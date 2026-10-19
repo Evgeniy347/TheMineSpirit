@@ -3,8 +3,7 @@ package com.theminespirit.core.repair;
 import java.util.Objects;
 
 public final class RepairCalculator {
-    private RepairCalculator() {
-    }
+    private RepairCalculator() {}
 
     public static final int GRINDSTONE_BONUS_PERCENT = 5;
     public static final int ANVIL_REPAIR_PERCENT = 25;
@@ -20,8 +19,8 @@ public final class RepairCalculator {
                     + " — у предмета без прочности наковальня бессмысленна");
         }
         if (repairPercent < PERCENT_MIN || repairPercent > PERCENT_MAX) {
-            throw new IllegalArgumentException("Доля ремонта " + repairPercent + "% вне диапазона ["
-                    + PERCENT_MIN + ", " + PERCENT_MAX + "]: ноль не чинил бы, больше ста переполнило бы предел");
+            throw new IllegalArgumentException("Доля ремонта " + repairPercent + "% вне диапазона [" + PERCENT_MIN
+                    + ", " + PERCENT_MAX + "]: ноль не чинил бы, больше ста переполнило бы предел");
         }
         long restored = (long) maxDurability * repairPercent / 100;
         return (int) Math.min(durability + restored, maxDurability);
@@ -29,8 +28,8 @@ public final class RepairCalculator {
 
     public static int grindstoneResult(int durabilityA, int durabilityB, int maxDurability) {
         if (durabilityA < 0 || durabilityB < 0) {
-            throw new IllegalArgumentException("Прочность не может быть отрицательной: "
-                    + durabilityA + ", " + durabilityB + " — сломанный предмет даёт ноль, а не минус");
+            throw new IllegalArgumentException("Прочность не может быть отрицательной: " + durabilityA + ", "
+                    + durabilityB + " — сломанный предмет даёт ноль, а не минус");
         }
         if (maxDurability <= 0) {
             throw new IllegalArgumentException("Максимальная прочность должна быть положительной: " + maxDurability
@@ -53,8 +52,10 @@ public final class RepairCalculator {
         boolean secondToolAvailable = availability.secondToolAvailable();
         boolean enchanted = availability.enchanted();
         boolean damagedEnough = availability.damagedEnough();
-        Objects.requireNonNull(costs, "Стоимость способов ремонта не задана: без неё не выбрать, "
-                + "что дешевле — материал с опытом или второй инструмент");
+        Objects.requireNonNull(
+                costs,
+                "Стоимость способов ремонта не задана: без неё не выбрать, "
+                        + "что дешевле — материал с опытом или второй инструмент");
         if (!damagedEnough) {
             return RepairMethod.NONE;
         }
@@ -73,7 +74,6 @@ public final class RepairCalculator {
         return costs.anvilCost() <= costs.toolCost() ? RepairMethod.ANVIL : RepairMethod.GRINDSTONE;
     }
 
-    public record Availability(boolean materialAvailable, boolean secondToolAvailable, boolean enchanted,
-            boolean damagedEnough) {
-    }
+    public record Availability(
+            boolean materialAvailable, boolean secondToolAvailable, boolean enchanted, boolean damagedEnough) {}
 }

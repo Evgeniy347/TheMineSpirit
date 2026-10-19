@@ -20,11 +20,10 @@ public final class FuelLoad {
         }
     }
 
-    private FuelLoad() {
-    }
+    private FuelLoad() {}
 
-    public static List<Portion> choose(int count, int cookTicks, Map<String, Integer> inventory,
-            ResourceKnowledge knowledge) {
+    public static List<Portion> choose(
+            int count, int cookTicks, Map<String, Integer> inventory, ResourceKnowledge knowledge) {
         Objects.requireNonNull(inventory, "inventory не может быть null: без инвентаря не выбрать топливо");
         Objects.requireNonNull(knowledge, "knowledge не может быть null: без знаний неизвестно время горения");
         List<String> candidates = knowledge.fuelCandidates();
@@ -37,8 +36,12 @@ public final class FuelLoad {
         return cover(count, cookTicks, inventory, knowledge, candidates);
     }
 
-    private static List<Portion> cover(int count, int cookTicks, Map<String, Integer> inventory,
-            ResourceKnowledge knowledge, List<String> candidates) {
+    private static List<Portion> cover(
+            int count,
+            int cookTicks,
+            Map<String, Integer> inventory,
+            ResourceKnowledge knowledge,
+            List<String> candidates) {
         long missingTicks = (long) count * cookTicks;
         List<Portion> portions = new ArrayList<>();
         for (String fuel : candidates) {

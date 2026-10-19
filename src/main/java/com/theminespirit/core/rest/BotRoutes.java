@@ -23,8 +23,11 @@ final class BotRoutes {
 
     private RestResponse get(RestRequest request, PathParams params) {
         String id = params.get("id");
-        BotInfo bot = gateway.bot(id).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                "Дух '" + id + "' не найден: список живых духов — GET /v1/bots", Map.of("id", id)));
+        BotInfo bot = gateway.bot(id)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Дух '" + id + "' не найден: список живых духов — GET /v1/bots",
+                        Map.of("id", id)));
         return RestResponse.ok(BotJson.toJson(bot));
     }
 

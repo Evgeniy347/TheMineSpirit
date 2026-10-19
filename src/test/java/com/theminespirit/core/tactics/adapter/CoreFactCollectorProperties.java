@@ -31,35 +31,50 @@ class CoreFactCollectorProperties {
 
     private Arbitrary<EnemyFact> enemy() {
         return Combinators.combine(
-                Arbitraries.of("minecraft:zombie", "minecraft:skeleton", "minecraft:creeper", "minecraft:spider"),
-                Arbitraries.integers().between(0, 8), Arbitraries.integers().between(0, 50),
-                Arbitraries.integers().between(0, 4), Arbitraries.integers().between(1, 3), Arbitraries.of(true, false))
-                .as((type, id, distance, hpStep, count, visible) -> new EnemyFact(type, "id" + id,
-                        new Point(distance, 0, 0), hpStep / 4.0, 0, visible, !visible, count));
+                        Arbitraries.of(
+                                "minecraft:zombie", "minecraft:skeleton", "minecraft:creeper", "minecraft:spider"),
+                        Arbitraries.integers().between(0, 8),
+                        Arbitraries.integers().between(0, 50),
+                        Arbitraries.integers().between(0, 4),
+                        Arbitraries.integers().between(1, 3),
+                        Arbitraries.of(true, false))
+                .as((type, id, distance, hpStep, count, visible) -> new EnemyFact(
+                        type, "id" + id, new Point(distance, 0, 0), hpStep / 4.0, 0, visible, !visible, count));
     }
 
     @Property(tries = 200)
     void collect_AnyEnemies_KeepsOnlyThoseInFactRadius(@ForAll("manyEnemies") List<EnemyFact> supplied) {
         SituationContext context = AdapterFixtures.context(supplied);
-        Situation expected = new Situation(context.self(),
-                supplied.stream().filter(enemy -> enemy.pos().distanceTo(ORIGIN) <= AdapterFixtures.RADIUS).toList(),
-                context.env(), context.orders(), context.ticksSinceHit(), context.ticksSinceStrike());
+        Situation expected = new Situation(
+                context.self(),
+                supplied.stream()
+                        .filter(enemy -> enemy.pos().distanceTo(ORIGIN) <= AdapterFixtures.RADIUS)
+                        .toList(),
+                context.env(),
+                context.orders(),
+                context.ticksSinceHit(),
+                context.ticksSinceStrike());
 
         Situation actual = CoreFactCollector.withDefaultSettings().collect(context);
 
-        assertEquals(expected, actual,
+        assertEquals(
+                expected,
+                actual,
                 "Снятие фактов обязано оставить ровно врагов в факт-радиусе " + AdapterFixtures.RADIUS
                         + " и отдать их ядру: иначе решение принимается по невидимым врагам или теряет видимых");
     }
 
     @Property(tries = 200)
     void collect_AnyEnemies_ReturnsCanonicalOrder(@ForAll("fewEnemies") List<EnemyFact> supplied) {
-        List<EnemyFact> actual = CoreFactCollector.withDefaultSettings().collect(AdapterFixtures.context(supplied))
+        List<EnemyFact> actual = CoreFactCollector.withDefaultSettings()
+                .collect(AdapterFixtures.context(supplied))
                 .enemies();
         List<EnemyFact> sorted = new ArrayList<>(actual);
         sorted.sort(canonicalOrder(ORIGIN));
 
-        assertEquals(sorted, actual,
+        assertEquals(
+                sorted,
+                actual,
                 "До лимита " + Situation.MAX_ENEMIES + " список врагов ситуации обязан идти по (дистанция, тип, "
                         + "HP-доля, id): порядок находки сущностей не должен протекать в решение. Свыше лимита хвост "
                         + "приписывается свёрнутым и общей сортировке не подчиняется");
@@ -69,24 +84,33 @@ class CoreFactCollectorProperties {
     void collect_MoreThanMax_PreservesCountWithinBounds(@ForAll("manyEnemies") List<EnemyFact> supplied) {
         Situation situation = CoreFactCollector.withDefaultSettings().collect(AdapterFixtures.context(supplied));
         List<EnemyFact> inRange = supplied.stream()
-                .filter(enemy -> enemy.pos().distanceTo(ORIGIN) <= AdapterFixtures.RADIUS).toList();
+                .filter(enemy -> enemy.pos().distanceTo(ORIGIN) <= AdapterFixtures.RADIUS)
+                .toList();
         int expectedCount = inRange.stream().mapToInt(EnemyFact::count).sum();
         long distinctTypes = inRange.stream().map(EnemyFact::type).distinct().count();
 
-        assertEquals(expectedCount, situation.enemies().stream().mapToInt(EnemyFact::count).sum(),
+        assertEquals(
+                expectedCount,
+                situation.enemies().stream().mapToInt(EnemyFact::count).sum(),
                 "Сворачивание хвоста сверх " + Situation.MAX_ENEMIES + " сохраняет число врагов: орда не должна "
                         + "пропадать из вида");
-        assertTrue(situation.enemies().size() <= Situation.MAX_ENEMIES + distinctTypes,
+        assertTrue(
+                situation.enemies().size() <= Situation.MAX_ENEMIES + distinctTypes,
                 "Сверх лимита хвост сворачивается в одну запись на тип, значит записей не больше "
                         + Situation.MAX_ENEMIES + " + число типов = " + (Situation.MAX_ENEMIES + distinctTypes));
     }
 
     private static Comparator<EnemyFact> canonicalOrder(Point origin) {
         return Comparator.<EnemyFact>comparingDouble(enemy -> enemy.pos().distanceTo(origin))
-                .thenComparing(EnemyFact::type).thenComparingDouble(EnemyFact::hpFraction).thenComparing(EnemyFact::id)
-                .thenComparingDouble(enemy -> enemy.pos().x()).thenComparingDouble(enemy -> enemy.pos().y())
-                .thenComparingDouble(enemy -> enemy.pos().z()).thenComparingDouble(EnemyFact::armor)
-                .thenComparing(EnemyFact::visible).thenComparing(EnemyFact::targetingSelf)
+                .thenComparing(EnemyFact::type)
+                .thenComparingDouble(EnemyFact::hpFraction)
+                .thenComparing(EnemyFact::id)
+                .thenComparingDouble(enemy -> enemy.pos().x())
+                .thenComparingDouble(enemy -> enemy.pos().y())
+                .thenComparingDouble(enemy -> enemy.pos().z())
+                .thenComparingDouble(EnemyFact::armor)
+                .thenComparing(EnemyFact::visible)
+                .thenComparing(EnemyFact::targetingSelf)
                 .thenComparingInt(EnemyFact::count);
     }
 }

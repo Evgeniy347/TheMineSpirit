@@ -14,13 +14,17 @@ class BuildStateTests {
 
         BuildState restored = BuildState.fromMap(state.toMap());
 
-        assertEquals(state, restored,
+        assertEquals(
+                state,
+                restored,
                 "Снимок обязан переживать сериализацию: иначе перезапуск теряет счёт поставленных и убранных блоков");
     }
 
     @Test
     void fromMap_NegativeValue_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> BuildState.fromMap(Map.of("placed", -1)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BuildState.fromMap(Map.of("placed", -1)),
                 "Отрицательный счётчик обязан отвергаться: иначе прогресс врёт и расход считается дважды");
     }
 
@@ -28,9 +32,12 @@ class BuildStateTests {
     void fromMap_MissingKeys_GivesZeros() {
         BuildState restored = BuildState.fromMap(Map.of());
 
-        assertEquals(new BuildState(0, 0, 0, 0, true), restored,
+        assertEquals(
+                new BuildState(0, 0, 0, 0, true),
+                restored,
                 "Старый снимок без ключей обязан читаться нулями: иначе обновление мода ломает незавершённые стройки");
-        assertTrue(restored.unfinished(),
+        assertTrue(
+                restored.unfinished(),
                 "Снимок без флага обязан считаться незавершённым: иначе стройка не продолжится после перезапуска");
     }
 }

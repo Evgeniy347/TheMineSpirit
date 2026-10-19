@@ -9,16 +9,49 @@ import java.util.Objects;
  * Собирается адаптером доски, отдаётся стратегу и игроку; {@code assignee} пуст, когда задание
  * ждёт любого свободного духа.
  */
-public record BoardTask(String id, String boardCase, int priority, String assignee, String status,
-        Map<String, Integer> requiredItems, Map<String, Integer> missing, List<String> dependsOn,
-        long createdAt, int level, String cause, int effectivePriority, List<String> modifiers,
+public record BoardTask(
+        String id,
+        String boardCase,
+        int priority,
+        String assignee,
+        String status,
+        Map<String, Integer> requiredItems,
+        Map<String, Integer> missing,
+        List<String> dependsOn,
+        long createdAt,
+        int level,
+        String cause,
+        int effectivePriority,
+        List<String> modifiers,
         boolean done) {
 
-    public BoardTask(String id, String boardCase, int priority, String assignee, String status,
-            Map<String, Integer> requiredItems, Map<String, Integer> missing, List<String> dependsOn,
-            long createdAt, int level, String cause) {
-        this(id, boardCase, priority, assignee, status, requiredItems, missing, dependsOn, createdAt,
-                level, cause, priority, List.of(), false);
+    public BoardTask(
+            String id,
+            String boardCase,
+            int priority,
+            String assignee,
+            String status,
+            Map<String, Integer> requiredItems,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long createdAt,
+            int level,
+            String cause) {
+        this(
+                id,
+                boardCase,
+                priority,
+                assignee,
+                status,
+                requiredItems,
+                missing,
+                dependsOn,
+                createdAt,
+                level,
+                cause,
+                priority,
+                List.of(),
+                false);
     }
 
     public BoardTask {
@@ -33,32 +66,32 @@ public record BoardTask(String id, String boardCase, int priority, String assign
             throw new IllegalArgumentException("Статус задания пуст: по нему наблюдатель решает, выдано оно или ждёт");
         }
         if (priority < 0) {
-            throw new IllegalArgumentException("Приоритет " + priority + " отрицателен: доска не выдаёт "
-                    + "заданий с отрицательным приоритетом");
+            throw new IllegalArgumentException(
+                    "Приоритет " + priority + " отрицателен: доска не выдаёт " + "заданий с отрицательным приоритетом");
         }
         if (createdAt < 0) {
             throw new IllegalArgumentException("createdAt равен " + createdAt + " и отрицателен: время постановки "
                     + "не может быть до начала отсчёта");
         }
         if (level < 1) {
-            throw new IllegalArgumentException("Уровень " + level + " меньше 1: первая постройка "
-                    + "ставится уровнем 1");
+            throw new IllegalArgumentException(
+                    "Уровень " + level + " меньше 1: первая постройка " + "ставится уровнем 1");
         }
         if (cause == null || cause.isBlank()) {
             throw new IllegalArgumentException("Причина задания пуста: по ней пересборка проверяет "
                     + "актуальность, постоянное задание задают причиной always");
         }
-        requiredItems = Map.copyOf(Objects.requireNonNull(requiredItems,
-                "requiredItems не может быть null: задание без ресурсов задают пустой картой"));
-        missing = Map.copyOf(Objects.requireNonNull(missing,
-                "missing не может быть null: задание без нехватки задают пустой картой"));
-        dependsOn = List.copyOf(Objects.requireNonNull(dependsOn,
-                "dependsOn не может быть null: задание без зависимостей задают пустым списком"));
+        requiredItems = Map.copyOf(Objects.requireNonNull(
+                requiredItems, "requiredItems не может быть null: задание без ресурсов задают пустой картой"));
+        missing = Map.copyOf(Objects.requireNonNull(
+                missing, "missing не может быть null: задание без нехватки задают пустой картой"));
+        dependsOn = List.copyOf(Objects.requireNonNull(
+                dependsOn, "dependsOn не может быть null: задание без зависимостей задают пустым списком"));
         if (effectivePriority < 0) {
             throw new IllegalArgumentException("Эффективный приоритет " + effectivePriority
                     + " отрицателен: доска не выдаёт заданий с отрицательным приоритетом");
         }
-        modifiers = List.copyOf(Objects.requireNonNull(modifiers,
-                "modifiers не может быть null: задание без модификаторов задают пустым списком"));
+        modifiers = List.copyOf(Objects.requireNonNull(
+                modifiers, "modifiers не может быть null: задание без модификаторов задают пустым списком"));
     }
 }

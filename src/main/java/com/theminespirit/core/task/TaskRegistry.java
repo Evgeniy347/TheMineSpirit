@@ -48,7 +48,8 @@ public final class TaskRegistry {
     public synchronized void markStarted(String taskId, long generation) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
-            throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: помечать запущенной нечего");
+            throw new IllegalArgumentException(
+                    "Задача '" + taskId + "' не найдена в реестре: помечать запущенной нечего");
         }
         entry.started = true;
         entry.generation = generation;
@@ -81,26 +82,26 @@ public final class TaskRegistry {
     public synchronized TaskEventLog log(String taskId) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
-            throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: журнал событий есть "
-                    + "только у известной задачи");
+            throw new IllegalArgumentException(
+                    "Задача '" + taskId + "' не найдена в реестре: журнал событий есть " + "только у известной задачи");
         }
         return entry.log;
     }
 
-    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress,
-            String error) {
+    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress, String error) {
         return observe(taskId, state, progress, null, error);
     }
 
-    public synchronized List<TaskEvent> observe(String taskId, TaskState state, RunProgress progress, Object result,
-            String error) {
+    public synchronized List<TaskEvent> observe(
+            String taskId, TaskState state, RunProgress progress, Object result, String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null) {
             throw new IllegalArgumentException("Задача '" + taskId + "' не найдена в реестре: обновлять нечего");
         }
         TaskRecord previous = entry.record;
         if (!previous.state().canTransitionTo(state)) {
-            throw new IllegalStateException("Недопустимый переход задачи " + taskId + ": " + previous.state().wire()
+            throw new IllegalStateException("Недопустимый переход задачи " + taskId + ": "
+                    + previous.state().wire()
                     + " → " + state.wire() + ". Разрешены accepted → running/succeeded/failed/cancelled и "
                     + "running → succeeded/failed/cancelled");
         }
@@ -120,8 +121,8 @@ public final class TaskRegistry {
         return observeIfActive(taskId, state, progress, null, error);
     }
 
-    public synchronized boolean observeIfActive(String taskId, TaskState state, RunProgress progress, Object result,
-            String error) {
+    public synchronized boolean observeIfActive(
+            String taskId, TaskState state, RunProgress progress, Object result, String error) {
         Entry entry = tasks.get(taskId);
         if (entry == null || !entry.record.active()) {
             return false;
@@ -144,13 +145,12 @@ public final class TaskRegistry {
         if (entry == null) {
             return Optional.empty();
         }
-        return Optional.of(new Snapshot(entry.record, entry.log, entry.log.since(lastEventId), entry.log.lastId(),
-                lastEventId));
+        return Optional.of(
+                new Snapshot(entry.record, entry.log, entry.log.since(lastEventId), entry.log.lastId(), lastEventId));
     }
 
-    public record Snapshot(TaskRecord record, TaskEventLog log, TaskEventLog.Catchup catchup, long position,
-            long lastEventId) {
-    }
+    public record Snapshot(
+            TaskRecord record, TaskEventLog log, TaskEventLog.Catchup catchup, long position, long lastEventId) {}
 
     public synchronized void closeAll() {
         for (Entry entry : tasks.values()) {

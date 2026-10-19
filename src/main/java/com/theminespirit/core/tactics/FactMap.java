@@ -5,8 +5,7 @@ import java.util.Arrays;
 public final class FactMap {
     private final Object[] values = new Object[FactName.values().length];
 
-    private FactMap() {
-    }
+    private FactMap() {}
 
     public static FactMap from(Situation situation, Assessment assessment) {
         FactMap map = new FactMap();

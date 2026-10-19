@@ -23,24 +23,20 @@ class PlanBudgetTests {
 
     @Test
     void measure_Sequence_CountsAllChildren() {
-        TaskNode root = new SequenceNode(List.of(
-                new SequenceNode(List.of(CALL, CALL)),
-                new RepeatNode(3, CALL),
-                CALL));
+        TaskNode root = new SequenceNode(List.of(new SequenceNode(List.of(CALL, CALL)), new RepeatNode(3, CALL), CALL));
 
         PlanBudget.Budget budget = PlanBudget.measure(root);
 
-        assertEquals(3, budget.depth(),
-                "Глубина — самый длинный путь: sequence → sequence → script");
-        assertEquals(7, budget.nodes(),
+        assertEquals(3, budget.depth(), "Глубина — самый длинный путь: sequence → sequence → script");
+        assertEquals(
+                7,
+                budget.nodes(),
                 "Узлы: корень sequence + вложенный sequence с двумя вызовами + repeat с вызовом + одиночный вызов");
     }
 
     @Test
     void measure_FallbackAndParallel_CountsSteps() {
-        TaskNode root = new FallbackNode(List.of(
-                new ParallelNode(ParallelMode.ALL, List.of(CALL, CALL)),
-                CALL));
+        TaskNode root = new FallbackNode(List.of(new ParallelNode(ParallelMode.ALL, List.of(CALL, CALL)), CALL));
 
         PlanBudget.Budget budget = PlanBudget.measure(root);
 
@@ -90,13 +86,14 @@ class PlanBudgetTests {
 
         PlanBudget.Budget budget = PlanBudget.measure(new SequenceNode(List.of(calls)));
 
-        assertTrue(budget.exceeds(),
-                "План больше MAX_NODES узлов обязан выходить за лимит бюджета");
+        assertTrue(budget.exceeds(), "План больше MAX_NODES узлов обязан выходить за лимит бюджета");
     }
 
     @Test
     void measure_NullRoot_IsRejected() {
-        assertThrows(NullPointerException.class, () -> PlanBudget.measure(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> PlanBudget.measure(null),
                 "measure(null) обязан отказывать: бюджет считается по дереву задач");
     }
 
@@ -106,9 +103,11 @@ class PlanBudgetTests {
 
         String text = budget.describe();
 
-        assertTrue(text.contains(String.valueOf(PlanLimits.MAX_DEPTH)),
+        assertTrue(
+                text.contains(String.valueOf(PlanLimits.MAX_DEPTH)),
                 "Описание обязано называть предел глубины: по нему игрок читает, что именно не так");
-        assertTrue(text.contains(String.valueOf(PlanLimits.MAX_NODES)),
+        assertTrue(
+                text.contains(String.valueOf(PlanLimits.MAX_NODES)),
                 "Описание обязано называть предел узлов: по нему игрок читает, что именно не так");
     }
 }

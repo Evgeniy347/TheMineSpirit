@@ -26,7 +26,9 @@ class TacticsRuleCoverageGuardTests {
 
         List<String> dead = uncovered(allRuleIds(config), fired);
 
-        assertEquals(List.of(), dead,
+        assertEquals(
+                List.of(),
+                dead,
                 "Правило из rules.json не срабатывает ни в одном сценарии scenarios.json: оно либо мёртвое (условие "
                         + "недостижимо или перекрыто старшим правилом), либо не защищено тестом, и его поломку никто не "
                         + "заметит. Добавьте сценарий, который его вызывает, или удалите правило вместе с упоминаниями в "
@@ -37,13 +39,17 @@ class TacticsRuleCoverageGuardTests {
     void uncovered_RuleWithoutScenario_IsReported() {
         List<String> dead = uncovered(Set.of("a_rule", "b_rule", "c_rule"), Set.of("a_rule", "c_rule"));
 
-        assertEquals(List.of("b_rule"), dead,
+        assertEquals(
+                List.of("b_rule"),
+                dead,
                 "Сторож ослеп: правило, которого нет среди сработавших, обязано попадать в список мёртвых");
     }
 
     @Test
     void uncovered_AllRulesFired_ReportsNothing() {
-        assertEquals(List.of(), uncovered(Set.of("a_rule"), Set.of("a_rule", "score")),
+        assertEquals(
+                List.of(),
+                uncovered(Set.of("a_rule"), Set.of("a_rule", "score")),
                 "Сторож ложно срабатывает: лишние служебные имена среди сработавших (score, hold) не мёртвые правила");
     }
 

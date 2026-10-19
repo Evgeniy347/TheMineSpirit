@@ -15,8 +15,8 @@ class ProductionCommentGuardTests {
     private static final Pattern RESTRICTION_LABEL = Pattern.compile("^(?:mc|lib)\\s*:");
     private static final Pattern SEPARATOR = Pattern.compile("[\\u2500\\u2501\\u2550=#*_\\-\\u00b7\\u2022]{3,}");
     private static final Pattern ANNOTATION = Pattern.compile("@\\w+(?:\\s*\\([^)]*\\))?");
-    private static final Pattern MODIFIERS = Pattern.compile(
-            "(?:public|protected|private|static|final|abstract|synchronized|native|strictfp|default|"
+    private static final Pattern MODIFIERS =
+            Pattern.compile("(?:public|protected|private|static|final|abstract|synchronized|native|strictfp|default|"
                     + "sealed|non-sealed|transient|volatile)\\b");
     private static final List<Pattern> CODE_LINES = List.of(
             Pattern.compile("^(?:return|throw|break|continue|import|package|case|else|if|for|while|switch|do|"
@@ -34,7 +34,9 @@ class ProductionCommentGuardTests {
         List<String> offenders = new ArrayList<>();
         collect(SourceFiles.javaUnder(SourceFiles.MAIN), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Комментарий в production-коде пересказывает код, делит файл чертой, прячет TODO или Javadoc на "
                         + "члене. Такой комментарий врёт после первой правки, а Javadoc на поле/методе дублирует "
                         + "имя. Как надо: «что» — в имени, «почему» — в тесте, который краснеет при нарушении; "
@@ -52,7 +54,9 @@ class ProductionCommentGuardTests {
                 + "    // value = 2;\n"
                 + "}\n";
 
-        assertEquals(List.of("2 JAVADOC", "4 SEPARATOR", "5 TODO", "6 CODE"), findings(sample),
+        assertEquals(
+                List.of("2 JAVADOC", "4 SEPARATOR", "5 TODO", "6 CODE"),
+                findings(sample),
                 "Сторож ослеп: Javadoc на члене, разделитель, TODO и закомментированный код обязаны находиться");
     }
 
@@ -65,7 +69,9 @@ class ProductionCommentGuardTests {
                 + "    private int value;\n"
                 + "}\n";
 
-        assertEquals(List.of(), findings(sample),
+        assertEquals(
+                List.of(),
+                findings(sample),
                 "Сторож ложно срабатывает: Javadoc класса и помеченные причины-ограничения разрешены");
     }
 
@@ -113,12 +119,16 @@ class ProductionCommentGuardTests {
                 break;
             }
         }
-        return rest.startsWith("class ") || rest.startsWith("interface ") || rest.startsWith("enum ")
-                || rest.startsWith("record ") || rest.startsWith("@interface");
+        return rest.startsWith("class ")
+                || rest.startsWith("interface ")
+                || rest.startsWith("enum ")
+                || rest.startsWith("record ")
+                || rest.startsWith("@interface");
     }
 
     private static boolean isCommentedCode(String body) {
-        List<String> lines = body.lines().map(String::strip).filter(line -> !line.isEmpty()).toList();
+        List<String> lines =
+                body.lines().map(String::strip).filter(line -> !line.isEmpty()).toList();
         if (lines.isEmpty()) {
             return false;
         }
@@ -143,15 +153,15 @@ class ProductionCommentGuardTests {
             } else if (text.startsWith("//", index)) {
                 int end = text.indexOf('\n', index);
                 end = end < 0 ? text.length() : end;
-                comments.add(new Comment(body(text.substring(index, end)), index, end, false,
-                        SourceFiles.lineOf(text, index)));
+                comments.add(new Comment(
+                        body(text.substring(index, end)), index, end, false, SourceFiles.lineOf(text, index)));
                 index = end;
             } else if (text.startsWith("/*", index)) {
                 int end = text.indexOf("*/", index + 2);
                 end = end < 0 ? text.length() : end + 2;
                 String raw = text.substring(index, end);
-                comments.add(new Comment(body(raw), index, end, raw.startsWith("/**"),
-                        SourceFiles.lineOf(text, index)));
+                comments.add(
+                        new Comment(body(raw), index, end, raw.startsWith("/**"), SourceFiles.lineOf(text, index)));
                 index = end;
             } else {
                 index++;
@@ -200,6 +210,5 @@ class ProductionCommentGuardTests {
         return text.length();
     }
 
-    private record Comment(String body, int start, int end, boolean javadoc, int line) {
-    }
+    private record Comment(String body, int start, int end, boolean javadoc, int line) {}
 }

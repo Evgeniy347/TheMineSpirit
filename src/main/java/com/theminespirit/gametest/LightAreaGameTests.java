@@ -28,8 +28,7 @@ public final class LightAreaGameTests {
     private static final BlockPos CENTER = new BlockPos(4, 1, 4);
     private static final int RADIUS = 3;
 
-    private LightAreaGameTests() {
-    }
+    private LightAreaGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -49,8 +48,9 @@ public final class LightAreaGameTests {
 
     private static ScriptCall lightCall(GameTestHelper helper) {
         BlockPos absolute = helper.absolutePos(CENTER);
-        return new ScriptCall("light_area", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ(),
-                "radius", RADIUS));
+        return new ScriptCall(
+                "light_area",
+                Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ(), "radius", RADIUS));
     }
 
     private static int blockLight(GameTestHelper helper, BlockPos relative) {
@@ -82,9 +82,12 @@ public final class LightAreaGameTests {
     }
 
     private static Map<String, Object> dataOf(GameTestHelper helper, SpiritEntity spirit, String what) {
-        helper.assertTrue(spirit.taskResult().orElse(null) instanceof ScriptResult.Data,
+        helper.assertTrue(
+                spirit.taskResult().orElse(null) instanceof ScriptResult.Data,
                 what + " обязан нести Data-итог, фактически "
-                        + spirit.taskResult().map(result -> result.getClass().getSimpleName()).orElse("пусто"));
+                        + spirit.taskResult()
+                                .map(result -> result.getClass().getSimpleName())
+                                .orElse("пусто"));
         return ((ScriptResult.Data) spirit.taskResult().orElseThrow()).fields();
     }
 
@@ -97,14 +100,17 @@ public final class LightAreaGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "освещение обязано завершиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(darkCells(helper) == 0,
+            helper.assertTrue(
+                    darkCells(helper) == 0,
                     "после освещения в комнате не должно остаться клеток со светом 0: "
                             + "враждебные мобы спавнятся при блочном свете 0, тёмных " + darkCells(helper));
-            helper.assertTrue(torchesInWorld(helper) == 1,
+            helper.assertTrue(
+                    torchesInWorld(helper) == 1,
                     "комнату 7×7 освещает один факел: лишние — перерасход, в мире " + torchesInWorld(helper));
             BlockPos torchCell = null;
             for (int x = ROOM_MIN; x <= ROOM_MAX; x++) {
@@ -116,15 +122,18 @@ public final class LightAreaGameTests {
                 }
             }
             PlacedBlocksData placed = PlacedBlocksData.get(helper.getLevel());
-            helper.assertTrue(torchCell != null && placed.isSpiritMarked(torchCell),
+            helper.assertTrue(
+                    torchCell != null && placed.isSpiritMarked(torchCell),
                     "поставленный духом факел обязан быть помечен: иначе дух не разберёт своё; клетка " + torchCell
                             + " isMarked=" + (torchCell != null && placed.isMarked(torchCell))
                             + " isSpiritMarked=" + (torchCell != null && placed.isSpiritMarked(torchCell))
                             + " size=" + placed.size());
             Map<String, Object> data = dataOf(helper, spirit, "успешный light_area");
-            helper.assertTrue(Integer.valueOf(1).equals(data.get("placed")) && "minecraft:torch".equals(data.get("block")),
+            helper.assertTrue(
+                    Integer.valueOf(1).equals(data.get("placed")) && "minecraft:torch".equals(data.get("block")),
                     "итог обязан назвать placed=1 и block=minecraft:torch, фактически " + data);
-            helper.assertTrue(Integer.valueOf(0).equals(data.get("missing")),
+            helper.assertTrue(
+                    Integer.valueOf(0).equals(data.get("missing")),
                     "факела хватило: недостачи быть не должно, фактически " + data);
             GameTestFixtures.finish(helper);
         });
@@ -138,18 +147,22 @@ public final class LightAreaGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "нехватка факелов обязана дать частичный итог, а не провал, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(torchesInWorld(helper) == 0,
+            helper.assertTrue(
+                    torchesInWorld(helper) == 0,
                     "без факелов в инвентаре в мире не появляется ни одного, в мире " + torchesInWorld(helper));
-            helper.assertTrue(darkCells(helper) > 0,
+            helper.assertTrue(
+                    darkCells(helper) > 0,
                     "пока факелов нет, комната остаётся тёмной: без света мобы спавнятся, тёмных " + darkCells(helper));
             Map<String, Object> data = dataOf(helper, spirit, "частичный light_area");
-            helper.assertTrue(Integer.valueOf(0).equals(data.get("placed")),
-                    "итог обязан назвать placed=0, фактически " + data);
-            helper.assertTrue(Integer.valueOf(1).equals(data.get("missing")),
+            helper.assertTrue(
+                    Integer.valueOf(0).equals(data.get("placed")), "итог обязан назвать placed=0, фактически " + data);
+            helper.assertTrue(
+                    Integer.valueOf(1).equals(data.get("missing")),
                     "итог обязан назвать 1 недостающий факел, фактически " + data);
             GameTestFixtures.finish(helper);
         });

@@ -24,11 +24,14 @@ final class HerdFlock {
     }
 
     void refreshSnapshot(boolean event) {
-        if (!event && session.ticks - session.lastRefresh < CatalogLimits.HERD_REFRESH_TICKS
+        if (!event
+                && session.ticks - session.lastRefresh < CatalogLimits.HERD_REFRESH_TICKS
                 && !session.herd.isEmpty()) {
             return;
         }
-        List<Animal> animals = HerdSurvey.query(session.spirit.level(), session.spirit.position(),
+        List<Animal> animals = HerdSurvey.query(
+                session.spirit.level(),
+                session.spirit.position(),
                 session.searchRadius + CatalogLimits.HERD_SIGHT_MARGIN);
         List<AnimalRef> refs = new ArrayList<>(animals.size());
         session.live.clear();
@@ -55,7 +58,9 @@ final class HerdFlock {
     List<AnimalRef> escapeesOf(Species species) {
         List<AnimalRef> escapees = new ArrayList<>();
         for (AnimalRef animal : session.herd) {
-            if (animal.species() == species && !animal.inPen() && session.live.containsKey(animal.id())
+            if (animal.species() == species
+                    && !animal.inPen()
+                    && session.live.containsKey(animal.id())
                     && !session.lureSkipped.contains(animal.id())) {
                 escapees.add(animal);
             }
@@ -78,7 +83,9 @@ final class HerdFlock {
         List<AnimalRef> babies = new ArrayList<>();
         List<AnimalRef> grown = new ArrayList<>();
         for (AnimalRef animal : session.herd) {
-            if (animal.species() != species || !animal.inPen() || !session.live.containsKey(animal.id())
+            if (animal.species() != species
+                    || !animal.inPen()
+                    || !session.live.containsKey(animal.id())
                     || session.handledIds.contains(animal.id())) {
                 continue;
             }
@@ -104,7 +111,9 @@ final class HerdFlock {
     AnimalRef nearestOf(Species species, boolean adultsOnly, boolean woolOnly) {
         List<AnimalRef> candidates = new ArrayList<>();
         for (AnimalRef animal : session.herd) {
-            if (animal.species() != species || !animal.inPen() || !session.live.containsKey(animal.id())
+            if (animal.species() != species
+                    || !animal.inPen()
+                    || !session.live.containsKey(animal.id())
                     || session.handledIds.contains(animal.id())) {
                 continue;
             }
@@ -149,7 +158,8 @@ final class HerdFlock {
         if (animal == null || animal.isRemoved()) {
             return true;
         }
-        Optional<String> danger = HerdSafety.dangerReason(new HerdSafety.Hazards(animal.isInLava(), animal.isOnFire(), animal.isInWater()));
+        Optional<String> danger = HerdSafety.dangerReason(
+                new HerdSafety.Hazards(animal.isInLava(), animal.isOnFire(), animal.isInWater()));
         if (danger.isPresent()) {
             session.skipped++;
             session.handledIds.add(ref.id());
@@ -240,8 +250,8 @@ final class HerdFlock {
     }
 
     int byDistanceToHome(AnimalRef left, AnimalRef right) {
-        int byDistance = Long.compare(distanceSquared(session.home, left.pos()),
-                distanceSquared(session.home, right.pos()));
+        int byDistance =
+                Long.compare(distanceSquared(session.home, left.pos()), distanceSquared(session.home, right.pos()));
         return byDistance != 0 ? byDistance : left.id().compareTo(right.id());
     }
 

@@ -5,10 +5,10 @@ import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.IdFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 
 public final class ArmorTable {
     private static final String RESOURCE_PATH = "data/theminespirit/armor/armor_table.json";
@@ -95,8 +95,11 @@ public final class ArmorTable {
                 throw new IllegalStateException("Файл материалов брони '" + origin + "': ранг правила №" + index
                         + " равен " + rank + ": ранг задаёт «лучше», отрицательный ранг сломал бы порядок");
             }
-            rules.add(rule(JsonResource.strings(ruleNode.get("match"), origin,
-                    "поля match правила №" + index), rank, origin, "правила №" + index));
+            rules.add(rule(
+                    JsonResource.strings(ruleNode.get("match"), origin, "поля match правила №" + index),
+                    rank,
+                    origin,
+                    "правила №" + index));
         }
         return rules;
     }
@@ -133,8 +136,8 @@ public final class ArmorTable {
         try {
             return new MaterialRule(match, rank);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл материалов брони '" + origin + "': " + what + " неверно — "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Файл материалов брони '" + origin + "': " + what + " неверно — " + error.getMessage(), error);
         }
     }
 
@@ -142,8 +145,8 @@ public final class ArmorTable {
         public MaterialRule {
             Objects.requireNonNull(match, "Список шаблонов материала не может быть null: пустой список — ошибка");
             if (match.isEmpty()) {
-                throw new IllegalArgumentException("У правила материала пустой match: правило без шаблонов "
-                        + "не описывает ни один предмет");
+                throw new IllegalArgumentException(
+                        "У правила материала пустой match: правило без шаблонов " + "не описывает ни один предмет");
             }
             if (rank < 0) {
                 throw new IllegalArgumentException("Ранг материала " + rank + " отрицателен: "

@@ -32,8 +32,7 @@ public final class RestTaskScaleGameTests {
     private static final int EXPECTED_LOG_WRITES = 5;
     private static final int SETTLE_TICKS = 3;
 
-    private RestTaskScaleGameTests() {
-    }
+    private RestTaskScaleGameTests() {}
 
     @GameTest(batch = "rest_scale_watcher", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty(
@@ -90,18 +89,23 @@ public final class RestTaskScaleGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(afterCancelPolls.get() >= 0, "Сценарий ещё не дошёл до конца: ждём тики");
-            helper.assertTrue(emptyPolls.get() == 0 && emptyTotalDelta.get() == 0,
+            helper.assertTrue(
+                    emptyPolls.get() == 0 && emptyTotalDelta.get() == 0,
                     "При пустом реестре watcher не должен опрашивать никого: за тик " + emptyPolls.get()
                             + ", всего за ожидание " + emptyTotalDelta.get());
-            helper.assertTrue(activePolls.get() == BOTS,
+            helper.assertTrue(
+                    activePolls.get() == BOTS,
                     "При " + BOTS + " духах с активными задачами watcher обязан делать ровно " + BOTS
                             + " опросов за тик, а сделал " + activePolls.get()
                             + ": лишние опросы растут с числом задач быстрее, чем нужно");
-            helper.assertTrue(activeTotalDelta.get() % BOTS == 0 && activeTotalDelta.get() >= BOTS,
+            helper.assertTrue(
+                    activeTotalDelta.get() % BOTS == 0 && activeTotalDelta.get() >= BOTS,
                     "Суммарно опросов за прогон обязано быть кратно " + BOTS + " (по " + BOTS + " на тик), получено "
                             + activeTotalDelta.get());
-            helper.assertTrue(afterCancelPolls.get() == 0,
-                    "После завершения всех задач watcher не должен опрашивать никого: за тик " + afterCancelPolls.get());
+            helper.assertTrue(
+                    afterCancelPolls.get() == 0,
+                    "После завершения всех задач watcher не должен опрашивать никого: за тик "
+                            + afterCancelPolls.get());
             GameTestFixtures.finish(helper);
         });
     }
@@ -116,8 +120,8 @@ public final class RestTaskScaleGameTests {
         List<RestFixture.SseCapture> streams = new ArrayList<>();
         AtomicReference<String> taskId = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest
-                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks", legsBody(helper))
+        CompletableFuture<List<String>> scenario = rest.post(
+                        "/v1/bots/" + spirit.getStringUUID() + "/tasks", legsBody(helper))
                 .thenApply(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
                     taskId.set(accepted.json().path("task_id").asText());
@@ -128,17 +132,20 @@ public final class RestTaskScaleGameTests {
                 });
         RestFixture.await(helper, rest, scenario, () -> {
             for (RestFixture.SseCapture stream : streams) {
-                helper.assertTrue(stream.finished(), "Все " + STREAMS + " потока обязаны закрыться после завершения задачи");
+                helper.assertTrue(
+                        stream.finished(), "Все " + STREAMS + " потока обязаны закрыться после завершения задачи");
             }
             long writes = rest.gateway().taskRegistry().log(taskId.get()).lastId();
-            helper.assertTrue(writes == EXPECTED_LOG_WRITES,
+            helper.assertTrue(
+                    writes == EXPECTED_LOG_WRITES,
                     "Журнал задачи из " + LEGS + " шагов обязан получить ровно " + EXPECTED_LOG_WRITES
                             + " записей (progress+state запуска, два перехода шага, финальный state) независимо от числа "
                             + "потоков, получил " + writes + " при " + STREAMS + " открытых потоках");
             for (RestFixture.SseCapture stream : streams) {
                 List<RestFixture.Frame> frames = stream.frames();
                 RestFixture.Frame last = frames.get(frames.size() - 1);
-                helper.assertTrue(last.idNumber() == writes,
+                helper.assertTrue(
+                        last.idNumber() == writes,
                         "Последний кадр каждого потока обязан иметь id " + writes + " (число записей журнала), получен "
                                 + last);
             }
@@ -156,27 +163,33 @@ public final class RestTaskScaleGameTests {
         AtomicInteger hopsForPost = new AtomicInteger(-1);
         AtomicInteger hopsForReads = new AtomicInteger(-1);
         int before = rest.gateway().serverCall().submittedCount();
-        CompletableFuture<List<String>> scenario = rest
-                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks", legsBody(helper))
+        CompletableFuture<List<String>> scenario = rest.post(
+                        "/v1/bots/" + spirit.getStringUUID() + "/tasks", legsBody(helper))
                 .thenCompose(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
                     hopsForPost.set(rest.gateway().serverCall().submittedCount() - before);
-                    String taskPath = "/v1/tasks/" + accepted.json().path("task_id").asText();
+                    String taskPath =
+                            "/v1/tasks/" + accepted.json().path("task_id").asText();
                     int afterPost = rest.gateway().serverCall().submittedCount();
                     RestFixture.SseCapture stream = rest.stream(taskPath + "/events", Map.of());
-                    return rest.get(taskPath).thenCompose(task -> stream.status().thenApply(status -> {
-                        problems.expect(task.status() == 200 && status == 200,
-                                "GET задачи и открытие потока обязаны отвечать 200: " + task.status() + " и " + status);
-                        hopsForReads.set(rest.gateway().serverCall().submittedCount() - afterPost);
-                        stream.cancel();
-                        return problems.found();
-                    }));
+                    return rest.get(taskPath)
+                            .thenCompose(task -> stream.status().thenApply(status -> {
+                                problems.expect(
+                                        task.status() == 200 && status == 200,
+                                        "GET задачи и открытие потока обязаны отвечать 200: " + task.status() + " и "
+                                                + status);
+                                hopsForReads.set(rest.gateway().serverCall().submittedCount() - afterPost);
+                                stream.cancel();
+                                return problems.found();
+                            }));
                 });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(hopsForPost.get() == 1,
+            helper.assertTrue(
+                    hopsForPost.get() == 1,
                     "Один POST tasks с планом обязан стоить ровно один переход на серверный поток (старт у шлюза), "
                             + "стоил " + hopsForPost.get());
-            helper.assertTrue(hopsForReads.get() == 0,
+            helper.assertTrue(
+                    hopsForReads.get() == 0,
                     "GET задачи и открытие SSE читают реестр в памяти и не должны ходить на серверный поток, ходили "
                             + hopsForReads.get() + " раз");
         });
@@ -189,8 +202,13 @@ public final class RestTaskScaleGameTests {
             if (i > 0) {
                 steps.append(',');
             }
-            steps.append("{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":").append(target.getX())
-                    .append(",\"y\":").append(target.getY()).append(",\"z\":").append(target.getZ()).append("}}");
+            steps.append("{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":")
+                    .append(target.getX())
+                    .append(",\"y\":")
+                    .append(target.getY())
+                    .append(",\"z\":")
+                    .append(target.getZ())
+                    .append("}}");
         }
         return "{\"request_id\":\"" + UUID.randomUUID() + "\",\"plan\":{\"type\":\"sequence\",\"steps\":[" + steps
                 + "]}}";

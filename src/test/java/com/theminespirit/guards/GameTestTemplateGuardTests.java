@@ -17,17 +17,12 @@ import org.junit.jupiter.api.Test;
  * {@code "arena"} (11×8×11), где сцена целиком помещается на активной площадке.
  */
 class GameTestTemplateGuardTests {
-    private static final Pattern GAMETEST_ANNOTATION = Pattern.compile(
-            "@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
+    private static final Pattern GAMETEST_ANNOTATION =
+            Pattern.compile("@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern EMPTY_TEMPLATE =
             Pattern.compile("template\\s*=\\s*(?:\"empty\"|EMPTY_TEMPLATE)(?![A-Za-z0-9_])");
     private static final String[] SPAWN_OR_BLOCK_MARKERS = {
-            "ModEntities.SPIRIT",
-            "spawnSpirit",
-            ".spawn(",
-            "setBlock",
-            "buildFloor",
-            ".fill(",
+        "ModEntities.SPIRIT", "spawnSpirit", ".spawn(", "setBlock", "buildFloor", ".fill(",
     };
 
     @Test
@@ -35,7 +30,9 @@ class GameTestTemplateGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "GameTest, который спавнит духа или ставит блоки, не должен использовать шаблон \"empty\" (3×3×3): "
                         + "сцена вылезает в соседний неактивный чанк, дух/блок не делает первого тика и тест флекает "
                         + "примерно 1 из 8. Такому тесту нужен шаблон \"arena\" (11×8×11), и вся сцена — внутри "
@@ -52,7 +49,9 @@ class GameTestTemplateGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("spawn_SpiritType_Lives"), offendersOf(sample),
+        assertEquals(
+                List.of("spawn_SpiritType_Lives"),
+                offendersOf(sample),
                 "Сторож ослеп: спавн духа в шаблоне \"empty\" должен попадать в нарушители");
     }
 
@@ -66,7 +65,9 @@ class GameTestTemplateGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("floor_Stone_IsBuilt"), offendersOf(sample),
+        assertEquals(
+                List.of("floor_Stone_IsBuilt"),
+                offendersOf(sample),
                 "Сторож ослеп: постановка блока в шаблоне \"empty\" должна попадать в нарушители");
     }
 
@@ -80,7 +81,9 @@ class GameTestTemplateGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), offendersOf(sample),
+        assertEquals(
+                List.of(),
+                offendersOf(sample),
                 "Сторож ложно срабатывает: шаблон \"arena\" со сценой внутри площадки — законное решение");
     }
 
@@ -94,7 +97,9 @@ class GameTestTemplateGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), offendersOf(sample),
+        assertEquals(
+                List.of(),
+                offendersOf(sample),
                 "Сторож ложно срабатывает: \"empty\" без спавна и блоков безопасен — читать нечего");
     }
 
@@ -102,8 +107,8 @@ class GameTestTemplateGuardTests {
         sources.forEach((file, text) -> {
             for (Method method : methodsOnEmptyTemplate(text)) {
                 if (spawnsOrPlacesBlocks(method.body())) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
-                            + " — " + method.name());
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, method.annotationStart()) + " — " + method.name());
                 }
             }
         });
@@ -170,6 +175,5 @@ class GameTestTemplateGuardTests {
         return false;
     }
 
-    private record Method(String name, int annotationStart, String body) {
-    }
+    private record Method(String name, int annotationStart, String body) {}
 }

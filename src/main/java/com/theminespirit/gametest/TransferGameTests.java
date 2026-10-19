@@ -35,8 +35,7 @@ public final class TransferGameTests {
             "{\"rules\":[{\"match\":[\"*\"],\"keep\":0,\"mode\":\"any\"}],\"never_give_away\":[\"shulker_box\"]}",
             "gametest");
 
-    private TransferGameTests() {
-    }
+    private TransferGameTests() {}
 
     @GameTest(template = "arena", batch = "transfer_craft", timeoutTicks = 300)
     public static void transfer_SticksToCrafter_StonePickaxeCrafted(GameTestHelper helper) {
@@ -49,42 +48,64 @@ public final class TransferGameTests {
         crafter.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
 
         StackMapper mapper = new StackMapper();
-        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest("stone_pickaxe", crafter.getUUID(), at(crafter), mapper.map(crafter.getInventory()), List.of(new Ingredient("minecraft:stick", 2), new Ingredient("minecraft:cobblestone", 3)), List.of(new TransferSource(giver.getUUID(), at(giver), mapper.map(giver.getInventory()),
-                        NO_PROTECTION, List.of())), Map.of(), InventoryTables.values(), 16, 64));
+        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
+                "stone_pickaxe",
+                crafter.getUUID(),
+                at(crafter),
+                mapper.map(crafter.getInventory()),
+                List.of(new Ingredient("minecraft:stick", 2), new Ingredient("minecraft:cobblestone", 3)),
+                List.of(new TransferSource(
+                        giver.getUUID(), at(giver), mapper.map(giver.getInventory()), NO_PROTECTION, List.of())),
+                Map.of(),
+                InventoryTables.values(),
+                16,
+                64));
 
-        helper.assertTrue(orders.size() == 1 && orders.get(0).from().isPresent()
+        helper.assertTrue(
+                orders.size() == 1
+                        && orders.get(0).from().isPresent()
                         && orders.get(0).from().orElseThrow().equals(giver.getUUID())
                         && orders.get(0).count() == 2,
                 "Планировщик обязан назначить передачу двух палок от дающего крафтеру, заказы: " + orders);
 
-        SpiritRun deliver = SpiritRun.launch(helper, giver, new ScriptCall("deliver", Map.of(
-                "item", "stick", "count", 2, "to", "spirit:" + crafter.getUUID())), 1);
+        SpiritRun deliver = SpiritRun.launch(
+                helper,
+                giver,
+                new ScriptCall("deliver", Map.of("item", "stick", "count", 2, "to", "spirit:" + crafter.getUUID())),
+                1);
         AtomicBoolean craftStarted = new AtomicBoolean();
         AtomicReference<SpiritRun> craft = new AtomicReference<>();
 
         helper.succeedWhen(() -> {
             deliver.assertStarted();
             RunStatus giverStatus = giver.taskStatus().orElse(null);
-            helper.assertTrue(giverStatus != RunStatus.FAILED,
-                    "Передача не должна проваливаться: " + giver.taskFailureReason().orElse("нет причины"));
+            helper.assertTrue(
+                    giverStatus != RunStatus.FAILED,
+                    "Передача не должна проваливаться: "
+                            + giver.taskFailureReason().orElse("нет причины"));
             if (giverStatus == RunStatus.SUCCEEDED && !craftStarted.get()) {
-                helper.assertTrue(GameTestFixtures.countInInventory(crafter.getInventory(), Items.STICK) == 2,
+                helper.assertTrue(
+                        GameTestFixtures.countInInventory(crafter.getInventory(), Items.STICK) == 2,
                         "Крафтер обязан получить ровно 2 палки, у него: "
                                 + GameTestFixtures.countInInventory(crafter.getInventory(), Items.STICK));
                 crafter.setNoAi(false);
-                craft.set(SpiritRun.launch(helper, crafter, new ScriptCall("craft", Map.of(
-                        "item", "minecraft:stone_pickaxe", "count", 1, "radius", 8)), 1));
+                craft.set(SpiritRun.launch(
+                        helper,
+                        crafter,
+                        new ScriptCall("craft", Map.of("item", "minecraft:stone_pickaxe", "count", 1, "radius", 8)),
+                        1));
                 craftStarted.set(true);
             }
-            helper.assertTrue(craftStarted.get() && craft.get().started(),
-                    "Крафт ещё не начат: передача " + giverStatus);
+            helper.assertTrue(
+                    craftStarted.get() && craft.get().started(), "Крафт ещё не начат: передача " + giverStatus);
             RunStatus craftStatus = crafter.taskStatus().orElse(null);
-            helper.assertTrue(craftStatus != RunStatus.FAILED,
+            helper.assertTrue(
+                    craftStatus != RunStatus.FAILED,
                     "Крафт каменной кирки не должен проваливаться: "
                             + crafter.taskFailureReason().orElse("нет причины"));
-            helper.assertTrue(craftStatus == RunStatus.SUCCEEDED
-                            && GameTestFixtures.countInInventory(crafter.getInventory(),
-                                    Items.STONE_PICKAXE) == 1,
+            helper.assertTrue(
+                    craftStatus == RunStatus.SUCCEEDED
+                            && GameTestFixtures.countInInventory(crafter.getInventory(), Items.STONE_PICKAXE) == 1,
                     "Кирка ещё не скрафчена: крафт " + craftStatus + ", причина "
                             + crafter.taskFailureReason().orElse("нет") + ", кирок "
                             + GameTestFixtures.countInInventory(crafter.getInventory(), Items.STONE_PICKAXE));
@@ -99,16 +120,21 @@ public final class TransferGameTests {
         SpiritEntity taker = TacticsScene.spirit(helper, CRAFTER_POS);
         taker.setNoAi(true);
         giver.getInventory().setItem(0, new ItemStack(Items.STICK, 2));
-        SpiritRun deliver = SpiritRun.launch(helper, giver, new ScriptCall("deliver", Map.of(
-                "item", "stick", "count", 2, "to", "spirit:" + taker.getUUID())), 1);
+        SpiritRun deliver = SpiritRun.launch(
+                helper,
+                giver,
+                new ScriptCall("deliver", Map.of("item", "stick", "count", 2, "to", "spirit:" + taker.getUUID())),
+                1);
         helper.succeedWhen(() -> {
             deliver.assertStarted();
             RunStatus status = giver.taskStatus().orElse(null);
-            helper.assertTrue(status != RunStatus.FAILED,
-                    "Передача не должна проваливаться: " + giver.taskFailureReason().orElse("нет"));
-            helper.assertTrue(status == RunStatus.SUCCEEDED,
-                    "Передача ещё идёт: " + status);
-            helper.assertTrue(GameTestFixtures.countInInventory(taker.getInventory(), Items.STICK) == 2,
+            helper.assertTrue(
+                    status != RunStatus.FAILED,
+                    "Передача не должна проваливаться: "
+                            + giver.taskFailureReason().orElse("нет"));
+            helper.assertTrue(status == RunStatus.SUCCEEDED, "Передача ещё идёт: " + status);
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(taker.getInventory(), Items.STICK) == 2,
                     "Получатель обязан получить 2 палки, у него: "
                             + GameTestFixtures.countInInventory(taker.getInventory(), Items.STICK));
             TacticsScene.finish(helper, giver);
@@ -116,7 +142,9 @@ public final class TransferGameTests {
     }
 
     private static BlockCoord at(SpiritEntity spirit) {
-        return new BlockCoord(spirit.blockPosition().getX(), spirit.blockPosition().getY(),
+        return new BlockCoord(
+                spirit.blockPosition().getX(),
+                spirit.blockPosition().getY(),
                 spirit.blockPosition().getZ());
     }
 }

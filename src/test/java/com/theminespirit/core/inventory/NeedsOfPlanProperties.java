@@ -43,21 +43,33 @@ class NeedsOfPlanProperties {
                         .as((times, step) -> new RepeatNode(times, step)),
                 deeper.list().ofMaxSize(3).map(SequenceNode::new),
                 deeper.list().ofMaxSize(2).map(FallbackNode::new),
-                Combinators.combine(Arbitraries.of(ParallelMode.values()), deeper.list().ofMaxSize(2))
+                Combinators.combine(
+                                Arbitraries.of(ParallelMode.values()),
+                                deeper.list().ofMaxSize(2))
                         .as(ParallelNode::new),
                 Combinators.combine(deeper, deeper)
-                        .as((thenStep, elseStep) -> new ConditionNode("has_item",
-                                Map.of("item", "bucket"), thenStep, elseStep)));
+                        .as((thenStep, elseStep) ->
+                                new ConditionNode("has_item", Map.of("item", "bucket"), thenStep, elseStep)));
     }
 
     private static Arbitrary<TaskNode> calls() {
-        Arbitrary<String> scripts = Arbitraries.of("craft", "smelt", "equip", "deposit", "acquire", "gather",
-                "scan", "wait", "collect_drops");
-        Arbitrary<String> items = Arbitraries.of("iron_pickaxe", "oak_log", "bread", "torch", "cobblestone",
-                "iron_ingot", "raw_iron", "stick", "coal", "diamond");
-        return Combinators.combine(scripts, items).as((script, item) -> (TaskNode) (script.equals("gather")
-                ? new ScriptCall(script, Map.of("block", item, "count", 1))
-                : new ScriptCall(script, Map.of("item", item, "count", 1))));
+        Arbitrary<String> scripts = Arbitraries.of(
+                "craft", "smelt", "equip", "deposit", "acquire", "gather", "scan", "wait", "collect_drops");
+        Arbitrary<String> items = Arbitraries.of(
+                "iron_pickaxe",
+                "oak_log",
+                "bread",
+                "torch",
+                "cobblestone",
+                "iron_ingot",
+                "raw_iron",
+                "stick",
+                "coal",
+                "diamond");
+        return Combinators.combine(scripts, items).as((script, item) -> (TaskNode)
+                (script.equals("gather")
+                        ? new ScriptCall(script, Map.of("block", item, "count", 1))
+                        : new ScriptCall(script, Map.of("item", item, "count", 1))));
     }
 
     @Property
@@ -65,7 +77,8 @@ class NeedsOfPlanProperties {
         List<String> needs = NeedsOfPlan.collect(plan, NoRecipes.INSTANCE);
 
         for (String item : itemParamsOf(plan)) {
-            assertTrue(needs.contains(item),
+            assertTrue(
+                    needs.contains(item),
                     "Предмет '" + item + "' заказан скриптом плана и обязан быть в нужном: иначе дух "
                             + "выбросил бы его при переполнении инвентаря и сорвал собственный план. "
                             + "Нужное " + needs + ", план " + plan);
@@ -77,7 +90,8 @@ class NeedsOfPlanProperties {
         List<String> needs = NeedsOfPlan.collect(plan, WithRecipes.INSTANCE);
 
         for (String item : itemParamsOf(plan)) {
-            assertTrue(needs.contains(item),
+            assertTrue(
+                    needs.contains(item),
                     "Предмет '" + item + "' заказан скриптом плана и защищён, даже когда у него "
                             + "раскрыты ингредиенты: защита покрывает и продукт, и сырьё. Нужное " + needs
                             + ", план " + plan);
@@ -88,7 +102,8 @@ class NeedsOfPlanProperties {
     void collect_CyclicRecipes_FinishAndStayShort(@ForAll("plans") TaskNode plan) {
         List<String> needs = NeedsOfPlan.collect(plan, CyclicRecipes.INSTANCE);
 
-        assertTrue(needs.size() <= 64,
+        assertTrue(
+                needs.size() <= 64,
                 "Сбор нужного обязан заканчиваться и оставаться коротким: получилось " + needs.size()
                         + " шаблонов. План " + plan);
     }

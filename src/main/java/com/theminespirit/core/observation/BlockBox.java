@@ -16,7 +16,8 @@ public record BlockBox(BlockCoord min, BlockCoord max) {
     public static BlockBox cube(BlockCoord center, int radius) {
         Objects.requireNonNull(center, "center не может быть null: куб строится вокруг точки");
         if (radius < 0) {
-            throw new IllegalArgumentException("Радиус куба " + radius + " отрицателен: куб вокруг точки имеет радиус от 0");
+            throw new IllegalArgumentException(
+                    "Радиус куба " + radius + " отрицателен: куб вокруг точки имеет радиус от 0");
         }
         return new BlockBox(
                 new BlockCoord(center.x() - radius, center.y() - radius, center.z() - radius),
@@ -33,16 +34,22 @@ public record BlockBox(BlockCoord min, BlockCoord max) {
     }
 
     public boolean contains(BlockCoord point) {
-        return point.x() >= min.x() && point.x() <= max.x()
-                && point.y() >= min.y() && point.y() <= max.y()
-                && point.z() >= min.z() && point.z() <= max.z();
+        return point.x() >= min.x()
+                && point.x() <= max.x()
+                && point.y() >= min.y()
+                && point.y() <= max.y()
+                && point.z() >= min.z()
+                && point.z() <= max.z();
     }
 
     public boolean intersects(BlockBox other) {
         Objects.requireNonNull(other, "Второй куб не может быть null: пересечение проверяется у двух кубов");
-        return min.x() <= other.max.x() && max.x() >= other.min.x()
-                && min.y() <= other.max.y() && max.y() >= other.min.y()
-                && min.z() <= other.max.z() && max.z() >= other.min.z();
+        return min.x() <= other.max.x()
+                && max.x() >= other.min.x()
+                && min.y() <= other.max.y()
+                && max.y() >= other.min.y()
+                && min.z() <= other.max.z()
+                && max.z() >= other.min.z();
     }
 
     public long volume() {

@@ -12,8 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class DefenseDirectives {
-    private DefenseDirectives() {
-    }
+    private DefenseDirectives() {}
 
     public static Map<UUID, DefenseIssuedOrder> of(DefensePlan plan) {
         return of(plan, Set.of());
@@ -24,8 +23,7 @@ public final class DefenseDirectives {
             throw new IllegalArgumentException("plan не может быть null: приказ обороны собирается из плана");
         }
         if (chargedEnemyIds == null) {
-            throw new IllegalArgumentException(
-                    "chargedEnemyIds не может быть null: нет заряженных — пустое множество");
+            throw new IllegalArgumentException("chargedEnemyIds не может быть null: нет заряженных — пустое множество");
         }
         if (plan.defendedPoint().isEmpty()) {
             return Map.of();
@@ -39,7 +37,8 @@ public final class DefenseDirectives {
             issued.put(order.defender(), direct(order, plan, chargedEnemyIds));
         }
         for (var assignment : plan.posts()) {
-            issued.putIfAbsent(assignment.defender(),
+            issued.putIfAbsent(
+                    assignment.defender(),
                     new DefenseIssuedOrder(assignment.defender(), post(assignment.post()), Optional.empty()));
         }
         for (DefenderOrder order : plan.orders()) {
@@ -48,12 +47,15 @@ public final class DefenseDirectives {
             }
             UUID ally = order.handOff().get();
             DefenderOrder allyOrder = byDefender.get(ally);
-            if (allyOrder == null || allyOrder.defender().equals(order.defender())
+            if (allyOrder == null
+                    || allyOrder.defender().equals(order.defender())
                     || allyOrder.target().isPresent()) {
                 continue;
             }
-            issued.put(ally, new DefenseIssuedOrder(ally, attack(),
-                    Optional.of(order.target().get().id())));
+            issued.put(
+                    ally,
+                    new DefenseIssuedOrder(
+                            ally, attack(), Optional.of(order.target().get().id())));
         }
         return Map.copyOf(issued);
     }
@@ -73,8 +75,8 @@ public final class DefenseDirectives {
     }
 
     private static CombatDirective post(Point post) {
-        return new CombatDirective(CombatMode.GUARD_AREA, Optional.empty(), Optional.of(RetreatMethod.HOME),
-                Optional.of(post));
+        return new CombatDirective(
+                CombatMode.GUARD_AREA, Optional.empty(), Optional.of(RetreatMethod.HOME), Optional.of(post));
     }
 
     private static CombatDirective retreat(DefensePlan plan) {
@@ -82,9 +84,11 @@ public final class DefenseDirectives {
     }
 
     private static CombatDirective attack() {
-        return new CombatDirective(CombatMode.AGGRESSIVE,
+        return new CombatDirective(
+                CombatMode.AGGRESSIVE,
                 Optional.of(new TargetSelector.Target(TargetSelector.Kind.HOSTILE, Optional.empty())),
-                Optional.empty(), Optional.empty());
+                Optional.empty(),
+                Optional.empty());
     }
 
     private static Point postFor(DefenderOrder order, DefensePlan plan) {

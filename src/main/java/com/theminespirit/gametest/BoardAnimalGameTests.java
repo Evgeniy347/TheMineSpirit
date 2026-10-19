@@ -40,11 +40,10 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @SettlementSystems(board = true)
 public final class BoardAnimalGameTests {
     private static final String BATCH = "board_animal";
-    private static final Set<BoardCase> LIFECYCLE = EnumSet.of(BoardCase.CAPTURE_ANIMAL,
-            BoardCase.BUILD_PEN, BoardCase.LURE_ANIMAL, BoardCase.DISMANTLE_SHELTER);
+    private static final Set<BoardCase> LIFECYCLE = EnumSet.of(
+            BoardCase.CAPTURE_ANIMAL, BoardCase.BUILD_PEN, BoardCase.LURE_ANIMAL, BoardCase.DISMANTLE_SHELTER);
 
-    private BoardAnimalGameTests() {
-    }
+    private BoardAnimalGameTests() {}
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
@@ -71,49 +70,54 @@ public final class BoardAnimalGameTests {
         drainLifecycle(board, spirit.getUUID(), now);
         HerdWatch.tick(level, board, List.of(spirit), now);
         long captures = activeCount(board, BoardCase.CAPTURE_ANIMAL);
-        helper.assertTrue(captures >= 1,
-                "Живое животное рядом с базой обязано поднять CAPTURE_ANIMAL, активных "
-                        + captures + ": источник «животное найдено» молчит");
+        helper.assertTrue(
+                captures >= 1,
+                "Живое животное рядом с базой обязано поднять CAPTURE_ANIMAL, активных " + captures
+                        + ": источник «животное найдено» молчит");
         HerdWatch.tick(level, board, List.of(spirit), now);
-        helper.assertTrue(activeCount(board, BoardCase.CAPTURE_ANIMAL) == captures,
+        helper.assertTrue(
+                activeCount(board, BoardCase.CAPTURE_ANIMAL) == captures,
                 "Повторный обзор при живом цикле не плодит второй отлов: было " + captures);
         String captureId = firstCaptureId(board);
-        helper.assertTrue(captureId != null,
-                "Задание отлова обязано найтись на доске: иначе нечего вести по циклу");
+        helper.assertTrue(captureId != null, "Задание отлова обязано найтись на доске: иначе нечего вести по циклу");
         closeTicket(board, captureId, spirit.getUUID(), now);
         board.completeCapture(captureId);
-        helper.assertTrue(activeCount(board, BoardCase.BUILD_PEN) == 1,
+        helper.assertTrue(
+                activeCount(board, BoardCase.BUILD_PEN) == 1,
                 "Отлов завершён — на доске ровно один BUILD_PEN: цикл «отлов → загон» идёт по порядку");
 
         closeTicket(board, "sheep_pen", spirit.getUUID(), now);
         board.completePen("sheep_pen");
         BoardTicket lure = findTicket(board, BoardCase.LURE_ANIMAL);
-        helper.assertTrue(lure != null,
-                "Загон построен — на доске LURE_ANIMAL: третье звено цикла");
-        helper.assertTrue(Map.of("wheat", 1).equals(lure.requiredItems()),
+        helper.assertTrue(lure != null, "Загон построен — на доске LURE_ANIMAL: третье звено цикла");
+        helper.assertTrue(
+                Map.of("wheat", 1).equals(lure.requiredItems()),
                 "Гейт «приманить» — одна пшеница, фактически " + lure.requiredItems()
                         + ": без приманки дух ушёл бы в пустой загон");
-        helper.assertTrue(board.board().claimable(new StockView(Map.of()), now).stream()
+        helper.assertTrue(
+                board.board().claimable(new StockView(Map.of()), now).stream()
                         .noneMatch(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL),
                 "Без приманки «приманить» не выдаётся: гейт держит задание в очереди");
-        helper.assertTrue(board.board().statusOf("sheep_lure").orElse(null)
-                        == BoardStatus.WAITING_RESOURCES,
+        helper.assertTrue(
+                board.board().statusOf("sheep_lure").orElse(null) == BoardStatus.WAITING_RESOURCES,
                 "Наблюдатель видит «приманить» как WAITING_RESOURCES, статус "
                         + board.board().statusOf("sheep_lure").orElse(null));
-        helper.assertTrue(board.board().claimable(new StockView(Map.of("wheat", 1)), now).stream()
+        helper.assertTrue(
+                board.board().claimable(new StockView(Map.of("wheat", 1)), now).stream()
                         .anyMatch(ticket -> ticket.boardCase() == BoardCase.LURE_ANIMAL),
                 "С пшеницей в запасах «приманить» выдаётся: доска сама снимает гейт");
 
         board.completeLure(Species.SHEEP);
-        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 0,
+        helper.assertTrue(
+                activeCount(board, BoardCase.DISMANTLE_SHELTER) == 0,
                 "Животное в загоне — разбирать нечего: отлов приманкой не ставит укрытия (упрощение 44.4)");
         board.notifyAnimalDied(Species.SHEEP);
-        helper.assertTrue(board.board().statusOf("sheep_lure").orElse(null)
-                        == BoardStatus.CANCELLED,
+        helper.assertTrue(
+                board.board().statusOf("sheep_lure").orElse(null) == BoardStatus.CANCELLED,
                 "Гибель снимает «приманить», статус "
                         + board.board().statusOf("sheep_lure").orElse(null));
-        helper.assertTrue(activeCount(board, BoardCase.DISMANTLE_SHELTER) == 0,
-                "После гибели разбирать нечего: укрытия нет");
+        helper.assertTrue(
+                activeCount(board, BoardCase.DISMANTLE_SHELTER) == 0, "После гибели разбирать нечего: укрытия нет");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -121,7 +125,8 @@ public final class BoardAnimalGameTests {
     private static long activeCount(BoardService service, BoardCase boardCase) {
         return service.board().all().stream()
                 .filter(ticket -> ticket.boardCase() == boardCase)
-                .filter(ticket -> service.board().statusOf(ticket.id())
+                .filter(ticket -> service.board()
+                        .statusOf(ticket.id())
                         .map(status -> status == BoardStatus.PENDING
                                 || status == BoardStatus.WAITING_RESOURCES
                                 || status == BoardStatus.ASSIGNED)
@@ -132,8 +137,7 @@ public final class BoardAnimalGameTests {
     private static String firstCaptureId(BoardService service) {
         String pending = service.board().all().stream()
                 .filter(ticket -> ticket.boardCase() == BoardCase.CAPTURE_ANIMAL)
-                .filter(ticket -> service.board().statusOf(ticket.id()).orElse(null)
-                        == BoardStatus.PENDING)
+                .filter(ticket -> service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.PENDING)
                 .map(BoardTicket::id)
                 .findFirst()
                 .orElse(null);

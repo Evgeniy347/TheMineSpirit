@@ -44,7 +44,8 @@ public final class PlacedBlocksData extends SavedData {
     }
 
     public static PlacedBlocksData load(CompoundTag tag, HolderLookup.Provider registries) {
-        return new PlacedBlocksData(PlacedBlockCodec.decode(readEntries(tag, CHUNKS)),
+        return new PlacedBlocksData(
+                PlacedBlockCodec.decode(readEntries(tag, CHUNKS)),
                 PlacedBlockCodec.decode(readEntries(tag, SPIRIT_CHUNKS)));
     }
 
@@ -60,7 +61,10 @@ public final class PlacedBlocksData extends SavedData {
         ListTag chunks = tag.getList(key, Tag.TAG_COMPOUND);
         for (int i = 0; i < chunks.size(); i++) {
             CompoundTag chunk = chunks.getCompound(i);
-            entries.add(new PlacedBlockCodec.ChunkEntry(chunk.getInt(CHUNK_X), chunk.getInt(CHUNK_Z), chunk.getBoolean(OVERFLOWED),
+            entries.add(new PlacedBlockCodec.ChunkEntry(
+                    chunk.getInt(CHUNK_X),
+                    chunk.getInt(CHUNK_Z),
+                    chunk.getBoolean(OVERFLOWED),
                     chunk.getLongArray(POSITIONS)));
         }
         return entries;
@@ -110,7 +114,6 @@ public final class PlacedBlocksData extends SavedData {
     public boolean isSpiritMarked(BlockPos pos) {
         return spiritSet.contains(toCoord(pos));
     }
-
 
     public int size() {
         return set.size();

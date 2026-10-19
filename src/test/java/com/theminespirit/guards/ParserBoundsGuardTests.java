@@ -3,9 +3,9 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 class ParserBoundsGuardTests {
     private static final Path TACTICS = SourceFiles.MAIN.resolve("com/theminespirit/core/tactics");
-    private static final List<String> PARSERS = List.of("FactorScalesParser.java", "EnemyProfilesParser.java",
-            "ModesParser.java", "WeightsParser.java");
+    private static final List<String> PARSERS =
+            List.of("FactorScalesParser.java", "EnemyProfilesParser.java", "ModesParser.java", "WeightsParser.java");
     private static final Pattern BOUNDED_READ = Pattern.compile("\\.(?:number|integer)\\(\\s*[^)\\s][^)]*\\)");
 
     private static List<String> boundedReads(String file, String text) {
@@ -34,7 +34,9 @@ class ParserBoundsGuardTests {
             offenders.addAll(boundedReads(parser, Files.readString(TACTICS.resolve(parser))));
         }
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Парсер задаёт границы числа сам, а конструктор записи проверяет их тоже: правка одного места оставит "
                         + "другое старым (docs/CONVENTIONS.md: одно правило — одно место). Читай число без аргументов "
                         + "(number()/integer()), границы держит FactChecks.range в конструкторе, а ConfigNode.build "
@@ -43,15 +45,21 @@ class ParserBoundsGuardTests {
 
     @Test
     void boundedReadPattern_NumberWithBounds_IsDetected() {
-        assertEquals(1, boundedReads("X.java", "return node.get(\"a\").number(0, 1);").size(),
+        assertEquals(
+                1,
+                boundedReads("X.java", "return node.get(\"a\").number(0, 1);").size(),
                 "Сторож ослеп: чтение числа с границами number(0, 1) должно находиться");
-        assertEquals(1, boundedReads("X.java", "return node.get(\"a\").integer(0, MAX);").size(),
+        assertEquals(
+                1,
+                boundedReads("X.java", "return node.get(\"a\").integer(0, MAX);")
+                        .size(),
                 "Сторож ослеп: чтение целого с границами из константы должно находиться");
     }
 
     @Test
     void boundedReadPattern_ReadWithoutBounds_IsIgnored() {
-        assertTrue(boundedReads("X.java", "return node.get(\"a\").number();").isEmpty(),
+        assertTrue(
+                boundedReads("X.java", "return node.get(\"a\").number();").isEmpty(),
                 "Сторож ложно срабатывает: чтение числа без границ — как раз то, что нужно");
     }
 }

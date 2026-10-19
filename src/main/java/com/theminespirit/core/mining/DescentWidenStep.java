@@ -4,8 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;
 
-public record DescentWidenStep(int index, int floor, int width, int height, BlockCoord stand,
-        List<BlockCoord> cells) {
+public record DescentWidenStep(int index, int floor, int width, int height, BlockCoord stand, List<BlockCoord> cells) {
     public DescentWidenStep {
         if (index < 0) {
             throw new IllegalArgumentException("Номер шага " + index + " отрицательный: шаги считаются от нуля");
@@ -24,8 +23,8 @@ public record DescentWidenStep(int index, int floor, int width, int height, Bloc
                     + ": пол — ровно блок под ногами духа");
         }
         if (cells.size() != width * height) {
-            throw new IllegalArgumentException("Клеток расширения шага " + index + " — " + cells.size()
-                    + " вместо " + (width * height) + ": проход шириной " + width + " и высотой " + height);
+            throw new IllegalArgumentException("Клеток расширения шага " + index + " — " + cells.size() + " вместо "
+                    + (width * height) + ": проход шириной " + width + " и высотой " + height);
         }
         for (BlockCoord cell : cells) {
             if (cell.y() <= floor || cell.y() > floor + height) {

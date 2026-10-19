@@ -14,8 +14,8 @@ public record BuildData(SpiritReach reach, int placeIntervalTicks) {
 
     public BuildData {
         if (placeIntervalTicks < 1) {
-            throw new IllegalArgumentException("placeIntervalTicks = " + placeIntervalTicks
-                    + ": между постановками хотя бы 1 тик");
+            throw new IllegalArgumentException(
+                    "placeIntervalTicks = " + placeIntervalTicks + ": между постановками хотя бы 1 тик");
         }
     }
 
@@ -27,8 +27,8 @@ public record BuildData(SpiritReach reach, int placeIntervalTicks) {
                     JsonResource.integer(root.get("reachHorizontal"), origin, "reachHorizontal"),
                     JsonResource.integer(root.get("reachUp"), origin, "reachUp"),
                     JsonResource.integer(root.get("reachDown"), origin, "reachDown"));
-            return new BuildData(reach, JsonResource.integer(root.get("placeIntervalTicks"), origin,
-                    "placeIntervalTicks"));
+            return new BuildData(
+                    reach, JsonResource.integer(root.get("placeIntervalTicks"), origin, "placeIntervalTicks"));
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }

@@ -5,8 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class WaterCrossingPlanner {
-    private WaterCrossingPlanner() {
-    }
+    private WaterCrossingPlanner() {}
 
     public static Optional<String> cheapestAvailable(Map<String, Integer> countByBlock) {
         Objects.requireNonNull(countByBlock, "Наличие блоков не может быть null: без него мост не из чего строить");

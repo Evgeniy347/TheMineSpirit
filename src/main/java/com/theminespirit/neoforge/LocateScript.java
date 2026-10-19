@@ -58,7 +58,8 @@ public final class LocateScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return published == null ? Optional.empty()
+        return published == null
+                ? Optional.empty()
                 : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 
@@ -75,7 +76,9 @@ public final class LocateScript implements ScriptInstance {
             return ScriptStatus.FAILED;
         }
         String blockId = BuiltInRegistries.BLOCK
-                .getKey(chunk.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).getBlock()).toString();
+                .getKey(chunk.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z()))
+                        .getBlock())
+                .toString();
         published = Finding.located(query.type(), blockId, pos, origin);
         spirit.updateFinding(published);
         return ScriptStatus.SUCCEEDED;
@@ -86,12 +89,14 @@ public final class LocateScript implements ScriptInstance {
         return switch (query.type()) {
             case BLOCK -> new BlockLocateSource(spirit.level(), center, radius, BlockSets.resolve(query.filter()));
             case TREE -> new TreeLocateSource(spirit.level(), center, radius, BlockSets.resolve(logFilter(query)));
-            case CONTAINER -> new ContainerLocateSource(spirit,
-                    new BlockCoord(center.getX(), center.getY(), center.getZ()), query.radius());
+            case CONTAINER ->
+                new ContainerLocateSource(
+                        spirit, new BlockCoord(center.getX(), center.getY(), center.getZ()), query.radius());
         };
     }
 
     private static IdFilter logFilter(LocateQuery query) {
-        return IdFilter.of(LocateParams.speciesOf(query).stream().map(TreeSpecies::logId).toList());
+        return IdFilter.of(
+                LocateParams.speciesOf(query).stream().map(TreeSpecies::logId).toList());
     }
 }

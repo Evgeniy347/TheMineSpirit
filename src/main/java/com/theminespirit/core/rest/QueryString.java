@@ -6,8 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class QueryString {
-    private QueryString() {
-    }
+    private QueryString() {}
 
     public static Map<String, String> parse(String raw) {
         Map<String, String> query = new LinkedHashMap<>();
@@ -30,10 +29,12 @@ public final class QueryString {
         try {
             return URLDecoder.decode(part, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Параметры запроса '" + raw + "' не разобраны: неверная процентная запись в '" + part
                             + "'. Проверьте кодирование символов %XX",
-                    Map.of("query", raw), e);
+                    Map.of("query", raw),
+                    e);
         }
     }
 }

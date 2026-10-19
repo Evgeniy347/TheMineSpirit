@@ -10,7 +10,8 @@ public record Modes(Map<CombatMode, ModeParams> params, double returnTolerance) 
         copy.putAll(params);
         for (CombatMode mode : CombatMode.values()) {
             if (!copy.containsKey(mode)) {
-                throw new IllegalArgumentException("Modes.params: нет режима " + mode.id() + ": опишите все режимы боя");
+                throw new IllegalArgumentException(
+                        "Modes.params: нет режима " + mode.id() + ": опишите все режимы боя");
             }
         }
         params = Map.copyOf(copy);

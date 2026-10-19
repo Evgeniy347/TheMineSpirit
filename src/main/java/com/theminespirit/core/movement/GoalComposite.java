@@ -9,8 +9,8 @@ public record GoalComposite(List<Goal> anyOf) implements Goal {
         Objects.requireNonNull(anyOf, "Список целей не может быть null: без него неизвестно, что считать достижением");
         anyOf = List.copyOf(anyOf);
         if (anyOf.isEmpty()) {
-            throw new IllegalArgumentException("Список целей пуст: составная цель без вложенных недостижима, "
-                    + "дух встанет до первого шага");
+            throw new IllegalArgumentException(
+                    "Список целей пуст: составная цель без вложенных недостижима, " + "дух встанет до первого шага");
         }
     }
 

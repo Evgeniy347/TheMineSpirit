@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, List<Cell> air) {
-    public record Cell(int dx, int dy, int dz) {
-    }
+    public record Cell(int dx, int dy, int dz) {}
 
     public record Entry(int dx, int dy, int dz, String block, Map<String, String> state, String text) {
         public Entry(int dx, int dy, int dz, String block) {
@@ -36,8 +35,11 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, Lis
     }
 
     public Schematic {
-        Objects.requireNonNull(blocks, "Список блоков схемы не может быть null: пустую схему задают пустым списком только через парсер с ошибкой");
-        Objects.requireNonNull(air, "Список клеток воздуха не может быть null: схему без обязательного воздуха задают пустым списком");
+        Objects.requireNonNull(
+                blocks,
+                "Список блоков схемы не может быть null: пустую схему задают пустым списком только через парсер с ошибкой");
+        Objects.requireNonNull(
+                air, "Список клеток воздуха не может быть null: схему без обязательного воздуха задают пустым списком");
         blocks = List.copyOf(blocks);
         air = List.copyOf(air);
     }
@@ -69,7 +71,9 @@ public record Schematic(int sizeX, int sizeY, int sizeZ, List<Entry> blocks, Lis
             BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
             placed.add(new PlacedEntry(
                     new BlockCoord(origin.x() + cell.x(), origin.y() + entry.dy(), origin.z() + cell.z()),
-                    entry.block(), entry.state(), entry.text()));
+                    entry.block(),
+                    entry.state(),
+                    entry.text()));
         }
         placed.sort(Comparator.comparingInt((PlacedEntry e) -> e.pos().y())
                 .thenComparingInt(e -> placementRank(e.block()))

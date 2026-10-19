@@ -12,8 +12,8 @@ public final class CachedSafetyView implements SafetyView {
     private final Map<BlockCoord, Cell> cache = new HashMap<>();
 
     public CachedSafetyView(SafetyView delegate) {
-        this.delegate = Objects.requireNonNull(delegate,
-                "SafetyView не может быть null: без него кэш не знает, что читать");
+        this.delegate =
+                Objects.requireNonNull(delegate, "SafetyView не может быть null: без него кэш не знает, что читать");
     }
 
     @Override

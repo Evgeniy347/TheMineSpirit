@@ -38,20 +38,24 @@ class TaskSnapshotScaleTests {
         }
 
         EngineCounters.reset();
-        TaskSnapshot snapshot = runner.snapshot().orElseThrow(() -> new AssertionError(
-                "работающая задача на пределе обязана отдавать снимок"));
+        TaskSnapshot snapshot = runner.snapshot()
+                .orElseThrow(() -> new AssertionError("работающая задача на пределе обязана отдавать снимок"));
         String json = TaskSnapshotCodec.encode(snapshot);
         int bytes = json.getBytes(StandardCharsets.UTF_8).length;
-        assertTrue(bytes <= LIMIT_BYTES, "JSON снимка " + bytes + " байт превышает предел " + LIMIT_BYTES
-                + ": снимок хранят в NBT сущности и большие значения его раздувают");
-        assertTrue(EngineCounters.snapshotVisits <= 2L * LIMIT_NODES,
+        assertTrue(
+                bytes <= LIMIT_BYTES,
+                "JSON снимка " + bytes + " байт превышает предел " + LIMIT_BYTES
+                        + ": снимок хранят в NBT сущности и большие значения его раздувают");
+        assertTrue(
+                EngineCounters.snapshotVisits <= 2L * LIMIT_NODES,
                 "обход снимка посетил " + EngineCounters.snapshotVisits + " исполнителей: каждый узел обязан "
                         + "посещаться не более двух раз, иначе снимок квадратичен по числу узлов");
 
         EngineCounters.reset();
         TaskRunner restored = TaskRunner.restore(TaskSnapshotCodec.decode(json), scripts, conditions);
         assertEquals(RunStatus.RUNNING, restored.status(), "восстановленная задача на пределе остаётся RUNNING");
-        assertTrue(EngineCounters.executorCreations <= 2L * LIMIT_NODES,
+        assertTrue(
+                EngineCounters.executorCreations <= 2L * LIMIT_NODES,
                 "восстановление создало " + EngineCounters.executorCreations + " исполнителей: каждый узел "
                         + "обязан создаваться не более двух раз");
     }
@@ -76,8 +80,10 @@ class TaskSnapshotScaleTests {
             case FallbackNode fallback -> 1 + nodeSum(fallback.steps());
             case ParallelNode parallel -> 1 + nodeSum(parallel.steps());
             case RepeatNode repeat -> 1 + countNodes(repeat.step());
-            case ConditionNode condition -> 1 + countNodes(condition.thenStep())
-                    + (condition.elseStep() == null ? 0 : countNodes(condition.elseStep()));
+            case ConditionNode condition ->
+                1
+                        + countNodes(condition.thenStep())
+                        + (condition.elseStep() == null ? 0 : countNodes(condition.elseStep()));
         };
     }
 

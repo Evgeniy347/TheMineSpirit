@@ -18,15 +18,24 @@ class FreeInventoryDemandTests {
 
     @Test
     void demand_EmptyInventory_IsZero() {
-        assertEquals(0.0, FreeInventoryDemand.demand(InventoryFill.EMPTY, InventoryNormTable.load()), 1e-9,
+        assertEquals(
+                0.0,
+                FreeInventoryDemand.demand(InventoryFill.EMPTY, InventoryNormTable.load()),
+                1e-9,
                 "Пустой инвентарь не создаёт спроса: иначе дух бросает работу ради пустой разгрузки");
     }
 
     @Test
     void demand_PartlyFilled_AddsBothCurves() {
-        assertEquals(0.5, FreeInventoryDemand.demand(0.25, 0.0, TABLE), 1e-9,
+        assertEquals(
+                0.5,
+                FreeInventoryDemand.demand(0.25, 0.0, TABLE),
+                1e-9,
                 "Половина пути по кривой занятости (0..1 на 0..0.5) даёт 0.5");
-        assertEquals(3.0, FreeInventoryDemand.demand(0.25, 0.5, TABLE), 1e-9,
+        assertEquals(
+                3.0,
+                FreeInventoryDemand.demand(0.25, 0.5, TABLE),
+                1e-9,
                 "Спрос — сумма кривой занятости и кривой лишнего, а не максимум");
     }
 
@@ -34,16 +43,23 @@ class FreeInventoryDemandTests {
     void demand_FullInventory_ClampsToMax() {
         InventoryFill full = new InventoryFill(36, 36, 200, 200);
 
-        assertEquals(IntellectTuning.loadDefault().maxDemand(), FreeInventoryDemand.demand(full, TABLE), 1e-9,
+        assertEquals(
+                IntellectTuning.loadDefault().maxDemand(),
+                FreeInventoryDemand.demand(full, TABLE),
+                1e-9,
                 "Полный забитый лишним инвентарь упирается в потолок шкалы: иначе распределение сравнивает "
                         + "значения выше MAX_DEMAND");
     }
 
     @Test
     void demand_FractionOutsideRange_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> FreeInventoryDemand.demand(1.2, 0, TABLE),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> FreeInventoryDemand.demand(1.2, 0, TABLE),
                 "Доля вне 0..1 недопустима: кривую не с чем сравнивать");
-        assertThrows(IllegalArgumentException.class, () -> FreeInventoryDemand.demand(0, Double.NaN, TABLE),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> FreeInventoryDemand.demand(0, Double.NaN, TABLE),
                 "NaN-доля ломает интерполяцию: спрос обязан быть числом");
     }
 
@@ -53,7 +69,8 @@ class FreeInventoryDemandTests {
         for (int occupied = 0; occupied <= 36; occupied++) {
             InventoryFill fill = new InventoryFill(occupied, 36, 0, occupied);
             double demand = FreeInventoryDemand.demand(fill, TABLE);
-            assertTrue(demand >= previous - 1e-9,
+            assertTrue(
+                    demand >= previous - 1e-9,
                     "Спрос не падает с ростом занятости: было " + previous + ", стало " + demand);
             previous = demand;
         }

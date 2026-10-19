@@ -8,11 +8,14 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class BreedPlanner {
-    private BreedPlanner() {
-    }
+    private BreedPlanner() {}
 
-    public static Outcome next(List<AnimalRef> herd, BlockCoord spiritPos, Species species,
-            Map<String, Integer> inventory, boolean keepBabies) {
+    public static Outcome next(
+            List<AnimalRef> herd,
+            BlockCoord spiritPos,
+            Species species,
+            Map<String, Integer> inventory,
+            boolean keepBabies) {
         Objects.requireNonNull(herd, "Снимок стада не может быть null: пустое стадо задают пустым списком");
         Objects.requireNonNull(spiritPos, "Точка духа не может быть null: по ней выбирается ближайшая пара");
         Objects.requireNonNull(species, "Вид не может быть null: пару сводят внутри одного вида");
@@ -64,8 +67,7 @@ public final class BreedPlanner {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    public sealed interface Outcome permits Feed, NeedsMoreFeed, NothingToDo {
-    }
+    public sealed interface Outcome permits Feed, NeedsMoreFeed, NothingToDo {}
 
     public record Feed(String targetId, String partnerId) implements Outcome {
         public Feed {

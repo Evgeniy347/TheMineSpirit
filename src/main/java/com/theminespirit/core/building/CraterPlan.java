@@ -14,12 +14,12 @@ import java.util.Objects;
  * защищённые (чужие) клетки план пропускает: их не засыпают.
  */
 public final class CraterPlan {
-    private CraterPlan() {
-    }
+    private CraterPlan() {}
 
     public record Plan(List<BlockCoord> cells, int blockCount) {
         public Plan {
-            cells = List.copyOf(Objects.requireNonNull(cells, "cells не может быть null: пустой план задают пустым списком"));
+            cells = List.copyOf(
+                    Objects.requireNonNull(cells, "cells не может быть null: пустой план задают пустым списком"));
             if (blockCount != cells.size()) {
                 throw new IllegalArgumentException("blockCount " + blockCount + " не равен числу клеток " + cells.size()
                         + ": расход блоков обязан совпадать с планом");
@@ -40,7 +40,9 @@ public final class CraterPlan {
                 collectColumn(surface, center.x() + dx, center.z() + dz, cells);
             }
         }
-        cells.sort(Comparator.comparingInt(BlockCoord::y).thenComparingInt(BlockCoord::x).thenComparingInt(BlockCoord::z));
+        cells.sort(Comparator.comparingInt(BlockCoord::y)
+                .thenComparingInt(BlockCoord::x)
+                .thenComparingInt(BlockCoord::z));
         return new Plan(cells, cells.size());
     }
 

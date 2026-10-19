@@ -27,7 +27,8 @@ public final class RecipeIndex {
         for (RecipeSpec recipe : recipes) {
             steps++;
             Map<String, List<RecipeSpec>> target = recipe.kind() == RecipeKind.SMELTING ? smelts : crafts;
-            target.computeIfAbsent(recipe.outputItem(), key -> new ArrayList<>(1)).add(recipe);
+            target.computeIfAbsent(recipe.outputItem(), key -> new ArrayList<>(1))
+                    .add(recipe);
         }
         return new RecipeIndex(crafts, smelts, steps);
     }

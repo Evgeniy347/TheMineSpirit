@@ -19,7 +19,9 @@ class StandChoiceTests {
 
         Optional<BlockCoord> stand = StandChoice.choose(TARGET, SPIRIT, world);
 
-        assertEquals(Optional.of(new BlockCoord(3, 1, 0)), stand,
+        assertEquals(
+                Optional.of(new BlockCoord(3, 1, 0)),
+                stand,
                 "На ровной земле лучшая стоянка — (3, 1, 0): ближайшая к духу из достижимых от цели, "
                         + "иначе дух идёт к дальней стоянке вместо ближней");
     }
@@ -30,7 +32,9 @@ class StandChoiceTests {
 
         Optional<BlockCoord> stand = StandChoice.choose(TARGET, SPIRIT, world);
 
-        assertEquals(Optional.of(new BlockCoord(3, 1, -1)), stand,
+        assertEquals(
+                Optional.of(new BlockCoord(3, 1, -1)),
+                stand,
                 "Стоянка (3, 1, 0) рядом с лавой обязана отвергаться кольцом безопасности: дух иначе "
                         + "встанет у лавы и сгорит; следующая дешёвая — (3, 1, -1)");
     }
@@ -46,7 +50,9 @@ class StandChoiceTests {
             }
         }
 
-        assertEquals(Optional.empty(), StandChoice.choose(TARGET, SPIRIT, world),
+        assertEquals(
+                Optional.empty(),
+                StandChoice.choose(TARGET, SPIRIT, world),
                 "Замурованная цель не даёт стоянок: духу подойти некуда, скрипт обязан вернуть FAILED, "
                         + "а не вести духа в стену");
     }
@@ -55,12 +61,16 @@ class StandChoiceTests {
     void candidates_TargetColumn_ExcludedAndLevelsMatch() {
         List<BlockCoord> candidates = StandChoice.candidates(TARGET);
 
-        assertEquals(96, candidates.size(),
+        assertEquals(
+                96,
+                candidates.size(),
                 "Кандидатов обязано быть 96 = 2 уровня × (7 × 7 − столбец цели): иначе часть стоянок "
                         + "не рассматривается и дух пропускает ближний подход");
-        assertTrue(candidates.stream().noneMatch(c -> c.x() == 0 && c.z() == 0),
+        assertTrue(
+                candidates.stream().noneMatch(c -> c.x() == 0 && c.z() == 0),
                 "Столбец цели исключён из кандидатов: стоянка внутри цели невозможна");
-        assertTrue(candidates.stream().allMatch(c -> c.y() == 1 || c.y() == 2),
+        assertTrue(
+                candidates.stream().allMatch(c -> c.y() == 1 || c.y() == 2),
                 "Кандидаты — только на уровнях ног y+1 и y+2: иначе дух пытается встать внутрь цели или в небо");
     }
 
@@ -70,28 +80,35 @@ class StandChoiceTests {
 
         StandChoice.choose(TARGET, SPIRIT, world);
 
-        assertTrue(world.reads() <= 19 * StandChoice.candidates(TARGET).size(),
+        assertTrue(
+                world.reads() <= 19 * StandChoice.candidates(TARGET).size(),
                 "Выбор стоянки читает не более 19 клеток на кандидата (ноги, голова, пол и два кольца по 8): "
                         + "иначе планирование цели кладёт серверный тик. Чтений: " + world.reads());
     }
 
     @Test
     void eyeHeight_ValueCheck_EqualsEyeLevel() {
-        assertEquals(1.62, StandChoice.EYE_HEIGHT,
+        assertEquals(
+                1.62,
+                StandChoice.EYE_HEIGHT,
                 "Высота глаз духа — 1.62: от неё считается досягаемость цели, неверная высота либо "
                         + "отвергнет близкую цель, либо примет недостижимую");
     }
 
     @Test
     void reachDistance_ValueCheck_EqualsBreakReach() {
-        assertEquals(4.5, StandChoice.REACH_DISTANCE,
+        assertEquals(
+                4.5,
+                StandChoice.REACH_DISTANCE,
                 "Досягаемость стоянки — 4.5 от глаз до центра цели: как досягаемость ломки, иначе дух "
                         + "встанет там, откуда цель не достать");
     }
 
     @Test
     void horizontalSpread_ValueCheck_EqualsThree() {
-        assertEquals(3, StandChoice.HORIZONTAL_SPREAD,
+        assertEquals(
+                3,
+                StandChoice.HORIZONTAL_SPREAD,
                 "Разлёт кандидатов — 3 клетки по горизонтали: шире — лишние чтения безопасности, "
                         + "уже — пропущенные ближние стоянки");
     }

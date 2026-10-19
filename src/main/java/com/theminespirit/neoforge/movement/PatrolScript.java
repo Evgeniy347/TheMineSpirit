@@ -119,8 +119,8 @@ public final class PatrolScript implements ScriptInstance {
             BlockCoord point = plan.points().get(index);
             String refusal = skipped.contains(index) ? "пропущена" : TravelCheck.refusal(spirit, point);
             if (refusal == null) {
-                approach.begin(new Vec3(point.x() + 0.5, point.y(), point.z() + 0.5),
-                        CatalogLimits.NAV_ARRIVAL_TOLERANCE);
+                approach.begin(
+                        new Vec3(point.x() + 0.5, point.y(), point.z() + 0.5), CatalogLimits.NAV_ARRIVAL_TOLERANCE);
                 walking = true;
                 return null;
             }

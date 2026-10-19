@@ -115,8 +115,7 @@ public final class FarmTargets implements HarvestTargets {
                 continue;
             }
             BlockPos base = pos;
-            if (groundShift == 1 && kind.isPresent()
-                    && kind.get().harvestMethod() == HarvestMethod.BREAK_COLUMN) {
+            if (groundShift == 1 && kind.isPresent() && kind.get().harvestMethod() == HarvestMethod.BREAK_COLUMN) {
                 while (true) {
                     BlockPos below = base.below();
                     Optional<CropKind> belowKind = CropKind.ofBlock(idOf(level.getBlockState(below)));

@@ -31,12 +31,12 @@ public final class CraterProfiles {
 
     public CraterProfiles(int capacity, int maxCells) {
         if (capacity < 1) {
-            throw new IllegalArgumentException("Ёмкость кольца воронок " + capacity
-                    + " меньше 1: кольцо без памяти не проверяет актуальность");
+            throw new IllegalArgumentException(
+                    "Ёмкость кольца воронок " + capacity + " меньше 1: кольцо без памяти не проверяет актуальность");
         }
         if (maxCells < 1) {
-            throw new IllegalArgumentException("Предел клеток профиля " + maxCells
-                    + " меньше 1: пустой профиль считался бы засыпанным");
+            throw new IllegalArgumentException(
+                    "Предел клеток профиля " + maxCells + " меньше 1: пустой профиль считался бы засыпанным");
         }
         this.capacity = capacity;
         this.maxCells = maxCells;

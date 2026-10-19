@@ -44,7 +44,9 @@ class TestHygieneGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Тест помечен @Disabled: он не защищает поведение, о поломке узнают из игры, а не из прогона. "
                         + "Отключённый тест прячет регрессию и гниёт молча. Как надо: починить тест или удалить его — "
                         + "если поведение больше не нужно. Правило: docs/TESTING.md → «Сторожа». Нарушители");
@@ -60,7 +62,9 @@ class TestHygieneGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Тест лезет рефлексией в private (setAccessible(true) или getDeclaredField/Method/Constructor): "
                         + "проверяется не контракт, а внутренняя деталь, которая ломает тест при любом рефакторинге. "
                         + "Как надо: проверяй публичное поведение; если private нельзя проверить иначе — вынеси логику "
@@ -71,7 +75,9 @@ class TestHygieneGuardTests {
     void testSources_Scanned_HaveNoMutableStaticState() {
         List<String> offenders = mutableStaticOffenders(testSources());
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "В тестах изменяемое static-состояние: прогон тестов становится зависимым от порядка, а параллельные "
                         + "тесты затирают данные друг друга. Как надо: поле — локальная переменная, поле экземпляра "
                         + "или @BeforeEach; неизменяемые константы — static final с Map.of/List.of/Set.of. "
@@ -82,8 +88,7 @@ class TestHygieneGuardTests {
     void disabledPattern_AnnotatedTest_IsReported() {
         String sample = "class Sample {\n    @Disabled\n    @Test\n    void x() {\n    }\n}\n";
 
-        assertEquals(List.of(2), disabledLines(sample),
-                "Сторож ослеп: @Disabled на тесте должен находиться");
+        assertEquals(List.of(2), disabledLines(sample), "Сторож ослеп: @Disabled на тесте должен находиться");
     }
 
     @Test
@@ -92,7 +97,9 @@ class TestHygieneGuardTests {
                 + "f.setAccessible(true);\n"
                 + "Method m = clazz.getDeclaredMethod(\"y\");\n";
 
-        assertEquals(3, reflectionCount(sample),
+        assertEquals(
+                3,
+                reflectionCount(sample),
                 "Сторож ослеп: рефлексия к private (setAccessible, getDeclaredField/Method) должна находиться");
     }
 
@@ -100,7 +107,9 @@ class TestHygieneGuardTests {
     void mutableStaticField_PlainDeclaration_IsReported() {
         String sample = "class Sample {\n    private static int counter;\n}\n";
 
-        assertEquals(List.of("counter"), staticFieldNames(sample),
+        assertEquals(
+                List.of("counter"),
+                staticFieldNames(sample),
                 "Сторож ослеп: неизменяемое static-поле без final должно попадать в нарушители");
     }
 
@@ -111,7 +120,9 @@ class TestHygieneGuardTests {
                 + "    static final List<String> order = new ArrayList<>();\n"
                 + "}\n";
 
-        assertEquals(List.of("seen", "order"), staticFieldNames(sample),
+        assertEquals(
+                List.of("seen", "order"),
+                staticFieldNames(sample),
                 "Сторож ослеп: static final-коллекция, наполняемая через new HashMap/new ArrayList, изменяема");
     }
 
@@ -129,7 +140,9 @@ class TestHygieneGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), staticFieldNames(sample),
+        assertEquals(
+                List.of(),
+                staticFieldNames(sample),
                 "Сторож ложно срабатывает: неизменяемые константы (Map.of/List.of, статический конструктор), "
                         + "static-метод и static-блок — не изменяемое состояние");
     }
@@ -139,9 +152,13 @@ class TestHygieneGuardTests {
         Map<Path, String> sources = Map.of(Path.of("Sample.java"), "class Sample {\n    void run() {\n    }\n}\n");
         List<String> offenders = mutableStaticOffenders(sources, Map.of("Sample.java#gone", "уже не нужно"));
 
-        assertEquals(1, offenders.size(),
+        assertEquals(
+                1,
+                offenders.size(),
                 "Устаревшее исключение обязано валить сторож, иначе список исключений гниёт и скрывает новые нарушения");
-        assertEquals(true, offenders.get(0).contains("устаревшее исключение"),
+        assertEquals(
+                true,
+                offenders.get(0).contains("устаревшее исключение"),
                 "Отчёт об устаревшем исключении должен называть его прямо, а получили: " + offenders);
     }
 
@@ -188,8 +205,8 @@ class TestHygieneGuardTests {
         return offenders;
     }
 
-    private static void addStaticOffender(List<String> offenders, Map<String, Boolean> used, String path, String body,
-            int offset, String field) {
+    private static void addStaticOffender(
+            List<String> offenders, Map<String, Boolean> used, String path, String body, int offset, String field) {
         String key = path + "#" + field;
         for (String exception : used.keySet()) {
             if (key.endsWith("/" + exception) || key.equals(exception)) {

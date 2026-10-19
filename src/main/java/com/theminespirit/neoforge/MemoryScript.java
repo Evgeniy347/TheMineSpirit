@@ -28,7 +28,8 @@ public final class MemoryScript implements ScriptInstance {
         }
         MemoryOutcome outcome;
         try {
-            outcome = call.apply(spirit.memory(), spirit.level().dimension().location().toString());
+            outcome = call.apply(
+                    spirit.memory(), spirit.level().dimension().location().toString());
         } catch (MemoryFullException e) {
             failureReason = e.getMessage();
             return ScriptStatus.FAILED;
@@ -41,7 +42,8 @@ public final class MemoryScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return published == null ? Optional.empty()
+        return published == null
+                ? Optional.empty()
                 : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published.finding())));
     }
 

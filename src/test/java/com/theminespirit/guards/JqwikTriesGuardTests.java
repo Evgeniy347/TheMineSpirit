@@ -22,7 +22,9 @@ class JqwikTriesGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.TEST), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Свойство с tries > 200 обязано нести jqwik-тег @Tag(\"slow\") (net.jqwik.api.Tag): "
                         + "иначе оно гоняется быстрым тиром с заявленной глубиной и ломает бюджет. "
                         + "Правило: docs/TESTING.md → «Property-based тесты». Нарушители");
@@ -36,7 +38,9 @@ class JqwikTriesGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("tries=1000"), triesOf(sample),
+        assertEquals(
+                List.of("tries=1000"),
+                triesOf(sample),
                 "Сторож ослеп: tries = 1000 без @Tag(\"slow\") должно попадать в нарушители");
     }
 
@@ -50,7 +54,9 @@ class JqwikTriesGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), triesOf(sample),
+        assertEquals(
+                List.of(),
+                triesOf(sample),
                 "Сторож ложно срабатывает: tries = 1000 с @Tag(\"slow\") — законное исключение");
     }
 
@@ -62,7 +68,9 @@ class JqwikTriesGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), triesOf(sample),
+        assertEquals(
+                List.of(),
+                triesOf(sample),
                 "Сторож ложно срабатывает: tries = 200 — граница быстрого тира, тег не нужен");
     }
 
@@ -74,7 +82,9 @@ class JqwikTriesGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("tries=1000"), triesOf(sample),
+        assertEquals(
+                List.of("tries=1000"),
+                triesOf(sample),
                 "Сторож ослеп: tries = 1000 не первым аргументом должно попадать в нарушители");
     }
 

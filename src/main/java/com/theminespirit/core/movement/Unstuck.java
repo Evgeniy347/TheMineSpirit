@@ -28,8 +28,8 @@ public record Unstuck(int maxDistance, int teleportsPerApproach) {
         }
     }
 
-    public Optional<BlockCoord> step(BlockCoord feet, BlockCoord target, Predicate<BlockCoord> standable,
-            Predicate<BlockCoord> clearPath) {
+    public Optional<BlockCoord> step(
+            BlockCoord feet, BlockCoord target, Predicate<BlockCoord> standable, Predicate<BlockCoord> clearPath) {
         Objects.requireNonNull(feet, "Ноги духа не могут быть null: без них неизвестно, откуда переносить");
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, куда ближе");
         Objects.requireNonNull(standable, "Правило стоянки не может быть null");
@@ -45,7 +45,8 @@ public record Unstuck(int maxDistance, int teleportsPerApproach) {
                     }
                     BlockCoord cell = new BlockCoord(feet.x() + dx, feet.y() + dy, feet.z() + dz);
                     double distance = distanceSquared(cell, target);
-                    boolean better = best == null ? distance < from
+                    boolean better = best == null
+                            ? distance < from
                             : distance < bestDistance || (distance == bestDistance && cell.compareTo(best) < 0);
                     if (better && standable.test(cell) && clearPath.test(cell)) {
                         best = cell;
@@ -61,7 +62,8 @@ public record Unstuck(int maxDistance, int teleportsPerApproach) {
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, FIELDS, origin, "unstuck.json");
         try {
-            return new Unstuck(JsonResource.integer(root.get("maxDistance"), origin, "maxDistance"),
+            return new Unstuck(
+                    JsonResource.integer(root.get("maxDistance"), origin, "maxDistance"),
                     JsonResource.integer(root.get("teleportsPerApproach"), origin, "teleportsPerApproach"));
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);

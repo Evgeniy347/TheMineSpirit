@@ -24,7 +24,8 @@ public final class TableHolder<T> {
 
     public TableHolder(String id, T initial, TableStatus.Source source, String origin, String hash, Clock clock) {
         Objects.requireNonNull(id, "id держателя не может быть null: по нему /spirit tables находит таблицу");
-        Objects.requireNonNull(initial, "Начальная версия таблицы не может быть null: читатели не должны видеть пустоту");
+        Objects.requireNonNull(
+                initial, "Начальная версия таблицы не может быть null: читатели не должны видеть пустоту");
         this.id = id;
         this.current = new AtomicReference<>(
                 new Entry<>(initial, new TableStatus(id, source, origin, Instant.now(clock), hash, null)));
@@ -48,10 +49,18 @@ public final class TableHolder<T> {
     }
 
     public TableStatus failed(String message) {
-        Objects.requireNonNull(message, "Текст ошибки не может быть null: ошибка обязана быть видимой, а не молчаливой");
-        return current.updateAndGet(entry -> new Entry<>(entry.value(),
-                new TableStatus(id, entry.status().source(), entry.status().origin(), entry.status().loadedAt(),
-                        entry.status().hash(), message))).status();
+        Objects.requireNonNull(
+                message, "Текст ошибки не может быть null: ошибка обязана быть видимой, а не молчаливой");
+        return current.updateAndGet(entry -> new Entry<>(
+                        entry.value(),
+                        new TableStatus(
+                                id,
+                                entry.status().source(),
+                                entry.status().origin(),
+                                entry.status().loadedAt(),
+                                entry.status().hash(),
+                                message)))
+                .status();
     }
 
     static String hashOf(String content) {
@@ -64,10 +73,10 @@ public final class TableHolder<T> {
             }
             return text.substring(0, 12);
         } catch (NoSuchAlgorithmException error) {
-            throw new IllegalStateException("SHA-256 недоступен в JVM: без хэша нельзя показать, что таблица поменялась", error);
+            throw new IllegalStateException(
+                    "SHA-256 недоступен в JVM: без хэша нельзя показать, что таблица поменялась", error);
         }
     }
 
-    private record Entry<T>(T value, TableStatus status) {
-    }
+    private record Entry<T>(T value, TableStatus status) {}
 }

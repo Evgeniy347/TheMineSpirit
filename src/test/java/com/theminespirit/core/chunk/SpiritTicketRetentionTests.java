@@ -15,7 +15,9 @@ class SpiritTicketRetentionTests {
 
         Set<UUID> keep = SpiritTicketRetention.keepAtLoad(Set.of(live, dead), Optional.of(Set.of(live)));
 
-        assertEquals(Set.of(live), keep,
+        assertEquals(
+                Set.of(live),
+                keep,
                 "Билеты владельца, отсутствующего в реестре живых духов, обязаны сниматься: иначе мёртвый дух "
                         + "держит чанки нагруженными до перезапуска");
     }
@@ -27,7 +29,9 @@ class SpiritTicketRetentionTests {
 
         Set<UUID> keep = SpiritTicketRetention.keepAtLoad(Set.of(first, second), Optional.of(Set.of(first, second)));
 
-        assertEquals(Set.of(first, second), keep,
+        assertEquals(
+                Set.of(first, second),
+                keep,
                 "Если все владельцы живы, снимать нечего: потеря билета живого духа оставит его без тикающих чанков");
     }
 
@@ -37,7 +41,9 @@ class SpiritTicketRetentionTests {
 
         Set<UUID> keep = SpiritTicketRetention.keepAtLoad(Set.of(owner), Optional.of(Set.of()));
 
-        assertEquals(Set.of(), keep,
+        assertEquals(
+                Set.of(),
+                keep,
                 "Пустой реестр живых духов означает, что владельцев в живых нет: билеты обязаны сняться. "
                         + "Иначе удалённые духи держат чанки вечно");
     }
@@ -49,7 +55,9 @@ class SpiritTicketRetentionTests {
 
         Set<UUID> keep = SpiritTicketRetention.keepAtLoad(Set.of(first, second), Optional.empty());
 
-        assertEquals(Set.of(first, second), keep,
+        assertEquals(
+                Set.of(first, second),
+                keep,
                 "Без реестра (мир до его появления) сущности ещё не загружены и мёртвых владельцев не опознать: "
                         + "сохранить надо все билеты, иначе первая же загрузка мира снимет чанки всех живых духов");
     }

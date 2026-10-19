@@ -44,7 +44,11 @@ public final class StationFinder {
     }
 
     private BlockPos closer(BlockPos first, BlockPos second) {
-        return Comparator.comparingDouble((BlockPos pos) -> pos.distSqr(center)).thenComparing(Comparator.naturalOrder())
-                .compare(first, second) <= 0 ? first : second;
+        return Comparator.comparingDouble((BlockPos pos) -> pos.distSqr(center))
+                                .thenComparing(Comparator.naturalOrder())
+                                .compare(first, second)
+                        <= 0
+                ? first
+                : second;
     }
 }

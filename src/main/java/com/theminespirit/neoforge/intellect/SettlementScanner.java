@@ -41,11 +41,14 @@ public final class SettlementScanner {
         }
     }
 
-    private SettlementScanner() {
-    }
+    private SettlementScanner() {}
 
-    public static Scan scan(ServerLevel level, List<SpiritEntity> members, List<SpiritSnapshot> snapshots,
-            Optional<Point> home, String containerFood) {
+    public static Scan scan(
+            ServerLevel level,
+            List<SpiritEntity> members,
+            List<SpiritSnapshot> snapshots,
+            Optional<Point> home,
+            String containerFood) {
         if (level == null) {
             throw new IllegalArgumentException("Скан поселения без уровня не идёт: мобы стоят в мире");
         }
@@ -77,8 +80,8 @@ public final class SettlementScanner {
             maxY = Math.max(maxY, spirit.getY() + ENEMY_RADIUS);
             maxZ = Math.max(maxZ, spirit.getZ() + ENEMY_RADIUS);
         }
-        List<LivingEntity> near = level.getEntitiesOfClass(LivingEntity.class,
-                new AABB(minX, minY, minZ, maxX, maxY, maxZ), SettlementScanner::visible);
+        List<LivingEntity> near = level.getEntitiesOfClass(
+                LivingEntity.class, new AABB(minX, minY, minZ, maxX, maxY, maxZ), SettlementScanner::visible);
         List<EnemyFact> facts = new ArrayList<>();
         Map<Species, Integer> wild = new EnumMap<>(Species.class);
         PenBounds homePen = homePen(home);
@@ -88,12 +91,17 @@ public final class SettlementScanner {
             }
             boolean targeted = entity instanceof Mob mob && alive.contains(mob.getTarget());
             if (entity instanceof Enemy || targeted) {
-                double hpFraction = entity.getMaxHealth() <= 0 ? 0
+                double hpFraction = entity.getMaxHealth() <= 0
+                        ? 0
                         : Math.max(0, Math.min(1, entity.getHealth() / entity.getMaxHealth()));
-                facts.add(new EnemyFact(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(),
+                facts.add(new EnemyFact(
+                        BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(),
                         entity.getUUID().toString(),
-                        new Point(entity.getX(), entity.getY(), entity.getZ()), hpFraction, entity.getArmorValue(),
-                        true, targeted));
+                        new Point(entity.getX(), entity.getY(), entity.getZ()),
+                        hpFraction,
+                        entity.getArmorValue(),
+                        true,
+                        targeted));
             } else if (homePen != null && entity instanceof Animal animal && isWild(animal, homePen)) {
                 HerdSpecies.of(animal).ifPresent(species -> wild.merge(species, 1, Integer::sum));
             }
@@ -136,8 +144,9 @@ public final class SettlementScanner {
             return null;
         }
         Point point = home.get();
-        return new PenBounds(new BlockCoord((int) Math.floor(point.x()), (int) Math.floor(point.y()),
-                (int) Math.floor(point.z())), CatalogLimits.HERD_HOME_RADIUS);
+        return new PenBounds(
+                new BlockCoord((int) Math.floor(point.x()), (int) Math.floor(point.y()), (int) Math.floor(point.z())),
+                CatalogLimits.HERD_HOME_RADIUS);
     }
 
     private static boolean isWild(Animal animal, PenBounds homePen) {
@@ -149,7 +158,8 @@ public final class SettlementScanner {
         Species best = null;
         int count = 0;
         for (Map.Entry<Species, Integer> entry : wild.entrySet()) {
-            if (best == null || entry.getValue() > count
+            if (best == null
+                    || entry.getValue() > count
                     || (entry.getValue() == count && entry.getKey().name().compareTo(best.name()) < 0)) {
                 best = entry.getKey();
                 count = entry.getValue();

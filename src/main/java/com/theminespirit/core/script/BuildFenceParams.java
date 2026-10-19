@@ -48,19 +48,20 @@ public record BuildFenceParams(String block, String gate, List<BlockCoord> point
     private static BlockCoord parsePoint(String text) {
         String[] parts = text.split(",");
         if (parts.length != 3) {
-            throw new IllegalArgumentException("Точка забора '" + text + "' не в формате \"x,y,z\": "
-                    + "три координаты через запятую");
+            throw new IllegalArgumentException(
+                    "Точка забора '" + text + "' не в формате \"x,y,z\": " + "три координаты через запятую");
         }
-        return new BlockCoord(parseCoordinate(text, parts[0]), parseCoordinate(text, parts[1]),
-                parseCoordinate(text, parts[2]));
+        return new BlockCoord(
+                parseCoordinate(text, parts[0]), parseCoordinate(text, parts[1]), parseCoordinate(text, parts[2]));
     }
 
     private static int parseCoordinate(String point, String value) {
         try {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException error) {
-            throw new IllegalArgumentException("Точка забора '" + point + "' содержит не целое число: "
-                    + "координаты задаются целыми блоками", error);
+            throw new IllegalArgumentException(
+                    "Точка забора '" + point + "' содержит не целое число: " + "координаты задаются целыми блоками",
+                    error);
         }
     }
 }

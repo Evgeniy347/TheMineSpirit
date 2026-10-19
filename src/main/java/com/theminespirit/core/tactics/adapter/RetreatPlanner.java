@@ -17,8 +17,15 @@ public final class RetreatPlanner {
     public static final double RUN_ARRIVAL = 1.5;
     public static final double RALLY_ARRIVAL = 1.5;
 
-    public record Input(Point self, BlockCoord feet, List<EnemyFact> enemies, EnvReading env, Optional<Point> home,
-            int blocks, Optional<Point> rally, boolean waterBucket) {
+    public record Input(
+            Point self,
+            BlockCoord feet,
+            List<EnemyFact> enemies,
+            EnvReading env,
+            Optional<Point> home,
+            int blocks,
+            Optional<Point> rally,
+            boolean waterBucket) {
         public Input {
             if (self == null || feet == null || enemies == null || env == null || home == null || rally == null) {
                 throw new IllegalArgumentException("RetreatPlanner.Input: self/feet/enemies/env/home/rally = null; "
@@ -32,8 +39,7 @@ public final class RetreatPlanner {
         }
     }
 
-    private RetreatPlanner() {
-    }
+    private RetreatPlanner() {}
 
     public static Optional<RetreatPlan> plan(RetreatMethod method, Input input) {
         if (method == null || input == null) {
@@ -52,8 +58,8 @@ public final class RetreatPlanner {
     }
 
     private static Optional<RetreatPlan> water(Input input) {
-        Optional<RetreatPlan> found = input.env().water()
-                .map(cell -> new RetreatPlan.Walk(center(cell), WATER_ARRIVAL, false));
+        Optional<RetreatPlan> found =
+                input.env().water().map(cell -> new RetreatPlan.Walk(center(cell), WATER_ARRIVAL, false));
         if (found.isPresent()) {
             return found;
         }
@@ -78,8 +84,9 @@ public final class RetreatPlanner {
     }
 
     private static Optional<EnemyFact> nearest(Input input) {
-        return input.enemies().stream().min(Comparator.comparingDouble((EnemyFact enemy) -> enemy.pos().distanceTo(input.self()))
-                .thenComparing(EnemyFact::id));
+        return input.enemies().stream()
+                .min(Comparator.comparingDouble((EnemyFact enemy) -> enemy.pos().distanceTo(input.self()))
+                        .thenComparing(EnemyFact::id));
     }
 
     private static Point center(BlockCoord cell) {

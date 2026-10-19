@@ -19,7 +19,8 @@ class WanderPolicyProperties {
             @ForAll @IntRange(min = 0, max = 64) int attempt) {
         BlockCoord origin = new BlockCoord(x, y, z);
 
-        assertEquals(WanderPolicy.next(seed, origin, radius, attempt),
+        assertEquals(
+                WanderPolicy.next(seed, origin, radius, attempt),
                 WanderPolicy.next(seed, origin, radius, attempt),
                 "Два вызова с тем же сидом обязаны давать ту же точку: иначе блуждание нетестируемо");
     }
@@ -36,8 +37,10 @@ class WanderPolicyProperties {
 
         BlockCoord point = WanderPolicy.next(seed, origin, radius, attempt);
 
-        assertTrue(Math.abs(point.x() - x) <= radius && Math.abs(point.z() - z) <= radius
-                && Math.abs(point.y() - y) <= WanderPolicy.VERTICAL_SPREAD,
+        assertTrue(
+                Math.abs(point.x() - x) <= radius
+                        && Math.abs(point.z() - z) <= radius
+                        && Math.abs(point.y() - y) <= WanderPolicy.VERTICAL_SPREAD,
                 "Точка блуждания обязана лежать внутри радиуса от старта и в пределах ±2 по высоте: "
                         + "иначе дух уходит из порученной зоны. Точка: " + point);
     }

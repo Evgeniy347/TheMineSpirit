@@ -8,8 +8,7 @@ public final class HazardDetector {
     public static final int DROP_DEPTH = 3;
     private static final int[][] HORIZONTAL_STEPS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
-    private HazardDetector() {
-    }
+    private HazardDetector() {}
 
     public static Optional<HazardType> classify(TerrainView view, BlockCoord pos) {
         Objects.requireNonNull(view, "view не может быть null: без обзора местности опасности не определить");

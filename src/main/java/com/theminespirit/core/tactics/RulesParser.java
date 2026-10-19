@@ -16,25 +16,29 @@ final class RulesParser {
 
     private final Set<String> ids = new HashSet<>();
 
-    private RulesParser() {
-    }
+    private RulesParser() {}
 
     static Rules parse(ConfigNode root) {
         RulesParser parser = new RulesParser();
         root.fields(SECTIONS);
-        return new Rules(parser.hard(root.get("hard")), parser.actions(root.get("actions")),
-                parser.modeTransitions(root.get("modeTransitions")), parser.states(root.get("states")),
+        return new Rules(
+                parser.hard(root.get("hard")),
+                parser.actions(root.get("actions")),
+                parser.modeTransitions(root.get("modeTransitions")),
+                parser.states(root.get("states")),
                 RetreatParser.parse(root.get("retreat"), parser::claimId));
     }
 
     private String claimId(ConfigNode node) {
         String id = node.text();
         if (!ID.matcher(id).matches()) {
-            throw node.fail("id '" + id + "' не подходит под шаблон [a-z][a-z0-9_]*",
+            throw node.fail(
+                    "id '" + id + "' не подходит под шаблон [a-z][a-z0-9_]*",
                     "id правила - латиница в нижнем регистре и подчёркивания");
         }
         if (!ids.add(id)) {
-            throw node.fail("id '" + id + "' уже занят другим правилом",
+            throw node.fail(
+                    "id '" + id + "' уже занят другим правилом",
                     "id уникален во всём rules.json: по нему сценарии и trace находят правило");
         }
         return id;
@@ -44,8 +48,11 @@ final class RulesParser {
         List<HardRule> rules = new ArrayList<>();
         for (ConfigNode item : section.nonEmptyItems()) {
             item.fields(PRIORITY_RULE);
-            rules.add(new HardRule(claimId(item.get("id")), item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
-                    ConditionParser.parse(item.get("when")), hardEffect(item.get("then"))));
+            rules.add(new HardRule(
+                    claimId(item.get("id")),
+                    item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
+                    ConditionParser.parse(item.get("when")),
+                    hardEffect(item.get("then"))));
         }
         requireClosingNoRouteRule(section, rules);
         return rules;
@@ -53,9 +60,11 @@ final class RulesParser {
 
     private static void requireClosingNoRouteRule(ConfigNode section, List<HardRule> rules) {
         boolean closed = rules.stream()
-                .anyMatch(rule -> rule.noRouteOption().isPresent() && rule.when().atoms().isEmpty());
+                .anyMatch(rule ->
+                        rule.noRouteOption().isPresent() && rule.when().atoms().isEmpty());
         if (!closed) {
-            throw section.fail("нет замыкающего правила подмены с noRoute и пустым when",
+            throw section.fail(
+                    "нет замыкающего правила подмены с noRoute и пустым when",
                     "добавьте правило без условий с then.noRoute: иначе RETREAT без способа отхода останется без подмены "
                             + "и вернётся запасное FIGHT");
         }
@@ -65,15 +74,18 @@ final class RulesParser {
         then.fields(new String[] {}, "decision", "exclude", "noRoute");
         int effects = (then.has("decision") ? 1 : 0) + (then.has("exclude") ? 1 : 0) + (then.has("noRoute") ? 1 : 0);
         if (effects != 1) {
-            throw then.fail("нужно ровно одно из полей decision, exclude и noRoute",
+            throw then.fail(
+                    "нужно ровно одно из полей decision, exclude и noRoute",
                     "правило либо решает (decision), либо вычёркивает варианты (exclude), либо подменяет RETREAT, когда "
                             + "отступать некуда (noRoute)");
         }
         if (then.has("noRoute")) {
             TacticalOption option = then.get("noRoute").enumValue(TacticalOption.class);
             if (option == TacticalOption.RETREAT) {
-                throw then.get("noRoute").fail("подмена RETREAT на RETREAT",
-                        "noRoute заменяет отход, которому некуда идти: допустимы FIGHT и IGNORE");
+                throw then.get("noRoute")
+                        .fail(
+                                "подмена RETREAT на RETREAT",
+                                "noRoute заменяет отход, которому некуда идти: допустимы FIGHT и IGNORE");
             }
             return new HardEffect.NoRoute(option);
         }
@@ -92,8 +104,11 @@ final class RulesParser {
         for (ConfigNode item : section.nonEmptyItems()) {
             item.fields(PRIORITY_RULE);
             ConfigNode then = item.get("then").fields(new String[] {"action"});
-            rules.add(new ActionRule(claimId(item.get("id")), item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
-                    ConditionParser.parse(item.get("when")), then.get("action").enumValue(TacticalAction.class)));
+            rules.add(new ActionRule(
+                    claimId(item.get("id")),
+                    item.get("priority").integer(-MAX_PRIORITY, MAX_PRIORITY),
+                    ConditionParser.parse(item.get("when")),
+                    then.get("action").enumValue(TacticalAction.class)));
         }
         requireClosingRules(section, rules);
         return rules;
@@ -102,9 +117,11 @@ final class RulesParser {
     private static void requireClosingRules(ConfigNode section, List<ActionRule> rules) {
         for (TacticalOption option : TacticalOption.values()) {
             boolean closed = rules.stream()
-                    .anyMatch(rule -> rule.action().option() == option && rule.when().atoms().isEmpty());
+                    .anyMatch(rule -> rule.action().option() == option
+                            && rule.when().atoms().isEmpty());
             if (!closed) {
-                throw section.fail("для решения " + option + " нет замыкающего правила с пустым when",
+                throw section.fail(
+                        "для решения " + option + " нет замыкающего правила с пустым when",
                         "добавьте правило без условий для " + option
                                 + ": иначе для этого решения может не найтись действие");
             }
@@ -115,8 +132,11 @@ final class RulesParser {
         List<ModeTransition> transitions = new ArrayList<>();
         for (ConfigNode item : section.items()) {
             item.fields(new String[] {"id", "from", "to", "when"});
-            transitions.add(new ModeTransition(claimId(item.get("id")), enums(item.get("from"), CombatMode.class),
-                    item.get("to").enumValue(CombatMode.class), ConditionParser.parse(item.get("when"))));
+            transitions.add(new ModeTransition(
+                    claimId(item.get("id")),
+                    enums(item.get("from"), CombatMode.class),
+                    item.get("to").enumValue(CombatMode.class),
+                    ConditionParser.parse(item.get("when"))));
         }
         return transitions;
     }
@@ -126,9 +146,14 @@ final class RulesParser {
         for (ConfigNode item : section.nonEmptyItems()) {
             item.fields(new String[] {"id", "from", "to", "when"}, "decision");
             Optional<TacticalOption> decision = item.has("decision")
-                    ? Optional.of(item.get("decision").enumValue(TacticalOption.class)) : Optional.empty();
-            transitions.add(new StateTransition(claimId(item.get("id")), enums(item.get("from"), TacticalState.class),
-                    item.get("to").enumValue(TacticalState.class), decision, ConditionParser.parse(item.get("when"))));
+                    ? Optional.of(item.get("decision").enumValue(TacticalOption.class))
+                    : Optional.empty();
+            transitions.add(new StateTransition(
+                    claimId(item.get("id")),
+                    enums(item.get("from"), TacticalState.class),
+                    item.get("to").enumValue(TacticalState.class),
+                    decision,
+                    ConditionParser.parse(item.get("when"))));
         }
         return transitions;
     }

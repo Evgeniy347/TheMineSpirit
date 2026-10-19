@@ -12,22 +12,33 @@ public final class ScenarioFile {
     private static final String RESOURCE = "/tactics/scenarios.json";
     private static final long DEFAULT_TICK = 1000;
 
-    private ScenarioFile() {
-    }
+    private ScenarioFile() {}
 
-    public record Scenario(String name, Situation situation, TacticsMemory memory, long tick, Expectation expect,
-            Optional<String> why, boolean boundary, Optional<String> pair) {
-    }
+    public record Scenario(
+            String name,
+            Situation situation,
+            TacticsMemory memory,
+            long tick,
+            Expectation expect,
+            Optional<String> why,
+            boolean boundary,
+            Optional<String> pair) {}
 
-    public record Expectation(Optional<TacticalOption> decision, Optional<TacticalAction> action,
-            Optional<RetreatMethod> retreat, Optional<String> rule, Optional<CombatMode> mode,
-            Optional<TacticalState> state, Optional<Boolean> callHelp, Optional<Boolean> returnTo) {
-    }
+    public record Expectation(
+            Optional<TacticalOption> decision,
+            Optional<TacticalAction> action,
+            Optional<RetreatMethod> retreat,
+            Optional<String> rule,
+            Optional<CombatMode> mode,
+            Optional<TacticalState> state,
+            Optional<Boolean> callHelp,
+            Optional<Boolean> returnTo) {}
 
     public static String text() {
         try (InputStream stream = ScenarioFile.class.getResourceAsStream(RESOURCE)) {
             if (stream == null) {
-                throw new IllegalStateException("Нет ресурса " + RESOURCE + ": сценарии тактики лежат в src/test/resources");
+                throw new IllegalStateException(
+                        "Нет ресурса " + RESOURCE + ": сценарии тактики лежат в src/test/resources");
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -43,8 +54,19 @@ public final class ScenarioFile {
         ConfigNode root = ConfigNode.root("scenarios.json", json).fields(new String[] {"scenarios"});
         List<Scenario> scenarios = new ArrayList<>();
         for (ConfigNode item : root.get("scenarios").nonEmptyItems()) {
-            item.fields(new String[] {"name", "expect"}, "self", "enemies", "env", "orders", "memory", "sinceHit",
-                    "sinceStrike", "tick", "why", "boundary", "pair");
+            item.fields(
+                    new String[] {"name", "expect"},
+                    "self",
+                    "enemies",
+                    "env",
+                    "orders",
+                    "memory",
+                    "sinceHit",
+                    "sinceStrike",
+                    "tick",
+                    "why",
+                    "boundary",
+                    "pair");
             scenarios.add(scenario(item));
         }
         return scenarios;
@@ -75,17 +97,36 @@ public final class ScenarioFile {
         }
         Situation situation = builder.build();
         long tick = item.has("tick") ? item.get("tick").integer(0, Integer.MAX_VALUE) : DEFAULT_TICK;
-        TacticsMemory memory = item.has("memory") ? memory(item.get("memory"), situation, tick)
-                : TacticsMemory.initial(situation.orders().mode(), tick, situation.self().hpFraction());
-        return new Scenario(item.get("name").text(), situation, memory, tick, expectation(item.get("expect")),
+        TacticsMemory memory = item.has("memory")
+                ? memory(item.get("memory"), situation, tick)
+                : TacticsMemory.initial(
+                        situation.orders().mode(), tick, situation.self().hpFraction());
+        return new Scenario(
+                item.get("name").text(),
+                situation,
+                memory,
+                tick,
+                expectation(item.get("expect")),
                 item.has("why") ? Optional.of(item.get("why").text()) : Optional.empty(),
                 item.has("boundary") && item.get("boundary").bool(),
                 item.has("pair") ? Optional.of(item.get("pair").text()) : Optional.empty());
     }
 
     private static void self(ConfigNode node, SituationBuilder builder) {
-        node.fields(new String[] {}, "hp", "hpFraction", "armor", "dps", "speed", "food", "blocks", "ammo", "bucket",
-                "allies", "heal", "at");
+        node.fields(
+                new String[] {},
+                "hp",
+                "hpFraction",
+                "armor",
+                "dps",
+                "speed",
+                "food",
+                "blocks",
+                "ammo",
+                "bucket",
+                "allies",
+                "heal",
+                "at");
         if (node.has("hp")) {
             builder.hp(node.get("hp").number(0, 20));
         }
@@ -136,8 +177,8 @@ public final class ScenarioFile {
         boolean targeting = !node.has("targeting") || node.get("targeting").bool();
         String qualified = type.contains(":") ? type : "minecraft:" + type;
         for (int i = 0; i < count; i++) {
-            builder.enemy(new EnemyFact(qualified, type + "-" + index + "-" + i,
-                    new Point(distance, 0, 0), hp, armor, visible, targeting));
+            builder.enemy(new EnemyFact(
+                    qualified, type + "-" + index + "-" + i, new Point(distance, 0, 0), hp, armor, visible, targeting));
         }
     }
 
@@ -173,12 +214,17 @@ public final class ScenarioFile {
         }
         if (node.has("zone")) {
             List<ConfigNode> zone = node.get("zone").items();
-            builder.zone(zone.get(0).number(-1000, 1000), zone.get(1).number(-1000, 1000),
+            builder.zone(
+                    zone.get(0).number(-1000, 1000),
+                    zone.get(1).number(-1000, 1000),
                     zone.get(2).number(1, Orders.MAX_ZONE_RADIUS));
         }
         if (node.has("ward")) {
             List<ConfigNode> ward = node.get("ward").items();
-            builder.ward(ward.get(0).number(-1000, 1000), ward.get(1).number(-1000, 1000), ward.get(2).bool());
+            builder.ward(
+                    ward.get(0).number(-1000, 1000),
+                    ward.get(1).number(-1000, 1000),
+                    ward.get(2).bool());
         }
         if (node.has("help")) {
             builder.help(node.get("help").bool());
@@ -186,20 +232,34 @@ public final class ScenarioFile {
     }
 
     private static TacticsMemory memory(ConfigNode node, Situation situation, long tick) {
-        node.fields(new String[] {}, "state", "inState", "sinceSeen", "previous", "by", "decidedAgo",
-                "mode");
-        TacticsMemory base = TacticsMemory.initial(situation.orders().mode(), tick, situation.self().hpFraction());
+        node.fields(new String[] {}, "state", "inState", "sinceSeen", "previous", "by", "decidedAgo", "mode");
+        TacticsMemory base = TacticsMemory.initial(
+                situation.orders().mode(), tick, situation.self().hpFraction());
         TacticalState state = node.has("state") ? node.get("state").enumValue(TacticalState.class) : base.state();
         long inState = node.has("inState") ? node.get("inState").integer(0, (int) tick) : 0;
-        long sinceSeen = node.has("sinceSeen") ? node.get("sinceSeen").integer(0, (int) tick) : tick - base.lastSeenTick();
+        long sinceSeen =
+                node.has("sinceSeen") ? node.get("sinceSeen").integer(0, (int) tick) : tick - base.lastSeenTick();
         Optional<TacticalOption> previous = node.has("previous")
-                ? Optional.of(node.get("previous").enumValue(TacticalOption.class)) : Optional.empty();
+                ? Optional.of(node.get("previous").enumValue(TacticalOption.class))
+                : Optional.empty();
         DecisionSource by = node.has("by") ? node.get("by").enumValue(DecisionSource.class) : DecisionSource.SCORE;
         long decidedAgo = node.has("decidedAgo") ? node.get("decidedAgo").integer(0, (int) tick) : 0;
         CombatMode mode = node.has("mode") ? node.get("mode").enumValue(CombatMode.class) : base.mode();
-        Optional<Point> anchor = state == TacticalState.CALM ? Optional.empty() : Optional.of(situation.self().pos());
-        return new TacticsMemory(previous, by, tick - decidedAgo, state, tick - inState, mode, base.orderedMode(), anchor,
-                tick - sinceSeen, base.hpWindowRef(), tick);
+        Optional<Point> anchor = state == TacticalState.CALM
+                ? Optional.empty()
+                : Optional.of(situation.self().pos());
+        return new TacticsMemory(
+                previous,
+                by,
+                tick - decidedAgo,
+                state,
+                tick - inState,
+                mode,
+                base.orderedMode(),
+                anchor,
+                tick - sinceSeen,
+                base.hpWindowRef(),
+                tick);
     }
 
     private static Expectation expectation(ConfigNode node) {
@@ -207,7 +267,9 @@ public final class ScenarioFile {
         return new Expectation(
                 Optional.of(node.get("decision").enumValue(TacticalOption.class)),
                 node.has("action") ? Optional.of(node.get("action").enumValue(TacticalAction.class)) : Optional.empty(),
-                node.has("retreat") ? Optional.of(node.get("retreat").enumValue(RetreatMethod.class)) : Optional.empty(),
+                node.has("retreat")
+                        ? Optional.of(node.get("retreat").enumValue(RetreatMethod.class))
+                        : Optional.empty(),
                 node.has("rule") ? Optional.of(node.get("rule").text()) : Optional.empty(),
                 node.has("mode") ? Optional.of(node.get("mode").enumValue(CombatMode.class)) : Optional.empty(),
                 node.has("state") ? Optional.of(node.get("state").enumValue(TacticalState.class)) : Optional.empty(),

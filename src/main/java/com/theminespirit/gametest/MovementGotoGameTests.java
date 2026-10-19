@@ -31,8 +31,7 @@ public final class MovementGotoGameTests {
     private static final int MAX_SLICES_LITERAL = 4;
     private static final double STANDS_STILL = 0.1;
 
-    private MovementGotoGameTests() {
-    }
+    private MovementGotoGameTests() {}
 
     @GameTest(template = "arena", batch = "move_goto_block_nearest", timeoutTicks = 300)
     public static void gotoBlock_ThreeHayBlocks_StopsInReachOfNearestWithoutWalkingToFarOnes(GameTestHelper helper) {
@@ -41,7 +40,9 @@ public final class MovementGotoGameTests {
         helper.setBlock(FAR_HAY_EAST, Blocks.HAY_BLOCK);
         helper.setBlock(FAR_HAY_SOUTH, Blocks.HAY_BLOCK);
         SpiritEntity spirit = MovementScene.spirit(helper, CORNER);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
                 MovementScene.call("goto_block", Map.of("block", "minecraft:hay_block", "radius", 16)),
                 MovementScene.SETTLE_TICKS);
         Vec3[] startAt = new Vec3[1];
@@ -53,24 +54,31 @@ public final class MovementGotoGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "сено в радиусе есть: goto_block обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double reach = MovementScene.eyeDistanceTo(helper, spirit, NEAR_HAY);
-            helper.assertTrue(reach <= MovementScene.REACH,
-                    "дух обязан встать в досягаемости " + MovementScene.REACH + " от ближнего сена, а до него " + reach);
+            helper.assertTrue(
+                    reach <= MovementScene.REACH,
+                    "дух обязан встать в досягаемости " + MovementScene.REACH + " от ближнего сена, а до него "
+                            + reach);
             double walked = spirit.position().distanceTo(startAt[0]);
-            helper.assertTrue(walked <= NEAREST_MAX_WALK,
+            helper.assertTrue(
+                    walked <= NEAREST_MAX_WALK,
                     "ближняя цель требует пройти меньше " + NEAREST_MAX_WALK + " блока, а дух прошёл " + walked
                             + ": так идут к дальнему сену, ближняя цель обязана идти первой");
-            helper.assertTrue(spirit.pathBuilds() <= NEAREST_MAX_PATH_BUILDS,
+            helper.assertTrue(
+                    spirit.pathBuilds() <= NEAREST_MAX_PATH_BUILDS,
                     "путь строится по разу на цель и перестраивается по политике обновления: не больше "
                             + NEAREST_MAX_PATH_BUILDS + " построений, построено " + spirit.pathBuilds());
-            helper.assertTrue(run.spiritTicks() <= NEAREST_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= NEAREST_LIMIT_TICKS,
                     "подход к ближнему сену обязан уложиться в " + NEAREST_LIMIT_TICKS + " тиков духа, ушло "
                             + run.spiritTicks());
-            helper.assertTrue(helper.getBlockState(NEAR_HAY).is(Blocks.HAY_BLOCK),
+            helper.assertTrue(
+                    helper.getBlockState(NEAR_HAY).is(Blocks.HAY_BLOCK),
                     "goto_block только подходит: сено обязано остаться на месте");
             MovementScene.finish(helper);
         });
@@ -80,9 +88,11 @@ public final class MovementGotoGameTests {
     public static void gotoBlock_NoSuchBlockInRadius_FailsFastAndStands(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                MovementScene.call("goto_block",
-                        Map.of("block", "minecraft:hay_block", "radius", SEARCH_RADIUS_NO_HAY)),
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                MovementScene.call(
+                        "goto_block", Map.of("block", "minecraft:hay_block", "radius", SEARCH_RADIUS_NO_HAY)),
                 MovementScene.SETTLE_TICKS);
         Vec3[] startAt = new Vec3[1];
         helper.onEachTick(() -> {
@@ -91,21 +101,26 @@ public final class MovementGotoGameTests {
             }
         });
         int limit = (SECTIONS_IN_SEARCH_CUBE + GotoBlockSession.MAX_SLICES_PER_TICK - 1)
-                / GotoBlockSession.MAX_SLICES_PER_TICK + 1;
+                        / GotoBlockSession.MAX_SLICES_PER_TICK
+                + 1;
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "сена в радиусе нет: goto_block обязан провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("блоков вида minecraft:hay_block в радиусе " + SEARCH_RADIUS_NO_HAY + " нет"),
+            helper.assertTrue(
+                    reason.contains("блоков вида minecraft:hay_block в радиусе " + SEARCH_RADIUS_NO_HAY + " нет"),
                     "причина обязана называть блок и радиус, фактически: " + reason);
-            helper.assertTrue(run.spiritTicks() <= limit,
+            helper.assertTrue(
+                    run.spiritTicks() <= limit,
                     "поиск куба радиуса " + SEARCH_RADIUS_NO_HAY + " (не больше " + SECTIONS_IN_SEARCH_CUBE
                             + " секций по " + GotoBlockSession.MAX_SLICES_PER_TICK + " за тик) обязан закончиться за "
                             + limit + " тиков духа, ушло " + run.spiritTicks());
-            helper.assertTrue(spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
+            helper.assertTrue(
+                    spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
                     "без цели дух стоит, а он сдвинулся на " + spirit.position().distanceTo(startAt[0]));
             MovementScene.finish(helper);
         });
@@ -132,18 +147,24 @@ public final class MovementGotoGameTests {
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(session.get() != null && outcome.get() != GotoBlockSession.Outcome.RUNNING,
+            helper.assertTrue(
+                    session.get() != null && outcome.get() != GotoBlockSession.Outcome.RUNNING,
                     "поиск и подход ещё идут");
-            helper.assertTrue(MAX_SLICES_LITERAL == GotoBlockSession.MAX_SLICES_PER_TICK,
+            helper.assertTrue(
+                    MAX_SLICES_LITERAL == GotoBlockSession.MAX_SLICES_PER_TICK,
                     "предел срезов поиска за тик — 4 (чеклист 24), в коде " + GotoBlockSession.MAX_SLICES_PER_TICK);
-            helper.assertTrue(outcome.get() == GotoBlockSession.Outcome.SUCCEEDED,
+            helper.assertTrue(
+                    outcome.get() == GotoBlockSession.Outcome.SUCCEEDED,
                     "сено в радиусе есть: сессия обязана закончиться успехом, итог " + outcome.get() + ", причина "
                             + session.get().failureReason());
-            helper.assertTrue(session.get().maxSlicesPerTick() <= MAX_SLICES_LITERAL,
+            helper.assertTrue(
+                    session.get().maxSlicesPerTick() <= MAX_SLICES_LITERAL,
                     "за один тик поиск берёт не больше " + MAX_SLICES_LITERAL + " срезов, максимум за тик: "
                             + session.get().maxSlicesPerTick());
-            helper.assertTrue(session.get().slicesUsed() > MAX_SLICES_LITERAL,
-                    "куб радиуса " + SCALE_RADIUS + " не помещается в один тик поиска, иначе тест ничего не доказывает: "
+            helper.assertTrue(
+                    session.get().slicesUsed() > MAX_SLICES_LITERAL,
+                    "куб радиуса " + SCALE_RADIUS
+                            + " не помещается в один тик поиска, иначе тест ничего не доказывает: "
                             + "срезов просмотрено " + session.get().slicesUsed());
             MovementScene.finish(helper);
         });

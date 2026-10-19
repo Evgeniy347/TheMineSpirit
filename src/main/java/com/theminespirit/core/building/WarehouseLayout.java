@@ -16,15 +16,12 @@ import java.util.Set;
  * Сундук — блок {@code *_chest}, двойной сундук — два соседних сундука, стопка — двойные сундуки
  * друг над другом. Табличка стоит над столбом справа от стопки и несёт имя категории.
  */
-public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List<Sign> signs,
-        int doubleChests, int interiorHeight) {
+public record WarehouseLayout(
+        Schematic schematic, List<ChestStack> stacks, List<Sign> signs, int doubleChests, int interiorHeight) {
 
-    public record ChestStack(int minX, int maxX, int minZ, int maxZ, int minY, int maxY) {
+    public record ChestStack(int minX, int maxX, int minZ, int maxZ, int minY, int maxY) {}
 
-    }
-
-    public record Sign(BlockCoord pos, String text) {
-    }
+    public record Sign(BlockCoord pos, String text) {}
 
     public WarehouseLayout {
         Objects.requireNonNull(schematic, "Схема не может быть null: без неё нечего размечать");
@@ -50,8 +47,10 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
         Sign best = null;
         int bestDistance = Integer.MAX_VALUE;
         for (Sign sign : signs) {
-            int dx = Math.max(0, Math.max(stack.minX() - sign.pos().x(), sign.pos().x() - stack.maxX()));
-            int dz = Math.max(0, Math.max(stack.minZ() - sign.pos().z(), sign.pos().z() - stack.maxZ()));
+            int dx = Math.max(
+                    0, Math.max(stack.minX() - sign.pos().x(), sign.pos().x() - stack.maxX()));
+            int dz = Math.max(
+                    0, Math.max(stack.minZ() - sign.pos().z(), sign.pos().z() - stack.maxZ()));
             int dy = sign.pos().y() - stack.maxY();
             if (dy < 1 || dy > 3 || dx > 2 || dz > 2) {
                 continue;
@@ -103,14 +102,16 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
 
     private static List<List<Schematic.Entry>> pairs(List<Schematic.Entry> component, int y) {
         List<Schematic.Entry> ordered = new ArrayList<>(component);
-        boolean sameX = ordered.stream().allMatch(entry -> entry.dx() == ordered.get(0).dx());
-        boolean sameZ = ordered.stream().allMatch(entry -> entry.dz() == ordered.get(0).dz());
+        boolean sameX =
+                ordered.stream().allMatch(entry -> entry.dx() == ordered.get(0).dx());
+        boolean sameZ =
+                ordered.stream().allMatch(entry -> entry.dz() == ordered.get(0).dz());
         if (!sameX && !sameZ) {
             throw new IllegalStateException("Сундуки на уровне y=" + y + " образуют фигуру, а не ряд: "
                     + "двойной сундук — два соседних блока вдоль одной стены");
         }
-        ordered.sort(sameZ ? Comparator.comparingInt(Schematic.Entry::dx)
-                : Comparator.comparingInt(Schematic.Entry::dz));
+        ordered.sort(
+                sameZ ? Comparator.comparingInt(Schematic.Entry::dx) : Comparator.comparingInt(Schematic.Entry::dz));
         if (ordered.size() % 2 != 0) {
             throw new IllegalStateException("Сундуков на уровне y=" + y + " нечётное число " + ordered.size()
                     + ": двойные сундуки складываются из пар, одиночный сундук нарушил бы стопку");
@@ -122,8 +123,8 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
         return List.copyOf(pairs);
     }
 
-    private static void collect(Schematic.Entry start, Set<Schematic.Entry> unvisited,
-            List<Schematic.Entry> component) {
+    private static void collect(
+            Schematic.Entry start, Set<Schematic.Entry> unvisited, List<Schematic.Entry> component) {
         if (!unvisited.remove(start)) {
             return;
         }
@@ -140,8 +141,11 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
     private static List<ChestStack> stacks(List<DoubleChest> doubles) {
         Map<Footprint, List<DoubleChest>> byFootprint = new LinkedHashMap<>();
         for (DoubleChest chest : doubles) {
-            byFootprint.computeIfAbsent(new Footprint(chest.minX(), chest.maxX(), chest.minZ(), chest.maxZ()),
-                    key -> new ArrayList<>()).add(chest);
+            byFootprint
+                    .computeIfAbsent(
+                            new Footprint(chest.minX(), chest.maxX(), chest.minZ(), chest.maxZ()),
+                            key -> new ArrayList<>())
+                    .add(chest);
         }
         List<ChestStack> stacks = new ArrayList<>();
         for (Map.Entry<Footprint, List<DoubleChest>> group : byFootprint.entrySet()) {
@@ -153,13 +157,20 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
                 if (ordered.get(index).minY() != ordered.get(index - 1).maxY() + 1) {
                     throw new IllegalStateException("Двойные сундуки стопки в " + group.getKey()
                             + " стоят не друг на друге: разрыв по высоте между y="
-                            + ordered.get(index - 1).maxY() + " и y=" + ordered.get(index).minY());
+                            + ordered.get(index - 1).maxY() + " и y="
+                            + ordered.get(index).minY());
                 }
             }
-            stacks.add(new ChestStack(group.getKey().minX(), group.getKey().maxX(), group.getKey().minZ(),
-                    group.getKey().maxZ(), minY, maxY));
+            stacks.add(new ChestStack(
+                    group.getKey().minX(),
+                    group.getKey().maxX(),
+                    group.getKey().minZ(),
+                    group.getKey().maxZ(),
+                    minY,
+                    maxY));
         }
-        stacks.sort(Comparator.comparingInt(ChestStack::minZ).thenComparingInt(ChestStack::minX)
+        stacks.sort(Comparator.comparingInt(ChestStack::minZ)
+                .thenComparingInt(ChestStack::minX)
                 .thenComparingInt(ChestStack::minY));
         return List.copyOf(stacks);
     }
@@ -169,14 +180,15 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
         for (Schematic.Entry entry : schematic.blocks()) {
             if (isSign(entry.block())) {
                 if (entry.text().isBlank()) {
-                    throw new IllegalStateException("Табличка в [" + entry.dx() + "," + entry.dy() + ","
-                            + entry.dz() + "] без категории: табличка склада обязана называть категорию");
+                    throw new IllegalStateException("Табличка в [" + entry.dx() + "," + entry.dy() + "," + entry.dz()
+                            + "] без категории: табличка склада обязана называть категорию");
                 }
                 signs.add(new Sign(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), entry.text()));
             }
         }
         signs.sort(Comparator.comparingInt((Sign sign) -> sign.pos().y())
-                .thenComparingInt(sign -> sign.pos().x()).thenComparingInt(sign -> sign.pos().z()));
+                .thenComparingInt(sign -> sign.pos().x())
+                .thenComparingInt(sign -> sign.pos().z()));
         return List.copyOf(signs);
     }
 
@@ -191,7 +203,9 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
     }
 
     private static boolean isChest(String block) {
-        return path(block).endsWith("_chest") || path(block).equals("chest") || path(block).equals("trapped_chest");
+        return path(block).endsWith("_chest")
+                || path(block).equals("chest")
+                || path(block).equals("trapped_chest");
     }
 
     private static boolean isSign(String block) {
@@ -202,9 +216,7 @@ public record WarehouseLayout(Schematic schematic, List<ChestStack> stacks, List
         return block.contains(":") ? block.substring(block.indexOf(':') + 1) : block;
     }
 
-    private record Footprint(int minX, int maxX, int minZ, int maxZ) {
-    }
+    private record Footprint(int minX, int maxX, int minZ, int maxZ) {}
 
-    private record DoubleChest(int minX, int maxX, int minZ, int maxZ, int minY, int maxY) {
-    }
+    private record DoubleChest(int minX, int maxX, int minZ, int maxZ, int minY, int maxY) {}
 }

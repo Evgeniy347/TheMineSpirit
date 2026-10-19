@@ -33,7 +33,8 @@ class FarmStandSpotsProperties {
             for (BlockCoord stand : FarmStandSpots.of(target, from, safety, farm)) {
                 checked++;
                 double distance = eyeDistance(stand, target);
-                assertTrue(distance <= FarmTuning.REACH,
+                assertTrue(
+                        distance <= FarmTuning.REACH,
                         "Каждая стоянка обязана лежать в досягаемости исполнителя (" + FarmTuning.REACH
                                 + " от глаз до центра цели, как проверяет сессия): иначе BlockBreaker отвергнет "
                                 + "ломку и цель не обработается. Стоянка " + stand + ", цель " + target
@@ -51,12 +52,13 @@ class FarmStandSpotsProperties {
         List<BlockCoord> candidates = randomTargets(random);
         BlockCoord from = randomCoord(random);
 
-        FarmPlanner.Outcome outcome = FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from, candidates, farm, safety,
-                fullHydration());
+        FarmPlanner.Outcome outcome =
+                FarmPlanner.next(FarmJob.TILL, CropKind.ANY, from, candidates, farm, safety, fullHydration());
 
         if (outcome instanceof FarmPlanner.Next next) {
             double distance = eyeDistance(next.stand(), next.target());
-            assertTrue(distance <= FarmTuning.REACH,
+            assertTrue(
+                    distance <= FarmTuning.REACH,
                     "Стоянка, выбранная планировщиком, обязана быть в досягаемости исполнителя (" + FarmTuning.REACH
                             + " от глаз до центра цели): иначе сессия не сможет обработать выбранную клетку. "
                             + "Стоянка " + next.stand() + ", цель " + next.target() + ", расстояние " + distance);

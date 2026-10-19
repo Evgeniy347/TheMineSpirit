@@ -39,8 +39,8 @@ public final class SwapToolScript implements ScriptInstance {
         if (spirit.isRemoved()) {
             return fail("дух исчез до смены инструмента");
         }
-        Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(
-                params.block().contains(":") ? params.block() : "minecraft:" + params.block()));
+        Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(
+                ResourceLocation.parse(params.block().contains(":") ? params.block() : "minecraft:" + params.block()));
         if (block.isEmpty()) {
             return fail("блок '" + params.block() + "' не зарегистрирован: инструмент выбирать не для чего");
         }
@@ -54,8 +54,10 @@ public final class SwapToolScript implements ScriptInstance {
         if (choice.slot() == ToolChoice.HAND || choice.slot() == ToolChoice.MAIN_HAND) {
             return succeed(heldId(), choice.slot(), choice.speed());
         }
-        ItemStack picked = spirit.getInventory().removeItem(choice.slot(),
-                spirit.getInventory().getItem(choice.slot()).getCount());
+        ItemStack picked = spirit.getInventory()
+                .removeItem(
+                        choice.slot(),
+                        spirit.getInventory().getItem(choice.slot()).getCount());
         ItemStack hand = spirit.getMainHandItem();
         if (!hand.isEmpty()) {
             spirit.getInventory().setItem(choice.slot(), hand.copy());
@@ -66,8 +68,7 @@ public final class SwapToolScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
     public String failureReason() {
@@ -82,8 +83,8 @@ public final class SwapToolScript implements ScriptInstance {
     private List<ToolChoice.ToolOption> optionsFor(BlockState state) {
         boolean needsTool = state.requiresCorrectToolForDrops();
         List<ToolChoice.ToolOption> options = new ArrayList<>();
-        options.add(new ToolChoice.ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool,
-                ToolChoice.UNWEARING, ToolChoice.UNWEARING, false));
+        options.add(new ToolChoice.ToolOption(
+                ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool, ToolChoice.UNWEARING, ToolChoice.UNWEARING, false));
         ItemStack hand = spirit.getMainHandItem();
         if (!hand.isEmpty()) {
             options.add(option(ToolChoice.MAIN_HAND, hand, state, needsTool));
@@ -101,8 +102,13 @@ public final class SwapToolScript implements ScriptInstance {
     private static ToolChoice.ToolOption option(int slot, ItemStack stack, BlockState state, boolean needsTool) {
         int max = stack.isDamageableItem() ? stack.getMaxDamage() : ToolChoice.UNWEARING;
         int remaining = max > 0 ? max - stack.getDamageValue() : ToolChoice.UNWEARING;
-        return new ToolChoice.ToolOption(slot, stack.getDestroySpeed(state),
-                !needsTool || stack.isCorrectToolForDrops(state), remaining, max, stack.isEnchanted());
+        return new ToolChoice.ToolOption(
+                slot,
+                stack.getDestroySpeed(state),
+                !needsTool || stack.isCorrectToolForDrops(state),
+                remaining,
+                max,
+                stack.isEnchanted());
     }
 
     private String heldId() {

@@ -46,8 +46,10 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
         }
         JsonNode root = read(body);
         if (!root.isObject()) {
-            throw invalid("Тело запроса observe должно быть JSON-объектом вида "
-                    + "{\"radius\": 8, \"filter\": [\"*_ore\"], \"include_entities\": true}, получено: " + root.getNodeType(),
+            throw invalid(
+                    "Тело запроса observe должно быть JSON-объектом вида "
+                            + "{\"radius\": 8, \"filter\": [\"*_ore\"], \"include_entities\": true}, получено: "
+                            + root.getNodeType(),
                     Map.of("allowed", FIELDS));
         }
         rejectUnknownFields(root);
@@ -78,13 +80,15 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
                 details.put("column", location.getColumnNr());
                 where = " (строка " + location.getLineNr() + ", столбец " + location.getColumnNr() + ")";
             }
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Тело запроса не разобрано как JSON" + where + ": " + e.getOriginalMessage()
                             + ". Проверьте скобки, кавычки и кодировку UTF-8",
-                    details, e);
+                    details,
+                    e);
         } catch (IOException e) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
-                    "Тело запроса не прочитано как JSON: " + e.getMessage(), Map.of(), e);
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST, "Тело запроса не прочитано как JSON: " + e.getMessage(), Map.of(), e);
         }
     }
 
@@ -93,7 +97,8 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
         while (names.hasNext()) {
             String name = names.next();
             if (!FIELDS.contains(name)) {
-                throw invalid("Неизвестное поле '" + name + "' в запросе observe: допустимы " + FIELDS,
+                throw invalid(
+                        "Неизвестное поле '" + name + "' в запросе observe: допустимы " + FIELDS,
                         Map.of("field", name, "allowed", FIELDS));
             }
         }
@@ -101,26 +106,32 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
 
     private static ScanRadius radius(JsonNode node) {
         if (!node.isInt()) {
-            throw invalid("Поле 'radius' должно быть целым числом от " + ScanRadius.MIN + " до " + ScanRadius.MAX
-                    + ", получено: " + node, Map.of("field", RADIUS, "min", ScanRadius.MIN, "max", ScanRadius.MAX));
+            throw invalid(
+                    "Поле 'radius' должно быть целым числом от " + ScanRadius.MIN + " до " + ScanRadius.MAX
+                            + ", получено: " + node,
+                    Map.of("field", RADIUS, "min", ScanRadius.MIN, "max", ScanRadius.MAX));
         }
         int value = node.intValue();
         if (value < ScanRadius.MIN || value > ScanRadius.MAX) {
-            throw invalid("Поле 'radius' = " + value + " вне диапазона [" + ScanRadius.MIN + ", " + ScanRadius.MAX
-                    + "]: больший скан нагружает серверный тик", Map.of("field", RADIUS, "min", ScanRadius.MIN,
-                            "max", ScanRadius.MAX));
+            throw invalid(
+                    "Поле 'radius' = " + value + " вне диапазона [" + ScanRadius.MIN + ", " + ScanRadius.MAX
+                            + "]: больший скан нагружает серверный тик",
+                    Map.of("field", RADIUS, "min", ScanRadius.MIN, "max", ScanRadius.MAX));
         }
         return ScanRadius.of(value);
     }
 
     private static List<String> filter(JsonNode node) {
         if (!node.isArray()) {
-            throw invalid("Поле 'filter' должно быть массивом строк-шаблонов, например [\"*_ore\"], получено: "
-                    + node.getNodeType(), Map.of("field", FILTER));
+            throw invalid(
+                    "Поле 'filter' должно быть массивом строк-шаблонов, например [\"*_ore\"], получено: "
+                            + node.getNodeType(),
+                    Map.of("field", FILTER));
         }
         if (node.size() > MAX_FILTER_PATTERNS) {
-            throw invalid("Поле 'filter' содержит " + node.size() + " шаблонов, допустимо не больше "
-                    + MAX_FILTER_PATTERNS, Map.of("field", FILTER, "max", MAX_FILTER_PATTERNS));
+            throw invalid(
+                    "Поле 'filter' содержит " + node.size() + " шаблонов, допустимо не больше " + MAX_FILTER_PATTERNS,
+                    Map.of("field", FILTER, "max", MAX_FILTER_PATTERNS));
         }
         List<String> patterns = new ArrayList<>(node.size());
         for (int i = 0; i < node.size(); i++) {
@@ -131,19 +142,22 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
 
     private static String pattern(JsonNode element, int index) {
         if (!element.isTextual()) {
-            throw invalid("Элемент filter[" + index + "] должен быть строкой-шаблоном, получено: " + element,
+            throw invalid(
+                    "Элемент filter[" + index + "] должен быть строкой-шаблоном, получено: " + element,
                     Map.of("field", FILTER, "index", index));
         }
         String pattern = element.textValue();
         if (pattern.length() > MAX_FILTER_LENGTH) {
-            throw invalid("Шаблон filter[" + index + "] длиной " + pattern.length() + " длиннее допустимых "
-                    + MAX_FILTER_LENGTH + " символов", Map.of("field", FILTER, "index", index,
-                            "max_length", MAX_FILTER_LENGTH));
+            throw invalid(
+                    "Шаблон filter[" + index + "] длиной " + pattern.length() + " длиннее допустимых "
+                            + MAX_FILTER_LENGTH + " символов",
+                    Map.of("field", FILTER, "index", index, "max_length", MAX_FILTER_LENGTH));
         }
         try {
             IdFilter.of(List.of(pattern));
         } catch (IllegalArgumentException rejected) {
-            throw invalid("Шаблон filter[" + index + "] отвергнут IdFilter: " + rejected.getMessage(),
+            throw invalid(
+                    "Шаблон filter[" + index + "] отвергнут IdFilter: " + rejected.getMessage(),
                     Map.of("field", FILTER, "index", index));
         }
         return pattern;
@@ -151,7 +165,8 @@ public record ObserveRequest(ScanRadius radius, List<String> filter, boolean inc
 
     private static boolean includeEntities(JsonNode node) {
         if (!node.isBoolean()) {
-            throw invalid("Поле 'include_entities' должно быть true или false, получено: " + node,
+            throw invalid(
+                    "Поле 'include_entities' должно быть true или false, получено: " + node,
                     Map.of("field", INCLUDE_ENTITIES));
         }
         return node.booleanValue();

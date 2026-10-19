@@ -19,16 +19,20 @@ class InventoryParamsTests {
 
         TransferParams transfer = TransferParams.from(params);
 
-        assertEquals(ContainerTarget.NEAREST, transfer.container(),
+        assertEquals(
+                ContainerTarget.NEAREST,
+                transfer.container(),
                 "container='nearest' из плана даёт ближайший контейнер: именно это делает перенос "
                         + "рабочим без выдумывания координат");
-        assertEquals("cobblestone", transfer.item(),
+        assertEquals(
+                "cobblestone",
+                transfer.item(),
                 "item переносится в параметры без изменений: по нему фильтр решает, что идёт в контейнер");
-        assertEquals(10, transfer.count(),
-                "count переноса — приказ плана: сколько предметов кладём в контейнер");
-        assertEquals(8, transfer.radius(),
-                "radius переноса берётся из плана: по умолчанию 8 — ближайший контейнер "
-                        + "обычно рядом с духом");
+        assertEquals(10, transfer.count(), "count переноса — приказ плана: сколько предметов кладём в контейнер");
+        assertEquals(
+                8,
+                transfer.radius(),
+                "radius переноса берётся из плана: по умолчанию 8 — ближайший контейнер " + "обычно рядом с духом");
     }
 
     @Test
@@ -41,7 +45,9 @@ class InventoryParamsTests {
 
         TransferParams transfer = TransferParams.from(params);
 
-        assertEquals(new ContainerTarget.Position(12, 64, -7), transfer.container(),
+        assertEquals(
+                new ContainerTarget.Position(12, 64, -7),
+                transfer.container(),
                 "Координаты контейнера из плана доходят до скрипта: без них дух пойдёт к ближайшему "
                         + "сундуку вместо названного");
     }
@@ -54,14 +60,16 @@ class InventoryParamsTests {
         params.put("count", 1);
         params.put("radius", 17);
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> TransferParams.from(params),
                 "Радиус вне [1, 16] обязан быть отказом: план мог обойти валидатор, "
                         + "а дух ушёл бы из базовой зоны");
 
-        assertTrue(error.getMessage().contains("Радиус") && error.getMessage().contains("16"),
-                "Сообщение обязано называть параметр radius и его предел 16: по нему правят план. "
-                        + "Фактическое: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("Радиус") && error.getMessage().contains("16"),
+                "Сообщение обязано называть параметр radius и его предел 16: по нему правят план. " + "Фактическое: "
+                        + error.getMessage());
     }
 
     @Test
@@ -72,9 +80,10 @@ class InventoryParamsTests {
         params.put("count", 257);
         params.put("radius", 8);
 
-        assertThrows(IllegalArgumentException.class, () -> TransferParams.from(params),
-                "Число предметов вне [1, 256] обязательно отказом: перенос тысяч стопок "
-                        + "занял бы серверный тик");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> TransferParams.from(params),
+                "Число предметов вне [1, 256] обязательно отказом: перенос тысяч стопок " + "занял бы серверный тик");
     }
 
     @Test
@@ -86,11 +95,14 @@ class InventoryParamsTests {
 
         UnloadParams unload = UnloadParams.from(params);
 
-        assertEquals(ContainerTarget.NEAREST, unload.container(),
+        assertEquals(
+                ContainerTarget.NEAREST,
+                unload.container(),
                 "container разгрузки по умолчанию ближайший: база обычно стоит рядом с духом");
-        assertEquals(8, unload.radius(),
-                "radius разгрузки по умолчанию 8: контейнер ищется в базовой зоне");
-        assertEquals(false, unload.force(),
+        assertEquals(8, unload.radius(), "radius разгрузки по умолчанию 8: контейнер ищется в базовой зоне");
+        assertEquals(
+                false,
+                unload.force(),
                 "force=false значит «разгрузка только при заполненном инвентаре»: "
                         + "иначе дух носил бы в сундук каждый лишний камешек");
     }
@@ -104,7 +116,9 @@ class InventoryParamsTests {
 
         UnloadParams unload = UnloadParams.from(params);
 
-        assertEquals(true, unload.force(),
+        assertEquals(
+                true,
+                unload.force(),
                 "force=true снимает порог занятости: разгрузка выполняется по приказу, "
                         + "даже если инвентарь почти пуст");
     }
@@ -116,13 +130,17 @@ class InventoryParamsTests {
 
         EquipParams equip = EquipParams.from(params);
 
-        assertEquals("*_pickaxe", equip.item(),
+        assertEquals(
+                "*_pickaxe",
+                equip.item(),
                 "Шаблон equip доходит до скрипта: по нему выбирается самая ценная подходящая кирка");
     }
 
     @Test
     void equipParams_MissingItem_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> EquipParams.from(Map.of()),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> EquipParams.from(Map.of()),
                 "Equip без item обязан быть отказом: без шаблона непонятно, что надевать");
     }
 }

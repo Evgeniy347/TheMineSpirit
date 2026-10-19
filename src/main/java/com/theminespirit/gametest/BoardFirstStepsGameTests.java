@@ -64,8 +64,7 @@ public final class BoardFirstStepsGameTests {
     private static final int SCAN_RADIUS = 16;
     private static final int FIRST_TOOL_INDEX = 3;
 
-    private BoardFirstStepsGameTests() {
-    }
+    private BoardFirstStepsGameTests() {}
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
@@ -143,13 +142,16 @@ public final class BoardFirstStepsGameTests {
                                 || status == BoardStatus.ASSIGNED;
                     })
                     .toList();
-            helper.assertTrue(active.size() <= 1,
+            helper.assertTrue(
+                    active.size() <= 1,
                     "Задание первых шагов всегда одно: активных " + active.size()
                             + ": иначе поселение строится вразнобой");
             if (active.isEmpty()) {
-                if (lastCase != null && board.board()
-                        .statusOf("first:" + lastCase.name().toLowerCase(Locale.ROOT))
-                        .orElse(null) == BoardStatus.DONE) {
+                if (lastCase != null
+                        && board.board()
+                                        .statusOf("first:" + lastCase.name().toLowerCase(Locale.ROOT))
+                                        .orElse(null)
+                                == BoardStatus.DONE) {
                     // Тень DONE мешает переизданию того же шага: снимаем напрямую.
                     board.board().prune(board.board().now());
                     continue;
@@ -163,15 +165,15 @@ public final class BoardFirstStepsGameTests {
                 satisfy(helper, board, spirit, head.boardCase());
                 board.board().prune(board.board().now());
                 if (streak >= 2) {
-                    if (head.boardCase() == BoardCase.CLEAR_GROUNDS
-                            && foreignTreesPresent(helper)) {
+                    if (head.boardCase() == BoardCase.CLEAR_GROUNDS && foreignTreesPresent(helper)) {
                         // Чужие деревья в обзоре держат землю не зачищенной вечно:
                         // генератор прав, дальше цепочке идти некуда — выходим через
                         // зафиксированный факт, а не через пропуск шагов.
                         foreignTrees = true;
                         break;
                     }
-                    helper.assertTrue(false,
+                    helper.assertTrue(
+                            false,
                             "Шаг " + head.boardCase() + " повторяется в третий раз, маркеры целы: "
                                     + "генератор топчется на месте");
                 }
@@ -179,16 +181,18 @@ public final class BoardFirstStepsGameTests {
             }
             streak = 0;
             int index = chainIndex(head.boardCase());
-            helper.assertTrue(index > prevIndex,
-                    "Следующий шаг " + head.boardCase() + " идёт после предыдущего (индекс "
-                            + prevIndex + "): цепочка не идёт назад и не топчется на месте");
+            helper.assertTrue(
+                    index > prevIndex,
+                    "Следующий шаг " + head.boardCase() + " идёт после предыдущего (индекс " + prevIndex
+                            + "): цепочка не идёт назад и не топчется на месте");
             satisfy(helper, board, spirit, head.boardCase());
             closeTicket(board, head.id(), spirit);
             prevIndex = index;
             lastCase = head.boardCase();
         }
         if (!foreignTrees) {
-            helper.assertTrue(prevIndex >= chainIndex(BoardCase.BUILD_MINE),
+            helper.assertTrue(
+                    prevIndex >= chainIndex(BoardCase.BUILD_MINE),
                     "Цепочка сошлась не раньше шахты: последний шаг " + prevIndex
                             + ": ранний конец означает пропуск шагов, а не выполненную цепочку");
         }
@@ -207,14 +211,17 @@ public final class BoardFirstStepsGameTests {
         long now = level.getGameTime();
 
         FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.of()), now);
-        helper.assertTrue(board.board().statusOf("first:stock_chests").isEmpty(),
+        helper.assertTrue(
+                board.board().statusOf("first:stock_chests").isEmpty(),
                 "Без досок шаг сундуков не ставится: он ждёт добычу материала");
-        helper.assertTrue(board.board().statusOf("gather:oak_planks").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("gather:oak_planks").isPresent(),
                 "Пустой склад: на доску встаёт добыча досок (рубка дерева), статус "
                         + board.board().statusOf("gather:oak_planks"));
 
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
-        helper.assertTrue(board.board().statusOf("first:stock_chests").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:stock_chests").isPresent(),
                 "После добычи материал на складе — шаг сундуков открывается, статус "
                         + board.board().statusOf("first:stock_chests"));
 
@@ -223,15 +230,18 @@ public final class BoardFirstStepsGameTests {
         board.board().claim("first:stock_chests", spirit.getUUID(), now);
         board.board().complete("first:stock_chests");
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
-        helper.assertTrue(board.board().statusOf("first:crafting_station").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:crafting_station").isPresent(),
                 "После сундуков наступает верстак: цепочка не перескакивает шаги, статус "
                         + board.board().statusOf("first:crafting_station"));
 
         board.journal().flushAll();
         List<BoardLogEntry> log = board.journal().last(64);
-        helper.assertTrue(hasPosted(log, "gather:oak_planks"),
+        helper.assertTrue(
+                hasPosted(log, "gather:oak_planks"),
                 "Журнал доски обязан содержать постановку добычи: по ней разбирают, кто что получил");
-        helper.assertTrue(hasPosted(log, "first:stock_chests") && hasPosted(log, "first:crafting_station"),
+        helper.assertTrue(
+                hasPosted(log, "first:stock_chests") && hasPosted(log, "first:crafting_station"),
                 "Журнал доски обязан содержать постановки шагов — сундуки и верстак");
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -251,39 +261,47 @@ public final class BoardFirstStepsGameTests {
         Map<String, Integer> stock = new HashMap<>();
 
         tick(level, board, spirit, stock);
-        helper.assertTrue(board.board().statusOf("first:craft_wooden_pickaxe").isEmpty(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_wooden_pickaxe").isEmpty(),
                 "Пустой склад: деревянная кирка ждёт досок, а не выдаётся вхолостую");
-        helper.assertTrue(board.board().statusOf("gather:oak_planks").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("gather:oak_planks").isPresent(),
                 "Пустой склад: на доску встаёт добыча досок под деревянный набор, статус "
                         + board.board().statusOf("gather:oak_planks"));
 
         stock.put("oak_planks", 64);
         stock.put("stick", 64);
         tick(level, board, spirit, stock);
-        helper.assertTrue(board.board().statusOf("first:craft_wooden_pickaxe").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_wooden_pickaxe").isPresent(),
                 "С досками и палками открывается деревянная кирка, статус "
                         + board.board().statusOf("first:craft_wooden_pickaxe"));
 
         craftTool(board, spirit, stock, "first:craft_wooden_pickaxe", "wooden_pickaxe");
         tick(level, board, spirit, stock);
-        helper.assertTrue(board.board().statusOf("first:craft_wooden_axe").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_wooden_axe").isPresent(),
                 "После деревянной кирки наступает деревянный топор: ступень идёт по одному предмету");
         craftTool(board, spirit, stock, "first:craft_wooden_axe", "wooden_axe");
         tick(level, board, spirit, stock);
-        helper.assertTrue(board.board().statusOf("first:craft_wooden_shovel").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_wooden_shovel").isPresent(),
                 "После топора — деревянная лопата: деревянный набор закрывается перед каменным");
         craftTool(board, spirit, stock, "first:craft_wooden_shovel", "wooden_shovel");
 
         tick(level, board, spirit, stock);
-        helper.assertTrue(board.board().statusOf("gather:cobblestone").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("gather:cobblestone").isPresent(),
                 "Каменная ступень ждёт булыжник: при недостаче встаёт добыча булыжника, статус "
                         + board.board().statusOf("gather:cobblestone"));
-        helper.assertTrue(board.board().statusOf("first:craft_stone_pickaxe").isEmpty(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_stone_pickaxe").isEmpty(),
                 "Без булыжника каменная кирка не открывается: гейт из рецепта держит задание");
 
         stock.put("cobblestone", 64);
         tick(level, board, spirit, stock);
-        helper.assertTrue(board.board().statusOf("first:craft_stone_pickaxe").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_stone_pickaxe").isPresent(),
                 "С булыжником открывается каменная кирка — вторая ступень набора, статус "
                         + board.board().statusOf("first:craft_stone_pickaxe"));
         GameTestFixtures.finish(helper);
@@ -297,10 +315,10 @@ public final class BoardFirstStepsGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-first-steps-smithy.jsonl");
 
-        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(true)),
-                level.getGameTime());
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(true)), level.getGameTime());
 
-        helper.assertTrue(board.board().statusOf("first:craft_anvil").isPresent(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_anvil").isPresent(),
                 "С железом (3 блока + 4 слитка из рецепта) наковальня открывается: статус "
                         + board.board().statusOf("first:craft_anvil"));
         GameTestFixtures.finish(helper);
@@ -314,15 +332,16 @@ public final class BoardFirstStepsGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-first-steps-smithy-iron.jsonl");
 
-        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(false)),
-                level.getGameTime());
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(false)), level.getGameTime());
 
-        helper.assertTrue(board.board().statusOf("first:craft_anvil").isEmpty(),
+        helper.assertTrue(
+                board.board().statusOf("first:craft_anvil").isEmpty(),
                 "Без железа крафт наковальни не открывается: гейт из рецепта держит задание, статус "
                         + board.board().statusOf("first:craft_anvil"));
         boolean gather = board.board().statusOf("gather:iron_ingot").isPresent()
                 || board.board().statusOf("gather:iron_block").isPresent();
-        helper.assertTrue(gather,
+        helper.assertTrue(
+                gather,
                 "При недостаче железа на доску встаёт добыча слитка или блока: статусы "
                         + board.board().statusOf("gather:iron_ingot") + " и "
                         + board.board().statusOf("gather:iron_block"));
@@ -368,27 +387,25 @@ public final class BoardFirstStepsGameTests {
         return stock;
     }
 
-    private static void tick(ServerLevel level, BoardService board, SpiritEntity spirit,
-            Map<String, Integer> stock) {
-        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.copyOf(stock)),
-                level.getGameTime());
+    private static void tick(ServerLevel level, BoardService board, SpiritEntity spirit, Map<String, Integer> stock) {
+        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.copyOf(stock)), level.getGameTime());
     }
 
-    private static void craftTool(BoardService board, SpiritEntity spirit, Map<String, Integer> stock,
-            String ticketId, String item) {
+    private static void craftTool(
+            BoardService board, SpiritEntity spirit, Map<String, Integer> stock, String ticketId, String item) {
         board.board().claim(ticketId, spirit.getUUID(), board.board().now());
         board.board().complete(ticketId);
         stock.merge(item, 1, Integer::sum);
     }
 
     private static boolean hasPosted(List<BoardLogEntry> log, String ticketId) {
-        return log.stream().anyMatch(entry -> entry.event() == BoardLog.Event.POSTED
-                && entry.ticketId().equals(ticketId));
+        return log.stream()
+                .anyMatch(entry -> entry.event() == BoardLog.Event.POSTED
+                        && entry.ticketId().equals(ticketId));
     }
 
     private static StockView stocked() {
-        return new StockView(Map.of("oak_planks", 64, "stick", 64, "oak_fence", 64, "torch", 64,
-                "cobblestone", 64));
+        return new StockView(Map.of("oak_planks", 64, "stick", 64, "oak_fence", 64, "torch", 64, "cobblestone", 64));
     }
 
     private static BoardService isolatedBoard(ServerLevel level) {
@@ -404,9 +421,12 @@ public final class BoardFirstStepsGameTests {
             throw new UncheckedIOException(error);
         }
         JournalService journal = new JournalService(journalPath);
-        return new BoardService(board, new HerdCycles(board),
+        return new BoardService(
+                board,
+                new HerdCycles(board),
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
-                BoardSources.create(), journal);
+                BoardSources.create(),
+                journal);
     }
 
     private static StockView stockOf(BoardService board) {
@@ -440,9 +460,11 @@ public final class BoardFirstStepsGameTests {
                             || status == BoardStatus.ASSIGNED;
                 })
                 .toList();
-        helper.assertTrue(active.isEmpty(),
+        helper.assertTrue(
+                active.isEmpty(),
                 "Дух без дома не начинает первых шагов: цепочку задаёт дом, а не выдуманная точка. "
-                        + "Активных заданий: " + active.stream().map(BoardTicket::id).toList());
+                        + "Активных заданий: "
+                        + active.stream().map(BoardTicket::id).toList());
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -489,8 +511,7 @@ public final class BoardFirstStepsGameTests {
         };
     }
 
-    private static void satisfy(GameTestHelper helper, BoardService board, SpiritEntity spirit,
-            BoardCase head) {
+    private static void satisfy(GameTestHelper helper, BoardService board, SpiritEntity spirit, BoardCase head) {
         if (ToolSet.isTool(head)) {
             int slot = ToolSet.chain().indexOf(head);
             spirit.getInventory().setItem(slot, toolStack(head));

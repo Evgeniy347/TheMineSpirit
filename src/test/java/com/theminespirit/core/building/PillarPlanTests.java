@@ -26,7 +26,9 @@ class PillarPlanTests {
     void dismantle_ThreeBlocks_ReturnsTopDown() {
         List<BlockCoord> order = PillarPlan.dismantle(3);
 
-        assertEquals(List.of(2, 1, 0), order.stream().map(BlockCoord::y).toList(),
+        assertEquals(
+                List.of(2, 1, 0),
+                order.stream().map(BlockCoord::y).toList(),
                 "разбор обязан идти сверху вниз: снятый снизу блок оставляет верхние висеть без опоры");
     }
 

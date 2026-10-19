@@ -14,8 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
 public final class StationPlacer {
-    private StationPlacer() {
-    }
+    private StationPlacer() {}
 
     public static Optional<BlockPos> place(SpiritEntity spirit, StationType type) {
         return place(spirit, type, spirit.blockPosition());
@@ -27,8 +26,8 @@ public final class StationPlacer {
             return Optional.empty();
         }
         for (BlockPos cell : cellsAround(origin)) {
-            Direction toward = Direction.getNearest(spirit.getX() - (cell.getX() + 0.5), 0,
-                    spirit.getZ() - (cell.getZ() + 0.5));
+            Direction toward =
+                    Direction.getNearest(spirit.getX() - (cell.getX() + 0.5), 0, spirit.getZ() - (cell.getZ() + 0.5));
             BlockState state = type.placedState(toward);
             if (isFree(level, cell, state)) {
                 spirit.getInventory().removeItemType(type.item(), 1);
@@ -49,7 +48,8 @@ public final class StationPlacer {
                 }
             }
         }
-        cells.sort(Comparator.comparingDouble((BlockPos cell) -> cell.distSqr(origin)).thenComparing(Comparator.naturalOrder()));
+        cells.sort(Comparator.comparingDouble((BlockPos cell) -> cell.distSqr(origin))
+                .thenComparing(Comparator.naturalOrder()));
         return cells;
     }
 

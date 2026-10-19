@@ -12,8 +12,7 @@ public final class SpiritCampStore {
 
     private static final String VERSION_KEY = "Version";
 
-    private SpiritCampStore() {
-    }
+    private SpiritCampStore() {}
 
     public static void write(CompoundTag tag, Camp camp) {
         if (camp == null) {
@@ -43,6 +42,8 @@ public final class SpiritCampStore {
         }
         return Optional.of(new Camp(
                 new Point(stored.getDouble("X"), stored.getDouble("Y"), stored.getDouble("Z")),
-                stored.getDouble("R"), stored.getInt("Owner"), stored.getLong("SetAt")));
+                stored.getDouble("R"),
+                stored.getInt("Owner"),
+                stored.getLong("SetAt")));
     }
 }

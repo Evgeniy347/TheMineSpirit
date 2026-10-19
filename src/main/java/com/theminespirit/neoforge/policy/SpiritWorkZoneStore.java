@@ -12,8 +12,7 @@ public final class SpiritWorkZoneStore {
 
     private static final String VERSION_KEY = "Version";
 
-    private SpiritWorkZoneStore() {
-    }
+    private SpiritWorkZoneStore() {}
 
     public static void write(CompoundTag tag, WorkZone zone) {
         if (zone == null) {
@@ -36,9 +35,10 @@ public final class SpiritWorkZoneStore {
         CompoundTag stored = tag.getCompound(KEY);
         int version = stored.getInt(VERSION_KEY);
         if (version != VERSION) {
-            throw new IllegalStateException("Рабочая зона духа записана версией " + version + ", поддерживается " + VERSION
-                    + ": обновите мод или снимите зону командой /spirit zone <дух> clear");
+            throw new IllegalStateException("Рабочая зона духа записана версией " + version + ", поддерживается "
+                    + VERSION + ": обновите мод или снимите зону командой /spirit zone <дух> clear");
         }
-        return Optional.of(new WorkZone(new BlockCoord(stored.getInt("X"), stored.getInt("Y"), stored.getInt("Z")), stored.getInt("Radius")));
+        return Optional.of(new WorkZone(
+                new BlockCoord(stored.getInt("X"), stored.getInt("Y"), stored.getInt("Z")), stored.getInt("Radius")));
     }
 }

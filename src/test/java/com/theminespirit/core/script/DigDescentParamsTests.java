@@ -21,21 +21,25 @@ class DigDescentParamsTests {
 
     @Test
     void from_MissingDirection_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DigDescentParams.from(Map.of("y", 12)),
                 "Параметры без direction обязаны отклоняться до запуска спуска");
 
-        assertTrue(error.getMessage().contains("direction"),
+        assertTrue(
+                error.getMessage().contains("direction"),
                 "Пропуск direction обязан называть имя параметра: без направления спуск невозможен");
     }
 
     @Test
     void from_UnknownDirection_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DigDescentParams.from(Map.of("direction", "upwards")),
                 "Параметры с неизвестным направлением обязаны отклоняться до запуска спуска");
 
-        assertTrue(error.getMessage().contains("Неизвестное направление спуска"),
+        assertTrue(
+                error.getMessage().contains("Неизвестное направление спуска"),
                 "Опечатка в направлении обязана отклоняться с перечнем допустимых");
     }
 
@@ -43,20 +47,24 @@ class DigDescentParamsTests {
     void from_MissingY_UsesDataDefault() {
         DigDescentParams params = DigDescentParams.from(Map.of("direction", "north"));
 
-        assertEquals(-58, params.y(),
+        assertEquals(
+                -58,
+                params.y(),
                 "Без y спуск обязан идти до целевого этажа из данных -58: факт зафиксирован литералом");
-        assertEquals(DescentData.defaults().targetY(), params.y(),
+        assertEquals(
+                DescentData.defaults().targetY(),
+                params.y(),
                 "Default y обязан совпадать с данными спуска: два источника умолчания разошлись бы у игроков");
     }
 
     @Test
     void from_YOutsideWorld_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> DigDescentParams.from(Map.of("direction", "north", "y", 320)),
                 "Параметры с целью выше потолка мира обязаны отклоняться до запуска спуска");
 
-        assertTrue(error.getMessage().contains("вне мира"),
-                "Цель выше потолка мира обязана отклоняться до запуска");
+        assertTrue(error.getMessage().contains("вне мира"), "Цель выше потолка мира обязана отклоняться до запуска");
     }
 
     @Test
@@ -64,7 +72,9 @@ class DigDescentParamsTests {
         for (String name : DescentDirection.names()) {
             DigDescentParams params = DigDescentParams.from(Map.of("direction", name));
 
-            assertEquals(name, params.direction().name().toLowerCase(),
+            assertEquals(
+                    name,
+                    params.direction().name().toLowerCase(),
                     "Имя '" + name + "' обязано пережить разбор без потерь: каталог и ядро говорят на одном языке");
         }
     }

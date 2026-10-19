@@ -6,8 +6,8 @@ import java.util.Objects;
 public record BuildShelterParams(int side) {
     public BuildShelterParams {
         if (side < CatalogLimits.SHELTER_SIDE_MIN || side > CatalogLimits.SHELTER_SIDE_MAX) {
-            throw new IllegalArgumentException("Сторона укрытия " + side + ": укрытие бывает 3×3 или 4×4 "
-                    + "(пределы " + CatalogLimits.SHELTER_SIDE_MIN + ".." + CatalogLimits.SHELTER_SIDE_MAX + ")");
+            throw new IllegalArgumentException("Сторона укрытия " + side + ": укрытие бывает 3×3 или 4×4 " + "(пределы "
+                    + CatalogLimits.SHELTER_SIDE_MIN + ".." + CatalogLimits.SHELTER_SIDE_MAX + ")");
         }
     }
 

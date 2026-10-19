@@ -26,8 +26,8 @@ public final class EnvScanner {
         return cache;
     }
 
-    public EnvReading scan(Point self, BlockCoord feet, Optional<Point> threat, TerrainView world, ReadBudget budget,
-            long now) {
+    public EnvReading scan(
+            Point self, BlockCoord feet, Optional<Point> threat, TerrainView world, ReadBudget budget, long now) {
         int total = budget.remaining();
         CellReader neighbours = new CellReader(world, cache, new ReadBudget(total), now);
         double drop = dropHeight(feet, neighbours);
@@ -41,15 +41,20 @@ public final class EnvScanner {
         int used = afterColumns + coverReader.budget().used();
         budget.charge(used);
         boolean cut = neighbours.cutByBudget() || columns.cutByBudget() || coverReader.cutByBudget();
-        return new EnvReading(found.lava, drop, found.water.map(Cell::coord),
-                found.water.map(Cell::distance).orElse(EnvFacts.FAR_DISTANCE), cover.cell, cover.distance, used, cut);
+        return new EnvReading(
+                found.lava,
+                drop,
+                found.water.map(Cell::coord),
+                found.water.map(Cell::distance).orElse(EnvFacts.FAR_DISTANCE),
+                cover.cell,
+                cover.distance,
+                used,
+                cut);
     }
 
-    private record Cell(BlockCoord coord, double distance) {
-    }
+    private record Cell(BlockCoord coord, double distance) {}
 
-    private record Found(double lava, Optional<Cell> water, List<BlockCoord> walls) {
-    }
+    private record Found(double lava, Optional<Cell> water, List<BlockCoord> walls) {}
 
     private record Cover(Optional<BlockCoord> cell, double distance) {
         static final Cover NONE = new Cover(Optional.empty(), EnvFacts.FAR_DISTANCE);
@@ -109,7 +114,8 @@ public final class EnvScanner {
             double distance = self.distanceTo(center(seen));
             if (terrain == Terrain.LAVA) {
                 lava = Math.min(lava, distance);
-            } else if (terrain == Terrain.WATER && (water.isEmpty() || distance < water.get().distance())) {
+            } else if (terrain == Terrain.WATER
+                    && (water.isEmpty() || distance < water.get().distance())) {
                 water = Optional.of(new Cell(seen, distance));
             }
         }
@@ -181,7 +187,8 @@ public final class EnvScanner {
         }
         offsets.sort(Comparator.comparingInt(EnvScanner::latticeRank)
                 .thenComparingInt(offset -> offset[0] * offset[0] + offset[1] * offset[1])
-                .thenComparingInt(offset -> offset[0]).thenComparingInt(offset -> offset[1]));
+                .thenComparingInt(offset -> offset[0])
+                .thenComparingInt(offset -> offset[1]));
         return List.copyOf(offsets);
     }
 

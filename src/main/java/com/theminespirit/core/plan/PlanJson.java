@@ -13,8 +13,7 @@ import java.util.TreeMap;
 public final class PlanJson {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private PlanJson() {
-    }
+    private PlanJson() {}
 
     public static String toJson(TaskNode node) {
         Objects.requireNonNull(node, "node не может быть null: сериализовать нечего");

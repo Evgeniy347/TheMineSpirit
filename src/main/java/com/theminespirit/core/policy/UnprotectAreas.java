@@ -17,8 +17,8 @@ public final class UnprotectAreas {
     public UnprotectAreas(List<UnprotectArea> areas) {
         Objects.requireNonNull(areas, "Список разрешённых областей не может быть null: пустой список задают List.of()");
         if (areas.size() > MAX_AREAS) {
-            throw new IllegalArgumentException("Разрешённых областей " + areas.size() + ", допустимо не больше " + MAX_AREAS
-                    + ": список проверяется на каждую ломку, снимите старые разрешения");
+            throw new IllegalArgumentException("Разрешённых областей " + areas.size() + ", допустимо не больше "
+                    + MAX_AREAS + ": список проверяется на каждую ломку, снимите старые разрешения");
         }
         this.areas = new ArrayList<>(areas);
     }
@@ -26,19 +26,22 @@ public final class UnprotectAreas {
     public void add(UnprotectArea area, int maxVolume, long nowMillis) {
         Objects.requireNonNull(area, "Разрешённая область не может быть null: добавлять нечего");
         if (maxVolume < 1) {
-            throw new IllegalArgumentException("Предел объёма " + maxVolume + " меньше 1: область не может быть пустой");
+            throw new IllegalArgumentException(
+                    "Предел объёма " + maxVolume + " меньше 1: область не может быть пустой");
         }
         if (!area.isActive(nowMillis)) {
-            throw new IllegalArgumentException("Срок разрешения '" + area.id() + "' уже истёк: новая область не может быть мёртвой");
+            throw new IllegalArgumentException(
+                    "Срок разрешения '" + area.id() + "' уже истёк: новая область не может быть мёртвой");
         }
         for (UnprotectArea existing : areas) {
             if (existing.id().equals(area.id())) {
-                throw new IllegalArgumentException("Разрешение '" + area.id() + "' уже существует: id должен быть уникальным");
+                throw new IllegalArgumentException(
+                        "Разрешение '" + area.id() + "' уже существует: id должен быть уникальным");
             }
         }
         if (areas.size() >= MAX_AREAS) {
-            throw new IllegalArgumentException("Разрешённых областей уже " + areas.size() + ", допустимо не больше " + MAX_AREAS
-                    + ": снимите старые разрешения");
+            throw new IllegalArgumentException("Разрешённых областей уже " + areas.size() + ", допустимо не больше "
+                    + MAX_AREAS + ": снимите старые разрешения");
         }
         long volume = area.volume();
         if (volume > maxVolume) {

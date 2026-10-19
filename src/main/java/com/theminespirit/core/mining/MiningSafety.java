@@ -6,14 +6,11 @@ import java.util.Set;
 
 public final class MiningSafety {
 
-    private static final int[][] FACE_OFFSETS = {
-            {0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}
-    };
+    private static final int[][] FACE_OFFSETS = {{0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
     private static final Set<Cell> FLUIDS = Set.of(Cell.WATER, Cell.LAVA);
     private static final Set<Cell> DANGEROUS = Set.of(Cell.WATER, Cell.LAVA, Cell.FIRE, Cell.HAZARD);
 
-    private MiningSafety() {
-    }
+    private MiningSafety() {}
 
     public static BreakSafety canBreak(BlockCoord target, SafetyView view) {
         Objects.requireNonNull(target, "Цель ломки не может быть null: без неё неизвестно, какие грани проверять");

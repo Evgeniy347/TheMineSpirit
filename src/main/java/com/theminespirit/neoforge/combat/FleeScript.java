@@ -9,8 +9,8 @@ import com.theminespirit.core.social.WaitCounter;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatTuning;
 import com.theminespirit.core.tactics.TargetSelector;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,8 +49,10 @@ public final class FleeScript implements ScriptInstance {
         }
         if (ticks >= CatalogLimits.FLEE_TIMEOUT_TICKS) {
             return fail("не убежал за " + ticks + " тиков (тайм-аут " + CatalogLimits.FLEE_TIMEOUT_TICKS
-                    + "), ближайшая угроза: " + (threat.isPresent()
-                            ? "на расстоянии " + threat.get().position().distanceTo(spirit.position()) : "нет"));
+                    + "), ближайшая угроза: "
+                    + (threat.isPresent()
+                            ? "на расстоянии " + threat.get().position().distanceTo(spirit.position())
+                            : "нет"));
         }
         return ScriptStatus.RUNNING;
     }
@@ -72,10 +74,14 @@ public final class FleeScript implements ScriptInstance {
 
     private ScriptStatus succeed() {
         result = new ScriptResult.Data(Map.of(
-                "mode", CombatDirective.flee().mode().name(),
-                "target", "hostile",
-                "ticks", ticks,
-                "outcome", "escaped"));
+                "mode",
+                CombatDirective.flee().mode().name(),
+                "target",
+                "hostile",
+                "ticks",
+                ticks,
+                "outcome",
+                "escaped"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

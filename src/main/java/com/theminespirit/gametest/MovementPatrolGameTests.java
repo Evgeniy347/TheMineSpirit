@@ -26,8 +26,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class MovementPatrolGameTests {
     private static final BlockPos CENTER = new BlockPos(4, 1, 4);
-    private static final List<BlockPos> CORNERS = List.of(new BlockPos(1, 1, 1), new BlockPos(7, 1, 1),
-            new BlockPos(7, 1, 7), new BlockPos(1, 1, 7));
+    private static final List<BlockPos> CORNERS =
+            List.of(new BlockPos(1, 1, 1), new BlockPos(7, 1, 1), new BlockPos(7, 1, 7), new BlockPos(1, 1, 7));
     private static final int WALLED_CORNER = 1;
     private static final int LOOP_LIMIT_TICKS = 350;
     private static final int PATH_BUILDS_PER_POINT = 3;
@@ -37,8 +37,7 @@ public final class MovementPatrolGameTests {
     private static final double STANDS_STILL = 0.1;
     private static final int POINTS_BEFORE_RELOAD = 2;
 
-    private MovementPatrolGameTests() {
-    }
+    private MovementPatrolGameTests() {}
 
     @GameTest(template = "arena", batch = "move_patrol_loop", timeoutTicks = 400)
     public static void patrol_LoopOverFourCorners_VisitsAllInOrderAndSucceedsWithFewPathBuilds(GameTestHelper helper) {
@@ -50,20 +49,25 @@ public final class MovementPatrolGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "четыре достижимых угла за один круг: patrol обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + ", посещено " + visits.order());
-            helper.assertTrue(visits.order().equals(List.of(0, 1, 2, 3)),
+            helper.assertTrue(
+                    visits.order().equals(List.of(0, 1, 2, 3)),
                     "углы обязаны посещаться по порядку маршрута 0, 1, 2, 3, фактически " + visits.order());
-            helper.assertTrue(run.spiritTicks() <= LOOP_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= LOOP_LIMIT_TICKS,
                     "круг по периметру обязан уложиться в " + LOOP_LIMIT_TICKS + " тиков духа, ушло "
                             + run.spiritTicks());
             int budget = CORNERS.size() * PATH_BUILDS_PER_POINT;
-            helper.assertTrue(spirit.pathBuilds() <= budget,
+            helper.assertTrue(
+                    spirit.pathBuilds() <= budget,
                     "путь строится по разу на точку и перестраивается по политике обновления: не больше " + budget
                             + " построений на круг, построено " + spirit.pathBuilds());
-            helper.assertTrue(visits.maxBuildsInOneTick() <= 1,
+            helper.assertTrue(
+                    visits.maxBuildsInOneTick() <= 1,
                     "за один тик скрипт строит не больше одного пути, максимум за тик: " + visits.maxBuildsInOneTick());
             MovementScene.finish(helper);
         });
@@ -88,15 +92,20 @@ public final class MovementPatrolGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "недостижимая точка пропускается, остальные проходятся: patrol обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + ", посещено " + visits.order());
-            helper.assertTrue(visits.order().equals(List.of(0, 2, 3)),
-                    "достижимые углы 0, 2, 3 обязаны быть посещены, замурованный 1 — нет, фактически " + visits.order());
-            helper.assertTrue(visits.lastSkipped().equals(List.of(WALLED_CORNER)),
+            helper.assertTrue(
+                    visits.order().equals(List.of(0, 2, 3)),
+                    "достижимые углы 0, 2, 3 обязаны быть посещены, замурованный 1 — нет, фактически "
+                            + visits.order());
+            helper.assertTrue(
+                    visits.lastSkipped().equals(List.of(WALLED_CORNER)),
                     "пропущенная точка обязана быть посчитана в состоянии скрипта, фактически " + visits.lastSkipped());
-            helper.assertTrue(run.spiritTicks() <= LOOP_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= LOOP_LIMIT_TICKS,
                     "обход с пропуском обязан уложиться в " + LOOP_LIMIT_TICKS + " тиков духа, ушло "
                             + run.spiritTicks());
             MovementScene.finish(helper);
@@ -123,15 +132,19 @@ public final class MovementPatrolGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(cancelledAt[0] >= 0
-                            && spirit.tickCount >= cancelledAt[0] + SETTLE_AFTER_CANCEL_TICKS + OBSERVE_AFTER_CANCEL_TICKS,
+            helper.assertTrue(
+                    cancelledAt[0] >= 0
+                            && spirit.tickCount
+                                    >= cancelledAt[0] + SETTLE_AFTER_CANCEL_TICKS + OBSERVE_AFTER_CANCEL_TICKS,
                     "отмена и наблюдение за остановкой ещё не закончились");
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
                     "отменённый патруль обязан иметь статус CANCELLED, фактически "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
             helper.assertTrue(spirit.getNavigation().isDone(), "после отмены навигация обязана быть остановлена");
             double drift = spirit.position().distanceTo(atSettle[0]);
-            helper.assertTrue(drift < STANDS_STILL,
+            helper.assertTrue(
+                    drift < STANDS_STILL,
                     "после отмены дух стоит: за " + OBSERVE_AFTER_CANCEL_TICKS + " тиков он сдвинулся на " + drift);
             int stone = 0;
             for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
@@ -139,7 +152,8 @@ public final class MovementPatrolGameTests {
                     stone += helper.getBlockState(new BlockPos(x, 0, z)).is(Blocks.STONE) ? 1 : 0;
                 }
             }
-            helper.assertTrue(stone == GameTestFixtures.FLOOR_SIZE * GameTestFixtures.FLOOR_SIZE,
+            helper.assertTrue(
+                    stone == GameTestFixtures.FLOOR_SIZE * GameTestFixtures.FLOOR_SIZE,
                     "патруль ничего не ломает: пол обязан остаться целым, камня " + stone);
             MovementScene.finish(helper);
         });
@@ -179,15 +193,19 @@ public final class MovementPatrolGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(reloaded[0], "дух ещё не прошёл " + POINTS_BEFORE_RELOAD + " точки, перезагрузки не было");
+            helper.assertTrue(
+                    reloaded[0], "дух ещё не прошёл " + POINTS_BEFORE_RELOAD + " точки, перезагрузки не было");
             SpiritEntity spirit = current[0];
-            helper.assertTrue(visitedAfterReload[0] >= savedVisited[0],
+            helper.assertTrue(
+                    visitedAfterReload[0] >= savedVisited[0],
                     "после загрузки счётчик пройденных точек не обнуляется: сохранено " + savedVisited[0]
                             + ", прочитано " + visitedAfterReload[0]);
-            helper.assertTrue(indexAfterReload[0] >= savedIndex[0],
-                    "после загрузки индекс маршрута не откатывается к нулю: сохранён " + savedIndex[0]
-                            + ", прочитан " + indexAfterReload[0]);
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    indexAfterReload[0] >= savedIndex[0],
+                    "после загрузки индекс маршрута не откатывается к нулю: сохранён " + savedIndex[0] + ", прочитан "
+                            + indexAfterReload[0]);
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "загруженный дух обязан дойти до конца маршрута, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -201,8 +219,8 @@ public final class MovementPatrolGameTests {
             BlockCoord at = MovementScene.coord(helper, corner);
             points.add(at.x() + "," + at.y() + "," + at.z());
         }
-        return MovementScene.call("patrol", Map.of("points", points, "mode", CatalogLimits.NAV_PATROL_MODE_DEFAULT,
-                "loops", loops));
+        return MovementScene.call(
+                "patrol", Map.of("points", points, "mode", CatalogLimits.NAV_PATROL_MODE_DEFAULT, "loops", loops));
     }
 
     private static Map<String, Object> scriptState(SpiritEntity spirit) {
@@ -236,7 +254,8 @@ public final class MovementPatrolGameTests {
                 return;
             }
             for (int i = 0; i < CORNERS.size(); i++) {
-                if (!order.contains(i) && MovementScene.distanceTo(helper, spirit, CORNERS.get(i)) <= MovementScene.ARRIVAL) {
+                if (!order.contains(i)
+                        && MovementScene.distanceTo(helper, spirit, CORNERS.get(i)) <= MovementScene.ARRIVAL) {
                     order.add(i);
                 }
             }

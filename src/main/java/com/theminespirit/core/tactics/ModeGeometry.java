@@ -12,7 +12,8 @@ public record ModeGeometry(Point anchor, double zoneDistance, double leashLeft, 
         double engageLeft = Assessment.UNBOUNDED;
         boolean first = true;
         for (EnemyFact enemy : situation.enemies()) {
-            double left = Leash.check(params, zoneRadius, anchor, self, enemy.pos()).left();
+            double left =
+                    Leash.check(params, zoneRadius, anchor, self, enemy.pos()).left();
             double engage = params.engage(zoneRadius) - anchor.distanceTo(enemy.pos());
             leashLeft = first ? left : Math.max(leashLeft, left);
             engageLeft = first ? engage : Math.max(engageLeft, engage);

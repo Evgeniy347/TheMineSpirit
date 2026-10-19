@@ -7,8 +7,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -35,8 +35,7 @@ public final class DoorsGameTests {
     private static final int PLAYER_X = 8;
     private static final int PLAYER_Z = 8;
 
-    private DoorsGameTests() {
-    }
+    private DoorsGameTests() {}
 
     @GameTest(template = "arena", batch = "doors_player_left", timeoutTicks = 400)
     public static void door_PlayerGone_ClosesAfterTimeout(GameTestHelper helper) {
@@ -51,7 +50,8 @@ public final class DoorsGameTests {
         openDoor(helper, new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(!helper.getBlockState(new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z))
+            helper.assertTrue(
+                    !helper.getBlockState(new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z))
                             .getValue(BlockStateProperties.OPEN),
                     "дверь, открытая игроком и брошенная, обязана быть закрыта духом: иначе ночь найдёт "
                             + "поселение открытым");
@@ -70,9 +70,11 @@ public final class DoorsGameTests {
         openDoor(helper, new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.tickCount > PLAYER_IN_OPENING_WAIT_TICKS,
+            helper.assertTrue(
+                    spirit.tickCount > PLAYER_IN_OPENING_WAIT_TICKS,
                     "наблюдение ещё идёт: тик духа " + spirit.tickCount);
-            helper.assertTrue(helper.getBlockState(new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z))
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z))
                             .getValue(BlockStateProperties.OPEN),
                     "игрок стоит в проёме: дверь обязана оставаться открытой, иначе дух зажмёт игрока створкой");
             MovementScene.removePlayer(helper, player);
@@ -92,12 +94,15 @@ public final class DoorsGameTests {
         openDoor(helper, new BlockPos(DOOR_TWO_X, DOOR_Y, WALL_Z));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(first.tickCount >= EVENING_SETTLE_TICKS || second.tickCount >= EVENING_SETTLE_TICKS,
+            helper.assertTrue(
+                    first.tickCount >= EVENING_SETTLE_TICKS || second.tickCount >= EVENING_SETTLE_TICKS,
                     "духи ещё не начали работу: тики " + first.tickCount + " и " + second.tickCount);
-            helper.assertTrue(!helper.getBlockState(new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z))
+            helper.assertTrue(
+                    !helper.getBlockState(new BlockPos(DOOR_ONE_X, DOOR_Y, WALL_Z))
                             .getValue(BlockStateProperties.OPEN),
                     "первая открытая дверь обязана быть закрыта вечером: иначе ночь найдёт поселение открытым");
-            helper.assertTrue(!helper.getBlockState(new BlockPos(DOOR_TWO_X, DOOR_Y, WALL_Z))
+            helper.assertTrue(
+                    !helper.getBlockState(new BlockPos(DOOR_TWO_X, DOOR_Y, WALL_Z))
                             .getValue(BlockStateProperties.OPEN),
                     "вторая открытая дверь обязана быть закрыта другим духом: иначе одна дверь ждёт, "
                             + "пока дух дойдёт до второй");
@@ -121,14 +126,20 @@ public final class DoorsGameTests {
     }
 
     private static void openDoor(GameTestHelper helper, BlockPos lower) {
-        helper.setBlock(lower, Blocks.OAK_DOOR.defaultBlockState()
-                .setValue(BlockStateProperties.OPEN, true)
-                .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
+        helper.setBlock(
+                lower,
+                Blocks.OAK_DOOR
+                        .defaultBlockState()
+                        .setValue(BlockStateProperties.OPEN, true)
+                        .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
     }
 
     private static void closeDoor(GameTestHelper helper, BlockPos lower) {
-        helper.setBlock(lower, Blocks.OAK_DOOR.defaultBlockState()
-                .setValue(BlockStateProperties.OPEN, false)
-                .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
+        helper.setBlock(
+                lower,
+                Blocks.OAK_DOOR
+                        .defaultBlockState()
+                        .setValue(BlockStateProperties.OPEN, false)
+                        .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
     }
 }

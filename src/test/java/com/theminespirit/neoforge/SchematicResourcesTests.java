@@ -20,7 +20,9 @@ class SchematicResourcesTests {
 
     @Test
     void load_RegisteredSchematic_ReturnsHolderCurrent() {
-        assertSame(houseHolder().current(), SchematicResources.load("fixture_plate"),
+        assertSame(
+                houseHolder().current(),
+                SchematicResources.load("fixture_plate"),
                 "Потребитель обязан брать тело схемы из держателя, а не из classpath-кэша: иначе /reload "
                         + "не поменяет постройку дома, хотя таблица перечитана");
     }
@@ -38,18 +40,25 @@ class SchematicResourcesTests {
                       s
                 """;
         try {
-            DataTables.INSTANCE.reload(ContentSource.of(Map.of(HOUSE,
-                    new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK))));
+            DataTables.INSTANCE.reload(ContentSource.of(
+                    Map.of(HOUSE, new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK))));
 
-            assertEquals(1, SchematicResources.load("fixture_plate").sizeX(),
+            assertEquals(
+                    1,
+                    SchematicResources.load("fixture_plate").sizeX(),
                     "После /reload потребитель обязан видеть новое тело схемы: иначе датапак мира не поменяет "
                             + "постройку без перезапуска, а схема числится горячей ложно");
-            assertEquals(List.of(new Schematic.Entry(0, 0, 0, "minecraft:stone")),
+            assertEquals(
+                    List.of(new Schematic.Entry(0, 0, 0, "minecraft:stone")),
                     SchematicResources.load("fixture_plate").blocks(),
                     "Новое тело схемы обязано подменяться целиком, а не смешиваться со старым: блоки берутся "
                             + "из перечитанного файла");
         } finally {
-            holder.replace(original, TableStatus.Source.MOD, "classpath (мод)", holder.status().hash(),
+            holder.replace(
+                    original,
+                    TableStatus.Source.MOD,
+                    "classpath (мод)",
+                    holder.status().hash(),
                     Clock.systemUTC());
         }
     }
@@ -59,22 +68,31 @@ class SchematicResourcesTests {
         TableHolder<Schematic> holder = houseHolder();
         Schematic original = holder.current();
         try {
-            DataTables.INSTANCE.reload(ContentSource.of(Map.of(HOUSE,
-                    new LoadedContent("not a schematic", "test datapack", TableStatus.Source.DATAPACK))));
+            DataTables.INSTANCE.reload(ContentSource.of(
+                    Map.of(HOUSE, new LoadedContent("not a schematic", "test datapack", TableStatus.Source.DATAPACK))));
 
-            assertSame(original, holder.current(),
+            assertSame(
+                    original,
+                    holder.current(),
                     "Битый файл схемы не должен подменять тело: прежняя схема остаётся в силе, иначе /reload "
                             + "сломает постройку дома у игроков");
-            assertTrue(holder.status().failed(),
+            assertTrue(
+                    holder.status().failed(),
                     "Ошибка чтения схемы обязана быть видна в /spirit tables и логе, а не проглочена молча");
         } finally {
-            holder.replace(original, TableStatus.Source.MOD, "classpath (мод)", holder.status().hash(),
+            holder.replace(
+                    original,
+                    TableStatus.Source.MOD,
+                    "classpath (мод)",
+                    holder.status().hash(),
                     Clock.systemUTC());
         }
     }
 
     private static TableHolder<Schematic> houseHolder() {
-        return DataTables.INSTANCE.schematic("fixture_plate").orElseThrow(
-                () -> new AssertionError("схема house не зарегистрирована в DataTables: /reload её не перечитает"));
+        return DataTables.INSTANCE
+                .schematic("fixture_plate")
+                .orElseThrow(() ->
+                        new AssertionError("схема house не зарегистрирована в DataTables: /reload её не перечитает"));
     }
 }

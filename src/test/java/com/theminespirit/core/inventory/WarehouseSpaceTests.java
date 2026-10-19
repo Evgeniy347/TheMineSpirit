@@ -15,7 +15,9 @@ class WarehouseSpaceTests {
 
     @Test
     void minFreePercent_ProductionValue_IsTwenty() {
-        assertEquals(20, WarehouseSpace.MIN_FREE_PERCENT,
+        assertEquals(
+                20,
+                WarehouseSpace.MIN_FREE_PERCENT,
                 "Склад обязан сохранять минимум 20% свободного места (решение владельца 14.10): когда запас "
                         + "меньше, склад уже полон и его пора расширять, а не забивать остатком");
     }
@@ -24,7 +26,8 @@ class WarehouseSpaceTests {
     void canTakeNewSlot_SevenFreeOfTwentySeven_KeepsReserve() {
         ContainerSnapshot chest = chestWithFreeSlots(7);
 
-        assertTrue(WarehouseSpace.canTakeNewSlot(chest, WarehouseSpace.MIN_FREE_PERCENT),
+        assertTrue(
+                WarehouseSpace.canTakeNewSlot(chest, WarehouseSpace.MIN_FREE_PERCENT),
                 "Из 27 слотов свободны 7: после одной новой стопки останется 6 (22%), минимум 20% сохранён — "
                         + "склад ещё принимает сдачу");
     }
@@ -33,7 +36,8 @@ class WarehouseSpaceTests {
     void canTakeNewSlot_SixFreeOfTwentySeven_BreaksReserve() {
         ContainerSnapshot chest = chestWithFreeSlots(6);
 
-        assertFalse(WarehouseSpace.canTakeNewSlot(chest, WarehouseSpace.MIN_FREE_PERCENT),
+        assertFalse(
+                WarehouseSpace.canTakeNewSlot(chest, WarehouseSpace.MIN_FREE_PERCENT),
                 "Из 27 слотов свободны 6: после новой стопки останется 5 (18%), ниже минимума 20% — "
                         + "склад считается полным, дух не забивает его под завязку");
     }
@@ -42,7 +46,8 @@ class WarehouseSpaceTests {
     void canTakeNewSlot_FullChest_Rejects() {
         ContainerSnapshot chest = chestWithFreeSlots(0);
 
-        assertFalse(WarehouseSpace.canTakeNewSlot(chest, WarehouseSpace.MIN_FREE_PERCENT),
+        assertFalse(
+                WarehouseSpace.canTakeNewSlot(chest, WarehouseSpace.MIN_FREE_PERCENT),
                 "В полный сундук новую стопку не положить: отказ обязан быть и при нулевом запасе свободы");
     }
 
@@ -50,7 +55,8 @@ class WarehouseSpaceTests {
     void canTakeNewSlot_ZeroReserve_MatchesFreeSlotRule() {
         ContainerSnapshot chest = chestWithFreeSlots(1);
 
-        assertTrue(WarehouseSpace.canTakeNewSlot(chest, 0),
+        assertTrue(
+                WarehouseSpace.canTakeNewSlot(chest, 0),
                 "Без требования запаса (обычная разгрузка) достаточно одного свободного слота: иначе "
                         + "старое поведение unload изменилось бы молча");
     }

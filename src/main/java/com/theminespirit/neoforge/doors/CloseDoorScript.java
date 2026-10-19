@@ -90,7 +90,8 @@ public final class CloseDoorScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return outcome == ScriptStatus.SUCCEEDED ? Optional.of(new ScriptResult.Text("дверь закрыта"))
+        return outcome == ScriptStatus.SUCCEEDED
+                ? Optional.of(new ScriptResult.Text("дверь закрыта"))
                 : Optional.empty();
     }
 

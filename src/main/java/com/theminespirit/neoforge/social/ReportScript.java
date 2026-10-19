@@ -45,7 +45,8 @@ public final class ReportScript implements ScriptInstance {
             return fail("доклад возможен только на сервере: у клиентского мира нет чата игроков");
         }
         if (params.to().isPresent()) {
-            Optional<?> found = ScriptTargetResolver.resolve(spirit, TargetSelector.parse(params.to().orElseThrow()));
+            Optional<?> found = ScriptTargetResolver.resolve(
+                    spirit, TargetSelector.parse(params.to().orElseThrow()));
             if (found.isEmpty() || !(found.get() instanceof ServerPlayer player)) {
                 return fail("адресат доклада '" + params.to().orElseThrow() + "' не найден: докладывать некому");
             }
@@ -62,12 +63,10 @@ public final class ReportScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
-    public void suspend() {
-    }
+    public void suspend() {}
 
     @Override
     public String failureReason() {
@@ -85,7 +84,10 @@ public final class ReportScript implements ScriptInstance {
 
     private String reportText() {
         String task = spirit.currentTaskScript()
-                .map(script -> script + (spirit.taskStatus().map(status -> " (" + status + ")").orElse("")))
+                .map(script -> script
+                        + (spirit.taskStatus()
+                                .map(status -> " (" + status + ")")
+                                .orElse("")))
                 .orElse("нет");
         return "Доклад: задача " + task
                 + "; здоровье " + (int) Math.ceil(spirit.getHealth()) + "/" + (int) Math.ceil(spirit.getMaxHealth())

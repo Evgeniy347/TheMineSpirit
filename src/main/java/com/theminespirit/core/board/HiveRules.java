@@ -10,8 +10,13 @@ import java.util.Set;
  */
 public final class HiveRules {
     public static final Set<String> HIVE_KEYS = Set.of(
-            "hive_radius", "smoke_depth", "flower_radius", "flowers_min",
-            "hive_planks", "hive_honeycomb", "site_radius");
+            "hive_radius",
+            "smoke_depth",
+            "flower_radius",
+            "flowers_min",
+            "hive_planks",
+            "hive_honeycomb",
+            "site_radius");
 
     public static final int DEFAULT_HIVE_RADIUS = 16;
     public static final int DEFAULT_SMOKE_DEPTH = 5;
@@ -35,8 +40,7 @@ public final class HiveRules {
         NONE
     }
 
-    private HiveRules() {
-    }
+    private HiveRules() {}
 
     public static int hiveRadius() {
         return hiveValue("hive_radius", DEFAULT_HIVE_RADIUS);
@@ -68,16 +72,16 @@ public final class HiveRules {
 
     public static boolean fullHive(int honeyLevel) {
         if (honeyLevel < 0 || honeyLevel > FULL_HONEY_LEVEL) {
-            throw new IllegalArgumentException("Уровень мёда " + honeyLevel + " вне [0, "
-                    + FULL_HONEY_LEVEL + "]: такого состояния улья не бывает");
+            throw new IllegalArgumentException("Уровень мёда " + honeyLevel + " вне [0, " + FULL_HONEY_LEVEL
+                    + "]: такого состояния улья не бывает");
         }
         return honeyLevel >= FULL_HONEY_LEVEL;
     }
 
     public static Tool chooseTool(boolean hasShears, int glassBottles) {
         if (glassBottles < 0) {
-            throw new IllegalArgumentException("Стеклянных бутылок " + glassBottles
-                    + ": запас не бывает отрицательным");
+            throw new IllegalArgumentException(
+                    "Стеклянных бутылок " + glassBottles + ": запас не бывает отрицательным");
         }
         if (hasShears) {
             return Tool.SHEARS;
@@ -91,8 +95,8 @@ public final class HiveRules {
 
     public static boolean smokeOffsetWithinDepth(int offset) {
         if (offset < 0) {
-            throw new IllegalArgumentException("Смещение под ульем " + offset
-                    + " не бывает отрицательным: отсчёт идёт от улья вниз");
+            throw new IllegalArgumentException(
+                    "Смещение под ульем " + offset + " не бывает отрицательным: отсчёт идёт от улья вниз");
         }
         return offset >= 1 && offset <= smokeDepth();
     }
@@ -124,8 +128,8 @@ public final class HiveRules {
 
     static String hiveKey(String key) {
         if (!HIVE_KEYS.contains(key)) {
-            throw new IllegalArgumentException("Неизвестный ключ пчёл '" + key + "': допустимы "
-                    + HIVE_KEYS + ", сверьтесь с секцией hive в board.json");
+            throw new IllegalArgumentException("Неизвестный ключ пчёл '" + key + "': допустимы " + HIVE_KEYS
+                    + ", сверьтесь с секцией hive в board.json");
         }
         return key;
     }

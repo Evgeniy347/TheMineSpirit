@@ -30,17 +30,20 @@ class PolicyExemptionsTests {
 
     @Test
     void of_LavaFire_ThrowsException() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException e = assertThrows(
+                IllegalArgumentException.class,
                 () -> PolicyExemptions.of(PolicyId.LAVA_FIRE),
                 "LAVA_FIRE не может иметь исключение — защищает жизнь духа");
 
-        assertTrue(e.getMessage().contains("LAVA_FIRE"),
+        assertTrue(
+                e.getMessage().contains("LAVA_FIRE"),
                 "Ошибка обязана называть запрещённую политику. Фактическое: " + e.getMessage());
     }
 
     @Test
     void of_Air_ThrowsException() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException e = assertThrows(
+                IllegalArgumentException.class,
                 () -> PolicyExemptions.of(PolicyId.AIR),
                 "AIR не может иметь исключение — защищает жизнь духа");
 
@@ -49,20 +52,25 @@ class PolicyExemptionsTests {
 
     @Test
     void of_Explosive_ThrowsException() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException e = assertThrows(
+                IllegalArgumentException.class,
                 () -> PolicyExemptions.of(PolicyId.EXPLOSIVE),
                 "EXPLOSIVE не может иметь исключение — защищает жизнь духа");
 
-        assertTrue(e.getMessage().contains("EXPLOSIVE"), "Ошибка обязана называть EXPLOSIVE. Фактическое: " + e.getMessage());
+        assertTrue(
+                e.getMessage().contains("EXPLOSIVE"),
+                "Ошибка обязана называть EXPLOSIVE. Фактическое: " + e.getMessage());
     }
 
     @Test
     void of_MixedAllowedAndForbidden_ThrowsException() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException e = assertThrows(
+                IllegalArgumentException.class,
                 () -> PolicyExemptions.of(PolicyId.WATER, PolicyId.AIR),
                 "смесь разрешённой и запрещённой политики обязана падать");
 
-        assertTrue(e.getMessage().contains("AIR"),
+        assertTrue(
+                e.getMessage().contains("AIR"),
                 "При смеси разрешённой и запрещённой — ошибка о запрещённой. Фактическое: " + e.getMessage());
     }
 
@@ -86,7 +94,10 @@ class PolicyExemptionsTests {
     void of_NoArguments_EqualsEmpty() {
         PolicyExemptions none = PolicyExemptions.of();
 
-        assertEquals(PolicyExemptions.empty(), none, "of() без аргументов — те же пустые исключения, что и empty(); скрипт без исключений не должен падать при создании");
+        assertEquals(
+                PolicyExemptions.empty(),
+                none,
+                "of() без аргументов — те же пустые исключения, что и empty(); скрипт без исключений не должен падать при создании");
         assertTrue(none.all().isEmpty(), "of() без аргументов не добавляет исключений");
     }
 
@@ -94,12 +105,17 @@ class PolicyExemptionsTests {
     void of_DuplicateIds_CollapsesToOne() {
         PolicyExemptions ex = PolicyExemptions.of(PolicyId.WATER, PolicyId.WATER);
 
-        assertEquals(Set.of(PolicyId.WATER), ex.all(), "повтор политики в списке исключений — одно исключение, а не ошибка создания");
+        assertEquals(
+                Set.of(PolicyId.WATER),
+                ex.all(),
+                "повтор политики в списке исключений — одно исключение, а не ошибка создания");
     }
 
     @Test
     void of_NullId_ThrowsNullPointer() {
-        assertThrows(NullPointerException.class, () -> PolicyExemptions.of(PolicyId.WATER, null),
+        assertThrows(
+                NullPointerException.class,
+                () -> PolicyExemptions.of(PolicyId.WATER, null),
                 "null в списке исключений — ошибка вызывающего, а не тихий пропуск");
     }
 
@@ -107,7 +123,9 @@ class PolicyExemptionsTests {
     void all_ReturnedSet_IsImmutable() {
         PolicyExemptions ex = PolicyExemptions.of(PolicyId.WATER);
 
-        assertThrows(UnsupportedOperationException.class, () -> ex.all().add(PolicyId.AIR),
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> ex.all().add(PolicyId.AIR),
                 "изменение набора снаружи обошло бы запрет исключений для LAVA_FIRE, AIR и EXPLOSIVE");
     }
 
@@ -115,7 +133,10 @@ class PolicyExemptionsTests {
     void union_TwoSets_ContainsBoth() {
         PolicyExemptions merged = PolicyExemptions.of(PolicyId.WATER).union(PolicyExemptions.of(PolicyId.PORTAL));
 
-        assertEquals(Set.of(PolicyId.WATER, PolicyId.PORTAL), merged.all(), "Объединение параллельных скриптов даёт оба исключения");
+        assertEquals(
+                Set.of(PolicyId.WATER, PolicyId.PORTAL),
+                merged.all(),
+                "Объединение параллельных скриптов даёт оба исключения");
     }
 
     @Test

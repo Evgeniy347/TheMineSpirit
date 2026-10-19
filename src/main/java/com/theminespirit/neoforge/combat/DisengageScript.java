@@ -52,8 +52,8 @@ public final class DisengageScript implements ScriptInstance {
             return succeed("withdrawn");
         }
         if (ticks >= CatalogLimits.DISENGAGE_TIMEOUT_TICKS) {
-            return fail("не вышел из боя за " + ticks + " тиков (тайм-аут "
-                    + CatalogLimits.DISENGAGE_TIMEOUT_TICKS + "): ближайший враг в " + round(threat.get()) + " блоках");
+            return fail("не вышел из боя за " + ticks + " тиков (тайм-аут " + CatalogLimits.DISENGAGE_TIMEOUT_TICKS
+                    + "): ближайший враг в " + round(threat.get()) + " блоках");
         }
         return ScriptStatus.RUNNING;
     }

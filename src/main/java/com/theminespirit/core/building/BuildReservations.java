@@ -17,8 +17,8 @@ public final class BuildReservations {
     }
 
     public BuildReservations(WorkReservations leases) {
-        this.leases = Objects.requireNonNull(leases,
-                "Общий реестр не может быть null: без него брони клеток не с кем сверять");
+        this.leases = Objects.requireNonNull(
+                leases, "Общий реестр не может быть null: без него брони клеток не с кем сверять");
     }
 
     public boolean reserve(BlockCoord cell, UUID spirit) {
@@ -26,7 +26,6 @@ public final class BuildReservations {
         Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, чья бронь");
         return leases.reserve(target(cell), spirit, 0, PERMANENT_LEASE) != WorkReservations.Outcome.TAKEN_BY_OTHER;
     }
-
 
     public boolean foreign(BlockCoord cell, UUID spirit) {
         Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, чья бронь мешает");

@@ -34,18 +34,58 @@ public record WorldObservation(
         openBlocks = sortOpenBlocks(openBlocks);
     }
 
-    public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
-            List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius) {
-        this(botId, tick, position, inventory, blocks, entities, containers, radius,
-                null, List.of(), List.of(), null, List.of());
+    public WorldObservation(
+            String botId,
+            long tick,
+            BlockCoord position,
+            List<ItemCount> inventory,
+            List<ItemCount> blocks,
+            List<EntityRef> entities,
+            List<ContainerRef> containers,
+            int radius) {
+        this(
+                botId,
+                tick,
+                position,
+                inventory,
+                blocks,
+                entities,
+                containers,
+                radius,
+                null,
+                List.of(),
+                List.of(),
+                null,
+                List.of());
     }
 
-    public WorldObservation(String botId, long tick, BlockCoord position, List<ItemCount> inventory,
-            List<ItemCount> blocks, List<EntityRef> entities, List<ContainerRef> containers, int radius,
-            SpiritStatus spirit, List<GroundItem> groundItems, List<ContainerContents> containerItems,
+    public WorldObservation(
+            String botId,
+            long tick,
+            BlockCoord position,
+            List<ItemCount> inventory,
+            List<ItemCount> blocks,
+            List<EntityRef> entities,
+            List<ContainerRef> containers,
+            int radius,
+            SpiritStatus spirit,
+            List<GroundItem> groundItems,
+            List<ContainerContents> containerItems,
             WorldTime time) {
-        this(botId, tick, position, inventory, blocks, entities, containers, radius, spirit, groundItems,
-                containerItems, time, List.of());
+        this(
+                botId,
+                tick,
+                position,
+                inventory,
+                blocks,
+                entities,
+                containers,
+                radius,
+                spirit,
+                groundItems,
+                containerItems,
+                time,
+                List.of());
     }
 
     public String hash() {
@@ -101,9 +141,11 @@ public record WorldObservation(
     }
 
     private static <T> List<T> requireList(List<T> entries, String field) {
-        Objects.requireNonNull(entries, field + " не может быть null: пустой список передаётся как список без элементов");
+        Objects.requireNonNull(
+                entries, field + " не может быть null: пустой список передаётся как список без элементов");
         for (T entry : entries) {
-            Objects.requireNonNull(entry, field + " не может содержать null: список описывает только существующие объекты");
+            Objects.requireNonNull(
+                    entry, field + " не может содержать null: список описывает только существующие объекты");
         }
         return entries;
     }

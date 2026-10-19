@@ -50,29 +50,38 @@ public final class AcquireScript implements ScriptInstance {
     private String lastStepFailure;
     private boolean suspendedBeforeStart;
 
-    public AcquireScript(String item, int count, ResourceKnowledge knowledge, AcquireSupplies supplies,
-            ScriptCatalog catalog, ConditionCatalog conditions, Registries registries) {
+    public AcquireScript(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            AcquireSupplies supplies,
+            ScriptCatalog catalog,
+            ConditionCatalog conditions,
+            Registries registries) {
         if (item == null || item.isBlank()) {
             throw new IllegalArgumentException("Предмет для acquire пуст: без id скрипт не знает, что добыть");
         }
         if (count < 1) {
-            throw new IllegalArgumentException("Число предметов " + count + " не положительно: цель добычи "
-                    + "должна быть хотя бы 1");
+            throw new IllegalArgumentException(
+                    "Число предметов " + count + " не положительно: цель добычи " + "должна быть хотя бы 1");
         }
         this.item = item;
         this.count = count;
-        this.knowledge = Objects.requireNonNull(knowledge, "knowledge не может быть null: без знаний резолвер "
-                + "не отличит крафт от сбора");
-        this.supplies = Objects.requireNonNull(supplies, "supplies не может быть null: без снабжения скрипт "
-                + "не прочитает инвентарь и сундуки");
-        this.catalog = Objects.requireNonNull(catalog, "catalog не может быть null: без каталога подплан "
-                + "не пройдёт валидацию");
-        this.conditions = Objects.requireNonNull(conditions, "conditions не может быть null: без каталога "
-                + "проверок подплан не пройдёт валидацию");
-        this.registry = Objects.requireNonNull(registries.registry(), "registry не может быть null: реестр скриптов "
-                + "отдаётся лениво, иначе регистрация acquire упирается в саму себя");
-        this.conditionRegistry = Objects.requireNonNull(registries.conditionRegistry(), "conditionRegistry не может "
-                + "быть null: без реестра проверок вложенный раннер не выберет ветку");
+        this.knowledge = Objects.requireNonNull(
+                knowledge, "knowledge не может быть null: без знаний резолвер " + "не отличит крафт от сбора");
+        this.supplies = Objects.requireNonNull(
+                supplies, "supplies не может быть null: без снабжения скрипт " + "не прочитает инвентарь и сундуки");
+        this.catalog = Objects.requireNonNull(
+                catalog, "catalog не может быть null: без каталога подплан " + "не пройдёт валидацию");
+        this.conditions = Objects.requireNonNull(
+                conditions, "conditions не может быть null: без каталога " + "проверок подплан не пройдёт валидацию");
+        this.registry = Objects.requireNonNull(
+                registries.registry(),
+                "registry не может быть null: реестр скриптов "
+                        + "отдаётся лениво, иначе регистрация acquire упирается в саму себя");
+        this.conditionRegistry = Objects.requireNonNull(
+                registries.conditionRegistry(),
+                "conditionRegistry не может " + "быть null: без реестра проверок вложенный раннер не выберет ветку");
     }
 
     @Override
@@ -146,8 +155,8 @@ public final class AcquireScript implements ScriptInstance {
         int need = count - startInventory - chestPlanned;
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {
-            nodes.add(ResourceResolver.resolve(item, need, knowledge, catalog, conditions,
-                    supplies.inventory(), supplies.nearbyStations()));
+            nodes.add(ResourceResolver.resolve(
+                    item, need, knowledge, catalog, conditions, supplies.inventory(), supplies.nearbyStations()));
         }
         TaskNode plan = new SequenceNode(nodes);
         plan = PlanValidator.validate(plan, catalog, conditions);
@@ -198,9 +207,10 @@ public final class AcquireScript implements ScriptInstance {
         if (runner == null) {
             return Optional.empty();
         }
-        return runner.progress().map(step -> step.done() != null && step.target() != null
-                ? new Progress(step.done(), step.target())
-                : new Progress(step.step(), step.totalSteps()));
+        return runner.progress()
+                .map(step -> step.done() != null && step.target() != null
+                        ? new Progress(step.done(), step.target())
+                        : new Progress(step.step(), step.totalSteps()));
     }
 
     @Override
@@ -301,6 +311,5 @@ public final class AcquireScript implements ScriptInstance {
         return attempts;
     }
 
-    public record Registries(Supplier<ScriptRegistry> registry, ConditionRegistry conditionRegistry) {
-    }
+    public record Registries(Supplier<ScriptRegistry> registry, ConditionRegistry conditionRegistry) {}
 }

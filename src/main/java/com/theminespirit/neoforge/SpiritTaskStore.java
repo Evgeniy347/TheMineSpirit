@@ -7,8 +7,7 @@ import net.minecraft.nbt.Tag;
 public final class SpiritTaskStore {
     public static final String KEY = "SpiritTask";
 
-    private SpiritTaskStore() {
-    }
+    private SpiritTaskStore() {}
 
     public static void write(CompoundTag tag, String snapshotJson) {
         if (tag == null) {

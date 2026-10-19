@@ -10,11 +10,9 @@ import java.util.Objects;
 public final class CullPolicy {
     public static final int MIN_KEEP = CatalogLimits.HERD_KEEP_MIN;
 
-    private CullPolicy() {
-    }
+    private CullPolicy() {}
 
-    public static Outcome pick(List<AnimalRef> herd, BlockCoord penCenter, Species species, int keep,
-            SwordTier sword) {
+    public static Outcome pick(List<AnimalRef> herd, BlockCoord penCenter, Species species, int keep, SwordTier sword) {
         Objects.requireNonNull(herd, "Снимок стада не может быть null: пустое стадо задают пустым списком");
         Objects.requireNonNull(penCenter, "Центр загона не может быть null: по нему выбираются дальние головы");
         Objects.requireNonNull(species, "Вид не может быть null: норму держат внутри одного вида");
@@ -37,7 +35,8 @@ public final class CullPolicy {
             }
         }
         adults.sort(Comparator.comparingLong((AnimalRef animal) -> distanceSquared(penCenter, animal.pos()))
-                .reversed().thenComparing(AnimalRef::id));
+                .reversed()
+                .thenComparing(AnimalRef::id));
         int extra = adults.size() - keep;
         List<String> picked = new ArrayList<>();
         for (int i = 0; i < extra; i++) {
@@ -53,8 +52,7 @@ public final class CullPolicy {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    public sealed interface Outcome permits Picked, Refused {
-    }
+    public sealed interface Outcome permits Picked, Refused {}
 
     public record Picked(List<String> ids) implements Outcome {
         public Picked {

@@ -64,7 +64,9 @@ public sealed interface MemoryCall {
 
         @Override
         public String describe(Finding finding) {
-            return finding.isEmpty() ? "Точки '" + name + "' в памяти нет" : line(finding.sightings().get(0));
+            return finding.isEmpty()
+                    ? "Точки '" + name + "' в памяти нет"
+                    : line(finding.sightings().get(0));
         }
     }
 
@@ -80,7 +82,8 @@ public sealed interface MemoryCall {
 
         @Override
         public MemoryOutcome apply(MemoryStore store, String dimension) {
-            List<Sighting> sightings = store.recallAll(type).stream().map(MemoryCall::sightingOf).toList();
+            List<Sighting> sightings =
+                    store.recallAll(type).stream().map(MemoryCall::sightingOf).toList();
             return new MemoryOutcome(store, new Finding(script(), sightings));
         }
 
@@ -89,7 +92,8 @@ public sealed interface MemoryCall {
             if (finding.isEmpty()) {
                 return "Точек типа " + type.id() + " в памяти нет";
             }
-            StringBuilder text = new StringBuilder("Точек типа " + type.id() + ": " + finding.sightings().size());
+            StringBuilder text = new StringBuilder(
+                    "Точек типа " + type.id() + ": " + finding.sightings().size());
             finding.sightings().forEach(sighting -> text.append('\n').append(line(sighting)));
             return text.toString();
         }

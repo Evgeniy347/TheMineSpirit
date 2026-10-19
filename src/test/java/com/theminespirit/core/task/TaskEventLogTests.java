@@ -33,42 +33,46 @@ class TaskEventLogTests {
         AtomicReference<List<Long>> readIds = new AtomicReference<>(new ArrayList<>());
         AtomicReference<Throwable> failure = new AtomicReference<>();
 
-        Thread reader = new Thread(() -> {
-            try {
-                readerReady.await();
-                long last = 0;
-                List<Long> ids = new ArrayList<>(total);
-                while (ids.size() < total) {
-                    TaskEventLog.ReadResult result = log.awaitAfter(last, Duration.ofSeconds(5));
-                    if (result.kind() == TaskEventLog.Kind.EVENT) {
-                        ids.add(result.event().id());
-                        last = result.event().id();
-                    } else if (result.kind() == TaskEventLog.Kind.CLOSED) {
-                        break;
+        Thread reader = new Thread(
+                () -> {
+                    try {
+                        readerReady.await();
+                        long last = 0;
+                        List<Long> ids = new ArrayList<>(total);
+                        while (ids.size() < total) {
+                            TaskEventLog.ReadResult result = log.awaitAfter(last, Duration.ofSeconds(5));
+                            if (result.kind() == TaskEventLog.Kind.EVENT) {
+                                ids.add(result.event().id());
+                                last = result.event().id();
+                            } else if (result.kind() == TaskEventLog.Kind.CLOSED) {
+                                break;
+                            }
+                        }
+                        readIds.set(ids);
+                    } catch (Throwable t) {
+                        failure.set(t);
                     }
-                }
-                readIds.set(ids);
-            } catch (Throwable t) {
-                failure.set(t);
-            }
-        }, "sse-reader-test");
+                },
+                "sse-reader-test");
         reader.start();
 
-        Thread writer = new Thread(() -> {
-            try {
-                readerReady.countDown();
-                for (int i = 0; i < total; i++) {
-                    log.append(events(1, TaskEvent.TYPE_PROGRESS));
-                    if (i % 10 == 0) {
-                        Thread.yield();
+        Thread writer = new Thread(
+                () -> {
+                    try {
+                        readerReady.countDown();
+                        for (int i = 0; i < total; i++) {
+                            log.append(events(1, TaskEvent.TYPE_PROGRESS));
+                            if (i % 10 == 0) {
+                                Thread.yield();
+                            }
+                        }
+                        log.close();
+                        writerDone.countDown();
+                    } catch (Throwable t) {
+                        failure.set(t);
                     }
-                }
-                log.close();
-                writerDone.countDown();
-            } catch (Throwable t) {
-                failure.set(t);
-            }
-        }, "sse-writer-test");
+                },
+                "sse-writer-test");
         writer.start();
 
         assertTrue(writerDone.await(10, TimeUnit.SECONDS), "Писатель обязан завершить работу за 10 с");
@@ -109,8 +113,11 @@ class TaskEventLogTests {
 
         TaskEventLog.Catchup catchup = log.since(1);
 
-        assertTrue(catchup.gap(), "Last-Event-ID старше окна обязан помечаться gap: клиент поймёт, что кадры пропущены");
-        assertEquals(TaskEventLog.CAPACITY, catchup.events().size(),
+        assertTrue(
+                catchup.gap(), "Last-Event-ID старше окна обязан помечаться gap: клиент поймёт, что кадры пропущены");
+        assertEquals(
+                TaskEventLog.CAPACITY,
+                catchup.events().size(),
                 "После вытеснения читатель обязан получить только остаток окна, а не 300 событий");
     }
 

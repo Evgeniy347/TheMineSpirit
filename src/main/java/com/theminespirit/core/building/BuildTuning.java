@@ -7,8 +7,7 @@ public final class BuildTuning {
     public static final int MAX_CONSECUTIVE_SKIPS = 16;
     public static final int DEMO_PLATFORM_PADDING = 5;
 
-    private BuildTuning() {
-    }
+    private BuildTuning() {}
 
     public static int timeoutTicks(double distanceBlocks) {
         return GotoTuning.timeoutTicks(distanceBlocks);

@@ -43,9 +43,8 @@ public final class DropToPlayerScript implements ScriptInstance {
             return fail("дух исчез по дороге с грузом '" + params.item() + "'");
         }
         if (!started) {
-            Optional<Item> found = BuiltInRegistries.ITEM
-                    .getOptional(ResourceLocation.parse(
-                            params.item().contains(":") ? params.item() : "minecraft:" + params.item()));
+            Optional<Item> found = BuiltInRegistries.ITEM.getOptional(
+                    ResourceLocation.parse(params.item().contains(":") ? params.item() : "minecraft:" + params.item()));
             if (found.isEmpty()) {
                 return fail("предмет '" + params.item() + "' не зарегистрирован: бросать нечего");
             }
@@ -57,8 +56,8 @@ public final class DropToPlayerScript implements ScriptInstance {
             target = addressee.get();
             int available = countInInventory();
             if (available < params.count()) {
-                return fail("не хватает предмета '" + params.item() + "': нужно " + params.count()
-                        + ", в инвентаре " + available);
+                return fail("не хватает предмета '" + params.item() + "': нужно " + params.count() + ", в инвентаре "
+                        + available);
             }
             approach.begin(target, SocialTuning.DELIVER_ARRIVAL);
             started = true;
@@ -70,10 +69,11 @@ public final class DropToPlayerScript implements ScriptInstance {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> dropToTarget();
-            case TIMEOUT -> fail("не подошёл к адресату '" + params.to() + "' за " + approach.timeoutTicks()
-                    + " тиков");
-            case STUCK -> fail("застрял по дороге к адресату '" + params.to() + "' в (x=" + spirit.getX()
-                    + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ")");
+            case TIMEOUT ->
+                fail("не подошёл к адресату '" + params.to() + "' за " + approach.timeoutTicks() + " тиков");
+            case STUCK ->
+                fail("застрял по дороге к адресату '" + params.to() + "' в (x=" + spirit.getX() + ", y=" + spirit.getY()
+                        + ", z=" + spirit.getZ() + ")");
         };
     }
 
@@ -117,8 +117,8 @@ public final class DropToPlayerScript implements ScriptInstance {
         if (taken == 0) {
             return fail("не удалось взять '" + params.item() + "': инвентарь изменился по дороге");
         }
-        ItemEntity drop = new ItemEntity(spirit.level(), target.getX(), target.getY() + 0.5, target.getZ(),
-                new ItemStack(item, taken));
+        ItemEntity drop = new ItemEntity(
+                spirit.level(), target.getX(), target.getY() + 0.5, target.getZ(), new ItemStack(item, taken));
         drop.setDeltaMovement(0.0, 0.0, 0.0);
         drop.setPickUpDelay(40);
         spirit.level().addFreshEntity(drop);

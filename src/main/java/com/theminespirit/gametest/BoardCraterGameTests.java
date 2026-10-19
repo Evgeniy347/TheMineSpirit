@@ -54,8 +54,7 @@ public final class BoardCraterGameTests {
     private static final int FILL_TIMEOUT_TICKS = 800;
     private static final String SCENE_TICKET_PREFIX = "board_test_";
 
-    private BoardCraterGameTests() {
-    }
+    private BoardCraterGameTests() {}
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
@@ -81,48 +80,68 @@ public final class BoardCraterGameTests {
         pig.setNoAi(true);
         int farX = home.x() + 100_000;
         int farZ = home.z() + 100_000;
-        NeoForge.EVENT_BUS.post(new ExplosionEvent.Detonate(level,
-                new Explosion(level, creeper, farX + 0.5, home.y() + 0.5, farZ + 0.5, BLAST_RADIUS,
-                        false, Explosion.BlockInteraction.DESTROY_WITH_DECAY),
+        NeoForge.EVENT_BUS.post(new ExplosionEvent.Detonate(
+                level,
+                new Explosion(
+                        level,
+                        creeper,
+                        farX + 0.5,
+                        home.y() + 0.5,
+                        farZ + 0.5,
+                        BLAST_RADIUS,
+                        false,
+                        Explosion.BlockInteraction.DESTROY_WITH_DECAY),
                 List.of()));
         String craterId = "crater:" + farX + "," + home.y() + "," + farZ;
         int alienX = home.x() + 200_000;
         int alienZ = home.z() + 200_000;
-        NeoForge.EVENT_BUS.post(new ExplosionEvent.Detonate(level,
-                new Explosion(level, pig, alienX + 0.5, home.y() + 0.5, alienZ + 0.5, BLAST_RADIUS,
-                        false, Explosion.BlockInteraction.DESTROY_WITH_DECAY),
+        NeoForge.EVENT_BUS.post(new ExplosionEvent.Detonate(
+                level,
+                new Explosion(
+                        level,
+                        pig,
+                        alienX + 0.5,
+                        home.y() + 0.5,
+                        alienZ + 0.5,
+                        BLAST_RADIUS,
+                        false,
+                        Explosion.BlockInteraction.DESTROY_WITH_DECAY),
                 List.of()));
         String alienId = "crater:" + alienX + "," + home.y() + "," + alienZ;
         BoardService board = BoardRegistry.get(level);
 
         BoardTicket ticket = board.board().find(craterId).orElse(null);
-        helper.assertTrue(ticket != null,
+        helper.assertTrue(
+                ticket != null,
                 "Взрыв крипера за территорией обязан поднять FILL_CRATER " + craterId
                         + ": иначе воронки за городом не заделываются");
-        helper.assertTrue(ticket.boardCase() == BoardCase.FILL_CRATER,
+        helper.assertTrue(
+                ticket.boardCase() == BoardCase.FILL_CRATER,
                 "Задание воронки — кейс FILL_CRATER, фактически " + ticket.boardCase());
-        helper.assertTrue(Map.of("dirt", BLAST_DIRT).equals(ticket.requiredItems()),
+        helper.assertTrue(
+                Map.of("dirt", BLAST_DIRT).equals(ticket.requiredItems()),
                 "Воронка радиуса 5 требует 79 земли (ceil(pi*25)), фактически "
                         + ticket.requiredItems() + ": гейт с неверным числом либо держит "
                         + "лишнее, либо отпускает без запаса");
-        helper.assertTrue(board.board().find(alienId).isEmpty(),
-                "Взрыв не крипера (свинья) — не кейс доски: задание " + alienId
-                        + " поднялось зря");
-        helper.assertTrue(BoardRules.priorityOf(BoardCase.FILL_CRATER) == 35,
+        helper.assertTrue(
+                board.board().find(alienId).isEmpty(),
+                "Взрыв не крипера (свинья) — не кейс доски: задание " + alienId + " поднялось зря");
+        helper.assertTrue(
+                BoardRules.priorityOf(BoardCase.FILL_CRATER) == 35,
                 "Приоритет воронки — 35 (ниже снабжения 40, ниже стройки 50): воронка — задание "
                         + "с низким приоритетом (п. 3), фактически "
                         + BoardRules.priorityOf(BoardCase.FILL_CRATER));
         List<Point> homes = List.of(new Point(home.x(), home.z()));
-        helper.assertTrue(!CraterNeed.outsideTerritory(new Point(home.x() + 4, home.z()), homes,
-                        BoardTuning.craterTerritoryRadius()),
-                "Взрыв в 4 блоках от дома — внутри территории: воронку закрывает координатор, "
-                        + "а не доска");
-        helper.assertTrue(CraterNeed.outsideTerritory(new Point(farX, farZ), homes,
-                        BoardTuning.craterTerritoryRadius()),
+        helper.assertTrue(
+                !CraterNeed.outsideTerritory(
+                        new Point(home.x() + 4, home.z()), homes, BoardTuning.craterTerritoryRadius()),
+                "Взрыв в 4 блоках от дома — внутри территории: воронку закрывает координатор, " + "а не доска");
+        helper.assertTrue(
+                CraterNeed.outsideTerritory(new Point(farX, farZ), homes, BoardTuning.craterTerritoryRadius()),
                 "Взрыв в 100000 блоках — за территорией: предикат обязан это видеть");
         board.board().cancel(craterId);
-        helper.assertTrue(board.board().statusOf(craterId).orElse(null)
-                        == BoardStatus.CANCELLED,
+        helper.assertTrue(
+                board.board().statusOf(craterId).orElse(null) == BoardStatus.CANCELLED,
                 "Проверенная воронка снимается отменой, а не висит в очереди: статус "
                         + board.board().statusOf(craterId).orElse(null));
         GameTestFixtures.finish(helper);
@@ -145,26 +164,39 @@ public final class BoardCraterGameTests {
         BoardService board = BoardRegistry.get(level);
         drainForeignTickets(board);
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
-        board.submit(new BoardTicket("board_test_crater_fill", BoardCase.FILL_CRATER,
-                Optional.of(spirit.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
-                level.getGameTime(), 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of("dirt", 9)),
+        board.submit(
+                new BoardTicket(
+                        "board_test_crater_fill",
+                        BoardCase.FILL_CRATER,
+                        Optional.of(spirit.getUUID()),
+                        BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                        level.getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of("dirt", 9)),
                 TicketTarget.at(center).withCraterBlocks(9));
         board.rebuild(level, level.getGameTime());
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.getUUID()
-                            .equals(board.board().holderOf("board_test_crater_fill").orElse(null)),
+            helper.assertTrue(
+                    spirit.getUUID()
+                            .equals(board.board()
+                                    .holderOf("board_test_crater_fill")
+                                    .orElse(null)),
                     "Заделку держит назначенный дух: держатель "
                             + board.board().holderOf("board_test_crater_fill").orElse(null));
-            helper.assertTrue(countHoles(helper) == 0,
+            helper.assertTrue(
+                    countHoles(helper) == 0,
                     "С землёй воронка 3×3 заделана ровно: осталось " + countHoles(helper)
-                            + " пустот на уровне пола; задача духа " + spirit.currentTaskScript().orElse("нет")
+                            + " пустот на уровне пола; задача духа "
+                            + spirit.currentTaskScript().orElse("нет")
                             + ", статус " + spirit.taskStatus().map(Enum::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + ", дух в "
                             + helper.relativePos(spirit.blockPosition()) + ", земли "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT));
-            helper.assertTrue(board.board().statusOf("board_test_crater_fill").orElse(null)
-                            == BoardStatus.DONE,
+            helper.assertTrue(
+                    board.board().statusOf("board_test_crater_fill").orElse(null) == BoardStatus.DONE,
                     "После заделки задание закрыто как DONE, статус "
                             + board.board().statusOf("board_test_crater_fill").orElse(null));
             GameTestFixtures.finish(helper);
@@ -184,23 +216,53 @@ public final class BoardCraterGameTests {
         BoardService board = BoardRegistry.get(level);
         drainForeignTickets(board);
         BlockCoord near = absolute(helper, new BlockPos(2, 1, 2));
-        board.submit(new BoardTicket("board_test_generic_planks", BoardCase.GATHER_MATERIALS, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS), level.getGameTime(), 1,
-                BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), TicketTarget.at(near).withSupply("oak_planks", 4));
-        board.submit(new BoardTicket("board_test_addressed_crater", BoardCase.FILL_CRATER,
-                Optional.of(addressee.getUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(),
-                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of("dirt", 9)),
+        board.submit(
+                new BoardTicket(
+                        "board_test_generic_planks",
+                        BoardCase.GATHER_MATERIALS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                        level.getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(near).withSupply("oak_planks", 4));
+        board.submit(
+                new BoardTicket(
+                        "board_test_addressed_crater",
+                        BoardCase.FILL_CRATER,
+                        Optional.of(addressee.getUUID()),
+                        BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                        level.getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of("dirt", 9)),
                 TicketTarget.at(absolute(helper, new BlockPos(3, 0, 3))).withCraterBlocks(9));
         board.rebuild(level, level.getGameTime());
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(addressee.getUUID().equals(board.board().holderOf("board_test_addressed_crater")
-                            .orElse(null)),
+            helper.assertTrue(
+                    addressee
+                            .getUUID()
+                            .equals(board.board()
+                                    .holderOf("board_test_addressed_crater")
+                                    .orElse(null)),
                     "Адресное задание обязано достаться своему духу, хотя «добыть доски» выше и ближе к нему: "
-                            + "держатель " + board.board().holderOf("board_test_addressed_crater").orElse(null));
-            helper.assertTrue(other.getUUID().equals(board.board().holderOf("board_test_generic_planks").orElse(null)),
+                            + "держатель "
+                            + board.board()
+                                    .holderOf("board_test_addressed_crater")
+                                    .orElse(null));
+            helper.assertTrue(
+                    other.getUUID()
+                            .equals(board.board()
+                                    .holderOf("board_test_generic_planks")
+                                    .orElse(null)),
                     "Задание без адресата берёт другой свободный дух, а не тот, кого ждёт адресное: держатель "
-                            + board.board().holderOf("board_test_generic_planks").orElse(null));
+                            + board.board()
+                                    .holderOf("board_test_generic_planks")
+                                    .orElse(null));
             board.board().cancel("board_test_generic_planks");
             board.board().cancel("board_test_addressed_crater");
             GameTestFixtures.finish(helper);
@@ -216,19 +278,29 @@ public final class BoardCraterGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = BoardRegistry.get(level);
         BlockCoord center = absolute(helper, new BlockPos(4, 0, 4));
-        board.submit(new BoardTicket("board_test_crater_wait", BoardCase.FILL_CRATER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(), 1, BoardTicket.ALWAYS_CAUSE,
-                List.of(), Map.of("dirt", 5000)), TicketTarget.at(center).withCraterBlocks(5000));
+        board.submit(
+                new BoardTicket(
+                        "board_test_crater_wait",
+                        BoardCase.FILL_CRATER,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                        level.getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of("dirt", 5000)),
+                TicketTarget.at(center).withCraterBlocks(5000));
         board.rebuild(level, level.getGameTime());
 
         helper.succeedWhen(() -> {
             long now = level.getGameTime();
-            helper.assertTrue(board.board().statusOf("board_test_crater_wait").orElse(null)
-                            == BoardStatus.WAITING_RESOURCES,
+            helper.assertTrue(
+                    board.board().statusOf("board_test_crater_wait").orElse(null) == BoardStatus.WAITING_RESOURCES,
                     "Без 5000 земли задание висит в WAITING_RESOURCES, статус "
                             + board.board().statusOf("board_test_crater_wait").orElse(null)
                             + ": стройка, стартовавшая без ресурсов, ломает гейт доски");
-            helper.assertTrue(board.board().statusOf("supply:dirt").isPresent()
+            helper.assertTrue(
+                    board.board().statusOf("supply:dirt").isPresent()
                             || board.board().recentlyFailed("supply:dirt", now),
                     "При нехватке доска ставит добычу supply:dirt: без неё ждущее задание "
                             + "зависнет навсегда (добыча видна как задание, либо как свежий провал)");

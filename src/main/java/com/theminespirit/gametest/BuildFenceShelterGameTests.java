@@ -26,8 +26,7 @@ public final class BuildFenceShelterGameTests {
     private static final int SHELTER_BLOCKS = 25;
     private static final int FEET_Y = 1;
 
-    private BuildFenceShelterGameTests() {
-    }
+    private BuildFenceShelterGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -43,9 +42,10 @@ public final class BuildFenceShelterGameTests {
     }
 
     private static void assertSucceeded(GameTestHelper helper, SpiritEntity spirit, String message) {
-        helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                message + ": статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
-                        + ", причина " + spirit.taskFailureReason().orElse("нет"));
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                message + ": статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                        + spirit.taskFailureReason().orElse("нет"));
     }
 
     @GameTest(template = "arena", batch = "build_fence_script", timeoutTicks = 400)
@@ -62,10 +62,14 @@ public final class BuildFenceShelterGameTests {
             points.add(absolute.getX() + "," + absolute.getY() + "," + absolute.getZ());
         }
         BlockPos gate = new BlockPos(4, FEET_Y, 2);
-        SpiritEntity spirit = spawnWith(helper, START,
-                new ItemStack(Items.OAK_FENCE, 15), new ItemStack(Items.OAK_FENCE_GATE, 1));
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_fence", Map.of(
-                "block", "minecraft:oak_fence", "gate", "minecraft:oak_fence_gate", "points", points)),
+        SpiritEntity spirit =
+                spawnWith(helper, START, new ItemStack(Items.OAK_FENCE, 15), new ItemStack(Items.OAK_FENCE_GATE, 1));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "build_fence",
+                        Map.of("block", "minecraft:oak_fence", "gate", "minecraft:oak_fence_gate", "points", points)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
@@ -73,18 +77,22 @@ public final class BuildFenceShelterGameTests {
             assertSucceeded(helper, spirit, "забор по прямоугольнику обязан построиться целиком");
             for (BlockPos cell : perimeter(corners)) {
                 if (cell.equals(gate)) {
-                    helper.assertTrue(helper.getBlockState(cell).is(Blocks.OAK_FENCE_GATE),
+                    helper.assertTrue(
+                            helper.getBlockState(cell).is(Blocks.OAK_FENCE_GATE),
                             "в середине длинной стороны обязана стоять калитка, а там "
                                     + helper.getBlockState(cell).getBlock());
                 } else {
-                    helper.assertTrue(helper.getBlockState(cell).is(Blocks.OAK_FENCE),
+                    helper.assertTrue(
+                            helper.getBlockState(cell).is(Blocks.OAK_FENCE),
                             "клетка периметра " + cell + " обязана быть забором, а там "
                                     + helper.getBlockState(cell).getBlock());
                 }
             }
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_FENCE) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_FENCE) == 0,
                     "пятнадцать блоков забора обязаны израсходоваться ровно: двойного расхода нет");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_FENCE_GATE) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_FENCE_GATE) == 0,
                     "калитка обязана быть поставлена: в инвентаре не осталось ни одной");
             GameTestFixtures.finish(helper);
         });
@@ -95,8 +103,8 @@ public final class BuildFenceShelterGameTests {
         prepare(helper);
         BlockPos start = new BlockPos(4, FEET_Y, 4);
         SpiritEntity spirit = spawnWith(helper, start, new ItemStack(Items.STONE, 64));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("build_shelter", Map.of("side", SHELTER_SIDE)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("build_shelter", Map.of("side", SHELTER_SIDE)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -108,24 +116,29 @@ public final class BuildFenceShelterGameTests {
                         BlockPos wall = start.offset(dx, dy, dz);
                         boolean perimeter = dx != 0 || dz != 0;
                         if (perimeter) {
-                            helper.assertTrue(helper.getBlockState(wall).is(Blocks.STONE),
+                            helper.assertTrue(
+                                    helper.getBlockState(wall).is(Blocks.STONE),
                                     "стена укрытия в " + wall + " обязана быть из камня, а там "
                                             + helper.getBlockState(wall).getBlock());
                             placed++;
                         }
                     }
                     BlockPos roof = start.offset(dx, 2, dz);
-                    helper.assertTrue(helper.getBlockState(roof).is(Blocks.STONE),
+                    helper.assertTrue(
+                            helper.getBlockState(roof).is(Blocks.STONE),
                             "крыша укрытия в " + roof + " обязана быть из камня, а там "
                                     + helper.getBlockState(roof).getBlock());
                     placed++;
                 }
             }
-            helper.assertTrue(placed == SHELTER_BLOCKS,
-                    "укрытие 3×3 — 25 блоков (16 стен и 9 крыши), посчитано " + placed);
-            helper.assertTrue(helper.getBlockState(start).isAir() && helper.getBlockState(start.above()).isAir(),
+            helper.assertTrue(
+                    placed == SHELTER_BLOCKS, "укрытие 3×3 — 25 блоков (16 стен и 9 крыши), посчитано " + placed);
+            helper.assertTrue(
+                    helper.getBlockState(start).isAir()
+                            && helper.getBlockState(start.above()).isAir(),
                     "клетки духа внутри укрытия обязаны остаться свободными: иначе дух замурован");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE) == 64 - SHELTER_BLOCKS,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE) == 64 - SHELTER_BLOCKS,
                     "камня обязано израсходоваться ровно 25, осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE));
             GameTestFixtures.finish(helper);

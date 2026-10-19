@@ -11,18 +11,19 @@ public final class OutsideGate {
     private final NightLeash leash;
 
     public OutsideGate(OutsideRules rules, int settlementRadius) {
-        this.rules = Objects.requireNonNull(rules,
-                "Правило выхода без данных не работает: порог группы и радиус живут в outside.json");
+        this.rules = Objects.requireNonNull(
+                rules, "Правило выхода без данных не работает: порог группы и радиус живут в outside.json");
         if (settlementRadius < 1) {
-            throw new IllegalArgumentException("Радиус поселения " + settlementRadius
-                    + " меньше 1: с ним ни одна точка не считалась бы своей");
+            throw new IllegalArgumentException(
+                    "Радиус поселения " + settlementRadius + " меньше 1: с ним ни одна точка не считалась бы своей");
         }
         this.settlementRadius = settlementRadius;
         this.leash = NightLeash.withDefaultRules();
     }
 
     public static OutsideGate withDefaults() {
-        return new OutsideGate(OutsideRules.loadDefault(), NightLeash.withDefaultRules().settlementRadius());
+        return new OutsideGate(
+                OutsideRules.loadDefault(), NightLeash.withDefaultRules().settlementRadius());
     }
 
     public int partyMin() {
@@ -63,11 +64,9 @@ public final class OutsideGate {
         }
     }
 
-    public sealed interface Decision {
-    }
+    public sealed interface Decision {}
 
-    public record Allowed() implements Decision {
-    }
+    public record Allowed() implements Decision {}
 
     public record Refused(String reason) implements Decision {
         public Refused {

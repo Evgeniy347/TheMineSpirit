@@ -7,15 +7,19 @@ import java.util.TreeMap;
 
 /** Строка задания доски для чата {@code /spirit board}: кейс, приоритет, владелец, статус, нехватка. */
 public final class BoardText {
-    private BoardText() {
-    }
+    private BoardText() {}
 
     public static String line(BoardTask task) {
         StringBuilder text = new StringBuilder();
-        text.append(task.id()).append(" — ").append(task.boardCase())
-                .append(", уровень ").append(task.level())
-                .append(", приоритет ").append(task.effectivePriority())
-                .append(", ").append(statusRu(task.status()));
+        text.append(task.id())
+                .append(" — ")
+                .append(task.boardCase())
+                .append(", уровень ")
+                .append(task.level())
+                .append(", приоритет ")
+                .append(task.effectivePriority())
+                .append(", ")
+                .append(statusRu(task.status()));
         if (!task.modifiers().isEmpty()) {
             text.append(", модификаторы: ").append(String.join(", ", task.modifiers()));
         }

@@ -15,14 +15,16 @@ public final class LevelOreView implements OreView {
 
     public LevelOreView(Level level, Set<Block> ores) {
         this.level = Objects.requireNonNull(level, "Уровень не может быть null: по нему читаются блоки руды");
-        this.ores = Set.copyOf(Objects.requireNonNull(ores, "Множество руды не может быть null: без него непонятно, что искать"));
+        this.ores = Set.copyOf(
+                Objects.requireNonNull(ores, "Множество руды не может быть null: без него непонятно, что искать"));
     }
 
     @Override
     public boolean isOre(BlockCoord coord) {
         Objects.requireNonNull(coord, "Координата не может быть null: неизвестно, какую клетку проверять");
         reads++;
-        return ores.contains(level.getBlockState(new BlockPos(coord.x(), coord.y(), coord.z())).getBlock());
+        return ores.contains(level.getBlockState(new BlockPos(coord.x(), coord.y(), coord.z()))
+                .getBlock());
     }
 
     public int reads() {

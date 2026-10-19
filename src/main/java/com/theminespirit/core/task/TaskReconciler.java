@@ -50,8 +50,12 @@ public final class TaskReconciler {
             case RUNNING -> running(record, reading.progress());
             case SUCCEEDED -> finish(record, TaskState.SUCCEEDED, null, reading.result());
             case CANCELLED -> finish(record, TaskState.CANCELLED, null, null);
-            case FAILED -> finish(record.withProgress(reading.failedAt()), TaskState.FAILED,
-                    reading.failureReason() == null ? NO_REASON : reading.failureReason(), null);
+            case FAILED ->
+                finish(
+                        record.withProgress(reading.failedAt()),
+                        TaskState.FAILED,
+                        reading.failureReason() == null ? NO_REASON : reading.failureReason(),
+                        null);
         }
     }
 
@@ -65,7 +69,8 @@ public final class TaskReconciler {
 
     private boolean displaced(TaskRecord record, SpiritReading reading) {
         long expected = registry.startedGeneration(record.taskId());
-        return expected != SpiritReading.UNKNOWN_GENERATION && reading.generation() != SpiritReading.UNKNOWN_GENERATION
+        return expected != SpiritReading.UNKNOWN_GENERATION
+                && reading.generation() != SpiritReading.UNKNOWN_GENERATION
                 && reading.generation() != expected;
     }
 

@@ -20,8 +20,7 @@ public final class SpiritChunkTickets {
     private static final TicketController CONTROLLER =
             new TicketController(CONTROLLER_ID, SpiritChunkTickets::validateTickets);
 
-    private SpiritChunkTickets() {
-    }
+    private SpiritChunkTickets() {}
 
     public static void registerControllers(RegisterTicketControllersEvent event) {
         event.register(CONTROLLER);
@@ -38,8 +37,8 @@ public final class SpiritChunkTickets {
 
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
         Set<UUID> owners = helper.getEntityTickets().keySet();
-        Set<UUID> keep = SpiritTicketRetention.keepAtLoad(owners,
-                SpiritRegistry.find(level).map(SpiritRegistry::alive));
+        Set<UUID> keep = SpiritTicketRetention.keepAtLoad(
+                owners, SpiritRegistry.find(level).map(SpiritRegistry::alive));
         for (UUID owner : owners) {
             if (!keep.contains(owner)) {
                 helper.removeAllTickets(owner);

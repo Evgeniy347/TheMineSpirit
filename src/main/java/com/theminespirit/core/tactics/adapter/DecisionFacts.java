@@ -12,8 +12,8 @@ public record DecisionFacts(int enemies, String nearest, double hp, double maxHp
 
     public DecisionFacts {
         if (enemies < 0) {
-            throw new IllegalArgumentException("DecisionFacts.enemies = " + enemies + ": врагов рядом не бывает "
-                    + "отрицательного числа");
+            throw new IllegalArgumentException(
+                    "DecisionFacts.enemies = " + enemies + ": врагов рядом не бывает " + "отрицательного числа");
         }
         if (maxHp < 1 || hp < 0 || hp > maxHp) {
             throw new IllegalArgumentException("DecisionFacts hp = " + hp + " из maxHp = " + maxHp
@@ -25,8 +25,8 @@ public record DecisionFacts(int enemies, String nearest, double hp, double maxHp
     public static DecisionFacts of(Situation situation) {
         SelfFacts self = situation.self();
         List<EnemyFact> enemies = situation.enemies();
-        return new DecisionFacts(enemies.size(), nearest(situation), self.hp(), self.maxHp(), self.armor(),
-                weapon(self));
+        return new DecisionFacts(
+                enemies.size(), nearest(situation), self.hp(), self.maxHp(), self.armor(), weapon(self));
     }
 
     private static String nearest(Situation situation) {

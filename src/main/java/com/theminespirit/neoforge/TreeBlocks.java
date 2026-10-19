@@ -10,13 +10,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
 final class TreeBlocks {
-    private TreeBlocks() {
-    }
+    private TreeBlocks() {}
 
     static Set<Block> logs(List<TreeSpecies> species) {
         Set<Block> blocks = new LinkedHashSet<>();
         for (TreeSpecies entry : species) {
-            blocks.add(BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(entry.logId()))
+            blocks.add(BuiltInRegistries.BLOCK
+                    .getOptional(ResourceLocation.parse(entry.logId()))
                     .orElseThrow(() -> new IllegalStateException("Блок брёвен '" + entry.logId() + "' породы '"
                             + entry.id() + "' отсутствует в реестре: сторож treeSpecies_AllIds_ExistInRegistries "
                             + "обязан был поймать опечатку до запуска рубки")));

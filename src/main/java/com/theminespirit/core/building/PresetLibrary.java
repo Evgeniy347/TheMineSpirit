@@ -148,8 +148,8 @@ public final class PresetLibrary {
         }
         List<Preset> presets = new ArrayList<>(entries.size());
         for (int i = 0; i < entries.size(); i++) {
-            presets.add(parsePreset(JsonResource.text(entries.get(i), index.origin(), "id пресета"),
-                    contents.get(i + 1)));
+            presets.add(
+                    parsePreset(JsonResource.text(entries.get(i), index.origin(), "id пресета"), contents.get(i + 1)));
         }
         return new PresetLibrary(presets, parsePlanned(root, index.origin()));
     }
@@ -162,14 +162,14 @@ public final class PresetLibrary {
         List<PlannedLevel> planned = new ArrayList<>();
         for (JsonNode item : JsonResource.array(node, origin, "списка planned")) {
             if (!item.isObject()) {
-                throw new IllegalStateException("Файл '" + origin
-                        + "': запланированный уровень обязан быть объектом с метаданными");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': запланированный уровень обязан быть объектом с метаданными");
             }
             JsonResource.checkFields(item, PLANNED_FIELDS, origin, "запланированного уровня");
             int level = JsonResource.integer(item.get("level"), origin, "поля level запланированного уровня");
             String name = JsonResource.text(item.get("name"), origin, "поля name запланированного уровня");
-            planned.add(new PlannedLevel(level, name,
-                    optionalText(item.get("requires"), origin, "поля requires запланированного уровня")));
+            planned.add(new PlannedLevel(
+                    level, name, optionalText(item.get("requires"), origin, "поля requires запланированного уровня")));
         }
         return List.copyOf(planned);
     }
@@ -200,8 +200,12 @@ public final class PresetLibrary {
     }
 
     private static void checkEntry(String id, BlockCoord entry, Schematic schematic, String origin) {
-        if (entry.x() < 0 || entry.y() < 0 || entry.z() < 0
-                || entry.x() >= schematic.sizeX() || entry.y() >= schematic.sizeY() || entry.z() >= schematic.sizeZ()) {
+        if (entry.x() < 0
+                || entry.y() < 0
+                || entry.z() < 0
+                || entry.x() >= schematic.sizeX()
+                || entry.y() >= schematic.sizeY()
+                || entry.z() >= schematic.sizeZ()) {
             throw new IllegalStateException("Файл '" + origin + "': у пресета '" + id + "' точка входа "
                     + "[" + entry.x() + "," + entry.y() + "," + entry.z() + "] вне габаритов "
                     + schematic.sizeX() + "×" + schematic.sizeY() + "×" + schematic.sizeZ()

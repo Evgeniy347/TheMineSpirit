@@ -26,8 +26,7 @@ public final class NoDropGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(4, 1, 4);
     private static final int SETTLE_TICKS = 5;
 
-    private NoDropGameTests() {
-    }
+    private NoDropGameTests() {}
 
     @GameTest(template = "arena", batch = "no_drop_almost_full", timeoutTicks = 400)
     public static void gather_AlmostFullInventory_MinesWithoutDropping(GameTestHelper helper) {
@@ -42,27 +41,31 @@ public final class NoDropGameTests {
         spirit.getInventory().setItem(35, new ItemStack(Items.COBBLESTONE, 63));
         int before = GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE);
 
-        SpiritRun.launch(helper, spirit,
+        SpiritRun.launch(
+                helper,
+                spirit,
                 new ScriptCall("gather", Map.of("block", "cobblestone", "count", 1, "radius", 8)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "gather одного булыжника при почти полном инвентаре обязан завершиться успехом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == before + 1,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == before + 1,
                     "в инвентаре обязан появиться добытый булыжник: было " + before + ", стало "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            helper.assertTrue(GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
+            helper.assertTrue(
+                    GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
                     "на земле не должно быть выброшенных булыжников: политика «не выкидывать предметы»");
             GameTestFixtures.finish(helper);
         });
     }
 
     @GameTest(template = "arena", batch = "no_drop_warehouse", timeoutTicks = 400)
-    public static void gather_FullInventoryWithWarehouse_DepositsSurplusMinesAndKeepsPickaxe(
-            GameTestHelper helper) {
+    public static void gather_FullInventoryWithWarehouse_DepositsSurplusMinesAndKeepsPickaxe(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         placeDoubleChest(helper, 5, 6, 1, 4);
@@ -74,27 +77,36 @@ public final class NoDropGameTests {
         }
         Container warehouse = chestAt(helper, 5, 1, 4);
 
-        SpiritRun run = SpiritRun.launch(helper, spirit,
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
                 new ScriptCall("gather", Map.of("block", "cobblestone", "count", 1, "radius", 8)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "gather при полном инвентаре с сундуком склада рядом обязан сдать лишнее и продолжить "
-                            + "работу: статус " + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
+                            + "работу: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи")
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(warehouse, Items.COBBLESTONE) == 35 * 64,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(warehouse, Items.COBBLESTONE) == 35 * 64,
                     "весь булыжник сверх набора обязан уехать на склад (35 стопок по 64), фактически "
                             + GameTestFixtures.countInInventory(warehouse, Items.COBBLESTONE));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1,
                     "кирка — текущий инструмент, сдавать её нельзя: без неё работа не продолжится");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
                     "после сдачи дух обязан продолжить добычу и подобрать новый булыжник, фактически у духа "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            helper.assertTrue(helper.getBlockState(new BlockPos(2, 1, 2)).isAir(),
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(2, 1, 2)).isAir(),
                     "целевой булыжник обязан быть сломан после сдачи: работа продолжилась, а не остановилась");
-            helper.assertTrue(GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
+            helper.assertTrue(
+                    GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
                     "на земле не должно остаться добычи: дух не выкидывает предметы");
             GameTestFixtures.finish(helper);
         });
@@ -112,23 +124,30 @@ public final class NoDropGameTests {
         }
         int before = GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE);
 
-        SpiritRun.launch(helper, spirit,
+        SpiritRun.launch(
+                helper,
+                spirit,
                 new ScriptCall("gather", Map.of("block", "cobblestone", "count", 1, "radius", 8)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "gather при полном инвентаре обязан завершиться отказом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("инвентарь полон"),
+            helper.assertTrue(
+                    spirit.taskFailureReason().orElse("").contains("инвентарь полон"),
                     "причина отказа обязана называть полный инвентарь: "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == before,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == before,
                     "инвентарь не должен измениться при отказе: было " + before + ", стало "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            helper.assertTrue(GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
+            helper.assertTrue(
+                    GameTestFixtures.dropsInArea(helper, Items.COBBLESTONE).isEmpty(),
                     "на земле не должно быть выброшенных булыжников при отказе");
-            helper.assertTrue(helper.getBlockState(new BlockPos(2, 1, 2)).is(Blocks.COBBLESTONE),
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(2, 1, 2)).is(Blocks.COBBLESTONE),
                     "блок при отказе не должен быть сломан");
             GameTestFixtures.finish(helper);
         });
@@ -137,14 +156,22 @@ public final class NoDropGameTests {
     private static void placeDoubleChest(GameTestHelper helper, int westX, int eastX, int y, int z) {
         BlockPos west = helper.absolutePos(new BlockPos(westX, y, z));
         BlockPos east = helper.absolutePos(new BlockPos(eastX, y, z));
-        helper.getLevel().setBlock(west,
-                Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH)
-                        .setValue(ChestBlock.TYPE, ChestType.LEFT),
-                3);
-        helper.getLevel().setBlock(east,
-                Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH)
-                        .setValue(ChestBlock.TYPE, ChestType.RIGHT),
-                3);
+        helper.getLevel()
+                .setBlock(
+                        west,
+                        Blocks.CHEST
+                                .defaultBlockState()
+                                .setValue(ChestBlock.FACING, Direction.NORTH)
+                                .setValue(ChestBlock.TYPE, ChestType.LEFT),
+                        3);
+        helper.getLevel()
+                .setBlock(
+                        east,
+                        Blocks.CHEST
+                                .defaultBlockState()
+                                .setValue(ChestBlock.FACING, Direction.NORTH)
+                                .setValue(ChestBlock.TYPE, ChestType.RIGHT),
+                        3);
     }
 
     private static Container chestAt(GameTestHelper helper, int x, int y, int z) {

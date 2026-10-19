@@ -83,7 +83,8 @@ public final class Approach {
             finish();
             return State.STUCK;
         }
-        if (pathRefresh.shouldRefresh(target.x, target.y, target.z, spirit.getNavigation().isDone())) {
+        if (pathRefresh.shouldRefresh(
+                target.x, target.y, target.z, spirit.getNavigation().isDone())) {
             moveToTarget(target);
             spirit.countPathBuild();
             if (mode == PathMode.CAREFUL && spirit.onGround()) {
@@ -193,8 +194,11 @@ public final class Approach {
             return false;
         }
         LevelSafetyView safety = new LevelSafetyView(spirit.level());
-        Optional<BlockCoord> step = rules.step(blockCoord(spirit.position()), blockCoord(target),
-                cell -> MiningSafety.canStand(cell, safety) && allowedThere(cell), this::clearPath);
+        Optional<BlockCoord> step = rules.step(
+                blockCoord(spirit.position()),
+                blockCoord(target),
+                cell -> MiningSafety.canStand(cell, safety) && allowedThere(cell),
+                this::clearPath);
         if (step.isEmpty()) {
             return false;
         }
@@ -218,8 +222,10 @@ public final class Approach {
     private boolean clearPath(BlockCoord cell) {
         Vec3 eye = spirit.getEyePosition();
         Vec3 head = new Vec3(cell.x() + 0.5, cell.y() + spirit.getEyeHeight(), cell.z() + 0.5);
-        return spirit.level().clip(new ClipContext(eye, head, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,
-                spirit)).getType() == HitResult.Type.MISS;
+        return spirit.level()
+                        .clip(new ClipContext(eye, head, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, spirit))
+                        .getType()
+                == HitResult.Type.MISS;
     }
 
     private void moveToTarget(Vec3 target) {

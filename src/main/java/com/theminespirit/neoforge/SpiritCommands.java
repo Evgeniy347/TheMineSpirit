@@ -9,8 +9,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 public final class SpiritCommands {
-    private SpiritCommands() {
-    }
+    private SpiritCommands() {}
 
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();

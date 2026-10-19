@@ -11,14 +11,13 @@ import java.util.Objects;
 public final class CraterNeed {
     private static final String DIRT = "dirt";
 
-    private CraterNeed() {
-    }
+    private CraterNeed() {}
 
     public static Map<String, Integer> estimate(Point blast, double radius) {
         Objects.requireNonNull(blast, "blast не может быть null: точка взрыва — центр воронки");
         if (radius < 0) {
-            throw new IllegalArgumentException("Радиус взрыва равен " + radius
-                    + " и отрицателен: взрыв не имеет отрицательного радиуса");
+            throw new IllegalArgumentException(
+                    "Радиус взрыва равен " + radius + " и отрицателен: взрыв не имеет отрицательного радиуса");
         }
         if (radius == 0) {
             return Map.of();
@@ -31,8 +30,8 @@ public final class CraterNeed {
         Objects.requireNonNull(blast, "blast не может быть null: точка взрыва — центр воронки");
         Objects.requireNonNull(homes, "homes не может быть null: список домов задают пустым списком");
         if (radius < 0) {
-            throw new IllegalArgumentException("Радиус территории равен " + radius
-                    + " и отрицателен: территория не имеет отрицательного радиуса");
+            throw new IllegalArgumentException(
+                    "Радиус территории равен " + radius + " и отрицателен: территория не имеет отрицательного радиуса");
         }
         return homes.stream().allMatch(home -> distance(blast, home) > radius);
     }

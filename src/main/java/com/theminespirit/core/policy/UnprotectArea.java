@@ -4,11 +4,18 @@ import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 
-public record UnprotectArea(String id, String dimension, BlockBox box, String grantedBy,
-        long grantedAtMillis, String reason, long expiresAtMillis) {
+public record UnprotectArea(
+        String id,
+        String dimension,
+        BlockBox box,
+        String grantedBy,
+        long grantedAtMillis,
+        String reason,
+        long expiresAtMillis) {
     public UnprotectArea {
         Objects.requireNonNull(id, "Id разрешённой области не может быть null: по нему снимают разрешение");
-        Objects.requireNonNull(dimension, "Мир разрешённой области не может быть null: область принадлежит одному миру");
+        Objects.requireNonNull(
+                dimension, "Мир разрешённой области не может быть null: область принадлежит одному миру");
         Objects.requireNonNull(box, "Куб разрешённой области не может быть null: без него область ничего не разрешает");
         Objects.requireNonNull(grantedBy, "Автор разрешения не может быть null: по нему видно, кто попросил");
         Objects.requireNonNull(reason, "Причина разрешения не может быть null: по ней видно, зачем сняли защиту");

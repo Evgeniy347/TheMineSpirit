@@ -10,10 +10,20 @@ import java.util.Optional;
  * Один файл — единственный источник правды о постройке: габариты, вход и материалы выводятся из него же.
  */
 public record SchematicDocument(Schematic schematic, Header header, List<Exemption> exemptions) {
-    public record Header(Optional<String> name, Optional<BuildingType> type, Optional<Integer> stage, int level,
-            Optional<String> requires, Optional<BlockCoord> entrance) {
-        public static final Header EMPTY = new Header(Optional.empty(), Optional.empty(), Optional.empty(),
-                Preset.LEVEL_NONE, Optional.empty(), Optional.empty());
+    public record Header(
+            Optional<String> name,
+            Optional<BuildingType> type,
+            Optional<Integer> stage,
+            int level,
+            Optional<String> requires,
+            Optional<BlockCoord> entrance) {
+        public static final Header EMPTY = new Header(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Preset.LEVEL_NONE,
+                Optional.empty(),
+                Optional.empty());
 
         public Header {
             Objects.requireNonNull(name, "Название не может быть null: отсутствие задают Optional.empty()");

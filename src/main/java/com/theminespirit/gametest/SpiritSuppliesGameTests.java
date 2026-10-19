@@ -9,12 +9,11 @@ import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -34,8 +33,7 @@ public final class SpiritSuppliesGameTests {
     private static final String BATCH = "acquire_supplies";
     private static final int TIMEOUT = 100;
 
-    private SpiritSuppliesGameTests() {
-    }
+    private SpiritSuppliesGameTests() {}
 
     @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
     public static void inventory_TwoStacksInInventory_CountsTotal(GameTestHelper helper) {
@@ -46,11 +44,10 @@ public final class SpiritSuppliesGameTests {
         spirit.getInventory().setItem(3, new ItemStack(Items.IRON_INGOT, 3));
         SpiritSupplies supplies = new SpiritSupplies(spirit, 8);
 
-        helper.assertTrue(supplies.inInventory("iron_ingot") == 7,
-                "счёт инвентаря обязан сложить обе стопки (4+3), фактически "
-                        + supplies.inInventory("iron_ingot"));
-        helper.assertTrue(supplies.inInventory("diamond") == 0,
-                "отсутствующий предмет обязан дать ноль, а не ошибку");
+        helper.assertTrue(
+                supplies.inInventory("iron_ingot") == 7,
+                "счёт инвентаря обязан сложить обе стопки (4+3), фактически " + supplies.inInventory("iron_ingot"));
+        helper.assertTrue(supplies.inInventory("diamond") == 0, "отсутствующий предмет обязан дать ноль, а не ошибку");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -67,13 +64,15 @@ public final class SpiritSuppliesGameTests {
 
         Map<String, Integer> inventory = supplies.inventory();
 
-        helper.assertTrue(inventory.getOrDefault("iron_ingot", 0) == 7,
+        helper.assertTrue(
+                inventory.getOrDefault("iron_ingot", 0) == 7,
                 "инвентарь обязан сложить обе стопки железа (4+3), фактически "
                         + inventory.getOrDefault("iron_ingot", 0));
-        helper.assertTrue(inventory.getOrDefault("coal", 0) == 2,
+        helper.assertTrue(
+                inventory.getOrDefault("coal", 0) == 2,
                 "инвентарь обязан содержать уголь, фактически " + inventory.getOrDefault("coal", 0));
-        helper.assertTrue(inventory.size() == 2,
-                "инвентарь обязан содержать только занятые предметы, фактически " + inventory);
+        helper.assertTrue(
+                inventory.size() == 2, "инвентарь обязан содержать только занятые предметы, фактически " + inventory);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -90,11 +89,12 @@ public final class SpiritSuppliesGameTests {
         List<ScriptCall> steps = supplies.withdraw("iron_ingot", 5);
 
         String absolute = absolute(helper, new BlockPos(6, 1, 4));
-        List<ScriptCall> expected = List.of(new ScriptCall("withdraw",
-                Map.of("container", absolute, "item", "iron_ingot", "count", 5)));
-        helper.assertTrue(steps.equals(expected),
-                "один сундук обязан дать один шаг с его мировыми координатами и числом не больше нужного, "
-                        + "шаги: " + steps);
+        List<ScriptCall> expected =
+                List.of(new ScriptCall("withdraw", Map.of("container", absolute, "item", "iron_ingot", "count", 5)));
+        helper.assertTrue(
+                steps.equals(expected),
+                "один сундук обязан дать один шаг с его мировыми координатами и числом не больше нужного, " + "шаги: "
+                        + steps);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -113,13 +113,20 @@ public final class SpiritSuppliesGameTests {
         List<ScriptCall> steps = supplies.withdraw("iron_ingot", 5);
 
         List<ScriptCall> expected = List.of(
-                new ScriptCall("withdraw",
-                        Map.of("container", absolute(helper, new BlockPos(5, 1, 4)),
-                                "item", "iron_ingot", "count", 2)),
-                new ScriptCall("withdraw",
-                        Map.of("container", absolute(helper, new BlockPos(7, 1, 4)),
-                                "item", "iron_ingot", "count", 3)));
-        helper.assertTrue(steps.equals(expected),
+                new ScriptCall(
+                        "withdraw",
+                        Map.of("container", absolute(helper, new BlockPos(5, 1, 4)), "item", "iron_ingot", "count", 2)),
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                "container",
+                                absolute(helper, new BlockPos(7, 1, 4)),
+                                "item",
+                                "iron_ingot",
+                                "count",
+                                3)));
+        helper.assertTrue(
+                steps.equals(expected),
                 "ближний сундук обязан идти первым и отдать всё своё, дальний — добирать остаток, шаги: " + steps);
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -135,16 +142,17 @@ public final class SpiritSuppliesGameTests {
         BlockPos lootChest = helper.absolutePos(new BlockPos(6, 1, 4));
         RandomizableContainerBlockEntity entity =
                 (RandomizableContainerBlockEntity) helper.getLevel().getBlockEntity(lootChest);
-        entity.setLootTable(ResourceKey.create(Registries.LOOT_TABLE,
-                ResourceLocation.parse("minecraft:chests/simple_dungeon")));
+        entity.setLootTable(
+                ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.parse("minecraft:chests/simple_dungeon")));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
         SpiritSupplies supplies = new SpiritSupplies(spirit, 8);
 
         List<ScriptCall> steps = supplies.withdraw("iron_ingot", 5);
 
-        helper.assertTrue(steps.isEmpty(),
-                "пустой сундук и сундук с нераскрытой таблицей добычи обязаны быть пропущены без шагов, "
-                        + "шаги: " + steps);
+        helper.assertTrue(
+                steps.isEmpty(),
+                "пустой сундук и сундук с нераскрытой таблицей добычи обязаны быть пропущены без шагов, " + "шаги: "
+                        + steps);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -160,10 +168,8 @@ public final class SpiritSuppliesGameTests {
         List<ScriptCall> near = new SpiritSupplies(spirit, 2).withdraw("iron_ingot", 5);
         List<ScriptCall> far = new SpiritSupplies(spirit, 4).withdraw("iron_ingot", 5);
 
-        helper.assertTrue(near.isEmpty(),
-                "сундук на расстоянии 4 не должен попадать в радиус 2, шаги: " + near);
-        helper.assertTrue(far.size() == 1,
-                "тот же сундук обязан найтись в радиусе 4, шаги: " + far);
+        helper.assertTrue(near.isEmpty(), "сундук на расстоянии 4 не должен попадать в радиус 2, шаги: " + near);
+        helper.assertTrue(far.size() == 1, "тот же сундук обязан найтись в радиусе 4, шаги: " + far);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

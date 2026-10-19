@@ -15,8 +15,7 @@ public final class RecipeChooser {
         return byCost != 0 ? byCost : first.id().compareTo(second.id());
     };
 
-    private RecipeChooser() {
-    }
+    private RecipeChooser() {}
 
     public static Optional<RecipeSpec> pick(List<RecipeSpec> candidates, Map<String, Integer> available) {
         Objects.requireNonNull(candidates, "candidates не может быть null: выбирать не из чего");

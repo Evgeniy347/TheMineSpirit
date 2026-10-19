@@ -18,8 +18,8 @@ class BoardJournalTests {
     Path directory;
 
     private static BoardLogEntry entry(BoardLog.Event event, String id, BoardCase boardCase, int level) {
-        return new BoardLogEntry(event, 10, id, boardCase, level, "always", 50, 65,
-                List.of("pen_caught_animal"), null, "hash-1", 10);
+        return new BoardLogEntry(
+                event, 10, id, boardCase, level, "always", 50, 65, List.of("pen_caught_animal"), null, "hash-1", 10);
     }
 
     private Path log() {
@@ -35,10 +35,13 @@ class BoardJournalTests {
 
         BoardJournal.LoadResult result = journal.load(ledger);
 
-        assertEquals(1, result.restored(),
+        assertEquals(
+                1,
+                result.restored(),
                 "DONE-запись обязана вернуть ровно одну отметку: без этого «загон построен» "
                         + "не переживёт перезапуск");
-        assertTrue(ledger.has(BoardCase.BUILD_PEN, 2),
+        assertTrue(
+                ledger.has(BoardCase.BUILD_PEN, 2),
                 "Ledger обязан увидеть выполненный уровень 2 загона после загрузки журнала");
         assertFalse(result.failed(), "Целый журнал обязан загружаться без ошибки");
     }
@@ -48,19 +51,22 @@ class BoardJournalTests {
         BoardJournal journal = new BoardJournal(log());
         journal.enqueue(entry(BoardLog.Event.DONE, "mine", BoardCase.BUILD_MINE, 1));
         journal.flushAll();
-        Files.writeString(log(), "{\"event\":\"DONE\",\"tick\":", StandardCharsets.UTF_8,
-                StandardOpenOption.APPEND);
+        Files.writeString(log(), "{\"event\":\"DONE\",\"tick\":", StandardCharsets.UTF_8, StandardOpenOption.APPEND);
         BoardLedger ledger = new BoardLedger();
 
         BoardJournal.LoadResult result = journal.load(ledger);
 
-        assertTrue(result.failed(), "Оборванная хвостовая строка обязана попасть в результат ошибкой, "
-                + "а не потеряться молча");
+        assertTrue(
+                result.failed(),
+                "Оборванная хвостовая строка обязана попасть в результат ошибкой, " + "а не потеряться молча");
         assertTrue(result.truncated(), "Оборванный хвост обязан быть отрезан, иначе он мешает следующей записи");
-        assertTrue(ledger.has(BoardCase.BUILD_MINE, 1),
+        assertTrue(
+                ledger.has(BoardCase.BUILD_MINE, 1),
                 "Строки до оборванного хвоста обязаны восстановиться: обрыв не отменяет выполненное");
         String content = Files.readString(log(), StandardCharsets.UTF_8);
-        assertEquals(1, content.lines().filter(line -> !line.isBlank()).count(),
+        assertEquals(
+                1,
+                content.lines().filter(line -> !line.isBlank()).count(),
                 "После обрезки битой строки в файле остаётся ровно одна целая запись: " + content);
     }
 
@@ -71,9 +77,11 @@ class BoardJournalTests {
             journal.enqueue(entry(BoardLog.Event.ASSIGNED, "t" + index, BoardCase.SUPPLY_SITE, 1));
         }
 
-        assertEquals(2, journal.flush(2),
-                "Бюджет сброса обязан ограничивать число записанных строк: журнал не грузит тик");
-        assertEquals(3, journal.pending(),
+        assertEquals(
+                2, journal.flush(2), "Бюджет сброса обязан ограничивать число записанных строк: журнал не грузит тик");
+        assertEquals(
+                3,
+                journal.pending(),
                 "Остальные строки ждут следующего сброса, а не теряются: за тик пишется не больше бюджета");
         assertEquals(3, journal.flushAll(), "Второй сброс обязан дописать остаток");
         assertEquals(0, journal.pending(), "После полного сброса очередь пуста");
@@ -86,15 +94,21 @@ class BoardJournalTests {
             journal.enqueue(entry(BoardLog.Event.ASSIGNED, "t" + index, BoardCase.SUPPLY_SITE, 1));
         }
 
-        assertEquals(5, journal.enqueued(),
+        assertEquals(
+                5,
+                journal.enqueued(),
                 "Счётчик поставленных записей обязан равняться числу переходов: тест масштаба "
                         + "сверяет по нему строки журнала с переходами статусов");
         assertEquals(0, journal.written(), "До сброса на диске ничего нет, а очередь держит записи");
         journal.flush(2);
-        assertEquals(2, journal.written(),
+        assertEquals(
+                2,
+                journal.written(),
                 "Счётчик записанных строк обязан расти на бюджет сброса: каждая строка — один переход");
         journal.flushAll();
-        assertEquals(5, journal.written(),
+        assertEquals(
+                5,
+                journal.written(),
                 "После полного сброса записаны все поставленные строки: журнал не теряет переходы");
     }
 
@@ -108,8 +122,8 @@ class BoardJournalTests {
         List<BoardLogEntry> entries = journal.last(1);
 
         assertEquals(1, entries.size(), "limit обязан ограничивать ответ: " + entries);
-        assertEquals("new", entries.get(0).ticketId(),
-                "Последняя запись отдаётся первой: наблюдатель видит свежие события");
+        assertEquals(
+                "new", entries.get(0).ticketId(), "Последняя запись отдаётся первой: наблюдатель видит свежие события");
     }
 
     @Test
@@ -118,7 +132,9 @@ class BoardJournalTests {
         journal.enqueue(entry(BoardLog.Event.DONE, "загон:корова", BoardCase.BUILD_PEN, 1));
         journal.flushAll();
 
-        assertEquals("загон:корова", journal.last(1).get(0).ticketId(),
+        assertEquals(
+                "загон:корова",
+                journal.last(1).get(0).ticketId(),
                 "Кириллица в id задания обязана переживать запись и чтение UTF-8");
     }
 }

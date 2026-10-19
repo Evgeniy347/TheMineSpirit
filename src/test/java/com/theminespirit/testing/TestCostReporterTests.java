@@ -26,10 +26,8 @@ class TestCostReporterTests {
 
     @Test
     void report_Top10_SortedByCpuDescending() {
-        List<TestCostReporter.CostLine> lines = List.of(
-                line("a", "junit", 100, false),
-                line("b", "junit", 500, false),
-                line("c", "junit", 300, false));
+        List<TestCostReporter.CostLine> lines =
+                List.of(line("a", "junit", 100, false), line("b", "junit", 500, false), line("c", "junit", 300, false));
 
         List<String> report = TestCostReporter.report(lines, thresholds());
 
@@ -44,9 +42,9 @@ class TestCostReporterTests {
 
         List<String> report = TestCostReporter.report(lines, thresholds());
 
-        assertFalse(report.stream().anyMatch(text -> text.contains("5000 мс")),
-                "строка с warmup в пороги не идёт");
-        assertTrue(report.stream().anyMatch(text -> text.contains("(нет)")),
+        assertFalse(report.stream().anyMatch(text -> text.contains("5000 мс")), "строка с warmup в пороги не идёт");
+        assertTrue(
+                report.stream().anyMatch(text -> text.contains("(нет)")),
                 "без строк в порогах отчёт говорит «(нет)»: " + report);
     }
 
@@ -54,9 +52,11 @@ class TestCostReporterTests {
     void report_Cpu499_NotMarkedSlow() {
         List<String> report = TestCostReporter.report(List.of(line("a", "junit", 499, false)), thresholds());
 
-        assertFalse(report.stream().anyMatch(text -> text.contains("499") && text.contains("ДОЛГИЙ")),
+        assertFalse(
+                report.stream().anyMatch(text -> text.contains("499") && text.contains("ДОЛГИЙ")),
                 "499 мс ниже порога 500 — не ДОЛГИЙ: " + report);
-        assertTrue(report.stream().anyMatch(text -> text.contains("a — 499 мс CPU (порог 100 мс)")),
+        assertTrue(
+                report.stream().anyMatch(text -> text.contains("a — 499 мс CPU (порог 100 мс)")),
                 "499 мс выше warn 100 — строка с порогом: " + report);
     }
 
@@ -64,7 +64,8 @@ class TestCostReporterTests {
     void report_Cpu500_MarkedSlow() {
         List<String> report = TestCostReporter.report(List.of(line("a", "junit", 500, false)), thresholds());
 
-        assertTrue(report.stream().anyMatch(text -> text.contains("a — 500 мс CPU (ДОЛГИЙ, порог 500 мс)")),
+        assertTrue(
+                report.stream().anyMatch(text -> text.contains("a — 500 мс CPU (ДОЛГИЙ, порог 500 мс)")),
                 "500 мс — граница МЕДЛЕННЫЙ: " + report);
     }
 
@@ -72,8 +73,10 @@ class TestCostReporterTests {
     void report_JqwikTotalWarn300_MarksAsSlow() {
         List<String> report = TestCostReporter.report(List.of(line("a", "jqwik", 300, false)), thresholds());
 
-        assertTrue(report.stream().anyMatch(text -> text.contains("a — 300 мс CPU (ДОЛГИЙ, порог 1000 мс)")
-                || text.contains("a — 300 мс CPU (порог 300 мс)")),
+        assertTrue(
+                report.stream()
+                        .anyMatch(text -> text.contains("a — 300 мс CPU (ДОЛГИЙ, порог 1000 мс)")
+                                || text.contains("a — 300 мс CPU (порог 300 мс)")),
                 "jqwik-строка 300 мс выше total warn 300: " + report);
     }
 

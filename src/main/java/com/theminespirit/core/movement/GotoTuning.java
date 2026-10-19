@@ -8,8 +8,7 @@ public final class GotoTuning {
     public static final int EARLY_REFUSAL_RANGE = 8;
     public static final int DEAD_END_CONFIRM_TICKS = 3;
 
-    private GotoTuning() {
-    }
+    private GotoTuning() {}
 
     public static int timeoutTicks(double distanceBlocks) {
         double estimate = Math.max(0, distanceBlocks) * TICKS_PER_BLOCK + RESERVE_TICKS;

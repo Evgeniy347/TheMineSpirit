@@ -33,7 +33,9 @@ class TasksDoneGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "В tasks/ лежит чеклист, где все пункты отмечены, но нет пометки «ждёт приёмки (ветка …)»: "
                         + "принятый чеклист обязан быть удалён, иначе папка задач превращается в архив закрытого "
                         + "и прячет открытую работу. Как надо: удалить чеклист или в статусе назвать ветку и то, "
@@ -44,16 +46,20 @@ class TasksDoneGuardTests {
     void finishedWithoutWait_AllCheckedNoNote_IsReported() {
         Map<String, String> files = Map.of("tasks/9-x.md", "# Чеклист\n1. [x] сделано\n2. [x] тоже\n");
 
-        assertEquals(List.of("tasks/9-x.md"), offenders(files),
+        assertEquals(
+                List.of("tasks/9-x.md"),
+                offenders(files),
                 "Сторож ослеп: все пункты отмечены, пометки о приёмке нет — обязан попасть в нарушители");
     }
 
     @Test
     void finishedWithoutWait_AllCheckedWithWaitNote_IsAccepted() {
-        Map<String, String> files = Map.of("tasks/9-x.md",
-                "Статус: выполнено в ветке `opus/work`, ждёт приёмки.\n- [x] сделано\n");
+        Map<String, String> files =
+                Map.of("tasks/9-x.md", "Статус: выполнено в ветке `opus/work`, ждёт приёмки.\n- [x] сделано\n");
 
-        assertEquals(List.of(), offenders(files),
+        assertEquals(
+                List.of(),
+                offenders(files),
                 "Сторож ложно срабатывает: чеклист со статусом «ждёт приёмки» должен приниматься");
     }
 
@@ -61,7 +67,9 @@ class TasksDoneGuardTests {
     void finishedWithoutWait_WaitNoteWithoutBranch_IsReported() {
         Map<String, String> files = Map.of("tasks/9-x.md", "Статус: ждёт приёмки.\n- [x] сделано\n");
 
-        assertEquals(List.of("tasks/9-x.md"), offenders(files),
+        assertEquals(
+                List.of("tasks/9-x.md"),
+                offenders(files),
                 "Сторож ослеп: пометка «ждёт приёмки» без названной ветки обязана попасть в нарушители");
     }
 
@@ -69,7 +77,9 @@ class TasksDoneGuardTests {
     void finishedWithoutWait_OpenItem_IsAccepted() {
         Map<String, String> files = Map.of("tasks/9-x.md", "# Чеклист\n- [x] сделано\n- [ ] осталось\n");
 
-        assertEquals(List.of(), offenders(files),
+        assertEquals(
+                List.of(),
+                offenders(files),
                 "Сторож ложно срабатывает: чеклист с открытым пунктом — рабочий, не архив");
     }
 
@@ -77,7 +87,9 @@ class TasksDoneGuardTests {
     void finishedWithoutWait_NoItems_Skipped() {
         Map<String, String> files = Map.of("tasks/questions.md", "# Вопросы\nВопрос про версии моделей.\n");
 
-        assertEquals(List.of(), offenders(files),
+        assertEquals(
+                List.of(),
+                offenders(files),
                 "Сторож ложно срабатывает: файл без пунктов чеклиста — не чеклист и не проверяется");
     }
 
@@ -85,8 +97,7 @@ class TasksDoneGuardTests {
     void open_IndentedAndNumberedItems_AreFound() {
         String text = "  - [ ] вложенный\n7. [ ] номерной\n- [x] закрытый\n";
 
-        assertEquals(2, count(OPEN, text),
-                "Сторож ослеп: открытые пункты в отступе и с номером обязаны считаться");
+        assertEquals(2, count(OPEN, text), "Сторож ослеп: открытые пункты в отступе и с номером обязаны считаться");
         assertEquals(1, count(CHECKED, text), "Сторож ослеп: закрытый пункт в отступе обязан находиться");
     }
 
@@ -111,12 +122,14 @@ class TasksDoneGuardTests {
     }
 
     private static Map<String, String> taskFiles() {
-        assertTrue(Files.isDirectory(TASKS),
+        assertTrue(
+                Files.isDirectory(TASKS),
                 "Сторож не нашёл " + TASKS + ": тесты запускаются из корня проекта (./gradlew test)");
         Map<String, String> files = new TreeMap<>();
         try (Stream<Path> stream = Files.walk(TASKS)) {
             for (Path file : stream.filter(Files::isRegularFile)
-                    .filter(path -> path.toString().endsWith(".md")).toList()) {
+                    .filter(path -> path.toString().endsWith(".md"))
+                    .toList()) {
                 files.put(file.toString(), Files.readString(file, StandardCharsets.UTF_8));
             }
         } catch (IOException e) {

@@ -17,8 +17,9 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 public final class ArmorEquipPolicy {
     private static final Map<EquipmentSlot, ArmorSlot> SLOTS = armorSlots();
-    private static final EquipmentSlot[] ORDER = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
-            EquipmentSlot.FEET};
+    private static final EquipmentSlot[] ORDER = {
+        EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+    };
 
     private final SpiritEntity spirit;
     private long lastChange = -1;
@@ -131,8 +132,13 @@ public final class ArmorEquipPolicy {
         if (SLOTS.get(armor.getEquipmentSlot()) != slot) {
             return null;
         }
-        return new ArmorPiece(StackMapper.itemId(stack), slot, armor.getDefense(), armor.getToughness(),
-                protectionLevel(stack), durabilityFraction(stack));
+        return new ArmorPiece(
+                StackMapper.itemId(stack),
+                slot,
+                armor.getDefense(),
+                armor.getToughness(),
+                protectionLevel(stack),
+                durabilityFraction(stack));
     }
 
     private static double durabilityFraction(ItemStack stack) {
@@ -146,7 +152,8 @@ public final class ArmorEquipPolicy {
         ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         int total = 0;
         for (var entry : enchantments.entrySet()) {
-            if (entry.getKey().is(Enchantments.PROTECTION) || entry.getKey().is(Enchantments.FIRE_PROTECTION)
+            if (entry.getKey().is(Enchantments.PROTECTION)
+                    || entry.getKey().is(Enchantments.FIRE_PROTECTION)
                     || entry.getKey().is(Enchantments.BLAST_PROTECTION)
                     || entry.getKey().is(Enchantments.PROJECTILE_PROTECTION)) {
                 total += entry.getIntValue();

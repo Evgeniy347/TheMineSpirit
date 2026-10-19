@@ -18,7 +18,9 @@ class AcquireSuppliesTests {
     void inInventory_StubWithStock_ReturnsCounter() {
         AcquireSupplies supplies = stub(Map.of("oak_log", 7), Map.of());
 
-        assertEquals(7, supplies.inInventory("oak_log"),
+        assertEquals(
+                7,
+                supplies.inInventory("oak_log"),
                 "Снабжение обязано отдавать счётчик инвентаря: по нему acquire решает, добывать ли остаток");
     }
 
@@ -26,7 +28,9 @@ class AcquireSuppliesTests {
     void inInventory_UnknownItem_ReturnsZero() {
         AcquireSupplies supplies = stub(Map.of(), Map.of());
 
-        assertEquals(0, supplies.inInventory("diamond"),
+        assertEquals(
+                0,
+                supplies.inInventory("diamond"),
                 "Предмета нет в инвентаре — счётчик обязан быть 0, а не отрицательным или выбросом");
     }
 
@@ -36,14 +40,17 @@ class AcquireSuppliesTests {
 
         List<ScriptCall> steps = supplies.withdraw("oak_log", 3);
 
-        assertEquals(1, steps.size(),
-                "Сундук с предметом обязан дать ровно один шаг withdraw на acquire");
-        assertEquals("withdraw", steps.get(0).script(),
+        assertEquals(1, steps.size(), "Сундук с предметом обязан дать ровно один шаг withdraw на acquire");
+        assertEquals(
+                "withdraw",
+                steps.get(0).script(),
                 "Шаг снабжения — обычный вызов withdraw: движок не знает про acquire");
-        assertEquals("chestA", steps.get(0).params().get("container"),
+        assertEquals(
+                "chestA",
+                steps.get(0).params().get("container"),
                 "Шаг обязан называть контейнер, из которого берут предмет");
-        assertEquals(3, steps.get(0).params().get("count"),
-                "Шаг обязан просить не больше остатка цели: count = maxCount");
+        assertEquals(
+                3, steps.get(0).params().get("count"), "Шаг обязан просить не больше остатка цели: count = maxCount");
     }
 
     @Test
@@ -52,7 +59,8 @@ class AcquireSuppliesTests {
 
         List<ScriptCall> steps = supplies.withdraw("oak_log", 3);
 
-        assertTrue(steps.isEmpty(),
+        assertTrue(
+                steps.isEmpty(),
                 "Контейнеров нет — пустой список шагов, а не шаг «в никуда»: acquire тогда идёт в мир");
     }
 
@@ -62,7 +70,8 @@ class AcquireSuppliesTests {
 
         List<ScriptCall> steps = supplies.withdraw("oak_log", 5);
 
-        assertEquals(List.of("near", "far"),
+        assertEquals(
+                List.of("near", "far"),
                 steps.stream().map(step -> step.params().get("container")).toList(),
                 "Порядок шагов обязан сохраняться: ближний сундук первым, иначе дух ходит за дальним, минуя ближний");
     }
@@ -71,7 +80,9 @@ class AcquireSuppliesTests {
     void withdraw_NullItem_IsRejected() {
         AcquireSupplies supplies = stub(Map.of(), Map.of());
 
-        assertThrows(NullPointerException.class, () -> supplies.withdraw(null, 1),
+        assertThrows(
+                NullPointerException.class,
+                () -> supplies.withdraw(null, 1),
                 "withdraw(null) обязан отказывать: без имени предмета переносить нечего");
     }
 
@@ -79,7 +90,9 @@ class AcquireSuppliesTests {
     void inInventory_NullItem_IsRejected() {
         AcquireSupplies supplies = stub(Map.of(), Map.of());
 
-        assertThrows(NullPointerException.class, () -> supplies.inInventory(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> supplies.inInventory(null),
                 "inInventory(null) обязан отказывать: без имени предмета счёт бессмыслен");
     }
 
@@ -112,11 +125,17 @@ class AcquireSuppliesTests {
                     if (available <= 0) {
                         continue;
                     }
-                    steps.add(new ScriptCall("withdraw", Map.of(
-                            "container", chest.getKey(),
-                            "item", item,
-                            "count", Math.min(available, maxCount),
-                            "radius", 8)));
+                    steps.add(new ScriptCall(
+                            "withdraw",
+                            Map.of(
+                                    "container",
+                                    chest.getKey(),
+                                    "item",
+                                    item,
+                                    "count",
+                                    Math.min(available, maxCount),
+                                    "radius",
+                                    8)));
                     maxCount -= available;
                     if (maxCount <= 0) {
                         break;

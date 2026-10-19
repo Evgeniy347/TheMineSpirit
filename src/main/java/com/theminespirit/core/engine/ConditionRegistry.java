@@ -17,9 +17,10 @@ public final class ConditionRegistry {
         Objects.requireNonNull(evaluators, "evaluators не может быть null: пустой реестр задают пустой картой");
         Map<String, ConditionEvaluator> byCheck = new LinkedHashMap<>();
         for (Map.Entry<String, ConditionEvaluator> entry : evaluators.entrySet()) {
-            String check = Objects.requireNonNull(entry.getKey(),
-                    "имя проверки не может быть null: по нему условие выбирает ветку");
-            ConditionEvaluator evaluator = Objects.requireNonNull(entry.getValue(),
+            String check = Objects.requireNonNull(
+                    entry.getKey(), "имя проверки не может быть null: по нему условие выбирает ветку");
+            ConditionEvaluator evaluator = Objects.requireNonNull(
+                    entry.getValue(),
                     "вычислитель проверки '" + check + "' не может быть null: без него условие не выберет ветку");
             byCheck.put(check, evaluator);
         }

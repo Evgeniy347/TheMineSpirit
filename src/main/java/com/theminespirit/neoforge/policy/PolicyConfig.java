@@ -22,16 +22,16 @@ public final class PolicyConfig {
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("policy");
-        PROTECTED_ZONES = builder
-                .comment("Защищённые зоны: дух не ломает и не ставит блоки внутри. Строка: «измерение x1 y1 z1 x2 y2 z2», не больше 64 строк.",
+        PROTECTED_ZONES = builder.comment(
+                        "Защищённые зоны: дух не ломает и не ставит блоки внутри. Строка: «измерение x1 y1 z1 x2 y2 z2», не больше 64 строк.",
                         "Пример: \"" + EXAMPLE_ZONE + "\". Ошибка в строке останавливает запуск сервера.")
-                .defineListAllowEmpty("protectedZones", List.of(), () -> EXAMPLE_ZONE, entry -> entry instanceof String);
+                .defineListAllowEmpty(
+                        "protectedZones", List.of(), () -> EXAMPLE_ZONE, entry -> entry instanceof String);
         builder.pop();
         SPEC = builder.build();
     }
 
-    private PolicyConfig() {
-    }
+    private PolicyConfig() {}
 
     public static ModConfigSpec spec() {
         return SPEC;

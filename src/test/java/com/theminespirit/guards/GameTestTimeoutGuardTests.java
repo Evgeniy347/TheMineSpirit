@@ -16,8 +16,8 @@ class GameTestTimeoutGuardTests {
             "@GameTest\\s*\\([^)]*timeoutTicks\\s*=\\s*([^,)]+?)\\s*[,)]", Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern STATIC_FINAL_INT = Pattern.compile(
             "(?:private\\s+|public\\s+|protected\\s+)?static\\s+final\\s+int\\s+([A-Za-z_]\\w*)\\s*=\\s*([0-9_]+)\\s*;");
-    private static final Pattern STATIC_IMPORT = Pattern.compile(
-            "import\\s+static\\s+([\\w.]+)\\.([A-Za-z_]\\w*)\\s*;");
+    private static final Pattern STATIC_IMPORT =
+            Pattern.compile("import\\s+static\\s+([\\w.]+)\\.([A-Za-z_]\\w*)\\s*;");
     private static final Pattern CLASS_DECL = Pattern.compile("(?:class|interface|enum|record)\\s+([A-Za-z_]\\w*)");
     private static final int SANE_TIMEOUT_LIMIT = 400;
 
@@ -26,7 +26,9 @@ class GameTestTimeoutGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "GameTest с timeoutTicks > 400 обязан иметь комментарий-обоснование с словом «флак» "
                         + "перед аннотацией: иначе тайм-аут прячет зависший тест (docs/TESTING.md → "
                         + "«Время тестов»: timeoutTicks ≈ 2× фактических тиков). Сторож видит только литерал "
@@ -42,7 +44,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("timeoutTicks=600"), timeoutsOf(sample),
+        assertEquals(
+                List.of("timeoutTicks=600"),
+                timeoutsOf(sample),
                 "Сторож ослеп: timeoutTicks = 600 без комментария должно попадать в нарушители");
     }
 
@@ -55,7 +59,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
                 "Сторож ложно срабатывает: timeoutTicks = 600 с комментарием-обоснованием — законно");
     }
 
@@ -67,7 +73,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
                 "Сторож ложно срабатывает: timeoutTicks = 400 — граница, комментарий не нужен");
     }
 
@@ -80,7 +88,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("timeoutTicks=600"), timeoutsOf(sample),
+        assertEquals(
+                List.of("timeoutTicks=600"),
+                timeoutsOf(sample),
                 "Сторож ослеп: многострочная @GameTest( с timeoutTicks = 600 без комментария должна попадать в нарушители");
     }
 
@@ -93,7 +103,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
                 "Сторож ложно срабатывает: timeoutTicks = 600 с меткой [флак] — законно");
     }
 
@@ -105,8 +117,7 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
-                "Сторож ложно срабатывает: литерал 300 ≤ 400 — законен без метки");
+        assertEquals(List.of(), timeoutsOf(sample), "Сторож ложно срабатывает: литерал 300 ≤ 400 — законен без метки");
     }
 
     @Test
@@ -118,7 +129,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("timeoutTicks=500 (TIMEOUT_TICKS)"), timeoutsOf(sample),
+        assertEquals(
+                List.of("timeoutTicks=500 (TIMEOUT_TICKS)"),
+                timeoutsOf(sample),
                 "Сторож ослеп: константа 500 без метки [флак] должна попадать в нарушители — "
                         + "иначе потолок прячется за именем и уходит от проверки");
     }
@@ -133,7 +146,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
                 "Сторож ложно срабатывает: константа 500 с меткой [флак] и обоснованием — законна");
     }
 
@@ -146,8 +161,8 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
-                "Сторож ложно срабатывает: константа 300 ≤ 400 — законна без метки");
+        assertEquals(
+                List.of(), timeoutsOf(sample), "Сторож ложно срабатывает: константа 300 ≤ 400 — законна без метки");
     }
 
     @Test
@@ -160,7 +175,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
                 "Сторож ложно срабатывает: обоснование стоит у объявления общей константы, "
                         + "а не у каждого GameTest — иначе 45 сайтов REST дублировали бы один комментарий");
     }
@@ -177,7 +194,9 @@ class GameTestTimeoutGuardTests {
                 + "    static final int TIMEOUT_TICKS = 500;\n"
                 + "}\n";
 
-        assertEquals(List.of(), timeoutsOf(sample),
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
                 "Сторож ложно срабатывает: обоснование у объявления константы по полному имени "
                         + "закрывает все её использования");
     }
@@ -190,7 +209,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("timeoutTicks=LIMIT_TICKS"), timeoutsOf(sample),
+        assertEquals(
+                List.of("timeoutTicks=LIMIT_TICKS"),
+                timeoutsOf(sample),
                 "Сторож ослеп: timeoutTicks именем, значение которого он не нашёл, — нарушение: "
                         + "потолок уходит от проверки, сторож видит только литерал или static final int");
     }
@@ -203,7 +224,9 @@ class GameTestTimeoutGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("timeoutTicks=400 + 200"), timeoutsOf(sample),
+        assertEquals(
+                List.of("timeoutTicks=400 + 200"),
+                timeoutsOf(sample),
                 "Сторож ослеп: timeoutTicks арифметикой, которую он не считает, — нарушение: "
                         + "потолок уходит от проверки, сторож видит только литерал или static final int");
     }
@@ -219,16 +242,16 @@ class GameTestTimeoutGuardTests {
                 + "    static final int TIMEOUT_TICKS = 500;\n"
                 + "}\n";
 
-        assertEquals(List.of("timeoutTicks=500 (Limits.TIMEOUT_TICKS)"), timeoutsOf(sample),
+        assertEquals(
+                List.of("timeoutTicks=500 (Limits.TIMEOUT_TICKS)"),
+                timeoutsOf(sample),
                 "Сторож ослеп: константа по полному имени без метки [флак] должна попадать в нарушители");
     }
 
     // Разрешённая константа: значение и место её объявления (для проверки метки [флак] у самой константы).
-    private record Constant(int value, String text, int declarationOffset) {
-    }
+    private record Constant(int value, String text, int declarationOffset) {}
 
-    private record ClassSource(String text, Map<String, Constant> constants) {
-    }
+    private record ClassSource(String text, Map<String, Constant> constants) {}
 
     private static void collectOffenders(Map<Path, String> sources, List<String> offenders) {
         Map<String, ClassSource> classes = new LinkedHashMap<>();
@@ -241,12 +264,12 @@ class GameTestTimeoutGuardTests {
                 String expression = matcher.group(1).trim();
                 Constant constant = resolve(expression, text, classes);
                 if (constant == null) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start())
-                            + " timeoutTicks=" + expression);
-                } else if (constant.value() > SANE_TIMEOUT_LIMIT && !hasAnyJustification(
-                        text, matcher.start(), constant)) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start())
-                            + " timeoutTicks=" + constant.value() + describe(expression, constant.value()));
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, matcher.start()) + " timeoutTicks=" + expression);
+                } else if (constant.value() > SANE_TIMEOUT_LIMIT
+                        && !hasAnyJustification(text, matcher.start(), constant)) {
+                    offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " timeoutTicks="
+                            + constant.value() + describe(expression, constant.value()));
                 }
             }
         });
@@ -261,8 +284,7 @@ class GameTestTimeoutGuardTests {
             Constant constant = resolve(expression, text, classes);
             if (constant == null) {
                 names.add("timeoutTicks=" + expression);
-            } else if (constant.value() > SANE_TIMEOUT_LIMIT && !hasAnyJustification(
-                    text, matcher.start(), constant)) {
+            } else if (constant.value() > SANE_TIMEOUT_LIMIT && !hasAnyJustification(text, matcher.start(), constant)) {
                 names.add("timeoutTicks=" + constant.value() + describe(expression, constant.value()));
             }
         }
@@ -362,8 +384,9 @@ class GameTestTimeoutGuardTests {
         Matcher matcher = STATIC_FINAL_INT.matcher(text);
         while (matcher.find()) {
             if (matcher.start() >= start && matcher.end() <= end) {
-                constants.put(matcher.group(1), new Constant(
-                        Integer.parseInt(matcher.group(2).replace("_", "")), text, matcher.start()));
+                constants.put(
+                        matcher.group(1),
+                        new Constant(Integer.parseInt(matcher.group(2).replace("_", "")), text, matcher.start()));
             }
         }
         return constants;

@@ -40,7 +40,8 @@ public record HazardFacts(List<HazardRef> hazards) {
             throw new IllegalArgumentException("Предел " + limit + " отрицателен: сколько ближайших опасностей "
                     + "оставить, задаётся числом от нуля");
         }
-        return new HazardFacts(hazards.stream().sorted(BY_PROXIMITY).limit(limit).toList());
+        return new HazardFacts(
+                hazards.stream().sorted(BY_PROXIMITY).limit(limit).toList());
     }
 
     private boolean has(HazardType type) {

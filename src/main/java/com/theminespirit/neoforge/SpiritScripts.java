@@ -7,97 +7,106 @@ import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.planner.AcquireScript;
 import com.theminespirit.core.script.AcquireParams;
 import com.theminespirit.core.script.ApproachParams;
-import com.theminespirit.core.script.BucketFishParams;
 import com.theminespirit.core.script.AttackParams;
-import com.theminespirit.core.script.DefendParams;
-import com.theminespirit.core.script.DisengageParams;
+import com.theminespirit.core.script.BlockPointParams;
 import com.theminespirit.core.script.BoneMealParams;
 import com.theminespirit.core.script.BreedParams;
 import com.theminespirit.core.script.BridgeParams;
+import com.theminespirit.core.script.BucketFishParams;
 import com.theminespirit.core.script.BuildFarmParams;
 import com.theminespirit.core.script.BuildFenceParams;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.BuildShelterParams;
-import com.theminespirit.core.script.CrossWaterParams;
 import com.theminespirit.core.script.CaptureParams;
 import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.script.ClearCampParams;
-import com.theminespirit.core.script.SetCampParams;
-import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ChopTargetParams;
+import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
-import com.theminespirit.core.script.BlockPointParams;
-import com.theminespirit.core.script.ComeToPlayerParams;
-import com.theminespirit.core.script.DigAreaParams;
-import com.theminespirit.core.script.DigDescentParams;
-import com.theminespirit.core.script.FillCraterParams;
-import com.theminespirit.core.script.FillParams;
-import com.theminespirit.core.script.FishingParams;
-import com.theminespirit.core.script.PlaceBlockParams;
-import com.theminespirit.core.script.PillarUpParams;
-import com.theminespirit.core.script.SafeMineParams;
+import com.theminespirit.core.script.ClearCampParams;
 import com.theminespirit.core.script.ClimbParams;
 import com.theminespirit.core.script.CollectDropsParams;
 import com.theminespirit.core.script.CollectEggsParams;
-import com.theminespirit.core.script.CraftParams;
-import com.theminespirit.core.script.CullParams;
+import com.theminespirit.core.script.ComeToPlayerParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.CraftParams;
+import com.theminespirit.core.script.CrossWaterParams;
+import com.theminespirit.core.script.CullParams;
+import com.theminespirit.core.script.DefendParams;
 import com.theminespirit.core.script.DeliverParams;
+import com.theminespirit.core.script.DigAreaParams;
+import com.theminespirit.core.script.DigDescentParams;
+import com.theminespirit.core.script.DisengageParams;
 import com.theminespirit.core.script.DrinkPotionParams;
 import com.theminespirit.core.script.DropToPlayerParams;
-import com.theminespirit.core.script.ReportParams;
-import com.theminespirit.core.script.SwapToolParams;
-import com.theminespirit.core.script.TakeParams;
 import com.theminespirit.core.script.EatParams;
 import com.theminespirit.core.script.EquipParams;
-import com.theminespirit.core.script.FleeParams;
 import com.theminespirit.core.script.EscortParams;
 import com.theminespirit.core.script.ExploreParams;
+import com.theminespirit.core.script.FeedParams;
+import com.theminespirit.core.script.FillCraterParams;
+import com.theminespirit.core.script.FillParams;
+import com.theminespirit.core.script.FishingParams;
+import com.theminespirit.core.script.FleeParams;
 import com.theminespirit.core.script.FollowParams;
 import com.theminespirit.core.script.GatherParams;
 import com.theminespirit.core.script.GotoBlockParams;
 import com.theminespirit.core.script.GotoParams;
-import com.theminespirit.core.script.KeepDistanceParams;
 import com.theminespirit.core.script.HarvestCropParams;
 import com.theminespirit.core.script.HarvestHiveParams;
-import com.theminespirit.core.script.LocateParams;
-import com.theminespirit.core.script.LookAtParams;
-import com.theminespirit.core.script.MemoryParams;
-import com.theminespirit.core.script.MeetParams;
 import com.theminespirit.core.script.HerdCheckParams;
 import com.theminespirit.core.script.HuntParams;
+import com.theminespirit.core.script.KeepDistanceParams;
 import com.theminespirit.core.script.LightAreaParams;
+import com.theminespirit.core.script.LocateParams;
+import com.theminespirit.core.script.LookAtParams;
+import com.theminespirit.core.script.MeetParams;
+import com.theminespirit.core.script.MemoryParams;
 import com.theminespirit.core.script.MilkParams;
 import com.theminespirit.core.script.MineVeinParams;
 import com.theminespirit.core.script.PatrolParams;
 import com.theminespirit.core.script.PerceptionParams;
+import com.theminespirit.core.script.PillarUpParams;
+import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.script.PlantCropParams;
-import com.theminespirit.core.script.RetreatParams;
 import com.theminespirit.core.script.RepairParams;
-import com.theminespirit.core.script.ScanParams;
+import com.theminespirit.core.script.ReportParams;
+import com.theminespirit.core.script.RetreatParams;
+import com.theminespirit.core.script.SafeMineParams;
 import com.theminespirit.core.script.SayParams;
+import com.theminespirit.core.script.ScanParams;
+import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.SetCampParams;
+import com.theminespirit.core.script.SetCombatModeParams;
 import com.theminespirit.core.script.ShearParams;
 import com.theminespirit.core.script.SmeltParams;
-import com.theminespirit.core.script.ScriptCatalog;
 import com.theminespirit.core.script.SortChestParams;
-import com.theminespirit.core.script.SetCombatModeParams;
 import com.theminespirit.core.script.StepOverParams;
+import com.theminespirit.core.script.SwapToolParams;
 import com.theminespirit.core.script.SwimParams;
+import com.theminespirit.core.script.TakeParams;
 import com.theminespirit.core.script.TillParams;
-import com.theminespirit.core.script.FeedParams;
+import com.theminespirit.core.script.TransferParams;
+import com.theminespirit.core.script.UnloadParams;
+import com.theminespirit.core.script.WaitParams;
+import com.theminespirit.core.script.WalkCarefulParams;
+import com.theminespirit.core.script.WanderParams;
+import com.theminespirit.neoforge.blocks.OpenScript;
+import com.theminespirit.neoforge.blocks.UseBlockScript;
 import com.theminespirit.neoforge.combat.AttackScript;
 import com.theminespirit.neoforge.combat.DefendScript;
 import com.theminespirit.neoforge.combat.DisengageScript;
 import com.theminespirit.neoforge.combat.FleeScript;
 import com.theminespirit.neoforge.combat.RetreatScript;
 import com.theminespirit.neoforge.combat.SetCombatModeScript;
-import com.theminespirit.neoforge.blocks.OpenScript;
-import com.theminespirit.neoforge.blocks.UseBlockScript;
 import com.theminespirit.neoforge.crafting.CraftScript;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.crafting.SmeltScript;
+import com.theminespirit.neoforge.crater.CraterResolver;
+import com.theminespirit.neoforge.crater.FillCraterScript;
 import com.theminespirit.neoforge.doors.CloseDoorScript;
+import com.theminespirit.neoforge.hunger.DrinkPotionScript;
+import com.theminespirit.neoforge.hunger.EatScript;
 import com.theminespirit.neoforge.husbandry.BreedScript;
 import com.theminespirit.neoforge.husbandry.CaptureScript;
 import com.theminespirit.neoforge.husbandry.CollectEggsScript;
@@ -108,23 +117,13 @@ import com.theminespirit.neoforge.husbandry.HerdCheckScript;
 import com.theminespirit.neoforge.husbandry.HuntScript;
 import com.theminespirit.neoforge.husbandry.MilkScript;
 import com.theminespirit.neoforge.husbandry.ShearScript;
-import com.theminespirit.neoforge.hunger.DrinkPotionScript;
-import com.theminespirit.neoforge.hunger.EatScript;
-import com.theminespirit.core.script.TransferParams;
-import com.theminespirit.core.script.UnloadParams;
-import com.theminespirit.core.script.WaitParams;
-import com.theminespirit.core.script.WalkCarefulParams;
-import com.theminespirit.core.script.WanderParams;
 import com.theminespirit.neoforge.inventory.DepositScript;
 import com.theminespirit.neoforge.inventory.EquipScript;
-import com.theminespirit.neoforge.inventory.SwapToolScript;
 import com.theminespirit.neoforge.inventory.SortChestScript;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
+import com.theminespirit.neoforge.inventory.SwapToolScript;
 import com.theminespirit.neoforge.inventory.UnloadScript;
-import com.theminespirit.neoforge.crater.CraterResolver;
-import com.theminespirit.neoforge.crater.FillCraterScript;
 import com.theminespirit.neoforge.inventory.WithdrawScript;
-import com.theminespirit.neoforge.repair.RepairScript;
 import com.theminespirit.neoforge.movement.ApproachScript;
 import com.theminespirit.neoforge.movement.BridgeScript;
 import com.theminespirit.neoforge.movement.ClimbScript;
@@ -140,21 +139,22 @@ import com.theminespirit.neoforge.movement.ReturnHomeScript;
 import com.theminespirit.neoforge.movement.StepOverScript;
 import com.theminespirit.neoforge.movement.SwimScript;
 import com.theminespirit.neoforge.movement.WanderScript;
+import com.theminespirit.neoforge.repair.RepairScript;
+import com.theminespirit.neoforge.sleep.SleepScript;
 import com.theminespirit.neoforge.social.DeliverScript;
 import com.theminespirit.neoforge.social.DropToPlayerScript;
 import com.theminespirit.neoforge.social.ReportScript;
-import com.theminespirit.neoforge.social.TakeScript;
 import com.theminespirit.neoforge.social.SayScript;
+import com.theminespirit.neoforge.social.TakeScript;
 import com.theminespirit.neoforge.social.WaitScript;
-import com.theminespirit.neoforge.sleep.SleepScript;import java.util.LinkedHashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 public final class SpiritScripts {
     private static final Map<String, Function<SpiritEntity, ScriptFactory>> IMPLEMENTED = implemented();
 
-    private SpiritScripts() {
-    }
+    private SpiritScripts() {}
 
     private static Map<String, Function<SpiritEntity, ScriptFactory>> implemented() {
         Map<String, Function<SpiritEntity, ScriptFactory>> table = new LinkedHashMap<>();
@@ -180,7 +180,8 @@ public final class SpiritScripts {
         table.put("set_camp", spirit -> params -> new SetCampScript(spirit, SetCampParams.from(params)));
         table.put("clear_camp", spirit -> params -> new ClearCampScript(spirit, ClearCampParams.from(params)));
         table.put("goto_block", spirit -> params -> new GotoBlockScript(spirit, GotoBlockParams.from(params)));
-        table.put("come_to_player", spirit -> params -> new ComeToPlayerScript(spirit, ComeToPlayerParams.from(params)));
+        table.put(
+                "come_to_player", spirit -> params -> new ComeToPlayerScript(spirit, ComeToPlayerParams.from(params)));
         table.put("patrol", spirit -> params -> new PatrolScript(spirit, PatrolParams.from(params)));
         table.put("wander", spirit -> params -> new WanderScript(spirit, WanderParams.from(params)));
         table.put("explore", spirit -> params -> new ExploreScript(spirit, ExploreParams.from(params)));
@@ -197,10 +198,11 @@ public final class SpiritScripts {
         table.put("defend", spirit -> observing(params -> new DefendScript(spirit, DefendParams.from(params))));
         table.put("flee", spirit -> observing(params -> new FleeScript(spirit, FleeParams.from(params))));
         table.put("retreat", spirit -> observing(params -> new RetreatScript(spirit, RetreatParams.from(params))));
-        table.put("disengage",
-                spirit -> observing(params -> new DisengageScript(spirit, DisengageParams.from(params))));
+        table.put(
+                "disengage", spirit -> observing(params -> new DisengageScript(spirit, DisengageParams.from(params))));
         table.put("deliver", spirit -> params -> new DeliverScript(spirit, DeliverParams.from(params)));
-        table.put("drop_to_player", spirit -> params -> new DropToPlayerScript(spirit, DropToPlayerParams.from(params)));
+        table.put(
+                "drop_to_player", spirit -> params -> new DropToPlayerScript(spirit, DropToPlayerParams.from(params)));
         table.put("give", spirit -> params -> new DeliverScript(spirit, DeliverParams.from(params)));
         table.put("take", spirit -> params -> new TakeScript(spirit, TakeParams.from(params)));
         table.put("report", spirit -> params -> new ReportScript(spirit, ReportParams.from(params)));
@@ -241,29 +243,42 @@ public final class SpiritScripts {
         table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
         table.put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
-        table.put("fill_crater", spirit -> params -> new FillCraterScript(spirit,
-                CraterResolver.resolve(spirit, FillCraterParams.from(params))));
+        table.put(
+                "fill_crater",
+                spirit -> params ->
+                        new FillCraterScript(spirit, CraterResolver.resolve(spirit, FillCraterParams.from(params))));
         table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
         table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
         table.put("dig_descent", spirit -> params -> new DescentScript(spirit, DigDescentParams.from(params)));
         table.put("safe_mine", spirit -> params -> new SafeMineScript(spirit, SafeMineParams.from(params)));
-        table.put("dig_descent_widen",
+        table.put(
+                "dig_descent_widen",
                 spirit -> params -> new DigDescentWidenScript(spirit, DigDescentParams.from(params)));
-        table.put("place_descent_stairs",
+        table.put(
+                "place_descent_stairs",
                 spirit -> params -> new PlaceDescentStairsScript(spirit, DigDescentParams.from(params)));
-        table.put("build_schematic",
+        table.put(
+                "build_schematic",
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
         table.put("build_farm", spirit -> params -> new BuildFarmScript(spirit, BuildFarmParams.from(params)));
         table.put("build_fence", spirit -> params -> new BuildFenceScript(spirit, BuildFenceParams.from(params)));
-        table.put("build_shelter",
-                spirit -> params -> new BuildShelterScript(spirit, BuildShelterParams.from(params)));
+        table.put("build_shelter", spirit -> params -> new BuildShelterScript(spirit, BuildShelterParams.from(params)));
         table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, BlockPointParams.from(params)));
         table.put("use_block", spirit -> params -> new UseBlockScript(spirit, BlockPointParams.from(params)));
         table.put("open", spirit -> params -> new OpenScript(spirit, BlockPointParams.from(params)));
-        table.put("set_combat_mode", spirit -> params -> new SetCombatModeScript(spirit, SetCombatModeParams.from(params)));
+        table.put(
+                "set_combat_mode",
+                spirit -> params -> new SetCombatModeScript(spirit, SetCombatModeParams.from(params)));
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
-            return new AcquireScript(parsed.item(), parsed.count(), RecipeKnowledge.of(spirit.level()), new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT), catalog(), conditionCatalog(), new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
+            return new AcquireScript(
+                    parsed.item(),
+                    parsed.count(),
+                    RecipeKnowledge.of(spirit.level()),
+                    new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT),
+                    catalog(),
+                    conditionCatalog(),
+                    new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
         });
         return table;
     }

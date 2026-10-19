@@ -27,7 +27,9 @@ final class BuildShelterScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         List<BlockCoord> cells = ShelterPlan.shelter(
                 new BlockCoord(feet.getX() - 1, feet.getY(), feet.getZ() - 1),
-                params.side(), ShelterPlan.WALL_HEIGHT, ShelterPlan.BLOCK_BUDGET);
+                params.side(),
+                ShelterPlan.WALL_HEIGHT,
+                ShelterPlan.BLOCK_BUDGET);
         this.session = new FillSession(spirit, material.get(), cells);
     }
 

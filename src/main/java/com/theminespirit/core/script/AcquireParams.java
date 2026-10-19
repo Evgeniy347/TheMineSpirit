@@ -17,8 +17,6 @@ public record AcquireParams(String item, int count) {
 
     public static AcquireParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new AcquireParams(
-                ScriptArgs.requireString(params, "item"),
-                ScriptArgs.requireInt(params, "count"));
+        return new AcquireParams(ScriptArgs.requireString(params, "item"), ScriptArgs.requireInt(params, "count"));
     }
 }

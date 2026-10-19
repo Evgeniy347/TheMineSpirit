@@ -19,7 +19,9 @@ class WarehousePlanTests {
         for (int level = 1; level <= WarehouseRules.MAX_LEVEL; level++) {
             TaskNode plan = TicketPlans.plan(BoardCase.BUILD_WAREHOUSE, level, TicketTarget.at(AT));
             ScriptCall build = find(plan, "build_schematic");
-            assertEquals(WarehouseRules.scheme(level), build.params().get("file"),
+            assertEquals(
+                    WarehouseRules.scheme(level),
+                    build.params().get("file"),
                     "Уровень " + level + " склада строится своей схемой: чужая схема дала бы не тот "
                             + "размер и не то число сундуков");
         }
@@ -29,23 +31,31 @@ class WarehousePlanTests {
     void plan_RelocateWarehouse_CollectsDropsAndUnloadsIntoNewChests() {
         BlockCoord from = new BlockCoord(10, 64, 10);
         BlockCoord to = new BlockCoord(42, 64, 10);
-        TaskNode plan = TicketPlans.plan(BoardCase.RELOCATE_BUILDING,
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.RELOCATE_BUILDING,
                 TicketTarget.at(to).withRelocate(from, to).withScheme("storage_v2"));
 
         List<String> scripts = scripts(plan);
-        assertTrue(scripts.contains("clear_area"),
+        assertTrue(
+                scripts.contains("clear_area"),
                 "Перенос склада обязан снести старый склад: иначе две постройки остались бы стоять");
-        assertTrue(scripts.contains("collect_drops"),
+        assertTrue(
+                scripts.contains("collect_drops"),
                 "Перенос склада обязан подобрать выпавшие из старых сундуков вещи: иначе они остались бы на земле");
-        assertTrue(scripts.contains("unload"),
+        assertTrue(
+                scripts.contains("unload"),
                 "Перенос склада обязан разложить вещи в сундуки нового склада: иначе груз остался бы в инвентаре");
-        assertTrue(!scripts.contains("build_schematic"),
+        assertTrue(
+                !scripts.contains("build_schematic"),
                 "Новый склад уже построен: перенос не должен строить его второй раз");
     }
 
     private static ScriptCall find(TaskNode node, String script) {
         List<ScriptCall> calls = calls(node);
-        return calls.stream().filter(call -> script.equals(call.script())).findFirst().orElseThrow();
+        return calls.stream()
+                .filter(call -> script.equals(call.script()))
+                .findFirst()
+                .orElseThrow();
     }
 
     private static List<String> scripts(TaskNode node) {

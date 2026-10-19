@@ -20,7 +20,9 @@ class CellPartitionTests {
     void split_OnePart_KeepsWholeOrder() {
         List<List<BlockCoord>> shares = CellPartition.split(List.of(A, B, C), 1);
 
-        assertEquals(List.of(List.of(A, B, C)), shares,
+        assertEquals(
+                List.of(List.of(A, B, C)),
+                shares,
                 "Одна доля — весь список без изменения порядка: иначе одиночный строитель терял бы клетки");
     }
 
@@ -28,7 +30,9 @@ class CellPartitionTests {
     void split_TwoParts_AlternateCellsWithoutGaps() {
         List<List<BlockCoord>> shares = CellPartition.split(List.of(A, B, C, D, E, F), 2);
 
-        assertEquals(List.of(List.of(A, C, E), List.of(B, D, F)), shares,
+        assertEquals(
+                List.of(List.of(A, C, E), List.of(B, D, F)),
+                shares,
                 "Чередование index % parts даёт каждой доле клетки через одну: иначе доля одного слоя ложится "
                         + "целиком на одного и верхние блоки строятся без опоры");
     }
@@ -56,7 +60,8 @@ class CellPartitionTests {
         assertEquals(4, shares.size(), "Долей ровно столько, сколько духов в отряде");
         assertEquals(List.of(A), shares.get(0), "Первая клетка — первой доле");
         assertEquals(List.of(B), shares.get(1), "Вторая клетка — второй доле");
-        assertTrue(shares.get(2).isEmpty() && shares.get(3).isEmpty(),
+        assertTrue(
+                shares.get(2).isEmpty() && shares.get(3).isEmpty(),
                 "Лишним духам достаются пустые доли: они потом помогают по общему списку");
     }
 
@@ -70,19 +75,25 @@ class CellPartitionTests {
 
     @Test
     void split_NullList_Throws() {
-        assertThrows(NullPointerException.class, () -> CellPartition.split(null, 2),
+        assertThrows(
+                NullPointerException.class,
+                () -> CellPartition.split(null, 2),
                 "null вместо списка не говорит, есть ли клетки: передавайте пустой список");
     }
 
     @Test
     void split_ZeroParts_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> CellPartition.split(List.of(A), 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellPartition.split(List.of(A), 0),
                 "Ноль долей некуда раздавать клетки: разбиение вырождено");
     }
 
     @Test
     void split_NegativeParts_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> CellPartition.split(List.of(A), -1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellPartition.split(List.of(A), -1),
                 "Отрицательное число долей противоречит разбиению: клетки некому отдать");
     }
 }

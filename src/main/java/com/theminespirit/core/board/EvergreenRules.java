@@ -12,8 +12,7 @@ import java.util.UUID;
  * ({@code supplies}); набор кейсов — код, новый постоянный кейс встаёт сюда явно.
  */
 public final class EvergreenRules {
-    private EvergreenRules() {
-    }
+    private EvergreenRules() {}
 
     public static Map<String, Integer> supplyThresholds() {
         return DataTables.INSTANCE.board().current().supplies();

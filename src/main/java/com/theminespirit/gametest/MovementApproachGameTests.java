@@ -25,8 +25,7 @@ public final class MovementApproachGameTests {
     private static final int CHAMBER_MAX_Z = 7;
     private static final int CHAMBER_TOP = 4;
 
-    private MovementApproachGameTests() {
-    }
+    private MovementApproachGameTests() {}
 
     @GameTest(template = "arena", batch = "move_approach_glass", timeoutTicks = 300)
     public static void approach_DiamondOnMoundBehindGlass_StandsOnMoundInReachAndLeavesBlockIntact(
@@ -43,25 +42,31 @@ public final class MovementApproachGameTests {
             helper.setBlock(new BlockPos(4, 2, z), Blocks.GLASS);
         }
         SpiritEntity spirit = MovementScene.spirit(helper, APPROACH_START);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "approach", DIAMOND),
-                MovementScene.SETTLE_TICKS);
-        helper.assertTrue(MovementScene.eyeDistanceTo(helper, spirit, DIAMOND) > MovementScene.REACH,
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.pointCall(helper, "approach", DIAMOND), MovementScene.SETTLE_TICKS);
+        helper.assertTrue(
+                MovementScene.eyeDistanceTo(helper, spirit, DIAMOND) > MovementScene.REACH,
                 "из точки старта алмазный блок дальше досягаемости, иначе подходить не к чему");
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "к блоку есть стоянка на холме: approach обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double reach = MovementScene.eyeDistanceTo(helper, spirit, DIAMOND);
-            helper.assertTrue(reach <= MovementScene.REACH,
+            helper.assertTrue(
+                    reach <= MovementScene.REACH,
                     "дух обязан встать в досягаемости " + MovementScene.REACH + " от блока, а до него " + reach);
-            helper.assertTrue(helper.relativeVec(spirit.position()).y >= 1.9,
+            helper.assertTrue(
+                    helper.relativeVec(spirit.position()).y >= 1.9,
                     "стоянка — на холме выше пола, а дух стоит на высоте " + helper.relativeVec(spirit.position()).y);
-            helper.assertTrue(helper.getBlockState(DIAMOND).is(Blocks.DIAMOND_BLOCK),
+            helper.assertTrue(
+                    helper.getBlockState(DIAMOND).is(Blocks.DIAMOND_BLOCK),
                     "approach только подходит: алмазный блок обязан остаться целым");
-            helper.assertTrue(run.spiritTicks() <= APPROACH_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= APPROACH_LIMIT_TICKS,
                     "подход обязан уложиться в " + APPROACH_LIMIT_TICKS + " тиков духа, ушло " + run.spiritTicks());
             MovementScene.finish(helper);
         });
@@ -79,8 +84,8 @@ public final class MovementApproachGameTests {
         }
         helper.setBlock(DIAMOND, Blocks.DIAMOND_BLOCK);
         SpiritEntity spirit = MovementScene.spirit(helper, APPROACH_START);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "approach", DIAMOND),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.pointCall(helper, "approach", DIAMOND), MovementScene.SETTLE_TICKS);
         Vec3[] startAt = new Vec3[1];
         helper.onEachTick(() -> {
             if (startAt[0] == null && spirit.tickCount >= MovementScene.SETTLE_TICKS) {
@@ -90,16 +95,23 @@ public final class MovementApproachGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "цель в глухой камере: approach обязан провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
-            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("подойти некуда"),
-                    "причина обязана говорить, что подойти некуда, фактически: " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(run.spiritTicks() <= NO_STAND_LIMIT_TICKS,
+            helper.assertTrue(
+                    spirit.taskFailureReason().orElse("").contains("подойти некуда"),
+                    "причина обязана говорить, что подойти некуда, фактически: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    run.spiritTicks() <= NO_STAND_LIMIT_TICKS,
                     "отказ идёт до первого шага, за " + NO_STAND_LIMIT_TICKS + " тика, а прошло " + run.spiritTicks());
-            helper.assertTrue(spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
-                    "без стоянки дух стоит, а он сдвинулся на " + spirit.position().distanceTo(startAt[0]));
-            helper.assertTrue(helper.getBlockState(DIAMOND).is(Blocks.DIAMOND_BLOCK),
+            helper.assertTrue(
+                    spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
+                    "без стоянки дух стоит, а он сдвинулся на "
+                            + spirit.position().distanceTo(startAt[0]));
+            helper.assertTrue(
+                    helper.getBlockState(DIAMOND).is(Blocks.DIAMOND_BLOCK),
                     "approach не ломает блоков: алмазный блок обязан остаться целым");
             MovementScene.finish(helper);
         });

@@ -1,13 +1,12 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.movement.CellCentering;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -175,8 +174,7 @@ final class PillarColumn {
 
     private Outcome place(BlockPos target) {
         if (count(spirit, blockId) < 1) {
-            return fail("нет материала '" + blockId + "': нужно " + height + ", а закончился на " + built
-                    + "-м блоке");
+            return fail("нет материала '" + blockId + "': нужно " + height + ", а закончился на " + built + "-м блоке");
         }
         BlockPlacer.Begin begin = placer.begin(target, state, blockId);
         if (begin instanceof BlockPlacer.Started) {

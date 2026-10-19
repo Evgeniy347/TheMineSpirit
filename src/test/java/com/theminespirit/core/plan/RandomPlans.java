@@ -12,13 +12,11 @@ import java.util.Random;
 
 final class RandomPlans {
     static final ScriptCatalog SCRIPTS = CoreScripts.defaultCatalog();
-    static final ConditionCatalog CONDITIONS = ConditionCatalog.of(List.of(
-            new ConditionSpec("seen", "проверка видимости цели", List.of(
-                    ParamSpec.integer("limit", false, 0, 100, 5)))));
+    static final ConditionCatalog CONDITIONS = ConditionCatalog.of(List.of(new ConditionSpec(
+            "seen", "проверка видимости цели", List.of(ParamSpec.integer("limit", false, 0, 100, 5)))));
     static final int MAX_DEPTH = 4;
 
-    private RandomPlans() {
-    }
+    private RandomPlans() {}
 
     static TaskNode valid(Random random) {
         return PlanValidator.validate(node(random, MAX_DEPTH), SCRIPTS, CONDITIONS);
@@ -32,11 +30,14 @@ final class RandomPlans {
             case 0 -> new SequenceNode(children(random, depth));
             case 1 -> new RepeatNode(1 + random.nextInt(4), node(random, depth - 1));
             case 2 -> new FallbackNode(children(random, depth));
-            case 3 -> new ParallelNode(random.nextBoolean() ? ParallelMode.ALL : ParallelMode.ANY,
-                    children(random, depth));
-            case 4 -> new ConditionNode("seen", conditionParams(random),
-                    node(random, depth - 1),
-                    random.nextBoolean() ? node(random, depth - 1) : null);
+            case 3 ->
+                new ParallelNode(random.nextBoolean() ? ParallelMode.ALL : ParallelMode.ANY, children(random, depth));
+            case 4 ->
+                new ConditionNode(
+                        "seen",
+                        conditionParams(random),
+                        node(random, depth - 1),
+                        random.nextBoolean() ? node(random, depth - 1) : null);
             default -> script(random);
         };
     }
@@ -54,10 +55,13 @@ final class RandomPlans {
         return switch (random.nextInt(4)) {
             case 0 -> new ScriptCall("wait", Map.of("ticks", 1 + random.nextInt(6000)));
             case 1 -> new ScriptCall("say", Map.of("text", text(random)));
-            case 2 -> new ScriptCall("goto", Map.of(
-                    "x", random.nextInt(2001) - 1000,
-                    "y", random.nextInt(101),
-                    "z", random.nextInt(2001) - 1000));
+            case 2 ->
+                new ScriptCall(
+                        "goto",
+                        Map.of(
+                                "x", random.nextInt(2001) - 1000,
+                                "y", random.nextInt(101),
+                                "z", random.nextInt(2001) - 1000));
             default -> new ScriptCall("return_home", Map.of());
         };
     }

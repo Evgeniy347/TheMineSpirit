@@ -15,8 +15,8 @@ public record DecisionOrder(CombatMode mode, boolean zone, Optional<String> ward
         FactChecks.required("DecisionOrder.directive", directive);
     }
 
-    public static DecisionOrder of(CombatMode mode, boolean zone, Optional<String> ward,
-            Optional<CombatDirective> directive) {
+    public static DecisionOrder of(
+            CombatMode mode, boolean zone, Optional<String> ward, Optional<CombatDirective> directive) {
         return new DecisionOrder(mode, zone, ward, directive);
     }
 
@@ -32,7 +32,8 @@ public record DecisionOrder(CombatMode mode, boolean zone, Optional<String> ward
 
     private static String directiveLabel(CombatDirective directive) {
         if (directive.target().isPresent()) {
-            return directive.mode() == CombatMode.PROTECT ? "приказ защиты " + targetLabel(directive)
+            return directive.mode() == CombatMode.PROTECT
+                    ? "приказ защиты " + targetLabel(directive)
                     : "приказ атаки " + targetLabel(directive);
         }
         if (directive.retreat().filter(method -> method != RetreatMethod.NONE).isPresent()) {

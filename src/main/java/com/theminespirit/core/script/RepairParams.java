@@ -6,8 +6,8 @@ import java.util.Objects;
 public record RepairParams(String item) {
     public RepairParams {
         if (item == null || item.isBlank()) {
-            throw new IllegalArgumentException("Не задан предмет repair: без id или шаблона ('*_pickaxe') "
-                    + "не понять, что чинить");
+            throw new IllegalArgumentException(
+                    "Не задан предмет repair: без id или шаблона ('*_pickaxe') " + "не понять, что чинить");
         }
     }
 

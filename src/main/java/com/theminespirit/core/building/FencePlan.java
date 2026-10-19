@@ -20,8 +20,7 @@ public record FencePlan(List<BlockCoord> cells, BlockCoord gate) {
     public static FencePlan contour(List<BlockCoord> corners) {
         Objects.requireNonNull(corners, "Контур забора не может быть null: без углов неизвестно, где ставить забор");
         List<BlockCoord> points = normalized(corners);
-        if (points.size() < CatalogLimits.FENCE_CORNERS_MIN
-                || points.size() > CatalogLimits.FENCE_CORNERS_MAX) {
+        if (points.size() < CatalogLimits.FENCE_CORNERS_MIN || points.size() > CatalogLimits.FENCE_CORNERS_MAX) {
             throw new IllegalArgumentException("Углов контура " + points.size() + ": нужно от "
                     + CatalogLimits.FENCE_CORNERS_MIN + " до " + CatalogLimits.FENCE_CORNERS_MAX
                     + ", иначе не задать замкнутый забор");
@@ -86,8 +85,8 @@ public record FencePlan(List<BlockCoord> cells, BlockCoord gate) {
         }
         int length = Math.max(Math.abs(dx), Math.abs(dz));
         if (length < 1) {
-            throw new IllegalArgumentException("Ребро контура " + from + " → " + to + " нулевой длины: "
-                    + "углы обязаны различаться");
+            throw new IllegalArgumentException(
+                    "Ребро контура " + from + " → " + to + " нулевой длины: " + "углы обязаны различаться");
         }
         int stepX = Integer.signum(dx);
         int stepZ = Integer.signum(dz);

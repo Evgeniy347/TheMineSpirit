@@ -30,8 +30,7 @@ final class FullCycleScene {
     private static final int SLOT_OF_FIRST_INGOTS = 5;
     private static final int SLOT_OF_SECOND_INGOTS = 9;
 
-    private FullCycleScene() {
-    }
+    private FullCycleScene() {}
 
     static void buildOakTree(GameTestHelper helper, BlockPos base, int trunk) {
         helper.setBlock(base.below(), Blocks.DIRT);
@@ -75,8 +74,8 @@ final class FullCycleScene {
 
     static void assertChestHolds(GameTestHelper helper, Item item, int expected) {
         int actual = GameTestFixtures.countInInventory(chest(helper), item);
-        helper.assertTrue(actual == expected,
-                "в сундуке ожидалось " + expected + " " + item + ", фактически " + actual);
+        helper.assertTrue(
+                actual == expected, "в сундуке ожидалось " + expected + " " + item + ", фактически " + actual);
     }
 
     static void assertChestSortedAfterDeposit(GameTestHelper helper, Item deposited) {
@@ -88,16 +87,19 @@ final class FullCycleScene {
             if (stack.isEmpty()) {
                 continue;
             }
-            helper.assertTrue(slot == filled,
+            helper.assertTrue(
+                    slot == filled,
                     "сундук обязан быть отсортирован без дырок между стопками: слот " + slot + " занят, а подряд "
                             + "заполнено только " + filled);
-            helper.assertTrue(!kinds.contains(stack.getItem()),
+            helper.assertTrue(
+                    !kinds.contains(stack.getItem()),
                     "сундук обязан быть отсортирован: стопки одного предмета слиты, а " + stack.getItem()
                             + " лежит в двух слотах");
             kinds.add(stack.getItem());
             filled++;
         }
-        helper.assertTrue(kinds.contains(deposited) && kinds.contains(Items.IRON_INGOT) && kinds.contains(Items.DIRT),
+        helper.assertTrue(
+                kinds.contains(deposited) && kinds.contains(Items.IRON_INGOT) && kinds.contains(Items.DIRT),
                 "старое содержимое сундука и положенное духом обязано остаться: " + kinds);
     }
 
@@ -132,11 +134,13 @@ final class FullCycleScene {
     private static void collect(TaskNode node, List<String> scripts) {
         switch (node) {
             case ScriptCall call ->
-                scripts.add(call.script() + ":" + call.params().getOrDefault("item", call.params().get("block")));
-            case SequenceNode sequence ->
-                sequence.steps().forEach(step -> collect(step, scripts));
-            default -> throw new IllegalArgumentException("Резолвер выдал узел " + node.getClass().getSimpleName()
-                    + ", а тест разбирает только sequence и script: расширь разбор плана");
+                scripts.add(call.script() + ":"
+                        + call.params().getOrDefault("item", call.params().get("block")));
+            case SequenceNode sequence -> sequence.steps().forEach(step -> collect(step, scripts));
+            default ->
+                throw new IllegalArgumentException(
+                        "Резолвер выдал узел " + node.getClass().getSimpleName()
+                                + ", а тест разбирает только sequence и script: расширь разбор плана");
         }
     }
 }

@@ -16,8 +16,7 @@ import net.minecraft.world.level.Level;
 public final class WorkReserveHub {
     private static final Map<Level, WorkReservations> TABLES = new WeakHashMap<>();
 
-    private WorkReserveHub() {
-    }
+    private WorkReserveHub() {}
 
     public static synchronized WorkReservations leasesFor(Level level) {
         if (level == null) {
@@ -50,9 +49,11 @@ public final class WorkReserveHub {
         }
         long now = spirit.level().getGameTime();
         SpiritSnapshot self = SpiritSnapshotReader.read(spirit, now);
-        List<WorkAssignment> assignments = new WorkAllocator()
-                .allocate(List.of(self), candidates, leasesFor(spirit.level()), now);
-        return assignments.isEmpty() ? Optional.empty() : Optional.of(assignments.get(0).target());
+        List<WorkAssignment> assignments =
+                new WorkAllocator().allocate(List.of(self), candidates, leasesFor(spirit.level()), now);
+        return assignments.isEmpty()
+                ? Optional.empty()
+                : Optional.of(assignments.get(0).target());
     }
 
     private static void requireSpirit(SpiritEntity spirit) {

@@ -35,9 +35,11 @@ public final class ServerThreadCall {
         try {
             serverThread.execute(() -> run(task, future));
         } catch (RejectedExecutionException e) {
-            throw new ApiException(ErrorCode.INTERNAL,
+            throw new ApiException(
+                    ErrorCode.INTERNAL,
                     "Серверный поток не принял задачу: сервер останавливается или перегружен, повторите запрос позже",
-                    Map.of(), e);
+                    Map.of(),
+                    e);
         }
         return future;
     }
@@ -75,8 +77,8 @@ public final class ServerThreadCall {
                     stopLock.wait(remainingMillis);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new ApiException(ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается",
-                            Map.of(), e);
+                    throw new ApiException(
+                            ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается", Map.of(), e);
                 }
             }
         }
@@ -101,22 +103,25 @@ public final class ServerThreadCall {
         } catch (ExecutionException e) {
             throw failure(e.getCause());
         } catch (CancellationException e) {
-            throw new ApiException(ErrorCode.INTERNAL, "Задача на серверном потоке отменена до выполнения",
-                    Map.of(), e);
+            throw new ApiException(
+                    ErrorCode.INTERNAL, "Задача на серверном потоке отменена до выполнения", Map.of(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ApiException(ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается",
-                    Map.of(), e);
+            throw new ApiException(
+                    ErrorCode.INTERNAL, "Ожидание ответа сервера прервано: мост останавливается", Map.of(), e);
         }
     }
 
     private static ApiException stoppingError() {
-        return new ApiException(ErrorCode.INTERNAL,
-                "Сервер останавливается, повторите запрос позже: мост закрывается и больше не читает мир", Map.of());
+        return new ApiException(
+                ErrorCode.INTERNAL,
+                "Сервер останавливается, повторите запрос позже: мост закрывается и больше не читает мир",
+                Map.of());
     }
 
     private static ApiException timeoutError(Duration timeout) {
-        return new ApiException(ErrorCode.INTERNAL,
+        return new ApiException(
+                ErrorCode.INTERNAL,
                 "Сервер не ответил за " + formatSeconds(timeout) + " с: серверный тик завис или перегружен, "
                         + "повторите запрос позже и проверьте нагрузку сервера",
                 Map.of("timeout_ms", timeout.toMillis()));
@@ -138,8 +143,10 @@ public final class ServerThreadCall {
             return api;
         }
         String description = cause.getClass().getName() + ": " + cause.getMessage();
-        return new ApiException(ErrorCode.INTERNAL,
+        return new ApiException(
+                ErrorCode.INTERNAL,
                 "Задача на серверном потоке завершилась ошибкой: " + description + ". Полный стек — в логе сервера",
-                Map.of("cause", description), cause);
+                Map.of("cause", description),
+                cause);
     }
 }

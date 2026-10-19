@@ -14,11 +14,9 @@ final class ContainerCategories {
     private static final int HORIZONTAL_REACH = 2;
     private static final int VERTICAL_REACH = 5;
 
-    private ContainerCategories() {
-    }
+    private ContainerCategories() {}
 
-    static String of(Level level, BlockPos container, List<Stack> slots,
-            WarehouseCategories categories) {
+    static String of(Level level, BlockPos container, List<Stack> slots, WarehouseCategories categories) {
         String sign = near(level, container, categories);
         if (!sign.isEmpty()) {
             return sign;

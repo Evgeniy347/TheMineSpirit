@@ -102,8 +102,8 @@ public final class FillCraterScript implements ScriptInstance {
     }
 
     private TaskRunner startWithdraw() {
-        BuildMaterials.Plan supplies = BuildMaterials.plan(FILL_BLOCK, Math.max(plan.blockCount(), 1),
-                new SpiritBuildSupplies(spirit));
+        BuildMaterials.Plan supplies =
+                BuildMaterials.plan(FILL_BLOCK, Math.max(plan.blockCount(), 1), new SpiritBuildSupplies(spirit));
         if (supplies.steps().isEmpty()) {
             return null;
         }
@@ -197,12 +197,14 @@ public final class FillCraterScript implements ScriptInstance {
 
     @Override
     public Optional<Progress> progress() {
-        return Optional.of(new Progress(Math.min(cursor, plan.cells().size()), Math.max(plan.cells().size(), 1)));
+        return Optional.of(new Progress(
+                Math.min(cursor, plan.cells().size()), Math.max(plan.cells().size(), 1)));
     }
 
     @Override
     public Optional<ScriptResult> result() {
-        return outcome == ScriptStatus.SUCCEEDED ? Optional.of(new ScriptResult.Data(tally.toData()))
+        return outcome == ScriptStatus.SUCCEEDED
+                ? Optional.of(new ScriptResult.Data(tally.toData()))
                 : Optional.empty();
     }
 
@@ -237,7 +239,8 @@ public final class FillCraterScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        Map<String, Object> state = new HashMap<>(new BuildState(placed, 0, skipped, 0, outcome == ScriptStatus.RUNNING).toMap());
+        Map<String, Object> state =
+                new HashMap<>(new BuildState(placed, 0, skipped, 0, outcome == ScriptStatus.RUNNING).toMap());
         state.put("cursor", cursor);
         return Map.copyOf(state);
     }

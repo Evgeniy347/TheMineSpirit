@@ -51,7 +51,8 @@ final class ReflexExecutor {
         if (spirit.isInLava()) {
             Vec3 toward = new Vec3(target.x - spirit.getX(), 0, target.z - spirit.getZ());
             if (toward.lengthSqr() > 0) {
-                spirit.setDeltaMovement(spirit.getDeltaMovement().add(toward.normalize().scale(LAVA_PUSH)));
+                spirit.setDeltaMovement(
+                        spirit.getDeltaMovement().add(toward.normalize().scale(LAVA_PUSH)));
             }
             spirit.getJumpControl().jump();
         }

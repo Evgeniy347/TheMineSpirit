@@ -3,12 +3,12 @@ package com.theminespirit.core.coordinator;
 import java.util.Optional;
 
 public final class SpiritRoles {
-    private SpiritRoles() {
-    }
+    private SpiritRoles() {}
 
     public static SpiritRole classify(Optional<String> currentScript, boolean hasActivePlan) {
         if (currentScript == null) {
-            throw new IllegalArgumentException("currentScript не может быть null: отсутствие скрипта — это Optional.empty()");
+            throw new IllegalArgumentException(
+                    "currentScript не может быть null: отсутствие скрипта — это Optional.empty()");
         }
         if (currentScript.isEmpty()) {
             return hasActivePlan ? SpiritRole.IDLE : SpiritRole.DEFENDER;

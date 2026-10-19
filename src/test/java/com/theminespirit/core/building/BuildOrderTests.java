@@ -17,7 +17,8 @@ class BuildOrderTests {
 
         List<BlockCoord> ordered = BuildOrder.placement(List.of(upper, lower), Set.of());
 
-        assertTrue(ordered.indexOf(lower) < ordered.indexOf(upper),
+        assertTrue(
+                ordered.indexOf(lower) < ordered.indexOf(upper),
                 "Блок нижнего слоя обязан ставиться раньше верхнего: иначе верхний ставится без опоры");
     }
 
@@ -29,7 +30,9 @@ class BuildOrderTests {
 
         List<BlockCoord> ordered = BuildOrder.placement(List.of(feet, floor, head), Set.of(feet, head));
 
-        assertEquals(List.of(floor, feet, head), ordered,
+        assertEquals(
+                List.of(floor, feet, head),
+                ordered,
                 "Ячейки духа обязаны уходить в хвост: иначе дух замуровывает себя и остаётся внутри стены");
     }
 
@@ -39,15 +42,21 @@ class BuildOrderTests {
 
         List<BlockCoord> ordered = BuildOrder.placement(cells, Set.of());
 
-        assertEquals(new HashSet<>(cells), new HashSet<>(ordered),
+        assertEquals(
+                new HashSet<>(cells),
+                new HashSet<>(ordered),
                 "Раскладка обязана быть перестановкой входа: потеря ячейки даёт дырку, дубль — двойной расход");
-        assertEquals(cells.size(), ordered.size(),
+        assertEquals(
+                cells.size(),
+                ordered.size(),
                 "Раскладка обязана сохранять число ячеек: иначе часть коробки не строится");
     }
 
     @Test
     void placement_EmptyInput_GivesEmpty() {
-        assertEquals(List.of(), BuildOrder.placement(List.of(), Set.of(new BlockCoord(0, 1, 0))),
+        assertEquals(
+                List.of(),
+                BuildOrder.placement(List.of(), Set.of(new BlockCoord(0, 1, 0))),
                 "Пустой вход обязан давать пустой выход: иначе пустая стройка ставит лишний блок");
     }
 
@@ -59,7 +68,8 @@ class BuildOrderTests {
 
         List<BlockCoord> ordered = BuildOrder.placement(List.of(second, free, first), Set.of(first, second));
 
-        assertTrue(ordered.indexOf(free) < ordered.indexOf(first) && ordered.indexOf(first) < ordered.indexOf(second),
+        assertTrue(
+                ordered.indexOf(free) < ordered.indexOf(first) && ordered.indexOf(first) < ordered.indexOf(second),
                 "Несколько занятых ячеек обязаны сохранять относительный порядок в хвосте: иначе порядок становится недетерминированным");
     }
 }

@@ -43,8 +43,13 @@ public final class OverflowDecider {
         }
         StackMapper mapper = new StackMapper();
         List<Stack> inventory = mapper.map(spirit.getInventory());
-        OverflowPolicy.Decision decision = OverflowPolicy.decide(inventory, mapper.of(heap),
-                InventoryTables.values(), needs, KitFor.kitFor(activity, child), baseStock(),
+        OverflowPolicy.Decision decision = OverflowPolicy.decide(
+                inventory,
+                mapper.of(heap),
+                InventoryTables.values(),
+                needs,
+                KitFor.kitFor(activity, child),
+                baseStock(),
                 InventoryTables.overflow());
         policyCalls++;
         cachedItem = item;
@@ -63,12 +68,23 @@ public final class OverflowDecider {
         return policyCalls;
     }
 
-    private boolean cacheHit(ItemStack heap, String item, long changes, long generation, List<String> needs,
-            String activity, boolean child) {
-        return cachedDecision != null && cachedChanges == changes && cachedGeneration == generation
-                && cachedCount == heap.getCount() && cachedItem.equals(item)
-                && ItemStack.isSameItemSameComponents(cachedHeap, heap) && cachedNeeds.equals(needs)
-                && Objects.equals(cachedActivity, activity) && cachedChild == child;
+    private boolean cacheHit(
+            ItemStack heap,
+            String item,
+            long changes,
+            long generation,
+            List<String> needs,
+            String activity,
+            boolean child) {
+        return cachedDecision != null
+                && cachedChanges == changes
+                && cachedGeneration == generation
+                && cachedCount == heap.getCount()
+                && cachedItem.equals(item)
+                && ItemStack.isSameItemSameComponents(cachedHeap, heap)
+                && cachedNeeds.equals(needs)
+                && Objects.equals(cachedActivity, activity)
+                && cachedChild == child;
     }
 
     private Map<String, Integer> baseStock() {
@@ -82,6 +98,8 @@ public final class OverflowDecider {
         if (recipes == null) {
             recipes = RecipeKnowledge.of(spirit.level());
         }
-        return spirit.currentPlan().map(plan -> NeedsOfPlan.collect(plan, recipes)).orElse(List.of());
+        return spirit.currentPlan()
+                .map(plan -> NeedsOfPlan.collect(plan, recipes))
+                .orElse(List.of());
     }
 }

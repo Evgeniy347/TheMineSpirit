@@ -67,8 +67,12 @@ final class AutoContainerScan {
         Container container = containers.get(index);
         ContainerSnapshot previous = snapshots.get(index);
         List<Stack> slots = mapper.map(container);
-        String category = ContainerCategories.of(level, BlockPos.containing(previous.pos().x(), previous.pos().y(),
-                previous.pos().z()), slots, categories());
+        String category = ContainerCategories.of(
+                level,
+                BlockPos.containing(
+                        previous.pos().x(), previous.pos().y(), previous.pos().z()),
+                slots,
+                categories());
         snapshots.set(index, new ContainerSnapshot(previous.pos(), slots, category));
     }
 

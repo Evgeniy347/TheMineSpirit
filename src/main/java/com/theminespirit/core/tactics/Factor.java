@@ -3,15 +3,16 @@ package com.theminespirit.core.tactics;
 public enum Factor {
     BIAS((situation, assessment, scales) -> 1),
     WIN_MARGIN((situation, assessment, scales) -> assessment.winMargin()),
-    LOW_HP((situation, assessment, scales) -> unit(
-            (scales.lowHpFloor() - situation.self().hpFraction()) / scales.lowHpFloor())),
-    ENEMY_PRESSURE((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
-            : WinMargin.pressure(situation.self(), assessment.enemies(), scales)),
-    PROXIMITY((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
+    LOW_HP((situation, assessment, scales) ->
+            unit((scales.lowHpFloor() - situation.self().hpFraction()) / scales.lowHpFloor())),
+    ENEMY_PRESSURE((situation, assessment, scales) ->
+            assessment.enemies().count() == 0 ? 0 : WinMargin.pressure(situation.self(), assessment.enemies(), scales)),
+    PROXIMITY((situation, assessment, scales) -> assessment.enemies().count() == 0
+            ? 0
             : unit(1 - assessment.enemies().nearest() / scales.proximityRange())),
     RANGED_EXPOSURE((situation, assessment, scales) -> rangedExposure(assessment.enemies(), scales)),
-    EXPLOSIVE_NEAR((situation, assessment, scales) -> unit(
-            1 - assessment.enemies().nearestExplosive() / scales.explosiveRange())),
+    EXPLOSIVE_NEAR((situation, assessment, scales) ->
+            unit(1 - assessment.enemies().nearestExplosive() / scales.explosiveRange())),
     ALLY_SUPPORT((situation, assessment, scales) -> unit(situation.self().allies() / scales.allyFull())),
     ESCAPE_ROUTE((situation, assessment, scales) -> assessment.escapeQuality()),
     TERRAIN_RISK((situation, assessment, scales) -> Math.max(
@@ -20,15 +21,15 @@ public enum Factor {
     DARKNESS((situation, assessment, scales) -> Math.max(
             unit(1 - (double) situation.env().light() / EnvFacts.MAX_LIGHT),
             situation.env().night() ? scales.nightFloor() : 0)),
-    HUNGER((situation, assessment, scales) -> unit(
-            (scales.hungerThreshold() - situation.self().food()) / scales.hungerThreshold())),
+    HUNGER((situation, assessment, scales) ->
+            unit((scales.hungerThreshold() - situation.self().food()) / scales.hungerThreshold())),
     PROTECT_URGENCY((situation, assessment, scales) ->
             assessment.mode() == CombatMode.PROTECT && situation.orders().wardThreatened() ? 1 : 0),
-    LEASH_PRESSURE((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
-            : unit(1 - assessment.leashLeft() / scales.leashMargin())),
+    LEASH_PRESSURE((situation, assessment, scales) ->
+            assessment.enemies().count() == 0 ? 0 : unit(1 - assessment.leashLeft() / scales.leashMargin())),
     HEALING_AVAILABLE((situation, assessment, scales) -> unit(situation.self().healItems() / scales.healFull())),
-    URGENCY((situation, assessment, scales) -> assessment.enemies().count() == 0 ? 0
-            : WinMargin.urgency(situation.self(), assessment.enemies(), scales));
+    URGENCY((situation, assessment, scales) ->
+            assessment.enemies().count() == 0 ? 0 : WinMargin.urgency(situation.self(), assessment.enemies(), scales));
 
     private final FactorFunction function;
 

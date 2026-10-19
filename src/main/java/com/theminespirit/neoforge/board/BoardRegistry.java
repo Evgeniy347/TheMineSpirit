@@ -9,8 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 public final class BoardRegistry {
     private static final Map<ServerLevel, BoardService> BY_LEVEL = new ConcurrentHashMap<>();
 
-    private BoardRegistry() {
-    }
+    private BoardRegistry() {}
 
     public static BoardService get(ServerLevel level) {
         if (level == null) {

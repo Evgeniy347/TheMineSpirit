@@ -33,9 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -122,15 +120,29 @@ public final class HarvestSession {
 
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.copyOf(OreKind.blocks(ore))));
-        return new HarvestSession(spirit, new Spec(
-                new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
-                WorkKind.VEIN, ore.name().toLowerCase(Locale.ROOT), count, radius, ore == OreKind.ANY, true));
+        return new HarvestSession(
+                spirit,
+                new Spec(
+                        new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
+                        WorkKind.VEIN,
+                        ore.name().toLowerCase(Locale.ROOT),
+                        count,
+                        radius,
+                        ore == OreKind.ANY,
+                        true));
     }
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
-        return new HarvestSession(spirit, new Spec(
-                new GatherTargets(spirit.level(), spirit.blockPosition(), radius, IdFilter.of(List.of(block))),
-                WorkKind.GATHER, block, count, radius, IdFilter.isPattern(block), false));
+        return new HarvestSession(
+                spirit,
+                new Spec(
+                        new GatherTargets(spirit.level(), spirit.blockPosition(), radius, IdFilter.of(List.of(block))),
+                        WorkKind.GATHER,
+                        block,
+                        count,
+                        radius,
+                        IdFilter.isPattern(block),
+                        false));
     }
 
     public Outcome tick() {
@@ -288,8 +300,8 @@ public final class HarvestSession {
                 return;
             }
         }
-        MiningPlanner.Outcome result = MiningPlanner.next(origin, candidates, safety,
-                approachFailures.excludedStands());
+        MiningPlanner.Outcome result =
+                MiningPlanner.next(origin, candidates, safety, approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             if ((exhausted.noStand() > 0 || exhausted.unreachable() > 0) && approachReachStand(origin, candidates)) {
                 return;
@@ -306,8 +318,8 @@ public final class HarvestSession {
             return;
         }
         currentStand = next.stand();
-        approach.begin(new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5),
-                APPROACH_ARRIVAL);
+        approach.begin(
+                new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
         state = State.APPROACH;
     }
 
@@ -353,9 +365,10 @@ public final class HarvestSession {
                 return MiningSafety.canStand(feet, safety);
             }
         };
-        List<BlockCoord> reachable = vein ? candidates : candidates.stream().filter(this::exposed).toList();
-        Optional<BlockCoord> stand = ReachPlanner.nextStand(SpiritReach.current(), origin, reachable, world,
-                reachStandsTried, Set.copyOf(candidates));
+        List<BlockCoord> reachable =
+                vein ? candidates : candidates.stream().filter(this::exposed).toList();
+        Optional<BlockCoord> stand = ReachPlanner.nextStand(
+                SpiritReach.current(), origin, reachable, world, reachStandsTried, Set.copyOf(candidates));
         if (stand.isEmpty()) {
             return false;
         }
@@ -369,8 +382,7 @@ public final class HarvestSession {
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
                 if (currentTarget == null) {
                     state = State.PICK;
@@ -406,8 +418,8 @@ public final class HarvestSession {
         }
         BlockPos feet = spirit.blockPosition();
         boolean inReach = SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), currentTarget);
-        BlockBreaker.Begin begin = inReach ? breaker.beginAnyDistance(toPos(currentTarget))
-                : breaker.begin(toPos(currentTarget));
+        BlockBreaker.Begin begin =
+                inReach ? breaker.beginAnyDistance(toPos(currentTarget)) : breaker.begin(toPos(currentTarget));
         if (begin instanceof BlockBreaker.Protected) {
             protectedSkipped++;
             currentTarget = null;
@@ -415,8 +427,7 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
-        if (begin instanceof BlockBreaker.Refused refused
-                && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
+        if (begin instanceof BlockBreaker.Refused refused && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
             fail(refused.message());
             return;
         }
@@ -506,7 +517,8 @@ public final class HarvestSession {
     }
 
     private String fullReason() {
-        return depositBlockedItem == null ? "инвентарь полон: не помещается добыча"
+        return depositBlockedItem == null
+                ? "инвентарь полон: не помещается добыча"
                 : "инвентарь полон: не помещается " + depositBlockedItem;
     }
 
@@ -522,8 +534,7 @@ public final class HarvestSession {
 
     private void breakTick() {
         switch (breaker.tick()) {
-            case BREAKING -> {
-            }
+            case BREAKING -> {}
             case BROKEN -> {
                 releaseReserved();
                 mined++;
@@ -581,7 +592,12 @@ public final class HarvestSession {
     }
 
     private DropCollector newCollector(BlockCoord center) {
-        return new DropCollector(spirit, IdFilter.matchAll(), center, COLLECT_RADIUS, PickupTuning.DEFAULT,
+        return new DropCollector(
+                spirit,
+                IdFilter.matchAll(),
+                center,
+                COLLECT_RADIUS,
+                PickupTuning.DEFAULT,
                 OverflowMode.forSpirit(spirit.isFollowingPlayer()));
     }
 
@@ -633,7 +649,12 @@ public final class HarvestSession {
         return new BlockPos(coord.x(), coord.y(), coord.z());
     }
 
-    private record Spec(HarvestTargets targets, WorkKind kind, String label, int count, int radius,
-            boolean skipWithoutTool, boolean vein) {
-    }
+    private record Spec(
+            HarvestTargets targets,
+            WorkKind kind,
+            String label,
+            int count,
+            int radius,
+            boolean skipWithoutTool,
+            boolean vein) {}
 }

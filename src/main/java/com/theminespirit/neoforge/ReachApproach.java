@@ -57,8 +57,8 @@ public final class ReachApproach {
                 tried.add(stand);
             }
             if (tried.size() >= MAX_STANDS || !nextStand()) {
-                refusal = "ни с одной стоянки не дотянуться до " + target + " (" + SpiritReach.current().describe() + ")"
-                        + (refusal == null ? "" : "; " + refusal);
+                refusal = "ни с одной стоянки не дотянуться до " + target + " ("
+                        + SpiritReach.current().describe() + ")" + (refusal == null ? "" : "; " + refusal);
                 finish();
                 return Approach.State.STUCK;
             }
@@ -111,8 +111,8 @@ public final class ReachApproach {
                 return MiningSafety.canStand(feet, safety);
             }
         };
-        Optional<BlockCoord> next = ReachPlanner.nextStand(SpiritReach.current(), feet(), List.of(target), world,
-                tried, Set.of(target));
+        Optional<BlockCoord> next =
+                ReachPlanner.nextStand(SpiritReach.current(), feet(), List.of(target), world, tried, Set.of(target));
         if (next.isEmpty()) {
             return false;
         }

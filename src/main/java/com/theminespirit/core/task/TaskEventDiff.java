@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class TaskEventDiff {
-    private TaskEventDiff() {
-    }
+    private TaskEventDiff() {}
 
     public static List<TaskEvent> between(TaskRecord previous, TaskRecord current) {
         Objects.requireNonNull(previous, "previous не может быть null: дифф считают между двумя кадрами задачи");

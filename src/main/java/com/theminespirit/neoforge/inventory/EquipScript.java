@@ -60,8 +60,7 @@ public final class EquipScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
     public String failureReason() {

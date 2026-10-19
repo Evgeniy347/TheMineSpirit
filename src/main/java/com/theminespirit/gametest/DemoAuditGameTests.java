@@ -41,8 +41,7 @@ public final class DemoAuditGameTests {
     private static final int FAMILY_HOUSE_MAX_PATH_BUILDS = 15;
     private static final int DEFAULT_MAX_PATH_BUILDS = 15;
 
-    private DemoAuditGameTests() {
-    }
+    private DemoAuditGameTests() {}
 
     private static void floor(GameTestHelper helper) {
         for (int x = 0; x < FLOOR_SIZE; x++) {
@@ -54,7 +53,8 @@ public final class DemoAuditGameTests {
 
     private static void give(GameTestHelper helper, SpiritEntity spirit, Schematic schematic) {
         int slot = 0;
-        for (Map.Entry<String, Integer> material : PresetLibrary.countMaterials(schematic).entrySet()) {
+        for (Map.Entry<String, Integer> material :
+                PresetLibrary.countMaterials(schematic).entrySet()) {
             if (!BlockItems.hasBlockItem(material.getKey())) {
                 continue;
             }
@@ -73,7 +73,8 @@ public final class DemoAuditGameTests {
 
     private static Map<String, Object> data(GameTestHelper helper, SpiritEntity spirit) {
         ScriptResult result = spirit.taskResult().orElse(null);
-        helper.assertTrue(result instanceof ScriptResult.Data,
+        helper.assertTrue(
+                result instanceof ScriptResult.Data,
                 "Успешная стройка обязана нести Data-итог: " + (result == null ? "пусто" : result));
         return ((ScriptResult.Data) result).fields();
     }
@@ -82,8 +83,8 @@ public final class DemoAuditGameTests {
         audit(helper, building, level, rotation, DEFAULT_MAX_PATH_BUILDS);
     }
 
-    private static void audit(GameTestHelper helper, String building, int level, BuildRotation rotation,
-            int maxPathBuilds) {
+    private static void audit(
+            GameTestHelper helper, String building, int level, BuildRotation rotation, int maxPathBuilds) {
         String scheme = DemoBuildings.require(building).level(level).scheme();
         GameTestFixtures.reset(helper);
         floor(helper);
@@ -94,24 +95,44 @@ public final class DemoAuditGameTests {
         BuildAudit.Before before = BuildAudit.snapshot(helper.getLevel(), schematic, origin, rotation, 3);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), spawnOutside(schematic, rotation));
         give(helper, spirit, schematic);
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_schematic",
-                Map.of("file", scheme, "x", anchor.getX(), "y", anchor.getY(), "z", anchor.getZ(),
-                        "rotation", rotation.id())), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "build_schematic",
+                        Map.of(
+                                "file",
+                                scheme,
+                                "x",
+                                anchor.getX(),
+                                "y",
+                                anchor.getY(),
+                                "z",
+                                anchor.getZ(),
+                                "rotation",
+                                rotation.id())),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Постройка '" + scheme + "' (" + rotation + ") обязана завершиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             Map<String, Object> data = data(helper, spirit);
             int skipped = ((Number) data.get("skipped")).intValue();
             BuildAudit.Result audit = BuildAudit.audit(helper.getLevel(), schematic, origin, rotation, before, skipped);
-            helper.assertTrue(audit.ok(), "Постройка '" + scheme + "' (" + rotation
-                    + ") обязана совпасть со схемой без лишних блоков, расхождения: " + audit.problems());
-            helper.assertTrue(spirit.pathBuilds() <= maxPathBuilds, "Постройка '" + scheme + "' (" + rotation
-                    + ") обязана уложиться в " + maxPathBuilds + " построений пути: дух ставит всё досягаемое с "
-                    + "места, а не подходит к каждому блоку; фактически " + spirit.pathBuilds());
+            helper.assertTrue(
+                    audit.ok(),
+                    "Постройка '" + scheme + "' (" + rotation
+                            + ") обязана совпасть со схемой без лишних блоков, расхождения: " + audit.problems());
+            helper.assertTrue(
+                    spirit.pathBuilds() <= maxPathBuilds,
+                    "Постройка '" + scheme + "' (" + rotation
+                            + ") обязана уложиться в " + maxPathBuilds
+                            + " построений пути: дух ставит всё досягаемое с "
+                            + "места, а не подходит к каждому блоку; фактически " + spirit.pathBuilds());
             GameTestFixtures.finish(helper);
         });
     }
@@ -129,8 +150,8 @@ public final class DemoAuditGameTests {
                 + FLOOR_SIZE + "×" + FLOOR_SIZE + ": духу негде появиться снаружи");
     }
 
-    private static void preplaceWithoutItem(GameTestHelper helper, Schematic schematic, BlockCoord origin,
-            BuildRotation rotation) {
+    private static void preplaceWithoutItem(
+            GameTestHelper helper, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
         Rotation mc = switch (rotation) {
             case NONE -> Rotation.NONE;
             case CLOCKWISE_90 -> Rotation.CLOCKWISE_90;
@@ -141,9 +162,12 @@ public final class DemoAuditGameTests {
             if (BlockItems.hasBlockItem(entry.block())) {
                 continue;
             }
-            BlockPos pos = new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+            BlockPos pos =
+                    new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
             BlockState state = BlockStates.stateFor(entry.block(), entry.state());
-            helper.getLevel().setBlock(pos, rotation == BuildRotation.NONE ? state : state.rotate(helper.getLevel(), pos, mc), 3);
+            helper.getLevel()
+                    .setBlock(
+                            pos, rotation == BuildRotation.NONE ? state : state.rotate(helper.getLevel(), pos, mc), 3);
         }
     }
 

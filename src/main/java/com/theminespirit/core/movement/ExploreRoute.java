@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class ExploreRoute {
-    private ExploreRoute() {
-    }
+    private ExploreRoute() {}
 
     public static List<BlockCoord> points(BlockCoord origin, int radius, int budget) {
         Objects.requireNonNull(origin, "origin не может быть null: маршрут разведки начинается от духа");

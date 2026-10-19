@@ -11,8 +11,8 @@ public record TransferNeed(UUID recipient, String item, int count, BlockCoord at
             throw new IllegalArgumentException("Предмет передачи пуст: без имени нечего искать у источника");
         }
         if (count <= 0) {
-            throw new IllegalArgumentException("Нужно предметов " + count + " <= 0: передача без нужды "
-                    + "не планируется");
+            throw new IllegalArgumentException(
+                    "Нужно предметов " + count + " <= 0: передача без нужды " + "не планируется");
         }
         Objects.requireNonNull(at, "Точка получателя не может быть null: по ней измеряется близость источника");
     }

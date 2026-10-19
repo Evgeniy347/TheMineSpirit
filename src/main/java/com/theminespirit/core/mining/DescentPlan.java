@@ -45,11 +45,7 @@ public record DescentPlan(
     }
 
     public static DescentPlan from(
-            SafetyView view,
-            BlockCoord entry,
-            DescentDirection direction,
-            int targetY,
-            int torchInterval) {
+            SafetyView view, BlockCoord entry, DescentDirection direction, int targetY, int torchInterval) {
         Objects.requireNonNull(view, "Вид мира не может быть null: без него не проверить безопасность шагов");
         Objects.requireNonNull(entry, "Точка входа не может быть null: без неё неизвестно, откуда спускаться");
         Objects.requireNonNull(direction, "Направление спуска не может быть null: без него неизвестно, куда копать");
@@ -86,8 +82,8 @@ public record DescentPlan(
             steps.add(step);
         }
         DescentStop stop = dangerReason == null ? DescentStop.TARGET_Y : DescentStop.DANGER;
-        return new DescentPlan(entry, direction, targetY, torchInterval, steps, stop,
-                dangerReason == null ? "" : dangerReason);
+        return new DescentPlan(
+                entry, direction, targetY, torchInterval, steps, stop, dangerReason == null ? "" : dangerReason);
     }
 
     public static String dangerAt(SafetyView view, DescentStep step, DescentDirection direction) {
@@ -96,26 +92,26 @@ public record DescentPlan(
         Objects.requireNonNull(direction, "Направление спуска не может быть null: от него зависят боковые клетки");
         int floor = step.floor();
         BlockCoord stand = step.stand();
-        String floorDanger = DescentDanger.solidFloor(view, new BlockCoord(stand.x(), floor, stand.z()),
-                "пол", step.index());
+        String floorDanger =
+                DescentDanger.solidFloor(view, new BlockCoord(stand.x(), floor, stand.z()), "пол", step.index());
         if (floorDanger != null) {
             return floorDanger;
         }
-        String subFloorDanger = DescentDanger.solidFloor(view, new BlockCoord(stand.x(), floor - 1, stand.z()),
-                "подпол", step.index());
+        String subFloorDanger =
+                DescentDanger.solidFloor(view, new BlockCoord(stand.x(), floor - 1, stand.z()), "подпол", step.index());
         if (subFloorDanger != null) {
             return subFloorDanger;
         }
         int sideX = -direction.dz;
         int sideZ = direction.dx;
         for (BlockCoord cell : step.passage()) {
-            String forward = DescentDanger.fluidPassage(view, new BlockCoord(cell.x() + sideX, cell.y(), cell.z() + sideZ),
-                    "стенка", cell);
+            String forward = DescentDanger.fluidPassage(
+                    view, new BlockCoord(cell.x() + sideX, cell.y(), cell.z() + sideZ), "стенка", cell);
             if (forward != null) {
                 return forward;
             }
-            String backward = DescentDanger.fluidPassage(view, new BlockCoord(cell.x() - sideX, cell.y(), cell.z() - sideZ),
-                    "стенка", cell);
+            String backward = DescentDanger.fluidPassage(
+                    view, new BlockCoord(cell.x() - sideX, cell.y(), cell.z() - sideZ), "стенка", cell);
             if (backward != null) {
                 return backward;
             }

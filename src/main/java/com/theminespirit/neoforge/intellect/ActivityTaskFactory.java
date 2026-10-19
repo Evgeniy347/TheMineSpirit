@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -8,8 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class ActivityTaskFactory {
-    private ActivityTaskFactory() {
-    }
+    private ActivityTaskFactory() {}
 
     public static Optional<TaskNode> taskFor(ActivityIntent intent) {
         if (intent == null) {
@@ -30,5 +28,4 @@ public final class ActivityTaskFactory {
         };
         return Optional.of(new ScriptCall(script, params));
     }
-
 }

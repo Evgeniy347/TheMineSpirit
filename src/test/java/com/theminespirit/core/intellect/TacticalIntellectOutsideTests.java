@@ -20,9 +20,14 @@ class TacticalIntellectOutsideTests {
 
     private static TacticalIntellect intellect() {
         return new TacticalIntellect(
-                ActivityCatalog.adultsOnly(List.of(new ChopActivity(), new FarmActivity(), new MineActivity(),
-                        new RestActivity(), new DefendActivity())),
-                StrengthAssessorTests.PROFILES, StrengthAssessorTests.ARMOR);
+                ActivityCatalog.adultsOnly(List.of(
+                        new ChopActivity(),
+                        new FarmActivity(),
+                        new MineActivity(),
+                        new RestActivity(),
+                        new DefendActivity())),
+                StrengthAssessorTests.PROFILES,
+                StrengthAssessorTests.ARMOR);
     }
 
     private static SettlementView needy(List<UUID> ids) {
@@ -31,47 +36,58 @@ class TacticalIntellectOutsideTests {
 
     private static SettlementView needyAt(List<UUID> ids, double dayFraction) {
         List<SpiritSnapshot> spirits = ids.stream().map(SettlementViews::spirit).toList();
-        return new SettlementView(ids.size(), 0, 2, 2, 0, 0, 0, 0, dayFraction, SettlementViews.farmWork(),
-                Forage.NONE, spirits, 100);
+        return new SettlementView(
+                ids.size(), 0, 2, 2, 0, 0, 0, 0, dayFraction, SettlementViews.farmWork(), Forage.NONE, spirits, 100);
     }
 
     @Test
     void decide_OneWorkerOutsideNeed_MineNotAssigned() {
         TacticalIntellect mind = intellect();
 
-        TacticalDecision decision =
-                mind.decide(needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(),
-                        new StrategicQueue(), 100);
+        TacticalDecision decision = mind.decide(
+                needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
 
-        assertFalse(has(decision, ActivityId.MINE),
+        assertFalse(
+                has(decision, ActivityId.MINE),
                 "Один дух внешней работы не получает: за границу поселения в одиночку не выходят");
-        assertTrue(decision.refusals().stream().anyMatch(reason -> reason.contains("MINE")
-                        && reason.contains("одиночку")),
+        assertTrue(
+                decision.refusals().stream().anyMatch(reason -> reason.contains("MINE") && reason.contains("одиночку")),
                 "Отказ обязан попасть в журнал решений с причиной, фактически: " + decision.refusals());
     }
 
     @Test
     void decide_TwoWorkersOutsideNeed_MineAssigned() {
-        TacticalDecision decision =
-                intellect().decide(needy(List.of(FIRST, SECOND)), new ActivityLedger(), new WorkReservations(),
-                        new StrategicQueue(), 100);
+        TacticalDecision decision = intellect()
+                .decide(
+                        needy(List.of(FIRST, SECOND)),
+                        new ActivityLedger(),
+                        new WorkReservations(),
+                        new StrategicQueue(),
+                        100);
 
-        assertTrue(has(decision, ActivityId.MINE),
+        assertTrue(
+                has(decision, ActivityId.MINE),
                 "Двое духов внешнюю работу получают: группа от порога — уже организация");
-        assertTrue(decision.refusals().isEmpty(),
+        assertTrue(
+                decision.refusals().isEmpty(),
                 "При организованном выходе отказов нет, фактически: " + decision.refusals());
     }
 
     @Test
     void decide_EveningTwoWorkersOutsideNeed_MineNotAssigned() {
-        TacticalDecision decision =
-                intellect().decide(needyAt(List.of(FIRST, SECOND), 0.5), new ActivityLedger(),
-                        new WorkReservations(), new StrategicQueue(), 100);
+        TacticalDecision decision = intellect()
+                .decide(
+                        needyAt(List.of(FIRST, SECOND), 0.5),
+                        new ActivityLedger(),
+                        new WorkReservations(),
+                        new StrategicQueue(),
+                        100);
 
-        assertFalse(has(decision, ActivityId.MINE),
+        assertFalse(
+                has(decision, ActivityId.MINE),
                 "Вечером внешняя работа не назначается даже группе: ночью наружу ходят только за игроком");
-        assertTrue(decision.refusals().stream().anyMatch(reason -> reason.contains("MINE")
-                        && reason.contains("ночь")),
+        assertTrue(
+                decision.refusals().stream().anyMatch(reason -> reason.contains("MINE") && reason.contains("ночь")),
                 "Отказ обязан попасть в журнал решений с причиной «ночь», фактически: " + decision.refusals());
     }
 
@@ -80,11 +96,11 @@ class TacticalIntellectOutsideTests {
         TacticalIntellect mind = intellect();
         mind.trackPlayerEscort(true);
 
-        TacticalDecision decision =
-                mind.decide(needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(),
-                        new StrategicQueue(), 100);
+        TacticalDecision decision = mind.decide(
+                needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
 
-        assertTrue(has(decision, ActivityId.MINE),
+        assertTrue(
+                has(decision, ActivityId.MINE),
                 "С реальным игроком рядом один дух внешнюю работу получает: игрок ведёт за собой");
     }
 

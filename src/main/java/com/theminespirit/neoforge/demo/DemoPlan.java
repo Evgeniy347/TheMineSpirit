@@ -7,7 +7,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Готовая к постановке демо-постройка: имя, схема, раскладка, содержимое сундука и блоки без предмета. */
-record DemoPlan(String name, String scheme, DemoPlacement placement, Map<String, Integer> materials,
+record DemoPlan(
+        String name,
+        String scheme,
+        DemoPlacement placement,
+        Map<String, Integer> materials,
         List<Placement> preplaced) {
     record Placement(BlockCoord pos, String block) {
         Placement {

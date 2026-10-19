@@ -8,16 +8,25 @@ import java.util.Set;
  * инструменты (запас цепочки), вход в шахту, забор, освещение, постройки, стол кузнеца
  * и наковальня. Собирает адаптер из снимка мира; генератор читает только эти данные.
  */
-public record SettlementFacts(boolean hasHome, boolean groundsCleared, int chests,
-        boolean craftingStation, Set<String> tools, boolean mineEntrance, boolean fence,
-        boolean lighting, boolean houses, boolean smithingTable, boolean anvil) {
+public record SettlementFacts(
+        boolean hasHome,
+        boolean groundsCleared,
+        int chests,
+        boolean craftingStation,
+        Set<String> tools,
+        boolean mineEntrance,
+        boolean fence,
+        boolean lighting,
+        boolean houses,
+        boolean smithingTable,
+        boolean anvil) {
 
     public SettlementFacts {
         if (chests < 0) {
-            throw new IllegalArgumentException("chests равен " + chests
-                    + " и отрицателен: число сундуков не может быть отрицательным");
+            throw new IllegalArgumentException(
+                    "chests равен " + chests + " и отрицателен: число сундуков не может быть отрицательным");
         }
-        tools = Set.copyOf(Objects.requireNonNull(tools,
-                "tools не может быть null: набор собранных инструментов задают пустым множеством, а не null"));
+        tools = Set.copyOf(Objects.requireNonNull(
+                tools, "tools не может быть null: набор собранных инструментов задают пустым множеством, а не null"));
     }
 }

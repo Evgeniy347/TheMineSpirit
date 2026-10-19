@@ -10,8 +10,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Sheep;
@@ -109,12 +107,13 @@ public final class HerdActions {
         sheep.setSheared(true);
         shears.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
         Item wool = BuiltInRegistries.ITEM
-                .getOptional(ResourceLocation.parse("minecraft:" + sheep.getColor().getName() + "_wool")).orElseThrow(
-                        () -> new IllegalStateException("В реестре нет шерсти цвета " + sheep.getColor()
-                                + ": id шерсти неверен для версии игры, сверь его с реестром"));
+                .getOptional(
+                        ResourceLocation.parse("minecraft:" + sheep.getColor().getName() + "_wool"))
+                .orElseThrow(() -> new IllegalStateException("В реестре нет шерсти цвета " + sheep.getColor()
+                        + ": id шерсти неверен для версии игры, сверь его с реестром"));
         int count = 1 + level.random.nextInt(3);
-        ItemEntity drop = new ItemEntity(level, sheep.getX(), sheep.getY() + 1.0, sheep.getZ(),
-                new ItemStack(wool, count));
+        ItemEntity drop =
+                new ItemEntity(level, sheep.getX(), sheep.getY() + 1.0, sheep.getZ(), new ItemStack(wool, count));
         drop.setDefaultPickUpDelay();
         level.addFreshEntity(drop);
         return count;
@@ -168,9 +167,10 @@ public final class HerdActions {
     }
 
     public static Item registryItem(String id) {
-        return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(id)).orElseThrow(
-                () -> new IllegalStateException("В реестре нет предмета " + id + ": id корма неверен для версии игры, "
-                        + "сверь его с реестром"));
+        return BuiltInRegistries.ITEM
+                .getOptional(ResourceLocation.parse(id))
+                .orElseThrow(() -> new IllegalStateException("В реестре нет предмета " + id
+                        + ": id корма неверен для версии игры, " + "сверь его с реестром"));
     }
 
     private static String itemId(ItemStack stack) {

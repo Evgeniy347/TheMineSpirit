@@ -38,14 +38,11 @@ import net.minecraft.world.phys.Vec3;
 public final class WorldScanner {
     private static final int UNLIMITED_SLICES = Integer.MAX_VALUE;
 
-    private WorldScanner() {
-    }
+    private WorldScanner() {}
 
-    public record Scan(WorldObservation observation, int scannedPositions, int skippedChunks) {
-    }
+    public record Scan(WorldObservation observation, int scannedPositions, int skippedChunks) {}
 
-    public static Scan observe(Level level, String botId, BlockCoord center, ScanRadius radius,
-            Container inventory) {
+    public static Scan observe(Level level, String botId, BlockCoord center, ScanRadius radius, Container inventory) {
         Session session = new Session(level, botId, center, radius, IdFilter.matchAll(), inventory);
         while (!session.done()) {
             session.step(UNLIMITED_SLICES);
@@ -75,18 +72,35 @@ public final class WorldScanner {
         private int entityQueries;
         private Scan result;
 
-        public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter blockFilter,
+        public Session(
+                Level level,
+                String botId,
+                BlockCoord center,
+                ScanRadius radius,
+                IdFilter blockFilter,
                 Container inventory) {
             this(level, botId, center, radius, blockFilter, inventory, new ScanOptions(ScanFocus.ALL, 0));
         }
 
-        public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
-                Container inventory, ScanFocus focus) {
+        public Session(
+                Level level,
+                String botId,
+                BlockCoord center,
+                ScanRadius radius,
+                IdFilter filter,
+                Container inventory,
+                ScanFocus focus) {
             this(level, botId, center, radius, filter, inventory, new ScanOptions(focus, 0));
         }
 
-        public Session(Level level, String botId, BlockCoord center, ScanRadius radius, IdFilter filter,
-                Container inventory, ScanOptions options) {
+        public Session(
+                Level level,
+                String botId,
+                BlockCoord center,
+                ScanRadius radius,
+                IdFilter filter,
+                Container inventory,
+                ScanOptions options) {
             this.level = level;
             this.botId = botId;
             this.center = center;
@@ -96,8 +110,8 @@ public final class WorldScanner {
             this.cursor = options.focus().needsSlices() ? LoadedWorld.cursor(box, center) : SectionCursor.empty();
             this.focus = options.focus();
             this.entityFilter = options.focus().filtersEntities() ? filter : IdFilter.matchAll();
-            this.filteredBlocks = options.focus().collectsBlocks() && !filter.matchesAll()
-                    ? BlockSets.resolve(filter) : null;
+            this.filteredBlocks =
+                    options.focus().collectsBlocks() && !filter.matchesAll() ? BlockSets.resolve(filter) : null;
             this.openBlockLimit = Math.max(0, options.openBlockLimit());
         }
 
@@ -126,8 +140,8 @@ public final class WorldScanner {
 
         public Scan result() {
             if (!done()) {
-                throw new IllegalStateException("Скан не закончен: осталось срезов " + cursor.remaining()
-                        + ", результат читают после done()");
+                throw new IllegalStateException(
+                        "Скан не закончен: осталось срезов " + cursor.remaining() + ", результат читают после done()");
             }
             if (result == null) {
                 result = finish();
@@ -148,7 +162,8 @@ public final class WorldScanner {
             }
             LevelChunkSection section = chunk.getSection(chunk.getSectionIndexFromSectionY(slice.sectionY()));
             if (section.hasOnlyAir()
-                    || (filteredBlocks != null && !section.maybeHas(state -> filteredBlocks.contains(state.getBlock())))) {
+                    || (filteredBlocks != null
+                            && !section.maybeHas(state -> filteredBlocks.contains(state.getBlock())))) {
                 return;
             }
             BlockBox bounds = slice.bounds();
@@ -206,11 +221,14 @@ public final class WorldScanner {
 
         private void collectContainers(LevelChunk chunk) {
             BlockBox cube = box.orElseThrow();
-            for (Map.Entry<BlockPos, BlockEntity> entry : chunk.getBlockEntities().entrySet()) {
+            for (Map.Entry<BlockPos, BlockEntity> entry :
+                    chunk.getBlockEntities().entrySet()) {
                 BlockPos pos = entry.getKey();
                 if (cube.contains(toCore(pos)) && entry.getValue() instanceof Container) {
                     containers.add(new ContainerRef(
-                            BuiltInRegistries.BLOCK.getKey(entry.getValue().getBlockState().getBlock()).toString(),
+                            BuiltInRegistries.BLOCK
+                                    .getKey(entry.getValue().getBlockState().getBlock())
+                                    .toString(),
                             toCore(pos)));
                 }
             }
@@ -218,12 +236,23 @@ public final class WorldScanner {
 
         private Scan finish() {
             List<ItemCount> blocks = new ArrayList<>();
-            blockCounts.forEach((block, count) ->
-                    blocks.add(new ItemCount(BuiltInRegistries.BLOCK.getKey(block).toString(), count[0])));
+            blockCounts.forEach((block, count) -> blocks.add(
+                    new ItemCount(BuiltInRegistries.BLOCK.getKey(block).toString(), count[0])));
             List<EntityRef> entities = focus.collectsEntities() ? findEntities() : List.of();
-            WorldObservation observation = new WorldObservation(botId, level.getGameTime(), center,
-                    inventoryEntries(inventory), blocks, entities, containers, radius, null, List.of(), List.of(),
-                    null, openBlocks);
+            WorldObservation observation = new WorldObservation(
+                    botId,
+                    level.getGameTime(),
+                    center,
+                    inventoryEntries(inventory),
+                    blocks,
+                    entities,
+                    containers,
+                    radius,
+                    null,
+                    List.of(),
+                    List.of(),
+                    null,
+                    openBlocks);
             return new Scan(observation, examinedPositions, skippedChunks.size());
         }
 
@@ -235,15 +264,20 @@ public final class WorldScanner {
             }
             BlockBox cube = box.get();
             Vec3 centerPos = new Vec3(center.x() + 0.5, center.y() + 0.5, center.z() + 0.5);
-            AABB bounds = new AABB(cube.min().x(), cube.min().y(), cube.min().z(),
-                    cube.max().x() + 1.0, cube.max().y() + 1.0, cube.max().z() + 1.0);
+            AABB bounds = new AABB(
+                    cube.min().x(),
+                    cube.min().y(),
+                    cube.min().z(),
+                    cube.max().x() + 1.0,
+                    cube.max().y() + 1.0,
+                    cube.max().z() + 1.0);
             for (Entity entity : level.getEntities((Entity) null, bounds, e -> !e.isRemoved())) {
                 String type = EntityType.getKey(entity.getType()).toString();
                 if (!entityFilter.matches(type)) {
                     continue;
                 }
-                entities.add(new EntityRef(type, toCore(entity.blockPosition()),
-                        entity.position().distanceTo(centerPos)));
+                entities.add(new EntityRef(
+                        type, toCore(entity.blockPosition()), entity.position().distanceTo(centerPos)));
             }
             return entities;
         }
@@ -268,6 +302,5 @@ public final class WorldScanner {
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public record ScanOptions(ScanFocus focus, int openBlockLimit) {
-    }
+    public record ScanOptions(ScanFocus focus, int openBlockLimit) {}
 }

@@ -10,15 +10,10 @@ import java.util.Objects;
 public final class StandSpots {
 
     private static final int MAX_DEPTH = 2;
-    private static final int[][] FACE_OFFSETS = {
-            {0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}
-    };
-    private static final int[][] HORIZONTAL_OFFSETS = {
-            {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}
-    };
+    private static final int[][] FACE_OFFSETS = {{0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
+    private static final int[][] HORIZONTAL_OFFSETS = {{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
 
-    private StandSpots() {
-    }
+    private StandSpots() {}
 
     public static List<BlockCoord> of(BlockCoord target, SafetyView view, BlockCoord from) {
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, где искать стоянку");

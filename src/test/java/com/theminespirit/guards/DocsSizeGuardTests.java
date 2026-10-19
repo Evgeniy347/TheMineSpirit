@@ -16,12 +16,14 @@ import org.junit.jupiter.api.Test;
 
 class DocsSizeGuardTests {
     private static final int LIMIT = 200;
-    private static final List<Path> ROOTS = List.of(Path.of("AGENTS.md"), Path.of("README.md"),
-            Path.of("docs"), Path.of("tasks"));
+    private static final List<Path> ROOTS =
+            List.of(Path.of("AGENTS.md"), Path.of("README.md"), Path.of("docs"), Path.of("tasks"));
 
     @Test
     void docs_FilesLongerThanLimit_AreReported() {
-        assertEquals(List.of(), oversized(documents()),
+        assertEquals(
+                List.of(),
+                oversized(documents()),
                 "Документ длиннее " + LIMIT + " строк: такой файл не читают целиком, правила в нём теряются, "
                         + "а правка требует перечитывать всё. Как надо: раздробить по темам (каталог с README-картой) "
                         + "или сократить без потери смысла. Правило: docs/TESTING.md → «Сторожа», AGENTS.md → «Документы». "
@@ -30,13 +32,17 @@ class DocsSizeGuardTests {
 
     @Test
     void oversized_FileOverLimit_IsReported() {
-        assertEquals(List.of("docs/long.md (201)"), oversized(Map.of("docs/long.md", "x\n".repeat(201))),
+        assertEquals(
+                List.of("docs/long.md (201)"),
+                oversized(Map.of("docs/long.md", "x\n".repeat(201))),
                 "Сторож ослеп: файл длиной 201 строка обязан попасть в нарушители");
     }
 
     @Test
     void oversized_FileAtLimit_IsAccepted() {
-        assertEquals(List.of(), oversized(Map.of("docs/ok.md", "x\n".repeat(LIMIT))),
+        assertEquals(
+                List.of(),
+                oversized(Map.of("docs/ok.md", "x\n".repeat(LIMIT))),
                 "Сторож ложно срабатывает: файл ровно в предел " + LIMIT + " строк допустим");
     }
 
@@ -50,7 +56,8 @@ class DocsSizeGuardTests {
                 }
                 try (Stream<Path> files = Files.walk(root)) {
                     for (Path file : files.filter(Files::isRegularFile)
-                            .filter(path -> path.toString().endsWith(".md")).toList()) {
+                            .filter(path -> path.toString().endsWith(".md"))
+                            .toList()) {
                         texts.put(file.toString(), Files.readString(file, StandardCharsets.UTF_8));
                     }
                 }

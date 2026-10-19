@@ -13,8 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class TacticsScheduleTests {
     private static final int INTERVAL = TacticsAdapterSettings.defaults().evalIntervalTicks();
 
-    record Row(String name, long evaluatedAt, long eventAt, long now, boolean hurt, boolean forced, boolean expected) {
-    }
+    record Row(String name, long evaluatedAt, long eventAt, long now, boolean hurt, boolean forced, boolean expected) {}
 
     static Stream<Row> rows() {
         return Stream.of(
@@ -24,7 +23,14 @@ class TacticsScheduleTests {
                 new Row("прошло ровно 10 тиков", 100, -1, 110, false, false, true),
                 new Row("прошло больше интервала", 100, -1, 150, false, false, true),
                 new Row("урон на 2-й тик: событийный вызов", 100, -1, 102, true, false, true),
-                new Row("урон на 1-й тик подряд за вызовом по событию: зазор не вышел", 100, 100, 101, true, false, false),
+                new Row(
+                        "урон на 1-й тик подряд за вызовом по событию: зазор не вышел",
+                        100,
+                        100,
+                        101,
+                        true,
+                        false,
+                        false),
                 new Row("урон спустя 5 тиков после прошлого события", 100, 100, 105, true, false, true),
                 new Row("урон спустя 4 тика после прошлого события", 100, 100, 104, true, false, false),
                 new Row("принудительный вызов (возобновление после политики)", 100, -1, 101, false, true, true),
@@ -42,7 +48,9 @@ class TacticsScheduleTests {
             schedule.evaluated(row.eventAt(), true);
         }
 
-        assertEquals(row.expected(), schedule.due(row.now(), row.hurt(), row.forced()),
+        assertEquals(
+                row.expected(),
+                schedule.due(row.now(), row.hurt(), row.forced()),
                 "Расписание («" + row.name() + "»): оценка раз в " + INTERVAL
                         + " тиков, урон вызывает её сразу, но не чаще раза в " + TacticsSchedule.HURT_MIN_GAP_TICKS
                         + " тиков; иначе тактика душит сервер или опаздывает");
@@ -59,7 +67,9 @@ class TacticsScheduleTests {
 
     @Test
     void constructor_ZeroInterval_Rejected() {
-        assertThrows(IllegalArgumentException.class, () -> new TacticsSchedule(0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TacticsSchedule(0),
                 "Интервал 0 означал бы оценку на каждом тике: настройки обязаны отвергнуть его заранее");
     }
 }

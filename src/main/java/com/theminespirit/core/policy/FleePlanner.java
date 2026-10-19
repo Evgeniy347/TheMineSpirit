@@ -25,15 +25,14 @@ public final class FleePlanner {
 
     private static final int[][] STEPS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
-    private FleePlanner() {
-    }
+    private FleePlanner() {}
 
     public record Threat(BlockCoord pos, double minDistance) {
         public Threat {
             Objects.requireNonNull(pos, "Позиция угрозы не может быть null: от неё считается расстояние");
             if (!(minDistance > 0) || Double.isInfinite(minDistance)) {
-                throw new IllegalArgumentException("Расстояние держания " + minDistance + " должно быть конечным и больше нуля: "
-                        + "нулевое расстояние ничего не требует от духа");
+                throw new IllegalArgumentException("Расстояние держания " + minDistance
+                        + " должно быть конечным и больше нуля: " + "нулевое расстояние ничего не требует от духа");
             }
         }
 
@@ -64,10 +63,12 @@ public final class FleePlanner {
         Objects.requireNonNull(threats, "Список угроз не может быть null: пустой список задаётся List.of()");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему читается проходимость клеток");
         if (maxNodes < 1) {
-            throw new IllegalArgumentException("maxNodes " + maxNodes + " меньше 1: без хотя бы исходной клетки поиск не начинается");
+            throw new IllegalArgumentException(
+                    "maxNodes " + maxNodes + " меньше 1: без хотя бы исходной клетки поиск не начинается");
         }
         if (maxRadius < 0) {
-            throw new IllegalArgumentException("maxRadius " + maxRadius + " отрицателен: радиус поиска считается от исходной клетки");
+            throw new IllegalArgumentException(
+                    "maxRadius " + maxRadius + " отрицателен: радиус поиска считается от исходной клетки");
         }
         BudgetView budget = new BudgetView(view, maxNodes * READS_PER_NODE);
         Queue<BlockCoord> queue = new ArrayDeque<>();
@@ -89,8 +90,10 @@ public final class FleePlanner {
             for (int[] step : STEPS) {
                 if (seen.size() < maxNodes) {
                     Optional<BlockCoord> next = move(cell, step[0], step[1], budget);
-                    if (next.isPresent() && withinRadius(origin, next.get(), maxRadius)
-                            && keepsDistance(next.get(), threats, closestPass) && seen.add(next.get())) {
+                    if (next.isPresent()
+                            && withinRadius(origin, next.get(), maxRadius)
+                            && keepsDistance(next.get(), threats, closestPass)
+                            && seen.add(next.get())) {
                         queue.add(next.get());
                     }
                 }
@@ -105,8 +108,7 @@ public final class FleePlanner {
         return new Plan(new ReflexAction.StopMoving(), seen.size());
     }
 
-    private record Visit(BlockCoord cell, double slack) {
-    }
+    private record Visit(BlockCoord cell, double slack) {}
 
     private static double[] closestPass(BlockCoord origin, List<Threat> threats) {
         double[] limits = new double[threats.size()];
@@ -156,7 +158,9 @@ public final class FleePlanner {
         BlockCoord above = new BlockCoord(wall.x(), wall.y() + 1, wall.z());
         BlockCoord twoAbove = new BlockCoord(wall.x(), wall.y() + 2, wall.z());
         BlockCoord headroom = new BlockCoord(from.x(), from.y() + 2, from.z());
-        if (view.cellAt(above) == Cell.PASSABLE && view.cellAt(twoAbove) == Cell.PASSABLE && view.cellAt(headroom) == Cell.PASSABLE) {
+        if (view.cellAt(above) == Cell.PASSABLE
+                && view.cellAt(twoAbove) == Cell.PASSABLE
+                && view.cellAt(headroom) == Cell.PASSABLE) {
             return Optional.of(above);
         }
         return Optional.empty();

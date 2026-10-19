@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 public final class TreeShape {
-    private TreeShape() {
-    }
+    private TreeShape() {}
 
     public static TreeDetection detect(BlockCoord start, TreeView view) {
         if (!view.isLog(start)) {
@@ -66,9 +65,11 @@ public final class TreeShape {
     }
 
     private static BlockCoord base(Set<BlockCoord> logs) {
-        return logs.stream().min(Comparator.comparingInt(BlockCoord::y)
-                .thenComparingInt(BlockCoord::x)
-                .thenComparingInt(BlockCoord::z)).orElseThrow();
+        return logs.stream()
+                .min(Comparator.comparingInt(BlockCoord::y)
+                        .thenComparingInt(BlockCoord::x)
+                        .thenComparingInt(BlockCoord::z))
+                .orElseThrow();
     }
 
     private static boolean hasAllowedExtent(Set<BlockCoord> logs) {

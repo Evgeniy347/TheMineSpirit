@@ -29,13 +29,15 @@ class NearestTrackerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("scenes")
-    void best_OfferedCandidates_IsNearestWithStableTieBreak(String scene, List<BlockCoord> offered,
-            Optional<BlockCoord> expected) {
+    void best_OfferedCandidates_IsNearestWithStableTieBreak(
+            String scene, List<BlockCoord> offered, Optional<BlockCoord> expected) {
         NearestTracker tracker = new NearestTracker(ORIGIN);
 
         offered.forEach(tracker::offer);
 
-        assertEquals(expected, tracker.best(),
+        assertEquals(
+                expected,
+                tracker.best(),
                 scene + ": ближайший блок обязан выбираться по расстоянию, а при равенстве — по координате, иначе "
                         + "locate_* отдаёт разные ответы при разном порядке срезов");
     }

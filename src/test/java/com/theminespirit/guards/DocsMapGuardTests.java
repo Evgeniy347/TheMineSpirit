@@ -29,7 +29,9 @@ class DocsMapGuardTests {
     void docsAndScripts_ReadmeMap_KnowsEveryFile() {
         List<String> missing = unmentioned(readmeMaps(), mappedFiles());
 
-        assertEquals(List.of(), missing,
+        assertEquals(
+                List.of(),
+                missing,
                 "Файл документации или скрипт не упомянут в карте README: о нём не узнают ни игрок, ни агент — "
                         + "файл считается мусором и пропадает из поля зрения. Как надо: добавьте путь в README.md, "
                         + "в README своего каталога (docs/api/, docs/tactics/, docs/research/<тема>/) или, для "
@@ -41,7 +43,9 @@ class DocsMapGuardTests {
     void links_RelativeTargetsInInstructions_Exist() {
         List<String> broken = brokenLinks(linksFromInstructions(), path -> Files.exists(Path.of(path)));
 
-        assertEquals(List.of(), broken,
+        assertEquals(
+                List.of(),
+                broken,
                 "Ссылка `[..](путь)` в инструкции ведёт на несуществующий файл: читатель проваливается в пустоту, "
                         + "а инструкция обещает документ, которого нет. Как надо: починить путь или удалить ссылку. "
                         + "Правило: ссылки AGENTS.md, README.md и docs ведут на существующие файлы. Битые ссылки");
@@ -51,7 +55,9 @@ class DocsMapGuardTests {
     void unmentioned_FileMissingFromMap_IsReported() {
         Map<String, String> maps = Map.of("README.md", "тут [a](docs/a.md)");
 
-        assertEquals(List.of("docs/b.md"), unmentioned(maps, List.of("docs/a.md", "docs/b.md")),
+        assertEquals(
+                List.of("docs/b.md"),
+                unmentioned(maps, List.of("docs/a.md", "docs/b.md")),
                 "Сторож ослеп: файл, пути которого нет в карте README, обязан попасть в пропажу");
     }
 
@@ -59,7 +65,8 @@ class DocsMapGuardTests {
     void unmentioned_ScriptsUnderMentionedDir_AreAccepted() {
         Map<String, String> maps = Map.of("README.md", "каталог scripts/lead/ и docs/api/");
 
-        assertEquals(List.of("docs/api/plan.md"),
+        assertEquals(
+                List.of("docs/api/plan.md"),
                 unmentioned(maps, List.of("scripts/lead/chkq.sh", "docs/api/plan.md")),
                 "Сторож ослеп: каталог закрывает скрипты, но не документ — документ обязан быть назван сам");
     }
@@ -68,20 +75,26 @@ class DocsMapGuardTests {
     void brokenLinks_ExistingAndExternalTargets_AreAccepted() {
         List<String> links = List.of("docs/a.md#якорь", "https://example.org/x", "#локальный");
 
-        assertEquals(List.of(), brokenLinks(links, path -> path.equals("docs/a.md")),
+        assertEquals(
+                List.of(),
+                brokenLinks(links, path -> path.equals("docs/a.md")),
                 "Сторож ложно срабатывает: якорь, внешняя ссылка и локальный якорь не проверяются как пути, "
                         + "а существующий путь не битый");
     }
 
     @Test
     void brokenLinks_MissingFile_IsReported() {
-        assertEquals(List.of("docs/missing.md"), brokenLinks(List.of("docs/missing.md"), path -> false),
+        assertEquals(
+                List.of("docs/missing.md"),
+                brokenLinks(List.of("docs/missing.md"), path -> false),
                 "Сторож ослеп: относительная ссылка на несуществующий файл обязана попасть в битые");
     }
 
     @Test
     void linksIn_TableLink_IsFound() {
-        assertEquals(List.of("docs/api/README.md"), linksIn("[docs/api/README.md](docs/api/README.md)"),
+        assertEquals(
+                List.of("docs/api/README.md"),
+                linksIn("[docs/api/README.md](docs/api/README.md)"),
                 "Сторож ослеп: ссылка в таблице обязана находиться");
     }
 
@@ -90,7 +103,8 @@ class DocsMapGuardTests {
         maps.put(README.toString(), read(README));
         try (Stream<Path> files = Files.walk(DOCS)) {
             for (Path file : files.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().equals("README.md")).toList()) {
+                    .filter(path -> path.getFileName().toString().equals("README.md"))
+                    .toList()) {
                 maps.put(file.toString(), read(file));
             }
         } catch (IOException e) {
@@ -103,7 +117,8 @@ class DocsMapGuardTests {
         List<String> paths = new ArrayList<>();
         try (Stream<Path> files = Files.walk(DOCS)) {
             for (Path file : files.filter(Files::isRegularFile)
-                    .filter(path -> path.toString().endsWith(".md")).toList()) {
+                    .filter(path -> path.toString().endsWith(".md"))
+                    .toList()) {
                 paths.add(file.toString().replace('\\', '/'));
             }
         } catch (IOException e) {
@@ -122,7 +137,8 @@ class DocsMapGuardTests {
     private static List<String> unmentioned(Map<String, String> maps, List<String> files) {
         List<String> missing = new ArrayList<>();
         for (String file : new TreeSet<>(files)) {
-            boolean mentioned = maps.entrySet().stream().anyMatch(entry -> mentions(entry.getKey(), entry.getValue(), file));
+            boolean mentioned =
+                    maps.entrySet().stream().anyMatch(entry -> mentions(entry.getKey(), entry.getValue(), file));
             if (!mentioned) {
                 missing.add(file);
             }
@@ -132,7 +148,9 @@ class DocsMapGuardTests {
 
     private static boolean mentions(String mapPath, String mapText, String file) {
         Path mapDir = Path.of(mapPath).getParent();
-        String relative = mapDir == null ? file : mapDir.relativize(Path.of(file)).toString().replace('\\', '/');
+        String relative = mapDir == null
+                ? file
+                : mapDir.relativize(Path.of(file)).toString().replace('\\', '/');
         if (mapText.contains(relative)) {
             return true;
         }
@@ -150,7 +168,8 @@ class DocsMapGuardTests {
                 }
                 try (Stream<Path> files = Files.walk(root)) {
                     for (Path file : files.filter(Files::isRegularFile)
-                            .filter(path -> path.toString().endsWith(".md")).toList()) {
+                            .filter(path -> path.toString().endsWith(".md"))
+                            .toList()) {
                         links.addAll(resolvedLinks(file));
                     }
                 }
@@ -164,12 +183,18 @@ class DocsMapGuardTests {
     private static List<String> resolvedLinks(Path file) {
         List<String> resolved = new ArrayList<>();
         for (String link : linksIn(read(file))) {
-            if (link.startsWith("http") || link.startsWith("mailto") || link.startsWith("tel") || link.startsWith("#")) {
+            if (link.startsWith("http")
+                    || link.startsWith("mailto")
+                    || link.startsWith("tel")
+                    || link.startsWith("#")) {
                 resolved.add(link);
                 continue;
             }
             Path parent = file.getParent();
-            resolved.add((parent == null ? Path.of(link) : parent.resolve(link)).normalize().toString().replace('\\', '/'));
+            resolved.add((parent == null ? Path.of(link) : parent.resolve(link))
+                    .normalize()
+                    .toString()
+                    .replace('\\', '/'));
         }
         return resolved;
     }
@@ -178,7 +203,10 @@ class DocsMapGuardTests {
         List<String> broken = new ArrayList<>();
         for (String link : new TreeSet<>(links)) {
             String target = link.split("#", 2)[0].trim();
-            if (target.isEmpty() || target.startsWith("http") || target.startsWith("mailto") || target.startsWith("tel")) {
+            if (target.isEmpty()
+                    || target.startsWith("http")
+                    || target.startsWith("mailto")
+                    || target.startsWith("tel")) {
                 continue;
             }
             if (!exists.test(target)) {

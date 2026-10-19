@@ -3,8 +3,11 @@ package com.theminespirit.core.tactics;
 import java.util.Objects;
 import java.util.Optional;
 
-public record CombatDirective(CombatMode mode, Optional<TargetSelector.Target> target,
-        Optional<RetreatMethod> retreat, Optional<Point> safePoint) {
+public record CombatDirective(
+        CombatMode mode,
+        Optional<TargetSelector.Target> target,
+        Optional<RetreatMethod> retreat,
+        Optional<Point> safePoint) {
     public CombatDirective {
         Objects.requireNonNull(mode, "mode не может быть null: режим задаётся приказом явно");
         Objects.requireNonNull(target, "target не может быть null: отсутствие цели — Optional.empty()");
@@ -36,13 +39,13 @@ public record CombatDirective(CombatMode mode, Optional<TargetSelector.Target> t
     }
 
     public static CombatDirective flee() {
-        return new CombatDirective(CombatMode.PASSIVE, Optional.empty(), Optional.of(RetreatMethod.NONE),
-                Optional.empty());
+        return new CombatDirective(
+                CombatMode.PASSIVE, Optional.empty(), Optional.of(RetreatMethod.NONE), Optional.empty());
     }
 
     public static CombatDirective retreat(Point point) {
         Objects.requireNonNull(point, "point не может быть null: отход обязан идти к конкретной точке");
-        return new CombatDirective(CombatMode.PASSIVE, Optional.empty(), Optional.of(RetreatMethod.HOME),
-                Optional.of(point));
+        return new CombatDirective(
+                CombatMode.PASSIVE, Optional.empty(), Optional.of(RetreatMethod.HOME), Optional.of(point));
     }
 }

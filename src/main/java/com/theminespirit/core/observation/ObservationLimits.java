@@ -9,12 +9,11 @@ import java.util.Set;
  * Пределы размера наблюдения: сколько выпавших предметов, сколько контейнеров и сколько записей
  * в каждом контейнере попадает в ответ {@code observe}. Числа — данные: правятся через /reload.
  */
-public record ObservationLimits(int maxGroundItems, int maxContainers, int maxContainerItems,
-        int maxOpenBlocks) {
+public record ObservationLimits(int maxGroundItems, int maxContainers, int maxContainerItems, int maxOpenBlocks) {
     public static final String RESOURCE = "data/theminespirit/observation/observation.json";
 
-    private static final Set<String> FIELDS = Set.of("maxGroundItems", "maxContainers", "maxContainerItems",
-            "maxOpenBlocks");
+    private static final Set<String> FIELDS =
+            Set.of("maxGroundItems", "maxContainers", "maxContainerItems", "maxOpenBlocks");
     private static final int MAX_PER_FIELD = 512;
     private static final ObservationLimits DEFAULTS = new ObservationLimits(16, 8, 27, 24);
 

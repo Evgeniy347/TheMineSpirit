@@ -16,8 +16,7 @@ public final class HerdCap {
     public static final int DEFAULT_MAX_PER_SPECIES = 4;
     public static final int DEFAULT_MIN_BREED = 2;
 
-    private HerdCap() {
-    }
+    private HerdCap() {}
 
     public static int maxPerSpecies() {
         return herdValue("maxPerSpecies", DEFAULT_MAX_PER_SPECIES);
@@ -28,8 +27,7 @@ public final class HerdCap {
     }
 
     public static boolean reached(Species species, int housed, int caught) {
-        Objects.requireNonNull(species, "Вид лимита не может быть null: без него неизвестно, "
-                + "чей запас считать");
+        Objects.requireNonNull(species, "Вид лимита не может быть null: без него неизвестно, " + "чей запас считать");
         if (housed < 0 || caught < 0) {
             throw new IllegalArgumentException("Поголовье " + housed + " и пойманное " + caught
                     + " не бывают отрицательными: отрицательное число прятало бы перебор");
@@ -43,8 +41,8 @@ public final class HerdCap {
 
     static String herdKey(String key) {
         if (!HERD_KEYS.contains(key)) {
-            throw new IllegalArgumentException("Неизвестный ключ стада '" + key + "': допустимы "
-                    + HERD_KEYS + ", сверьтесь с таблицей herd в board.json");
+            throw new IllegalArgumentException("Неизвестный ключ стада '" + key + "': допустимы " + HERD_KEYS
+                    + ", сверьтесь с таблицей herd в board.json");
         }
         return key;
     }

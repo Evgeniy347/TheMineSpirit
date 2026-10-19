@@ -11,8 +11,7 @@ public final class ShelterPlan {
     public static final int WALL_HEIGHT = 2;
     public static final int BLOCK_BUDGET = 64;
 
-    private ShelterPlan() {
-    }
+    private ShelterPlan() {}
 
     public static List<BlockCoord> shelter(BlockCoord origin, int wallHeight, int budget) {
         return shelter(origin, SHELTER_SIDE, wallHeight, budget);
@@ -25,12 +24,11 @@ public final class ShelterPlan {
                     + "меньше — дух не встанет внутри, больше — съедает бюджет и время стройки");
         }
         if (wallHeight < 1) {
-            throw new IllegalArgumentException("Высота стен укрытия = " + wallHeight
-                    + ": стена ниже блока не прикроет духа");
+            throw new IllegalArgumentException(
+                    "Высота стен укрытия = " + wallHeight + ": стена ниже блока не прикроет духа");
         }
         if (budget < 1) {
-            throw new IllegalArgumentException("Бюджет укрытия = " + budget
-                    + ": без блоков строителю нечего ставить");
+            throw new IllegalArgumentException("Бюджет укрытия = " + budget + ": без блоков строителю нечего ставить");
         }
         List<BlockCoord> cells = new ArrayList<>();
         for (int level = 0; level < wallHeight; level++) {
@@ -42,7 +40,9 @@ public final class ShelterPlan {
                 }
             }
         }
-        cells.sort(Comparator.comparingInt(BlockCoord::y).thenComparingInt(BlockCoord::x).thenComparingInt(BlockCoord::z));
+        cells.sort(Comparator.comparingInt(BlockCoord::y)
+                .thenComparingInt(BlockCoord::x)
+                .thenComparingInt(BlockCoord::z));
         for (int dx = 0; dx < side; dx++) {
             for (int dz = 0; dz < side; dz++) {
                 cells.add(new BlockCoord(origin.x() + dx, origin.y() + wallHeight, origin.z() + dz));

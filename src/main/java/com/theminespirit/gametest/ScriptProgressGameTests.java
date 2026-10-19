@@ -32,19 +32,22 @@ public final class ScriptProgressGameTests {
     private static final int CHOP_TARGET = 2;
     private static final int TRUNK_HEIGHT = 5;
 
-    private ScriptProgressGameTests() {
-    }
+    private ScriptProgressGameTests() {}
 
     @GameTest(template = "arena", batch = "progress_gather", timeoutTicks = 400)
     public static void gatherProgress_CobblestoneHeap_DoneGrowsMonotonicallyTowardTarget(GameTestHelper helper) {
         heap(helper, Blocks.COBBLESTONE, 1, 3, 4, 6);
         SpiritEntity spirit = spiritWithPickaxe(helper);
         List<RunProgress> seen = recordProgress(helper, spirit);
-        SpiritRun.launch(helper, spirit, new ScriptCall("gather", Map.of("block", "cobblestone", "count", COBBLE_TARGET, "radius", RADIUS)),
+        SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("gather", Map.of("block", "cobblestone", "count", COBBLE_TARGET, "radius", RADIUS)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "gather шести булыжников обязан завершиться успехом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -58,11 +61,15 @@ public final class ScriptProgressGameTests {
         heap(helper, Blocks.IRON_ORE, 1, 3, 6, 6);
         SpiritEntity spirit = spiritWithPickaxe(helper);
         List<RunProgress> seen = recordProgress(helper, spirit);
-        SpiritRun.launch(helper, spirit, new ScriptCall("mine_vein", Map.of("ore", "iron", "count", ORE_TARGET, "radius", RADIUS)),
+        SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("mine_vein", Map.of("ore", "iron", "count", ORE_TARGET, "radius", RADIUS)),
                 SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "mine_vein трёх железных руд обязан завершиться успехом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -81,11 +88,16 @@ public final class ScriptProgressGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         spirit.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
         List<RunProgress> seen = recordProgress(helper, spirit);
-        SpiritRun.launch(helper, spirit, new ScriptCall("chop_tree",
-                Map.of("species", "any", "count", CHOP_TARGET, "radius", 8, "replant", false)), SETTLE_TICKS);
+        SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "chop_tree", Map.of("species", "any", "count", CHOP_TARGET, "radius", 8, "replant", false)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "chop_tree двух дубов обязан завершиться успехом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
@@ -101,43 +113,55 @@ public final class ScriptProgressGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         List<RunProgress> seen = recordProgress(helper, spirit);
         BlockPos target = helper.absolutePos(new BlockPos(7, 1, 7));
-        SpiritRun.launch(helper, spirit,
-                new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ())), 1);
+        SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("goto", Map.of("x", target.getX(), "y", target.getY(), "z", target.getZ())),
+                1);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "goto в угол арены обязан завершиться успехом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             helper.assertTrue(!seen.isEmpty(), "Пока goto идёт, прогресс задачи обязан быть доступен");
             for (RunProgress progress : seen) {
-                helper.assertTrue((progress.currentScript() == null || progress.currentScript().equals("goto")) && progress.done() == null
-                        && progress.target() == null,
-                        "У goto нет счётчика: ожидалось goto (или ещё не созданный скрипт) без done/target, получено " + progress);
+                helper.assertTrue(
+                        (progress.currentScript() == null
+                                        || progress.currentScript().equals("goto"))
+                                && progress.done() == null
+                                && progress.target() == null,
+                        "У goto нет счётчика: ожидалось goto (или ещё не созданный скрипт) без done/target, получено "
+                                + progress);
             }
             GameTestFixtures.finish(helper);
         });
     }
 
-    private static void assertCountedProgress(GameTestHelper helper, List<RunProgress> seen, String script,
-            int expectedTarget) {
-        List<RunProgress> named = seen.stream().filter(progress -> progress.currentScript() != null).toList();
+    private static void assertCountedProgress(
+            GameTestHelper helper, List<RunProgress> seen, String script, int expectedTarget) {
+        List<RunProgress> named = seen.stream()
+                .filter(progress -> progress.currentScript() != null)
+                .toList();
         helper.assertTrue(!named.isEmpty(), "Пока " + script + " идёт, прогресс задачи обязан быть доступен");
         int previousDone = 0;
         int maxDone = 0;
         for (RunProgress progress : named) {
-            helper.assertTrue(script.equals(progress.currentScript()) && progress.step() == 1
-                    && progress.totalSteps() == 1,
+            helper.assertTrue(
+                    script.equals(progress.currentScript()) && progress.step() == 1 && progress.totalSteps() == 1,
                     "Прогресс обязан называть текущий скрипт " + script + " и шаг 1 из 1, получено " + progress);
-            helper.assertTrue(progress.target() != null && progress.target() == expectedTarget,
+            helper.assertTrue(
+                    progress.target() != null && progress.target() == expectedTarget,
                     "target обязан быть равен count скрипта (" + expectedTarget + "), получено " + progress);
-            helper.assertTrue(progress.done() != null && progress.done() >= previousDone
-                    && progress.done() <= expectedTarget,
+            helper.assertTrue(
+                    progress.done() != null && progress.done() >= previousDone && progress.done() <= expectedTarget,
                     "done обязан не убывать и не превышать target " + expectedTarget + ", получено " + progress
                             + " после done=" + previousDone);
             previousDone = progress.done();
             maxDone = Math.max(maxDone, progress.done());
         }
-        helper.assertTrue(maxDone >= expectedTarget - 1,
+        helper.assertTrue(
+                maxDone >= expectedTarget - 1,
                 "За время работы done обязан дорасти минимум до " + (expectedTarget - 1) + " из " + expectedTarget
                         + ", максимум " + maxDone + " в " + named.size() + " замерах");
     }

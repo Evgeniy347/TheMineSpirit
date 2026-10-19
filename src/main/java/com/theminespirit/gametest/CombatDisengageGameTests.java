@@ -23,8 +23,7 @@ public final class CombatDisengageGameTests {
     private static final int HEALTH_SETTLE_TICKS = 5;
     private static final int DISENGAGE_LIMIT_TICKS = 200;
 
-    private CombatDisengageGameTests() {
-    }
+    private CombatDisengageGameTests() {}
 
     @GameTest(template = "arena", batch = "combat_disengage", timeoutTicks = 400)
     public static void disengage_FightingZombie_BacksOffAndStopsAttacking(GameTestHelper helper) {
@@ -34,8 +33,11 @@ public final class CombatDisengageGameTests {
         zombie.getAttribute(Attributes.MAX_HEALTH).setBaseValue(TOUGH_HP);
         zombie.setHealth(TOUGH_HP);
         zombie.setTarget(spirit);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                MovementScene.call("disengage", Map.of("distance", DISTANCE)), TacticsScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                MovementScene.call("disengage", Map.of("distance", DISTANCE)),
+                TacticsScene.SETTLE_TICKS);
         double[] healthAtStart = {-1};
         helper.onEachTick(() -> {
             if (run.started() && healthAtStart[0] < 0 && run.spiritTicks() >= HEALTH_SETTLE_TICKS) {
@@ -45,19 +47,24 @@ public final class CombatDisengageGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "выход из боя обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double distance = spirit.position().distanceTo(zombie.position());
-            helper.assertTrue(distance >= DISTANCE,
+            helper.assertTrue(
+                    distance >= DISTANCE,
                     "дух обязан отойти от врага минимум на " + DISTANCE + " блоков, а он в " + distance);
-            helper.assertTrue(spirit.getTarget() == null,
+            helper.assertTrue(
+                    spirit.getTarget() == null,
                     "disengage обязан прекратить бой: цель духа обязана стать пустой, а она " + spirit.getTarget());
-            helper.assertTrue(healthAtStart[0] >= 0 && zombie.getHealth() >= healthAtStart[0],
+            helper.assertTrue(
+                    healthAtStart[0] >= 0 && zombie.getHealth() >= healthAtStart[0],
                     "после выхода из боя дух не атакует: здоровье врага не должно падать, было " + healthAtStart[0]
                             + ", стало " + zombie.getHealth());
-            helper.assertTrue(run.spiritTicks() <= DISENGAGE_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= DISENGAGE_LIMIT_TICKS,
                     "выход из боя обязан уложиться в " + DISENGAGE_LIMIT_TICKS + " тиков духа, ушло "
                             + run.spiritTicks());
             TacticsScene.finish(helper, spirit);

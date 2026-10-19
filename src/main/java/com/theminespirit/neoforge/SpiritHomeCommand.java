@@ -15,8 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
 final class SpiritHomeCommand {
-    private SpiritHomeCommand() {
-    }
+    private SpiritHomeCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("home")
@@ -25,14 +24,16 @@ final class SpiritHomeCommand {
                         .then(literal("set")
                                 .executes(context -> set(context, null))
                                 .then(argument("pos", BlockPosArgument.blockPos())
-                                        .executes(context -> set(context,
-                                                BlockPosArgument.getLoadedBlockPos(context, "pos")))))));
+                                        .executes(context ->
+                                                set(context, BlockPosArgument.getLoadedBlockPos(context, "pos")))))));
     }
 
-    private static int set(CommandContext<CommandSourceStack> context, BlockPos explicit) throws CommandSyntaxException {
+    private static int set(CommandContext<CommandSourceStack> context, BlockPos explicit)
+            throws CommandSyntaxException {
         List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         if (spirits.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Дом некому поставить: среди выбранных сущностей нет духа"));
+            context.getSource()
+                    .sendFailure(Component.literal("Дом некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
         for (SpiritEntity spirit : spirits) {

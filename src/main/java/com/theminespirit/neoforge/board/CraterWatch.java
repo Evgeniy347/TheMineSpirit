@@ -28,8 +28,7 @@ import net.neoforged.neoforge.event.level.ExplosionEvent;
  * координатор (31), задание доски не ставится. Слушатель — O(1) на взрыв, мир не сканирует.
  */
 public final class CraterWatch {
-    private CraterWatch() {
-    }
+    private CraterWatch() {}
 
     public static void register(IEventBus bus) {
         if (bus == null) {
@@ -51,7 +50,8 @@ public final class CraterWatch {
         if (!CraterNeed.outsideTerritory(blast, homes(level), BoardTuning.craterTerritoryRadius())) {
             return;
         }
-        Map<String, Integer> need = CraterNeed.estimate(blast, event.getExplosion().radius());
+        Map<String, Integer> need =
+                CraterNeed.estimate(blast, event.getExplosion().radius());
         if (need.isEmpty()) {
             return;
         }
@@ -62,15 +62,27 @@ public final class CraterWatch {
             profile.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         }
         service.craters().remember(craterCause(center), profile);
-        service.submit(new BoardTicket(craterId(center), BoardCase.FILL_CRATER, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.FILL_CRATER), level.getGameTime(),
-                1, craterCause(center), List.of(), need),
-                TicketTarget.at(target).withCraterBlocks(need.values().stream().mapToInt(Integer::intValue).sum()));
+        service.submit(
+                new BoardTicket(
+                        craterId(center),
+                        BoardCase.FILL_CRATER,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                        level.getGameTime(),
+                        1,
+                        craterCause(center),
+                        List.of(),
+                        need),
+                TicketTarget.at(target)
+                        .withCraterBlocks(need.values().stream()
+                                .mapToInt(Integer::intValue)
+                                .sum()));
     }
 
     static Set<String> liveCauses(ServerLevel level, BoardService service) {
-        return service.craters().retainLive(pos ->
-                level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).isAir());
+        return service.craters()
+                .retainLive(pos -> level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z()))
+                        .isAir());
     }
 
     static String craterCause(BlockPos center) {

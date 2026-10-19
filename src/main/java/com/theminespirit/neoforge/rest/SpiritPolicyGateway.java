@@ -47,8 +47,14 @@ public final class SpiritPolicyGateway implements PolicyGateway {
         UnprotectService service = UnprotectService.of(server);
         BlockCoord min = request.min();
         BlockCoord max = request.max();
-        return service.grant(request.dimension(), min, max, request.grantedBy(), request.reason(),
-                request.ttlSeconds(), System.currentTimeMillis());
+        return service.grant(
+                request.dimension(),
+                min,
+                max,
+                request.grantedBy(),
+                request.reason(),
+                request.ttlSeconds(),
+                System.currentTimeMillis());
     }
 
     private UnprotectArea revokeNow(String id) {

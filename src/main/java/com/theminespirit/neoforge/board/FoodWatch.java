@@ -37,8 +37,7 @@ final class FoodWatch {
     private static final int STATION_SLICES = 16;
     private static final Set<Block> COOKING_STATIONS = Set.of(Blocks.SMOKER, Blocks.FURNACE, Blocks.CAMPFIRE);
 
-    private FoodWatch() {
-    }
+    private FoodWatch() {}
 
     static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
@@ -70,9 +69,17 @@ final class FoodWatch {
             if (count <= 0) {
                 continue;
             }
-            service.submit(new BoardTicket(id, BoardCase.RESTOCK_FOOD, Optional.of(spirit.getUUID()),
-                    BoardPriorities.effective(BoardCase.RESTOCK_FOOD, PriorityContext.none()), now, 1,
-                    BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
+            service.submit(
+                    new BoardTicket(
+                            id,
+                            BoardCase.RESTOCK_FOOD,
+                            Optional.of(spirit.getUUID()),
+                            BoardPriorities.effective(BoardCase.RESTOCK_FOOD, PriorityContext.none()),
+                            now,
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of()),
                     TicketTarget.at(targetOf(spirit)).withSupply(item, count));
         }
     }

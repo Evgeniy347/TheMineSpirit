@@ -6,8 +6,8 @@ public record Ingredient(String item, int count) {
             throw new IllegalArgumentException("Имя предмета ингредиента пусто: без имени резолвер не найдёт предмет");
         }
         if (count <= 0) {
-            throw new IllegalArgumentException(
-                    "Количество ингредиента должно быть больше 0, а получено " + count + ": нулевое количество вырождает рецепт");
+            throw new IllegalArgumentException("Количество ингредиента должно быть больше 0, а получено " + count
+                    + ": нулевое количество вырождает рецепт");
         }
     }
 }

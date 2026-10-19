@@ -4,8 +4,12 @@ import com.theminespirit.core.tactics.Point;
 import java.util.List;
 import java.util.Optional;
 
-public record CoordinatorPlan(Optional<Point> defendedPoint, double defendedRadius, List<DefenseAssignment> defense,
-        List<AssistOrder> assists, List<WorkAssignment> work) {
+public record CoordinatorPlan(
+        Optional<Point> defendedPoint,
+        double defendedRadius,
+        List<DefenseAssignment> defense,
+        List<AssistOrder> assists,
+        List<WorkAssignment> work) {
 
     public CoordinatorPlan {
         if (defendedPoint == null) {

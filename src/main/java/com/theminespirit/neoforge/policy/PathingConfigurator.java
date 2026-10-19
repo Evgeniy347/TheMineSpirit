@@ -11,11 +11,16 @@ public final class PathingConfigurator {
     public static final float WATER_COST = 16.0F;
     public static final float WATER_COST_EXEMPT = 1.0F;
 
-    public static final List<PathType> BLOCKED_TYPES = List.of(PathType.LAVA, PathType.DAMAGE_FIRE, PathType.DANGER_FIRE,
-            PathType.DAMAGE_OTHER, PathType.DANGER_OTHER, PathType.DAMAGE_CAUTIOUS, PathType.DANGER_POWDER_SNOW);
+    public static final List<PathType> BLOCKED_TYPES = List.of(
+            PathType.LAVA,
+            PathType.DAMAGE_FIRE,
+            PathType.DANGER_FIRE,
+            PathType.DAMAGE_OTHER,
+            PathType.DANGER_OTHER,
+            PathType.DAMAGE_CAUTIOUS,
+            PathType.DANGER_POWDER_SNOW);
 
-    private PathingConfigurator() {
-    }
+    private PathingConfigurator() {}
 
     public static void apply(SpiritEntity spirit, PolicyExemptions exemptions) {
         for (PathType type : BLOCKED_TYPES) {

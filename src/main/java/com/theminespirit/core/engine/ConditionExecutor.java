@@ -60,7 +60,8 @@ final class ConditionExecutor extends SingleChildExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        return new TaskProgress.ConditionAt(branch, current() == null ? null : current().snapshot());
+        return new TaskProgress.ConditionAt(
+                branch, current() == null ? null : current().snapshot());
     }
 
     @Override

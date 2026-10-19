@@ -16,8 +16,7 @@ public sealed interface ReflexAction {
         }
     }
 
-    record Surface() implements ReflexAction {
-    }
+    record Surface() implements ReflexAction {}
 
     record StepOutOfPortal(BlockCoord cell) implements ReflexAction {
         public StepOutOfPortal {
@@ -31,9 +30,7 @@ public sealed interface ReflexAction {
         }
     }
 
-    record StopMoving() implements ReflexAction {
-    }
+    record StopMoving() implements ReflexAction {}
 
-    record Eat() implements ReflexAction {
-    }
+    record Eat() implements ReflexAction {}
 }

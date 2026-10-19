@@ -32,8 +32,12 @@ public final class TacticsEngine {
 
     public int totalRules() {
         Rules rules = config.rules();
-        return rules.hard().size() + rules.actions().size() + rules.modeTransitions().size() + rules.states().size()
-                + rules.retreat().entries().size() + 1;
+        return rules.hard().size()
+                + rules.actions().size()
+                + rules.modeTransitions().size()
+                + rules.states().size()
+                + rules.retreat().entries().size()
+                + 1;
     }
 
     public TacticalOutcome step(Situation situation, TacticsMemory memory, long nowTick) {
@@ -46,17 +50,23 @@ public final class TacticsEngine {
         CombatMode ordered = situation.orders().mode();
         CombatMode current = memory.orderedMode() == ordered ? memory.mode() : ordered;
         Frame frame = new Frame(situation, memory, nowTick, metrics, lastSeen);
-        ModeStep modeStep = modes.next(current, FactMap.from(situation, frame.assessment(current).assessment()));
+        ModeStep modeStep = modes.next(
+                current, FactMap.from(situation, frame.assessment(current).assessment()));
         Assessed assessed = frame.assessment(modeStep.mode());
         RetreatOptions options = retreat.evaluate(FactMap.from(situation, assessed.assessment()));
-        Assessment assessment = assessed.assessment().withEscapeRoutes(options.routes())
-                .withEscapeQuality(options.bestUtility());
+        Assessment assessment =
+                assessed.assessment().withEscapeRoutes(options.routes()).withEscapeQuality(options.bestUtility());
         FactMap facts = FactMap.from(situation, assessment);
         return conclude(frame, modeStep, assessed.geometry(), options, assessment, facts);
     }
 
-    private TacticalOutcome conclude(Frame frame, ModeStep modeStep, ModeGeometry geometry, RetreatOptions options,
-            Assessment assessment, FactMap facts) {
+    private TacticalOutcome conclude(
+            Frame frame,
+            ModeStep modeStep,
+            ModeGeometry geometry,
+            RetreatOptions options,
+            Assessment assessment,
+            FactMap facts) {
         Situation situation = frame.situation();
         TacticsMemory memory = frame.memory();
         Scores scores = scorer.score(situation, assessment, config.weights());
@@ -68,40 +78,60 @@ public final class TacticsEngine {
         StateStep state = states.next(memory.state(), decision.option(), facts);
         ModeParams params = config.modes().of(modeStep.mode());
         Optional<Point> returnTo = state.state() == TacticalState.CALM
-                ? Leash.returnTarget(params, Optional.of(geometry.anchor()), situation.self().pos(),
+                ? Leash.returnTarget(
+                        params,
+                        Optional.of(geometry.anchor()),
+                        situation.self().pos(),
                         config.modes().returnTolerance())
                 : Optional.empty();
         TacticsMemory next = nextMemory(frame, decision, state, modeStep.mode());
-        return new TacticalOutcome(decision.option(), action.action(), choice.method(), callHelp, state.state(),
-                modeStep.mode(), returnTo, TraceBuilder.build(decision, scores, action, choice, state, modeStep),
+        return new TacticalOutcome(
+                decision.option(),
+                action.action(),
+                choice.method(),
+                callHelp,
+                state.state(),
+                modeStep.mode(),
+                returnTo,
+                TraceBuilder.build(decision, scores, action, choice, state, modeStep),
                 next);
     }
 
     private TacticsMemory nextMemory(Frame frame, Decision decision, StateStep state, CombatMode mode) {
         Situation situation = frame.situation();
         TacticsMemory memory = frame.memory();
-        TacticsMemory remembered = decider.hysteresis().remember(memory, decision, frame.nowTick(),
-                situation.self().hpFraction());
+        TacticsMemory remembered = decider.hysteresis()
+                .remember(memory, decision, frame.nowTick(), situation.self().hpFraction());
         boolean stateChanged = state.state() != memory.state();
         Optional<Point> anchor = anchorAfter(situation, memory, state.state());
-        return new TacticsMemory(remembered.previous(), remembered.previousSource(), remembered.decidedAt(),
-                state.state(), stateChanged ? frame.nowTick() : memory.stateSince(), mode, situation.orders().mode(),
-                anchor, frame.lastSeen(), remembered.hpWindowRef(), remembered.hpWindowStart());
+        return new TacticsMemory(
+                remembered.previous(),
+                remembered.previousSource(),
+                remembered.decidedAt(),
+                state.state(),
+                stateChanged ? frame.nowTick() : memory.stateSince(),
+                mode,
+                situation.orders().mode(),
+                anchor,
+                frame.lastSeen(),
+                remembered.hpWindowRef(),
+                remembered.hpWindowStart());
     }
 
     private static Optional<Point> anchorAfter(Situation situation, TacticsMemory memory, TacticalState next) {
         if (next == TacticalState.CALM) {
             return Optional.empty();
         }
-        return memory.state() == TacticalState.CALM ? Optional.of(situation.self().pos()) : memory.anchor();
+        return memory.state() == TacticalState.CALM
+                ? Optional.of(situation.self().pos())
+                : memory.anchor();
     }
 
     private static long ticksBetween(long from, long to) {
         return Math.min(Situation.MAX_TICKS, Math.max(0, to - from));
     }
 
-    private record Assessed(Assessment assessment, ModeGeometry geometry) {
-    }
+    private record Assessed(Assessment assessment, ModeGeometry geometry) {}
 
     private final class Frame {
         private final Situation situation;
@@ -138,10 +168,20 @@ public final class TacticsEngine {
             FactorScales scales = config.weights().scales();
             ModeParams params = config.modes().of(mode);
             ModeGeometry geometry = ModeGeometry.of(situation, params, memory.anchor());
-            Assessment assessment = new Assessment(metrics, WinMargin.of(situation.self(), metrics, scales),
-                    0, 0, mode, params.initiates(), geometry.zoneDistance(), geometry.leashLeft(),
-                    geometry.engageLeft(), metrics.speedRatio(situation.self().speed(), scales.speedRatioCap()),
-                    memory.state(), ticksBetween(memory.stateSince(), nowTick), ticksBetween(lastSeen, nowTick));
+            Assessment assessment = new Assessment(
+                    metrics,
+                    WinMargin.of(situation.self(), metrics, scales),
+                    0,
+                    0,
+                    mode,
+                    params.initiates(),
+                    geometry.zoneDistance(),
+                    geometry.leashLeft(),
+                    geometry.engageLeft(),
+                    metrics.speedRatio(situation.self().speed(), scales.speedRatioCap()),
+                    memory.state(),
+                    ticksBetween(memory.stateSince(), nowTick),
+                    ticksBetween(lastSeen, nowTick));
             return new Assessed(assessment, geometry);
         }
     }

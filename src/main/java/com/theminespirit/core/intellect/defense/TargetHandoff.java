@@ -1,18 +1,16 @@
 package com.theminespirit.core.intellect.defense;
 
 import com.theminespirit.core.tactics.EnemyFact;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 public final class TargetHandoff {
-    private TargetHandoff() {
-    }
+    private TargetHandoff() {}
 
-    public static Optional<UUID> handOff(UUID self, EnemyFact target, List<DefenderCapability> allies,
-            Set<UUID> busy, DefenseProfile profile) {
+    public static Optional<UUID> handOff(
+            UUID self, EnemyFact target, List<DefenderCapability> allies, Set<UUID> busy, DefenseProfile profile) {
         if (self == null) {
             throw new IllegalArgumentException("self не может быть null: уходящий из боя обязан быть известен");
         }
@@ -31,7 +29,9 @@ public final class TargetHandoff {
         }
         TargetClass cls = profile.classify(target.type());
         boolean archerPresent = allies.stream()
-                .anyMatch(ally -> ally != null && ally.bow() && !busy.contains(ally.id())
+                .anyMatch(ally -> ally != null
+                        && ally.bow()
+                        && !busy.contains(ally.id())
                         && ally.hpFraction() >= DefenseTuning.LOW_HP_FRACTION);
         UUID best = null;
         double bestDistance = 0;
@@ -39,7 +39,8 @@ public final class TargetHandoff {
             if (ally == null) {
                 throw new IllegalArgumentException("allies содержит null: союзник без снимка цель не примет");
             }
-            if (ally.id().equals(self) || busy.contains(ally.id())
+            if (ally.id().equals(self)
+                    || busy.contains(ally.id())
                     || ally.hpFraction() < DefenseTuning.LOW_HP_FRACTION) {
                 continue;
             }
@@ -47,7 +48,8 @@ public final class TargetHandoff {
                 continue;
             }
             double distance = ally.pos().distanceTo(target.pos());
-            if (best == null || distance < bestDistance
+            if (best == null
+                    || distance < bestDistance
                     || (distance == bestDistance && ally.id().compareTo(best) < 0)) {
                 best = ally.id();
                 bestDistance = distance;

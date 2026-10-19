@@ -16,8 +16,8 @@ public record OverflowTuning(String origin, int stockScale, double minFactor) {
             throw new IllegalArgumentException("Источник таблицы переполнения пуст: сообщение называет файл");
         }
         if (stockScale < 1) {
-            throw new IllegalArgumentException("Масштаб запаса " + stockScale
-                    + " меньше 1: на нуле ценность не падала бы никогда");
+            throw new IllegalArgumentException(
+                    "Масштаб запаса " + stockScale + " меньше 1: на нуле ценность не падала бы никогда");
         }
         if (Double.isNaN(minFactor) || Double.isInfinite(minFactor) || minFactor <= 0 || minFactor > 1) {
             throw new IllegalArgumentException("Нижний коэффициент " + minFactor

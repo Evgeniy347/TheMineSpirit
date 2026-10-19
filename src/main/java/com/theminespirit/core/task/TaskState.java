@@ -1,7 +1,5 @@
 package com.theminespirit.core.task;
 
-import java.util.Locale;
-
 public enum TaskState {
     ACCEPTED("accepted", false),
     RUNNING("running", false),
@@ -38,5 +36,4 @@ public enum TaskState {
             case SUCCEEDED, FAILED, CANCELLED -> false;
         };
     }
-
 }

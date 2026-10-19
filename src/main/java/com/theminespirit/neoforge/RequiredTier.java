@@ -5,8 +5,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class RequiredTier {
-    private RequiredTier() {
-    }
+    private RequiredTier() {}
 
     public static String of(BlockState state) {
         Objects.requireNonNull(state, "Состояние блока не может быть null: по его тегам определяется инструмент");

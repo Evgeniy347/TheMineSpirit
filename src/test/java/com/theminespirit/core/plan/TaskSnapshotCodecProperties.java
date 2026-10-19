@@ -31,12 +31,18 @@ class TaskSnapshotCodecProperties {
     void decode_AnyEncodedSnapshot_EqualsSource(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         TaskNode plan = RandomPlans.valid(random);
-        TaskSnapshot snapshot = new TaskSnapshot(TaskSnapshot.VERSION, RunStatus.RUNNING,
-                random.nextBoolean() ? null : "причина", plan, progress(plan, random));
+        TaskSnapshot snapshot = new TaskSnapshot(
+                TaskSnapshot.VERSION,
+                RunStatus.RUNNING,
+                random.nextBoolean() ? null : "причина",
+                plan,
+                progress(plan, random));
 
         TaskSnapshot restored = TaskSnapshotCodec.decode(TaskSnapshotCodec.encode(snapshot));
 
-        assertEquals(snapshot, restored,
+        assertEquals(
+                snapshot,
+                restored,
                 "любой снимок RUNNING обязан переживать encode→decode без потерь: расхождение означает, что часть "
                         + "прогресса уехала в JSON не полностью и после перезапуска план пойдёт иначе. "
                         + "seed=" + seed + ", план=" + plan);
@@ -55,17 +61,13 @@ class TaskSnapshotCodecProperties {
 
     private static TaskProgress stepped(Random random, List<TaskNode> steps) {
         int index = chosenIndex(random, steps.size());
-        TaskProgress child = index < steps.size() && random.nextBoolean()
-                ? progress(steps.get(index), random)
-                : null;
+        TaskProgress child = index < steps.size() && random.nextBoolean() ? progress(steps.get(index), random) : null;
         return new SequenceAt(index, child);
     }
 
     private static TaskProgress repeated(Random random, RepeatNode repeat) {
         int index = chosenIndex(random, repeat.times());
-        TaskProgress child = index < repeat.times() && random.nextBoolean()
-                ? progress(repeat.step(), random)
-                : null;
+        TaskProgress child = index < repeat.times() && random.nextBoolean() ? progress(repeat.step(), random) : null;
         return new RepeatAt(index, child);
     }
 
@@ -105,15 +107,16 @@ class TaskSnapshotCodecProperties {
         return switch (random.nextInt(3)) {
             case 0 -> new ConditionAt(ConditionBranch.UNRESOLVED, null);
             case 1 -> new ConditionAt(ConditionBranch.THEN, progress(condition.thenStep(), random));
-            default -> condition.elseStep() == null
-                    ? new ConditionAt(ConditionBranch.UNRESOLVED, null)
-                    : new ConditionAt(ConditionBranch.ELSE, progress(condition.elseStep(), random));
+            default ->
+                condition.elseStep() == null
+                        ? new ConditionAt(ConditionBranch.UNRESOLVED, null)
+                        : new ConditionAt(ConditionBranch.ELSE, progress(condition.elseStep(), random));
         };
     }
 
     private static Map<String, Object> state(Random random) {
-        List<Object> values = List.of("метка", random.nextInt(1000), random.nextBoolean(),
-                List.of(random.nextInt(10), random.nextInt(10)));
+        List<Object> values = List.of(
+                "метка", random.nextInt(1000), random.nextBoolean(), List.of(random.nextInt(10), random.nextInt(10)));
         int count = 1 + random.nextInt(3);
         Map<String, Object> state = new LinkedHashMap<>();
         for (int i = 0; i < count; i++) {

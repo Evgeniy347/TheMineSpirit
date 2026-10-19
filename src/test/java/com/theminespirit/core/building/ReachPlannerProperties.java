@@ -22,10 +22,11 @@ class ReachPlannerProperties {
 
     @Provide
     Arbitrary<List<BlockCoord>> cells() {
-        return Arbitraries.integers().between(-6, 6)
-                .flatMap(x -> Arbitraries.integers().between(0, 6)
-                        .flatMap(y -> Arbitraries.integers().between(-6, 6)
-                                .map(z -> new BlockCoord(x, y, z))))
+        return Arbitraries.integers()
+                .between(-6, 6)
+                .flatMap(x -> Arbitraries.integers()
+                        .between(0, 6)
+                        .flatMap(y -> Arbitraries.integers().between(-6, 6).map(z -> new BlockCoord(x, y, z))))
                 .list()
                 .ofMaxSize(20)
                 .map(cells -> List.copyOf(new LinkedHashSet<>(cells)));
@@ -33,10 +34,11 @@ class ReachPlannerProperties {
 
     @Provide
     Arbitrary<BlockCoord> feet() {
-        return Arbitraries.integers().between(-10, 10)
-                .flatMap(x -> Arbitraries.integers().between(-2, 8)
-                        .flatMap(y -> Arbitraries.integers().between(-10, 10)
-                                .map(z -> new BlockCoord(x, y, z))));
+        return Arbitraries.integers()
+                .between(-10, 10)
+                .flatMap(x -> Arbitraries.integers()
+                        .between(-2, 8)
+                        .flatMap(y -> Arbitraries.integers().between(-10, 10).map(z -> new BlockCoord(x, y, z))));
     }
 
     @Property
@@ -55,7 +57,9 @@ class ReachPlannerProperties {
                 .filter(cell -> !ReachPlanner.inBody(feet, cell))
                 .filter(ready::contains)
                 .toList();
-        assertEquals(expected, workable,
+        assertEquals(
+                expected,
+                workable,
                 "С места делается ровно то, что досягаемо, готово и не в теле духа, в порядке вызывающего: пропуск "
                         + "или лишняя клетка ломают постановку без подходов");
     }
@@ -83,10 +87,12 @@ class ReachPlannerProperties {
         }
         BlockCoord spot = stand.get();
         assertTrue(world.standable(spot), "Стоянка обязана быть клеткой, где можно стоять");
-        assertFalse(scheme.contains(spot) || scheme.contains(new BlockCoord(spot.x(), spot.y() + 1, spot.z())),
+        assertFalse(
+                scheme.contains(spot) || scheme.contains(new BlockCoord(spot.x(), spot.y() + 1, spot.z())),
                 "Стоянка и голова духа не могут быть клетками схемы: дух встанет в будущий блок, фактически " + spot);
         assertFalse(spot.equals(feet), "Стоянка не совпадает с текущей: иначе подход не начнётся");
-        assertTrue(cells.stream().anyMatch(cell -> REACH.reaches(spot, cell) && !SpiritReach.forbiddenStand(spot, cell)),
+        assertTrue(
+                cells.stream().anyMatch(cell -> REACH.reaches(spot, cell) && !SpiritReach.forbiddenStand(spot, cell)),
                 "Со стоянки обязана быть досягаема хотя бы одна клетка: иначе шаг бесполезен");
     }
 
@@ -110,8 +116,11 @@ class ReachPlannerProperties {
         int steps = 0;
         int limit = cells.size() * 4 + 50;
         while (!remaining.isEmpty()) {
-            assertTrue(steps++ < limit, "Планировщик обязан завершить работу за конечное число шагов: зацикливание "
-                    + "на стоянках оставило бы духа бегать вокруг дома, осталось " + remaining.size() + " клеток");
+            assertTrue(
+                    steps++ < limit,
+                    "Планировщик обязан завершить работу за конечное число шагов: зацикливание "
+                            + "на стоянках оставило бы духа бегать вокруг дома, осталось " + remaining.size()
+                            + " клеток");
             List<BlockCoord> pending = new ArrayList<>(remaining);
             List<BlockCoord> workable = ReachPlanner.workableNow(REACH, feet, pending, world);
             if (!workable.isEmpty()) {
@@ -120,8 +129,10 @@ class ReachPlannerProperties {
                 continue;
             }
             Optional<BlockCoord> stand = ReachPlanner.nextStand(REACH, feet, pending, world, excluded, Set.of());
-            assertTrue(stand.isPresent(), "Пока есть клетки, обязана найтись следующая стоянка: иначе стройка "
-                    + "брошена на " + remaining.size() + " клетках");
+            assertTrue(
+                    stand.isPresent(),
+                    "Пока есть клетки, обязана найтись следующая стоянка: иначе стройка " + "брошена на "
+                            + remaining.size() + " клетках");
             feet = stand.get();
             excluded.add(feet);
         }

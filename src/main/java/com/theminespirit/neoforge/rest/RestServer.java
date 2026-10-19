@@ -24,8 +24,8 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -85,7 +85,8 @@ public final class RestServer {
         pool.shutdown();
         try {
             if (!pool.awaitTermination(POOL_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
-                LOGGER.warn("REST-мост: потоки обработчиков не завершились за {} с, прерываю", POOL_TERMINATION_SECONDS);
+                LOGGER.warn(
+                        "REST-мост: потоки обработчиков не завершились за {} с, прерываю", POOL_TERMINATION_SECONDS);
                 pool.shutdownNow();
             }
         } catch (InterruptedException e) {
@@ -105,7 +106,8 @@ public final class RestServer {
     }
 
     private RestResponse answer(HttpExchange exchange) {
-        String description = exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath();
+        String description =
+                exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath();
         try {
             Optional<RestResponse> limited = rateLimit.reject(clientKey(exchange), System.nanoTime());
             if (limited.isPresent()) {
@@ -117,8 +119,8 @@ public final class RestServer {
             return ErrorJson.response(e);
         } catch (IOException | RuntimeException e) {
             LOGGER.error("REST-мост: необработанная ошибка при обработке {}", description, e);
-            return ErrorJson.response(ApiError.of(ErrorCode.INTERNAL,
-                    "Внутренняя ошибка моста при обработке запроса: подробности в логе сервера"));
+            return ErrorJson.response(ApiError.of(
+                    ErrorCode.INTERNAL, "Внутренняя ошибка моста при обработке запроса: подробности в логе сервера"));
         }
     }
 
@@ -146,8 +148,12 @@ public final class RestServer {
                 discardRest(in);
             }
         }
-        return new RestRequest(exchange.getRequestMethod(), exchange.getRequestURI().getRawPath(),
-                QueryString.parse(exchange.getRequestURI().getRawQuery()), headers, body);
+        return new RestRequest(
+                exchange.getRequestMethod(),
+                exchange.getRequestURI().getRawPath(),
+                QueryString.parse(exchange.getRequestURI().getRawQuery()),
+                headers,
+                body);
     }
 
     private static void discardRest(InputStream in) throws IOException {

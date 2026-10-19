@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -41,7 +40,9 @@ class MethodShapeGuardTests {
     void productionMethods_TooManyParametersOrBooleanFlags_AreAbsent() {
         List<String> found = violations(SourceFiles.MAIN, EXCEPTIONS);
 
-        assertEquals(List.of(), found,
+        assertEquals(
+                List.of(),
+                found,
                 "У метода 3+ boolean-параметра или 8+ параметров: по вызову не видно, что означают флаги, "
                         + "а длинный список легко перепутать местами. Как надо: флаги одного смысла — "
                         + "enum/тип, длинный список — объект-параметр. Внешний контракт (override "
@@ -56,7 +57,9 @@ class MethodShapeGuardTests {
                 + "    void narrow(boolean first, boolean second, int value) { }\n"
                 + "}\n";
 
-        assertEquals(List.of("2 Sample.flags", "3 Sample.wide"), violationsOf(sample),
+        assertEquals(
+                List.of("2 Sample.flags", "3 Sample.wide"),
+                violationsOf(sample),
                 "Сторож ослеп: 3 boolean-параметра и 8 параметров обязаны находиться, 2 boolean — нет");
     }
 
@@ -64,7 +67,9 @@ class MethodShapeGuardTests {
     void methodShapePattern_RecordCanonicalConstructor_IsClean() {
         String sample = "record Point(int x, int y, int z, int level, int kind, int meta, int light, int sky) { }\n";
 
-        assertEquals(List.of(), violationsOf(sample),
+        assertEquals(
+                List.of(),
+                violationsOf(sample),
                 "Сторож ложно срабатывает: канонический конструктор record — это форма данных, а не метод");
     }
 
@@ -76,7 +81,9 @@ class MethodShapeGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), violationsOf(sample),
+        assertEquals(
+                List.of(),
+                violationsOf(sample),
                 "Сторож ложно срабатывает: вторичный конструктор record только подставляет умолчания "
                         + "в канонический и не задаёт новую форму");
     }
@@ -90,8 +97,8 @@ class MethodShapeGuardTests {
         }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null);
-        JavacTask task = (JavacTask) compiler.getTask(null, manager, null, List.of("-proc:none"), null,
-                manager.getJavaFileObjectsFromPaths(files));
+        JavacTask task = (JavacTask) compiler.getTask(
+                null, manager, null, List.of("-proc:none"), null, manager.getJavaFileObjectsFromPaths(files));
         try {
             List<Violation> found = inspect(task, exceptions);
             return found.stream()
@@ -106,12 +113,13 @@ class MethodShapeGuardTests {
 
     private static List<String> violationsOf(String source) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        JavaFileObject file = new SimpleJavaFileObject(URI.create("string:///Sample.java"), JavaFileObject.Kind.SOURCE) {
-            @Override
-            public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-                return source;
-            }
-        };
+        JavaFileObject file =
+                new SimpleJavaFileObject(URI.create("string:///Sample.java"), JavaFileObject.Kind.SOURCE) {
+                    @Override
+                    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+                        return source;
+                    }
+                };
         JavacTask task = (JavacTask) compiler.getTask(null, null, null, List.of("-proc:none"), null, List.of(file));
         try {
             return inspect(task, Map.of()).stream()
@@ -167,8 +175,13 @@ class MethodShapeGuardTests {
                         seen.add(key);
                         if (!exceptions.containsKey(key)) {
                             long line = unit.getLineMap().getLineNumber(positions.getStartPosition(unit, node));
-                            violations.add(new Violation(file, line, owner.getSimpleName().toString(),
-                                    node.getName().toString(), parameters, booleans));
+                            violations.add(new Violation(
+                                    file,
+                                    line,
+                                    owner.getSimpleName().toString(),
+                                    node.getName().toString(),
+                                    parameters,
+                                    booleans));
                         }
                     }
                     return super.visitMethod(node, unused);
@@ -176,20 +189,22 @@ class MethodShapeGuardTests {
             }.scan(unit, null);
         }
         for (String exception : exceptions.keySet()) {
-            assertTrue(seen.contains(exception), "Устаревшее исключение метода " + exception + ": нарушение "
-                    + "исчезло или сигнатура изменилась, причина в EXCEPTIONS больше не нужна");
+            assertTrue(
+                    seen.contains(exception),
+                    "Устаревшее исключение метода " + exception + ": нарушение "
+                            + "исчезло или сигнатура изменилась, причина в EXCEPTIONS больше не нужна");
         }
         return violations;
     }
 
-    private record Violation(String file, long line, String owner, String name, int params, int booleans) {
-    }
+    private record Violation(String file, long line, String owner, String name, int params, int booleans) {}
 
     private static String key(CompilationUnitTree unit, MethodTree node, ClassTree owner, String file) {
         String path = file.replace('\\', '/');
         int root = path.indexOf("src/main/java/");
         String relative = root < 0 ? path : path.substring(root + "src/main/java/".length());
-        return relative + "#" + owner.getSimpleName() + "." + node.getName() + "/" + node.getParameters().size();
+        return relative + "#" + owner.getSimpleName() + "." + node.getName() + "/"
+                + node.getParameters().size();
     }
 
     private static List<String> componentNames(ClassTree record) {
@@ -204,7 +219,8 @@ class MethodShapeGuardTests {
     }
 
     private static boolean delegatesToCanonical(MethodTree constructor) {
-        if (constructor.getBody() == null || constructor.getBody().getStatements().isEmpty()) {
+        if (constructor.getBody() == null
+                || constructor.getBody().getStatements().isEmpty()) {
             return false;
         }
         return constructor.getBody().getStatements().get(0).toString().startsWith("this(");

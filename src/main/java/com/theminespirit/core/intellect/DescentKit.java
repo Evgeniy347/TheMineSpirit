@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class DescentKit {
-    private DescentKit() {
-    }
+    private DescentKit() {}
 
     public static List<String> missing(List<OutsideRules.Need> needs, List<Stack> inventory, ValueTable values) {
         Objects.requireNonNull(needs, "Набор шахты не может быть null: пустой набор задают пустым списком");

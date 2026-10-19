@@ -19,18 +19,30 @@ final class StubKnowledge implements ResourceKnowledge {
         this(gatherable, crafts, smelts, Map.of());
     }
 
-    StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
+    StubKnowledge(
+            Set<String> gatherable,
+            Map<String, List<Ingredient>> crafts,
+            Map<String, String> smelts,
             Map<String, Integer> outputs) {
         this(gatherable, crafts, smelts, outputs, Map.of());
     }
 
-    StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
-            Map<String, Integer> outputs, Map<String, String> stations) {
+    StubKnowledge(
+            Set<String> gatherable,
+            Map<String, List<Ingredient>> crafts,
+            Map<String, String> smelts,
+            Map<String, Integer> outputs,
+            Map<String, String> stations) {
         this(gatherable, crafts, smelts, outputs, stations, Map.of(), Map.of());
     }
 
-    private StubKnowledge(Set<String> gatherable, Map<String, List<Ingredient>> crafts, Map<String, String> smelts,
-            Map<String, Integer> outputs, Map<String, String> stations, Map<String, String> gatherSources,
+    private StubKnowledge(
+            Set<String> gatherable,
+            Map<String, List<Ingredient>> crafts,
+            Map<String, String> smelts,
+            Map<String, Integer> outputs,
+            Map<String, String> stations,
+            Map<String, String> gatherSources,
             Map<String, String> tools) {
         this.gatherable = Set.copyOf(gatherable);
         this.crafts = Map.copyOf(crafts);

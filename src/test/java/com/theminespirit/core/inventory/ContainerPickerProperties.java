@@ -20,12 +20,13 @@ class ContainerPickerProperties {
 
     // Инвариант 1: предмет никогда не попадает в контейнер, который не может его принять.
     @Property
-    void choose_AnyContainers_NeverPicksFullOne(@ForAll("containers") List<ContainerSnapshot> containers,
-            @ForAll("incoming") Stack incoming) {
+    void choose_AnyContainers_NeverPicksFullOne(
+            @ForAll("containers") List<ContainerSnapshot> containers, @ForAll("incoming") Stack incoming) {
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, incoming);
         if (choice instanceof ContainerChoice.Chosen chosen) {
             ContainerSnapshot picked = containers.get(chosen.index());
-            assertTrue(picked.hasFreeSlot() || picked.hasPartial(incoming),
+            assertTrue(
+                    picked.hasFreeSlot() || picked.hasPartial(incoming),
                     "выбранный контейнер обязан принять предмет: либо свободный слот, либо неполная стопка того же "
                             + "предмета. В полный контейнер предмет не влезет. Снимки: " + containers
                             + ", предмет: " + incoming);
@@ -36,16 +37,20 @@ class ContainerPickerProperties {
     @Property
     void choose_PartialStackExists_PicksContainerWithPartial(
             @ForAll("containersWithPartial") List<ContainerSnapshot> containers,
-            @ForAll("incoming") Stack incoming, @ForAll("partialIndex") int partialIndex) {
+            @ForAll("incoming") Stack incoming,
+            @ForAll("partialIndex") int partialIndex) {
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, incoming);
-        assertTrue(choice instanceof ContainerChoice.Chosen,
+        assertTrue(
+                choice instanceof ContainerChoice.Chosen,
                 "при наличии неполного стака того же предмета отказ недопустим: " + containers);
         ContainerSnapshot chosen = containers.get(((ContainerChoice.Chosen) choice).index());
-        assertTrue(chosen.hasPartial(incoming),
+        assertTrue(
+                chosen.hasPartial(incoming),
                 "если в радиусе есть контейнер с неполной стопкой того же предмета, выбран обязан быть такой "
                         + "контейнер, а не пустой. Снимки: " + containers + ", предмет: " + incoming
                         + ", выбран индекс " + ((ContainerChoice.Chosen) choice).index());
-        assertFalse(containers.get(partialIndex).hasPartial(incoming) && !chosen.hasPartial(incoming),
+        assertFalse(
+                containers.get(partialIndex).hasPartial(incoming) && !chosen.hasPartial(incoming),
                 "неполный стак был в контейнере " + partialIndex + ", но выбран контейнер без него: "
                         + "докладывание обязано идти к существующей стопке");
     }
@@ -63,19 +68,19 @@ class ContainerPickerProperties {
         Arbitrary<ContainerSnapshot> withPartial = partial.map(stack -> {
             List<Stack> slots = new ArrayList<>();
             slots.add(stack);
-            slots.add(Arbitraries.of(true, false).sample()
-                    ? new Stack(PLANK, 0, MAX_STACK, MAX_STACK)
-                    : null);
+            slots.add(Arbitraries.of(true, false).sample() ? new Stack(PLANK, 0, MAX_STACK, MAX_STACK) : null);
             return new ContainerSnapshot(new BlockCoord(0, 64, 0), slots);
         });
         Arbitrary<ContainerSnapshot> filler = container(Arbitraries.of(COBBLE, PLANK));
-        return withPartial.list().ofMinSize(1).ofMaxSize(3)
-                .flatMap(partials -> filler.list().ofMaxSize(3)
-                        .map(rest -> {
-                            List<ContainerSnapshot> all = new ArrayList<>(partials);
-                            all.addAll(rest);
-                            return all;
-                        }));
+        return withPartial
+                .list()
+                .ofMinSize(1)
+                .ofMaxSize(3)
+                .flatMap(partials -> filler.list().ofMaxSize(3).map(rest -> {
+                    List<ContainerSnapshot> all = new ArrayList<>(partials);
+                    all.addAll(rest);
+                    return all;
+                }));
     }
 
     @Provide
@@ -85,18 +90,16 @@ class ContainerPickerProperties {
 
     @Provide
     Arbitrary<Stack> incoming() {
-        return Arbitraries.integers().between(1, MAX_STACK)
-                .map(count -> new Stack(COBBLE, 0, count, MAX_STACK));
+        return Arbitraries.integers().between(1, MAX_STACK).map(count -> new Stack(COBBLE, 0, count, MAX_STACK));
     }
 
     private static Arbitrary<Stack> partialOf(String item) {
-        return Arbitraries.integers().between(1, MAX_STACK - 1)
-                .map(count -> new Stack(item, 0, count, MAX_STACK));
+        return Arbitraries.integers().between(1, MAX_STACK - 1).map(count -> new Stack(item, 0, count, MAX_STACK));
     }
 
     private static Arbitrary<ContainerSnapshot> container(Arbitrary<String> items) {
-        Arbitrary<Stack> stack = items.flatMap(item -> Arbitraries.integers().between(1, MAX_STACK)
-                .map(count -> new Stack(item, 0, count, MAX_STACK)));
+        Arbitrary<Stack> stack = items.flatMap(item ->
+                Arbitraries.integers().between(1, MAX_STACK).map(count -> new Stack(item, 0, count, MAX_STACK)));
         Arbitrary<List<Stack>> slots = stack.injectNull(0.4).list().ofMinSize(1).ofMaxSize(4);
         return slots.map(list -> new ContainerSnapshot(new BlockCoord(0, 64, list.size()), list));
     }

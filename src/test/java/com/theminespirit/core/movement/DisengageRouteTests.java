@@ -18,7 +18,10 @@ class DisengageRouteTests {
         Point away = DisengageRoute.away(self, threat, 5);
 
         assertEquals(64.0, away.y(), 0.001, "точка отхода остаётся на высоте духа: он отходит, а не взбирается");
-        assertEquals(5 + RetreatPlanner.HOME_ARRIVAL + DisengageRoute.ARRIVAL_SLACK, horizontal(threat, away), 0.001,
+        assertEquals(
+                5 + RetreatPlanner.HOME_ARRIVAL + DisengageRoute.ARRIVAL_SLACK,
+                horizontal(threat, away),
+                0.001,
                 "точка отхода стоит за требуемой дистанцией с запасом на прибытие отхода: без запаса дух "
                         + "остановился бы ближе distance и не вышел из боя");
         assertTrue(away.x() > self.x(), "точка отхода лежит дальше от угрозы, чем дух: он пятится, а не идёт на врага");
@@ -31,7 +34,10 @@ class DisengageRouteTests {
 
         Point away = DisengageRoute.away(self, threat, 5);
 
-        assertEquals(5 + RetreatPlanner.HOME_ARRIVAL + DisengageRoute.ARRIVAL_SLACK, away.x(), 0.001,
+        assertEquals(
+                5 + RetreatPlanner.HOME_ARRIVAL + DisengageRoute.ARRIVAL_SLACK,
+                away.x(),
+                0.001,
                 "при совпадении позиций направление не определено: берём +X, иначе NaN увёл бы духа в никуда");
         assertEquals(0, away.z(), 0.001, "при совпадении позиций отход идёт строго по +X");
     }
@@ -43,7 +49,10 @@ class DisengageRouteTests {
 
         Point away = DisengageRoute.away(self, threat, 5);
 
-        assertEquals(11, away.x(), 0.001,
+        assertEquals(
+                11,
+                away.x(),
+                0.001,
                 "если дух уже за дистанцией, точка всё равно на шаг дальше: скрипт не должен разворачивать его к врагу");
     }
 
@@ -52,7 +61,9 @@ class DisengageRouteTests {
         Point self = new Point(2, 64, 0);
         Point threat = new Point(0, 64, 0);
 
-        assertThrows(IllegalArgumentException.class, () -> DisengageRoute.away(self, threat, 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> DisengageRoute.away(self, threat, 0),
                 "нулевая дистанция отхода бессмысленна: проверка обязана остановить расчёт до позиции NaN");
     }
 
@@ -61,8 +72,7 @@ class DisengageRouteTests {
         Point self = new Point(6, 64, 0);
         Point threat = new Point(0, 64, 0);
 
-        assertTrue(DisengageRoute.reached(self, threat, 5),
-                "расстояние 6 при требуемых 5 — цель отхода достигнута");
+        assertTrue(DisengageRoute.reached(self, threat, 5), "расстояние 6 при требуемых 5 — цель отхода достигнута");
     }
 
     @Test
@@ -70,8 +80,8 @@ class DisengageRouteTests {
         Point self = new Point(4, 64, 0);
         Point threat = new Point(0, 64, 0);
 
-        assertFalse(DisengageRoute.reached(self, threat, 5),
-                "расстояние 4 при требуемых 5 — дух ещё в бою, выходить рано");
+        assertFalse(
+                DisengageRoute.reached(self, threat, 5), "расстояние 4 при требуемых 5 — дух ещё в бою, выходить рано");
     }
 
     private static double horizontal(Point first, Point second) {

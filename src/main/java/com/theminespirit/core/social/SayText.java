@@ -3,8 +3,7 @@ package com.theminespirit.core.social;
 import java.util.Objects;
 
 public final class SayText {
-    private SayText() {
-    }
+    private SayText() {}
 
     public static String normalize(String text, int maxLength) {
         Objects.requireNonNull(text, "text не может быть null: речь берётся из параметров скрипта");

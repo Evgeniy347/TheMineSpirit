@@ -5,8 +5,7 @@ package com.theminespirit.core.fishing;
  * {@link FishingData#bucketCount()} — правкой датапака мира, а не кодом.
  */
 public final class BucketCatch {
-    private BucketCatch() {
-    }
+    private BucketCatch() {}
 
     public static int limit(int requested, FishingData data) {
         if (data == null) {
@@ -14,8 +13,8 @@ public final class BucketCatch {
                     "Предел ловли ведром без данных рыбалки не считается: число живёт в fishing.json");
         }
         if (requested < 1) {
-            throw new IllegalArgumentException("Запрошено поймать " + requested
-                    + " ведёрной рыбы: ловить нечего, заход без рыбы не ставится");
+            throw new IllegalArgumentException(
+                    "Запрошено поймать " + requested + " ведёрной рыбы: ловить нечего, заход без рыбы не ставится");
         }
         return Math.min(requested, data.bucketCount());
     }

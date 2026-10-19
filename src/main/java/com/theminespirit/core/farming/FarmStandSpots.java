@@ -15,8 +15,7 @@ public final class FarmStandSpots {
     private static final double EYE_HEIGHT = 1.62;
     private static final double MAX_REACH_SQUARED = FarmTuning.REACH * FarmTuning.REACH;
 
-    private FarmStandSpots() {
-    }
+    private FarmStandSpots() {}
 
     public static List<BlockCoord> of(BlockCoord target, BlockCoord from, SafetyView safety, FarmView farmView) {
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, где искать стоянку");
@@ -67,7 +66,9 @@ public final class FarmStandSpots {
                     continue;
                 }
                 Cell neighbor = safety.cellAt(offset(center, dx, 0, dz));
-                if (neighbor == Cell.LAVA || neighbor == Cell.FIRE || neighbor == Cell.HAZARD
+                if (neighbor == Cell.LAVA
+                        || neighbor == Cell.FIRE
+                        || neighbor == Cell.HAZARD
                         || neighbor == Cell.FALLING) {
                     return false;
                 }
@@ -94,6 +95,5 @@ public final class FarmStandSpots {
         return new BlockCoord(coord.x() + dx, coord.y() + dy, coord.z() + dz);
     }
 
-    private record Stand(BlockCoord feet, boolean farmland) {
-    }
+    private record Stand(BlockCoord feet, boolean farmland) {}
 }

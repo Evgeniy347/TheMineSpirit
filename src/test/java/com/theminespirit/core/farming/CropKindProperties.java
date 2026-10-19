@@ -14,7 +14,9 @@ class CropKindProperties {
             return;
         }
 
-        assertEquals(Optional.of(kind), CropKind.ofBlock(kind.blockId()),
+        assertEquals(
+                Optional.of(kind),
+                CropKind.ofBlock(kind.blockId()),
                 "Обратное сопоставление обязано держаться для блока вида " + kind
                         + ": иначе распознавание посева и поиск цели расходятся");
     }
@@ -25,7 +27,8 @@ class CropKindProperties {
             return;
         }
 
-        assertTrue(kind.blockId().matches("minecraft:[a-z_]+"),
+        assertTrue(
+                kind.blockId().matches("minecraft:[a-z_]+"),
                 "id блока обязан идти по шаблону minecraft:[a-z_]+: LevelFarmView ищет вид по id из реестра, "
                         + "а заглавные буквы или дефис сломают сопоставление. Фактический: " + kind.blockId());
     }
@@ -37,9 +40,12 @@ class CropKindProperties {
         }
 
         for (int age = 0; age <= kind.maxAge(); age++) {
-            boolean expected = kind.harvestMethod() == HarvestMethod.PICK ? age >= 2
+            boolean expected = kind.harvestMethod() == HarvestMethod.PICK
+                    ? age >= 2
                     : kind.harvestMethod() == HarvestMethod.BREAK_COLUMN ? true : age == kind.maxAge();
-            assertEquals(expected, new CropState(kind, age).isMature(),
+            assertEquals(
+                    expected,
+                    new CropState(kind, age).isMature(),
                     "Зрелость вида " + kind + " метода " + kind.harvestMethod()
                             + " обязана совпадать с правилом: PICK с 2, BREAK_COLUMN всегда, BREAK на maxAge. Возраст: "
                             + age);

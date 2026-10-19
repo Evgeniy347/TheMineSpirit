@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class CapabilitiesJson {
-    private CapabilitiesJson() {
-    }
+    private CapabilitiesJson() {}
 
     public static String toJson(ScriptCatalog catalog) {
         List<Map<String, Object>> scripts = new ArrayList<>();
@@ -39,7 +38,9 @@ public final class CapabilitiesJson {
         script.put("summary", spec.summary());
         script.put("params", params);
         script.put("preconditions", spec.preconditions());
-        script.put("requires", spec.requires().stream().map(CapabilitiesJson::requirement).toList());
+        script.put(
+                "requires",
+                spec.requires().stream().map(CapabilitiesJson::requirement).toList());
         script.put("effects", spec.effects());
         return script;
     }

@@ -20,9 +20,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class EncodingGuardTests {
-    private static final Set<String> SKIP_DIRECTORIES = Set.of(
-            ".git", ".gradle", ".idea", ".codegraph", "build", "TestResults", "temp-scripts",
-            "run", "run-data");
+    private static final Set<String> SKIP_DIRECTORIES =
+            Set.of(".git", ".gradle", ".idea", ".codegraph", "build", "TestResults", "temp-scripts", "run", "run-data");
     private static final byte[] BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     @Test
@@ -34,7 +33,9 @@ class EncodingGuardTests {
             Files.walkFileTree(root, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    return dir != root && SKIP_DIRECTORIES.contains(dir.getFileName().toString())
+                    return dir != root
+                                    && SKIP_DIRECTORIES.contains(
+                                            dir.getFileName().toString())
                             ? FileVisitResult.SKIP_SUBTREE
                             : FileVisitResult.CONTINUE;
                 }
@@ -49,11 +50,13 @@ class EncodingGuardTests {
                 }
             });
         } catch (IOException e) {
-            throw new IllegalStateException("Сторож не смог обойти дерево проекта: тесты запускаются "
-                    + "из корня проекта", e);
+            throw new IllegalStateException(
+                    "Сторож не смог обойти дерево проекта: тесты запускаются " + "из корня проекта", e);
         }
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Кодировка и переводы строк ломают сборку и запуск незаметно: BOM в начале исходника "
                         + "ломает javac и shebang, CR в *.sh — bash, не-ASCII или LF в *.bat — командную "
                         + "строку Windows. Исходники и данные — UTF-8 без BOM, *.sh — только LF, *.bat — "
@@ -64,7 +67,8 @@ class EncodingGuardTests {
     void encoding_BomInSource_IsReported() {
         String text = "\uFEFFclass Sample {}\n";
 
-        assertTrue(problemsOf("Sample.java", text.getBytes(StandardCharsets.UTF_8)).contains("BOM"),
+        assertTrue(
+                problemsOf("Sample.java", text.getBytes(StandardCharsets.UTF_8)).contains("BOM"),
                 "Сторож ослеп: BOM в начале файла должен попадать в нарушители");
     }
 
@@ -72,8 +76,8 @@ class EncodingGuardTests {
     void encoding_ShellWithCarriageReturn_IsReported() {
         String text = "#!/usr/bin/env bash\r\necho hi\n";
 
-        assertTrue(problemsOf("run.sh", text.getBytes(StandardCharsets.UTF_8))
-                        .contains("*.sh содержит CR"),
+        assertTrue(
+                problemsOf("run.sh", text.getBytes(StandardCharsets.UTF_8)).contains("*.sh содержит CR"),
                 "Сторож ослеп: CR в *.sh ломает bash, но нарушение не найдено");
     }
 
@@ -81,8 +85,8 @@ class EncodingGuardTests {
     void encoding_BatchWithoutCrlf_IsReported() {
         String text = "@echo off\necho hi\n";
 
-        assertTrue(problemsOf("run.bat", text.getBytes(StandardCharsets.UTF_8))
-                        .contains("*.bat не CRLF"),
+        assertTrue(
+                problemsOf("run.bat", text.getBytes(StandardCharsets.UTF_8)).contains("*.bat не CRLF"),
                 "Сторож ослеп: *.bat с LF вместо CRLF ломает командную строку, но нарушение не найдено");
     }
 
@@ -90,7 +94,8 @@ class EncodingGuardTests {
     void encoding_BatchWithNonAscii_IsReported() {
         String text = "@echo off\r\nrem привет\r\n";
 
-        assertTrue(problemsOf("run.bat", text.getBytes(StandardCharsets.UTF_8)).contains("*.bat не ASCII"),
+        assertTrue(
+                problemsOf("run.bat", text.getBytes(StandardCharsets.UTF_8)).contains("*.bat не ASCII"),
                 "Сторож ослеп: не-ASCII в *.bat зависит от кодовой страницы Windows, но нарушение не найдено");
     }
 
@@ -98,7 +103,9 @@ class EncodingGuardTests {
     void encoding_PlainUtf8WithLf_IsAccepted() {
         String text = "class Sample {\n    String s = \"привет\";\n}\n";
 
-        assertEquals(List.of(), problemsOf("Sample.java", text.getBytes(StandardCharsets.UTF_8)),
+        assertEquals(
+                List.of(),
+                problemsOf("Sample.java", text.getBytes(StandardCharsets.UTF_8)),
                 "Сторож ложно срабатывает: UTF-8 без BOM и LF — законный исходник");
     }
 
@@ -149,7 +156,8 @@ class EncodingGuardTests {
     }
 
     private static boolean isUtf8(byte[] bytes) {
-        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+        CharsetDecoder decoder = StandardCharsets.UTF_8
+                .newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
                 .onUnmappableCharacter(CodingErrorAction.REPORT);
         try {

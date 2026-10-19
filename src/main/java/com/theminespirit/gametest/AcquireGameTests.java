@@ -29,7 +29,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -45,8 +44,7 @@ public final class AcquireGameTests {
     private static final int COBBLESTONE_FOR_FURNACE = 3;
     private static final int IRON_ORE_COUNT = 3;
 
-    private AcquireGameTests() {
-    }
+    private AcquireGameTests() {}
 
     @GameTest(template = "arena", batch = "acquire_wood", timeoutTicks = WOOD_TICKS_LIMIT)
     public static void acquireWoodenPickaxe_FromScratch_PickaxeInInventory(GameTestHelper helper) {
@@ -62,9 +60,10 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "деревянная кирка");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
-                    "верстак в мире — подплан строит только недостающие доски и палки (2 брёвна из 3), "
-                            + "осталось " + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
+                    "верстак в мире — подплан строит только недостающие доски и палки (2 брёвна из 3), " + "осталось "
+                            + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
             cleanup(helper, spirit);
         });
     }
@@ -87,7 +86,8 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.STONE_PICKAXE, 1, "каменная кирка");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "булыжник обязан быть израсходован на кирку, осталось "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             cleanup(helper, spirit);
@@ -115,7 +115,8 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 1, "железный слиток");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.IRON_ORE) == IRON_ORE_COUNT - 1,
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.IRON_ORE) == IRON_ORE_COUNT - 1,
                     "план добывает ровно одну руду под слиток — лишняя не нужна, осталось "
                             + FullCycleScene.countBlocks(helper, Blocks.IRON_ORE));
             cleanup(helper, spirit);
@@ -140,7 +141,8 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.IRON_INGOT, 1, "железный слиток");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.DEEPSLATE_IRON_ORE) == IRON_ORE_COUNT,
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.DEEPSLATE_IRON_ORE) == IRON_ORE_COUNT,
                     "deepslate_iron_ore обязан остаться нетронутым: осталось "
                             + FullCycleScene.countBlocks(helper, Blocks.DEEPSLATE_IRON_ORE));
             cleanup(helper, spirit);
@@ -160,10 +162,12 @@ public final class AcquireGameTests {
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "деревянная кирка");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS,
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS,
                     "дерево обязано остаться нетронутым: осталось "
                             + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
-            helper.assertTrue(run.spiritTicks() <= 2,
+            helper.assertTrue(
+                    run.spiritTicks() <= 2,
                     "acquire с готовым предметом обязан завершиться за ≤ 2 тика, заняло " + run.spiritTicks());
             cleanup(helper, spirit);
         });
@@ -220,18 +224,21 @@ public final class AcquireGameTests {
             spirit.saveWithoutId(tag);
             SpiritEntity reloaded = CraftTestSupport.reload(helper, spirit);
             helper.runAfterDelay(2, () -> {
-                helper.assertTrue(reloaded.taskStatus().orElse(null) == RunStatus.RUNNING,
+                helper.assertTrue(
+                        reloaded.taskStatus().orElse(null) == RunStatus.RUNNING,
                         "восстановленный acquire обязан продолжить: статус "
                                 + reloaded.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             });
             helper.succeedWhen(() -> {
                 RunStatus status = reloaded.taskStatus().orElse(null);
-                helper.assertTrue(status == RunStatus.SUCCEEDED,
+                helper.assertTrue(
+                        status == RunStatus.SUCCEEDED,
                         "задача обязана дойти до SUCCEEDED после перезапуска, статус: "
                                 + (status == null ? "нет задачи" : status)
                                 + ", причина: " + reloaded.taskFailureReason().orElse("нет"));
                 assertCount(helper, reloaded, Items.WOODEN_PICKAXE, 1, "деревянная кирка после перезапуска");
-                helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
+                helper.assertTrue(
+                        FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == TREE_LOGS - 2,
                         "подплан, переживший перезапуск, строит ту же экономию (2 брёвна из 3 под второй "
                                 + "верстак не идут), осталось "
                                 + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
@@ -253,34 +260,36 @@ public final class AcquireGameTests {
         SpiritEntity spirit = rest.spawn(helper, CraftTestSupport.SPIRIT_START);
         ResultGameTests.ResultPoller poller = ResultGameTests.ResultPoller.start(helper, rest);
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest
-                .post("/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        ResultGameTests.taskBody("acquire",
-                                Map.of("item", "wooden_pickaxe", "count", 1)))
+        CompletableFuture<List<String>> scenario = rest.post(
+                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
+                        ResultGameTests.taskBody("acquire", Map.of("item", "wooden_pickaxe", "count", 1)))
                 .thenApply(accepted -> {
-                    problems.expect(accepted.status() == 202,
-                            "POST tasks обязан отвечать 202: " + accepted.body());
+                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
                     poller.follow(accepted.json().path("task_id").asText());
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue("succeeded".equals(poller.latest()),
-                    "acquire деревянной кирки обязана завершить задачу успехом; последнее состояние "
-                            + poller.latest() + ", тело " + poller.lastJson());
+            helper.assertTrue(
+                    "succeeded".equals(poller.latest()),
+                    "acquire деревянной кирки обязана завершить задачу успехом; последнее состояние " + poller.latest()
+                            + ", тело " + poller.lastJson());
             JsonNode result = poller.lastJson().path("result");
-            helper.assertTrue(result.isObject(),
-                    "итог acquire в GET задачи обязан быть объектом с числами, получено " + result);
-            helper.assertTrue("wooden_pickaxe".equals(result.path("item").asText()),
+            helper.assertTrue(
+                    result.isObject(), "итог acquire в GET задачи обязан быть объектом с числами, получено " + result);
+            helper.assertTrue(
+                    "wooden_pickaxe".equals(result.path("item").asText()),
                     "итог обязан называть предмет wooden_pickaxe, получено " + result);
-            helper.assertTrue(result.path("count").asInt() == 1,
-                    "итог обязан называть цель 1, получено " + result);
-            helper.assertTrue(result.path("from_inventory").asInt() == 0
-                    && result.path("from_chests").asInt() == 0,
+            helper.assertTrue(result.path("count").asInt() == 1, "итог обязан называть цель 1, получено " + result);
+            helper.assertTrue(
+                    result.path("from_inventory").asInt() == 0
+                            && result.path("from_chests").asInt() == 0,
                     "в инвентаре и сундуках пусто — итог обязан назвать нули, получено " + result);
-            helper.assertTrue(result.path("gathered").asInt() == 1,
+            helper.assertTrue(
+                    result.path("gathered").asInt() == 1,
                     "один предмет добыт из мира — итог обязан назвать gathered=1, получено " + result);
             int attempts = result.path("attempts").asInt();
-            helper.assertTrue(attempts >= 1 && attempts <= CatalogLimits.ACQUIRE_MAX_ATTEMPTS,
+            helper.assertTrue(
+                    attempts >= 1 && attempts <= CatalogLimits.ACQUIRE_MAX_ATTEMPTS,
                     "число попыток обязано укладываться в предел [1, " + CatalogLimits.ACQUIRE_MAX_ATTEMPTS
                             + "], получено " + result);
         });

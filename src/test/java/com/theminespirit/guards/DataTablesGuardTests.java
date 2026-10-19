@@ -7,7 +7,6 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.TableDefinition;
-import com.theminespirit.core.reload.TableRegistry;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,13 +37,15 @@ class DataTablesGuardTests {
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {
-        assertTrue(Files.isDirectory(DATA_ROOT),
+        assertTrue(
+                Files.isDirectory(DATA_ROOT),
                 "Сторож не нашёл " + DATA_ROOT + ": тесты запускаются из корня проекта (./gradlew test)");
 
         List<String> jsonFiles = Files.walk(DATA_ROOT)
                 .filter(Files::isRegularFile)
                 .filter(p -> p.toString().endsWith(".json") || p.toString().endsWith(".txt"))
-                .map(p -> "data/theminespirit/" + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
+                .map(p -> "data/theminespirit/"
+                        + DATA_ROOT.relativize(p).toString().replace('\\', '/'))
                 .sorted()
                 .collect(Collectors.toList());
 
@@ -53,13 +54,14 @@ class DataTablesGuardTests {
         List<String> unregistered = new ArrayList<>();
 
         for (String path : jsonFiles) {
-            if (!registeredPaths.contains(path) && !EXCLUDED.containsKey(path)
-                    && !presetBodies.contains(path)) {
+            if (!registeredPaths.contains(path) && !EXCLUDED.containsKey(path) && !presetBodies.contains(path)) {
                 unregistered.add(path);
             }
         }
 
-        assertEquals(List.of(), unregistered,
+        assertEquals(
+                List.of(),
+                unregistered,
                 "Файл данных (json или текстовая постройка) не зарегистрирован в DataTables и не в исключениях: "
                         + "таблица без регистрации не перечитается на лету по /reload, изменение в датапаке мира игнорируется. "
                         + "Как исправить: зарегистрируйте таблицу в DataTables (TableRegistry.registerLazy) или добавьте в EXCLUDED "
@@ -79,7 +81,9 @@ class DataTablesGuardTests {
             }
         }
 
-        assertEquals(List.of(), missing,
+        assertEquals(
+                List.of(),
+                missing,
                 "Зарегистрированная в DataTables таблица не существует как файл: "
                         + "загрузчик DataReload упадёт или вернёт ошибку при /reload, таблица не обновится. "
                         + "Как исправить: создайте файл по указанному пути или удалите регистрацию из DataTables. "

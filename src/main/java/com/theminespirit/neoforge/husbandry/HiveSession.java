@@ -137,8 +137,8 @@ public final class HiveSession {
         BlockPos found = nearestFullHive();
         if (found == null) {
             if (done == 0) {
-                fail("полных ульев нет в радиусе " + searchRadius + ": уровень мёда ниже "
-                        + HiveRules.FULL_HONEY_LEVEL + ", улей не тронут");
+                fail("полных ульев нет в радиусе " + searchRadius + ": уровень мёда ниже " + HiveRules.FULL_HONEY_LEVEL
+                        + ", улей не тронут");
             } else {
                 succeed();
             }
@@ -158,13 +158,13 @@ public final class HiveSession {
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.SMOKE;
-            case STUCK, TIMEOUT -> fail("к улью " + hive.toShortString()
-                    + " не подойти со стоянки " + stand.toShortString()
-                    + (approach.refusal() == null ? "" : " (" + approach.refusal() + ")")
-                    + ": соты не собраны, пчёлы не тронуты");
+            case STUCK, TIMEOUT ->
+                fail("к улью " + hive.toShortString()
+                        + " не подойти со стоянки " + stand.toShortString()
+                        + (approach.refusal() == null ? "" : " (" + approach.refusal() + ")")
+                        + ": соты не собраны, пчёлы не тронуты");
         }
     }
 
@@ -178,14 +178,14 @@ public final class HiveSession {
             return;
         }
         if (!CampfireKit.ensure(spirit)) {
-            fail("костра под ульем нет и материалов для него не хватает: пчёлы разозлятся, "
-                    + "улей " + hive.toShortString() + " не тронут");
+            fail("костра под ульем нет и материалов для него не хватает: пчёлы разозлятся, " + "улей "
+                    + hive.toShortString() + " не тронут");
             return;
         }
         fireSpot = campfireSpot();
         if (fireSpot == null) {
-            fail("под ульем " + hive.toShortString() + " нет места для костра в "
-                    + HiveRules.smokeDepth() + " блоках: собирать без дыма нельзя, пчёлы разозлятся");
+            fail("под ульем " + hive.toShortString() + " нет места для костра в " + HiveRules.smokeDepth()
+                    + " блоках: собирать без дыма нельзя, пчёлы разозлятся");
             return;
         }
         if (distanceTo(fireSpot) > BlockBreaker.REACH) {
@@ -198,11 +198,9 @@ public final class HiveSession {
 
     private void fireApproachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.FIRE;
-            case STUCK, TIMEOUT -> fail("к месту костра " + fireSpot.toShortString()
-                    + " не подойти: улей не тронут");
+            case STUCK, TIMEOUT -> fail("к месту костра " + fireSpot.toShortString() + " не подойти: улей не тронут");
         }
     }
 
@@ -239,7 +237,8 @@ public final class HiveSession {
             resetTarget();
             return;
         }
-        HiveRules.Tool tool = HiveRules.chooseTool(spirit.getInventory().countItem(Items.SHEARS) > 0,
+        HiveRules.Tool tool = HiveRules.chooseTool(
+                spirit.getInventory().countItem(Items.SHEARS) > 0,
                 spirit.getInventory().countItem(Items.GLASS_BOTTLE));
         if (tool == HiveRules.Tool.NONE) {
             fail("нечем собирать улей " + hive.toShortString()
@@ -308,7 +307,8 @@ public final class HiveSession {
             }
             BlockPos pos = hive.below(offset);
             BlockState state = level.getBlockState(pos);
-            if (state.is(Blocks.CAMPFIRE) && state.hasProperty(CampfireBlock.LIT)
+            if (state.is(Blocks.CAMPFIRE)
+                    && state.hasProperty(CampfireBlock.LIT)
                     && !state.getValue(CampfireBlock.LIT)) {
                 level.setBlock(pos, state.setValue(CampfireBlock.LIT, true), 3);
             }
@@ -337,7 +337,8 @@ public final class HiveSession {
         BlockPos origin = spirit.blockPosition();
         BlockPos found = null;
         double best = Double.MAX_VALUE;
-        for (BlockPos pos : BlockPos.betweenClosed(origin.offset(-searchRadius, -searchRadius, -searchRadius),
+        for (BlockPos pos : BlockPos.betweenClosed(
+                origin.offset(-searchRadius, -searchRadius, -searchRadius),
                 origin.offset(searchRadius, searchRadius, searchRadius))) {
             if (!fullHive(level.getBlockState(pos))) {
                 continue;
@@ -352,7 +353,8 @@ public final class HiveSession {
     }
 
     private static boolean fullHive(BlockState state) {
-        return state.getBlock() instanceof BeehiveBlock && state.hasProperty(BeehiveBlock.HONEY_LEVEL)
+        return state.getBlock() instanceof BeehiveBlock
+                && state.hasProperty(BeehiveBlock.HONEY_LEVEL)
                 && HiveRules.fullHive(state.getValue(BeehiveBlock.HONEY_LEVEL));
     }
 

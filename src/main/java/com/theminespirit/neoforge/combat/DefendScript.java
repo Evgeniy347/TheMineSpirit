@@ -8,8 +8,8 @@ import com.theminespirit.core.script.DefendParams;
 import com.theminespirit.core.social.WaitCounter;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
@@ -64,8 +64,8 @@ public final class DefendScript implements ScriptInstance {
             return succeed();
         }
         if (ticks >= CatalogLimits.DEFEND_TIMEOUT_TICKS) {
-            return fail("подопечный '" + targetText + "' под угрозой " + ticks
-                    + " тиков (тайм-аут " + CatalogLimits.DEFEND_TIMEOUT_TICKS + ")");
+            return fail("подопечный '" + targetText + "' под угрозой " + ticks + " тиков (тайм-аут "
+                    + CatalogLimits.DEFEND_TIMEOUT_TICKS + ")");
         }
         return ScriptStatus.RUNNING;
     }
@@ -86,11 +86,8 @@ public final class DefendScript implements ScriptInstance {
     }
 
     private ScriptStatus succeed() {
-        result = new ScriptResult.Data(Map.of(
-                "mode", directive.mode().name(),
-                "target", targetText,
-                "ticks", ticks,
-                "outcome", "ward_safe"));
+        result = new ScriptResult.Data(
+                Map.of("mode", directive.mode().name(), "target", targetText, "ticks", ticks, "outcome", "ward_safe"));
         release();
         return ScriptStatus.SUCCEEDED;
     }

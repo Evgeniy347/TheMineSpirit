@@ -35,7 +35,9 @@ class GameTestHolderGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), templateNames(), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Класс с @GameTest без @GameTestHolder(ModIdentity.MOD_ID) не регистрируется в пространстве "
                         + "мода, без @PrefixGameTestTemplate(false) шаблон ищется с префиксом класса и сцена "
                         + "не находится; шаблон, которого нет в data/theminespirit/structure/*.nbt, роняет "
@@ -52,8 +54,8 @@ class GameTestHolderGuardTests {
                 }
                 """;
 
-        assertTrue(offendersOf(sample, Set.of("arena")).stream()
-                        .anyMatch(line -> line.contains("GameTestHolder")),
+        assertTrue(
+                offendersOf(sample, Set.of("arena")).stream().anyMatch(line -> line.contains("GameTestHolder")),
                 "Сторож ослеп: класс с @GameTest без @GameTestHolder должен попадать в нарушители");
     }
 
@@ -68,10 +70,9 @@ class GameTestHolderGuardTests {
                 }
                 """;
 
-        assertTrue(offendersOf(sample, Set.of("arena")).stream()
-                        .anyMatch(line -> line.contains("PrefixGameTestTemplate")),
-                "Сторож ослеп: класс с @GameTest без @PrefixGameTestTemplate(false) должен попадать "
-                        + "в нарушители");
+        assertTrue(
+                offendersOf(sample, Set.of("arena")).stream().anyMatch(line -> line.contains("PrefixGameTestTemplate")),
+                "Сторож ослеп: класс с @GameTest без @PrefixGameTestTemplate(false) должен попадать " + "в нарушители");
     }
 
     @Test
@@ -86,8 +87,8 @@ class GameTestHolderGuardTests {
                 }
                 """;
 
-        assertTrue(offendersOf(sample, Set.of("arena")).stream()
-                        .anyMatch(line -> line.contains("missing")),
+        assertTrue(
+                offendersOf(sample, Set.of("arena")).stream().anyMatch(line -> line.contains("missing")),
                 "Сторож ослеп: шаблон без файла .nbt должен попадать в нарушители");
     }
 
@@ -105,12 +106,13 @@ class GameTestHolderGuardTests {
                 }
                 """;
 
-        assertEquals(List.of(), offendersOf(sample, Set.of("arena")),
+        assertEquals(
+                List.of(),
+                offendersOf(sample, Set.of("arena")),
                 "Сторож ложно срабатывает: шаблон из static final String с существующим .nbt — законное решение");
     }
 
-    private static void collectOffenders(Map<Path, String> sources, Set<String> templates,
-            List<String> offenders) {
+    private static void collectOffenders(Map<Path, String> sources, Set<String> templates, List<String> offenders) {
         Map<String, Set<String>> constants = constantsOf(sources);
         sources.forEach((file, text) -> {
             for (Finding finding : findings(text, constants, templates)) {
@@ -127,8 +129,7 @@ class GameTestHolderGuardTests {
         return problems;
     }
 
-    private static List<Finding> findings(String text, Map<String, Set<String>> constants,
-            Set<String> templates) {
+    private static List<Finding> findings(String text, Map<String, Set<String>> constants, Set<String> templates) {
         List<Finding> findings = new ArrayList<>();
         for (ClassRange range : classes(text)) {
             if (!GAMETEST_METHOD.matcher(range.body()).find()) {
@@ -136,23 +137,28 @@ class GameTestHolderGuardTests {
             }
             String header = headerBefore(text, range.start());
             if (!HOLDER.matcher(header).find()) {
-                findings.add(new Finding(range.line(), range.name()
-                        + ": класс с @GameTest не помечен @GameTestHolder(ModIdentity.MOD_ID)"));
+                findings.add(new Finding(
+                        range.line(),
+                        range.name() + ": класс с @GameTest не помечен @GameTestHolder(ModIdentity.MOD_ID)"));
             }
             if (!PREFIX.matcher(header).find()) {
-                findings.add(new Finding(range.line(), range.name()
-                        + ": класс с @GameTest не помечен @PrefixGameTestTemplate(false)"));
+                findings.add(new Finding(
+                        range.line(), range.name() + ": класс с @GameTest не помечен @PrefixGameTestTemplate(false)"));
             }
             Matcher methods = GAMETEST_ANNOTATION.matcher(range.body());
             while (methods.find()) {
                 int line = SourceFiles.lineOf(text, range.bodyStart() + methods.start());
                 String template = templateOf(methods.group(1), constants);
                 if (template == null) {
-                    findings.add(new Finding(line, "шаблон @GameTest не задан строкой или "
-                            + "static final String: сцена не знает, какой .nbt загружать"));
+                    findings.add(new Finding(
+                            line,
+                            "шаблон @GameTest не задан строкой или "
+                                    + "static final String: сцена не знает, какой .nbt загружать"));
                 } else if (!templates.contains(template)) {
-                    findings.add(new Finding(line, "шаблон «" + template + "» не существует: нет "
-                            + TEMPLATES + "/" + template + ".nbt; есть " + templates));
+                    findings.add(new Finding(
+                            line,
+                            "шаблон «" + template + "» не существует: нет " + TEMPLATES + "/" + template + ".nbt; есть "
+                                    + templates));
                 }
             }
         }
@@ -168,8 +174,13 @@ class GameTestHolderGuardTests {
             if (open < 0 || close < 0) {
                 continue;
             }
-            classes.add(new ClassRange(matcher.group(1), matcher.start(), open + 1, close,
-                    text.substring(open + 1, close), SourceFiles.lineOf(text, matcher.start())));
+            classes.add(new ClassRange(
+                    matcher.group(1),
+                    matcher.start(),
+                    open + 1,
+                    close,
+                    text.substring(open + 1, close),
+                    SourceFiles.lineOf(text, matcher.start())));
         }
         return classes;
     }
@@ -216,7 +227,8 @@ class GameTestHolderGuardTests {
         sources.values().forEach(text -> {
             Matcher matcher = STRING_CONSTANT.matcher(text);
             while (matcher.find()) {
-                constants.computeIfAbsent(matcher.group(1), ignored -> new LinkedHashSet<>())
+                constants
+                        .computeIfAbsent(matcher.group(1), ignored -> new LinkedHashSet<>())
                         .add(matcher.group(2));
             }
         });
@@ -234,15 +246,13 @@ class GameTestHolderGuardTests {
             throw new IllegalStateException("Сторож не смог прочитать шаблоны GameTest в " + TEMPLATES, e);
         }
         if (names.isEmpty()) {
-            throw new IllegalStateException("Сторож не нашёл ни одного шаблона .nbt в " + TEMPLATES
-                    + ": без них GameTest не запустится");
+            throw new IllegalStateException(
+                    "Сторож не нашёл ни одного шаблона .nbt в " + TEMPLATES + ": без них GameTest не запустится");
         }
         return names;
     }
 
-    private record ClassRange(String name, int start, int bodyStart, int bodyEnd, String body, int line) {
-    }
+    private record ClassRange(String name, int start, int bodyStart, int bodyEnd, String body, int line) {}
 
-    private record Finding(int line, String problem) {
-    }
+    private record Finding(int line, String problem) {}
 }

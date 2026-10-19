@@ -18,7 +18,9 @@ class PerceptionParamsTests {
 
         assertEquals(PerceptionType.BLOCKS, query.type(), "scan_blocks обязан строить запрос блоков");
         assertEquals(12, query.radius().value(), "радиус запроса обязан совпасть с параметром плана");
-        assertEquals(IdFilter.of(List.of("*_ore")).patterns(), query.filter().patterns(),
+        assertEquals(
+                IdFilter.of(List.of("*_ore")).patterns(),
+                query.filter().patterns(),
                 "фильтр запроса обязан совпасть с параметром плана: иначе ИИ получит блоки, которых не просил");
     }
 
@@ -27,13 +29,16 @@ class PerceptionParamsTests {
         PerceptionQuery query = PerceptionParams.entities(Map.of("radius", 5));
 
         assertEquals(PerceptionType.ENTITIES, query.type(), "scan_entities обязан строить запрос сущностей");
-        assertEquals(true, query.filter().matchesAll(),
+        assertEquals(
+                true,
+                query.filter().matchesAll(),
                 "без параметра filter запрос сущностей обязан брать всех: пустой фильтр значит «всё»");
     }
 
     @Test
     void blocks_RadiusAboveScanLimit_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> PerceptionParams.blocks(Map.of("radius", ScanRadius.MAX + 1)),
                 "радиус сверх предела скана обязан отклоняться: больший скан кладёт серверный тик");
     }
@@ -48,11 +53,14 @@ class PerceptionParamsTests {
 
     @Test
     void hazards_NoRadius_IsRejectedWithParamName() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> PerceptionParams.hazards(Map.of()),
                 "radius приходит из каталога с умолчанием; без него разбор обязан падать, а не выдумывать значение");
 
-        assertEquals(true, error.getMessage().contains("radius"),
+        assertEquals(
+                true,
+                error.getMessage().contains("radius"),
                 "сообщение обязано назвать параметр radius, сейчас: " + error.getMessage());
     }
 }

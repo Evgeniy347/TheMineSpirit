@@ -37,8 +37,7 @@ public final class SimplificationGameTests {
     private static final BlockPos SPIRIT_AT = new BlockPos(4, 1, 4);
     private static final String MAGNET_BATCH = "simplify_magnet";
 
-    private SimplificationGameTests() {
-    }
+    private SimplificationGameTests() {}
 
     @BeforeBatch(batch = MAGNET_BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
@@ -61,12 +60,15 @@ public final class SimplificationGameTests {
         thrown.setThrower(player);
 
         helper.runAfterDelay(40, () -> {
-            helper.assertTrue(near.isRemoved() && count(spirit.getInventory(), Items.IRON_INGOT) == 3,
+            helper.assertTrue(
+                    near.isRemoved() && count(spirit.getInventory(), Items.IRON_INGOT) == 3,
                     "Дроп в 3 блоках обязан сам лечь в инвентарь (магнит, радиус 5): слитков у духа "
                             + count(spirit.getInventory(), Items.IRON_INGOT) + ", дроп на земле " + !near.isRemoved());
-            helper.assertTrue(!far.isRemoved() && count(spirit.getInventory(), Items.GOLD_INGOT) == 0,
+            helper.assertTrue(
+                    !far.isRemoved() && count(spirit.getInventory(), Items.GOLD_INGOT) == 0,
                     "Дроп дальше радиуса магнита обязан остаться на земле");
-            helper.assertTrue(!thrown.isRemoved() && count(spirit.getInventory(), Items.EMERALD) == 0,
+            helper.assertTrue(
+                    !thrown.isRemoved() && count(spirit.getInventory(), Items.EMERALD) == 0,
                     "Предмет, только что брошенный игроком, магнит не трогает: игрок мог бросить его другому");
             GameTestFixtures.finish(helper);
             helper.succeed();
@@ -88,19 +90,21 @@ public final class SimplificationGameTests {
         params.put("container", chestAbsolute.getX() + "," + chestAbsolute.getY() + "," + chestAbsolute.getZ());
         params.put("item", "minecraft:cobblestone");
         params.put("count", 5);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("withdraw", params),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.call("withdraw", params), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Сундук в 3 блоках — в досягаемости: withdraw обязан пройти, статус " + spirit.taskStatus()
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(count(spirit.getInventory(), Items.COBBLESTONE) == 5,
-                    "Из сундука взято ровно 5 булыжников");
-            helper.assertTrue(spirit.pathBuilds() == 0,
-                    "Сундук в досягаемости открывается с места (упрощение 44.2): путь строился "
-                            + spirit.pathBuilds() + " раз");
+            helper.assertTrue(
+                    count(spirit.getInventory(), Items.COBBLESTONE) == 5, "Из сундука взято ровно 5 булыжников");
+            helper.assertTrue(
+                    spirit.pathBuilds() == 0,
+                    "Сундук в досягаемости открывается с места (упрощение 44.2): путь строился " + spirit.pathBuilds()
+                            + " раз");
             GameTestFixtures.finish(helper);
         });
     }
@@ -123,22 +127,27 @@ public final class SimplificationGameTests {
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT_AT);
         spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
         Map<String, Object> params = Map.of("ore", "coal", "count", 2, "radius", 6);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("mine_vein", params),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.call("mine_vein", params), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Жила за каменной стенкой в досягаемости обязана добыться с места (упрощение 44.3): статус "
-                            + spirit.taskStatus() + ", причина " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(count(spirit.getInventory(), Items.COAL) >= 2,
+                            + spirit.taskStatus() + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    count(spirit.getInventory(), Items.COAL) >= 2,
                     "Уголь обязан лечь прямо в инвентарь (дроп целевого блока в инвентарь, решение владельца 18.10): "
                             + "у духа " + count(spirit.getInventory(), Items.COAL));
             helper.assertTrue(dropsAround(helper).isEmpty(), "На земле не осталось дропа: " + dropsAround(helper));
-            helper.assertTrue(helper.getBlockState(new BlockPos(5, 1, 4)).is(Blocks.STONE)
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(5, 1, 4)).is(Blocks.STONE)
                             && helper.getBlockState(new BlockPos(6, 3, 4)).is(Blocks.STONE),
                     "Ломается только руда этой жилы: камень стенки и над жилой остаётся на месте");
-            helper.assertTrue(spirit.pathBuilds() == 0,
+            helper.assertTrue(
+                    spirit.pathBuilds() == 0,
                     "Руда в досягаемости ломается с места, без подхода: путь строился " + spirit.pathBuilds() + " раз");
             GameTestFixtures.finish(helper);
         });
@@ -159,16 +168,18 @@ public final class SimplificationGameTests {
         }
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT_AT);
         BlockPos target = new BlockPos(8, 1, 4);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "goto", target),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.pointCall(helper, "goto", target), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Дух в кольце высотой 2 застревает, перенос на 1–3 блока к цели (упрощение 44.6) обязан вывести его, "
-                            + "статус " + spirit.taskStatus() + ", причина " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(spirit.teleports() >= 1, "Выход из кольца — только переносом: переносов "
-                    + spirit.teleports());
+                            + "статус " + spirit.taskStatus() + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    spirit.teleports() >= 1, "Выход из кольца — только переносом: переносов " + spirit.teleports());
             GameTestFixtures.finish(helper);
         });
     }
@@ -187,15 +198,20 @@ public final class SimplificationGameTests {
             }
         }
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT_AT);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "goto", new BlockPos(8, 1, 4)),
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                MovementScene.pointCall(helper, "goto", new BlockPos(8, 1, 4)),
                 MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "Из замурованной клетки выхода нет: перенос не сквозь стены (решение владельца 18.10), goto обязан "
                             + "провалиться, статус " + spirit.taskStatus());
-            helper.assertTrue(spirit.teleports() == 0 && spirit.blockPosition().equals(helper.absolutePos(SPIRIT_AT)),
+            helper.assertTrue(
+                    spirit.teleports() == 0 && spirit.blockPosition().equals(helper.absolutePos(SPIRIT_AT)),
                     "Дух остаётся в своей клетке: переносов " + spirit.teleports() + ", стоит "
                             + spirit.blockPosition().toShortString());
             GameTestFixtures.finish(helper);
@@ -214,21 +230,25 @@ public final class SimplificationGameTests {
         }
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT_AT);
         Map<String, Object> params = Map.of("crop", "wheat", "radius", 6, "replant", false);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("harvest_crop", params),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.call("harvest_crop", params), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Три зрелые клетки в досягаемости обязаны собраться, статус " + spirit.taskStatus() + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             for (BlockPos cell : cells) {
-                helper.assertTrue(!helper.getBlockState(cell.above()).is(Blocks.WHEAT),
+                helper.assertTrue(
+                        !helper.getBlockState(cell.above()).is(Blocks.WHEAT),
                         "Клетка " + cell + " обязана быть собрана");
             }
-            helper.assertTrue(count(spirit.getInventory(), Items.WHEAT) >= 3,
+            helper.assertTrue(
+                    count(spirit.getInventory(), Items.WHEAT) >= 3,
                     "Урожай лежит в инвентаре духа: пшеницы " + count(spirit.getInventory(), Items.WHEAT));
-            helper.assertTrue(spirit.pathBuilds() == 0,
+            helper.assertTrue(
+                    spirit.pathBuilds() == 0,
                     "Грядка в досягаемости собирается со стоянки без хождения по клеткам (упрощение 44.9): путь "
                             + "строился " + spirit.pathBuilds() + " раз");
             GameTestFixtures.finish(helper);

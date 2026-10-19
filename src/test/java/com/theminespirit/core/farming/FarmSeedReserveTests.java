@@ -24,7 +24,9 @@ class FarmSeedReserveTests {
 
         List<Slice> surplus = DepositSelection.surplus(inventory, FARM_KIT, VALUES, -1);
 
-        assertEquals(List.of(new Slice(0, 12), new Slice(1, 8)), surplus,
+        assertEquals(
+                List.of(new Slice(0, 12), new Slice(1, 8)),
+                surplus,
                 "Урожай сдаётся на склад целиком, а из 24 семян уходит только излишек (8): запас на посадку "
                         + "(16) и мотыга набора остаются у фермы. Иначе сеять следующую грядку нечем");
     }
@@ -33,7 +35,9 @@ class FarmSeedReserveTests {
     void surplus_SeedsBelowReserve_GivesNoSeeds() {
         List<Stack> inventory = List.of(new Stack("minecraft:wheat_seeds", 0, 9, 64));
 
-        assertEquals(List.of(), DepositSelection.surplus(inventory, FARM_KIT, VALUES, -1),
+        assertEquals(
+                List.of(),
+                DepositSelection.surplus(inventory, FARM_KIT, VALUES, -1),
                 "Семян меньше запаса на посадку (16) — на склад не уходит ни одно: иначе грядка останется "
                         + "незасеянной ради чужого сундука");
     }

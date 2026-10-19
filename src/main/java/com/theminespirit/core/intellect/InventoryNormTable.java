@@ -11,7 +11,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, List<CurvePoint> extraCurve,
+public record InventoryNormTable(
+        String origin,
+        List<CurvePoint> occupiedCurve,
+        List<CurvePoint> extraCurve,
         Map<ActivityId, Integer> releaseFreeSlots) {
 
     public static final String RESOURCE = "data/theminespirit/inventory/inventory_norm.json";
@@ -37,8 +40,9 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
         Objects.requireNonNull(origin, "Источник таблицы не может быть null: сообщение называет файл");
         occupiedCurve = checkCurve(occupiedCurve, "occupied_curve");
         extraCurve = checkCurve(extraCurve, "extra_curve");
-        Objects.requireNonNull(releaseFreeSlots, "Пороги освобождения не могут быть null: "
-                + "по ним решают, когда дух бросает задачу");
+        Objects.requireNonNull(
+                releaseFreeSlots,
+                "Пороги освобождения не могут быть null: " + "по ним решают, когда дух бросает задачу");
         Map<ActivityId, Integer> checked = new EnumMap<>(ActivityId.class);
         for (ActivityId id : ActivityId.values()) {
             Integer threshold = releaseFreeSlots.get(id);
@@ -95,11 +99,12 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
         List<CurvePoint> parsed = new ArrayList<>(points.size());
         for (JsonNode point : points) {
             if (!point.isObject()) {
-                throw new IllegalStateException("Файл '" + origin + "': точка кривой " + what
-                        + " — не объект с полями at и value");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': точка кривой " + what + " — не объект с полями at и value");
             }
             JsonResource.checkFields(point, POINT_FIELDS, origin, "точки кривой " + what);
-            parsed.add(new CurvePoint(JsonResource.decimal(point.get("at"), origin, "поля at кривой " + what),
+            parsed.add(new CurvePoint(
+                    JsonResource.decimal(point.get("at"), origin, "поля at кривой " + what),
                     JsonResource.decimal(point.get("value"), origin, "поля value кривой " + what)));
         }
         return parsed;
@@ -132,8 +137,8 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
         }
         List<CurvePoint> checked = List.copyOf(curve);
         if (checked.get(0).at() != 0.0 || checked.get(0).value() != 0.0) {
-            throw new IllegalArgumentException("Кривая " + what
-                    + " обязана начинаться точкой (0, 0): пустой инвентарь не создаёт спроса");
+            throw new IllegalArgumentException(
+                    "Кривая " + what + " обязана начинаться точкой (0, 0): пустой инвентарь не создаёт спроса");
         }
         if (checked.get(checked.size() - 1).at() != 1.0) {
             throw new IllegalArgumentException("Кривая " + what + " обязана заканчиваться при at = 1: "
@@ -143,8 +148,8 @@ public record InventoryNormTable(String origin, List<CurvePoint> occupiedCurve, 
             CurvePoint previous = checked.get(index - 1);
             CurvePoint current = checked.get(index);
             if (current.at() <= previous.at()) {
-                throw new IllegalArgumentException("Кривая " + what + ": доли точек не растут ("
-                        + previous.at() + " -> " + current.at() + "): кривая обязана быть упорядочена");
+                throw new IllegalArgumentException("Кривая " + what + ": доли точек не растут (" + previous.at()
+                        + " -> " + current.at() + "): кривая обязана быть упорядочена");
             }
             if (current.value() < previous.value()) {
                 throw new IllegalArgumentException("Кривая " + what + ": спрос падает ("

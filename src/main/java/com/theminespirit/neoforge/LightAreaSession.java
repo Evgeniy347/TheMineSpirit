@@ -127,8 +127,12 @@ public final class LightAreaSession {
     }
 
     private void plan() {
-        torches = LightPlan.plan(params.x(), params.z(), params.radius(),
-                scanCells(params.x(), params.y(), params.z(), params.radius())).torches();
+        torches = LightPlan.plan(
+                        params.x(),
+                        params.z(),
+                        params.radius(),
+                        scanCells(params.x(), params.y(), params.z(), params.radius()))
+                .torches();
         state = State.PICK;
     }
 
@@ -160,15 +164,18 @@ public final class LightAreaSession {
             skipCurrent();
             return;
         }
-        approach.begin(new Vec3(stands.get(0).x() + 0.5, stands.get(0).y(), stands.get(0).z() + 0.5),
+        approach.begin(
+                new Vec3(
+                        stands.get(0).x() + 0.5,
+                        stands.get(0).y(),
+                        stands.get(0).z() + 0.5),
                 BuildTuning.STAND_ARRIVAL);
         state = State.APPROACH;
     }
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.PLACE;
             case STUCK, TIMEOUT -> skipCurrent();
         }
@@ -227,8 +234,10 @@ public final class LightAreaSession {
                 if (pos == null) {
                     continue;
                 }
-                cells.add(new LightCell(new BlockCoord(x, pos.getY(), z),
-                        level.getBrightness(LightLayer.BLOCK, pos), isPlaceable(pos)));
+                cells.add(new LightCell(
+                        new BlockCoord(x, pos.getY(), z),
+                        level.getBrightness(LightLayer.BLOCK, pos),
+                        isPlaceable(pos)));
             }
         }
         return cells;

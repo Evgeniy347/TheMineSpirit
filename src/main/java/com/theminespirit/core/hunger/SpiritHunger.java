@@ -7,12 +7,12 @@ public record SpiritHunger(int foodLevel, double saturation, double exhaustion, 
 
     public SpiritHunger {
         if (foodLevel < 0 || foodLevel > MAX_FOOD) {
-            throw new IllegalArgumentException("Сытость " + foodLevel + " вне [0, " + MAX_FOOD
-                    + "]: шкала голода духа по образцу ванили");
+            throw new IllegalArgumentException(
+                    "Сытость " + foodLevel + " вне [0, " + MAX_FOOD + "]: шкала голода духа по образцу ванили");
         }
         if (!Double.isFinite(saturation) || saturation < 0) {
-            throw new IllegalArgumentException("Насыщение " + saturation
-                    + ": обязано быть конечным и не меньше 0, иначе запас еды отрицателен");
+            throw new IllegalArgumentException(
+                    "Насыщение " + saturation + ": обязано быть конечным и не меньше 0, иначе запас еды отрицателен");
         }
         if (saturation > foodLevel) {
             throw new IllegalArgumentException("Насыщение " + saturation + " больше сытости " + foodLevel
@@ -23,8 +23,8 @@ public record SpiritHunger(int foodLevel, double saturation, double exhaustion, 
                     + "): накопленное сверх порога немедленно тратит сытость");
         }
         if (regenTimer < 0) {
-            throw new IllegalArgumentException("Таймер восстановления " + regenTimer
-                    + ": отсчёт не может быть отрицательным");
+            throw new IllegalArgumentException(
+                    "Таймер восстановления " + regenTimer + ": отсчёт не может быть отрицательным");
         }
     }
 
@@ -46,8 +46,8 @@ public record SpiritHunger(int foodLevel, double saturation, double exhaustion, 
 
     public SpiritHunger addExhaustion(double amount) {
         if (!Double.isFinite(amount) || amount < 0) {
-            throw new IllegalArgumentException("Расход " + amount
-                    + ": истощение начисляется конечной неотрицательной величиной");
+            throw new IllegalArgumentException(
+                    "Расход " + amount + ": истощение начисляется конечной неотрицательной величиной");
         }
         double left = exhaustion + amount;
         int food = foodLevel;
@@ -65,12 +65,11 @@ public record SpiritHunger(int foodLevel, double saturation, double exhaustion, 
 
     public SpiritHunger eat(int nutrition, double saturationModifier) {
         if (nutrition < 0) {
-            throw new IllegalArgumentException("Питательность " + nutrition
-                    + ": съеденное не может отнимать сытость");
+            throw new IllegalArgumentException("Питательность " + nutrition + ": съеденное не может отнимать сытость");
         }
         if (!Double.isFinite(saturationModifier) || saturationModifier < 0) {
-            throw new IllegalArgumentException("Модификатор насыщения " + saturationModifier
-                    + ": обязан быть конечным и не меньше 0");
+            throw new IllegalArgumentException(
+                    "Модификатор насыщения " + saturationModifier + ": обязан быть конечным и не меньше 0");
         }
         int food = Math.min(MAX_FOOD, foodLevel + nutrition);
         double sat = Math.min(food, saturation + nutrition * saturationModifier * 2.0);

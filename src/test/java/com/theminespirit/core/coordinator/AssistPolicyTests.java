@@ -17,13 +17,31 @@ class AssistPolicyTests {
     private static final UUID FAR = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
     private static SpiritSnapshot defender(UUID id, double x, int threats, boolean attacked) {
-        return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.DEFENDER, CombatMode.GUARD_AREA, threats,
-                attacked, Optional.empty(), 10, 1.0);
+        return new SpiritSnapshot(
+                id,
+                new Point(x, 64, 0),
+                1,
+                SpiritRole.DEFENDER,
+                CombatMode.GUARD_AREA,
+                threats,
+                attacked,
+                Optional.empty(),
+                10,
+                1.0);
     }
 
     private static SpiritSnapshot worker(UUID id, double x) {
-        return new SpiritSnapshot(id, new Point(x, 64, 0), 1, SpiritRole.WORKER, CombatMode.DEFENSIVE, 0, false,
-                Optional.empty(), 10, 1.0);
+        return new SpiritSnapshot(
+                id,
+                new Point(x, 64, 0),
+                1,
+                SpiritRole.WORKER,
+                CombatMode.DEFENSIVE,
+                0,
+                false,
+                Optional.empty(),
+                10,
+                1.0);
     }
 
     private static DefenseAssignment post(UUID defender, double x) {
@@ -36,10 +54,12 @@ class AssistPolicyTests {
         SpiritSnapshot near = defender(NEAR, 2, 0, false);
         SpiritSnapshot far = defender(FAR, 5, 0, false);
 
-        List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, near, far),
-                List.of(post(NEAR, 2), post(FAR, 5)), 2);
+        List<UUID> helpers =
+                new AssistPolicy().assist(WARD, List.of(ward, near, far), List.of(post(NEAR, 2), post(FAR, 5)), 2);
 
-        assertEquals(List.of(NEAR, FAR), helpers,
+        assertEquals(
+                List.of(NEAR, FAR),
+                helpers,
                 "Выбран ближайший свободный защитник и идёт первым: иначе помощь идёт через весь круг мимо ближнего");
     }
 
@@ -49,8 +69,8 @@ class AssistPolicyTests {
         SpiritSnapshot near = defender(NEAR, 2, 0, false);
         SpiritSnapshot far = defender(FAR, 5, 0, false);
 
-        List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, near, far),
-                List.of(post(NEAR, 2), post(FAR, 5)), 1);
+        List<UUID> helpers =
+                new AssistPolicy().assist(WARD, List.of(ward, near, far), List.of(post(NEAR, 2), post(FAR, 5)), 1);
 
         assertEquals(1, helpers.size(), "Не больше maxHelpers помощников: иначе сектора пустеют");
         assertEquals(List.of(NEAR), helpers, "Среди двух свободных взят ближайший");
@@ -60,7 +80,8 @@ class AssistPolicyTests {
     void assist_NoDefenders_ReturnsEmpty() {
         SpiritSnapshot ward = worker(WARD, 0);
 
-        assertTrue(new AssistPolicy().assist(WARD, List.of(ward), List.of(), 2).isEmpty(),
+        assertTrue(
+                new AssistPolicy().assist(WARD, List.of(ward), List.of(), 2).isEmpty(),
                 "Защитников нет — помощь не выбирается");
     }
 
@@ -69,8 +90,8 @@ class AssistPolicyTests {
         SpiritSnapshot attacked = defender(WARD, 0, 1, true);
         SpiritSnapshot helper = defender(NEAR, 3, 0, false);
 
-        List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(attacked, helper),
-                List.of(post(WARD, 0), post(NEAR, 3)), 2);
+        List<UUID> helpers =
+                new AssistPolicy().assist(WARD, List.of(attacked, helper), List.of(post(WARD, 0), post(NEAR, 3)), 2);
 
         assertEquals(List.of(NEAR), helpers, "Атакованный не помогает себе: он держит свой сектор или отбивается");
         assertTrue(!helpers.contains(WARD), "Атакованный исключён из помощников");
@@ -82,11 +103,10 @@ class AssistPolicyTests {
         SpiritSnapshot busy = defender(NEAR, 2, 1, true);
         SpiritSnapshot free = defender(FAR, 5, 0, false);
 
-        List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, busy, free),
-                List.of(post(NEAR, 2), post(FAR, 5)), 2);
+        List<UUID> helpers =
+                new AssistPolicy().assist(WARD, List.of(ward, busy, free), List.of(post(NEAR, 2), post(FAR, 5)), 2);
 
-        assertEquals(List.of(FAR), helpers,
-                "Занятый боем защитник не бросает сектор: помощь идёт от свободного");
+        assertEquals(List.of(FAR), helpers, "Занятый боем защитник не бросает сектор: помощь идёт от свободного");
     }
 
     @Test
@@ -94,10 +114,12 @@ class AssistPolicyTests {
         SpiritSnapshot ward = defender(WARD, 0, 1, true);
         SpiritSnapshot helper = defender(NEAR, 3, 2, false);
 
-        List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, helper),
-                List.of(post(WARD, 0), post(NEAR, 3)), 2);
+        List<UUID> helpers =
+                new AssistPolicy().assist(WARD, List.of(ward, helper), List.of(post(WARD, 0), post(NEAR, 3)), 2);
 
-        assertEquals(List.of(NEAR), helpers,
+        assertEquals(
+                List.of(NEAR),
+                helpers,
                 "Присутствие угрозы рядом — не бой: передовые посты (33) всегда в радиусе угроз, "
                         + "помощь идёт от неатакованного, иначе подмена друг друга умирает");
     }
@@ -108,10 +130,10 @@ class AssistPolicyTests {
         SpiritSnapshot near = defender(NEAR, 2, 0, false);
         SpiritSnapshot far = defender(FAR, 5, 0, false);
 
-        List<UUID> first = new AssistPolicy().assist(WARD, List.of(ward, near, far),
-                List.of(post(NEAR, 2), post(FAR, 5)), 2);
-        List<UUID> second = new AssistPolicy().assist(WARD, List.of(far, ward, near),
-                List.of(post(FAR, 5), post(NEAR, 2)), 2);
+        List<UUID> first =
+                new AssistPolicy().assist(WARD, List.of(ward, near, far), List.of(post(NEAR, 2), post(FAR, 5)), 2);
+        List<UUID> second =
+                new AssistPolicy().assist(WARD, List.of(far, ward, near), List.of(post(FAR, 5), post(NEAR, 2)), 2);
 
         assertEquals(first, second, "Порядок входа не меняет выход: помощь не зависит от порядка наблюдения");
     }
@@ -121,7 +143,10 @@ class AssistPolicyTests {
         SpiritSnapshot ward = worker(WARD, 0);
         SpiritSnapshot near = defender(NEAR, 2, 0, false);
 
-        assertTrue(new AssistPolicy().assist(WARD, List.of(ward, near), List.of(post(NEAR, 2)), 0).isEmpty(),
+        assertTrue(
+                new AssistPolicy()
+                        .assist(WARD, List.of(ward, near), List.of(post(NEAR, 2)), 0)
+                        .isEmpty(),
                 "Нулевой предел — помощь не выбирается: оборона не расходится");
     }
 
@@ -130,7 +155,10 @@ class AssistPolicyTests {
         SpiritSnapshot near = defender(NEAR, 2, 0, false);
         UUID unknown = UUID.fromString("44444444-4444-4444-4444-444444444444");
 
-        assertTrue(new AssistPolicy().assist(unknown, List.of(near), List.of(post(NEAR, 2)), 2).isEmpty(),
+        assertTrue(
+                new AssistPolicy()
+                        .assist(unknown, List.of(near), List.of(post(NEAR, 2)), 2)
+                        .isEmpty(),
                 "Атакованный вне снимка неизвестен: помощь не выбирается без его позиции");
     }
 
@@ -142,31 +170,38 @@ class AssistPolicyTests {
 
         List<UUID> helpers = new AssistPolicy().assist(WARD, List.of(ward, offDuty, onDuty), List.of(post(FAR, 6)), 2);
 
-        assertEquals(List.of(FAR), helpers,
-                "Защитник без поста не в обороне: помощь идёт от тех, кто держит сектор");
+        assertEquals(List.of(FAR), helpers, "Защитник без поста не в обороне: помощь идёт от тех, кто держит сектор");
     }
 
     @Test
     void assist_NullAttacked_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new AssistPolicy().assist(null, List.of(), List.of(), 2),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AssistPolicy().assist(null, List.of(), List.of(), 2),
                 "Помощь неизвестному духу не нужна: атакованный обязателен");
     }
 
     @Test
     void assist_NullSpirits_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new AssistPolicy().assist(WARD, null, List.of(), 2),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AssistPolicy().assist(WARD, null, List.of(), 2),
                 "null вместо снимков не говорит, есть ли духи: передавайте пустой список");
     }
 
     @Test
     void assist_NullPosts_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new AssistPolicy().assist(WARD, List.of(), null, 2),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AssistPolicy().assist(WARD, List.of(), null, 2),
                 "null вместо постов не говорит, есть ли оборона: передавайте пустой список");
     }
 
     @Test
     void assist_NegativeMaxHelpers_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new AssistPolicy().assist(WARD, List.of(), List.of(), -1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AssistPolicy().assist(WARD, List.of(), List.of(), -1),
                 "Отрицательный предел помощников не имеет смысла");
     }
 }

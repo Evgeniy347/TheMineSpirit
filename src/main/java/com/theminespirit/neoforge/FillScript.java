@@ -12,7 +12,9 @@ final class FillScript implements ScriptInstance {
     private final FillSession session;
 
     FillScript(SpiritEntity spirit, FillParams params) {
-        this.session = new FillSession(spirit, params.block(),
+        this.session = new FillSession(
+                spirit,
+                params.block(),
                 BuildBox.of(params.x1(), params.y1(), params.z1(), params.x2(), params.y2(), params.z2()));
     }
 

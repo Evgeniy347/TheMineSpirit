@@ -159,8 +159,7 @@ public final class HungerState {
         switch (effect) {
             case HEAL -> spirit.heal(1.0F);
             case STARVE -> spirit.hurt(spirit.damageSources().starve(), 1.0F);
-            case NONE -> {
-            }
+            case NONE -> {}
         }
     }
 }

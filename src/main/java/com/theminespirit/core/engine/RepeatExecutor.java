@@ -20,7 +20,8 @@ final class RepeatExecutor extends StepExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        return new TaskProgress.RepeatAt(index(), current() == null ? null : current().snapshot());
+        return new TaskProgress.RepeatAt(
+                index(), current() == null ? null : current().snapshot());
     }
 
     @Override

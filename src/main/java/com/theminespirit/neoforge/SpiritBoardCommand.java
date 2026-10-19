@@ -24,15 +24,13 @@ import net.minecraft.server.level.ServerLevel;
  * ресурсов. {@code /spirit board cancel <id>} — отмена задания (как REST-отмена доски).
  */
 public final class SpiritBoardCommand {
-    private SpiritBoardCommand() {
-    }
+    private SpiritBoardCommand() {}
 
     public static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("board")
                 .executes(SpiritBoardCommand::list)
                 .then(literal("cancel")
-                        .then(argument("id", MessageArgument.message())
-                                .executes(SpiritBoardCommand::cancel))));
+                        .then(argument("id", MessageArgument.message()).executes(SpiritBoardCommand::cancel))));
     }
 
     private static int list(CommandContext<CommandSourceStack> context) {
@@ -59,7 +57,8 @@ public final class SpiritBoardCommand {
         String id = MessageArgument.getMessage(context, "id").getString();
         BoardService service = BoardRegistry.get(level);
         if (service.board().find(id).isEmpty()) {
-            source.sendFailure(Component.literal("Задание доски '" + id + "' не найдено: список заданий — /spirit board"));
+            source.sendFailure(
+                    Component.literal("Задание доски '" + id + "' не найдено: список заданий — /spirit board"));
             return 0;
         }
         service.cancel(level, id);

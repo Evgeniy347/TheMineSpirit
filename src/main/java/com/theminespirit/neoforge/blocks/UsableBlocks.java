@@ -14,8 +14,7 @@ public final class UsableBlocks {
         NONE
     }
 
-    private UsableBlocks() {
-    }
+    private UsableBlocks() {}
 
     public static Kind kind(BlockState state) {
         if (state.getBlock() instanceof LeverBlock || state.getBlock() instanceof ButtonBlock) {

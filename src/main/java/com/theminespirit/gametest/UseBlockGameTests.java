@@ -32,8 +32,7 @@ public final class UseBlockGameTests {
     private static final float FULL_HP = 20.0F;
     private static final int PASSIVE_OBSERVED_TICKS = 100;
 
-    private UseBlockGameTests() {
-    }
+    private UseBlockGameTests() {}
 
     @GameTest(template = "arena", batch = "useblock_lever", timeoutTicks = 200)
     public static void useBlock_LeverOnSupportBesideLamp_LampLights(GameTestHelper helper) {
@@ -41,26 +40,32 @@ public final class UseBlockGameTests {
         GameTestFixtures.holdDayTime(helper, NOON);
         BlockPos lever = new BlockPos(5, 2, 5);
         helper.setBlock(new BlockPos(5, 1, 5), Blocks.STONE);
-        helper.setBlock(lever, Blocks.LEVER.defaultBlockState()
-                .setValue(LeverBlock.FACE, AttachFace.FLOOR)
-                .setValue(LeverBlock.FACING, Direction.NORTH)
-                .setValue(BlockStateProperties.POWERED, false));
-        helper.setBlock(new BlockPos(6, 2, 5), Blocks.REDSTONE_LAMP.defaultBlockState()
-                .setValue(RedstoneLampBlock.LIT, false));
+        helper.setBlock(
+                lever,
+                Blocks.LEVER
+                        .defaultBlockState()
+                        .setValue(LeverBlock.FACE, AttachFace.FLOOR)
+                        .setValue(LeverBlock.FACING, Direction.NORTH)
+                        .setValue(BlockStateProperties.POWERED, false));
+        helper.setBlock(
+                new BlockPos(6, 2, 5), Blocks.REDSTONE_LAMP.defaultBlockState().setValue(RedstoneLampBlock.LIT, false));
 
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(4, 1, 5));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                MovementScene.pointCall(helper, "use_block", lever), SETTLE_TICKS);
+        SpiritRun run =
+                SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "use_block", lever), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "use_block обязан нажать рычаг: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(helper.getBlockState(lever).getValue(BlockStateProperties.POWERED),
+            helper.assertTrue(
+                    helper.getBlockState(lever).getValue(BlockStateProperties.POWERED),
                     "рычаг обязан переключиться в положение «включён»");
-            helper.assertTrue(helper.getBlockState(new BlockPos(6, 2, 5)).getValue(RedstoneLampBlock.LIT),
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(6, 2, 5)).getValue(RedstoneLampBlock.LIT),
                     "лампа рядом с включённым рычагом обязана загореться: нажатие передаёт питание соседям");
             GameTestFixtures.finish(helper);
         });
@@ -100,19 +105,19 @@ public final class UseBlockGameTests {
                         phase[0] = 3;
                     }
                 }
-                default -> {
-                }
+                default -> {}
             }
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(phase[0] == 3,
+            helper.assertTrue(
+                    phase[0] == 3,
                     "сцена не дошла до закрытия двери: фаза " + phase[0] + ", статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(opened[0],
-                    "open обязан открыть обе створки двери, иначе дух пройдёт в половину проёма");
-            helper.assertTrue(!isOpen(helper, lower) && !isOpen(helper, lower.above()),
+            helper.assertTrue(opened[0], "open обязан открыть обе створки двери, иначе дух пройдёт в половину проёма");
+            helper.assertTrue(
+                    !isOpen(helper, lower) && !isOpen(helper, lower.above()),
                     "close_door обязан закрыть дверь после open");
             GameTestFixtures.finish(helper);
         });
@@ -125,43 +130,55 @@ public final class UseBlockGameTests {
         spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
         BlockPos huskAt = new BlockPos(5, 1, 10);
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, huskAt);
-        SpiritRun mode = SpiritRun.launch(helper, spirit,
-                MovementScene.call("set_combat_mode", Map.of("mode", "passive")), SETTLE_TICKS);
+        SpiritRun mode = SpiritRun.launch(
+                helper, spirit, MovementScene.call("set_combat_mode", Map.of("mode", "passive")), SETTLE_TICKS);
         PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, huskAt, true, FULL_HP);
         boolean[] retreated = {false};
         helper.onEachTick(() -> {
             if (scene.started()) {
-                retreated[0] |= spirit.tactics().lastOutcome()
-                        .map(outcome -> outcome.decision() == TacticalOption.RETREAT).orElse(false);
+                retreated[0] |= spirit.tactics()
+                        .lastOutcome()
+                        .map(outcome -> outcome.decision() == TacticalOption.RETREAT)
+                        .orElse(false);
             }
         });
 
         helper.succeedWhen(() -> {
             mode.assertStarted();
             scene.assertStarted();
-            helper.assertTrue(spirit.tactics().combatMode() == CombatMode.PASSIVE,
-                    "set_combat_mode обязан выставить режим passive, а стоит " + spirit.tactics().combatMode());
-            helper.assertTrue(scene.ticks() >= PASSIVE_OBSERVED_TICKS,
+            helper.assertTrue(
+                    spirit.tactics().combatMode() == CombatMode.PASSIVE,
+                    "set_combat_mode обязан выставить режим passive, а стоит "
+                            + spirit.tactics().combatMode());
+            helper.assertTrue(
+                    scene.ticks() >= PASSIVE_OBSERVED_TICKS,
                     "наблюдение за пассивным духом ещё идёт: " + scene.ticks());
-            helper.assertTrue(retreated[0],
-                    "пассивный дух обязан отходить от нападающего, иначе тест ничего не доказывает");
-            helper.assertTrue(spirit.tactics().combat().strikes() == 0,
-                    "PASSIVE не бьёт никогда: ударов " + spirit.tactics().combat().strikes());
-            helper.assertTrue(husk.getHealth() == husk.getMaxHealth(),
-                    "враг не ранен, здоровье " + husk.getHealth());
+            helper.assertTrue(
+                    retreated[0], "пассивный дух обязан отходить от нападающего, иначе тест ничего не доказывает");
+            helper.assertTrue(
+                    spirit.tactics().combat().strikes() == 0,
+                    "PASSIVE не бьёт никогда: ударов "
+                            + spirit.tactics().combat().strikes());
+            helper.assertTrue(husk.getHealth() == husk.getMaxHealth(), "враг не ранен, здоровье " + husk.getHealth());
             TacticsScene.finish(helper, spirit);
         });
     }
 
     private static void placeDoor(GameTestHelper helper, BlockPos lower) {
-        helper.setBlock(lower, Blocks.OAK_DOOR.defaultBlockState()
-                .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER)
-                .setValue(DoorBlock.FACING, Direction.NORTH)
-                .setValue(BlockStateProperties.OPEN, false));
-        helper.setBlock(lower.above(), Blocks.OAK_DOOR.defaultBlockState()
-                .setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER)
-                .setValue(DoorBlock.FACING, Direction.NORTH)
-                .setValue(BlockStateProperties.OPEN, false));
+        helper.setBlock(
+                lower,
+                Blocks.OAK_DOOR
+                        .defaultBlockState()
+                        .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER)
+                        .setValue(DoorBlock.FACING, Direction.NORTH)
+                        .setValue(BlockStateProperties.OPEN, false));
+        helper.setBlock(
+                lower.above(),
+                Blocks.OAK_DOOR
+                        .defaultBlockState()
+                        .setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER)
+                        .setValue(DoorBlock.FACING, Direction.NORTH)
+                        .setValue(BlockStateProperties.OPEN, false));
     }
 
     private static boolean isOpen(GameTestHelper helper, BlockPos pos) {

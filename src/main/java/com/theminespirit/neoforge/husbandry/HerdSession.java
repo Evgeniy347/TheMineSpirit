@@ -119,8 +119,8 @@ public final class HerdSession {
     private final HerdLure lure;
     private final HerdPickup pickup;
 
-    private HerdSession(SpiritEntity spirit, HerdJob job, List<Species> wanted, int searchRadius, int goal,
-            boolean babiesFirst) {
+    private HerdSession(
+            SpiritEntity spirit, HerdJob job, List<Species> wanted, int searchRadius, int goal, boolean babiesFirst) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него некому пасти стадо");
         this.job = Objects.requireNonNull(job, "Работа не может быть null: без неё неизвестно, что делать со стадом");
         this.wanted = List.copyOf(Objects.requireNonNull(wanted, "Виды не могут быть null: пасут один набор видов"));
@@ -129,8 +129,7 @@ public final class HerdSession {
         this.babiesFirst = babiesFirst;
         BlockPos start = spirit.blockPosition();
         this.home = new BlockCoord(start.getX(), start.getY(), start.getZ());
-        int penRadius = Math.clamp(searchRadius, CatalogLimits.HERD_PEN_RADIUS_MIN,
-                CatalogLimits.HERD_PEN_RADIUS_MAX);
+        int penRadius = Math.clamp(searchRadius, CatalogLimits.HERD_PEN_RADIUS_MIN, CatalogLimits.HERD_PEN_RADIUS_MAX);
         this.pen = new PenBounds(home, penRadius);
         this.homePen = new PenBounds(home, CatalogLimits.HERD_HOME_RADIUS);
         this.actions = new HerdActions(spirit);
@@ -325,8 +324,7 @@ public final class HerdSession {
 
     void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.ACT;
             case STUCK, TIMEOUT -> {
                 if (current != null && !current.isRemoved() && inReach(current)) {
@@ -349,7 +347,8 @@ public final class HerdSession {
             state = State.PICK;
             return;
         }
-        Optional<String> danger = HerdSafety.dangerReason(new HerdSafety.Hazards(current.isInLava(), current.isOnFire(), current.isInWater()));
+        Optional<String> danger = HerdSafety.dangerReason(
+                new HerdSafety.Hazards(current.isInLava(), current.isOnFire(), current.isInWater()));
         if (danger.isPresent()) {
             skipped++;
             handledIds.add(currentId);
@@ -382,8 +381,8 @@ public final class HerdSession {
         if (job == HerdJob.HERD_CHECK) {
             kept = flock.censusTotal();
         }
-        HerdTally tally = new HerdTally(fed, babiesFed, born, sheared, milked, eggsPicked, culled, kept,
-                escapedReturned, skipped, goal);
+        HerdTally tally = new HerdTally(
+                fed, babiesFed, born, sheared, milked, eggsPicked, culled, kept, escapedReturned, skipped, goal);
         if (tally.outcome(job) instanceof HerdTally.Failed failed) {
             fail(failed.text());
         } else {
@@ -406,7 +405,11 @@ public final class HerdSession {
     }
 
     void startCollect(IdFilter filter, BlockPos at, int radius) {
-        collector = new DropCollector(spirit, filter, new BlockCoord(at.getX(), at.getY(), at.getZ()), radius,
+        collector = new DropCollector(
+                spirit,
+                filter,
+                new BlockCoord(at.getX(), at.getY(), at.getZ()),
+                radius,
                 PickupTuning.DEFAULT,
                 OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         state = State.COLLECT;

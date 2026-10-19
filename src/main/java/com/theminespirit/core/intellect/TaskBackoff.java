@@ -6,11 +6,9 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class TaskBackoff {
-    private record Mark(long failTick) {
-    }
+    private record Mark(long failTick) {}
 
-    private record BackoffKey(UUID spirit, String script) {
-    }
+    private record BackoffKey(UUID spirit, String script) {}
 
     private final Map<BackoffKey, Mark> marks = new LinkedHashMap<>();
 
@@ -41,7 +39,8 @@ public final class TaskBackoff {
             throw new IllegalArgumentException("Откат в тике " + now + ": время не может быть отрицательным");
         }
         Mark mark = marks.get(new BackoffKey(spirit, script));
-        return mark != null && now - mark.failTick() < IntellectTuning.loadDefault().failBackoffTicks();
+        return mark != null
+                && now - mark.failTick() < IntellectTuning.loadDefault().failBackoffTicks();
     }
 
     public int size() {

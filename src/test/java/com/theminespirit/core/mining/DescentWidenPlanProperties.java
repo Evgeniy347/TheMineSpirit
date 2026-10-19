@@ -28,10 +28,14 @@ class DescentWidenPlanProperties {
 
         DescentWidenPlan plan = DescentWidenPlan.from(world, level1, width, 6);
 
-        assertEquals(depth, plan.steps().size(),
+        assertEquals(
+                depth,
+                plan.steps().size(),
                 "Число шагов расширения обязано равняться глубине спуска: расширяют весь существующий спуск");
         for (DescentWidenStep step : plan.steps()) {
-            assertEquals(width * 6, step.cells().size(),
+            assertEquals(
+                    width * 6,
+                    step.cells().size(),
                     "Каждый шаг обязан нести " + width + "×6 клеток прохода: иначе тоннель не той ширины или высоты");
         }
     }
@@ -53,10 +57,13 @@ class DescentWidenPlanProperties {
 
         DescentWidenPlan plan = DescentWidenPlan.from(world, level1, 3, 6);
 
-        assertEquals(stepIndex, plan.steps().size(),
+        assertEquals(
+                stepIndex,
+                plan.steps().size(),
                 "Лава в клетке расширения шага k обязана обрезать план ровно перед шагом k: дальше копать нельзя");
         assertEquals(DescentStop.DANGER, plan.stop(), "Лава — остановка по опасности");
-        assertTrue(plan.dangerReason().contains("лава"),
+        assertTrue(
+                plan.dangerReason().contains("лава"),
                 "Причина остановки обязана называть лаву, чтобы игрок понял причину");
     }
 
@@ -76,7 +83,8 @@ class DescentWidenPlanProperties {
 
         for (DescentWidenStep step : plan.steps()) {
             for (BlockCoord cell : step.cells()) {
-                assertTrue(cell.y() > step.floor() && cell.y() <= step.floor() + 6,
+                assertTrue(
+                        cell.y() > step.floor() && cell.y() <= step.floor() + 6,
                         "Клетка расширения " + cell + " обязана быть на высотах floor+1..floor+6 над полом "
                                 + step.floor());
             }

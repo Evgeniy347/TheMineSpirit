@@ -16,10 +16,12 @@ public final class ProtectedZones {
 
     public record ProtectedZone(String dimension, BlockBox box) {
         public ProtectedZone {
-            Objects.requireNonNull(dimension, "Измерение защищённой зоны не может быть null: зона принадлежит одному миру");
+            Objects.requireNonNull(
+                    dimension, "Измерение защищённой зоны не может быть null: зона принадлежит одному миру");
             Objects.requireNonNull(box, "Коробка защищённой зоны не может быть null: без неё зона ничего не защищает");
             if (dimension.isBlank()) {
-                throw new IllegalArgumentException("Измерение защищённой зоны пусто: укажите, например, minecraft:overworld");
+                throw new IllegalArgumentException(
+                        "Измерение защищённой зоны пусто: укажите, например, minecraft:overworld");
             }
         }
     }

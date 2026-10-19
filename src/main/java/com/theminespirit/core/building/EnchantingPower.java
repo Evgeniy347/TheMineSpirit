@@ -24,8 +24,7 @@ public final class EnchantingPower {
     public static final int MAX_LEVEL = MAX_SHELVES * 2;
     private static final Set<String> AIR = Set.of("air", "cave_air", "void_air");
 
-    private EnchantingPower() {
-    }
+    private EnchantingPower() {}
 
     public static int shelfCount(Schematic schematic, BlockCoord table) {
         Objects.requireNonNull(schematic, "Схема не может быть null: по ней считают полки стола");
@@ -37,8 +36,8 @@ public final class EnchantingPower {
                     if (Math.abs(dx) != SHELF_DISTANCE && Math.abs(dz) != SHELF_DISTANCE) {
                         continue;
                     }
-                    if (!path(BOOKSHELF).equals(path(blockAt(schematic, table.x() + dx, table.y() + dy,
-                            table.z() + dz)))) {
+                    if (!path(BOOKSHELF)
+                            .equals(path(blockAt(schematic, table.x() + dx, table.y() + dy, table.z() + dz)))) {
                         continue;
                     }
                     if (!isAir(schematic, table.x() + dx / 2, table.y() + dy, table.z() + dz / 2)) {

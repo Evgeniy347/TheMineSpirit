@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class FoodNorm {
-    private FoodNorm() {
-    }
+    private FoodNorm() {}
 
     public static FoodNeed perSoul(int population, double days, NutritionTable table, double ration) {
         if (population < 0) {
@@ -25,7 +24,10 @@ public final class FoodNorm {
                     "Паёк = " + ration + ": суточная норма на душу обязана быть конечной и > 0");
         }
         double need = population * days * ration;
-        double best = table.nutrition().values().stream().mapToDouble(Double::doubleValue).max().orElseThrow();
+        double best = table.nutrition().values().stream()
+                .mapToDouble(Double::doubleValue)
+                .max()
+                .orElseThrow();
         return new FoodNeed((long) Math.ceil(need / best), need);
     }
 
@@ -57,8 +59,8 @@ public final class FoodNorm {
         return need;
     }
 
-    public static FoodDeficit deficit(int adults, int children, double days, double adultRation,
-            double childRation, double stockNutrition) {
+    public static FoodDeficit deficit(
+            int adults, int children, double days, double adultRation, double childRation, double stockNutrition) {
         if (Double.isNaN(stockNutrition) || Double.isInfinite(stockNutrition) || stockNutrition < 0) {
             throw new IllegalArgumentException(
                     "Запас еды = " + stockNutrition + ": сытность запаса обязана быть конечной и >= 0");
@@ -71,7 +73,8 @@ public final class FoodNorm {
             throw new IllegalArgumentException("Ранг еды без таблицы сытности не строится: сытность — данные");
         }
         return table.nutrition().entrySet().stream()
-                .sorted(Comparator.<Map.Entry<String, Double>>comparingDouble(Map.Entry::getValue).reversed()
+                .sorted(Comparator.<Map.Entry<String, Double>>comparingDouble(Map.Entry::getValue)
+                        .reversed()
                         .thenComparing(Map.Entry::getKey))
                 .map(Map.Entry::getKey)
                 .toList();

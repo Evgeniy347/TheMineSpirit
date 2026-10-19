@@ -21,8 +21,7 @@ public final class CampfireSession {
         FAILED
     }
 
-    public record Job(Item input, int inputToFeed, Item output, int cookTicks, int collectedSoFar, int wantedTotal) {
-    }
+    public record Job(Item input, int inputToFeed, Item output, int cookTicks, int collectedSoFar, int wantedTotal) {}
 
     private static final double DROP_RADIUS = 2.0;
 
@@ -67,8 +66,7 @@ public final class CampfireSession {
         }
         if (ticks > 0 && ticks >= timeoutTicks) {
             takeBack(campfire.get());
-            return fail("костёр не успел за " + timeoutTicks + " тиков: приготовлено " + collected + " из "
-                    + wanted);
+            return fail("костёр не успел за " + timeoutTicks + " тиков: приготовлено " + collected + " из " + wanted);
         }
         // Подбор готового — каждый тик, а не раз в POLL_TICKS: при ускоренной готовке (GameTest-помпа)
         // несколько предметов вызревают в один тик и падают одним местом; подбор раз в 10 тиков терял
@@ -169,7 +167,8 @@ public final class CampfireSession {
 
     private Optional<CampfireBlockEntity> campfireAt() {
         BlockEntity entity = level.getBlockEntity(pos);
-        if (entity instanceof CampfireBlockEntity campfire && level.getBlockState(pos).is(Blocks.CAMPFIRE)) {
+        if (entity instanceof CampfireBlockEntity campfire
+                && level.getBlockState(pos).is(Blocks.CAMPFIRE)) {
             return Optional.of(campfire);
         }
         return Optional.empty();

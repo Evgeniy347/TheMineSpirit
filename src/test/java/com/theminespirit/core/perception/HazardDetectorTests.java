@@ -26,22 +26,33 @@ class HazardDetectorTests {
 
     static Stream<Arguments> scenes() {
         return Stream.of(
-                Arguments.of("лава в клетке", new GridTerrain(Terrain.AIR).with(0, 5, 0, Terrain.LAVA),
+                Arguments.of(
+                        "лава в клетке",
+                        new GridTerrain(Terrain.AIR).with(0, 5, 0, Terrain.LAVA),
                         Optional.of(HazardType.LAVA)),
-                Arguments.of("вода в клетке", new GridTerrain(Terrain.AIR).with(0, 5, 0, Terrain.WATER),
+                Arguments.of(
+                        "вода в клетке",
+                        new GridTerrain(Terrain.AIR).with(0, 5, 0, Terrain.WATER),
                         Optional.of(HazardType.WATER)),
                 Arguments.of("камень", new GridTerrain(Terrain.SOLID), Optional.empty()),
                 Arguments.of("воздух над пустотой, пола нет", new GridTerrain(Terrain.AIR), Optional.empty()),
-                Arguments.of("пол со всех сторон", new GridTerrain(Terrain.AIR).column(0, 0, 4, 4, Terrain.SOLID)
-                        .with(1, 4, 0, Terrain.SOLID).with(-1, 4, 0, Terrain.SOLID).with(0, 4, 1, Terrain.SOLID)
-                        .with(0, 4, -1, Terrain.SOLID), Optional.empty()),
+                Arguments.of(
+                        "пол со всех сторон",
+                        new GridTerrain(Terrain.AIR)
+                                .column(0, 0, 4, 4, Terrain.SOLID)
+                                .with(1, 4, 0, Terrain.SOLID)
+                                .with(-1, 4, 0, Terrain.SOLID)
+                                .with(0, 4, 1, Terrain.SOLID)
+                                .with(0, 4, -1, Terrain.SOLID),
+                        Optional.empty()),
                 Arguments.of("край пола над провалом в три клетки", floorAtFour(), Optional.of(HazardType.DROP)),
-                Arguments.of("перепад в две клетки не обрыв", floorAtFour().with(1, 2, 0, Terrain.SOLID),
+                Arguments.of(
+                        "перепад в две клетки не обрыв", floorAtFour().with(1, 2, 0, Terrain.SOLID), Optional.empty()),
+                Arguments.of(
+                        "сосед за краем залит водой, падения нет",
+                        floorAtFour().with(1, 5, 0, Terrain.WATER),
                         Optional.empty()),
-                Arguments.of("сосед за краем залит водой, падения нет", floorAtFour().with(1, 5, 0, Terrain.WATER),
-                        Optional.empty()),
-                Arguments.of("незагруженный сосед не делает обрыв", surroundedBy(Terrain.UNLOADED),
-                        Optional.empty()),
+                Arguments.of("незагруженный сосед не делает обрыв", surroundedBy(Terrain.UNLOADED), Optional.empty()),
                 Arguments.of("под соседом вода, прыжок не падение", surroundedBy(Terrain.WATER), Optional.empty()));
     }
 
@@ -68,7 +79,9 @@ class HazardDetectorTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("scenes")
     void classify_Scene_ReportsHazardOfStandingCell(String scene, GridTerrain terrain, Optional<HazardType> expected) {
-        assertEquals(expected, HazardDetector.classify(terrain, STAND),
+        assertEquals(
+                expected,
+                HazardDetector.classify(terrain, STAND),
                 scene + ": опасность клетки обязана определяться по окружению, иначе sense_hazard врёт ИИ "
                         + "об обрывах, лаве и воде");
     }
@@ -77,9 +90,13 @@ class HazardDetectorTests {
     void classify_EdgeAtOneSideOnly_DetectedAndFarCellIsNot() {
         GridTerrain terrain = floorAtFour();
 
-        assertEquals(Optional.of(HazardType.DROP), HazardDetector.classify(terrain, new BlockCoord(0, 5, 3)),
+        assertEquals(
+                Optional.of(HazardType.DROP),
+                HazardDetector.classify(terrain, new BlockCoord(0, 5, 3)),
                 "клетка на краю пола у провала обязана быть обрывом");
-        assertEquals(Optional.empty(), HazardDetector.classify(terrain, new BlockCoord(-2, 5, 0)),
+        assertEquals(
+                Optional.empty(),
+                HazardDetector.classify(terrain, new BlockCoord(-2, 5, 0)),
                 "клетка в глубине пола, вдали от края, обрывом не является");
     }
 
@@ -89,7 +106,8 @@ class HazardDetectorTests {
 
         HazardDetector.classify(terrain, STAND);
 
-        assertTrue(terrain.reads() <= 2,
+        assertTrue(
+                terrain.reads() <= 2,
                 "воздух без пола отсекается двумя чтениями (клетка и пол), прочитано " + terrain.reads()
                         + ": иначе каждая клетка среза стоит как у обрыва, и тик не держит порцию срезов");
     }
@@ -100,16 +118,21 @@ class HazardDetectorTests {
 
         Optional<HazardType> result = HazardDetector.classify(terrain, STAND);
 
-        assertEquals(Optional.empty(), result,
+        assertEquals(
+                Optional.empty(),
+                result,
                 "яма в две клетки со всех сторон обрывом не является, а проверка обязана дойти до самого дальнего чтения");
-        assertTrue(terrain.reads() <= 2 + 4 * (1 + HazardDetector.DROP_DEPTH),
+        assertTrue(
+                terrain.reads() <= 2 + 4 * (1 + HazardDetector.DROP_DEPTH),
                 "одна клетка читает себя, пол и по четыре клетки (сосед и " + HazardDetector.DROP_DEPTH
                         + " под ним) на каждого из четырёх соседей, прочитано " + terrain.reads());
     }
 
     @Test
     void dropDepth_Constant_IsThree() {
-        assertEquals(3, HazardDetector.DROP_DEPTH,
+        assertEquals(
+                3,
+                HazardDetector.DROP_DEPTH,
                 "обрыв — перепад в три клетки и больше: меньший перепад дух проходит шагом, больший ломает ноги; "
                         + "при смене числа пересмотри тесты сцен и сценарий GameTest sense_hazard");
     }

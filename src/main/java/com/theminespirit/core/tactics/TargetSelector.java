@@ -7,7 +7,12 @@ import java.util.UUID;
 
 public final class TargetSelector {
     public enum Kind {
-        HOSTILE, ANIMAL, PLAYER, SPIRIT, NEAREST, ANY
+        HOSTILE,
+        ANIMAL,
+        PLAYER,
+        SPIRIT,
+        NEAREST,
+        ANY
     }
 
     public record Target(Kind kind, Optional<String> name) {
@@ -45,8 +50,10 @@ public final class TargetSelector {
                 try {
                     UUID.fromString(uuid);
                 } catch (IllegalArgumentException error) {
-                    throw new IllegalArgumentException("Сpirit-цель '" + raw + "' не разобрана: '" + uuid
-                            + "' не является UUID, а дух ищется только по своему UUID", error);
+                    throw new IllegalArgumentException(
+                            "Сpirit-цель '" + raw + "' не разобрана: '" + uuid
+                                    + "' не является UUID, а дух ищется только по своему UUID",
+                            error);
                 }
                 return new Target(Kind.SPIRIT, Optional.of(uuid));
             }

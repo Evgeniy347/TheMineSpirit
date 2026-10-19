@@ -23,9 +23,9 @@ public final class MineActivity implements Activity {
             throw new IllegalArgumentException("Спрос добычи без обстановки не считается: зависит от запасов");
         }
         IntellectTuning tuning = IntellectTuning.loadDefault();
-        double deficit = Math.max(deficit(view.ore(), tuning.oreTarget()), Math.max(
-                deficit(view.iron(), tuning.ironTarget()),
-                deficit(view.weapons(), tuning.weaponTarget())));
+        double deficit = Math.max(
+                deficit(view.ore(), tuning.oreTarget()),
+                Math.max(deficit(view.iron(), tuning.ironTarget()), deficit(view.weapons(), tuning.weaponTarget())));
         return Activity.checkedDemand(id(), 1 + 8 * deficit);
     }
 

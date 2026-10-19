@@ -15,7 +15,8 @@ class HelpCallGateTests {
 
     @Test
     void ready_FirstCall_IsDue() {
-        assertTrue(new HelpCallGate().ready(0, INTERVAL),
+        assertTrue(
+                new HelpCallGate().ready(0, INTERVAL),
                 "Первый зов не ждёт: до него дух не звал и игрок ещё ничего не слышал");
     }
 
@@ -24,21 +25,25 @@ class HelpCallGateTests {
         HelpCallGate gate = new HelpCallGate();
         gate.called(100);
 
-        assertFalse(gate.ready(100 + INTERVAL - 1, INTERVAL),
+        assertFalse(
+                gate.ready(100 + INTERVAL - 1, INTERVAL),
                 "Зов не повторяется раньше T тиков: иначе чат забивается одним и тем же сообщением");
-        assertTrue(gate.ready(100 + INTERVAL, INTERVAL),
+        assertTrue(
+                gate.ready(100 + INTERVAL, INTERVAL),
                 "На исходе T тиков зов снова разрешён: предел частоты, а не запрет навсегда");
     }
 
     @Test
     void ready_IntervalBelowOneTick_Rejected() {
-        assertThrows(IllegalArgumentException.class, () -> new HelpCallGate().ready(0, 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new HelpCallGate().ready(0, 0),
                 "Предел частоты меньше тика бессмыслен: зов шёл бы каждый тик");
     }
 
     @Property(tries = 200)
-    void called_AnyTickSequence_NeverCloserThanInterval(@ForAll @IntRange(min = 1, max = 6000) int interval,
-            @ForAll @IntRange(min = 0, max = 1000) int start) {
+    void called_AnyTickSequence_NeverCloserThanInterval(
+            @ForAll @IntRange(min = 1, max = 6000) int interval, @ForAll @IntRange(min = 0, max = 1000) int start) {
         HelpCallGate gate = new HelpCallGate();
         long last = -1;
         for (long now = start; now < start + 5000; now++) {
@@ -46,7 +51,8 @@ class HelpCallGateTests {
                 continue;
             }
             if (last >= 0) {
-                assertTrue(now - last >= interval,
+                assertTrue(
+                        now - last >= interval,
                         "Соседние зовы " + last + " и " + now + " ближе предела " + interval + ": чат игрока "
                                 + "превращается в спам, а сигнал помощи обесценивается");
             }

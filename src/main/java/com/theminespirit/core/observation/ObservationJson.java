@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Objects;
 
 public final class ObservationJson {
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    private static final ObjectMapper MAPPER =
+            new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     static {
         SimpleModule module = new SimpleModule();
@@ -29,8 +29,7 @@ public final class ObservationJson {
         MAPPER.registerModule(module);
     }
 
-    private ObservationJson() {
-    }
+    private ObservationJson() {}
 
     public static String toJson(WorldObservation obs) {
         try {
@@ -44,9 +43,20 @@ public final class ObservationJson {
         Objects.requireNonNull(json, "json не может быть null: наблюдение разбирается из текста JSON");
         try {
             Dto dto = MAPPER.readValue(json, Dto.class);
-            return new WorldObservation(dto.bot, dto.tick, dto.pos, dto.inventory, dto.blocks, toEntities(dto.entities),
-                    toContainers(dto.containers), dto.radius, toSpirit(dto), toGroundItems(dto.groundItems),
-                    toContainerItems(dto.containerItems), toTime(dto.time), toOpenBlocks(dto.openBlocks));
+            return new WorldObservation(
+                    dto.bot,
+                    dto.tick,
+                    dto.pos,
+                    dto.inventory,
+                    dto.blocks,
+                    toEntities(dto.entities),
+                    toContainers(dto.containers),
+                    dto.radius,
+                    toSpirit(dto),
+                    toGroundItems(dto.groundItems),
+                    toContainerItems(dto.containerItems),
+                    toTime(dto.time),
+                    toOpenBlocks(dto.openBlocks));
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException(
                     "Наблюдение не разобрано из JSON: проверьте набор и типы полей наблюдения", e);
@@ -66,9 +76,7 @@ public final class ObservationJson {
         if (list == null) {
             return List.of();
         }
-        return list.stream()
-                .map(d -> new ContainerRef(d.type, d.pos, d.id))
-                .toList();
+        return list.stream().map(d -> new ContainerRef(d.type, d.pos, d.id)).toList();
     }
 
     private static List<OpenBlock> toOpenBlocks(List<OpenBlockDto> list) {
@@ -93,13 +101,16 @@ public final class ObservationJson {
     }
 
     private static SpiritStatus toSpirit(Dto dto) {
-        if (dto.held == null && dto.health == null && dto.maxHealth == null && dto.food == null
+        if (dto.held == null
+                && dto.health == null
+                && dto.maxHealth == null
+                && dto.food == null
                 && dto.boardTask == null) {
             return null;
         }
         HeldItem held = dto.held == null ? null : new HeldItem(dto.held.item, dto.held.durability);
-        BoardTaskRef boardTask = dto.boardTask == null ? null
-                : new BoardTaskRef(dto.boardTask.caseName, dto.boardTask.status);
+        BoardTaskRef boardTask =
+                dto.boardTask == null ? null : new BoardTaskRef(dto.boardTask.caseName, dto.boardTask.status);
         return new SpiritStatus(held, dto.health, dto.maxHealth, dto.food, boardTask);
     }
 
@@ -127,65 +138,79 @@ public final class ObservationJson {
             WorldTimeDto time,
             String hash) {
         Dto(WorldObservation obs) {
-            this(obs.botId(), obs.tick(), obs.position(), obs.radius(), obs.inventory(), obs.blocks(),
+            this(
+                    obs.botId(),
+                    obs.tick(),
+                    obs.position(),
+                    obs.radius(),
+                    obs.inventory(),
+                    obs.blocks(),
                     obs.entities().stream()
                             .map(e -> new EntityDto(e.type(), e.pos(), e.id(), e.distance()))
                             .toList(),
-                    obs.containers().stream().map(c -> new ContainerDto(c.type(), c.pos(), c.id())).toList(),
+                    obs.containers().stream()
+                            .map(c -> new ContainerDto(c.type(), c.pos(), c.id()))
+                            .toList(),
                     openBlocks(obs.openBlocks()),
                     held(obs.spirit()),
                     obs.spirit() == null ? null : obs.spirit().health(),
                     obs.spirit() == null ? null : obs.spirit().maxHealth(),
                     obs.spirit() == null ? null : obs.spirit().food(),
                     boardTask(obs.spirit()),
-                    obs.groundItems().isEmpty() ? null
-                            : obs.groundItems().stream().map(g -> new GroundItemDto(g.item(), g.count())).toList(),
-                    obs.containerItems().isEmpty() ? null
+                    obs.groundItems().isEmpty()
+                            ? null
+                            : obs.groundItems().stream()
+                                    .map(g -> new GroundItemDto(g.item(), g.count()))
+                                    .toList(),
+                    obs.containerItems().isEmpty()
+                            ? null
                             : obs.containerItems().stream()
-                                    .map(c -> new ContainerItemDto(c.pos(), c.items())).toList(),
-                    obs.time() == null ? null : new WorldTimeDto(obs.time().day(), obs.time().dayTime()),
+                                    .map(c -> new ContainerItemDto(c.pos(), c.items()))
+                                    .toList(),
+                    obs.time() == null
+                            ? null
+                            : new WorldTimeDto(obs.time().day(), obs.time().dayTime()),
                     ObservationHash.compute(obs));
         }
 
         private static List<OpenBlockDto> openBlocks(List<OpenBlock> openBlocks) {
-            return openBlocks.isEmpty() ? null : openBlocks.stream()
-                    .map(block -> new OpenBlockDto(block.item(), block.pos(), block.distance())).toList();
+            return openBlocks.isEmpty()
+                    ? null
+                    : openBlocks.stream()
+                            .map(block -> new OpenBlockDto(block.item(), block.pos(), block.distance()))
+                            .toList();
         }
 
         private static HeldItemDto held(SpiritStatus spirit) {
-            return spirit == null || spirit.held() == null ? null
+            return spirit == null || spirit.held() == null
+                    ? null
                     : new HeldItemDto(spirit.held().item(), spirit.held().durability());
         }
 
         private static BoardTaskDto boardTask(SpiritStatus spirit) {
-            return spirit == null || spirit.boardTask() == null ? null
-                    : new BoardTaskDto(spirit.boardTask().caseName(), spirit.boardTask().status());
+            return spirit == null || spirit.boardTask() == null
+                    ? null
+                    : new BoardTaskDto(
+                            spirit.boardTask().caseName(), spirit.boardTask().status());
         }
     }
 
-    public record EntityDto(String type, BlockCoord pos, String id, double distance) {
-    }
+    public record EntityDto(String type, BlockCoord pos, String id, double distance) {}
 
-    public record OpenBlockDto(String item, BlockCoord pos, double distance) {
-    }
+    public record OpenBlockDto(String item, BlockCoord pos, double distance) {}
 
-    public record ContainerDto(String type, BlockCoord pos, String id) {
-    }
+    public record ContainerDto(String type, BlockCoord pos, String id) {}
 
-    public record HeldItemDto(String item, Integer durability) {
-    }
+    public record HeldItemDto(String item, Integer durability) {}
 
-    public record BoardTaskDto(@JsonProperty("case") String caseName, String status) {
-    }
+    public record BoardTaskDto(@JsonProperty("case") String caseName, String status) {}
 
-    public record GroundItemDto(String item, int count) {
-    }
+    public record GroundItemDto(String item, int count) {}
 
-    public record ContainerItemDto(BlockCoord pos, List<ItemCount> items) {
-    }
+    public record ContainerItemDto(BlockCoord pos, List<ItemCount> items) {}
 
-    public record WorldTimeDto(boolean day, @JsonProperty("day_time") long dayTime) {
-    }
+    public record WorldTimeDto(
+            boolean day, @JsonProperty("day_time") long dayTime) {}
 
     static class BlockCoordSerializer extends StdSerializer<BlockCoord> {
         private static final long serialVersionUID = 1L;
@@ -219,7 +244,8 @@ public final class ObservationJson {
                     throw new JsonParseException(p, "pos содержит нечисловой элемент");
                 }
             }
-            return new BlockCoord(array.get(0).asInt(), array.get(1).asInt(), array.get(2).asInt());
+            return new BlockCoord(
+                    array.get(0).asInt(), array.get(1).asInt(), array.get(2).asInt());
         }
     }
 }

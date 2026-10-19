@@ -19,8 +19,7 @@ final class SpecWeights {
             + "\"HEALING_AVAILABLE\": {\"FIGHT\": 0.3, \"RETREAT\": -0.3, \"IGNORE\": 0},"
             + "\"URGENCY\": {\"FIGHT\": -0.12, \"RETREAT\": 0.24, \"IGNORE\": -0.18}}";
 
-    private SpecWeights() {
-    }
+    private SpecWeights() {}
 
     static ScoreWeights spec() {
         return parse(BODY, "[\"RETREAT\", \"FIGHT\", \"IGNORE\"]");
@@ -30,16 +29,26 @@ final class SpecWeights {
         StringBuilder body = new StringBuilder("\"weights\": {");
         for (Factor factor : Factor.values()) {
             String value = factor == Factor.BIAS ? "1" : "0";
-            body.append(factor == Factor.BIAS ? "" : ",").append("\"").append(factor.name())
-                    .append("\": {\"FIGHT\": ").append(value).append(", \"RETREAT\": ").append(value)
-                    .append(", \"IGNORE\": ").append(value).append("}");
+            body.append(factor == Factor.BIAS ? "" : ",")
+                    .append("\"")
+                    .append(factor.name())
+                    .append("\": {\"FIGHT\": ")
+                    .append(value)
+                    .append(", \"RETREAT\": ")
+                    .append(value)
+                    .append(", \"IGNORE\": ")
+                    .append(value)
+                    .append("}");
         }
         return parse(body.append("}").toString(), tieBreakJson);
     }
 
     static ScoreWeights withBiasZero() {
-        return parse(BODY.replace("\"BIAS\": {\"FIGHT\": 0, \"RETREAT\": 0.2, \"IGNORE\": 0.5}",
-                "\"BIAS\": {\"FIGHT\": 0, \"RETREAT\": 0, \"IGNORE\": 0}"), "[\"RETREAT\", \"FIGHT\", \"IGNORE\"]");
+        return parse(
+                BODY.replace(
+                        "\"BIAS\": {\"FIGHT\": 0, \"RETREAT\": 0.2, \"IGNORE\": 0.5}",
+                        "\"BIAS\": {\"FIGHT\": 0, \"RETREAT\": 0, \"IGNORE\": 0}"),
+                "[\"RETREAT\", \"FIGHT\", \"IGNORE\"]");
     }
 
     static ScoreWeights parse(String weightsBody, String tieBreakJson) {

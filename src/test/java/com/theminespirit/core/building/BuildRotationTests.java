@@ -11,12 +11,18 @@ class BuildRotationTests {
         BuildRotation.Cell cell = BuildRotation.CLOCKWISE_90.rotate(0, 0, 4, 5);
         BuildRotation.DirectionVector north = BuildRotation.rotateDirection(0, -1, 1);
 
-        assertEquals(new BuildRotation.Cell(4, 0), cell,
+        assertEquals(
+                new BuildRotation.Cell(4, 0),
+                cell,
                 "Поворот клетки (0,0) схемы 4×5 по часовой на 90° обязан лечь в угол (4,0): формула поворота "
                         + "позиции расходится с размером схемы, и блоки встанут со сдвигом");
-        assertEquals(5, BuildRotation.CLOCKWISE_90.rotatedSizeX(4, 5),
+        assertEquals(
+                5,
+                BuildRotation.CLOCKWISE_90.rotatedSizeX(4, 5),
                 "После поворота на 90° сторона X берёт длину прежней Z: иначе коробка не накроет схему");
-        assertEquals(4, BuildRotation.CLOCKWISE_90.rotatedSizeZ(4, 5),
+        assertEquals(
+                4,
+                BuildRotation.CLOCKWISE_90.rotatedSizeZ(4, 5),
                 "После поворота на 90° сторона Z берёт длину прежней X: иначе коробка не накроет схему");
         assertEquals(1, north.dx(), "Север обязан стать востоком");
         assertEquals(0, north.dz(), "Север обязан стать востоком");
@@ -44,23 +50,31 @@ class BuildRotationTests {
 
     @Test
     void parse_Degrees_ReturnsMatchingRotation() {
-        assertEquals(BuildRotation.CLOCKWISE_180, BuildRotation.parse("180"),
+        assertEquals(
+                BuildRotation.CLOCKWISE_180,
+                BuildRotation.parse("180"),
                 "Градусы 180 обязаны читаться как половина оборота: иначе параметр поворота не сработает");
-        assertEquals(BuildRotation.NONE, BuildRotation.parse("0"),
-                "Градусы 0 обязаны читаться как отсутствие поворота");
-        assertEquals(BuildRotation.COUNTERCLOCKWISE_90, BuildRotation.parse("270"),
+        assertEquals(
+                BuildRotation.NONE, BuildRotation.parse("0"), "Градусы 0 обязаны читаться как отсутствие поворота");
+        assertEquals(
+                BuildRotation.COUNTERCLOCKWISE_90,
+                BuildRotation.parse("270"),
                 "Градусы 270 обязаны читаться как поворот против часовой на 90°");
     }
 
     @Test
     void parse_UnknownDegrees_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> BuildRotation.parse("45"),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BuildRotation.parse("45"),
                 "Неизвестный угол 45 обязан отвергаться: поворот не на четверть оборота сломал бы расстановку");
     }
 
     @Test
     void ofQuarterTurns_NegativeValue_NormalizesToCounterclockwise() {
-        assertEquals(BuildRotation.COUNTERCLOCKWISE_90, BuildRotation.ofQuarterTurns(-1),
+        assertEquals(
+                BuildRotation.COUNTERCLOCKWISE_90,
+                BuildRotation.ofQuarterTurns(-1),
                 "Четверть -1 обязана нормализоваться в поворот против часовой: иначе выбор поворота "
                         + "от взгляда игрока уйдёт в ошибку");
     }

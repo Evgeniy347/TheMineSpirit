@@ -28,8 +28,7 @@ public final class PerceptionResultCodec {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private PerceptionResultCodec() {
-    }
+    private PerceptionResultCodec() {}
 
     public static Map<String, Object> toMap(PerceptionResult result) {
         Map<String, Object> map = new LinkedHashMap<>();
@@ -118,7 +117,7 @@ public final class PerceptionResultCodec {
     }
 
     private static boolean truncateStrings(Map<String, Object> map) {
-        boolean[] truncated = { false };
+        boolean[] truncated = {false};
         walkStrings(map, value -> {
             if (value.length() > MAX_STRING_LENGTH) {
                 truncated[0] = true;
@@ -149,7 +148,7 @@ public final class PerceptionResultCodec {
 
     @SuppressWarnings("unchecked")
     private static boolean truncateLists(Map<String, Object> map) {
-        boolean[] truncated = { false };
+        boolean[] truncated = {false};
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (entry.getValue() instanceof List<?> list && list.size() > MAX_LIST_ITEMS) {
                 List<Object> kept = new ArrayList<>(list.subList(0, MAX_LIST_ITEMS));
@@ -169,7 +168,8 @@ public final class PerceptionResultCodec {
         String largestKey = null;
         List<Object> largest = null;
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (entry.getValue() instanceof List<?> list && !list.isEmpty()
+            if (entry.getValue() instanceof List<?> list
+                    && !list.isEmpty()
                     && (largest == null || list.size() > largest.size())) {
                 largestKey = entry.getKey();
                 largest = (List<Object>) list;

@@ -8,7 +8,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
-public record CraftPlan(RecipeSpec recipe, int crafts, List<String> assignment, Map<String, Integer> required,
+public record CraftPlan(
+        RecipeSpec recipe,
+        int crafts,
+        List<String> assignment,
+        Map<String, Integer> required,
         Map<String, Integer> missing) {
     public CraftPlan {
         Objects.requireNonNull(recipe, "recipe не может быть null: план строится по рецепту");

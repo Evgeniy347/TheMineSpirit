@@ -11,8 +11,7 @@ public final class SectorAssigner {
     private static final long BEARING_BITS = 0x1FFFFFFFFFFFL;
     private static final double UNIT = 0x20000000000L;
 
-    public SectorAssigner() {
-    }
+    public SectorAssigner() {}
 
     public List<DefenseAssignment> assign(Point center, double radius, List<UUID> defenders) {
         if (center == null) {
@@ -39,8 +38,8 @@ public final class SectorAssigner {
         List<DefenseAssignment> assignments = new ArrayList<>(count);
         for (int rank = 0; rank < count; rank++) {
             double direction = rank * slice;
-            Point post = new Point(center.x() + Math.cos(direction) * radius, center.y(),
-                    center.z() + Math.sin(direction) * radius);
+            Point post = new Point(
+                    center.x() + Math.cos(direction) * radius, center.y(), center.z() + Math.sin(direction) * radius);
             assignments.add(new DefenseAssignment(ordered.get(rank), post, direction));
         }
         return List.copyOf(assignments);

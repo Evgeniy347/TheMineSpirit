@@ -26,8 +26,7 @@ public final class BlockReach {
             approach.begin(toPos(target));
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> arrived = true;
             case STUCK, TIMEOUT -> refusal = approach.refusal();
         }

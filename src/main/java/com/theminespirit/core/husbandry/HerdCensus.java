@@ -6,8 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class HerdCensus {
-    private HerdCensus() {
-    }
+    private HerdCensus() {}
 
     public static Census summarize(List<AnimalRef> herd) {
         Objects.requireNonNull(herd, "Снимок стада не может быть null: пустое стадо задают пустым списком");

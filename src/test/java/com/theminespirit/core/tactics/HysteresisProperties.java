@@ -14,13 +14,17 @@ import net.jqwik.api.constraints.IntRange;
 
 class HysteresisProperties {
     private static final TacticsConfig CONFIG = TacticsConfig.loadDefault();
-    private static final Set<String> SOFT_REASONS = Set.of(Decision.BY_SCORE, Decision.HELD, Decision.SOLE_CANDIDATE,
-            Decision.ALL_EXCLUDED);
+    private static final Set<String> SOFT_REASONS =
+            Set.of(Decision.BY_SCORE, Decision.HELD, Decision.SOLE_CANDIDATE, Decision.ALL_EXCLUDED);
     private static final int INTERVAL = 10;
 
     @Provide
     Arbitrary<List<Situation>> series() {
-        return Situations.any().map(HysteresisProperties::healthy).list().ofMinSize(2).ofMaxSize(14);
+        return Situations.any()
+                .map(HysteresisProperties::healthy)
+                .list()
+                .ofMinSize(2)
+                .ofMaxSize(14);
     }
 
     private static Situation healthy(Situation situation) {
@@ -34,18 +38,21 @@ class HysteresisProperties {
     }
 
     @Property
-    void decide_PreviousFromRule_EqualsDecisionWithoutMemory(@ForAll("healthy") Situation situation,
-            @ForAll("options") TacticalOption previous, @ForAll @IntRange(min = 0, max = 100) int decidedAgo) {
+    void decide_PreviousFromRule_EqualsDecisionWithoutMemory(
+            @ForAll("healthy") Situation situation,
+            @ForAll("options") TacticalOption previous,
+            @ForAll @IntRange(min = 0, max = 100) int decidedAgo) {
         Decider decider = new Decider(new HardRules(CONFIG.rules().hard(), new RuleCounter()), CONFIG.weights());
         Assessment assessment = Assessments.withRoutes(situation, 1);
         Scores scores = new Scorer().score(situation, assessment, CONFIG.weights());
         FactMap facts = FactMap.from(situation, assessment);
 
-        Decision afterRule = decider.decide(facts, scores, 1, Memories.decidedByRule(situation, previous, 1000 - decidedAgo),
-                1000);
+        Decision afterRule =
+                decider.decide(facts, scores, 1, Memories.decidedByRule(situation, previous, 1000 - decidedAgo), 1000);
         Decision withoutMemory = decider.decide(facts, scores, 1, Memories.fresh(situation), 1000);
 
-        assertEquals(List.of(withoutMemory.option(), withoutMemory.rule(), withoutMemory.excluded()),
+        assertEquals(
+                List.of(withoutMemory.option(), withoutMemory.rule(), withoutMemory.excluded()),
                 List.of(afterRule.option(), afterRule.rule(), afterRule.excluded()),
                 "Решение, принятое жёстким правилом (" + previous + " " + decidedAgo + " тиков назад), не создаёт "
                         + "удержания: решение равно решению без памяти. Если удержание правила нужно осознанно, "
@@ -68,9 +75,11 @@ class HysteresisProperties {
             Decision decision = run.step(series.get(i), tick);
             if (previous != null && decision.option() != previous) {
                 boolean windowOver = tick - lastChange >= CONFIG.weights().holdTicks();
-                boolean hardReason = !SOFT_REASONS.contains(decision.rule()) || decision.excluded().contains(previous)
+                boolean hardReason = !SOFT_REASONS.contains(decision.rule())
+                        || decision.excluded().contains(previous)
                         || previousSource == DecisionSource.RULE;
-                assertTrue(windowOver || hardReason,
+                assertTrue(
+                        windowOver || hardReason,
                         "Решение сменилось с " + previous + " на " + decision.option() + " через " + (tick - lastChange)
                                 + " тиков без жёсткой причины (правило " + decision.rule() + "): гистерезис обязан "
                                 + "держать решение минимум holdTicks, кроме жёстких правил и вычёркивания");

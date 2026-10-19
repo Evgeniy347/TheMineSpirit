@@ -11,8 +11,7 @@ public final class ObservationHash {
     private static final char FIELD_SEPARATOR = '\u001f';
     private static final char RECORD_SEPARATOR = '\u001e';
 
-    private ObservationHash() {
-    }
+    private ObservationHash() {}
 
     public static String compute(WorldObservation obs) {
         String canonical = canonicalForm(obs);
@@ -52,11 +51,16 @@ public final class ObservationHash {
             return;
         }
         if (spirit.held() != null) {
-            builder.append(spirit.held().item()).append('@').append(spirit.held().durability());
+            builder.append(spirit.held().item())
+                    .append('@')
+                    .append(spirit.held().durability());
         }
         builder.append('|').append(spirit.health()).append('|').append(spirit.food());
         if (spirit.boardTask() != null) {
-            builder.append('|').append(spirit.boardTask().caseName()).append(':').append(spirit.boardTask().status());
+            builder.append('|')
+                    .append(spirit.boardTask().caseName())
+                    .append(':')
+                    .append(spirit.boardTask().status());
         }
         builder.append(RECORD_SEPARATOR);
     }

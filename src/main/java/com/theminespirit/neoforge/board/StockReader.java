@@ -59,8 +59,8 @@ public final class StockReader {
                 add(available, spirit.getInventory().getItem(slot));
             }
         }
-        StockScan.Result found = StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT,
-                blockBudget, blocks(level));
+        StockScan.Result found =
+                StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT, blockBudget, blocks(level));
         int reads = 0;
         for (BlockCoord pos : found.containers()) {
             if (reads >= containerBudget) {
@@ -78,8 +78,10 @@ public final class StockReader {
             }
         }
         if (reads >= containerBudget) {
-            LOGGER.debug("Снимок запасов обрезан бюджетом {} контейнеров: остальные сундуки "
-                    + "дочитаются на следующей пересборке", containerBudget);
+            LOGGER.debug(
+                    "Снимок запасов обрезан бюджетом {} контейнеров: остальные сундуки "
+                            + "дочитаются на следующей пересборке",
+                    containerBudget);
         }
         return new Snapshot(new StockView(available), found.blockReads(), reads);
     }
@@ -91,8 +93,8 @@ public final class StockReader {
     public record Snapshot(StockView view, int blockReads, int containers) {
         public Snapshot {
             if (blockReads < 0 || containers < 0) {
-                throw new IllegalArgumentException("Счётчики снимка не бывают отрицательными: чтений "
-                        + blockReads + ", контейнеров " + containers);
+                throw new IllegalArgumentException("Счётчики снимка не бывают отрицательными: чтений " + blockReads
+                        + ", контейнеров " + containers);
             }
         }
     }
@@ -107,7 +109,8 @@ public final class StockReader {
 
             @Override
             public boolean isContainer(BlockCoord pos) {
-                return allowed.contains(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())).getBlock());
+                return allowed.contains(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z()))
+                        .getBlock());
             }
         };
     }

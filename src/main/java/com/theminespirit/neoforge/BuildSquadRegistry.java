@@ -13,8 +13,7 @@ import net.minecraft.world.level.Level;
 public final class BuildSquadRegistry {
     private static final Map<Level, Map<BuildKey, BuildSquad>> BY_LEVEL = new WeakHashMap<>();
 
-    private BuildSquadRegistry() {
-    }
+    private BuildSquadRegistry() {}
 
     public static synchronized BuildSquad join(Level level, BuildKey key, UUID spirit) {
         require(level, key, spirit);

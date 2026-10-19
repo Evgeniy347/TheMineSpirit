@@ -21,8 +21,7 @@ public final class RestLifecycle {
     private static SpiritIndex index;
     private static RestServer server;
 
-    private RestLifecycle() {
-    }
+    private RestLifecycle() {}
 
     public static void register(IEventBus bus) {
         gameBus = bus;
@@ -32,27 +31,37 @@ public final class RestLifecycle {
         bus.addListener(RestLifecycle::onStopped);
     }
 
-    public static Optional<RestServer> tryStart(MinecraftServer minecraft, SpiritIndex spirits, String bindAddress,
-            int port) {
+    public static Optional<RestServer> tryStart(
+            MinecraftServer minecraft, SpiritIndex spirits, String bindAddress, int port) {
         InetAddress address;
         try {
             address = InetAddress.getByName(bindAddress);
         } catch (UnknownHostException e) {
-            LOGGER.error("REST-мост не запущен: адрес привязки '{}' из {} не разобран ({}). Укажите IP-адрес "
-                    + "этого компьютера, 0.0.0.0 или 127.0.0.1", bindAddress, RestConfig.FILE_NAME, e.toString());
+            LOGGER.error(
+                    "REST-мост не запущен: адрес привязки '{}' из {} не разобран ({}). Укажите IP-адрес "
+                            + "этого компьютера, 0.0.0.0 или 127.0.0.1",
+                    bindAddress,
+                    RestConfig.FILE_NAME,
+                    e.toString());
             return Optional.empty();
         }
         SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits, gameBus, new TaskRegistry());
         try {
             RestServer started = RestServer.start(address, port, RestRouter.create(gateway), gateway::stop);
-            LOGGER.info("REST-мост слушает {}:{} (без авторизации: доступ ограничивайте адресом привязки и файрволом)",
-                    address.getHostAddress(), started.port());
+            LOGGER.info(
+                    "REST-мост слушает {}:{} (без авторизации: доступ ограничивайте адресом привязки и файрволом)",
+                    address.getHostAddress(),
+                    started.port());
             return Optional.of(started);
         } catch (IOException | RuntimeException e) {
             gateway.stop();
-            LOGGER.error("REST-мост не запущен: не удалось занять {}:{} ({}). Проверьте, что порт свободен "
-                    + "(ss -ltn) и адрес принадлежит этому компьютеру, либо измените port и bindAddress в {}",
-                    address.getHostAddress(), port, e.toString(), RestConfig.FILE_NAME);
+            LOGGER.error(
+                    "REST-мост не запущен: не удалось занять {}:{} ({}). Проверьте, что порт свободен "
+                            + "(ss -ltn) и адрес принадлежит этому компьютеру, либо измените port и bindAddress в {}",
+                    address.getHostAddress(),
+                    port,
+                    e.toString(),
+                    RestConfig.FILE_NAME);
             return Optional.empty();
         }
     }
@@ -75,7 +84,8 @@ public final class RestLifecycle {
             LOGGER.error("REST-мост не запущен: индекс духов не создан, ServerAboutToStartEvent не был получен");
             return;
         }
-        server = tryStart(event.getServer(), index, RestConfig.bindAddress(), RestConfig.port()).orElse(null);
+        server = tryStart(event.getServer(), index, RestConfig.bindAddress(), RestConfig.port())
+                .orElse(null);
     }
 
     private static void onStopping(ServerStoppingEvent event) {

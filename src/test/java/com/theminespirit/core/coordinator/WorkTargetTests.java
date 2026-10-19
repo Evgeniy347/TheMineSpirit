@@ -21,43 +21,53 @@ class WorkTargetTests {
 
     @Test
     void equals_SameFields_IsTrue() {
-        assertEquals(new WorkTarget(WorkKind.TREE, ANCHOR), new WorkTarget(WorkKind.TREE, ANCHOR),
+        assertEquals(
+                new WorkTarget(WorkKind.TREE, ANCHOR),
+                new WorkTarget(WorkKind.TREE, ANCHOR),
                 "Цели с одинаковыми видом и якорем — одна и та же цель: бронь по ней общая");
     }
 
     @Test
     void equals_DifferentAnchor_IsFalse() {
-        assertNotEquals(new WorkTarget(WorkKind.TREE, ANCHOR), new WorkTarget(WorkKind.TREE, new BlockCoord(13, 64,
-                -8)),
+        assertNotEquals(
+                new WorkTarget(WorkKind.TREE, ANCHOR),
+                new WorkTarget(WorkKind.TREE, new BlockCoord(13, 64, -8)),
                 "Цели с разными якорями — разные цели: бронь по одной не занимает другую");
     }
 
     @Test
     void equals_DifferentKindSameAnchor_IsFalse() {
-        assertNotEquals(new WorkTarget(WorkKind.CELL, ANCHOR), new WorkTarget(WorkKind.TREE, ANCHOR),
+        assertNotEquals(
+                new WorkTarget(WorkKind.CELL, ANCHOR),
+                new WorkTarget(WorkKind.TREE, ANCHOR),
                 "Клетка и дерево в одной точке — разные цели: стройка и рубка бронируются раздельно");
     }
 
     @Test
     void hashCode_SameFields_IsEqual() {
-        assertEquals(new WorkTarget(WorkKind.VEIN, ANCHOR).hashCode(), new WorkTarget(WorkKind.VEIN, ANCHOR)
-                .hashCode(),
+        assertEquals(
+                new WorkTarget(WorkKind.VEIN, ANCHOR).hashCode(),
+                new WorkTarget(WorkKind.VEIN, ANCHOR).hashCode(),
                 "Одинаковые цели дают одинаковый hash: иначе реестр броней их не сопоставит в Map");
     }
 
     @Test
     void constructor_NullAnchor_Throws() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
                 () -> new WorkTarget(WorkKind.CELL, null),
                 "Цель без якоря не опознает клетку, ствол или жилу: бронь стала бы безадресной");
 
-        assertTrue(error.getMessage().contains("anchor"),
+        assertTrue(
+                error.getMessage().contains("anchor"),
                 "Сообщение называет поле anchor: без этого при падении не видно, что не так с целью");
     }
 
     @Test
     void constructor_NullKind_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new WorkTarget(null, ANCHOR),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new WorkTarget(null, ANCHOR),
                 "Цель без вида не говорит, клетка это, дерево или жила: бронь стала бы безвидовой");
     }
 }

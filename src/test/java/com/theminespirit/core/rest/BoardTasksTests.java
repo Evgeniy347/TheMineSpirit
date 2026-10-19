@@ -18,9 +18,16 @@ class BoardTasksTests {
     private static final UUID SPIRIT = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
     private static BoardTicket ticket(String id, Map<String, Integer> required) {
-        return new BoardTicket(id, BoardCase.SUPPLY_SITE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.SUPPLY_SITE), 0, 1, BoardTicket.ALWAYS_CAUSE,
-                List.of(), required);
+        return new BoardTicket(
+                id,
+                BoardCase.SUPPLY_SITE,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.SUPPLY_SITE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                required);
     }
 
     @Test
@@ -32,9 +39,13 @@ class BoardTasksTests {
 
         BoardTask task = BoardTasks.of(board, ticket, new StockView(Map.of("dirt", 3)));
 
-        assertEquals("WAITING_RESOURCES", task.status(),
+        assertEquals(
+                "WAITING_RESOURCES",
+                task.status(),
                 "Задание с нехваткой обязано нести статус ожидания ресурсов: наблюдатель видит, чего ждёт доска");
-        assertEquals(Map.of("dirt", 5), task.missing(),
+        assertEquals(
+                Map.of("dirt", 5),
+                task.missing(),
                 "Наблюдение обязано показывать нехватку, а не полную нужду: стратегу важно, сколько добыть");
     }
 
@@ -47,7 +58,9 @@ class BoardTasksTests {
 
         BoardTask task = BoardTasks.of(board, ticket, new StockView(Map.of()));
 
-        assertEquals(SPIRIT.toString(), task.assignee(),
+        assertEquals(
+                SPIRIT.toString(),
+                task.assignee(),
                 "После выдачи наблюдатель обязан видеть духа-держателя, а не «любой свободный»");
         assertEquals("ASSIGNED", task.status(), "Статус выданного задания — ASSIGNED");
     }
@@ -60,9 +73,7 @@ class BoardTasksTests {
 
         BoardTask task = BoardTasks.of(board, ticket, new StockView(Map.of()));
 
-        assertNull(task.assignee(),
-                "Невыданное задание без владельца в заявке не имеет держателя: assignee пуст");
-        assertEquals("PENDING", task.status(),
-                "Задание без нужды в ресурсах ждёт выдачи со статусом PENDING");
+        assertNull(task.assignee(), "Невыданное задание без владельца в заявке не имеет держателя: assignee пуст");
+        assertEquals("PENDING", task.status(), "Задание без нужды в ресурсах ждёт выдачи со статусом PENDING");
     }
 }

@@ -32,10 +32,11 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
 
     public TableDefinition {
         Objects.requireNonNull(id, "id таблицы не может быть null: по нему ведётся список /spirit tables");
-        Objects.requireNonNull(resourcePaths, "Пути ресурсов не могут быть null: по ним файлы ищутся в ресурс-менеджере");
+        Objects.requireNonNull(
+                resourcePaths, "Пути ресурсов не могут быть null: по ним файлы ищутся в ресурс-менеджере");
         if (resourcePaths.isEmpty()) {
-            throw new IllegalArgumentException("У таблицы '" + id
-                    + "' пустой список файлов: по пустому пути таблицу не найти");
+            throw new IllegalArgumentException(
+                    "У таблицы '" + id + "' пустой список файлов: по пустому пути таблицу не найти");
         }
         resourcePaths = List.copyOf(resourcePaths);
         Objects.requireNonNull(parser, "Парсер не может быть null: таблицу нечем превратить в данные");
@@ -44,10 +45,14 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
 
     public static <T> TableDefinition<T> single(String id, String resourcePath, SingleParser<T> parser) {
         Objects.requireNonNull(parser, "Парсер не может быть null: таблицу нечем превратить в данные");
-        return new TableDefinition<>(id, List.of(resourcePath), contents -> {
-            LoadedContent first = contents.get(0);
-            return parser.parse(first.json(), first.origin());
-        }, Expander.none());
+        return new TableDefinition<>(
+                id,
+                List.of(resourcePath),
+                contents -> {
+                    LoadedContent first = contents.get(0);
+                    return parser.parse(first.json(), first.origin());
+                },
+                Expander.none());
     }
 
     public static <T> TableDefinition<T> composite(String id, List<String> resourcePaths, Parser<T> parser) {

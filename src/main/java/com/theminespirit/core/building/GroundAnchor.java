@@ -14,8 +14,7 @@ public final class GroundAnchor {
         boolean solid(int y);
     }
 
-    private GroundAnchor() {
-    }
+    private GroundAnchor() {}
 
     public static int groundY(int fromY, int minY, SolidColumn column) {
         Objects.requireNonNull(column, "Столбец блоков не может быть null: без него неизвестно, где земля");

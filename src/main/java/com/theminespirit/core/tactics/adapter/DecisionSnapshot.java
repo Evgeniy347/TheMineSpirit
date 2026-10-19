@@ -6,8 +6,7 @@ import com.theminespirit.core.tactics.TacticalOption;
 import java.util.Objects;
 import java.util.Optional;
 
-public record DecisionSnapshot(TacticalOption decision, CombatMode mode, Optional<String> target,
-        DecisionOrder order) {
+public record DecisionSnapshot(TacticalOption decision, CombatMode mode, Optional<String> target, DecisionOrder order) {
     public static final String DECISION = "decision";
     public static final String MODE = "mode";
     public static final String TARGET = "target";
@@ -42,8 +41,9 @@ public record DecisionSnapshot(TacticalOption decision, CombatMode mode, Optiona
             case MODE -> mode.name();
             case TARGET -> target.orElse("нет");
             case ORDER -> order.label();
-            default -> throw new IllegalArgumentException("Поле снимка '" + field + "' неизвестно: сравниваются "
-                    + DECISION + ", " + MODE + ", " + TARGET + " и " + ORDER);
+            default ->
+                throw new IllegalArgumentException("Поле снимка '" + field + "' неизвестно: сравниваются " + DECISION
+                        + ", " + MODE + ", " + TARGET + " и " + ORDER);
         };
     }
 }

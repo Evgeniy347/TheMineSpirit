@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class TransferPlanner {
-    private TransferPlanner() {
-    }
+    private TransferPlanner() {}
 
     public static TransferPlan plan(List<Stack> from, List<Stack> to, IdFilter filter, int maxCount) {
         Objects.requireNonNull(from, "Слоты источника не могут быть null: переносить нечего");
         Objects.requireNonNull(to, "Слоты приёмника не могут быть null: некуда переносить");
-        Objects.requireNonNull(filter, "Фильтр предметов не может быть null: "
-                + "без фильтра непонятно, какие предметы идут в контейнер");
+        Objects.requireNonNull(
+                filter,
+                "Фильтр предметов не может быть null: " + "без фильтра непонятно, какие предметы идут в контейнер");
         if (maxCount < 0) {
             throw new IllegalArgumentException("Лимит переноса " + maxCount
                     + " отрицательный: лимит задаёт, сколько предметов переносим за один вызов");
@@ -51,16 +51,16 @@ public final class TransferPlanner {
     public static TransferPlan planSlices(List<Stack> from, List<Stack> to, List<Slice> slices) {
         Objects.requireNonNull(from, "Слоты источника не могут быть null: излишек разгрузки брать негде");
         Objects.requireNonNull(to, "Слоты приёмника не могут быть null: излишку разгрузки некуда лечь");
-        Objects.requireNonNull(slices, "Список излишка не может быть null: "
-                + "без него непонятно, какие слоты везти в контейнер");
+        Objects.requireNonNull(
+                slices, "Список излишка не может быть null: " + "без него непонятно, какие слоты везти в контейнер");
         Receiver receiver = new Receiver(to);
         List<Move> moves = new ArrayList<>();
         int moved = 0;
         int total = 0;
         for (Slice slice : slices) {
             if (slice.slot() >= from.size()) {
-                throw new IllegalArgumentException("Излишек в слоте " + slice.slot()
-                        + " при источнике на " + from.size() + " слотов: везти нечего, излишек посчитан не по тем слотам");
+                throw new IllegalArgumentException("Излишек в слоте " + slice.slot() + " при источнике на "
+                        + from.size() + " слотов: везти нечего, излишек посчитан не по тем слотам");
             }
             total += slice.count();
             Stack source = from.get(slice.slot());
@@ -105,7 +105,9 @@ public final class TransferPlanner {
                 this.emptySlot[slot] = stack == null;
                 this.room[slot] = stack == null ? 0 : stack.freeSpace();
                 if (stack != null && stack.freeSpace() > 0) {
-                    partialByKind.computeIfAbsent(key(stack), kind -> new ArrayList<>()).add(slot);
+                    partialByKind
+                            .computeIfAbsent(key(stack), kind -> new ArrayList<>())
+                            .add(slot);
                 }
             }
         }
@@ -140,7 +142,9 @@ public final class TransferPlanner {
                 room[target] = source.maxStack() - count;
                 emptySlot[target] = false;
                 if (room[target] > 0) {
-                    partialByKind.computeIfAbsent(key(source), kind -> new ArrayList<>()).add(target);
+                    partialByKind
+                            .computeIfAbsent(key(source), kind -> new ArrayList<>())
+                            .add(target);
                 }
                 return;
             }

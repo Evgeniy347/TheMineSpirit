@@ -39,8 +39,8 @@ public sealed interface ExecutionResult {
 
     private static void requireEnemy(EnemyFact enemy) {
         if (enemy == null) {
-            throw new IllegalArgumentException("Цель = null: атака и стрельба требуют врага; если цели нет, решение — "
-                    + "простой (Idle)");
+            throw new IllegalArgumentException(
+                    "Цель = null: атака и стрельба требуют врага; если цели нет, решение — " + "простой (Idle)");
         }
     }
 }

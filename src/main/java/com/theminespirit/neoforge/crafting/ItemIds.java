@@ -9,8 +9,7 @@ import net.minecraft.world.item.Items;
 public final class ItemIds {
     private static final String DEFAULT_NAMESPACE = "minecraft";
 
-    private ItemIds() {
-    }
+    private ItemIds() {}
 
     public static String of(Item item) {
         ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);

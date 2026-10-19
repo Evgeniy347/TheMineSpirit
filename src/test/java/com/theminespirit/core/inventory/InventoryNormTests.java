@@ -17,13 +17,17 @@ class InventoryNormTests {
 
     @Test
     void extra_BreadWithinQuota_IsEmpty() {
-        assertEquals(List.of(), InventoryNorm.extra(List.of(stack("bread", 16)), KIT, List.of(), VALUES),
+        assertEquals(
+                List.of(),
+                InventoryNorm.extra(List.of(stack("bread", 16)), KIT, List.of(), VALUES),
                 "Хлеб в пределах квоты еды (16) — норма, а не лишнее: иначе дух унесёт в контейнер свой паёк");
     }
 
     @Test
     void extra_BreadOverQuota_OnlyExcessIsExtra() {
-        assertEquals(List.of(new Slice(0, 4)), InventoryNorm.extra(List.of(stack("bread", 20)), KIT, List.of(), VALUES),
+        assertEquals(
+                List.of(new Slice(0, 4)),
+                InventoryNorm.extra(List.of(stack("bread", 20)), KIT, List.of(), VALUES),
                 "Сверх квоты еды лишним считается только избыток (4 из 20): норма остаётся у духа");
     }
 
@@ -31,15 +35,21 @@ class InventoryNormTests {
     void extra_TaskNeed_ProtectsItemFromExtra() {
         List<Stack> inventory = List.of(stack("iron_ingot", 10));
 
-        assertEquals(List.of(new Slice(0, 10)), InventoryNorm.extra(inventory, KIT, List.of(), VALUES),
+        assertEquals(
+                List.of(new Slice(0, 10)),
+                InventoryNorm.extra(inventory, KIT, List.of(), VALUES),
                 "Железо вне набора и вне нужд задачи — лишнее");
-        assertEquals(List.of(), InventoryNorm.extra(inventory, KIT, List.of("iron_ingot"), VALUES),
+        assertEquals(
+                List.of(),
+                InventoryNorm.extra(inventory, KIT, List.of("iron_ingot"), VALUES),
                 "Минимум задачи защищает железо от лишнего: иначе дух унесёт материал будущего крафта");
     }
 
     @Test
     void extra_TorchWithinQuota_IsNorm() {
-        assertEquals(List.of(), InventoryNorm.extra(List.of(stack("torch", 24)), KIT, List.of(), VALUES),
+        assertEquals(
+                List.of(),
+                InventoryNorm.extra(List.of(stack("torch", 24)), KIT, List.of(), VALUES),
                 "Факелы в пределах квоты (24) — норма: шахтёр не уносит освещение");
     }
 
@@ -74,7 +84,8 @@ class InventoryNormTests {
 
         InventoryFill fill = InventoryNorm.fill(inventory, KIT, List.of("iron_ingot"), VALUES);
 
-        assertTrue(fill.extraItems() <= fill.storedItems(),
+        assertTrue(
+                fill.extraItems() <= fill.storedItems(),
                 "Лишнее — часть лежащего: иначе доля лишнего превысит единицу");
         assertEquals(4, fill.extraItems(), "Железо защищено нуждой задачи, лишний только избыток хлеба");
     }

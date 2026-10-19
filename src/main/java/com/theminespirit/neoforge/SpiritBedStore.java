@@ -11,8 +11,7 @@ public final class SpiritBedStore {
 
     private static final String VERSION_KEY = "Version";
 
-    private SpiritBedStore() {
-    }
+    private SpiritBedStore() {}
 
     public static void write(CompoundTag tag, BlockCoord bed) {
         if (bed == null) {

@@ -8,11 +8,10 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 public final class FuelPlanner {
-    private FuelPlanner() {
-    }
+    private FuelPlanner() {}
 
-    public static Optional<FuelRequirement> select(String smelted, int count, ResourceKnowledge knowledge,
-            Set<String> path, Map<String, Integer> remaining) {
+    public static Optional<FuelRequirement> select(
+            String smelted, int count, ResourceKnowledge knowledge, Set<String> path, Map<String, Integer> remaining) {
         List<String> candidates = fuelCandidates(knowledge, smelted);
         String partialFuel = null;
         int partialHave = 0;
@@ -55,16 +54,21 @@ public final class FuelPlanner {
         for (String fuel : candidates) {
             names.add(fuel);
         }
-        throw new UnplannableGoalException(smelted, "Для плавки '" + smelted + "' ×" + count
-                + " нет доступного топлива (" + names + "): добавьте топливо в знания как gatherable, craftable или "
-                + "smeltable либо выдайте духу топливо в инвентарь");
+        throw new UnplannableGoalException(
+                smelted,
+                "Для плавки '" + smelted + "' ×" + count
+                        + " нет доступного топлива (" + names
+                        + "): добавьте топливо в знания как gatherable, craftable или "
+                        + "smeltable либо выдайте духу топливо в инвентарь");
     }
 
     private static List<String> fuelCandidates(ResourceKnowledge knowledge, String smelted) {
         List<String> candidates = knowledge.fuelCandidates();
         if (candidates == null || candidates.isEmpty()) {
-            throw new UnplannableGoalException(smelted, "Для плавки '" + smelted
-                    + "' знания не дали ни одного кандидата в топливо: верните порядок предпочтения топлива");
+            throw new UnplannableGoalException(
+                    smelted,
+                    "Для плавки '" + smelted
+                            + "' знания не дали ни одного кандидата в топливо: верните порядок предпочтения топлива");
         }
         return candidates;
     }

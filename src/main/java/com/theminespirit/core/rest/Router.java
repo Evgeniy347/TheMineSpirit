@@ -30,7 +30,8 @@ public final class Router {
 
     public RestResponse handle(RestRequest request) {
         if (request.body().length > RestTuning.MAX_BODY_BYTES) {
-            return ErrorJson.response(new ApiException(ErrorCode.INVALID_REQUEST,
+            return ErrorJson.response(new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Тело запроса " + request.body().length + " байт больше лимита " + RestTuning.MAX_BODY_BYTES
                             + " байт: сократите тело запроса",
                     Map.of("limit_bytes", RestTuning.MAX_BODY_BYTES)));
@@ -62,19 +63,21 @@ public final class Router {
     }
 
     private static RestResponse notFound(RestRequest request) {
-        return ErrorJson.response(new ApiException(ErrorCode.NOT_FOUND,
-                "Путь '" + request.path() + "' не найден: проверьте адрес по docs/api/README.md, например GET /v1/bots"));
+        return ErrorJson.response(new ApiException(
+                ErrorCode.NOT_FOUND,
+                "Путь '" + request.path()
+                        + "' не найден: проверьте адрес по docs/api/README.md, например GET /v1/bots"));
     }
 
     private static RestResponse methodNotAllowed(RestRequest request, Set<String> allowed) {
         String allow = String.join(", ", allowed);
-        RestResponse body = ErrorJson.response(new ApiException(ErrorCode.INVALID_REQUEST,
-                "Метод '" + request.method() + "' не поддерживается для пути '" + request.path()
-                        + "': допустимо " + allow,
+        RestResponse body = ErrorJson.response(new ApiException(
+                ErrorCode.INVALID_REQUEST,
+                "Метод '" + request.method() + "' не поддерживается для пути '" + request.path() + "': допустимо "
+                        + allow,
                 Map.of("allow", List.copyOf(allowed))));
         return new RestResponse(405, Map.of("Allow", allow), body.body());
     }
 
-    private record Compiled(Route route, RoutePattern pattern) {
-    }
+    private record Compiled(Route route, RoutePattern pattern) {}
 }

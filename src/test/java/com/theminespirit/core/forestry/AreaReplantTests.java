@@ -18,27 +18,34 @@ class AreaReplantTests {
 
         List<BlockCoord> cells = AreaReplant.plan(center, List.of(center), DATA, grid);
 
-        assertEquals(24, cells.size(),
+        assertEquals(
+                24,
+                cells.size(),
                 "В радиусе 6 с шагом 3 вокруг центра — сетка 5x5 без самой клетки ствола: 24 клетки досадки. "
                         + "Фактически " + cells);
-        assertFalse(cells.contains(center),
+        assertFalse(
+                cells.contains(center),
                 "Клетка ствола исключена: там уже посажен саженец пересадки, второй в ту же клетку не встанет");
-        assertTrue(cells.contains(new BlockCoord(3, 1, 0)) && cells.contains(new BlockCoord(-6, 1, 6)),
+        assertTrue(
+                cells.contains(new BlockCoord(3, 1, 0)) && cells.contains(new BlockCoord(-6, 1, 6)),
                 "В сетке обязаны быть клетки на шаге 3 и на краю радиуса: иначе шаг или радиус не соблюдён");
         for (BlockCoord cell : cells) {
             int dx = cell.x() - center.x();
             int dz = cell.z() - center.z();
-            assertTrue(dx % DATA.areaStep() == 0 && dz % DATA.areaStep() == 0,
+            assertTrue(
+                    dx % DATA.areaStep() == 0 && dz % DATA.areaStep() == 0,
                     "Клетка " + cell + " обязана стоять на сетке с шагом " + DATA.areaStep());
-            assertTrue(Math.abs(dx) <= DATA.areaRadius() && Math.abs(dz) <= DATA.areaRadius(),
+            assertTrue(
+                    Math.abs(dx) <= DATA.areaRadius() && Math.abs(dz) <= DATA.areaRadius(),
                     "Клетка " + cell + " обязана лежать в радиусе " + DATA.areaRadius());
         }
         int previous = -1;
         for (BlockCoord cell : cells) {
             int distance = cell.x() * cell.x() + cell.z() * cell.z();
-            assertTrue(distance >= previous,
-                    "Порядок досадки — от ближних клеток к дальним: клетка " + cell + " с расстоянием "
-                            + distance + " идёт после " + previous + ", обход недетерминирован");
+            assertTrue(
+                    distance >= previous,
+                    "Порядок досадки — от ближних клеток к дальним: клетка " + cell + " с расстоянием " + distance
+                            + " идёт после " + previous + ", обход недетерминирован");
             previous = distance;
         }
     }
@@ -51,10 +58,10 @@ class AreaReplantTests {
 
         List<BlockCoord> cells = AreaReplant.plan(center, List.of(), DATA, grid);
 
-        assertFalse(cells.contains(new BlockCoord(3, 1, 0)),
+        assertFalse(
+                cells.contains(new BlockCoord(3, 1, 0)),
                 "Клетка без почвы под ней обязана пропускаться: саженец на камне не приживётся");
-        assertTrue(cells.contains(new BlockCoord(-3, 1, 0)),
-                "Соседняя клетка с почвой обязана остаться в плане");
+        assertTrue(cells.contains(new BlockCoord(-3, 1, 0)), "Соседняя клетка с почвой обязана остаться в плане");
     }
 
     @Test
@@ -65,10 +72,12 @@ class AreaReplantTests {
 
         List<BlockCoord> cells = AreaReplant.plan(center, List.of(), DATA, grid);
 
-        assertFalse(cells.contains(new BlockCoord(3, 1, 0)),
+        assertFalse(
+                cells.contains(new BlockCoord(3, 1, 0)),
                 "Клетка вплотную к постройке (доска в соседней клетке при зазоре 2) обязана пропускаться: "
                         + "саженец не ставится к стене игрока");
-        assertTrue(cells.contains(new BlockCoord(3, 1, 3)),
+        assertTrue(
+                cells.contains(new BlockCoord(3, 1, 3)),
                 "Клетка дальше зазора от постройки обязана остаться: зазор не запрещает всю досадку");
     }
 
@@ -80,7 +89,8 @@ class AreaReplantTests {
 
         List<BlockCoord> cells = AreaReplant.plan(center, List.of(), DATA, grid);
 
-        assertFalse(cells.contains(new BlockCoord(3, 1, 0)),
+        assertFalse(
+                cells.contains(new BlockCoord(3, 1, 0)),
                 "Занятая клетка обязана пропускаться: на место листвы или камня саженец не поставишь");
     }
 

@@ -23,7 +23,9 @@ class ErrorCodeTests {
             actual.put(code.wire(), code.status());
         }
 
-        assertEquals(expected, actual,
+        assertEquals(
+                expected,
+                actual,
                 "Таблица «код ошибки → HTTP-статус» — контракт docs/api/README.md: клиент выбирает поведение по коду и "
                         + "статусу. Кода unauthorized нет (авторизации нет). Меняя таблицу осознанно, правь и docs/api/README.md");
     }

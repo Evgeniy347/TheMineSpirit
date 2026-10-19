@@ -15,7 +15,8 @@ public record DescentStairStep(int index, int floor, List<BlockCoord> stairCells
         Objects.requireNonNull(stairCells, "Клетки ступенек не могут быть null: без них непонятно, где ступеньки");
         Objects.requireNonNull(railCells, "Клетки рельсового прохода не могут быть null: пустой задают пустым списком");
         if (stairCells.isEmpty()) {
-            throw new IllegalArgumentException("Шаг " + index + " без единой ступеньки: ступеньки ставят на каждом шаге");
+            throw new IllegalArgumentException(
+                    "Шаг " + index + " без единой ступеньки: ступеньки ставят на каждом шаге");
         }
         List<BlockCoord> combined = new ArrayList<>(stairCells);
         combined.addAll(railCells);

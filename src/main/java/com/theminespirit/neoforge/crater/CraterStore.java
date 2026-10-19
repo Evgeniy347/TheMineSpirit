@@ -36,8 +36,7 @@ public final class CraterStore extends SavedData {
 
     private final List<Crater> craters = new ArrayList<>();
 
-    public CraterStore() {
-    }
+    public CraterStore() {}
 
     public static SavedData.Factory<CraterStore> factory() {
         return new SavedData.Factory<>(CraterStore::new, CraterStore::load, null);
@@ -85,9 +84,12 @@ public final class CraterStore extends SavedData {
     }
 
     private static Crater readCrater(CompoundTag tag) {
-        return new Crater(tag.getUUID(ID_KEY),
+        return new Crater(
+                tag.getUUID(ID_KEY),
                 new BlockCoord(tag.getInt(X_KEY), tag.getInt(Y_KEY), tag.getInt(Z_KEY)),
-                tag.getInt(RADIUS_KEY), tag.getInt(LEVEL_KEY), tag.getLong(TICK_KEY));
+                tag.getInt(RADIUS_KEY),
+                tag.getInt(LEVEL_KEY),
+                tag.getLong(TICK_KEY));
     }
 
     public void add(Crater crater) {

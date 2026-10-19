@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 
 class CoreIsolationTests {
     private static final Path CORE_SOURCES = Path.of("src/main/java/com/theminespirit/core");
-    private static final Pattern GAME_IMPORT =
-            Pattern.compile("^import\\s+(static\\s+)?(net\\.minecraft|net\\.neoforged|com\\.mojang)\\.", Pattern.MULTILINE);
+    private static final Pattern GAME_IMPORT = Pattern.compile(
+            "^import\\s+(static\\s+)?(net\\.minecraft|net\\.neoforged|com\\.mojang)\\.", Pattern.MULTILINE);
 
     @Test
     void coreSources_Scanned_ImportNothingFromMinecraftOrNeoForge() {
@@ -22,10 +22,12 @@ class CoreIsolationTests {
         List<Path> coreFiles = all.keySet().stream()
                 .filter(path -> path.startsWith(CORE_SOURCES))
                 .toList();
-        assertTrue(Files.isDirectory(CORE_SOURCES),
+        assertTrue(
+                Files.isDirectory(CORE_SOURCES),
                 "Сторож не нашёл каталог core " + CORE_SOURCES + ": переименование пакета молча делает "
                         + "сторож зелёным на нуле файлов");
-        assertTrue(!coreFiles.isEmpty(),
+        assertTrue(
+                !coreFiles.isEmpty(),
                 "Сторож не нашёл ни одного файла в " + CORE_SOURCES + ": переименование пакета молча делает "
                         + "сторож зелёным на нуле файлов");
 

@@ -10,19 +10,18 @@ import java.util.Set;
 public final class MiningPlanner {
     private static final int STAND_RADIUS = 3;
 
-    private MiningPlanner() {
-    }
+    private MiningPlanner() {}
 
     public static Outcome next(BlockCoord from, List<BlockCoord> remaining, SafetyView view) {
         return next(from, remaining, view, Set.of());
     }
 
-    public static Outcome next(BlockCoord from, List<BlockCoord> remaining, SafetyView view,
-            Set<BlockCoord> excluded) {
+    public static Outcome next(BlockCoord from, List<BlockCoord> remaining, SafetyView view, Set<BlockCoord> excluded) {
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней выбирается ближайшая цель");
         Objects.requireNonNull(remaining, "Список целей не может быть null: пустой набор задают пустым списком");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется безопасность цели");
-        Objects.requireNonNull(excluded, "Множество исключённых стоянок не может быть null: без него непонятно, что пропускать");
+        Objects.requireNonNull(
+                excluded, "Множество исключённых стоянок не может быть null: без него непонятно, что пропускать");
         List<BlockCoord> ordered = new ArrayList<>(remaining);
         ordered.sort(Comparator.comparingLong((BlockCoord target) -> distanceSquared(from, target))
                 .thenComparing(Comparator.naturalOrder()));
@@ -88,8 +87,7 @@ public final class MiningPlanner {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    public sealed interface Outcome permits Next, Exhausted {
-    }
+    public sealed interface Outcome permits Next, Exhausted {}
 
     public record Next(BlockCoord target, BlockCoord stand) implements Outcome {
         public Next {

@@ -80,28 +80,29 @@ public final class BoardService {
     private long stockBlockReads;
     private long stockContainers;
 
-    public BoardService(Board board, HerdCycles animals, StockReader stockReader, BoardSources sources,
-            JournalService journal) {
+    public BoardService(
+            Board board, HerdCycles animals, StockReader stockReader, BoardSources sources, JournalService journal) {
         this.board = Objects.requireNonNull(board, "board не может быть null: очередь заданий живёт в ядре");
-        this.animals = Objects.requireNonNull(animals,
-                "animals не может быть null: циклы животных по видам — составная часть доски");
-        this.stockReader = Objects.requireNonNull(stockReader,
-                "stockReader не может быть null: снимок запасов собирает адаптер");
-        this.sources = Objects.requireNonNull(sources,
-                "sources не может быть null: источники событий доски");
-        this.journal = Objects.requireNonNull(journal,
-                "journal не может быть null: без него переходы не попадут в журнал");
+        this.animals = Objects.requireNonNull(
+                animals, "animals не может быть null: циклы животных по видам — составная часть доски");
+        this.stockReader =
+                Objects.requireNonNull(stockReader, "stockReader не может быть null: снимок запасов собирает адаптер");
+        this.sources = Objects.requireNonNull(sources, "sources не может быть null: источники событий доски");
+        this.journal =
+                Objects.requireNonNull(journal, "journal не может быть null: без него переходы не попадут в журнал");
         journal.restore(board.ledger());
     }
 
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
         JournalService journal = JournalService.inConfigDirectory();
-        Board board = new Board(now, (event, ticket, holder, tick) ->
-                journal.record(event, ticket, holder, tick));
-        return new BoardService(board, new HerdCycles(board),
+        Board board = new Board(now, (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
+        return new BoardService(
+                board,
+                new HerdCycles(board),
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
-                BoardSources.create(), journal);
+                BoardSources.create(),
+                journal);
     }
 
     public Board board() {
@@ -179,7 +180,6 @@ public final class BoardService {
         return craters;
     }
 
-
     public void noteCapture(String captureId, Species species, UUID animal, TicketTarget penTarget) {
         Objects.requireNonNull(captureId, "captureId не может быть null: по нему идёт причина задания");
         Objects.requireNonNull(species, "Вид пойманного животного не может быть null: цикл идёт по виду");
@@ -208,7 +208,8 @@ public final class BoardService {
                 continue;
             }
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
-            if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES
+            if (status != BoardStatus.PENDING
+                    && status != BoardStatus.WAITING_RESOURCES
                     && status != BoardStatus.ASSIGNED) {
                 continue;
             }
@@ -227,9 +228,12 @@ public final class BoardService {
                 continue;
             }
             String item = parts[4];
-            boolean found = level.getEntitiesOfClass(ItemEntity.class,
-                    new AABB(x - 4, y - 4, z - 4, x + 5, y + 5, z + 5),
-                    drop -> !drop.isRemoved() && item.equals(StackMapper.itemId(drop.getItem()))).isEmpty() == false;
+            boolean found = level.getEntitiesOfClass(
+                                    ItemEntity.class,
+                                    new AABB(x - 4, y - 4, z - 4, x + 5, y + 5, z + 5),
+                                    drop -> !drop.isRemoved() && item.equals(StackMapper.itemId(drop.getItem())))
+                            .isEmpty()
+                    == false;
             if (found) {
                 live.add(ticket.cause());
             }
@@ -263,13 +267,14 @@ public final class BoardService {
         return live;
     }
 
-    private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {
-    }
+    private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {}
 
     public boolean reportDropped(SpiritEntity source, ItemEntity drop) {
         Objects.requireNonNull(source, "Дух, выкинувший вещь, не может быть null: по нему ищется поселение");
         Objects.requireNonNull(drop, "Выкинутая вещь не может быть null: без неё нечего забирать");
-        if (!SpiritConfig.boardEnabled() || source.home().isEmpty() || drop.isRemoved()
+        if (!SpiritConfig.boardEnabled()
+                || source.home().isEmpty()
+                || drop.isRemoved()
                 || !(drop.level() instanceof ServerLevel level)) {
             return false;
         }
@@ -281,9 +286,18 @@ public final class BoardService {
         }
         String cause = "drop:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ() + ":" + item;
         BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        BoardOutcome outcome = submit(new BoardTicket(id, BoardCase.COLLECT_DROPS, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.COLLECT_DROPS), level.getGameTime(), 1, cause,
-                List.of(), Map.of()), TicketTarget.at(at).withDrops(List.of(item)));
+        BoardOutcome outcome = submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.COLLECT_DROPS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.COLLECT_DROPS),
+                        level.getGameTime(),
+                        1,
+                        cause,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(at).withDrops(List.of(item)));
         if (outcome == BoardOutcome.ACCEPTED) {
             LOGGER.info("Журнал доски: постановка {} — забрать выкинутое в {}: {}", id, at, item);
         }
@@ -353,8 +367,10 @@ public final class BoardService {
         animals.cycle(species).penBuilt(penId);
         TicketTarget pen = targets.get(penId);
         if (pen != null) {
-            targets.put(cycleId(species, "lure"), pen.withSpecies(species)
-                    .withLureItem(FeedTable.feedFor(species).get(0)));
+            targets.put(
+                    cycleId(species, "lure"),
+                    pen.withSpecies(species)
+                            .withLureItem(FeedTable.feedFor(species).get(0)));
         }
     }
 
@@ -385,8 +401,7 @@ public final class BoardService {
 
     private static Species speciesOfId(String ticketId) {
         String[] parts = ticketId.split(":", 3);
-        String prefix = parts.length > 1 && "capture".equals(parts[0]) ? parts[1]
-                : ticketId.split("[_:/]", 2)[0];
+        String prefix = parts.length > 1 && "capture".equals(parts[0]) ? parts[1] : ticketId.split("[_:/]", 2)[0];
         String name = prefix.toLowerCase(Locale.ROOT);
         for (Species species : Species.all()) {
             if (species.name().toLowerCase(Locale.ROOT).equals(name)) {
@@ -427,10 +442,8 @@ public final class BoardService {
                 case CAPTURE_ANIMAL -> animals.cycle(speciesFor(ticket)).captured(ticket.id());
                 case BUILD_PEN -> completePen(ticket.id());
                 case LURE_ANIMAL -> animals.cycle(speciesFor(ticket)).lured();
-                case DISMANTLE_SHELTER -> {
-                }
-                default -> {
-                }
+                case DISMANTLE_SHELTER -> {}
+                default -> {}
             }
         } else {
             board.fail(ticket.id(), stock);
@@ -448,8 +461,11 @@ public final class BoardService {
             }
         }
         WorkReserveHub.releaseAll(spirit);
-        LOGGER.info("Дух {} {} задание {}: статус закрыт доской", spirit.displayName(),
-                success ? "завершил" : "провалил", ticket.id());
+        LOGGER.info(
+                "Дух {} {} задание {}: статус закрыт доской",
+                spirit.displayName(),
+                success ? "завершил" : "провалил",
+                ticket.id());
     }
 
     private void flushBlockNotes() {
@@ -484,14 +500,18 @@ public final class BoardService {
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now, awaited);
             if (spirit == null) {
-                LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(),
+                LOGGER.debug(
+                        "Задание {} ждёт свободного духа: {}",
+                        ticket.id(),
                         ticket.assignee().isPresent() ? "свой дух занят" : "свободных нет или их ждут свои задания");
                 continue;
             }
             TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
-                LOGGER.info("Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
-                        ticket.id(), spirit.displayName());
+                LOGGER.info(
+                        "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
+                        ticket.id(),
+                        spirit.displayName());
                 continue;
             }
             TaskNode plan;
@@ -500,14 +520,20 @@ public final class BoardService {
                         ? new ScriptCall("eat", Map.of())
                         : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
             } catch (RuntimeException failure) {
-                LOGGER.error("Задание {} (кейс {}): план не собран: {}", ticket.id(), ticket.boardCase(),
+                LOGGER.error(
+                        "Задание {} (кейс {}): план не собран: {}",
+                        ticket.id(),
+                        ticket.boardCase(),
                         failure.getMessage());
                 continue;
             }
             try {
                 spirit.startTask(plan);
             } catch (RuntimeException failure) {
-                LOGGER.error("Задание {}: дух {} не принял задание: {}", ticket.id(), spirit.displayName(),
+                LOGGER.error(
+                        "Задание {}: дух {} не принял задание: {}",
+                        ticket.id(),
+                        spirit.displayName(),
                         failure.getMessage());
                 continue;
             }
@@ -516,7 +542,10 @@ public final class BoardService {
                 claims++;
                 held.merge(spirit.getUUID(), 1, Integer::sum);
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
-                LOGGER.info("Доска выдала задание {} (кейс {}) духу {}", ticket.id(), ticket.boardCase(),
+                LOGGER.info(
+                        "Доска выдала задание {} (кейс {}) духу {}",
+                        ticket.id(),
+                        ticket.boardCase(),
                         spirit.displayName());
             } else {
                 LOGGER.error("Задание {} не выдано духу {}: {}", ticket.id(), spirit.displayName(), outcome);
@@ -546,8 +575,13 @@ public final class BoardService {
         return centers;
     }
 
-    private SpiritEntity chooseSpirit(BoardTicket ticket, List<SpiritEntity> spirits, ServerLevel level,
-            Map<UUID, Integer> held, long now, Set<UUID> awaited) {
+    private SpiritEntity chooseSpirit(
+            BoardTicket ticket,
+            List<SpiritEntity> spirits,
+            ServerLevel level,
+            Map<UUID, Integer> held,
+            long now,
+            Set<UUID> awaited) {
         if (ticket.assignee().isPresent()) {
             Entity entity = level.getEntity(ticket.assignee().orElseThrow());
             if (entity instanceof SpiritEntity spirit && free(spirit, held, ticket, now)) {
@@ -555,7 +589,9 @@ public final class BoardService {
             }
             return null;
         }
-        List<SpiritEntity> unclaimed = spirits.stream().filter(spirit -> !awaited.contains(spirit.getUUID())).toList();
+        List<SpiritEntity> unclaimed = spirits.stream()
+                .filter(spirit -> !awaited.contains(spirit.getUUID()))
+                .toList();
         return nearestFree(unclaimed, targets.get(ticket.id()), held, ticket, now);
     }
 
@@ -572,28 +608,34 @@ public final class BoardService {
     }
 
     private static EatNeed eatNeed(SpiritEntity spirit) {
-        return new EatNeed(spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()),
-                SpiritHunger.MAX_FOOD, (int) Math.ceil(spirit.getMaxHealth()));
+        return new EatNeed(
+                spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
+                        Math.ceil(spirit.getMaxHealth()));
     }
 
     private static SpiritView viewOf(SpiritEntity spirit) {
-        return new SpiritView(spirit.tactics().wantsControl(), false,
-                spirit.taskStatus().orElse(null) == RunStatus.RUNNING);
+        return new SpiritView(
+                spirit.tactics().wantsControl(), false, spirit.taskStatus().orElse(null) == RunStatus.RUNNING);
     }
 
-    private SpiritEntity nearestFree(List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held,
-            BoardTicket ticket, long now) {
+    private SpiritEntity nearestFree(
+            List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held, BoardTicket ticket, long now) {
         SpiritEntity best = null;
         double bestDistance = Double.MAX_VALUE;
         for (SpiritEntity spirit : spirits) {
             if (!free(spirit, held, ticket, now)) {
                 continue;
             }
-            double distance = target == null ? 0
-                    : spirit.distanceToSqr(target.target().x() + 0.5, target.target().y(),
+            double distance = target == null
+                    ? 0
+                    : spirit.distanceToSqr(
+                            target.target().x() + 0.5,
+                            target.target().y(),
                             target.target().z() + 0.5);
-            if (distance < bestDistance || (distance == bestDistance && best != null
-                    && spirit.getUUID().compareTo(best.getUUID()) < 0)) {
+            if (distance < bestDistance
+                    || (distance == bestDistance
+                            && best != null
+                            && spirit.getUUID().compareTo(best.getUUID()) < 0)) {
                 best = spirit;
                 bestDistance = distance;
             }
@@ -622,11 +664,21 @@ public final class BoardService {
                 continue;
             }
             TicketTarget target = targets.values().stream()
-                    .filter(supply -> item.equals(supply.supplyItem())).findFirst()
+                    .filter(supply -> item.equals(supply.supplyItem()))
+                    .findFirst()
                     .orElse(TicketTarget.at(homeOf(spirits)));
-            submit(new BoardTicket(id, BoardCase.SUPPLY_SITE, Optional.empty(),
-                    BoardRules.priorityOf(BoardCase.SUPPLY_SITE), now, 1, BoardTicket.ALWAYS_CAUSE,
-                    List.of(), Map.of()), target.withSupply(item, count));
+            submit(
+                    new BoardTicket(
+                            id,
+                            BoardCase.SUPPLY_SITE,
+                            Optional.empty(),
+                            BoardRules.priorityOf(BoardCase.SUPPLY_SITE),
+                            now,
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of()),
+                    target.withSupply(item, count));
         }
         permanentSupplies(spirits, stock, now);
     }
@@ -642,16 +694,25 @@ public final class BoardService {
             if (board.statusOf(id).isPresent() || board.recentlyFailed(id, now)) {
                 return;
             }
-            submit(new BoardTicket(id, BoardCase.SUPPLY_SITE, Optional.empty(),
-                    BoardPriorities.effective(BoardCase.ENCHANT_SHELVES, PriorityContext.none()),
-                    now, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of(shortItem, threshold - have)),
+            submit(
+                    new BoardTicket(
+                            id,
+                            BoardCase.SUPPLY_SITE,
+                            Optional.empty(),
+                            BoardPriorities.effective(BoardCase.ENCHANT_SHELVES, PriorityContext.none()),
+                            now,
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of(shortItem, threshold - have)),
                     TicketTarget.at(homeOf(spirits)).withSupply(shortItem, threshold - have));
         });
     }
 
     private boolean hasActiveSupply(String item) {
         for (BoardTicket ticket : board.all()) {
-            if (ticket.boardCase() != BoardCase.SUPPLY_SITE || board.statusOf(ticket.id()).isEmpty()) {
+            if (ticket.boardCase() != BoardCase.SUPPLY_SITE
+                    || board.statusOf(ticket.id()).isEmpty()) {
                 continue;
             }
             TicketTarget target = targets.get(ticket.id());
@@ -667,7 +728,10 @@ public final class BoardService {
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        return spirits.stream().map(SpiritEntity::home).flatMap(Optional::stream).findFirst()
+        return spirits.stream()
+                .map(SpiritEntity::home)
+                .flatMap(Optional::stream)
+                .findFirst()
                 .orElse(new BlockCoord(0, 64, 0));
     }
 

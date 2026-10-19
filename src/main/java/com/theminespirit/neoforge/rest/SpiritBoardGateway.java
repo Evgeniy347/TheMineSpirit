@@ -5,11 +5,11 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
-import com.theminespirit.core.board.RelocatePlan;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.RelocatePlan;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.BoardGateway;
 import com.theminespirit.core.rest.BoardTask;
@@ -65,8 +65,8 @@ public final class SpiritBoardGateway implements BoardGateway {
 
     @Override
     public List<BoardLogEntry> log(int limit) {
-        return serverCall.call(() -> BoardRegistry.get(server.overworld()).journal().last(limit),
-                RestTuning.SERVER_CALL_TIMEOUT);
+        return serverCall.call(
+                () -> BoardRegistry.get(server.overworld()).journal().last(limit), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     private List<BoardTask> readTasks() {
@@ -85,9 +85,15 @@ public final class SpiritBoardGateway implements BoardGateway {
         BoardService service = BoardRegistry.get(level);
         Board board = service.board();
         String id = ID_PREFIX + request.requestId();
-        BoardTicket ticket = new BoardTicket(id, request.boardCase(), request.assignee(),
+        BoardTicket ticket = new BoardTicket(
+                id,
+                request.boardCase(),
+                request.assignee(),
                 BoardRules.priorityOf(request.boardCase()),
-                level.getGameTime(), request.level(), request.cause(), request.dependsOn(),
+                level.getGameTime(),
+                request.level(),
+                request.cause(),
+                request.dependsOn(),
                 request.requiredItems());
         BoardOutcome outcome;
         if (request.boardCase() == BoardCase.RELOCATE_BUILDING) {
@@ -96,21 +102,27 @@ public final class SpiritBoardGateway implements BoardGateway {
             outcome = service.submit(ticket);
         }
         if (outcome == BoardOutcome.BACKOFF) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "Задание '" + id + "' не принято доской: " + outcome + " — задание с этим request_id "
                             + "недавно провалено, повторите с новым request_id",
                     Map.of("request_id", request.requestId().toString(), "outcome", outcome.name()));
         }
-        BoardTicket stored = board.find(id).orElseThrow(() -> new ApiException(ErrorCode.INTERNAL,
-                "Доска приняла задание '" + id + "', но не находит его в очереди: состояние доски "
-                        + "испорчено, перезапустите сервер", Map.of("request_id", request.requestId().toString())));
+        BoardTicket stored = board.find(id)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.INTERNAL,
+                        "Доска приняла задание '" + id + "', но не находит его в очереди: состояние доски "
+                                + "испорчено, перезапустите сервер",
+                        Map.of("request_id", request.requestId().toString())));
         return BoardTasks.of(board, stored, service.stock());
     }
 
     private static TicketTarget relocationTarget(BoardTaskRequest request) {
-        BoardCase building = request.building().orElseThrow(() -> new ApiException(
-                ErrorCode.INVALID_REQUEST, "Перенос без 'building': неизвестно, что переносить",
-                Map.of("field", "building")));
+        BoardCase building = request.building()
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.INVALID_REQUEST,
+                        "Перенос без 'building': неизвестно, что переносить",
+                        Map.of("field", "building")));
         return TicketTarget.at(request.to().orElseThrow())
                 .withRelocate(request.from().orElseThrow(), request.to().orElseThrow())
                 .withScheme(RelocatePlan.schemeFor(building));
@@ -120,13 +132,17 @@ public final class SpiritBoardGateway implements BoardGateway {
         ServerLevel level = server.overworld();
         BoardService service = BoardRegistry.get(level);
         Board board = service.board();
-        BoardTicket ticket = board.find(ticketId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                "Задание доски '" + ticketId + "' не найдено: список заданий — GET /v1/board",
-                Map.of("id", ticketId)));
+        BoardTicket ticket = board.find(ticketId)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Задание доски '" + ticketId + "' не найдено: список заданий — GET /v1/board",
+                        Map.of("id", ticketId)));
         service.cancel(level, ticketId);
-        BoardStatus status = board.statusOf(ticketId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
-                "Задание доски '" + ticketId + "' исчезло после отмены: список заданий — GET /v1/board",
-                Map.of("id", ticketId)));
+        BoardStatus status = board.statusOf(ticketId)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Задание доски '" + ticketId + "' исчезло после отмены: список заданий — GET /v1/board",
+                        Map.of("id", ticketId)));
         return BoardTasks.of(board, ticket, status, service.stock());
     }
 }

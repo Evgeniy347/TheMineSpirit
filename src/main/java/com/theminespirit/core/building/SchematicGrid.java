@@ -11,11 +11,9 @@ import java.util.Map;
  * (изголовье — по направлению facing). Половина или часть дописывается в состояние сама.
  */
 final class SchematicGrid {
-    record Result(List<Schematic.Entry> blocks, List<Schematic.Cell> air) {
-    }
+    record Result(List<Schematic.Entry> blocks, List<Schematic.Cell> air) {}
 
-    private SchematicGrid() {
-    }
+    private SchematicGrid() {}
 
     static Result resolve(char[][][] grid, Map<Character, SchematicTextParser.LegendEntry> legend, String origin) {
         int sy = grid.length;
@@ -51,23 +49,22 @@ final class SchematicGrid {
         return new Result(List.copyOf(blocks), List.copyOf(air));
     }
 
-    private static void door(Surface surface, SchematicTextParser.LegendEntry entry, char symbol,
-            int x, int y, int z) {
+    private static void door(Surface surface, SchematicTextParser.LegendEntry entry, char symbol, int x, int y, int z) {
         char[][][] grid = surface.grid();
         if (y + 1 >= grid.length || grid[y + 1][z][x] != symbol || surface.done()[y + 1][z][x]) {
             throw new IllegalStateException("Файл постройки '" + surface.origin() + "': дверь '" + symbol
                     + "' в клетке [" + x + "," + y + "," + z + "] без верхней половины: напишите тот же символ в слое y"
                     + (y + 1) + " над ней (строка " + (z + 1) + ", позиция " + (x + 1) + ")");
         }
-        surface.blocks().add(new Schematic.Entry(x, y, z, entry.block(), with(entry.state(), "half", "lower"),
-                entry.text()));
-        surface.blocks().add(new Schematic.Entry(x, y + 1, z, entry.block(), with(entry.state(), "half", "upper"),
-                entry.text()));
+        surface.blocks()
+                .add(new Schematic.Entry(x, y, z, entry.block(), with(entry.state(), "half", "lower"), entry.text()));
+        surface.blocks()
+                .add(new Schematic.Entry(
+                        x, y + 1, z, entry.block(), with(entry.state(), "half", "upper"), entry.text()));
         surface.done()[y + 1][z][x] = true;
     }
 
-    private static void bed(Surface surface, SchematicTextParser.LegendEntry entry, char symbol,
-            int x, int y, int z) {
+    private static void bed(Surface surface, SchematicTextParser.LegendEntry entry, char symbol, int x, int y, int z) {
         char[][][] grid = surface.grid();
         boolean[][][] done = surface.done();
         String facing = entry.state().get("facing");
@@ -99,17 +96,23 @@ final class SchematicGrid {
                     + "обязана стоять рядом вдоль facing=" + facing
                     + " — изголовье по направлению facing, ножная часть позади");
         }
-        surface.blocks().add(new Schematic.Entry(footX, y, footZ, entry.block(), with(entry.state(), "part", "foot"),
-                entry.text()));
-        surface.blocks().add(new Schematic.Entry(headX, y, headZ, entry.block(), with(entry.state(), "part", "head"),
-                entry.text()));
+        surface.blocks()
+                .add(new Schematic.Entry(
+                        footX, y, footZ, entry.block(), with(entry.state(), "part", "foot"), entry.text()));
+        surface.blocks()
+                .add(new Schematic.Entry(
+                        headX, y, headZ, entry.block(), with(entry.state(), "part", "head"), entry.text()));
         done[y][headZ][headX] = true;
         done[y][footZ][footX] = true;
     }
 
     private static boolean same(char[][][] grid, boolean[][][] done, char symbol, int y, int x, int z) {
-        return x >= 0 && x < grid[0][0].length && z >= 0 && z < grid[0].length
-                && grid[y][z][x] == symbol && !done[y][z][x];
+        return x >= 0
+                && x < grid[0][0].length
+                && z >= 0
+                && z < grid[0].length
+                && grid[y][z][x] == symbol
+                && !done[y][z][x];
     }
 
     private static Map<String, String> with(Map<String, String> state, String key, String value) {
@@ -118,6 +121,5 @@ final class SchematicGrid {
         return Map.copyOf(copy);
     }
 
-    private record Surface(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks, String origin) {
-    }
+    private record Surface(char[][][] grid, boolean[][][] done, List<Schematic.Entry> blocks, String origin) {}
 }

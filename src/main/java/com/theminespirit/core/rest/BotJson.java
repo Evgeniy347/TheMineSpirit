@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class BotJson {
-    private BotJson() {
-    }
+    private BotJson() {}
 
     public static String toJson(BotInfo bot) {
         return RestJson.write(toMap(bot));

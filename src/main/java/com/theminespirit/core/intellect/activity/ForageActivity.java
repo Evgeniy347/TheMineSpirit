@@ -46,33 +46,55 @@ public final class ForageActivity implements Activity {
         Forage forage = view.forage();
         IntellectTuning tuning = IntellectTuning.loadDefault();
         if (forage.hasContainerFood()) {
-            return new ActivityIntent(id(), Optional.of("withdraw"),
-                    Map.of("container", "nearest", "item", forage.containerFood(),
-                            "count", tuning.forageWithdrawCount(),
-                            "radius", tuning.forageWithdrawRadius()),
+            return new ActivityIntent(
+                    id(),
+                    Optional.of("withdraw"),
+                    Map.of(
+                            "container",
+                            "nearest",
+                            "item",
+                            forage.containerFood(),
+                            "count",
+                            tuning.forageWithdrawCount(),
+                            "radius",
+                            tuning.forageWithdrawRadius()),
                     Optional.empty());
         }
         if (view.farmWork().hasHarvest()) {
             return new ActivityIntent(id(), Optional.of("harvest_crop"), Map.of(), Optional.of(WorkKind.CELL));
         }
         if (forage.canFish()) {
-            return new ActivityIntent(id(), Optional.of("fish"),
-                    Map.of("count", tuning.forageFishCount(),
-                            "radius", tuning.forageFishRadius(),
-                            "duration_ticks", tuning.forageFishDuration()),
+            return new ActivityIntent(
+                    id(),
+                    Optional.of("fish"),
+                    Map.of(
+                            "count",
+                            tuning.forageFishCount(),
+                            "radius",
+                            tuning.forageFishRadius(),
+                            "duration_ticks",
+                            tuning.forageFishDuration()),
                     Optional.empty());
         }
         if (forage.hasPrey() && view.weapons() > 0) {
-            return new ActivityIntent(id(), Optional.of("hunt"),
-                    Map.of("species", forage.preySpecies(), "radius", tuning.forageHuntRadius(),
-                            "count", tuning.forageHuntCount()),
+            return new ActivityIntent(
+                    id(),
+                    Optional.of("hunt"),
+                    Map.of(
+                            "species",
+                            forage.preySpecies(),
+                            "radius",
+                            tuning.forageHuntRadius(),
+                            "count",
+                            tuning.forageHuntCount()),
                     Optional.empty());
         }
         return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
     }
 
     private static boolean hasMethod(SettlementView view) {
-        return view.forage().hasContainerFood() || view.farmWork().hasHarvest()
+        return view.forage().hasContainerFood()
+                || view.farmWork().hasHarvest()
                 || view.forage().canFish()
                 || (view.forage().hasPrey() && view.weapons() > 0);
     }

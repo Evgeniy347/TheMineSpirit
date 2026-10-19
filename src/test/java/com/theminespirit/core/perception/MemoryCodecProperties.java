@@ -18,12 +18,15 @@ class MemoryCodecProperties {
     @Provide
     Arbitrary<MemoryStore> stores() {
         Arbitrary<String> suffix = Arbitraries.strings().ofMaxLength(10);
-        Arbitrary<BlockCoord> pos = Combinators.combine(Arbitraries.integers(), Arbitraries.integers(),
-                Arbitraries.integers()).as(BlockCoord::new);
-        Arbitrary<String> dimension = Arbitraries.strings().alpha().ofMinLength(1).ofMaxLength(20)
-                .map(name -> "mod:" + name);
-        Arbitrary<List<MemoryPoint>> points = Combinators.combine(suffix, Arbitraries.of(MemoryType.class), dimension,
-                pos).as((tail, type, dim, at) -> new MemoryPoint("p" + tail, type, dim, at)).list()
+        Arbitrary<BlockCoord> pos = Combinators.combine(
+                        Arbitraries.integers(), Arbitraries.integers(), Arbitraries.integers())
+                .as(BlockCoord::new);
+        Arbitrary<String> dimension =
+                Arbitraries.strings().alpha().ofMinLength(1).ofMaxLength(20).map(name -> "mod:" + name);
+        Arbitrary<List<MemoryPoint>> points = Combinators.combine(
+                        suffix, Arbitraries.of(MemoryType.class), dimension, pos)
+                .as((tail, type, dim, at) -> new MemoryPoint("p" + tail, type, dim, at))
+                .list()
                 .ofMaxSize(MAX_POINTS);
         return points.map(MemoryCodecProperties::withUniqueNames);
     }
@@ -39,7 +42,9 @@ class MemoryCodecProperties {
 
     @Property
     void roundTrip_AnyStore_DecodeOfEncodeIsEqual(@ForAll("stores") MemoryStore store) {
-        assertEquals(store, MemoryCodec.decode(MemoryCodec.encode(store)),
+        assertEquals(
+                store,
+                MemoryCodec.decode(MemoryCodec.encode(store)),
                 "decode(encode(store)) обязан равняться store для любой памяти: иначе точки меняются при "
                         + "перезапуске сервера");
     }

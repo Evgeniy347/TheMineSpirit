@@ -31,8 +31,10 @@ public enum Species {
         try {
             return valueOf(species.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException error) {
-            throw new IllegalArgumentException("Неизвестный вид животного '" + species + "': допустимы " + NAMES
-                    + ", сверьте значение с каталогом /v1/capabilities", error);
+            throw new IllegalArgumentException(
+                    "Неизвестный вид животного '" + species + "': допустимы " + NAMES
+                            + ", сверьте значение с каталогом /v1/capabilities",
+                    error);
         }
     }
 

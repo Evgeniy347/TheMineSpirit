@@ -16,7 +16,8 @@ class FreeInventoryDemandProperties {
     private static final InventoryNormTable TABLE = InventoryNormTable.parse(CURVES, "тест");
 
     @Property
-    void demand_FractionsGrow_DemandNeverFalls(@ForAll @DoubleRange(min = 0, max = 1) double occupiedA,
+    void demand_FractionsGrow_DemandNeverFalls(
+            @ForAll @DoubleRange(min = 0, max = 1) double occupiedA,
             @ForAll @DoubleRange(min = 0, max = 1) double extraA,
             @ForAll @DoubleRange(min = 0, max = 1) double occupiedB,
             @ForAll @DoubleRange(min = 0, max = 1) double extraB) {
@@ -28,7 +29,8 @@ class FreeInventoryDemandProperties {
         double lower = FreeInventoryDemand.demand(lowerOccupied, lowerExtra, TABLE);
         double upper = FreeInventoryDemand.demand(upperOccupied, upperExtra, TABLE);
 
-        assertTrue(upper >= lower - 1e-9,
+        assertTrue(
+                upper >= lower - 1e-9,
                 "Чем полнее инвентарь и больше доля лишнего, тем не меньше спрос освободить его: "
                         + "нижняя точка (" + lowerOccupied + ", " + lowerExtra + ") = " + lower
                         + ", верхняя (" + upperOccupied + ", " + upperExtra + ") = " + upper);

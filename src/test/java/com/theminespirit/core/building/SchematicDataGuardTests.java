@@ -34,7 +34,9 @@ class SchematicDataGuardTests {
             }
         }
 
-        assertEquals(List.of(), problems,
+        assertEquals(
+                List.of(),
+                problems,
                 "Каждая постройка обязана разбираться и проходить правила качества (стены, вход, крыша, высота, окна, "
                         + "дверь, опора, сундук, свет) или иметь исключение с причиной в своём файле; устаревшее "
                         + "исключение — тоже ошибка: оно молча ослабляет сторож. Проверка вне тестов — "
@@ -48,13 +50,16 @@ class SchematicDataGuardTests {
             for (DemoBuildings.Level level : building.levels()) {
                 String path = PresetLibrary.SCHEMATICS_ROOT + level.scheme() + SchematicTextParser.EXTENSION;
                 SchematicDocument document = SchematicTextParser.parse(JsonResource.readClasspath(path), path);
-                if (document.header().type().isEmpty() || document.header().entrance().isEmpty()) {
+                if (document.header().type().isEmpty()
+                        || document.header().entrance().isEmpty()) {
                     untyped.add(level.scheme());
                 }
             }
         }
 
-        assertEquals(List.of(), untyped,
+        assertEquals(
+                List.of(),
+                untyped,
                 "Каждая постройка демо-каталога обязана нести type и entrance: без них сторожа качества её не "
                         + "проверяют, и демо покажет игроку дом без двери или крыши. Без типа");
     }
@@ -77,7 +82,8 @@ class SchematicDataGuardTests {
 
         SchematicCheck.Report report = SchematicCheck.check("probe", document);
 
-        assertTrue(report.stale().stream().anyMatch(problem -> problem.contains("probe|support")),
+        assertTrue(
+                report.stale().stream().anyMatch(problem -> problem.contains("probe|support")),
                 "Исключение для уже проходящего правила обязано считаться устаревшим: иначе сторож ослабляют "
                         + "навсегда; фактически: " + report.stale());
         assertFalse(report.ok(), "Отчёт с устаревшим исключением не может быть зелёным");
@@ -85,7 +91,9 @@ class SchematicDataGuardTests {
 
     @Test
     void parse_ExemptionWithUnknownRule_IsRejected() {
-        IllegalStateException error = assertThrows(IllegalStateException.class, () -> SchematicTextParser.parse("""
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> SchematicTextParser.parse("""
                 size: 1x1x1
                 exemptions:
                   - rule: ghost
@@ -98,14 +106,17 @@ class SchematicDataGuardTests {
                 """, "тест"),
                 "Исключение с несуществующим правилом обязано отвергаться: опечатка иначе молча не применится");
 
-        assertTrue(error.getMessage().contains("ghost") && error.getMessage().contains("строка 3"),
+        assertTrue(
+                error.getMessage().contains("ghost") && error.getMessage().contains("строка 3"),
                 "Ошибка обязана называть неизвестное правило и строку: без них непонятно, что чинить; фактически: "
                         + error.getMessage());
     }
 
     @Test
     void parse_ExemptionWithoutReason_IsRejected() {
-        IllegalStateException error = assertThrows(IllegalStateException.class, () -> SchematicTextParser.parse("""
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> SchematicTextParser.parse("""
                 size: 1x1x1
                 exemptions:
                   - rule: door
@@ -117,7 +128,8 @@ class SchematicDataGuardTests {
                 """, "тест"),
                 "Исключение без причины обязано отвергаться: иначе правило ослабляется молча");
 
-        assertTrue(error.getMessage().contains("reason"),
+        assertTrue(
+                error.getMessage().contains("reason"),
                 "Ошибка обязана называть поле reason; фактически: " + error.getMessage());
     }
 
@@ -125,7 +137,8 @@ class SchematicDataGuardTests {
         assertTrue(Files.isDirectory(ROOT), "Сторож не нашёл " + ROOT + ": тесты запускаются из корня проекта");
         try (Stream<Path> stream = Files.list(ROOT)) {
             List<Path> files = stream.filter(path -> path.toString().endsWith(SchematicTextParser.EXTENSION))
-                    .sorted().toList();
+                    .sorted()
+                    .toList();
             assertFalse(files.isEmpty(), "В " + ROOT + " нет ни одной постройки: сторож проверял бы пустоту");
             return files;
         }

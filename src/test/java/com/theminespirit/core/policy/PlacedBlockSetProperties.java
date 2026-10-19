@@ -18,13 +18,19 @@ import net.jqwik.api.constraints.IntRange;
 class PlacedBlockSetProperties {
     @Provide
     Arbitrary<BlockCoord> anyCoord() {
-        return Combinators.combine(Arbitraries.integers().between(-33_554_432, 33_554_431), Arbitraries.integers().between(-2048, 2047),
-                Arbitraries.integers().between(-33_554_432, 33_554_431)).as(BlockCoord::new);
+        return Combinators.combine(
+                        Arbitraries.integers().between(-33_554_432, 33_554_431),
+                        Arbitraries.integers().between(-2048, 2047),
+                        Arbitraries.integers().between(-33_554_432, 33_554_431))
+                .as(BlockCoord::new);
     }
 
     @Property(tries = 200)
     void unpack_PackedCoordinate_RestoresIt(@ForAll("anyCoord") BlockCoord coord) {
-        assertEquals(coord, PlacedBlockSet.unpack(PlacedBlockSet.pack(coord)), "Сжатие позиции в long обратимо на всём допустимом диапазоне");
+        assertEquals(
+                coord,
+                PlacedBlockSet.unpack(PlacedBlockSet.pack(coord)),
+                "Сжатие позиции в long обратимо на всём допустимом диапазоне");
     }
 
     @Property(tries = 200)
@@ -49,7 +55,9 @@ class PlacedBlockSetProperties {
         }
 
         for (BlockCoord coord : pool) {
-            assertEquals(model.contains(coord), set.contains(coord),
+            assertEquals(
+                    model.contains(coord),
+                    set.contains(coord),
                     "contains истинно ровно для добавленных и не удалённых позиций. Позиция: " + coord);
         }
         assertEquals(model.size(), set.size(), "Размер набора равен числу добавленных и не удалённых позиций");

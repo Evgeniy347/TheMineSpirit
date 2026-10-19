@@ -6,8 +6,7 @@ import net.minecraft.nbt.Tag;
 public final class SpiritDemoStore {
     public static final String KEY = "SpiritDemo";
 
-    private SpiritDemoStore() {
-    }
+    private SpiritDemoStore() {}
 
     public static void write(CompoundTag tag, boolean demo) {
         if (!demo) {

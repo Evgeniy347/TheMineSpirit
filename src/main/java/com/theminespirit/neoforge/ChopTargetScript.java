@@ -108,10 +108,11 @@ public final class ChopTargetScript implements ScriptInstance {
         return switch (outcome.state()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case DONE -> finish(outcome);
-            case PROTECTED -> fail("дерево по координате " + targetText()
-                    + " защищено политикой: рубка отменена, постройку и защищённые блоки дух не ломает");
-            case UNREACHABLE -> fail("дерево по координате " + targetText()
-                    + " недостижимо: подойти к стволу не удалось");
+            case PROTECTED ->
+                fail("дерево по координате " + targetText()
+                        + " защищено политикой: рубка отменена, постройку и защищённые блоки дух не ломает");
+            case UNREACHABLE ->
+                fail("дерево по координате " + targetText() + " недостижимо: подойти к стволу не удалось");
             case FAILED -> fail(outcome.reason());
         };
     }

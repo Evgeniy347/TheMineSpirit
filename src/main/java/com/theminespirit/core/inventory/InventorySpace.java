@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class InventorySpace {
-    private InventorySpace() {
-    }
+    private InventorySpace() {}
 
     public static boolean holds(List<Stack> inventory, Stack incoming) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: проверка вместимости считает слоты инвентаря");

@@ -11,8 +11,7 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 public final class MobTargetEvents {
     private static final int DEFAULT_TARGET_PRIORITY = 2;
 
-    private MobTargetEvents() {
-    }
+    private MobTargetEvents() {}
 
     public static void register(IEventBus bus) {
         bus.addListener(MobTargetEvents::onJoinLevel);
@@ -25,8 +24,9 @@ public final class MobTargetEvents {
         if (!SpiritConfig.mobsTargetSpirits() || alreadyTargetsSpirits(mob)) {
             return;
         }
-        SpiritTargets.conditionFor(typeOf(mob)).ifPresent(condition -> mob.targetSelector.addGoal(
-                targetPriority(mob), new SpiritAttackGoal(mob, condition)));
+        SpiritTargets.conditionFor(typeOf(mob))
+                .ifPresent(condition ->
+                        mob.targetSelector.addGoal(targetPriority(mob), new SpiritAttackGoal(mob, condition)));
     }
 
     private static String typeOf(Mob mob) {

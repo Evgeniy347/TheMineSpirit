@@ -20,11 +20,10 @@ public final class CookableFoods {
 
     private static final Set<String> COOKED = Set.copyOf(new HashSet<>(RAW_TO_COOKED.values()));
 
-    private static final Set<String> FISH = Set.of(
-            "minecraft:cod", "minecraft:salmon", "minecraft:pufferfish", "minecraft:tropical_fish");
+    private static final Set<String> FISH =
+            Set.of("minecraft:cod", "minecraft:salmon", "minecraft:pufferfish", "minecraft:tropical_fish");
 
-    private CookableFoods() {
-    }
+    private CookableFoods() {}
 
     public static boolean isFish(String item) {
         return item != null && FISH.contains(item);
@@ -39,8 +38,10 @@ public final class CookableFoods {
     }
 
     public static boolean isCooked(String item) {
-        return item != null && (COOKED.contains(item) || item.startsWith("minecraft:cooked_")
-                || item.equals("minecraft:baked_potato"));
+        return item != null
+                && (COOKED.contains(item)
+                        || item.startsWith("minecraft:cooked_")
+                        || item.equals("minecraft:baked_potato"));
     }
 
     public static Optional<String> cooked(String raw) {
@@ -54,7 +55,8 @@ public final class CookableFoods {
         return rawFoods.entrySet().stream()
                 .filter(entry -> entry.getValue() != null && entry.getValue() > 0)
                 .filter(entry -> RAW_TO_COOKED.containsKey(entry.getKey()))
-                .map(entry -> Map.entry(RAW_TO_COOKED.get(entry.getKey()), satiety(table, RAW_TO_COOKED.get(entry.getKey()))))
+                .map(entry ->
+                        Map.entry(RAW_TO_COOKED.get(entry.getKey()), satiety(table, RAW_TO_COOKED.get(entry.getKey()))))
                 .max(Comparator.<Map.Entry<String, Double>>comparingDouble(Map.Entry::getValue)
                         .thenComparing(Map.Entry::getKey))
                 .map(Map.Entry::getKey);

@@ -50,13 +50,16 @@ class RecipeCuratorTests {
     void curate_ItemWithSmeltingRecipe_CraftingRecipesOfItemAreDropped() {
         List<RecipeSpec> curated = RecipeCurator.curate(ironFamily());
 
-        assertFalse(ids(curated).contains("iron_ingot_from_nuggets"),
+        assertFalse(
+                ids(curated).contains("iron_ingot_from_nuggets"),
                 "Слиток железа получают плавкой, а не из 9 самородков: иначе резолвер зациклится слиток → самородок "
                         + "→ слиток и никогда не пойдёт в печь. Осталось: " + ids(curated));
-        assertFalse(ids(curated).contains("iron_ingot_from_iron_block"),
+        assertFalse(
+                ids(curated).contains("iron_ingot_from_iron_block"),
                 "Слиток из блока не должен считаться способом получения слитка, если у слитка есть плавка. "
                         + "Осталось: " + ids(curated));
-        assertTrue(ids(curated).contains("iron_ingot_from_smelting_raw_iron"),
+        assertTrue(
+                ids(curated).contains("iron_ingot_from_smelting_raw_iron"),
                 "Рецепт плавки обязан остаться: он и есть способ получить слиток. Осталось: " + ids(curated));
     }
 
@@ -64,7 +67,9 @@ class RecipeCuratorTests {
     void curate_IronFamily_KeepsCompressionAndNuggetsFromIngots() {
         List<RecipeSpec> curated = RecipeCurator.curate(ironFamily());
 
-        assertEquals(Set.of("iron_ingot_from_smelting_raw_iron", "iron_block", "iron_nugget"), ids(curated),
+        assertEquals(
+                Set.of("iron_ingot_from_smelting_raw_iron", "iron_block", "iron_nugget"),
+                ids(curated),
                 "Блок железа из 9 слитков и самородки из слитка обязаны остаться: это единственный путь к ним");
     }
 
@@ -78,50 +83,65 @@ class RecipeCuratorTests {
 
         Set<String> kept = ids(RecipeCurator.curate(recipes));
 
-        assertEquals(Set.of("gold_ingot_from_nuggets", "gold_block"), kept,
+        assertEquals(
+                Set.of("gold_ingot_from_nuggets", "gold_block"),
+                kept,
                 "Разжатие (блок → 9 слитков, слиток → 9 самородков), у которого есть обратная сборка, обязано "
                         + "отбрасываться, сжатие — оставаться: иначе золото получают из ничего по кругу");
     }
 
     @Test
     void curate_CoalAndCoalBlock_DropsBlockToCoal() {
-        List<RecipeSpec> recipes = List.of(
-                compression("coal_block", "coal_block", "coal"),
-                decompression("coal", "coal", "coal_block"));
+        List<RecipeSpec> recipes =
+                List.of(compression("coal_block", "coal_block", "coal"), decompression("coal", "coal", "coal_block"));
 
         Set<String> kept = ids(RecipeCurator.curate(recipes));
 
-        assertEquals(Set.of("coal_block"), kept,
+        assertEquals(
+                Set.of("coal_block"),
+                kept,
                 "Уголь не должен добываться из блока угля, если блок собирается из угля: резолвер ушёл бы в цикл");
     }
 
     @Test
     void curate_LogToPlanksAndPlanksToSticks_NothingDropped() {
         List<RecipeSpec> recipes = List.of(
-                RecipeSpec.shapeless("oak_planks", "oak_planks", 4,
-                        List.of(IngredientSpec.of("oak_log", "oak_wood"))),
-                RecipeSpec.shaped("stick", "stick", 4, 1, 2,
+                RecipeSpec.shapeless("oak_planks", "oak_planks", 4, List.of(IngredientSpec.of("oak_log", "oak_wood"))),
+                RecipeSpec.shaped(
+                        "stick",
+                        "stick",
+                        4,
+                        1,
+                        2,
                         List.of(IngredientSpec.of("oak_planks"), IngredientSpec.of("oak_planks"))),
-                RecipeSpec.shaped("stick_from_bamboo", "stick", 1, 1, 2,
+                RecipeSpec.shaped(
+                        "stick_from_bamboo",
+                        "stick",
+                        1,
+                        1,
+                        2,
                         List.of(IngredientSpec.of("bamboo"), IngredientSpec.of("bamboo"))));
 
         List<RecipeSpec> curated = RecipeCurator.curate(recipes);
 
-        assertEquals(recipes, curated,
+        assertEquals(
+                recipes,
+                curated,
                 "Бревно → доски (1 → 4) и доски → палки не имеют обратных рецептов: куратор не вправе их трогать, "
                         + "иначе у дерева пропадёт путь к палкам");
     }
 
     @Test
     void curate_RecipeConsumingItsOwnResult_IsDropped() {
-        RecipeSpec selfFed = RecipeSpec.shapeless("dye_mix", "red_dye", 2,
-                List.of(IngredientSpec.of("red_dye", "pink_dye"), IngredientSpec.of("poppy")));
-        RecipeSpec fine = RecipeSpec.shapeless("red_dye_from_poppy", "red_dye", 1,
-                List.of(IngredientSpec.of("poppy")));
+        RecipeSpec selfFed = RecipeSpec.shapeless(
+                "dye_mix", "red_dye", 2, List.of(IngredientSpec.of("red_dye", "pink_dye"), IngredientSpec.of("poppy")));
+        RecipeSpec fine = RecipeSpec.shapeless("red_dye_from_poppy", "red_dye", 1, List.of(IngredientSpec.of("poppy")));
 
         Set<String> kept = ids(RecipeCurator.curate(List.of(selfFed, fine)));
 
-        assertEquals(Set.of("red_dye_from_poppy"), kept,
+        assertEquals(
+                Set.of("red_dye_from_poppy"),
+                kept,
                 "Рецепт, которому нужен собственный результат, обязан отбрасываться: он не создаёт предмет из "
                         + "сырья, а только зацикливает резолвер");
     }
@@ -133,7 +153,9 @@ class RecipeCuratorTests {
                 smelting("b", "item_b", "raw_b"),
                 RecipeSpec.shapeless("c", "item_c", 2, List.of(IngredientSpec.of("raw_c"))));
 
-        assertEquals(recipes, RecipeCurator.curate(recipes),
+        assertEquals(
+                recipes,
+                RecipeCurator.curate(recipes),
                 "Правило (г): рецепты, не подпавшие под отбор, остаются без изменений и в прежнем порядке");
     }
 }

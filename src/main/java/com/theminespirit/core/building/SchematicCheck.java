@@ -29,8 +29,7 @@ public final class SchematicCheck {
         }
     }
 
-    private SchematicCheck() {
-    }
+    private SchematicCheck() {}
 
     public static Report check(String id, SchematicDocument document) {
         Objects.requireNonNull(id, "Id постройки не может быть null: по нему называют нарушителя");
@@ -45,11 +44,16 @@ public final class SchematicCheck {
             return new Report(id, List.of(), stale);
         }
         if (header.entrance().isEmpty()) {
-            return new Report(id, List.of(id + ": у постройки с type нет entrance — вход обязателен (front или x,y,z)"),
+            return new Report(
+                    id,
+                    List.of(id + ": у постройки с type нет entrance — вход обязателен (front или x,y,z)"),
                     List.of());
         }
-        SchematicRules.Structure structure = new SchematicRules.Structure(id, header.type().orElseThrow(),
-                document.schematic(), header.entrance().orElseThrow());
+        SchematicRules.Structure structure = new SchematicRules.Structure(
+                id,
+                header.type().orElseThrow(),
+                document.schematic(),
+                header.entrance().orElseThrow());
         Set<SchematicRules.RuleId> excused = new HashSet<>();
         for (SchematicDocument.Exemption exemption : document.exemptions()) {
             excused.add(exemption.rule());

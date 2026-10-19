@@ -5,13 +5,13 @@ public final class BreakTiming {
     public static final double WRONG_TOOL_FACTOR = 100.0;
     private static final double ROUNDING_NOISE = 1e-9;
 
-    private BreakTiming() {
-    }
+    private BreakTiming() {}
 
     public static int ticks(double hardness, double toolSpeed, boolean correctForDrops) {
         if (!(hardness >= 0)) {
-            throw new IllegalArgumentException("Твёрдость " + hardness + " отрицательна или не число: неразрушимый блок "
-                    + "ломать нельзя, вызывающий обязан отказаться до расчёта срока");
+            throw new IllegalArgumentException(
+                    "Твёрдость " + hardness + " отрицательна или не число: неразрушимый блок "
+                            + "ломать нельзя, вызывающий обязан отказаться до расчёта срока");
         }
         if (!(toolSpeed > 0)) {
             throw new IllegalArgumentException("Скорость инструмента " + toolSpeed + " не положительна: срок ломки "

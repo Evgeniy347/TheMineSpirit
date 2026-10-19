@@ -18,8 +18,7 @@ public final class ActivityLedger {
             throw new IllegalArgumentException("Занятие без деятельности не назначается: id входит в план духа");
         }
         if (now < 0) {
-            throw new IllegalArgumentException(
-                    "Назначение в тике " + now + ": время не может быть отрицательным");
+            throw new IllegalArgumentException("Назначение в тике " + now + ": время не может быть отрицательным");
         }
         Activity.checkedDemand(activity, demand);
         ActivityAssignment current = entries.get(spirit);
@@ -45,6 +44,8 @@ public final class ActivityLedger {
     }
 
     public List<ActivityAssignment> all() {
-        return entries.values().stream().sorted(Comparator.comparing(ActivityAssignment::spirit)).toList();
+        return entries.values().stream()
+                .sorted(Comparator.comparing(ActivityAssignment::spirit))
+                .toList();
     }
 }

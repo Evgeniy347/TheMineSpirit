@@ -10,8 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class SettlementGroups {
-    private SettlementGroups() {
-    }
+    private SettlementGroups() {}
 
     public static SettlementKey keyOf(Optional<BlockCoord> home, UUID spirit) {
         if (home == null) {
@@ -25,8 +24,8 @@ public final class SettlementGroups {
         return home.map(SettlementKey::homed).orElseGet(() -> SettlementKey.lone(spirit));
     }
 
-    public static Map<SettlementKey, List<SpiritSnapshot>> partition(List<SpiritSnapshot> spirits,
-            Map<UUID, Optional<BlockCoord>> homes) {
+    public static Map<SettlementKey, List<SpiritSnapshot>> partition(
+            List<SpiritSnapshot> spirits, Map<UUID, Optional<BlockCoord>> homes) {
         if (spirits == null) {
             throw new IllegalArgumentException(
                     "spirits не может быть null: пустое поселение — пустой список, иначе план соберут из ничего");

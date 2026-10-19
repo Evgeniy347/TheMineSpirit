@@ -13,8 +13,12 @@ final class PolicyScene {
     private int startTick = -1;
     private float minHealth = Float.MAX_VALUE;
 
-    private PolicyScene(GameTestHelper helper, SpiritEntity spirit, int settleTicks, Runnable onStart,
-                        Function<SpiritEntity, String> invariant) {
+    private PolicyScene(
+            GameTestHelper helper,
+            SpiritEntity spirit,
+            int settleTicks,
+            Runnable onStart,
+            Function<SpiritEntity, String> invariant) {
         this.helper = helper;
         this.spirit = spirit;
         this.settleTicks = settleTicks;
@@ -26,8 +30,12 @@ final class PolicyScene {
         return launch(helper, spirit, settleTicks, onStart, ignored -> null);
     }
 
-    static PolicyScene launch(GameTestHelper helper, SpiritEntity spirit, int settleTicks, Runnable onStart,
-                              Function<SpiritEntity, String> invariant) {
+    static PolicyScene launch(
+            GameTestHelper helper,
+            SpiritEntity spirit,
+            int settleTicks,
+            Runnable onStart,
+            Function<SpiritEntity, String> invariant) {
         PolicyScene scene = new PolicyScene(helper, spirit, settleTicks, onStart, invariant);
         helper.onEachTick(scene::tick);
         return scene;

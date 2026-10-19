@@ -18,8 +18,8 @@ public final class BoardPriorities {
     public static final String LURE_BAIT_READY = "lure_bait_ready";
     public static final String RELOCATE_BUSY = "relocate_busy";
 
-    public static final Set<String> MODIFIER_KEYS = Set.of(
-            PEN_CAUGHT_ANIMAL, PEN_MISSING_BAIT, PEN_SPECIES_FULL, LURE_BAIT_READY, RELOCATE_BUSY);
+    public static final Set<String> MODIFIER_KEYS =
+            Set.of(PEN_CAUGHT_ANIMAL, PEN_MISSING_BAIT, PEN_SPECIES_FULL, LURE_BAIT_READY, RELOCATE_BUSY);
 
     private static final Map<String, Integer> DEFAULT_MODIFIERS = Map.of(
             PEN_CAUGHT_ANIMAL, 15,
@@ -28,26 +28,23 @@ public final class BoardPriorities {
             LURE_BAIT_READY, 10,
             RELOCATE_BUSY, -20);
 
-    private BoardPriorities() {
-    }
+    private BoardPriorities() {}
 
     static String modifierKey(String key) {
         if (!MODIFIER_KEYS.contains(key)) {
-            throw new IllegalArgumentException("Неизвестный модификатор '" + key + "': допустимы "
-                    + MODIFIER_KEYS + ", сверьтесь с таблицей модификаторов board.json");
+            throw new IllegalArgumentException("Неизвестный модификатор '" + key + "': допустимы " + MODIFIER_KEYS
+                    + ", сверьтесь с таблицей модификаторов board.json");
         }
         return key;
     }
 
     public static int effective(BoardCase boardCase, PriorityContext context) {
         if (boardCase == null) {
-            throw new IllegalArgumentException(
-                    "Приоритет кейса не задан: доска не решит, что важнее, без кейса");
+            throw new IllegalArgumentException("Приоритет кейса не задан: доска не решит, что важнее, без кейса");
         }
         if (context == null) {
-            throw new IllegalArgumentException(
-                    "Ситуация не может быть null: модификаторы считаются по флагам, "
-                            + "пустую ситуацию задают PriorityContext.none()");
+            throw new IllegalArgumentException("Ситуация не может быть null: модификаторы считаются по флагам, "
+                    + "пустую ситуацию задают PriorityContext.none()");
         }
         int total = BoardRules.priorityOf(boardCase);
         for (String modifier : applied(boardCase, context)) {

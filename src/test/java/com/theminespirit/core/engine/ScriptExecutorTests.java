@@ -29,12 +29,15 @@ class ScriptExecutorTests {
                 return true;
             }
         };
-        ScriptExecutor executor = new ScriptExecutor(new ScriptCall("watch", Map.of()),
-                ScriptRegistry.of(Map.of("watch", factory)));
+        ScriptExecutor executor =
+                new ScriptExecutor(new ScriptCall("watch", Map.of()), ScriptRegistry.of(Map.of("watch", factory)));
 
-        assertTrue(executor.observesWhileTacticsOwns(),
+        assertTrue(
+                executor.observesWhileTacticsOwns(),
                 "флаг обязан читаться из фабрики: иначе движок не узнает, что скрипт наблюдает, пока тактика владеет");
-        assertEquals(0, creations.get(),
+        assertEquals(
+                0,
+                creations.get(),
                 "чтение флага не имеет права конструировать скрипт: фабрика вызвана " + creations.get() + " раз"
                         + " (ревью 30, п. 5)");
     }

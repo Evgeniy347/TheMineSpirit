@@ -39,8 +39,13 @@ final class HarvestProbe {
     private int pausedTicks;
     private int lastSampledSpiritTick = Integer.MIN_VALUE;
 
-    private HarvestProbe(GameTestHelper helper, SpiritEntity spirit, BooleanSupplier active,
-            IntSupplier inInventory, IntSupplier inWorld, Supplier<String> dropsDetail,
+    private HarvestProbe(
+            GameTestHelper helper,
+            SpiritEntity spirit,
+            BooleanSupplier active,
+            IntSupplier inInventory,
+            IntSupplier inWorld,
+            Supplier<String> dropsDetail,
             IntSupplier blocksLeft) {
         this.helper = helper;
         this.spirit = spirit;
@@ -51,11 +56,15 @@ final class HarvestProbe {
         this.blocksLeft = blocksLeft;
     }
 
-    static HarvestProbe attach(GameTestHelper helper, SpiritEntity spirit, BooleanSupplier active,
-            IntSupplier inInventory, IntSupplier inWorld, Supplier<String> dropsDetail,
+    static HarvestProbe attach(
+            GameTestHelper helper,
+            SpiritEntity spirit,
+            BooleanSupplier active,
+            IntSupplier inInventory,
+            IntSupplier inWorld,
+            Supplier<String> dropsDetail,
             IntSupplier blocksLeft) {
-        HarvestProbe probe = new HarvestProbe(helper, spirit, active, inInventory, inWorld, dropsDetail,
-                blocksLeft);
+        HarvestProbe probe = new HarvestProbe(helper, spirit, active, inInventory, inWorld, dropsDetail, blocksLeft);
         helper.onEachTick(probe::tick);
         return probe;
     }
@@ -72,7 +81,8 @@ final class HarvestProbe {
         if (!active.getAsBoolean()) {
             return;
         }
-        boolean suspended = spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false);
+        boolean suspended =
+                spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false);
         if (!initialized) {
             wasSuspended = suspended;
             initialized = true;
@@ -96,16 +106,17 @@ final class HarvestProbe {
     }
 
     private String suspendReason() {
-        return spirit.brainIfPresent().flatMap(brain -> brain.suspendReason())
-                .map(reason -> " (" + reason + ")").orElse("");
+        return spirit.brainIfPresent()
+                .flatMap(brain -> brain.suspendReason())
+                .map(reason -> " (" + reason + ")")
+                .orElse("");
     }
 
     private String sample() {
         return "тик игры " + helper.getTick() + ", тик духа " + spirit.tickCount + ": дух "
                 + spirit.blockPosition().toShortString() + ", задача "
                 + spirit.taskStatus().map(Enum::name).orElse("нет") + ", мозг "
-                + (spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false) ? "заморожен"
-                        : "тикает")
+                + (spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false) ? "заморожен" : "тикает")
                 + suspendReason() + ", тактика " + tacticsState() + ", угроза " + threat() + ", в инвентаре "
                 + inInventory.getAsInt() + ", в мире " + inWorld.getAsInt() + ", блоков осталось "
                 + blocksLeft.getAsInt();
@@ -114,8 +125,7 @@ final class HarvestProbe {
     private String tacticsState() {
         try {
             boolean control = spirit.tactics().wantsControl();
-            return control ? "владеет (" + spirit.tactics().explain().orElse("без разбора") + ")"
-                    : "не владеет";
+            return control ? "владеет (" + spirit.tactics().explain().orElse("без разбора") + ")" : "не владеет";
         } catch (RuntimeException error) {
             return "ошибка опроса: " + error;
         }
@@ -123,10 +133,15 @@ final class HarvestProbe {
 
     private String threat() {
         Vec3 center = spirit.position();
-        AABB area = new AABB(center.x - SCAN_XZ, center.y - SCAN_Y, center.z - SCAN_XZ,
-                center.x + SCAN_XZ, center.y + SCAN_Y, center.z + SCAN_XZ);
-        List<Monster> monsters = helper.getLevel().getEntitiesOfClass(Monster.class, area,
-                monster -> monster.isAlive() && !monster.isRemoved());
+        AABB area = new AABB(
+                center.x - SCAN_XZ,
+                center.y - SCAN_Y,
+                center.z - SCAN_XZ,
+                center.x + SCAN_XZ,
+                center.y + SCAN_Y,
+                center.z + SCAN_XZ);
+        List<Monster> monsters = helper.getLevel()
+                .getEntitiesOfClass(Monster.class, area, monster -> monster.isAlive() && !monster.isRemoved());
         if (monsters.isEmpty()) {
             return "нет";
         }
@@ -147,18 +162,38 @@ final class HarvestProbe {
     }
 
     String report(String failure) {
-        boolean frozen = spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false);
+        boolean frozen =
+                spirit.brainIfPresent().map(brain -> brain.isSuspended()).orElse(false);
         StringBuilder text = new StringBuilder();
         text.append("провал добычи: ").append(failure).append('\n');
-        text.append("тик игры ").append(helper.getTick()).append(", тик духа ").append(spirit.tickCount)
-                .append(", рабочих тиков ").append(workingTicks).append(", пауз ").append(pausedTicks)
-                .append(", дух ").append(spirit.blockPosition().toShortString()).append(", задача ")
-                .append(spirit.taskStatus().map(Enum::name).orElse("нет задачи")).append(", причина ")
-                .append(spirit.taskFailureReason().orElse("нет")).append(", мозг ")
-                .append(frozen ? "заморожен" : "тикает").append(suspendReason()).append(", тактика ")
-                .append(tacticsState()).append(", угроза ").append(threat()).append('\n');
-        text.append("в инвентаре ").append(inInventory.getAsInt()).append(", в мире ")
-                .append(inWorld.getAsInt()).append(", блоков осталось ").append(blocksLeft.getAsInt())
+        text.append("тик игры ")
+                .append(helper.getTick())
+                .append(", тик духа ")
+                .append(spirit.tickCount)
+                .append(", рабочих тиков ")
+                .append(workingTicks)
+                .append(", пауз ")
+                .append(pausedTicks)
+                .append(", дух ")
+                .append(spirit.blockPosition().toShortString())
+                .append(", задача ")
+                .append(spirit.taskStatus().map(Enum::name).orElse("нет задачи"))
+                .append(", причина ")
+                .append(spirit.taskFailureReason().orElse("нет"))
+                .append(", мозг ")
+                .append(frozen ? "заморожен" : "тикает")
+                .append(suspendReason())
+                .append(", тактика ")
+                .append(tacticsState())
+                .append(", угроза ")
+                .append(threat())
+                .append('\n');
+        text.append("в инвентаре ")
+                .append(inInventory.getAsInt())
+                .append(", в мире ")
+                .append(inWorld.getAsInt())
+                .append(", блоков осталось ")
+                .append(blocksLeft.getAsInt())
                 .append('\n');
         text.append("дроп в мире:\n").append(dropsDetail.get()).append('\n');
         text.append("переходы заморозки (").append(transitions.size()).append("):\n");

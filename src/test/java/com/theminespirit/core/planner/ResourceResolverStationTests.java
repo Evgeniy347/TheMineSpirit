@@ -41,11 +41,13 @@ class ResourceResolverStationTests {
     void resolve_ThreeByThreeCraft_AcquiresCraftingTableRightBeforeIt() {
         TaskNode plan = ResourceResolver.resolve("wooden_pickaxe", 1, WORLD);
 
-        assertEquals(seq(
-                seq(gather("oak_log", 1), craft("oak_planks", 3)),
-                seq(seq(gather("oak_log", 1), craft("oak_planks", 2)), craft("stick", 2)),
-                tableSteps(),
-                craft("wooden_pickaxe", 1)), plan,
+        assertEquals(
+                seq(
+                        seq(gather("oak_log", 1), craft("oak_planks", 3)),
+                        seq(seq(gather("oak_log", 1), craft("oak_planks", 2)), craft("stick", 2)),
+                        tableSteps(),
+                        craft("wooden_pickaxe", 1)),
+                plan,
                 "Кирка 3×3 требует верстак: резолвер обязан вставить получение верстака (доски → верстак) перед "
                         + "крафтом кирки, иначе дух упрётся в 'нужен верстак' посреди плана");
     }
@@ -54,9 +56,12 @@ class ResourceResolverStationTests {
     void resolve_TwoCraftsNeedingTable_AcquiresTableOnce() {
         TaskNode plan = ResourceResolver.resolve("tool_kit", 1, WORLD);
 
-        assertEquals(1, producedCount(plan, "crafting_table"),
+        assertEquals(
+                1,
+                producedCount(plan, "crafting_table"),
                 "Два крафта 3×3 в одном плане обязаны делить один верстак: второй верстак — лишние 4 доски и ход");
-        assertTrue(indexOfCraft(plan, "crafting_table") < indexOfCraft(plan, "wooden_pickaxe"),
+        assertTrue(
+                indexOfCraft(plan, "crafting_table") < indexOfCraft(plan, "wooden_pickaxe"),
                 "Верстак обязан быть получен до первого крафта, которому он нужен: иначе кирка крафтится без него");
     }
 
@@ -64,7 +69,9 @@ class ResourceResolverStationTests {
     void resolve_InventoryCraft_DoesNotAskForStation() {
         TaskNode plan = ResourceResolver.resolve("stick", 4, WORLD);
 
-        assertEquals(0, producedCount(plan, "crafting_table"),
+        assertEquals(
+                0,
+                producedCount(plan, "crafting_table"),
                 "Палки идут в сетке инвентаря: резолвер не вправе просить верстак ради рецепта 2×2");
     }
 
@@ -72,11 +79,13 @@ class ResourceResolverStationTests {
     void resolve_Smelt_AcquiresFurnaceAndItsTableBeforeSmelting() {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD);
 
-        assertEquals(seq(
-                gather("iron_ore", 1),
-                gather("coal", 1),
-                seq(gather("cobblestone", 8), tableSteps(), craft("furnace", 1)),
-                smelt("iron_ingot", 1)), plan,
+        assertEquals(
+                seq(
+                        gather("iron_ore", 1),
+                        gather("coal", 1),
+                        seq(gather("cobblestone", 8), tableSteps(), craft("furnace", 1)),
+                        smelt("iron_ingot", 1)),
+                plan,
                 "Плавке нужна печь, а печи (3×3) нужен верстак: резолвер обязан получить верстак, затем печь и только "
                         + "потом плавить. Топливо добывается как раньше (1 уголь на 1 слиток)");
     }
@@ -85,22 +94,20 @@ class ResourceResolverStationTests {
     void resolve_FurnaceStandingInWorld_SkipsFurnaceBuildingPlan() {
         TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("furnace"));
 
-        assertEquals(seq(
-                gather("iron_ore", 1),
-                smelt("iron_ingot", 1)), plan,
+        assertEquals(
+                seq(gather("iron_ore", 1), smelt("iron_ingot", 1)),
+                plan,
                 "Печь уже стоит в мире — план обязан плавить сразу: добыча 8 булыжников под вторую печь падает "
                         + "в мире, где булыжника нет");
     }
 
     @Test
     void resolve_CraftingTableStandingInWorld_FurnacePlannedWithoutTable() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1),
-                Set.of("crafting_table"));
+        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("crafting_table"));
 
-        assertEquals(seq(
-                gather("iron_ore", 1),
-                seq(gather("cobblestone", 8), craft("furnace", 1)),
-                smelt("iron_ingot", 1)), plan,
+        assertEquals(
+                seq(gather("iron_ore", 1), seq(gather("cobblestone", 8), craft("furnace", 1)), smelt("iron_ingot", 1)),
+                plan,
                 "Верстак в мире гасит только свой шаг: печь строится, но без второго верстака — иначе план "
                         + "тратит 4 доски на дубль того, что уже стоит");
     }
@@ -109,10 +116,13 @@ class ResourceResolverStationTests {
     void resolve_SmeltAndThreeByThreeCraft_EachStationOnce() {
         TaskNode plan = ResourceResolver.resolve("iron_pickaxe", 1, WORLD);
 
-        assertEquals(1, producedCount(plan, "crafting_table"),
+        assertEquals(
+                1,
+                producedCount(plan, "crafting_table"),
                 "Верстак нужен и печи, и кирке, но план обязан получить его один раз");
         assertEquals(1, producedCount(plan, "furnace"), "Печь нужна плавке один раз на план");
-        assertTrue(indexOfCraft(plan, "furnace") < indexOfSmelt(plan, "iron_ingot"),
+        assertTrue(
+                indexOfCraft(plan, "furnace") < indexOfSmelt(plan, "iron_ingot"),
                 "Печь обязана быть получена до плавки, которой она нужна");
     }
 
@@ -120,18 +130,24 @@ class ResourceResolverStationTests {
     void resolve_StationWithoutWayToGetIt_ThrowsNamingStation() {
         ResourceKnowledge noTable = new StubKnowledge(
                 Set.of("oak_log"),
-                Map.of("oak_planks", List.of(new Ingredient("oak_log", 1)),
-                        "wooden_pickaxe", List.of(new Ingredient("oak_planks", 3))),
+                Map.of(
+                        "oak_planks",
+                        List.of(new Ingredient("oak_log", 1)),
+                        "wooden_pickaxe",
+                        List.of(new Ingredient("oak_planks", 3))),
                 Map.of(),
                 Map.of("oak_planks", 4),
                 Map.of("wooden_pickaxe", "crafting_table"));
 
-        UnplannableGoalException error = assertThrows(UnplannableGoalException.class,
+        UnplannableGoalException error = assertThrows(
+                UnplannableGoalException.class,
                 () -> ResourceResolver.resolve("wooden_pickaxe", 1, noTable),
                 "Станция, которую негде взять, обязана давать отказ: иначе план выглядит готовым и ломается у "
                         + "верстака");
 
-        assertEquals("crafting_table", error.item(),
+        assertEquals(
+                "crafting_table",
+                error.item(),
                 "Исключение обязано нести станцию 'crafting_table': по ней правят знания или выдают верстак духу");
     }
 
@@ -142,8 +158,10 @@ class ResourceResolverStationTests {
     private static int producedCount(TaskNode plan, String item) {
         int total = 0;
         for (ScriptCall call : flatten(plan)) {
-            boolean gathers = call.script().equals("gather") && call.params().get("block").equals(item);
-            boolean crafts = call.script().equals("craft") && call.params().get("item").equals(item);
+            boolean gathers =
+                    call.script().equals("gather") && call.params().get("block").equals(item);
+            boolean crafts =
+                    call.script().equals("craft") && call.params().get("item").equals(item);
             if (gathers || crafts) {
                 total++;
             }
@@ -162,7 +180,8 @@ class ResourceResolverStationTests {
     private static int indexOf(TaskNode plan, String script, String item) {
         List<ScriptCall> calls = flatten(plan);
         for (int i = 0; i < calls.size(); i++) {
-            if (calls.get(i).script().equals(script) && calls.get(i).params().get("item").equals(item)) {
+            if (calls.get(i).script().equals(script)
+                    && calls.get(i).params().get("item").equals(item)) {
                 return i;
             }
         }
@@ -186,8 +205,8 @@ class ResourceResolverStationTests {
     }
 
     private static ScriptCall gather(String block, int count) {
-        return new ScriptCall("gather", Map.of("block", block, "count", count,
-                "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
+        return new ScriptCall(
+                "gather", Map.of("block", block, "count", count, "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
     }
 
     private static ScriptCall craft(String item, int count) {

@@ -18,7 +18,9 @@ class ActivityLedgerTests {
         ActivityLedger ledger = new ActivityLedger();
         ledger.assign(SPIRIT, ActivityId.CHOP, 100, 3.0);
 
-        assertEquals(Optional.of(new ActivityAssignment(SPIRIT, ActivityId.CHOP, 100, 3.0)), ledger.of(SPIRIT),
+        assertEquals(
+                Optional.of(new ActivityAssignment(SPIRIT, ActivityId.CHOP, 100, 3.0)),
+                ledger.of(SPIRIT),
                 "Назначение читается: иначе вытеснение не узнает текущее занятие духа");
     }
 
@@ -28,9 +30,13 @@ class ActivityLedgerTests {
         ledger.assign(SPIRIT, ActivityId.FARM, 100, 5.0);
         ledger.assign(SPIRIT, ActivityId.FARM, 200, 6.0);
 
-        assertEquals(100, ledger.of(SPIRIT).orElseThrow().since(),
+        assertEquals(
+                100,
+                ledger.of(SPIRIT).orElseThrow().since(),
                 "Повтор той же деятельности не сдвигает since: иначе гистерезис решит, что занятие новое");
-        assertEquals(6.0, ledger.of(SPIRIT).orElseThrow().demand(),
+        assertEquals(
+                6.0,
+                ledger.of(SPIRIT).orElseThrow().demand(),
                 "Спрос обновляется: иначе вытеснение сравнит устаревшее число");
     }
 
@@ -40,7 +46,9 @@ class ActivityLedgerTests {
         ledger.assign(SPIRIT, ActivityId.FARM, 100, 5.0);
         ledger.assign(SPIRIT, ActivityId.CHOP, 200, 3.0);
 
-        assertEquals(new ActivityAssignment(SPIRIT, ActivityId.CHOP, 200, 3.0), ledger.of(SPIRIT).orElseThrow(),
+        assertEquals(
+                new ActivityAssignment(SPIRIT, ActivityId.CHOP, 200, 3.0),
+                ledger.of(SPIRIT).orElseThrow(),
                 "Смена деятельности сдвигает since: иначе новое занятие удержит чужой гистерезис");
     }
 
@@ -50,7 +58,9 @@ class ActivityLedgerTests {
         ledger.assign(SPIRIT, ActivityId.CHOP, 100, 3.0);
 
         assertTrue(ledger.clear(SPIRIT), "Снятие известного духа подтверждает: иначе молчаливая потеря занятия");
-        assertEquals(Optional.empty(), ledger.of(SPIRIT),
+        assertEquals(
+                Optional.empty(),
+                ledger.of(SPIRIT),
                 "После снятия записи нет: иначе выбывший дух удержит деятельность");
         assertFalse(ledger.clear(SPIRIT), "Повторное снятие честно говорит об отсутствии: иначе двойной учёт");
     }
@@ -59,11 +69,17 @@ class ActivityLedgerTests {
     void assign_BadInputs_Throw() {
         ActivityLedger ledger = new ActivityLedger();
 
-        assertThrows(IllegalArgumentException.class, () -> ledger.assign(null, ActivityId.CHOP, 100, 3.0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ledger.assign(null, ActivityId.CHOP, 100, 3.0),
                 "Занятие без духа не назначается: план раздают конкретным духам");
-        assertThrows(IllegalArgumentException.class, () -> ledger.assign(SPIRIT, ActivityId.CHOP, -1, 3.0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ledger.assign(SPIRIT, ActivityId.CHOP, -1, 3.0),
                 "Назначение в отрицательном тике ломает гистерезис: окно смены посчитается неверно");
-        assertThrows(IllegalArgumentException.class, () -> ledger.assign(SPIRIT, ActivityId.CHOP, 100, -1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ledger.assign(SPIRIT, ActivityId.CHOP, 100, -1),
                 "Спрос вне шкалы ломает вытеснение: сравнение занятий станет несравнимым");
     }
 
@@ -75,8 +91,10 @@ class ActivityLedgerTests {
         ledger.assign(SPIRIT, ActivityId.FARM, 100, 5.0);
 
         assertEquals(
-                List.of(new ActivityAssignment(SPIRIT, ActivityId.FARM, 100, 5.0),
+                List.of(
+                        new ActivityAssignment(SPIRIT, ActivityId.FARM, 100, 5.0),
                         new ActivityAssignment(second, ActivityId.CHOP, 100, 3.0)),
-                ledger.all(), "Обход упорядочен по id духа: иначе план зависит от порядка назначений");
+                ledger.all(),
+                "Обход упорядочен по id духа: иначе план зависит от порядка назначений");
     }
 }

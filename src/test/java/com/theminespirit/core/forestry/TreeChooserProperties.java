@@ -23,19 +23,28 @@ class TreeChooserProperties {
 
         Optional<BlockCoord> chosen = TreeChooser.next(0, 0, 0, logs, known);
 
-        List<BlockCoord> candidates = logs.stream().filter(coord -> !known.contains(coord)).toList();
+        List<BlockCoord> candidates =
+                logs.stream().filter(coord -> !known.contains(coord)).toList();
         if (candidates.isEmpty()) {
-            assertTrue(chosen.isEmpty(),
+            assertTrue(
+                    chosen.isEmpty(),
                     "При пустом списке допустимых брёвен выбирать нечего: пустой результат остановит рубку");
             return;
         }
-        assertTrue(chosen.isPresent(),
+        assertTrue(
+                chosen.isPresent(),
                 "При наличии хотя бы одного допустимого бревна выбор обязан вернуть его: без этого "
                         + "дух останавливается с деревьями вокруг");
-        assertTrue(candidates.contains(chosen.orElseThrow()),
+        assertTrue(
+                candidates.contains(chosen.orElseThrow()),
                 "Выбранное бревно обязано принадлежать допустимым: известное бревно не должно выбираться повторно");
-        long minimum = candidates.stream().mapToLong(coord -> distanceSquared(coord)).min().orElseThrow();
-        assertEquals(minimum, distanceSquared(chosen.orElseThrow()),
+        long minimum = candidates.stream()
+                .mapToLong(coord -> distanceSquared(coord))
+                .min()
+                .orElseThrow();
+        assertEquals(
+                minimum,
+                distanceSquared(chosen.orElseThrow()),
                 "Выбор обязан давать бревно с минимальным расстоянием среди допустимых: иначе дух идёт "
                         + "к дальнему дереву, минуя ближнее");
     }
@@ -50,7 +59,9 @@ class TreeChooserProperties {
         Collections.shuffle(shuffled, random);
         Optional<BlockCoord> shuffledResult = TreeChooser.next(0, 0, 0, shuffled, Set.of());
 
-        assertEquals(direct, shuffledResult,
+        assertEquals(
+                direct,
+                shuffledResult,
                 "Порядок списка брёвен не должен влиять на выбор: иначе одна и та же находка скана "
                         + "рубится в разном порядке от вызова к вызову");
     }

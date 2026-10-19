@@ -2,13 +2,12 @@ package com.theminespirit.neoforge.movement;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.MeetParams;
 import com.theminespirit.core.social.SocialTuning;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.Approach;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.ScriptTargetResolver;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -50,11 +49,13 @@ public final class MeetScript implements ScriptInstance {
         return switch (approach.tick()) {
             case ARRIVED -> ScriptStatus.SUCCEEDED;
             case MOVING -> ScriptStatus.RUNNING;
-            case TIMEOUT -> fail("не дошёл до цели '" + targetText + "' за " + approach.timeoutTicks()
-                    + " тиков, расстояние: "
-                    + spirit.position().distanceTo(target.position()));
-            case STUCK -> fail("застрял по дороге к цели '" + targetText + "' в (x="
-                    + spirit.getX() + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ")");
+            case TIMEOUT ->
+                fail("не дошёл до цели '" + targetText + "' за " + approach.timeoutTicks()
+                        + " тиков, расстояние: "
+                        + spirit.position().distanceTo(target.position()));
+            case STUCK ->
+                fail("застрял по дороге к цели '" + targetText + "' в (x=" + spirit.getX() + ", y=" + spirit.getY()
+                        + ", z=" + spirit.getZ() + ")");
         };
     }
 

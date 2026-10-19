@@ -11,14 +11,16 @@ final class DecisionRun {
         this.config = config;
         this.decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
         this.escapeRoutes = escapeRoutes;
-        this.memory = TacticsMemory.initial(first.orders().mode(), 0, first.self().hpFraction());
+        this.memory =
+                TacticsMemory.initial(first.orders().mode(), 0, first.self().hpFraction());
     }
 
     Decision step(Situation situation, long tick) {
         Assessment assessment = Assessments.withRoutes(situation, escapeRoutes);
         Scores scores = scorer.score(situation, assessment, config.weights());
         Decision decision = decider.decide(FactMap.from(situation, assessment), scores, escapeRoutes, memory, tick);
-        memory = decider.hysteresis().remember(memory, decision, tick, situation.self().hpFraction());
+        memory = decider.hysteresis()
+                .remember(memory, decision, tick, situation.self().hpFraction());
         return decision;
     }
 

@@ -16,8 +16,7 @@ import net.minecraft.world.entity.monster.Enemy;
 public final class ScriptTargetResolver {
     private static final TacticsAdapterSettings SETTINGS = TacticsAdapterSettings.loadDefault();
 
-    private ScriptTargetResolver() {
-    }
+    private ScriptTargetResolver() {}
 
     public static Optional<LivingEntity> resolve(SpiritEntity spirit, TargetSelector.Target target) {
         if (spirit == null) {
@@ -63,9 +62,15 @@ public final class ScriptTargetResolver {
 
     private static Optional<LivingEntity> nearest(SpiritEntity spirit, Predicate<LivingEntity> fits) {
         double radius = SETTINGS.factRadius();
-        return spirit.level().getEntitiesOfClass(LivingEntity.class, spirit.getBoundingBox().inflate(radius),
-                entity -> entity != spirit && entity.isAlive() && fits.test(entity)
-                        && entity.distanceTo(spirit) <= radius)
+        return spirit
+                .level()
+                .getEntitiesOfClass(
+                        LivingEntity.class,
+                        spirit.getBoundingBox().inflate(radius),
+                        entity -> entity != spirit
+                                && entity.isAlive()
+                                && fits.test(entity)
+                                && entity.distanceTo(spirit) <= radius)
                 .stream()
                 .min(Comparator.comparingDouble((LivingEntity entity) -> entity.distanceToSqr(spirit.position()))
                         .thenComparing(entity -> entity.getUUID().toString()));

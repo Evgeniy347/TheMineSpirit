@@ -33,8 +33,7 @@ public final class FurnaceSession {
     private static final int SLOT_FUEL = 1;
     private static final int SLOT_RESULT = 2;
 
-    private record FuelPortion(Item fuel, int count) {
-    }
+    private record FuelPortion(Item fuel, int count) {}
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -56,9 +55,15 @@ public final class FurnaceSession {
         }
     }
 
-    public record Job(Item input, int inputToFeed, int outputPerInput, List<FuelLoad.Portion> fuel, int cookTicks,
-            int inputsInPlay, int collectedSoFar, int wantedTotal) {
-    }
+    public record Job(
+            Item input,
+            int inputToFeed,
+            int outputPerInput,
+            List<FuelLoad.Portion> fuel,
+            int cookTicks,
+            int inputsInPlay,
+            int collectedSoFar,
+            int wantedTotal) {}
 
     public FurnaceSession(SpiritEntity spirit, BlockPos pos, Job job) {
         this.spirit = spirit;
@@ -86,8 +91,9 @@ public final class FurnaceSession {
             return fail("печь в " + pos.toShortString() + " исчезла: переплавлено " + collected + " из " + wanted);
         }
         if (ticks > 0 && ticks >= timeoutTicks) {
-            return failAndReturn(furnace.get(), "печь не успела за " + timeoutTicks + " тиков: переплавлено "
-                    + collected + " из " + wanted);
+            return failAndReturn(
+                    furnace.get(),
+                    "печь не успела за " + timeoutTicks + " тиков: переплавлено " + collected + " из " + wanted);
         }
         boolean pollNow = ticks % CraftTuning.POLL_TICKS == 0;
         ticks++;
@@ -184,7 +190,8 @@ public final class FurnaceSession {
         if (next == null || !furnace.getItem(SLOT_FUEL).isEmpty()) {
             return;
         }
-        int moved = removeFromInventory(next.fuel(), Math.min(next.count(), next.fuel().getDefaultMaxStackSize()));
+        int moved = removeFromInventory(
+                next.fuel(), Math.min(next.count(), next.fuel().getDefaultMaxStackSize()));
         fuelQueue.poll();
         if (moved > 0) {
             furnace.setItem(SLOT_FUEL, new ItemStack(next.fuel(), moved));
@@ -196,7 +203,9 @@ public final class FurnaceSession {
 
     private int removeFromInventory(Item item, int wantedCount) {
         int available = Math.min(wantedCount, spirit.getInventory().countItem(item));
-        return available > 0 ? spirit.getInventory().removeItemType(item, available).getCount() : 0;
+        return available > 0
+                ? spirit.getInventory().removeItemType(item, available).getCount()
+                : 0;
     }
 
     private void giveBackContents(AbstractFurnaceBlockEntity furnace) {
@@ -223,8 +232,11 @@ public final class FurnaceSession {
     public static Optional<Contents> contentsAt(Level level, BlockPos pos) {
         BlockEntity entity = level.getBlockEntity(pos);
         if (entity instanceof AbstractFurnaceBlockEntity furnace
-                && (level.getBlockState(pos).is(Blocks.FURNACE) || level.getBlockState(pos).is(Blocks.SMOKER))) {
-            return Optional.of(new Contents(furnace.getItem(SLOT_INPUT).getCount(), furnace.getItem(SLOT_FUEL).getCount(),
+                && (level.getBlockState(pos).is(Blocks.FURNACE)
+                        || level.getBlockState(pos).is(Blocks.SMOKER))) {
+            return Optional.of(new Contents(
+                    furnace.getItem(SLOT_INPUT).getCount(),
+                    furnace.getItem(SLOT_FUEL).getCount(),
                     furnace.getItem(SLOT_RESULT).getCount()));
         }
         return Optional.empty();
@@ -233,7 +245,8 @@ public final class FurnaceSession {
     private Optional<AbstractFurnaceBlockEntity> furnaceAt() {
         BlockEntity entity = level.getBlockEntity(pos);
         if (entity instanceof AbstractFurnaceBlockEntity furnace
-                && (level.getBlockState(pos).is(Blocks.FURNACE) || level.getBlockState(pos).is(Blocks.SMOKER))) {
+                && (level.getBlockState(pos).is(Blocks.FURNACE)
+                        || level.getBlockState(pos).is(Blocks.SMOKER))) {
             return Optional.of(furnace);
         }
         return Optional.empty();

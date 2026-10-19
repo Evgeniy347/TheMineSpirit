@@ -9,15 +9,15 @@ final class Pictures {
     static final String SOLID_LAYER = "###/###/###";
     static final String OPEN_LAYER = ".../.../...";
 
-    private Pictures() {
-    }
+    private Pictures() {}
 
     static LocalSurroundings of(String floor, String feet, String head, BodyFlags flags) {
         return of(floor, feet, head, flags, Optional.empty());
     }
 
     static LocalSurroundings of(String floor, String feet, String head, BodyFlags flags, Optional<BlockCoord> water) {
-        AsciiWorld world = AsciiWorld.of(new BlockCoord(FEET.x() - 1, FEET.y() - 1, FEET.z() - 1), Cell.PASSABLE, floor, feet, head);
+        AsciiWorld world = AsciiWorld.of(
+                new BlockCoord(FEET.x() - 1, FEET.y() - 1, FEET.z() - 1), Cell.PASSABLE, floor, feet, head);
         return LocalSurroundings.read(FEET, world, flags, water);
     }
 

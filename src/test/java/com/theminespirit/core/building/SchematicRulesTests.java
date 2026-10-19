@@ -12,8 +12,7 @@ class SchematicRulesTests {
     private static final String ROOT = "schematic-rules/";
     private static final String INDEX = ROOT + "fixtures.json";
 
-    record Fixture(String file, List<SchematicRules.RuleId> expected) {
-    }
+    record Fixture(String file, List<SchematicRules.RuleId> expected) {}
 
     @Test
     void fixtures_EachNegative_IsRejectedByItsOwnRule() {
@@ -21,7 +20,9 @@ class SchematicRulesTests {
             if (fixture.expected().isEmpty()) {
                 continue;
             }
-            assertEquals(fixture.expected(), ruleIds(fixture),
+            assertEquals(
+                    fixture.expected(),
+                    ruleIds(fixture),
                     "Фикстура '" + fixture.file() + "' обязана нарушать только своё правило " + fixture.expected()
                             + ": иначе непонятно, какое правило сломалось, а тест зеленеет не на том");
         }
@@ -33,7 +34,9 @@ class SchematicRulesTests {
             if (!fixture.expected().isEmpty()) {
                 continue;
             }
-            assertEquals(List.of(), ruleIds(fixture),
+            assertEquals(
+                    List.of(),
+                    ruleIds(fixture),
                     "Корректная фикстура '" + fixture.file() + "' не обязана давать ни одного нарушения: "
                             + "иначе правило слишком строгое и забракует годную постройку");
         }
@@ -44,10 +47,14 @@ class SchematicRulesTests {
         Fixture stack = new Fixture("chest_stack", List.of());
         Fixture plank = new Fixture("chest_under_plank", List.of(SchematicRules.RuleId.CHEST_OPENABLE));
 
-        assertEquals(List.of(), ruleIds(stack),
+        assertEquals(
+                List.of(),
+                ruleIds(stack),
                 "Сундук над сундуком (стопка склада) не мешает открыть нижний: в ванили крышку держит только "
                         + "блок, проводящий редстоун, а сундук его не проводит");
-        assertEquals(List.of(SchematicRules.RuleId.CHEST_OPENABLE), ruleIds(plank),
+        assertEquals(
+                List.of(SchematicRules.RuleId.CHEST_OPENABLE),
+                ruleIds(plank),
                 "Доска над сундуком обязана браковаться: сундук под полным блоком не открыть");
     }
 
@@ -57,25 +64,34 @@ class SchematicRulesTests {
         for (SchematicRules.RuleId rule : SchematicRules.RuleId.values()) {
             ids.add(rule.id());
         }
-        assertEquals(ids.size(), ids.stream().distinct().count(),
+        assertEquals(
+                ids.size(),
+                ids.stream().distinct().count(),
                 "id правил обязаны быть уникальными: по id выбирают исключение, и повтор склеил бы два правила");
     }
 
     @Test
     void ruleId_UnknownId_IsRejected() {
-        assertEquals(List.of(), SchematicRules.RuleId.byId("no_such_rule").stream().toList(),
+        assertEquals(
+                List.of(),
+                SchematicRules.RuleId.byId("no_such_rule").stream().toList(),
                 "Неизвестный id правила обязан не находиться: исключение с опечаткой не должно молча ослаблять сторож");
     }
 
     private static List<SchematicRules.RuleId> ruleIds(Fixture fixture) {
-        return SchematicRules.check(structure(fixture)).stream().map(SchematicRules.Violation::rule).toList();
+        return SchematicRules.check(structure(fixture)).stream()
+                .map(SchematicRules.Violation::rule)
+                .toList();
     }
 
     private static SchematicRules.Structure structure(Fixture fixture) {
         String path = ROOT + fixture.file() + SchematicTextParser.EXTENSION;
         SchematicDocument document = SchematicTextParser.parse(JsonResource.readClasspath(path), path);
-        return new SchematicRules.Structure(fixture.file(), document.header().type().orElseThrow(),
-                document.schematic(), document.header().entrance().orElseThrow());
+        return new SchematicRules.Structure(
+                fixture.file(),
+                document.header().type().orElseThrow(),
+                document.schematic(),
+                document.header().entrance().orElseThrow());
     }
 
     private static List<Fixture> fixtures() {
@@ -85,8 +101,9 @@ class SchematicRulesTests {
             String file = JsonResource.text(item.get("file"), INDEX, "поля file фикстуры");
             List<SchematicRules.RuleId> expected = new ArrayList<>();
             for (String id : JsonResource.optionalStrings(item.get("expect"), INDEX, "ожидаемых правил")) {
-                expected.add(SchematicRules.RuleId.byId(id).orElseThrow(() -> new IllegalStateException(
-                        "У фикстуры '" + file + "' ожидается неизвестное правило '" + id + "'")));
+                expected.add(SchematicRules.RuleId.byId(id)
+                        .orElseThrow(() -> new IllegalStateException(
+                                "У фикстуры '" + file + "' ожидается неизвестное правило '" + id + "'")));
             }
             fixtures.add(new Fixture(file, expected));
         }

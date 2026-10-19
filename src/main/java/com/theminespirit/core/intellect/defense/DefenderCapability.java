@@ -3,8 +3,8 @@ package com.theminespirit.core.intellect.defense;
 import com.theminespirit.core.tactics.Point;
 import java.util.UUID;
 
-public record DefenderCapability(UUID id, Point pos, double hpFraction, int armor, boolean bow, double meleeDps,
-        boolean heal) {
+public record DefenderCapability(
+        UUID id, Point pos, double hpFraction, int armor, boolean bow, double meleeDps, boolean heal) {
     public static final int MAX_ARMOR = 20;
 
     public DefenderCapability {

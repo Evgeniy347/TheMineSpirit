@@ -21,15 +21,18 @@ class SpiritHungerTests {
     void full_NewState_HasMaxFoodAndSaturation() {
         SpiritHunger hunger = SpiritHunger.full();
 
-        assertEquals(SpiritHunger.MAX_FOOD, hunger.foodLevel(),
-                "Полный дух сыт по максимуму: иначе он ищет еду сытым");
-        assertEquals(1.0, hunger.satietyFraction(),
+        assertEquals(SpiritHunger.MAX_FOOD, hunger.foodLevel(), "Полный дух сыт по максимуму: иначе он ищет еду сытым");
+        assertEquals(
+                1.0,
+                hunger.satietyFraction(),
                 "Доля сытости полного духа — единица: по ней StrengthAssessor видит голод");
     }
 
     @Test
     void satietyFraction_HalfFood_Half() {
-        assertEquals(0.5, SpiritHunger.of(10, 10, 0).satietyFraction(),
+        assertEquals(
+                0.5,
+                SpiritHunger.of(10, 10, 0).satietyFraction(),
                 "Доля сытости — сытость, делённая на максимум: фактор голода тактики считается от неё");
     }
 
@@ -37,7 +40,9 @@ class SpiritHungerTests {
     void addExhaustion_BelowDrain_KeepsFood() {
         SpiritHunger hunger = SpiritHunger.full().addExhaustion(1.0);
 
-        assertEquals(SpiritHunger.MAX_FOOD, hunger.foodLevel(),
+        assertEquals(
+                SpiritHunger.MAX_FOOD,
+                hunger.foodLevel(),
                 "Истощение меньше порога не тратит сытость: иначе каждый шаг лишает духа обеда");
         assertEquals(SpiritHunger.MAX_FOOD, hunger.saturation(), "Истощение меньше порога не тратит насыщение");
         assertEquals(1.0, hunger.exhaustion(), "Накопленное истощение видно до траты");
@@ -47,9 +52,13 @@ class SpiritHungerTests {
     void addExhaustion_ReachesDrain_SpendsSaturationFirst() {
         SpiritHunger hunger = SpiritHunger.full().addExhaustion(SpiritHunger.EXHAUSTION_PER_DRAIN);
 
-        assertEquals(SpiritHunger.MAX_FOOD, hunger.foodLevel(),
+        assertEquals(
+                SpiritHunger.MAX_FOOD,
+                hunger.foodLevel(),
                 "Пока есть насыщение, сытость не тратится: насыщение — буфер быстрого голода");
-        assertEquals(SpiritHunger.MAX_FOOD - 1.0, hunger.saturation(),
+        assertEquals(
+                SpiritHunger.MAX_FOOD - 1.0,
+                hunger.saturation(),
                 "Порог истощения тратит единицу насыщения: без этого буфер не работает");
         assertEquals(0.0, hunger.exhaustion(), "Трата обнуляет накопленное до порога истощения");
     }
@@ -58,7 +67,9 @@ class SpiritHungerTests {
     void addExhaustion_NoSaturation_SpendsFood() {
         SpiritHunger hunger = SpiritHunger.of(20, 0, 0).addExhaustion(SpiritHunger.EXHAUSTION_PER_DRAIN);
 
-        assertEquals(19, hunger.foodLevel(),
+        assertEquals(
+                19,
+                hunger.foodLevel(),
                 "Без насыщения порог истощения тратит сытость: иначе голод никогда не наступит");
     }
 
@@ -82,7 +93,9 @@ class SpiritHungerTests {
         SpiritHunger hunger = SpiritHunger.empty().eat(5, 0.6);
 
         assertEquals(5, hunger.foodLevel(), "Съеденное добавляет питательность: хлеб 5 даёт 5 сытости");
-        assertEquals(5.0, hunger.saturation(),
+        assertEquals(
+                5.0,
+                hunger.saturation(),
                 "Насыщение — питательность на модификатор: хлеб 5 при 0.6 даёт буфер 5 (обрезан сытостью)");
     }
 
@@ -98,14 +111,17 @@ class SpiritHungerTests {
     void tick_WellFedAndHurt_HealsAtInterval() {
         HungerTick early = run(SpiritHunger.of(20, 0, 0), RULES.regenIntervalTicks() - 1, 10, 20);
 
-        assertEquals(HungerEffect.NONE, early.effect(),
-                "Восстановление не мгновенно: до интервала тик ничего не делает");
+        assertEquals(
+                HungerEffect.NONE, early.effect(), "Восстановление не мгновенно: до интервала тик ничего не делает");
 
         HungerTick healed = run(SpiritHunger.of(20, 0, 0), RULES.regenIntervalTicks(), 10, 20);
 
-        assertEquals(HungerEffect.HEAL, healed.effect(),
+        assertEquals(
+                HungerEffect.HEAL,
+                healed.effect(),
                 "Сытный раненый дух лечится по интервалу: на этом стоит «поесть до максимума»");
-        assertTrue(healed.hunger().foodLevel() < SpiritHunger.MAX_FOOD,
+        assertTrue(
+                healed.hunger().foodLevel() < SpiritHunger.MAX_FOOD,
                 "Лечение тратит сытость: восстановление не бесплатно");
     }
 
@@ -113,15 +129,20 @@ class SpiritHungerTests {
     void tick_WellFedAndHealthy_DoesNotHeal() {
         HungerTick tick = run(SpiritHunger.of(20, 0, 0), RULES.regenIntervalTicks(), 20, 20);
 
-        assertEquals(HungerEffect.NONE, tick.effect(),
+        assertEquals(
+                HungerEffect.NONE,
+                tick.effect(),
                 "Здоровый сытый дух не лечится: восстановление тратило бы еду впустую");
     }
 
     @Test
     void tick_BelowRegenThreshold_DoesNotHeal() {
-        HungerTick tick = run(SpiritHunger.of(RULES.regenFoodThreshold() - 1, 0, 0), RULES.regenIntervalTicks(), 10, 20);
+        HungerTick tick =
+                run(SpiritHunger.of(RULES.regenFoodThreshold() - 1, 0, 0), RULES.regenIntervalTicks(), 10, 20);
 
-        assertEquals(HungerEffect.NONE, tick.effect(),
+        assertEquals(
+                HungerEffect.NONE,
+                tick.effect(),
                 "Ниже порога сытости лечение запрещено: иначе голодный дух восстановится без обеда");
     }
 
@@ -129,12 +150,16 @@ class SpiritHungerTests {
     void tick_StarvingAtInterval_Damages() {
         HungerTick starving = run(SpiritHunger.empty(), RULES.starveIntervalTicks(), 20, 20);
 
-        assertEquals(HungerEffect.STARVE, starving.effect(),
+        assertEquals(
+                HungerEffect.STARVE,
+                starving.effect(),
                 "На нуле сытости дух получает урон от голода: голод наказывает, а не только блокирует лечение");
 
         HungerTick atFloor = run(SpiritHunger.empty(), RULES.starveIntervalTicks(), RULES.starveFloor(), 20);
 
-        assertEquals(HungerEffect.NONE, atFloor.effect(),
+        assertEquals(
+                HungerEffect.NONE,
+                atFloor.effect(),
                 "У порога голодного истощения урон прекращается: на обычной сложности голод не убивает");
     }
 
@@ -147,24 +172,37 @@ class SpiritHungerTests {
 
     @Test
     void constructor_BadValues_Throw() {
-        assertThrows(IllegalArgumentException.class, () -> SpiritHunger.of(21, 0, 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SpiritHunger.of(21, 0, 0),
                 "Сытость выше 20 отвергается: шкала голода по образцу ванили");
-        assertThrows(IllegalArgumentException.class, () -> SpiritHunger.of(-1, 0, 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SpiritHunger.of(-1, 0, 0),
                 "Отрицательная сытость отвергается: голод не уходит в минус");
-        assertThrows(IllegalArgumentException.class, () -> SpiritHunger.of(5, 6, 0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SpiritHunger.of(5, 6, 0),
                 "Насыщение выше сытости отвергается: буфер не переживает шкалу");
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> SpiritHunger.of(5, 0, SpiritHunger.EXHAUSTION_PER_DRAIN),
                 "Истощение на самом пороге отвергается: оно обязано быть уже истрачено");
-        assertThrows(IllegalArgumentException.class, () -> new SpiritHunger(5, 0, 0, -1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SpiritHunger(5, 0, 0, -1),
                 "Отрицательный таймер отвергается: отсчёт не идёт назад");
     }
 
     @Test
     void addExhaustion_BadAmount_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> SpiritHunger.full().addExhaustion(-1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SpiritHunger.full().addExhaustion(-1),
                 "Отрицательный расход отвергается: истощение не отматывается назад");
-        assertThrows(IllegalArgumentException.class, () -> SpiritHunger.full().addExhaustion(Double.NaN),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SpiritHunger.full().addExhaustion(Double.NaN),
                 "NaN-расход отвергается: накопленное истощение не станет NaN");
     }
 }

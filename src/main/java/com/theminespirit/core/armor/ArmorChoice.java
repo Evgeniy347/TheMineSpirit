@@ -1,17 +1,15 @@
 package com.theminespirit.core.armor;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class ArmorChoice {
-    private ArmorChoice() {
-    }
+    private ArmorChoice() {}
 
-    public static Map<ArmorSlot, ArmorPiece> decide(List<ArmorPiece> inventory, Map<ArmorSlot, ArmorPiece> worn,
-            ArmorTable table) {
+    public static Map<ArmorSlot, ArmorPiece> decide(
+            List<ArmorPiece> inventory, Map<ArmorSlot, ArmorPiece> worn, ArmorTable table) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: выбор идёт по его содержимому");
         Objects.requireNonNull(worn, "Надетое не может быть null: пустое надевание задаётся пустой картой");
         Objects.requireNonNull(table, "Таблица материалов не может быть null: по ней разрешается ничья");
@@ -98,5 +96,4 @@ public final class ArmorChoice {
     private static boolean isNearlyBroken(ArmorPiece piece, ArmorTable table) {
         return piece.durabilityFraction() < table.wornFraction();
     }
-
 }

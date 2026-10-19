@@ -1,7 +1,18 @@
 package com.theminespirit.core.tactics;
 
-public record SelfFacts(Point pos, double hp, double maxHp, double armor, double dps, double speed, double food,
-        int blocks, int rangedAmmo, boolean hasWaterBucket, int allies, int healItems) {
+public record SelfFacts(
+        Point pos,
+        double hp,
+        double maxHp,
+        double armor,
+        double dps,
+        double speed,
+        double food,
+        int blocks,
+        int rangedAmmo,
+        boolean hasWaterBucket,
+        int allies,
+        int healItems) {
     public static final double ARMOR_CAP = 20;
 
     public SelfFacts {

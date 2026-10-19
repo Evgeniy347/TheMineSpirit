@@ -19,8 +19,6 @@ public record ShearParams(int radius, int count) {
 
     public static ShearParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new ShearParams(
-                ScriptArgs.requireInt(params, "radius"),
-                ScriptArgs.requireInt(params, "count"));
+        return new ShearParams(ScriptArgs.requireInt(params, "radius"), ScriptArgs.requireInt(params, "count"));
     }
 }

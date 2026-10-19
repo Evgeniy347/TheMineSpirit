@@ -38,8 +38,8 @@ public final class SayScript implements ScriptInstance {
         }
         long now = spirit.tickCount;
         if (!SaySpacing.due(spirit.lastSayTick(), now, CatalogLimits.SAY_MIN_INTERVAL_TICKS)) {
-            return fail("спам: с прошлой речи прошло " + (now - spirit.lastSayTick())
-                    + " тиков, минимум " + CatalogLimits.SAY_MIN_INTERVAL_TICKS);
+            return fail("спам: с прошлой речи прошло " + (now - spirit.lastSayTick()) + " тиков, минимум "
+                    + CatalogLimits.SAY_MIN_INTERVAL_TICKS);
         }
         deliver(text);
         spirit.setLastSayTick(now);
@@ -47,12 +47,10 @@ public final class SayScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
-    public void suspend() {
-    }
+    public void suspend() {}
 
     @Override
     public String failureReason() {
@@ -73,8 +71,12 @@ public final class SayScript implements ScriptInstance {
             player.sendSystemMessage(message);
             heard++;
         }
-        LOGGER.info("Дух {} произнёс '{}' в радиусе {}: слышат {} игроков, дух в {}",
-                spirit.getDisplayName().getString(), text, CatalogLimits.SAY_HEARING_RADIUS, heard,
+        LOGGER.info(
+                "Дух {} произнёс '{}' в радиусе {}: слышат {} игроков, дух в {}",
+                spirit.getDisplayName().getString(),
+                text,
+                CatalogLimits.SAY_HEARING_RADIUS,
+                heard,
                 spirit.blockPosition());
     }
 

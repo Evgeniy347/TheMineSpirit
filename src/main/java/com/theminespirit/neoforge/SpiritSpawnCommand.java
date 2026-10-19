@@ -13,15 +13,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 final class SpiritSpawnCommand {
-    private SpiritSpawnCommand() {
-    }
+    private SpiritSpawnCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("spawn")
                 .executes(context -> spawnNear(context.getSource()))
                 .then(argument("pos", Vec3Argument.vec3())
-                        .executes(context -> spawnAt(context.getSource(),
-                                Vec3Argument.getVec3(context, "pos")))));
+                        .executes(context -> spawnAt(context.getSource(), Vec3Argument.getVec3(context, "pos")))));
     }
 
     private static int spawnNear(CommandSourceStack source) throws CommandSyntaxException {
@@ -33,14 +31,14 @@ final class SpiritSpawnCommand {
         ServerLevel level = source.getLevel();
         SpiritEntity spirit = ModEntities.SPIRIT.get().create(level);
         if (spirit == null) {
-            source.sendFailure(Component.literal("Дух не создан: тип сущности "
-                    + ModEntities.SPIRIT.getId() + " не зарегистрирован"));
+            source.sendFailure(Component.literal(
+                    "Дух не создан: тип сущности " + ModEntities.SPIRIT.getId() + " не зарегистрирован"));
             return 0;
         }
         spirit.moveTo(pos);
         level.addFreshEntity(spirit);
-        source.sendSuccess(() -> Component.literal(
-                "Дух призван в (" + pos.x + ", " + pos.y + ", " + pos.z + ")"), true);
+        source.sendSuccess(
+                () -> Component.literal("Дух призван в (" + pos.x + ", " + pos.y + ", " + pos.z + ")"), true);
         return 1;
     }
 }

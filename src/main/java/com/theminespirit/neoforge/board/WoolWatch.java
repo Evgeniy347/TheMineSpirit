@@ -50,9 +50,9 @@ public final class WoolWatch {
         return gate;
     }
 
-    public void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock,
-            long now) {
-        gate = SpiritConfig.boardEnabled() && !spirits.isEmpty()
+    public void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
+        gate = SpiritConfig.boardEnabled()
+                && !spirits.isEmpty()
                 && HerdWatch.penBuilt(service, Species.SHEEP)
                 && WoolRules.penReady(service.capturedCount(Species.SHEEP));
         if (!gate) {
@@ -79,12 +79,18 @@ public final class WoolWatch {
         if (!WoolRules.shearsCraftable(iron, hasShears)) {
             return;
         }
-        submit(service, SHEARS_ID, BoardCase.CRAFT_SHEARS, now, home,
-                Map.of(WoolRules.IRON_INGOT, WoolRules.shearsIron()), TicketTarget.at(home));
+        submit(
+                service,
+                SHEARS_ID,
+                BoardCase.CRAFT_SHEARS,
+                now,
+                home,
+                Map.of(WoolRules.IRON_INGOT, WoolRules.shearsIron()),
+                TicketTarget.at(home));
     }
 
-    private static void ensureShear(ServerLevel level, BoardService service, StockView stock, BlockCoord home,
-            long now) {
+    private static void ensureShear(
+            ServerLevel level, BoardService service, StockView stock, BlockCoord home, long now) {
         if (active(service, SHEAR_ID) || stock.available().getOrDefault(WoolRules.SHEARS, 0) < 1) {
             return;
         }
@@ -92,12 +98,18 @@ public final class WoolWatch {
         if (sheep <= 0) {
             return;
         }
-        submit(service, SHEAR_ID, BoardCase.SHEAR_SHEEP, now, home, Map.of(WoolRules.SHEARS, 1),
+        submit(
+                service,
+                SHEAR_ID,
+                BoardCase.SHEAR_SHEEP,
+                now,
+                home,
+                Map.of(WoolRules.SHEARS, 1),
                 TicketTarget.at(home).withCount(sheep));
     }
 
-    private void ensureHunt(ServerLevel level, BoardService service, List<SpiritEntity> spirits, BlockCoord home,
-            long now) {
+    private void ensureHunt(
+            ServerLevel level, BoardService service, List<SpiritEntity> spirits, BlockCoord home, long now) {
         long day = now / DAY_TICKS;
         if (active(service, HUNT_ID) || !outingAllowed(level, spirits, home)) {
             return;
@@ -111,7 +123,13 @@ public final class WoolWatch {
         }
         lastHuntDay = day;
         int count = (int) Math.min(wild, WoolRules.wildSheepPerDay());
-        submit(service, HUNT_ID, BoardCase.HUNT_WILD_SHEEP, now, home, Map.of(),
+        submit(
+                service,
+                HUNT_ID,
+                BoardCase.HUNT_WILD_SHEEP,
+                now,
+                home,
+                Map.of(),
                 TicketTarget.at(home).withCount(count));
     }
 
@@ -125,7 +143,12 @@ public final class WoolWatch {
             return;
         }
         int count = Math.min(wool, CatalogLimits.COUNT_MAX);
-        submit(service, STRING_ID, BoardCase.WEAVE_WOOL, now, home,
+        submit(
+                service,
+                STRING_ID,
+                BoardCase.WEAVE_WOOL,
+                now,
+                home,
                 Map.of(WoolRules.STRING, count * WoolRules.STRINGS_PER_WOOL),
                 TicketTarget.at(home).withCraft(WoolRules.CRAFTED_WOOL, count));
     }
@@ -140,20 +163,43 @@ public final class WoolWatch {
             return;
         }
         String woolId = WoolRules.woolId(color.orElseThrow());
-        submit(service, BED_ID, BoardCase.CRAFT_BED, now, home,
+        submit(
+                service,
+                BED_ID,
+                BoardCase.CRAFT_BED,
+                now,
+                home,
                 Map.of(woolId, WoolRules.bedWool(), planks.orElseThrow(), WoolRules.bedPlanks()),
                 TicketTarget.at(home).withCraft(WoolRules.bedId(color.orElseThrow()), 1));
     }
 
-    private static void submit(BoardService service, String id, BoardCase boardCase, long now, BlockCoord home,
-            Map<String, Integer> required, TicketTarget target) {
-        service.submit(new BoardTicket(id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase),
-                now, 1, CAUSE, List.of(), required), target);
+    private static void submit(
+            BoardService service,
+            String id,
+            BoardCase boardCase,
+            long now,
+            BlockCoord home,
+            Map<String, Integer> required,
+            TicketTarget target) {
+        service.submit(
+                new BoardTicket(
+                        id,
+                        boardCase,
+                        Optional.empty(),
+                        BoardRules.priorityOf(boardCase),
+                        now,
+                        1,
+                        CAUSE,
+                        List.of(),
+                        required),
+                target);
     }
 
     private static boolean active(BoardService service, String id) {
-        return service.board().statusOf(id)
-                .map(status -> status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return service.board()
+                .statusOf(id)
+                .map(status -> status == BoardStatus.PENDING
+                        || status == BoardStatus.WAITING_RESOURCES
                         || status == BoardStatus.ASSIGNED)
                 .orElse(false);
     }
@@ -164,8 +210,11 @@ public final class WoolWatch {
         int radius = WoolRules.shearRadius();
         int count = 0;
         for (Animal animal : HerdSurvey.query(level, center, radius)) {
-            if (!(animal instanceof Sheep sheep) || animal.isBaby() || sheep.isSheared()
-                    || !animal.isAlive() || !own.contains(animal.getUUID())) {
+            if (!(animal instanceof Sheep sheep)
+                    || animal.isBaby()
+                    || sheep.isSheared()
+                    || !animal.isAlive()
+                    || !own.contains(animal.getUUID())) {
                 continue;
             }
             if (distanceSquared(home, animal) <= (long) radius * radius) {

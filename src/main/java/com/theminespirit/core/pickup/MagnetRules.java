@@ -15,9 +15,13 @@ public record MagnetRules(double radius, int intervalTicks, int playerDropDelayT
     public static final String RESOURCE = "data/theminespirit/pickup/magnet.json";
     private static final Set<String> FIELDS = Set.of("radius", "intervalTicks", "playerDropDelayTicks");
 
-    public record Drop(int ageTicks, boolean pickupDelay, boolean thrownByPlayer, boolean thrownBySelf,
-            boolean addressedToOther, boolean reservedByOther) {
-    }
+    public record Drop(
+            int ageTicks,
+            boolean pickupDelay,
+            boolean thrownByPlayer,
+            boolean thrownBySelf,
+            boolean addressedToOther,
+            boolean reservedByOther) {}
 
     public MagnetRules {
         if (radius <= 0 || intervalTicks < 1 || playerDropDelayTicks < 0) {
@@ -42,7 +46,8 @@ public record MagnetRules(double radius, int intervalTicks, int playerDropDelayT
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, FIELDS, origin, "magnet.json");
         try {
-            return new MagnetRules(JsonResource.decimal(root.get("radius"), origin, "radius"),
+            return new MagnetRules(
+                    JsonResource.decimal(root.get("radius"), origin, "radius"),
                     JsonResource.integer(root.get("intervalTicks"), origin, "intervalTicks"),
                     JsonResource.integer(root.get("playerDropDelayTicks"), origin, "playerDropDelayTicks"));
         } catch (IllegalArgumentException error) {

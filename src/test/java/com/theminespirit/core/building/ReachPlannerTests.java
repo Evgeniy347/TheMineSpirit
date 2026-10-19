@@ -23,7 +23,9 @@ class ReachPlannerTests {
         ReachPlanner.World world = new SetWorld(Set.of(cell(2, 3, 0), cell(0, 2, 0), cell(1, 1, 0)), Set.of());
         List<BlockCoord> targets = List.of(cell(1, 1, 0), cell(0, 2, 0), cell(2, 3, 0));
 
-        assertEquals(targets, ReachPlanner.workableNow(REACH, cell(0, 1, 1), targets, world),
+        assertEquals(
+                targets,
+                ReachPlanner.workableNow(REACH, cell(0, 1, 1), targets, world),
                 "С места делаются все досягаемые готовые клетки в порядке, который задал вызывающий (снизу вверх "
                         + "для постановки, сверху вниз для очистки): иначе верхний блок повиснет без опоры");
     }
@@ -32,24 +34,34 @@ class ReachPlannerTests {
     void workableNow_NotReadyOutOfReachOrInsideBody_Skipped() {
         BlockCoord feet = cell(0, 1, 0);
         List<BlockCoord> targets = List.of(cell(0, 1, 0), cell(0, 2, 0), cell(4, 1, 0), cell(1, 2, 0), cell(1, 1, 0));
-        ReachPlanner.World world = new SetWorld(Set.of(cell(0, 1, 0), cell(0, 2, 0), cell(4, 1, 0), cell(1, 2, 0)),
-                Set.of());
+        ReachPlanner.World world =
+                new SetWorld(Set.of(cell(0, 1, 0), cell(0, 2, 0), cell(4, 1, 0), cell(1, 2, 0)), Set.of());
 
-        assertEquals(List.of(cell(1, 2, 0)), ReachPlanner.workableNow(REACH, feet, targets, world),
+        assertEquals(
+                List.of(cell(1, 2, 0)),
+                ReachPlanner.workableNow(REACH, feet, targets, world),
                 "С места делается только клетка вне тела, в досягаемости и готовая (с опорой): блок в теле духа, "
                         + "в четырёх шагах или без опоры ставить нельзя");
     }
 
     @Test
     void nextStand_WallOfSeven_CenterCoversWholeWall() {
-        List<BlockCoord> wall = List.of(cell(0, 1, 0), cell(1, 1, 0), cell(2, 1, 0), cell(3, 1, 0),
-                cell(4, 1, 0), cell(5, 1, 0), cell(6, 1, 0));
+        List<BlockCoord> wall = List.of(
+                cell(0, 1, 0),
+                cell(1, 1, 0),
+                cell(2, 1, 0),
+                cell(3, 1, 0),
+                cell(4, 1, 0),
+                cell(5, 1, 0),
+                cell(6, 1, 0));
         ReachPlanner.World world = new SetWorld(Set.copyOf(wall), standableAround(1, 0));
 
-        Optional<BlockCoord> stand = ReachPlanner.nextStand(REACH, cell(3, -10, 0), wall, world, Set.of(),
-                Set.copyOf(wall));
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStand(REACH, cell(3, -10, 0), wall, world, Set.of(), Set.copyOf(wall));
 
-        assertEquals(Optional.of(cell(3, 1, -1)), stand,
+        assertEquals(
+                Optional.of(cell(3, 1, -1)),
+                stand,
                 "Стоянка обязана накрывать всю стену: центр стены в 7 клеток ставит её с места, а не за четыре "
                         + "перехода по краям");
     }
@@ -59,10 +71,12 @@ class ReachPlannerTests {
         List<BlockCoord> wall = List.of(cell(0, 1, 0), cell(1, 1, 0), cell(2, 1, 0), cell(3, 1, 0), cell(4, 1, 0));
         ReachPlanner.World world = new SetWorld(Set.copyOf(wall), standableAround(1, 0));
 
-        Optional<BlockCoord> stand = ReachPlanner.nextStand(REACH, cell(0, 1, 5), wall, world, Set.of(),
-                Set.copyOf(wall));
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStand(REACH, cell(0, 1, 5), wall, world, Set.of(), Set.copyOf(wall));
 
-        assertEquals(Optional.of(cell(1, 1, 3)), stand,
+        assertEquals(
+                Optional.of(cell(1, 1, 3)),
+                stand,
                 "При равном охвате выбирается стоянка ближе к духу: иначе он бежит через всю площадку ради той же "
                         + "стройки");
     }
@@ -78,9 +92,11 @@ class ReachPlannerTests {
         Optional<BlockCoord> stand = ReachPlanner.nextStand(REACH, feet, wall, world, Set.of(), Set.copyOf(wall));
 
         assertTrue(stand.isPresent(), "Рядом есть свободная земля: стоянка обязана найтись");
-        assertFalse(wall.contains(stand.get()),
+        assertFalse(
+                wall.contains(stand.get()),
                 "Стоянка не может быть клеткой схемы: дух окажется в будущем блоке, фактически " + stand);
-        assertFalse(stand.get().equals(feet),
+        assertFalse(
+                stand.get().equals(feet),
                 "Следующая стоянка не может совпадать с текущей: иначе подход не начнётся, фактически " + stand);
     }
 
@@ -91,10 +107,11 @@ class ReachPlannerTests {
         BlockCoord best = ReachPlanner.nextStand(REACH, cell(0, 1, 5), wall, world, Set.of(), Set.copyOf(wall))
                 .orElseThrow();
 
-        Optional<BlockCoord> second = ReachPlanner.nextStand(REACH, cell(0, 1, 5), wall, world, Set.of(best),
-                Set.copyOf(wall));
+        Optional<BlockCoord> second =
+                ReachPlanner.nextStand(REACH, cell(0, 1, 5), wall, world, Set.of(best), Set.copyOf(wall));
 
-        assertTrue(second.isPresent() && !second.get().equals(best),
+        assertTrue(
+                second.isPresent() && !second.get().equals(best),
                 "Недостижимая стоянка исключается, и планировщик предлагает следующую: иначе дух повторяет тот же "
                         + "подход, фактически " + second);
     }
@@ -104,10 +121,11 @@ class ReachPlannerTests {
         List<BlockCoord> tower = List.of(cell(0, 1, 0), cell(0, 2, 0), cell(10, 5, 0));
         ReachPlanner.World world = new SetWorld(Set.of(), standableAround(1, 0));
 
-        Optional<BlockCoord> stand = ReachPlanner.nextStand(REACH, cell(20, 1, 20), tower, world, Set.of(),
-                Set.copyOf(tower));
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStand(REACH, cell(20, 1, 20), tower, world, Set.of(), Set.copyOf(tower));
 
-        assertTrue(stand.isPresent() && REACH.reaches(stand.get(), cell(0, 1, 0)),
+        assertTrue(
+                stand.isPresent() && REACH.reaches(stand.get(), cell(0, 1, 0)),
                 "Если готовых клеток нет, стоянка накрывает нижний слой: с него стройка начнётся, когда появится "
                         + "опора; фактически " + stand);
     }

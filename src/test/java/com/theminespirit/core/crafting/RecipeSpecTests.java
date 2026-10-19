@@ -15,54 +15,65 @@ class RecipeSpecTests {
 
     @Test
     void ingredientSpec_EmptyAlternatives_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> new IngredientSpec(List.of()),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new IngredientSpec(List.of()),
                 "Ингредиент без вариантов обязан отвергаться: такое место рецепта невыполнимо, и ассигнатор "
                         + "молча объявил бы весь рецепт невыполнимым");
     }
 
     @Test
     void ingredientSpec_DuplicateAlternatives_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> IngredientSpec.of("oak_planks", "oak_planks"),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> IngredientSpec.of("oak_planks", "oak_planks"),
                 "Повтор варианта обязан отвергаться: дубликат искажает подсчёт нехватки");
     }
 
     @Test
     void ingredientSpec_BlankAlternative_IsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> IngredientSpec.of("oak_planks", " "),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> IngredientSpec.of("oak_planks", " "),
                 "Пустое имя варианта обязано отвергаться: по нему нельзя найти предмет у духа");
     }
 
     @Test
     void recipeSpec_ZeroOutput_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> RecipeSpec.shapeless("r", "stick", 0, List.of(PLANKS)),
                 "Нулевой выход обязан отвергаться: число крафтов считается делением на выход");
     }
 
     @Test
     void recipeSpec_ZeroWidth_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> RecipeSpec.shaped("r", "stick", 4, 0, 2, List.of(PLANKS, PLANKS)),
                 "Нулевая ширина обязана отвергаться: форма из нуля клеток не существует");
     }
 
     @Test
     void recipeSpec_ShapeWiderThanGrid_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> RecipeSpec.shaped("r", "stick", 4, 4, 1, List.of(PLANKS)),
                 "Форма шире сетки 3×3 обязана отвергаться: в игре такой рецепт не бывает");
     }
 
     @Test
     void recipeSpec_MoreIngredientsThanCells_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> RecipeSpec.shaped("r", "stick", 4, 1, 2, List.of(PLANKS, PLANKS, PLANKS)),
                 "Ингредиентов больше клеток формы обязано отвергаться: форма и состав рецепта расходятся");
     }
 
     @Test
     void recipeSpec_SmeltingWithoutCookTime_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> RecipeSpec.smelting("r", "iron_ingot", 1, IngredientSpec.of("raw_iron"), 0),
                 "Плавка без времени обязана отвергаться: по нему считается ожидание печи");
     }
@@ -71,17 +82,20 @@ class RecipeSpecTests {
     void needsTable_TwoByOneShape_False() {
         RecipeSpec sticks = RecipeSpec.shaped("stick", "stick", 4, 1, 2, List.of(PLANKS, PLANKS));
 
-        assertFalse(sticks.needsTable(), "Палки 1×2 крафтятся в сетке 2×2 инвентаря: станция не нужна, "
-                + "иначе резолвер строит верстак ради палок");
+        assertFalse(
+                sticks.needsTable(),
+                "Палки 1×2 крафтятся в сетке 2×2 инвентаря: станция не нужна, "
+                        + "иначе резолвер строит верстак ради палок");
     }
 
     @Test
     void needsTable_ThreeByThreePickaxe_True() {
-        RecipeSpec pickaxe = RecipeSpec.shaped("wooden_pickaxe", "wooden_pickaxe", 1, 3, 3,
-                List.of(PLANKS, PLANKS, PLANKS, STICK, STICK));
+        RecipeSpec pickaxe = RecipeSpec.shaped(
+                "wooden_pickaxe", "wooden_pickaxe", 1, 3, 3, List.of(PLANKS, PLANKS, PLANKS, STICK, STICK));
 
-        assertTrue(pickaxe.needsTable(), "Кирка 3×3 не влезает в сетку инвентаря: без верстака дух "
-                + "попытался бы крафтить невозможное");
+        assertTrue(
+                pickaxe.needsTable(),
+                "Кирка 3×3 не влезает в сетку инвентаря: без верстака дух " + "попытался бы крафтить невозможное");
     }
 
     @Test
@@ -93,8 +107,7 @@ class RecipeSpecTests {
 
     @Test
     void needsTable_ShapelessFiveIngredients_True() {
-        RecipeSpec five = RecipeSpec.shapeless("five", "dye", 1,
-                List.of(PLANKS, PLANKS, PLANKS, PLANKS, PLANKS));
+        RecipeSpec five = RecipeSpec.shapeless("five", "dye", 1, List.of(PLANKS, PLANKS, PLANKS, PLANKS, PLANKS));
 
         assertTrue(five.needsTable(), "Бесформенный рецепт из 5 ингредиентов не влезает в 4 клетки инвентаря");
     }
@@ -112,7 +125,9 @@ class RecipeSpecTests {
         RecipeSpec recipe = RecipeSpec.shapeless("r", "stick", 1, source);
         source.add(STICK);
 
-        assertEquals(1, recipe.ingredients().size(),
+        assertEquals(
+                1,
+                recipe.ingredients().size(),
                 "Рецепт обязан копировать список ингредиентов: иначе внешняя правка меняет рецепт в индексе");
     }
 }

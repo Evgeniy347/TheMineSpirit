@@ -9,14 +9,19 @@ import net.jqwik.api.constraints.IntRange;
 
 class FarmJobProperties {
     @Property
-    void eligible_AnyTile_NeverHarvestAndBoneMealTogether(@ForAll Ground ground, @ForAll Above above,
-            @ForAll CropKind kind, @ForAll @IntRange(min = 0, max = 7) int age, @ForAll boolean watered) {
+    void eligible_AnyTile_NeverHarvestAndBoneMealTogether(
+            @ForAll Ground ground,
+            @ForAll Above above,
+            @ForAll CropKind kind,
+            @ForAll @IntRange(min = 0, max = 7) int age,
+            @ForAll boolean watered) {
         FarmTile tile = tile(ground, above, kind, age);
 
         boolean harvestable = FarmJob.HARVEST.eligible(tile, CropKind.ANY, watered);
         boolean feedable = FarmJob.BONE_MEAL.eligible(tile, CropKind.ANY, watered);
 
-        assertFalse(harvestable && feedable,
+        assertFalse(
+                harvestable && feedable,
                 "Клетка не может одновременно требовать сбор и подкормку: зрелость едина, "
                         + "иначе планировщик сломает зрелый посев мукой или удобрит вместо сбора. Клетка: " + tile);
     }

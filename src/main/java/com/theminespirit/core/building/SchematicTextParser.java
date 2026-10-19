@@ -26,22 +26,20 @@ public final class SchematicTextParser {
     public static final char ANY = ' ';
     public static final String EXTENSION = ".txt";
 
-    private static final Set<String> KEYS = Set.of("name", "type", "stage", "level", "requires", "size", "entrance",
-            "legend", "exemptions", "layers");
+    private static final Set<String> KEYS =
+            Set.of("name", "type", "stage", "level", "requires", "size", "entrance", "legend", "exemptions", "layers");
     private static final Pattern KEY_LINE = Pattern.compile("^([a-z]+):(.*)$");
     private static final Pattern LEGEND_LINE = Pattern.compile("^\\s+'(.)':\\s*(.*)$");
     private static final Pattern LAYER_LINE = Pattern.compile("^(\\s*)- y(\\d+)(?:\\s+[^:|]*)?:\\s*\\|\\s*$");
     private static final Pattern SIZE = Pattern.compile("^(\\d+)\\s*[x×]\\s*(\\d+)\\s*[x×]\\s*(\\d+)$");
     private static final Pattern COORDS = Pattern.compile("^(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)$");
-    private static final Pattern BLOCK_SPEC = Pattern.compile(
-            "^([a-z0-9_.\\-]+(?::[a-z0-9_./\\-]+)?)(?:\\[([^\\]]*)])?(?:\\s+\"([^\"]*)\")?$");
+    private static final Pattern BLOCK_SPEC =
+            Pattern.compile("^([a-z0-9_.\\-]+(?::[a-z0-9_./\\-]+)?)(?:\\[([^\\]]*)])?(?:\\s+\"([^\"]*)\")?$");
     private static final Pattern STATE_PAIR = Pattern.compile("^([a-z0-9_]+)=([a-z0-9_]+)$");
 
-    record LegendEntry(String block, Map<String, String> state, String text, int line) {
-    }
+    record LegendEntry(String block, Map<String, String> state, String text, int line) {}
 
-    record RawLayer(int y, int line, List<String> rows) {
-    }
+    record RawLayer(int y, int line, List<String> rows) {}
 
     private final String origin;
     private final List<String> lines;
@@ -80,8 +78,10 @@ public final class SchematicTextParser {
                 continue;
             }
             if (Character.isWhitespace(line.charAt(0))) {
-                throw error(index, "строка с отступом вне раздела: отступ бывает только внутри legend, exemptions "
-                        + "или layers");
+                throw error(
+                        index,
+                        "строка с отступом вне раздела: отступ бывает только внутри legend, exemptions "
+                                + "или layers");
             }
             Matcher key = KEY_LINE.matcher(line);
             if (!key.matches()) {
@@ -113,8 +113,9 @@ public final class SchematicTextParser {
         }
         switch (key) {
             case "name" -> name = Optional.of(unquote(value, line));
-            case "type" -> type = Optional.of(BuildingType.byId(value).orElseThrow(() -> error(line,
-                    "неизвестный тип '" + value + "': допустимы " + typeIds())));
+            case "type" ->
+                type = Optional.of(BuildingType.byId(value)
+                        .orElseThrow(() -> error(line, "неизвестный тип '" + value + "': допустимы " + typeIds())));
             case "stage" -> stage = Optional.of(integer(value, line, "stage"));
             case "level" -> level = integer(value, line, "level");
             case "requires" -> requires = Optional.of(value);
@@ -123,8 +124,9 @@ public final class SchematicTextParser {
                 if (!size.matches()) {
                     throw error(line, "размер '" + value + "' не по формату: ожидается Ш×В×Д, например 7x5x7");
                 }
-                this.size = new int[] {Integer.parseInt(size.group(1)), Integer.parseInt(size.group(2)),
-                        Integer.parseInt(size.group(3))};
+                this.size = new int[] {
+                    Integer.parseInt(size.group(1)), Integer.parseInt(size.group(2)), Integer.parseInt(size.group(3))
+                };
                 sizeLine = line;
             }
             case "entrance" -> {
@@ -145,12 +147,15 @@ public final class SchematicTextParser {
             }
             Matcher entry = LEGEND_LINE.matcher(line);
             if (!entry.matches()) {
-                throw error(index, "строка легенды не по формату: ожидается «  'c': блок[свойство=значение] \"текст\"»");
+                throw error(
+                        index, "строка легенды не по формату: ожидается «  'c': блок[свойство=значение] \"текст\"»");
             }
             char symbol = entry.group(1).charAt(0);
             if (symbol == AIR || symbol == ANY || symbol == '\'' || symbol == '-') {
-                throw error(index, "символ '" + symbol + "' зарезервирован: '.' — воздух, пробел — «не трогать», "
-                        + "кавычка и дефис ломают разбор");
+                throw error(
+                        index,
+                        "символ '" + symbol + "' зарезервирован: '.' — воздух, пробел — «не трогать», "
+                                + "кавычка и дефис ломают разбор");
             }
             if (legend.containsKey(symbol)) {
                 throw error(index, "символ '" + symbol + "' в легенде дважды: клетка с ним стала бы двусмысленной");
@@ -166,8 +171,10 @@ public final class SchematicTextParser {
     private LegendEntry blockSpec(String spec, int line) {
         Matcher block = BLOCK_SPEC.matcher(spec);
         if (!block.matches()) {
-            throw error(line, "блок '" + spec + "' не по формату: ожидается id[свойство=значение,…] и, для таблички, "
-                    + "текст в кавычках");
+            throw error(
+                    line,
+                    "блок '" + spec + "' не по формату: ожидается id[свойство=значение,…] и, для таблички, "
+                            + "текст в кавычках");
         }
         String id = block.group(1).contains(":") ? block.group(1) : "minecraft:" + block.group(1);
         if (SchematicBlocks.path(id).equals("air")) {
@@ -210,7 +217,8 @@ public final class SchematicTextParser {
             String trimmed = line.trim();
             if (trimmed.startsWith("- rule:")) {
                 if (rule != null) {
-                    throw error(ruleLine, "у исключения '" + rule + "' нет reason: без причины правило ослабляется молча");
+                    throw error(
+                            ruleLine, "у исключения '" + rule + "' нет reason: без причины правило ослабляется молча");
                 }
                 rule = stripComment(trimmed.substring("- rule:".length()).trim());
                 ruleLine = index;
@@ -221,8 +229,11 @@ public final class SchematicTextParser {
                 String reason = unquote(trimmed.substring("reason:".length()).trim(), index);
                 String ruleId = rule;
                 int unknownLine = ruleLine;
-                SchematicRules.RuleId id = SchematicRules.RuleId.byId(ruleId).orElseThrow(() -> error(unknownLine,
-                        "исключение ссылается на несуществующее правило '" + ruleId + "': допустимы " + ruleIds()));
+                SchematicRules.RuleId id = SchematicRules.RuleId.byId(ruleId)
+                        .orElseThrow(() -> error(
+                                unknownLine,
+                                "исключение ссылается на несуществующее правило '" + ruleId + "': допустимы "
+                                        + ruleIds()));
                 if (reason.isBlank()) {
                     throw error(index, "у исключения '" + ruleId + "' пустой reason");
                 }
@@ -292,8 +303,10 @@ public final class SchematicTextParser {
         }
         int max = CatalogLimits.SCHEMATIC_SIZE_MAX;
         if (sx > max || sy > max || sz > max) {
-            throw error(sizeLine, "размер " + sx + "×" + sy + "×" + sz + " больше предела " + max
-                    + ": большая схема строится слишком долго");
+            throw error(
+                    sizeLine,
+                    "размер " + sx + "×" + sy + "×" + sz + " больше предела " + max
+                            + ": большая схема строится слишком долго");
         }
         if (legend.isEmpty()) {
             throw error(-1, "нет раздела legend: нечем расшифровать слои");
@@ -301,12 +314,14 @@ public final class SchematicTextParser {
         char[][][] grid = grid(sx, sy, sz);
         SchematicGrid.Result cells = SchematicGrid.resolve(grid, legend, origin);
         if (cells.blocks().size() > CatalogLimits.SCHEMATIC_BLOCKS_MAX) {
-            throw error(-1, "блоков " + cells.blocks().size() + ", а предел " + CatalogLimits.SCHEMATIC_BLOCKS_MAX
-                    + ": большая схема строится слишком долго");
+            throw error(
+                    -1,
+                    "блоков " + cells.blocks().size() + ", а предел " + CatalogLimits.SCHEMATIC_BLOCKS_MAX
+                            + ": большая схема строится слишком долго");
         }
         Schematic schematic = new Schematic(sx, sy, sz, cells.blocks(), cells.air());
-        SchematicDocument.Header header = new SchematicDocument.Header(name, type, stage, level, requires,
-                entrance(schematic));
+        SchematicDocument.Header header =
+                new SchematicDocument.Header(name, type, stage, level, requires, entrance(schematic));
         return new SchematicDocument(schematic, header, exemptions);
     }
 
@@ -314,8 +329,9 @@ public final class SchematicTextParser {
         RawLayer[] byY = new RawLayer[sy];
         for (RawLayer layer : layers) {
             if (layer.y() >= sy) {
-                throw error(layer.line(), "слой y" + layer.y() + " выше габарита: по size высота " + sy
-                        + " (слои y0…y" + (sy - 1) + ")");
+                throw error(
+                        layer.line(),
+                        "слой y" + layer.y() + " выше габарита: по size высота " + sy + " (слои y0…y" + (sy - 1) + ")");
             }
             if (byY[layer.y()] != null) {
                 throw error(layer.line(), "слой y" + layer.y() + " описан дважды");
@@ -333,15 +349,19 @@ public final class SchematicTextParser {
                 rows.remove(rows.size() - 1);
             }
             if (rows.size() != sz) {
-                throw error(layer.line(), "в слое y" + y + " строк " + rows.size() + ", а по size глубина "
-                        + sz + ": первая строка — фронт (z=0), последняя — тыл; пустые строки в конце слоя "
-                        + "не считаются");
+                throw error(
+                        layer.line(),
+                        "в слое y" + y + " строк " + rows.size() + ", а по size глубина "
+                                + sz + ": первая строка — фронт (z=0), последняя — тыл; пустые строки в конце слоя "
+                                + "не считаются");
             }
             for (int z = 0; z < sz; z++) {
                 String row = rows.get(z);
                 if (row.length() > sx) {
-                    throw error(layer.line() + 1 + z, "в строке " + row.length() + " символов, а по size ширина " + sx
-                            + " (лишнее: '" + row.substring(sx) + "')");
+                    throw error(
+                            layer.line() + 1 + z,
+                            "в строке " + row.length() + " символов, а по size ширина " + sx + " (лишнее: '"
+                                    + row.substring(sx) + "')");
                 }
                 for (int x = 0; x < sx; x++) {
                     char symbol = x < row.length() ? row.charAt(x) : ANY;
@@ -362,7 +382,8 @@ public final class SchematicTextParser {
         if (entrance.equals("front")) {
             Schematic.Entry best = null;
             for (Schematic.Entry entry : schematic.blocks()) {
-                if (entry.dz() != 0 || !SchematicBlocks.isEntranceBlock(entry.block())
+                if (entry.dz() != 0
+                        || !SchematicBlocks.isEntranceBlock(entry.block())
                         || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
                     continue;
                 }
@@ -371,8 +392,10 @@ public final class SchematicTextParser {
                 }
             }
             if (best == null) {
-                throw error(entranceLine, "entrance: front, но в первой строке слоёв нет двери или калитки: "
-                        + "поставьте дверь во фронт или укажите вход координатами x,y,z");
+                throw error(
+                        entranceLine,
+                        "entrance: front, но в первой строке слоёв нет двери или калитки: "
+                                + "поставьте дверь во фронт или укажите вход координатами x,y,z");
             }
             return Optional.of(new BlockCoord(best.dx(), best.dy(), best.dz()));
         }
@@ -380,18 +403,23 @@ public final class SchematicTextParser {
         if (!coords.matches()) {
             throw error(entranceLine, "вход '" + entrance + "' не по формату: ожидается front или x,y,z");
         }
-        BlockCoord cell = new BlockCoord(Integer.parseInt(coords.group(1)), Integer.parseInt(coords.group(2)),
+        BlockCoord cell = new BlockCoord(
+                Integer.parseInt(coords.group(1)),
+                Integer.parseInt(coords.group(2)),
                 Integer.parseInt(coords.group(3)));
         if (cell.x() >= schematic.sizeX() || cell.y() >= schematic.sizeY() || cell.z() >= schematic.sizeZ()) {
-            throw error(entranceLine, "вход " + entrance + " вне габаритов " + schematic.sizeX() + "×"
-                    + schematic.sizeY() + "×" + schematic.sizeZ());
+            throw error(
+                    entranceLine,
+                    "вход " + entrance + " вне габаритов " + schematic.sizeX() + "×" + schematic.sizeY() + "×"
+                            + schematic.sizeZ());
         }
         return Optional.of(cell);
     }
 
     private void requireSection(int line, String value, String key) {
         if (!value.isEmpty()) {
-            throw error(line, "после '" + key + ":' значение не пишется: содержимое раздела — строками с отступом ниже");
+            throw error(
+                    line, "после '" + key + ":' значение не пишется: содержимое раздела — строками с отступом ниже");
         }
     }
 
@@ -405,7 +433,9 @@ public final class SchematicTextParser {
 
     private String unquote(String value, int line) {
         if (value.startsWith("\"")) {
-            if (value.length() < 2 || !value.endsWith("\"") || value.substring(1, value.length() - 1).contains("\"")) {
+            if (value.length() < 2
+                    || !value.endsWith("\"")
+                    || value.substring(1, value.length() - 1).contains("\"")) {
                 throw error(line, "строка в кавычках не закрыта или содержит кавычку внутри: " + value);
             }
             return value.substring(1, value.length() - 1);

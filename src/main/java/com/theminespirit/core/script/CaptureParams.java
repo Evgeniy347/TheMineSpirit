@@ -17,7 +17,6 @@ public record CaptureParams(Species species, int radius) {
     public static CaptureParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         return new CaptureParams(
-                Species.parse(ScriptArgs.requireString(params, "species")),
-                ScriptArgs.requireInt(params, "radius"));
+                Species.parse(ScriptArgs.requireString(params, "species")), ScriptArgs.requireInt(params, "radius"));
     }
 }

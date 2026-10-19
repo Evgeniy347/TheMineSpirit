@@ -100,12 +100,19 @@ public final class ChopTreeScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return Map.of(CHOPPED_KEY, chopped,
-                STANDING_KEY, standingLogs,
-                PROTECTED_KEY, protectedLogs,
-                PLANTED_KEY, plantedSaplings,
-                SKIPPED_KEY, skippedCells,
-                LACKED_KEY, lackedSaplings);
+        return Map.of(
+                CHOPPED_KEY,
+                chopped,
+                STANDING_KEY,
+                standingLogs,
+                PROTECTED_KEY,
+                protectedLogs,
+                PLANTED_KEY,
+                plantedSaplings,
+                SKIPPED_KEY,
+                skippedCells,
+                LACKED_KEY,
+                lackedSaplings);
     }
 
     @Override
@@ -140,7 +147,9 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     public String summary() {
-        StringBuilder text = new StringBuilder("срублено деревьев ").append(chopped).append(" из ")
+        StringBuilder text = new StringBuilder("срублено деревьев ")
+                .append(chopped)
+                .append(" из ")
                 .append(params.count());
         if (standingLogs > 0) {
             text.append("; оставлено брёвен: ").append(standingLogs);

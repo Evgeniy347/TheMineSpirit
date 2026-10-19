@@ -31,7 +31,8 @@ public record RetreatOptions(List<RetreatCandidate> candidates) {
         RetreatCandidate best = null;
         RetreatCandidate rally = null;
         List<RetreatCandidate> ordered = candidates.stream()
-                .sorted(Comparator.comparing(candidate -> candidate.entry().method())).toList();
+                .sorted(Comparator.comparing(candidate -> candidate.entry().method()))
+                .toList();
         for (RetreatCandidate candidate : ordered) {
             if (candidate.entry().method() == RetreatMethod.RALLY) {
                 if (rally == null || candidate.utility() > rally.utility() + TIE_EPSILON) {
@@ -42,7 +43,9 @@ public record RetreatOptions(List<RetreatCandidate> candidates) {
             }
         }
         RetreatCandidate chosen = rally != null ? rally : best;
-        return chosen == null ? RetreatChoice.NONE
-                : new RetreatChoice(chosen.entry().method(), Optional.of(chosen.entry().id()));
+        return chosen == null
+                ? RetreatChoice.NONE
+                : new RetreatChoice(
+                        chosen.entry().method(), Optional.of(chosen.entry().id()));
     }
 }

@@ -61,8 +61,7 @@ public final class WarehouseGameTests {
     private static final String BATCH = "warehouse";
     private static final int SETTLE_TICKS = 5;
 
-    private WarehouseGameTests() {
-    }
+    private WarehouseGameTests() {}
 
     private static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
@@ -79,18 +78,18 @@ public final class WarehouseGameTests {
 
     private static ScriptCall build(GameTestHelper helper, String file, BlockPos anchor) {
         BlockPos pos = helper.absolutePos(anchor);
-        return new ScriptCall("build_schematic", Map.of("file", file, "x", pos.getX(), "y", pos.getY(),
-                "z", pos.getZ()));
+        return new ScriptCall(
+                "build_schematic", Map.of("file", file, "x", pos.getX(), "y", pos.getY(), "z", pos.getZ()));
     }
 
     private static void place(GameTestHelper helper, Schematic schematic, BlockPos origin, int maxX, int maxZ) {
         BlockPos base = helper.absolutePos(origin);
-        for (Schematic.PlacedEntry entry : schematic.entries(
-                new BlockCoord(base.getX(), base.getY(), base.getZ()))) {
+        for (Schematic.PlacedEntry entry : schematic.entries(new BlockCoord(base.getX(), base.getY(), base.getZ()))) {
             if (entry.pos().x() - base.getX() > maxX || entry.pos().z() - base.getZ() > maxZ) {
                 continue;
             }
-            BlockPos pos = new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+            BlockPos pos =
+                    new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
             helper.getLevel().setBlockAndUpdate(pos, BlockStates.stateFor(entry.block()));
             if (!entry.text().isBlank()) {
                 SignTexts.write(helper.getLevel(), pos, entry.text());
@@ -105,7 +104,9 @@ public final class WarehouseGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         Schematic schematic = SchematicResources.load("storage_v1");
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(7, 1, 4),
+        SpiritEntity spirit = spawnWith(
+                helper,
+                new BlockPos(7, 1, 4),
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
@@ -118,7 +119,8 @@ public final class WarehouseGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Склад уровня 1 обязан построиться целиком: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + ", прогресс "
@@ -131,10 +133,13 @@ public final class WarehouseGameTests {
                     continue;
                 }
                 chests++;
-                BlockPos pos = new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+                BlockPos pos = new BlockPos(
+                        entry.pos().x(), entry.pos().y(), entry.pos().z());
                 if (!helper.getLevel().getBlockState(pos).is(Blocks.CHEST)) {
-                    missing.add(pos.toShortString() + "=" + helper.getLevel().getBlockState(pos).getBlock()
-                            + "@local(" + (entry.pos().x() - helper.absolutePos(anchor).getX()) + ","
+                    missing.add(pos.toShortString() + "="
+                            + helper.getLevel().getBlockState(pos).getBlock()
+                            + "@local("
+                            + (entry.pos().x() - helper.absolutePos(anchor).getX()) + ","
                             + (entry.pos().y() - helper.absolutePos(anchor).getY()) + ","
                             + (entry.pos().z() - helper.absolutePos(anchor).getZ()) + ")");
                 }
@@ -142,16 +147,18 @@ public final class WarehouseGameTests {
                     blocked++;
                 }
             }
-            helper.assertTrue(missing.isEmpty(),
+            helper.assertTrue(
+                    missing.isEmpty(),
                     "Сундук схемы не поставлен: " + missing + "; статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", дух в "
                             + spirit.blockPosition().toShortString() + ", сундуков в инвентаре "
                             + BlockItems.countIn(spirit.getInventory(), "minecraft:chest"));
-            helper.assertTrue(chests == 18,
-                    "Склад уровня 1 обязан вмещать 18 блоков сундуков (9 двойных), фактически " + chests);
-            helper.assertTrue(blocked == 0,
-                    "Все сундуки склада, включая верхний, обязаны открываться: заблокировано " + blocked
-                            + " из " + chests);
+            helper.assertTrue(
+                    chests == 18, "Склад уровня 1 обязан вмещать 18 блоков сундуков (9 двойных), фактически " + chests);
+            helper.assertTrue(
+                    blocked == 0,
+                    "Все сундуки склада, включая верхний, обязаны открываться: заблокировано " + blocked + " из "
+                            + chests);
             GameTestFixtures.finish(helper);
         });
     }
@@ -174,15 +181,20 @@ public final class WarehouseGameTests {
             expected++;
             BlockPos pos = helper.absolutePos(new BlockPos(1 + entry.dx(), 1 + entry.dy(), 1 + entry.dz()));
             BlockEntity entity = helper.getLevel().getBlockEntity(pos);
-            helper.assertTrue(entity instanceof SignBlockEntity,
+            helper.assertTrue(
+                    entity instanceof SignBlockEntity,
                     "Табличка схемы обязана стоять в " + pos.toShortString() + ": иначе категорию не прочитать");
-            String text = ((SignBlockEntity) entity).getFrontText().getMessage(0, false).getString();
-            helper.assertTrue(categories.known(text),
-                    "Табличка обязана нести категорию из данных, фактически '" + text + "'");
+            String text = ((SignBlockEntity) entity)
+                    .getFrontText()
+                    .getMessage(0, false)
+                    .getString();
+            helper.assertTrue(
+                    categories.known(text), "Табличка обязана нести категорию из данных, фактически '" + text + "'");
             placed++;
         }
         helper.assertTrue(expected > 0, "В проверяемом углу уровня 2 должна быть хотя бы одна табличка");
-        helper.assertTrue(placed == expected,
+        helper.assertTrue(
+                placed == expected,
                 "Все таблички проверяемого угла уровня 2 обязаны встать: " + placed + " из " + expected);
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -202,23 +214,26 @@ public final class WarehouseGameTests {
 
         WarehouseWatch.tick(level, board, List.of(spirit), now + 1);
         BoardTicket first = board.board().find(WarehouseRules.buildTicketId(1)).orElse(null);
-        helper.assertTrue(first != null && first.boardCase() == BoardCase.BUILD_WAREHOUSE
-                        && first.level() == 1,
+        helper.assertTrue(
+                first != null && first.boardCase() == BoardCase.BUILD_WAREHOUSE && first.level() == 1,
                 "После дома доска обязана заказать первый склад, фактически " + first);
         complete(board, WarehouseRules.buildTicketId(1), BoardCase.BUILD_WAREHOUSE, 1, spirit, now + 2);
 
         WarehouseWatch.tick(level, board, List.of(spirit), now + 3);
         BoardTicket second = board.board().find(WarehouseRules.buildTicketId(2)).orElse(null);
-        helper.assertTrue(second != null && second.level() == 2,
+        helper.assertTrue(
+                second != null && second.level() == 2,
                 "После первого склада доска обязана заказать второй уровень, фактически " + second);
         complete(board, WarehouseRules.buildTicketId(2), BoardCase.BUILD_WAREHOUSE, 2, spirit, now + 4);
 
         WarehouseWatch.tick(level, board, List.of(spirit), now + 5);
         String relocate = WarehouseRules.relocateTicketId(1);
         BoardTicket task = board.board().find(relocate).orElse(null);
-        helper.assertTrue(task != null && task.boardCase() == BoardCase.RELOCATE_BUILDING,
+        helper.assertTrue(
+                task != null && task.boardCase() == BoardCase.RELOCATE_BUILDING,
                 "Переход 1→2 обязан поставить задачу переноса и сноса прежнего склада, фактически " + task);
-        helper.assertTrue(board.board().statusOf(relocate).orElse(null) != BoardStatus.CANCELLED,
+        helper.assertTrue(
+                board.board().statusOf(relocate).orElse(null) != BoardStatus.CANCELLED,
                 "Задача переноса обязана остаться на доске: без неё старый склад не разберут");
         close(board, log, helper);
         helper.succeed();
@@ -235,22 +250,24 @@ public final class WarehouseGameTests {
         helper.setBlock(new BlockPos(5, 5, 3), Blocks.OAK_SIGN);
         SignTexts.write(helper.getLevel(), helper.absolutePos(new BlockPos(5, 5, 3)), "еда");
 
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(5, 1, 5),
-                new ItemStack(Items.RAW_IRON, 5));
-        ScriptCall deposit = new ScriptCall("deposit", Map.of("container", "auto", "radius", 8,
-                "item", "raw_iron", "count", 5));
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(5, 1, 5), new ItemStack(Items.RAW_IRON, 5));
+        ScriptCall deposit =
+                new ScriptCall("deposit", Map.of("container", "auto", "radius", 8, "item", "raw_iron", "count", 5));
         SpiritRun run = SpiritRun.launch(helper, spirit, deposit, SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Автосдача обязана завершиться успехом: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(count(helper, new BlockPos(2, 1, 3), Items.RAW_IRON) == 5,
+            helper.assertTrue(
+                    count(helper, new BlockPos(2, 1, 3), Items.RAW_IRON) == 5,
                     "Руда обязана лежать в сундуке «руда»: фактически "
                             + count(helper, new BlockPos(2, 1, 3), Items.RAW_IRON));
-            helper.assertTrue(count(helper, new BlockPos(5, 1, 3), Items.RAW_IRON) == 0,
+            helper.assertTrue(
+                    count(helper, new BlockPos(5, 1, 3), Items.RAW_IRON) == 0,
                     "В сундук «еда» руда попасть не должна: раскладка по категориям сломана");
             GameTestFixtures.finish(helper);
         });
@@ -272,11 +289,20 @@ public final class WarehouseGameTests {
         return total;
     }
 
-    private static void complete(BoardService board, String id, BoardCase boardCase, int level,
-            SpiritEntity spirit, long now) {
+    private static void complete(
+            BoardService board, String id, BoardCase boardCase, int level, SpiritEntity spirit, long now) {
         if (board.board().find(id).isEmpty()) {
-            board.submit(new BoardTicket(id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase),
-                    now, level, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
+            board.submit(
+                    new BoardTicket(
+                            id,
+                            boardCase,
+                            Optional.empty(),
+                            BoardRules.priorityOf(boardCase),
+                            now,
+                            level,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of()),
                     TicketTarget.at(new BlockCoord(0, 64, 0)));
         }
         if (board.board().statusOf(id).orElse(null) == BoardStatus.PENDING) {
@@ -286,17 +312,23 @@ public final class WarehouseGameTests {
     }
 
     private static Path journalPath(GameTestHelper helper) {
-        return helper.getLevel().getServer().getWorldPath(LevelResource.ROOT)
-                .resolve("theminespirit").resolve("warehouse-" + UUID.randomUUID() + ".jsonl");
+        return helper.getLevel()
+                .getServer()
+                .getWorldPath(LevelResource.ROOT)
+                .resolve("theminespirit")
+                .resolve("warehouse-" + UUID.randomUUID() + ".jsonl");
     }
 
     private static BoardService isolated(ServerLevel level, Path log) {
         JournalService journal = new JournalService(log);
-        Board board = new Board(level::getGameTime,
-                (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
-        return new BoardService(board, new HerdCycles(board),
+        Board board = new Board(
+                level::getGameTime, (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
+        return new BoardService(
+                board,
+                new HerdCycles(board),
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
-                BoardSources.create(), journal);
+                BoardSources.create(),
+                journal);
     }
 
     private static void close(BoardService board, Path log, GameTestHelper helper) {

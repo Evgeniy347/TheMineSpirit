@@ -7,8 +7,9 @@ import java.util.Optional;
 public record SetCampParams(Optional<Integer> x, Optional<Integer> y, Optional<Integer> z, int radius) {
     public SetCampParams {
         if (x == null || y == null || z == null) {
-            throw new IllegalArgumentException("Координаты лагеря не могут быть null: нет координаты — Optional.empty(), "
-                    + "иначе скрипт не отличит «на месте духа» от сломанного плана");
+            throw new IllegalArgumentException(
+                    "Координаты лагеря не могут быть null: нет координаты — Optional.empty(), "
+                            + "иначе скрипт не отличит «на месте духа» от сломанного плана");
         }
         x.ifPresent(BuildingCoords::checkX);
         y.ifPresent(BuildingCoords::checkY);
@@ -21,7 +22,9 @@ public record SetCampParams(Optional<Integer> x, Optional<Integer> y, Optional<I
 
     public static SetCampParams from(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
-        return new SetCampParams(ScriptArgs.optionalInt(params, "x"), ScriptArgs.optionalInt(params, "y"),
+        return new SetCampParams(
+                ScriptArgs.optionalInt(params, "x"),
+                ScriptArgs.optionalInt(params, "y"),
                 ScriptArgs.optionalInt(params, "z"),
                 ScriptArgs.optionalInt(params, "radius").orElse(CatalogLimits.CAMP_RADIUS_DEFAULT));
     }

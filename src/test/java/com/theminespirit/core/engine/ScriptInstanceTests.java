@@ -13,7 +13,8 @@ class ScriptInstanceTests {
     void result_DefaultImplementation_ReturnsEmptyOptional() {
         ScriptInstance script = () -> ScriptStatus.RUNNING;
 
-        assertTrue(script.result().isEmpty(),
+        assertTrue(
+                script.result().isEmpty(),
                 "Скрипт без содержательного итога обязан отдавать пустой Optional: движок отличает «итога нет» "
                         + "от «итог пустой» и не пишет null в задачу");
     }
@@ -33,7 +34,9 @@ class ScriptInstanceTests {
             }
         };
 
-        assertEquals(Optional.of(text), script.result(),
+        assertEquals(
+                Optional.of(text),
+                script.result(),
                 "Скрипт с содержательным итогом обязан возвращать его из result(): итог разносится до REST "
                         + "и стратега только этим каналом");
     }
@@ -54,7 +57,9 @@ class ScriptInstanceTests {
             }
         };
 
-        assertEquals(fields, script.result().orElseThrow().jsonValue(),
+        assertEquals(
+                fields,
+                script.result().orElseThrow().jsonValue(),
                 "Результат восприятия обязан нести поля как карту: REST отдаёт их JSON-объектом, "
                         + "а не строкой с двойным кодированием");
     }
@@ -63,7 +68,8 @@ class ScriptInstanceTests {
     void result_FailedScript_ReturnsEmptyInsteadOfThrowing() {
         ScriptInstance script = () -> ScriptStatus.FAILED;
 
-        assertTrue(script.result().isEmpty(),
+        assertTrue(
+                script.result().isEmpty(),
                 "У провалившегося скрипта итога нет: вызов обязан вернуть пустой Optional, а не бросать — "
                         + "исключение здесь уронило бы серверный тик");
     }

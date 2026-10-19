@@ -34,20 +34,18 @@ public final class RestTaskCancelGameTests {
     private static final int HEAP_SIZE = 9;
     private static final int RADIUS = 16;
 
-    private RestTaskCancelGameTests() {
-    }
+    private RestTaskCancelGameTests() {}
 
-    private record Stopped(Vec3 position, long gameTime) {
-    }
+    private record Stopped(Vec3 position, long gameTime) {}
 
     @GameTest(batch = "rest_cancel_move", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void delete_RunningGoto_Returns200CancelledTwiceAnd404ForUnknownAndSpiritStops(
-            GameTestHelper helper) throws IOException {
+    public static void delete_RunningGoto_Returns200CancelledTwiceAnd404ForUnknownAndSpiritStops(GameTestHelper helper)
+            throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
         ServerPlayer player = rest.mockPlayer(helper, PLAYER_FAR);
-        helper.onEachTick(() -> RestFixture.moveTo(helper, player,
-                helper.getTick() / PLAYER_SHUTTLE_TICKS % 2 == 0 ? PLAYER_FAR : PLAYER_NEAR));
+        helper.onEachTick(() -> RestFixture.moveTo(
+                helper, player, helper.getTick() / PLAYER_SHUTTLE_TICKS % 2 == 0 ? PLAYER_FAR : PLAYER_NEAR));
         String botPath = "/v1/bots/" + spirit.getStringUUID();
         Vec3 start = spirit.position();
         CompletableFuture<Void> moved = new CompletableFuture<>();
@@ -58,46 +56,60 @@ public final class RestTaskCancelGameTests {
         });
         AtomicReference<Stopped> stopped = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks",
-                RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
+        CompletableFuture<List<String>> scenario = rest.post(
+                        botPath + "/tasks",
+                        RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
                 .thenCompose(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-                    String taskPath = "/v1/tasks/" + accepted.json().path("task_id").asText();
+                    String taskPath =
+                            "/v1/tasks/" + accepted.json().path("task_id").asText();
                     return moved.thenCompose(walking -> rest.delete(taskPath)).thenCompose(first -> {
-                        problems.expect(first.status() == 200 && first.json().path("state").asText().equals("cancelled"),
+                        problems.expect(
+                                first.status() == 200
+                                        && first.json().path("state").asText().equals("cancelled"),
                                 "DELETE идущей задачи обязан отвечать 200 со state=cancelled, получено "
                                         + first.status() + ": " + first.body());
                         return rest.delete(taskPath).thenCompose(second -> {
-                            problems.expect(second.status() == 200 && second.body().equals(first.body()),
+                            problems.expect(
+                                    second.status() == 200 && second.body().equals(first.body()),
                                     "Повторный DELETE обязан отвечать 200 тем же состоянием: " + first.body() + " и "
                                             + second.status() + " " + second.body());
                             return rest.delete("/v1/tasks/t-9999").thenCompose(unknown -> {
-                                problems.expect(unknown.status() == 404,
+                                problems.expect(
+                                        unknown.status() == 404,
                                         "DELETE неизвестной задачи обязан отвечать 404, получен " + unknown.status()
                                                 + ": " + unknown.body());
                                 return rest.get(botPath).thenCompose(bot -> {
-                                    problems.expect(bot.json().path("current_task").isNull()
-                                            && bot.json().path("state").asText().equals("idle"),
+                                    problems.expect(
+                                            bot.json().path("current_task").isNull()
+                                                    && bot.json()
+                                                            .path("state")
+                                                            .asText()
+                                                            .equals("idle"),
                                             "После отмены дух обязан быть idle без current_task: " + bot.body());
-                                    return rest.onServer(() -> new Stopped(spirit.position(),
-                                            helper.getLevel().getGameTime()));
+                                    return rest.onServer(() -> new Stopped(
+                                            spirit.position(), helper.getLevel().getGameTime()));
                                 });
                             });
                         });
                     });
-                }).thenApply(snapshot -> {
+                })
+                .thenApply(snapshot -> {
                     stopped.set(snapshot);
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario, () -> {
             Stopped at = stopped.get();
-            helper.assertTrue(helper.getLevel().getGameTime() >= at.gameTime() + STILL_TICKS,
+            helper.assertTrue(
+                    helper.getLevel().getGameTime() >= at.gameTime() + STILL_TICKS,
                     "Ждём " + STILL_TICKS + " тиков после отмены");
-            helper.assertTrue(spirit.position().distanceTo(at.position()) <= STILL_WITHIN_BLOCKS,
+            helper.assertTrue(
+                    spirit.position().distanceTo(at.position()) <= STILL_WITHIN_BLOCKS,
                     "После DELETE дух обязан стоять: за " + STILL_TICKS + " тиков он ушёл на "
                             + spirit.position().distanceTo(at.position())
                             + " блока, значит навигация не остановлена и отмена не дошла до духа");
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.CANCELLED,
                     "У духа задача обязана быть CANCELLED, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
         });
@@ -125,32 +137,43 @@ public final class RestTaskCancelGameTests {
         AtomicReference<String> quietSnapshot = new AtomicReference<>();
         AtomicReference<Long> cancelledAt = new AtomicReference<>();
         RestFixture.Problems problems = new RestFixture.Problems();
-        String body = "{\"request_id\":\"" + UUID.randomUUID() + "\",\"plan\":{\"type\":\"script\",\"script\":\"gather\","
-                + "\"params\":{\"block\":\"cobblestone\",\"count\":6,\"radius\":" + RADIUS + "}}}";
+        String body =
+                "{\"request_id\":\"" + UUID.randomUUID() + "\",\"plan\":{\"type\":\"script\",\"script\":\"gather\","
+                        + "\"params\":{\"block\":\"cobblestone\",\"count\":6,\"radius\":" + RADIUS + "}}}";
         CompletableFuture<List<String>> scenario = rest.post("/v1/bots/" + spirit.getStringUUID() + "/tasks", body)
                 .thenCompose(accepted -> {
                     problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-                    String taskPath = "/v1/tasks/" + accepted.json().path("task_id").asText();
-                    return breaking.thenCompose(started -> rest.delete(taskPath)).thenCompose(deleted -> {
-                        problems.expect(deleted.status() == 200
-                                && deleted.json().path("state").asText().equals("cancelled"),
-                                "DELETE посреди добычи обязан отвечать 200 cancelled: " + deleted.body());
-                        return rest.onServer(() -> {
-                            quietSnapshot.set(worldSnapshot(helper, spirit));
-                            return helper.getLevel().getGameTime();
-                        });
-                    });
-                }).thenApply(time -> {
+                    String taskPath =
+                            "/v1/tasks/" + accepted.json().path("task_id").asText();
+                    return breaking.thenCompose(started -> rest.delete(taskPath))
+                            .thenCompose(deleted -> {
+                                problems.expect(
+                                        deleted.status() == 200
+                                                && deleted.json()
+                                                        .path("state")
+                                                        .asText()
+                                                        .equals("cancelled"),
+                                        "DELETE посреди добычи обязан отвечать 200 cancelled: " + deleted.body());
+                                return rest.onServer(() -> {
+                                    quietSnapshot.set(worldSnapshot(helper, spirit));
+                                    return helper.getLevel().getGameTime();
+                                });
+                            });
+                })
+                .thenApply(time -> {
                     cancelledAt.set(time);
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(helper.getLevel().getGameTime() >= cancelledAt.get() + QUIET_TICKS,
+            helper.assertTrue(
+                    helper.getLevel().getGameTime() >= cancelledAt.get() + QUIET_TICKS,
                     "Ждём " + QUIET_TICKS + " тиков после отмены");
-            helper.assertTrue(worldSnapshot(helper, spirit).equals(quietSnapshot.get()),
+            helper.assertTrue(
+                    worldSnapshot(helper, spirit).equals(quietSnapshot.get()),
                     "Через " + QUIET_TICKS + " тиков после DELETE мир не должен меняться дальше: было "
                             + quietSnapshot.get() + ", стало " + worldSnapshot(helper, spirit));
-            helper.assertTrue(cobbleTotal(helper, spirit) + blocksLeft(helper) == HEAP_SIZE,
+            helper.assertTrue(
+                    cobbleTotal(helper, spirit) + blocksLeft(helper) == HEAP_SIZE,
                     "Каждый блок кучи обязан быть либо цел, либо сломан с дропом (в инвентаре или на земле): целых "
                             + blocksLeft(helper) + ", булыжника у духа и на земле " + cobbleTotal(helper, spirit)
                             + " из " + HEAP_SIZE);

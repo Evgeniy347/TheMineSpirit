@@ -63,18 +63,18 @@ public final class WarehouseCategories {
         Set<String> names = new LinkedHashSet<>();
         for (JsonNode item : JsonResource.items(node)) {
             if (!item.isObject()) {
-                throw new IllegalStateException("Файл '" + origin
-                        + "': категория склада обязана быть объектом с полями name и match");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': категория склада обязана быть объектом с полями name и match");
             }
             JsonResource.checkFields(item, CATEGORY_FIELDS, origin, "категории склада");
             String name = JsonResource.text(item.get("name"), origin, "поля name категории склада");
             Category category;
             try {
-                category = new Category(name,
-                        JsonResource.strings(item.get("match"), origin, "поля match категории '" + name + "'"));
+                category = new Category(
+                        name, JsonResource.strings(item.get("match"), origin, "поля match категории '" + name + "'"));
             } catch (IllegalArgumentException error) {
-                throw new IllegalStateException("Файл '" + origin + "': категория '" + name + "' неверна — "
-                        + error.getMessage(), error);
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': категория '" + name + "' неверна — " + error.getMessage(), error);
             }
             names.add(name);
             categories.add(category);

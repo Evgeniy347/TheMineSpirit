@@ -16,14 +16,14 @@ public final class ModEntities {
     public static final DeferredRegister<EntityType<?>> REGISTRY =
             DeferredRegister.create(Registries.ENTITY_TYPE, ModIdentity.MOD_ID);
 
-    public static final DeferredHolder<EntityType<?>, EntityType<SpiritEntity>> SPIRIT =
-            REGISTRY.register("spirit", () -> EntityType.Builder.of(SpiritEntity::new, MobCategory.CREATURE)
+    public static final DeferredHolder<EntityType<?>, EntityType<SpiritEntity>> SPIRIT = REGISTRY.register(
+            "spirit",
+            () -> EntityType.Builder.of(SpiritEntity::new, MobCategory.CREATURE)
                     .sized(0.6F, 1.4F)
                     .clientTrackingRange(10)
                     .build("spirit"));
 
-    private ModEntities() {
-    }
+    private ModEntities() {}
 
     public static void register(IEventBus modEventBus) {
         REGISTRY.register(modEventBus);

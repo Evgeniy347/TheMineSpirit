@@ -119,7 +119,8 @@ class FleePlannerProperties {
     }
 
     @Property(tries = 200)
-    void plan_RandomTerrain_TargetIsReachableAndNotWorseThanStart(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+    void plan_RandomTerrain_TargetIsReachableAndNotWorseThanStart(
+            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         Grid grid = new Grid(random);
         BlockCoord origin = randomStanding(grid, random);
@@ -131,11 +132,17 @@ class FleePlannerProperties {
         FleePlanner.Plan plan = FleePlanner.plan(origin, threats, grid);
 
         if (plan.action() instanceof ReflexAction.Flee flee) {
-            assertTrue(reachableByLooseRules(grid, origin).contains(flee.cell()),
-                    "Цель бегства обязана быть достижима шагами по земле (вверх на 1, вниз на 2), иначе дух упирается в стену. Цель: " + flee.cell());
-            assertTrue(worstSlack(flee.cell(), threats) >= Math.min(0, worstSlack(origin, threats)),
-                    "Цель бегства либо выполняет все расстояния, либо не опаснее начала: иначе дух убегает в сторону угрозы. Цель: " + flee.cell());
-            assertTrue(Math.abs(flee.cell().x() - origin.x()) <= 8 && Math.abs(flee.cell().z() - origin.z()) <= 8,
+            assertTrue(
+                    reachableByLooseRules(grid, origin).contains(flee.cell()),
+                    "Цель бегства обязана быть достижима шагами по земле (вверх на 1, вниз на 2), иначе дух упирается в стену. Цель: "
+                            + flee.cell());
+            assertTrue(
+                    worstSlack(flee.cell(), threats) >= Math.min(0, worstSlack(origin, threats)),
+                    "Цель бегства либо выполняет все расстояния, либо не опаснее начала: иначе дух убегает в сторону угрозы. Цель: "
+                            + flee.cell());
+            assertTrue(
+                    Math.abs(flee.cell().x() - origin.x()) <= 8
+                            && Math.abs(flee.cell().z() - origin.z()) <= 8,
                     "Цель лежит в радиусе поиска 8. Цель: " + flee.cell());
         }
     }
@@ -148,12 +155,16 @@ class FleePlannerProperties {
         if (origin == null) {
             return;
         }
-        List<FleePlanner.Threat> threats = List.of(new FleePlanner.Threat(new BlockCoord(random.nextInt(SIDE), 2, random.nextInt(SIDE)), 40));
+        List<FleePlanner.Threat> threats =
+                List.of(new FleePlanner.Threat(new BlockCoord(random.nextInt(SIDE), 2, random.nextInt(SIDE)), 40));
 
         FleePlanner.Plan plan = FleePlanner.plan(origin, threats, grid, 50, 8);
 
         assertTrue(plan.visited() <= 50, "Посещено не более maxNodes = 50. Посещено: " + plan.visited());
-        assertTrue(grid.reads() <= 300, "Чтений SafetyView не более maxNodes × 6 = 300: иначе тик духа зависит от рельефа. Прочитано: " + grid.reads());
+        assertTrue(
+                grid.reads() <= 300,
+                "Чтений SafetyView не более maxNodes × 6 = 300: иначе тик духа зависит от рельефа. Прочитано: "
+                        + grid.reads());
     }
 
     @Property(tries = 200)
@@ -169,6 +180,9 @@ class FleePlannerProperties {
         FleePlanner.Plan first = FleePlanner.plan(origin, threats, grid);
         FleePlanner.Plan second = FleePlanner.plan(origin, threats, grid);
 
-        assertEquals(first, second, "Порядок обхода зафиксирован: одинаковые входы дают один и тот же план, иначе дух мечется между двумя целями");
+        assertEquals(
+                first,
+                second,
+                "Порядок обхода зафиксирован: одинаковые входы дают один и тот же план, иначе дух мечется между двумя целями");
     }
 }

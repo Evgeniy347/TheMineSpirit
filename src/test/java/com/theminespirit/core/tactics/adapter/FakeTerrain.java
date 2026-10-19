@@ -46,7 +46,9 @@ final class FakeTerrain implements TerrainView {
         if (override != null) {
             return override;
         }
-        return coord.y() <= 0 && Math.abs(coord.x()) <= HALF && Math.abs(coord.z()) <= HALF ? Terrain.SOLID : Terrain.AIR;
+        return coord.y() <= 0 && Math.abs(coord.x()) <= HALF && Math.abs(coord.z()) <= HALF
+                ? Terrain.SOLID
+                : Terrain.AIR;
     }
 
     int reads() {

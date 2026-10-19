@@ -16,8 +16,9 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 public final class ConfigNode {
-    private static final ObjectMapper MAPPER = new ObjectMapper(
-            JsonFactory.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build());
+    private static final ObjectMapper MAPPER = new ObjectMapper(JsonFactory.builder()
+            .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
+            .build());
 
     private final String file;
     private final String path;
@@ -33,8 +34,10 @@ public final class ConfigNode {
         try {
             return new ConfigNode(file, "", MAPPER.readTree(json));
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException(file + " → (корень): JSON не разобран (" + e.getOriginalMessage()
-                    + "). Проверьте: синтаксис, кавычки, запятые, дубли ключей и кодировку UTF-8", e);
+            throw new IllegalStateException(
+                    file + " → (корень): JSON не разобран (" + e.getOriginalMessage()
+                            + "). Проверьте: синтаксис, кавычки, запятые, дубли ключей и кодировку UTF-8",
+                    e);
         }
     }
 
@@ -57,16 +60,19 @@ public final class ConfigNode {
         }
         Set<String> allowed = new TreeSet<>(Arrays.asList(required));
         allowed.addAll(Arrays.asList(optional));
-        for (Iterator<String> names = node.fieldNames(); names.hasNext();) {
+        for (Iterator<String> names = node.fieldNames(); names.hasNext(); ) {
             String name = names.next();
             if (!allowed.contains(name)) {
-                throw child(name).fail("неизвестное поле '" + name + "'",
-                        "допустимы только " + allowed + ", опечатка или поле из другой схемы");
+                throw child(name)
+                        .fail(
+                                "неизвестное поле '" + name + "'",
+                                "допустимы только " + allowed + ", опечатка или поле из другой схемы");
             }
         }
         for (String name : required) {
             if (!node.has(name)) {
-                throw child(name).fail("нет обязательного поля '" + name + "'", "добавьте поле или верните его из шаблона");
+                throw child(name)
+                        .fail("нет обязательного поля '" + name + "'", "добавьте поле или верните его из шаблона");
             }
         }
         return this;
@@ -88,7 +94,7 @@ public final class ConfigNode {
             throw fail("ожидался объект, получено " + describe(), "в этом месте файла должен стоять объект { ... }");
         }
         Map<String, ConfigNode> result = new LinkedHashMap<>();
-        for (Iterator<String> names = node.fieldNames(); names.hasNext();) {
+        for (Iterator<String> names = node.fieldNames(); names.hasNext(); ) {
             String name = names.next();
             result.put(name, child(name));
         }
@@ -131,7 +137,8 @@ public final class ConfigNode {
     public double number(double min, double max) {
         double value = number();
         if (value < min || value > max) {
-            throw fail("значение " + value + " вне диапазона [" + min + "; " + max + "]",
+            throw fail(
+                    "значение " + value + " вне диапазона [" + min + "; " + max + "]",
                     "допустимо от " + min + " до " + max);
         }
         return value;
@@ -146,7 +153,9 @@ public final class ConfigNode {
 
     public int integer() {
         if (!node.isIntegralNumber() || !node.canConvertToInt()) {
-            throw fail("ожидалось целое число, получено " + describe(), "приоритеты и тики — целые числа без дробной части");
+            throw fail(
+                    "ожидалось целое число, получено " + describe(),
+                    "приоритеты и тики — целые числа без дробной части");
         }
         return node.asInt();
     }
@@ -154,7 +163,8 @@ public final class ConfigNode {
     public int integer(int min, int max) {
         int value = integer();
         if (value < min || value > max) {
-            throw fail("значение " + value + " вне диапазона [" + min + "; " + max + "]",
+            throw fail(
+                    "значение " + value + " вне диапазона [" + min + "; " + max + "]",
                     "допустимо от " + min + " до " + max);
         }
         return value;
@@ -172,13 +182,15 @@ public final class ConfigNode {
             for (int index = 0; index < e.path().size(); index++) {
                 String segment = e.path().get(index);
                 String json = index == 0 && !fieldPrefix.isEmpty()
-                        ? fieldPrefix + Character.toUpperCase(segment.charAt(0)) + segment.substring(1) : segment;
+                        ? fieldPrefix + Character.toUpperCase(segment.charAt(0)) + segment.substring(1)
+                        : segment;
                 if (!target.has(json)) {
                     break;
                 }
                 target = target.child(json);
             }
-            throw target.fail(e.getMessage(), "значение в границах " + e.owner() + " (их задаёт конструктор, не этот файл)");
+            throw target.fail(
+                    e.getMessage(), "значение в границах " + e.owner() + " (их задаёт конструктор, не этот файл)");
         }
     }
 
@@ -189,7 +201,8 @@ public final class ConfigNode {
                 return constant;
             }
         }
-        throw fail("неизвестное значение '" + text + "' типа " + type.getSimpleName(),
+        throw fail(
+                "неизвестное значение '" + text + "' типа " + type.getSimpleName(),
                 "допустимы " + Arrays.toString(type.getEnumConstants()) + ", опечатка в имени");
     }
 
@@ -199,7 +212,8 @@ public final class ConfigNode {
                 return constant;
             }
         }
-        throw fail("неизвестный " + label + " '" + name + "'",
+        throw fail(
+                "неизвестный " + label + " '" + name + "'",
                 "допустимы " + Arrays.toString(type.getEnumConstants()) + ", опечатка в имени");
     }
 

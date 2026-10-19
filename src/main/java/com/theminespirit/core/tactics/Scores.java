@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public record Scores(Map<Factor, Double> factors, Map<TacticalOption, Map<Factor, Double>> contributions,
+public record Scores(
+        Map<Factor, Double> factors,
+        Map<TacticalOption, Map<Factor, Double>> contributions,
         Map<TacticalOption, Double> totals) {
     public static final double TIE_EPSILON = 1e-9;
 

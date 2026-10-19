@@ -1,7 +1,14 @@
 package com.theminespirit.core.tactics;
 
-public record EnemyFact(String type, String id, Point pos, double hpFraction, double armor, boolean visible,
-        boolean targetingSelf, int count) {
+public record EnemyFact(
+        String type,
+        String id,
+        Point pos,
+        double hpFraction,
+        double armor,
+        boolean visible,
+        boolean targetingSelf,
+        int count) {
     public static final int MAX_COUNT = 10_000;
 
     public EnemyFact {
@@ -16,7 +23,13 @@ public record EnemyFact(String type, String id, Point pos, double hpFraction, do
         FactChecks.range("EnemyFact.count", count, 1, MAX_COUNT);
     }
 
-    public EnemyFact(String type, String id, Point pos, double hpFraction, double armor, boolean visible,
+    public EnemyFact(
+            String type,
+            String id,
+            Point pos,
+            double hpFraction,
+            double armor,
+            boolean visible,
             boolean targetingSelf) {
         this(type, id, pos, hpFraction, armor, visible, targetingSelf, 1);
     }

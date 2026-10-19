@@ -1,8 +1,8 @@
 package com.theminespirit.core.processing;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.intellect.IntellectTuning;
+import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.Set;
@@ -20,8 +20,16 @@ public record ProcessingRules(
 
     public static final String RESOURCE = "data/theminespirit/processing/processing.json";
 
-    private static final Set<String> FIELDS = Set.of("charcoalTarget", "plankTarget", "stickTarget",
-            "charcoalCount", "cookCount", "craftCount", "baseDemand", "demandScale", "stationRadius");
+    private static final Set<String> FIELDS = Set.of(
+            "charcoalTarget",
+            "plankTarget",
+            "stickTarget",
+            "charcoalCount",
+            "cookCount",
+            "craftCount",
+            "baseDemand",
+            "demandScale",
+            "stationRadius");
 
     private static final ProcessingRules DEFAULTS =
             new ProcessingRules(16, 32, 32, 8, 4, 8, 1.0, 8.0, CatalogLimits.STATION_RADIUS_DEFAULT);
@@ -34,8 +42,7 @@ public record ProcessingRules(
         requireCount("cookCount", cookCount);
         requireCount("craftCount", craftCount);
         double demandCeiling = IntellectTuning.loadDefault().maxDemand();
-        if (Double.isNaN(baseDemand) || Double.isInfinite(baseDemand) || baseDemand < 0
-                || baseDemand > demandCeiling) {
+        if (Double.isNaN(baseDemand) || Double.isInfinite(baseDemand) || baseDemand < 0 || baseDemand > demandCeiling) {
             throw new IllegalArgumentException("Базовый спрос переработки " + baseDemand
                     + ": обязан быть конечным числом в 0.." + demandCeiling
                     + ", иначе распределение сравнивает несравнимое");

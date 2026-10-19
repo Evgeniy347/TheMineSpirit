@@ -19,7 +19,11 @@ class ReflexScheduleTests {
                     fired++;
                 }
             }
-            assertEquals(10, fired, "За 100 тиков ярус 2 срабатывает ровно 10 раз при смещении " + offset + ": запрос сущностей раз в 10 тиков");
+            assertEquals(
+                    10,
+                    fired,
+                    "За 100 тиков ярус 2 срабатывает ровно 10 раз при смещении " + offset
+                            + ": запрос сущностей раз в 10 тиков");
         }
     }
 
@@ -37,13 +41,17 @@ class ReflexScheduleTests {
 
     @Test
     void tierOneDue_BlockChanged_FiresEvenOffPhase() {
-        assertTrue(ReflexSchedule.tierOneDue(7, 0, true, false), "Смена блока под ногами вызывает чтение вне очереди: шаг в лаву нельзя ждать 10 тиков");
+        assertTrue(
+                ReflexSchedule.tierOneDue(7, 0, true, false),
+                "Смена блока под ногами вызывает чтение вне очереди: шаг в лаву нельзя ждать 10 тиков");
         assertFalse(ReflexSchedule.tierOneDue(7, 0, false, false), "Без смены блока и вне фазы ярус 1 молчит");
     }
 
     @Test
     void tierOneDue_Escalated_FiresEvenOffPhase() {
-        assertTrue(ReflexSchedule.tierOneDue(7, 0, false, true), "Тревога яруса 0 (горим, в лаве, ранен) вызывает чтение вне очереди");
+        assertTrue(
+                ReflexSchedule.tierOneDue(7, 0, false, true),
+                "Тревога яруса 0 (горим, в лаве, ранен) вызывает чтение вне очереди");
     }
 
     @Test
@@ -64,15 +72,22 @@ class ReflexScheduleTests {
             }
             busiest = Math.max(busiest, due);
         }
-        assertTrue(busiest <= 20, "Сто духов с разными UUID разнесены по тикам: на самом загруженном тике не больше 20, иначе запросы сущностей встанут в один тик. Было: " + busiest
-                + ", смещения: " + Arrays.toString(offsets));
+        assertTrue(
+                busiest <= 20,
+                "Сто духов с разными UUID разнесены по тикам: на самом загруженном тике не больше 20, иначе запросы сущностей встанут в один тик. Было: "
+                        + busiest + ", смещения: " + Arrays.toString(offsets));
     }
 
     @Test
     void offsetOf_Uuid_IsStableAndWithinPeriod() {
         UUID id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
-        assertEquals(ReflexSchedule.offsetOf(id), ReflexSchedule.offsetOf(UUID.fromString(id.toString())), "Смещение зависит только от UUID: после перезагрузки дух сохраняет свою фазу");
-        assertTrue(ReflexSchedule.offsetOf(id) >= 0 && ReflexSchedule.offsetOf(id) < 10, "Смещение лежит в пределах периода 10 тиков");
+        assertEquals(
+                ReflexSchedule.offsetOf(id),
+                ReflexSchedule.offsetOf(UUID.fromString(id.toString())),
+                "Смещение зависит только от UUID: после перезагрузки дух сохраняет свою фазу");
+        assertTrue(
+                ReflexSchedule.offsetOf(id) >= 0 && ReflexSchedule.offsetOf(id) < 10,
+                "Смещение лежит в пределах периода 10 тиков");
     }
 }

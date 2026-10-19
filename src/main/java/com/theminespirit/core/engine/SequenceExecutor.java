@@ -30,7 +30,8 @@ final class SequenceExecutor extends StepExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        return new TaskProgress.SequenceAt(index(), current() == null ? null : current().snapshot());
+        return new TaskProgress.SequenceAt(
+                index(), current() == null ? null : current().snapshot());
     }
 
     @Override

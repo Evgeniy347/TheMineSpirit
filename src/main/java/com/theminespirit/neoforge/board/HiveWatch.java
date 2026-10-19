@@ -43,8 +43,7 @@ public final class HiveWatch {
         return gate;
     }
 
-    public void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock,
-            long now) {
+    public void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         gate = SpiritConfig.boardEnabled() && !spirits.isEmpty();
         if (!gate) {
             return;
@@ -58,8 +57,8 @@ public final class HiveWatch {
         ensurePlace(level, service, stock, home, now);
     }
 
-    private static void ensureHarvest(ServerLevel level, BoardService service, StockView stock,
-            BlockCoord home, long now) {
+    private static void ensureHarvest(
+            ServerLevel level, BoardService service, StockView stock, BlockCoord home, long now) {
         if (active(service, HARVEST_ID)) {
             return;
         }
@@ -73,14 +72,13 @@ public final class HiveWatch {
         if (tool == HiveRules.Tool.NONE) {
             return;
         }
-        Map<String, Integer> required = tool == HiveRules.Tool.SHEARS
-                ? Map.of(HiveRules.SHEARS, 1)
-                : Map.of(HiveRules.GLASS_BOTTLE, 1);
+        Map<String, Integer> required =
+                tool == HiveRules.Tool.SHEARS ? Map.of(HiveRules.SHEARS, 1) : Map.of(HiveRules.GLASS_BOTTLE, 1);
         submit(service, HARVEST_ID, BoardCase.HARVEST_HIVE, now, coord(hive.orElseThrow()), required);
     }
 
-    private static void ensurePlace(ServerLevel level, BoardService service, StockView stock,
-            BlockCoord home, long now) {
+    private static void ensurePlace(
+            ServerLevel level, BoardService service, StockView stock, BlockCoord home, long now) {
         if (active(service, PLACE_ID)) {
             return;
         }
@@ -98,9 +96,8 @@ public final class HiveWatch {
         if (site.isEmpty()) {
             return;
         }
-        Map<String, Integer> required = Map.of(
-                HiveRules.HONEYCOMB, HiveRules.hiveHoneycomb(),
-                planks.orElseThrow(), HiveRules.hivePlanks());
+        Map<String, Integer> required =
+                Map.of(HiveRules.HONEYCOMB, HiveRules.hiveHoneycomb(), planks.orElseThrow(), HiveRules.hivePlanks());
         submit(service, PLACE_ID, BoardCase.PLACE_BEEHIVE, now, coord(site.orElseThrow()), required);
     }
 
@@ -113,7 +110,8 @@ public final class HiveWatch {
                 origin.offset(-radius, -HIVE_VERTICAL_RADIUS, -radius),
                 origin.offset(radius, HIVE_VERTICAL_RADIUS, radius))) {
             BlockState state = level.getBlockState(pos);
-            if (!(state.getBlock() instanceof BeehiveBlock) || !state.hasProperty(BeehiveBlock.HONEY_LEVEL)
+            if (!(state.getBlock() instanceof BeehiveBlock)
+                    || !state.hasProperty(BeehiveBlock.HONEY_LEVEL)
                     || !HiveRules.fullHive(state.getValue(BeehiveBlock.HONEY_LEVEL))) {
                 continue;
             }
@@ -139,8 +137,7 @@ public final class HiveWatch {
                     BlockPos support = ground.offset(dx, 0, dz);
                     long shiftX = (long) support.getX() - home.x();
                     long shiftZ = (long) support.getZ() - home.z();
-                    if (shiftX * shiftX + shiftZ * shiftZ > (long) HiveRules.siteRadius()
-                            * HiveRules.siteRadius()) {
+                    if (shiftX * shiftX + shiftZ * shiftZ > (long) HiveRules.siteRadius() * HiveRules.siteRadius()) {
                         continue;
                     }
                     if (!supports(level, support.above())) {
@@ -215,16 +212,33 @@ public final class HiveWatch {
         return types.stream().findFirst();
     }
 
-    private static void submit(BoardService service, String id, BoardCase boardCase, long now,
-            BlockCoord target, Map<String, Integer> required) {
+    private static void submit(
+            BoardService service,
+            String id,
+            BoardCase boardCase,
+            long now,
+            BlockCoord target,
+            Map<String, Integer> required) {
         String cause = boardCase == BoardCase.HARVEST_HIVE ? CAUSE + ":harvest" : CAUSE + ":place";
-        service.submit(new BoardTicket(id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase),
-                now, 1, cause, List.of(), required), TicketTarget.at(target));
+        service.submit(
+                new BoardTicket(
+                        id,
+                        boardCase,
+                        Optional.empty(),
+                        BoardRules.priorityOf(boardCase),
+                        now,
+                        1,
+                        cause,
+                        List.of(),
+                        required),
+                TicketTarget.at(target));
     }
 
     private static boolean active(BoardService service, String id) {
-        return service.board().statusOf(id)
-                .map(status -> status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        return service.board()
+                .statusOf(id)
+                .map(status -> status == BoardStatus.PENDING
+                        || status == BoardStatus.WAITING_RESOURCES
                         || status == BoardStatus.ASSIGNED)
                 .orElse(false);
     }

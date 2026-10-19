@@ -23,11 +23,10 @@ public final class ReachPlanner {
         boolean standable(BlockCoord feet);
     }
 
-    private ReachPlanner() {
-    }
+    private ReachPlanner() {}
 
-    public static List<BlockCoord> workableNow(SpiritReach reach, BlockCoord feet, List<BlockCoord> targets,
-            World world) {
+    public static List<BlockCoord> workableNow(
+            SpiritReach reach, BlockCoord feet, List<BlockCoord> targets, World world) {
         Objects.requireNonNull(reach, "Досягаемость не может быть null: без неё неизвестно, до чего дотянуться");
         Objects.requireNonNull(feet, "Ноги духа не могут быть null: без них неизвестно, до чего дотягиваться");
         Objects.requireNonNull(targets, "Клетки не могут быть null: без них неизвестно, что делать");
@@ -41,8 +40,13 @@ public final class ReachPlanner {
         return List.copyOf(workable);
     }
 
-    public static Optional<BlockCoord> nextStand(SpiritReach reach, BlockCoord feet, List<BlockCoord> targets,
-            World world, Set<BlockCoord> excluded, Set<BlockCoord> blocked) {
+    public static Optional<BlockCoord> nextStand(
+            SpiritReach reach,
+            BlockCoord feet,
+            List<BlockCoord> targets,
+            World world,
+            Set<BlockCoord> excluded,
+            Set<BlockCoord> blocked) {
         Objects.requireNonNull(reach, "Досягаемость не может быть null: без неё стоянку не выбрать");
         Objects.requireNonNull(feet, "Ноги духа не могут быть null: без них неизвестно, откуда шагать");
         Objects.requireNonNull(targets, "Клетки не могут быть null: без них неизвестно, к чему шагать");
@@ -57,7 +61,9 @@ public final class ReachPlanner {
         int bestCount = 0;
         long bestDistance = Long.MAX_VALUE;
         for (BlockCoord stand : candidates(reach, cover, world)) {
-            if (stand.equals(feet) || excluded.contains(stand) || blocked.contains(stand)
+            if (stand.equals(feet)
+                    || excluded.contains(stand)
+                    || blocked.contains(stand)
                     || blocked.contains(new BlockCoord(stand.x(), stand.y() + 1, stand.z()))) {
                 continue;
             }
@@ -66,7 +72,9 @@ public final class ReachPlanner {
                 continue;
             }
             long distance = distanceSquared(feet, stand);
-            if (best == null || count > bestCount || (count == bestCount && distance < bestDistance)
+            if (best == null
+                    || count > bestCount
+                    || (count == bestCount && distance < bestDistance)
                     || (count == bestCount && distance == bestDistance && stand.compareTo(best) < 0)) {
                 best = stand;
                 bestCount = count;
@@ -140,7 +148,9 @@ public final class ReachPlanner {
     }
 
     public static boolean inBody(BlockCoord feet, BlockCoord cell) {
-        return cell.x() == feet.x() && cell.z() == feet.z() && cell.y() >= feet.y()
+        return cell.x() == feet.x()
+                && cell.z() == feet.z()
+                && cell.y() >= feet.y()
                 && cell.y() < feet.y() + BODY_HEIGHT;
     }
 

@@ -34,8 +34,7 @@ public final class TaskSnapshotCodec {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int MAX_VERSION = 1;
 
-    private TaskSnapshotCodec() {
-    }
+    private TaskSnapshotCodec() {}
 
     public static String encode(TaskSnapshot snapshot) {
         Objects.requireNonNull(snapshot, "snapshot не может быть null: сохранять нечего");
@@ -80,16 +79,18 @@ public final class TaskSnapshotCodec {
         try {
             return MAPPER.readTree(json);
         } catch (JsonProcessingException e) {
-            throw new SnapshotFormatException("Снимок задачи не разобран как JSON: проверьте синтаксис значения "
-                    + "ключа SpiritTask, файл не правьте вручную", e);
+            throw new SnapshotFormatException(
+                    "Снимок задачи не разобран как JSON: проверьте синтаксис значения "
+                            + "ключа SpiritTask, файл не правьте вручную",
+                    e);
         }
     }
 
     private static int requireVersion(JsonNode root) {
         JsonNode versionNode = root.get("version");
         if (versionNode == null || !versionNode.isIntegralNumber() || !versionNode.canConvertToInt()) {
-            throw new SnapshotFormatException("У снимка задачи нет целого поля version: без версии читатель "
-                    + "не выберет разбор формата");
+            throw new SnapshotFormatException(
+                    "У снимка задачи нет целого поля version: без версии читатель " + "не выберет разбор формата");
         }
         int version = versionNode.intValue();
         if (version > MAX_VERSION) {
@@ -97,7 +98,8 @@ public final class TaskSnapshotCodec {
                     + ": обнови мод или добавь читателя старой версии, файл не правьте вручную");
         }
         if (version < 1) {
-            throw new SnapshotFormatException("Версия снимка " + version + " меньше 1: допустимая версия начинается с 1");
+            throw new SnapshotFormatException(
+                    "Версия снимка " + version + " меньше 1: допустимая версия начинается с 1");
         }
         return version;
     }
@@ -111,8 +113,10 @@ public final class TaskSnapshotCodec {
         try {
             return RunStatus.valueOf(statusNode.asText());
         } catch (IllegalArgumentException e) {
-            throw new SnapshotFormatException("Неизвестный статус задачи '" + statusNode.asText()
-                    + "': допустимы RUNNING, SUCCEEDED, FAILED, CANCELLED", e);
+            throw new SnapshotFormatException(
+                    "Неизвестный статус задачи '" + statusNode.asText()
+                            + "': допустимы RUNNING, SUCCEEDED, FAILED, CANCELLED",
+                    e);
         }
     }
 
@@ -129,8 +133,8 @@ public final class TaskSnapshotCodec {
 
     private static TaskProgress parseProgress(JsonNode node) {
         if (node == null || node.isNull()) {
-            throw new SnapshotFormatException("RUNNING-снимок без прогресса progress: движок не знает, "
-                    + "с какого шага продолжать");
+            throw new SnapshotFormatException(
+                    "RUNNING-снимок без прогресса progress: движок не знает, " + "с какого шага продолжать");
         }
         if (!node.isObject()) {
             throw new SnapshotFormatException("Прогресс снимка должен быть JSON-объектом, а получено " + node);
@@ -139,25 +143,30 @@ public final class TaskSnapshotCodec {
         return switch (type) {
             case "sequence" -> new SequenceAt(requireIndex(node, "sequence"), optionalChild(node, "sequence"));
             case "repeat" -> new RepeatAt(requireIndex(node, "repeat"), optionalChild(node, "repeat"));
-            case "fallback" -> new FallbackAt(requireIndex(node, "fallback"),
-                    optionalText(node, "lastReason"), optionalChild(node, "fallback"));
+            case "fallback" ->
+                new FallbackAt(
+                        requireIndex(node, "fallback"),
+                        optionalText(node, "lastReason"),
+                        optionalChild(node, "fallback"));
             case "parallel" -> new ParallelAt(parseParallelChildren(node.get("children")));
             case "condition" -> new ConditionAt(parseBranch(node), optionalChild(node, "condition"));
             case "script" -> new ScriptAt(parseState(node.get("state")));
-            default -> throw new SnapshotFormatException("Неизвестный тип прогресса '" + type
-                    + "': допустимы sequence, repeat, fallback, parallel, condition, script");
+            default ->
+                throw new SnapshotFormatException("Неизвестный тип прогресса '" + type
+                        + "': допустимы sequence, repeat, fallback, parallel, condition, script");
         };
     }
 
     private static List<ParallelChild> parseParallelChildren(JsonNode node) {
         if (node == null || !node.isArray()) {
-            throw new SnapshotFormatException("У прогресса parallel поле 'children' обязательно и должно быть массивом");
+            throw new SnapshotFormatException(
+                    "У прогресса parallel поле 'children' обязательно и должно быть массивом");
         }
         List<ParallelChild> children = new ArrayList<>(node.size());
         for (JsonNode child : node) {
             if (!child.isObject()) {
-                throw new SnapshotFormatException("Элемент children прогресса parallel должен быть объектом, "
-                        + "а получено " + child);
+                throw new SnapshotFormatException(
+                        "Элемент children прогресса parallel должен быть объектом, " + "а получено " + child);
             }
             ScriptStatus status = parseChildStatus(child);
             String reason = optionalText(child, "reason");
@@ -173,8 +182,9 @@ public final class TaskSnapshotCodec {
         try {
             return ScriptStatus.valueOf(statusText);
         } catch (IllegalArgumentException e) {
-            throw new SnapshotFormatException("Неизвестный статус потомка parallel '" + statusText
-                    + "': допустимы RUNNING, SUCCEEDED, FAILED", e);
+            throw new SnapshotFormatException(
+                    "Неизвестный статус потомка parallel '" + statusText + "': допустимы RUNNING, SUCCEEDED, FAILED",
+                    e);
         }
     }
 
@@ -184,8 +194,9 @@ public final class TaskSnapshotCodec {
             case "unresolved" -> ConditionBranch.UNRESOLVED;
             case "then" -> ConditionBranch.THEN;
             case "else" -> ConditionBranch.ELSE;
-            default -> throw new SnapshotFormatException("Неизвестная ветка прогресса condition '" + branch
-                    + "': допустимы unresolved, then, else");
+            default ->
+                throw new SnapshotFormatException(
+                        "Неизвестная ветка прогресса condition '" + branch + "': допустимы unresolved, then, else");
         };
     }
 
@@ -202,13 +213,13 @@ public final class TaskSnapshotCodec {
     private static int requireIndex(JsonNode node, String owner) {
         JsonNode indexNode = node.get("index");
         if (indexNode == null || !indexNode.isIntegralNumber() || !indexNode.canConvertToInt()) {
-            throw new SnapshotFormatException("У прогресса '" + owner
-                    + "' поле 'index' обязательно и должно быть целым числом в диапазоне int");
+            throw new SnapshotFormatException(
+                    "У прогресса '" + owner + "' поле 'index' обязательно и должно быть целым числом в диапазоне int");
         }
         int index = indexNode.intValue();
         if (index < 0) {
-            throw new SnapshotFormatException("У прогресса '" + owner + "' отрицательный index=" + index
-                    + ": позиция шага нумеруется с нуля");
+            throw new SnapshotFormatException(
+                    "У прогресса '" + owner + "' отрицательный index=" + index + ": позиция шага нумеруется с нуля");
         }
         return index;
     }
@@ -229,7 +240,8 @@ public final class TaskSnapshotCodec {
             throw new SnapshotFormatException("Состояние скрипта должно быть JSON-объектом, а получено " + node);
         }
         Map<String, Object> state = new LinkedHashMap<>();
-        node.fields().forEachRemaining(entry -> state.put(entry.getKey(), parseValue(entry.getValue(), entry.getKey())));
+        node.fields()
+                .forEachRemaining(entry -> state.put(entry.getKey(), parseValue(entry.getValue(), entry.getKey())));
         return state;
     }
 
@@ -262,18 +274,20 @@ public final class TaskSnapshotCodec {
         }
         if (node.isObject()) {
             Map<String, Object> values = new LinkedHashMap<>();
-            node.fields().forEachRemaining(
-                    entry -> values.put(entry.getKey(), parseValue(entry.getValue(), path + "." + entry.getKey())));
+            node.fields()
+                    .forEachRemaining(entry ->
+                            values.put(entry.getKey(), parseValue(entry.getValue(), path + "." + entry.getKey())));
             return values;
         }
-        throw new SnapshotFormatException("Состояние скрипта содержит недопустимое значение в '" + path
-                + "' (" + node.getNodeType() + "): состояние хранит только JSON-совместимые значения");
+        throw new SnapshotFormatException("Состояние скрипта содержит недопустимое значение в '" + path + "' ("
+                + node.getNodeType() + "): состояние хранит только JSON-совместимые значения");
     }
 
     private static void checkAgainstPlan(TaskNode plan, TaskProgress progress) {
         switch (plan) {
             case ScriptCall call -> requireProgress(progress, ScriptAt.class, "script '" + call.script() + "'");
-            case SequenceNode sequence -> checkStepAt("sequence", sequence.steps().size(), sequence.steps(), progress);
+            case SequenceNode sequence ->
+                checkStepAt("sequence", sequence.steps().size(), sequence.steps(), progress);
             case RepeatNode repeat -> checkRepeat(repeat, progress);
             case FallbackNode fallback -> checkFallback(fallback, progress);
             case ParallelNode parallel -> checkParallel(parallel, progress);
@@ -314,8 +328,8 @@ public final class TaskSnapshotCodec {
             return;
         }
         if (at.index() >= size) {
-            throw new SnapshotFormatException("Прогресс repeat указывает на повтор " + at.index()
-                    + " из " + size + ": child висит на несуществующем повторе, снимок повреждён");
+            throw new SnapshotFormatException("Прогресс repeat указывает на повтор " + at.index() + " из " + size
+                    + ": child висит на несуществующем повторе, снимок повреждён");
         }
         checkAgainstPlan(repeat.step(), at.child());
     }
@@ -333,8 +347,9 @@ public final class TaskSnapshotCodec {
         }
         int size = parallel.steps().size();
         if (at.children().size() != size) {
-            throw new SnapshotFormatException("Прогресс parallel несёт " + at.children().size() + " потомков, а план — "
-                    + size + ": снимок повреждён или собран другой версией плана");
+            throw new SnapshotFormatException(
+                    "Прогресс parallel несёт " + at.children().size() + " потомков, а план — " + size
+                            + ": снимок повреждён или собран другой версией плана");
         }
         for (int i = 0; i < size; i++) {
             TaskProgress child = at.children().get(i).child();
@@ -387,8 +402,8 @@ public final class TaskSnapshotCodec {
     }
 
     private static SnapshotFormatException outOfRange(String owner, int index, int size) {
-        return new SnapshotFormatException("Прогресс '" + owner + "' ссылается на позицию " + index
-                + " при " + size + " шагах плана: снимок повреждён или собран другой версией плана");
+        return new SnapshotFormatException("Прогресс '" + owner + "' ссылается на позицию " + index + " при " + size
+                + " шагах плана: снимок повреждён или собран другой версией плана");
     }
 
     private static JsonNode planToJson(TaskNode plan) {
@@ -509,7 +524,8 @@ public final class TaskSnapshotCodec {
             return object;
         }
         throw new IllegalArgumentException("Состояние скрипта в '" + path + "' имеет тип "
-                + value.getClass().getSimpleName() + ": допустимы строки, числа, булевы значения, списки и карты из них");
+                + value.getClass().getSimpleName()
+                + ": допустимы строки, числа, булевы значения, списки и карты из них");
     }
 
     public static SaveEncoded encodeForSave(TaskSnapshot snapshot) {
@@ -523,6 +539,5 @@ public final class TaskSnapshotCodec {
         }
     }
 
-    public record SaveEncoded(String json, String failureReason) {
-    }
+    public record SaveEncoded(String json, String failureReason) {}
 }

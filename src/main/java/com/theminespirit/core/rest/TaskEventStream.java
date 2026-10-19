@@ -8,10 +8,8 @@ import com.theminespirit.core.task.TaskRecord;
 import com.theminespirit.core.task.TaskRegistry;
 import java.time.Duration;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,9 +27,11 @@ public final class TaskEventStream implements SseStream {
     private long lastId;
 
     public TaskEventStream(TaskRegistry.Snapshot snapshot, Duration keepalive, Runnable onClose) {
-        this.keepalive = Objects.requireNonNull(keepalive, "keepalive не может быть null: интервал кипалайва задают явно");
+        this.keepalive =
+                Objects.requireNonNull(keepalive, "keepalive не может быть null: интервал кипалайва задают явно");
         this.onClose = Objects.requireNonNull(onClose, "onClose не может быть null: закрытие обязано освобождать слот");
-        Objects.requireNonNull(snapshot, "snapshot не может быть null: первый кадр несёт согласованное состояние задачи");
+        Objects.requireNonNull(
+                snapshot, "snapshot не может быть null: первый кадр несёт согласованное состояние задачи");
         this.log = snapshot.log();
         long lastEventId = snapshot.lastEventId();
         long position = snapshot.position();

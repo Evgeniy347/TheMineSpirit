@@ -38,16 +38,22 @@ public final class DemoService {
         return new DemoService(level);
     }
 
-    public int start(CommandSourceStack source, DemoBuildings.Building building, int levelRequested,
-            BlockPos explicit, BuildRotation rotation, int upgradeFrom, int upgradeTo) {
+    public int start(
+            CommandSourceStack source,
+            DemoBuildings.Building building,
+            int levelRequested,
+            BlockPos explicit,
+            BuildRotation rotation,
+            int upgradeFrom,
+            int upgradeTo) {
         ServerPlayer player = source.getPlayer();
         if (player != null) {
             stopOwnedBy(player.getUUID());
         }
         Optional<BlockPos> resolved = anchor(source, explicit);
         if (resolved.isEmpty()) {
-            source.sendFailure(Component.literal("Не нашёл, где строить: встаньте и посмотрите на площадку "
-                    + "или укажите координаты x y z"));
+            source.sendFailure(Component.literal(
+                    "Не нашёл, где строить: встаньте и посмотрите на площадку " + "или укажите координаты x y z"));
             return 0;
         }
         BlockPos anchor = resolved.orElseThrow();
@@ -55,16 +61,16 @@ public final class DemoService {
         int lookDz = player == null ? 1 : player.getDirection().getStepZ();
         List<DemoPlan> plans;
         try {
-            plans = plans(new PlanRequest(building, levelRequested, anchor, lookDx, lookDz, rotation,
-                    upgradeFrom, upgradeTo));
+            plans = plans(new PlanRequest(
+                    building, levelRequested, anchor, lookDx, lookDz, rotation, upgradeFrom, upgradeTo));
         } catch (IllegalArgumentException refused) {
             source.sendFailure(Component.literal("Демо-стройка не начата: " + refused.getMessage()));
             return 0;
         }
         SpiritEntity spirit = ModEntities.SPIRIT.get().create(level);
         if (spirit == null) {
-            source.sendFailure(Component.literal("Дух не создан: тип сущности " + ModEntities.SPIRIT.getId()
-                    + " не зарегистрирован"));
+            source.sendFailure(Component.literal(
+                    "Дух не создан: тип сущности " + ModEntities.SPIRIT.getId() + " не зарегистрирован"));
             return 0;
         }
         DemoSession session = new DemoSession(level, spirit, plans, player == null ? null : player.getUUID());
@@ -81,10 +87,15 @@ public final class DemoService {
             return 0;
         }
         sessions.add(session);
-        LOGGER.info("Демо-стройка '{}' начата в {}: {}", building.id(), level.dimension().location(),
+        LOGGER.info(
+                "Демо-стройка '{}' начата в {}: {}",
+                building.id(),
+                level.dimension().location(),
                 format(plans));
-        source.sendSuccess(() -> Component.literal("Демо-стройка '" + building.name() + "' начата: "
-                + format(plans) + ". Дух пишет ход в чат; отменить — /spirit demo stop"), true);
+        source.sendSuccess(
+                () -> Component.literal("Демо-стройка '" + building.name() + "' начата: " + format(plans)
+                        + ". Дух пишет ход в чат; отменить — /spirit demo stop"),
+                true);
         return 1;
     }
 
@@ -127,14 +138,14 @@ public final class DemoService {
         int upgradeTo = request.upgradeTo();
         if (upgradeFrom > 0 || upgradeTo > 0) {
             if (!building.leveled()) {
-                throw new IllegalArgumentException("У постройки '" + building.id()
-                        + "' нет уровней: улучшать нечего");
+                throw new IllegalArgumentException("У постройки '" + building.id() + "' нет уровней: улучшать нечего");
             }
             if (upgradeFrom < 1 || upgradeTo <= upgradeFrom) {
                 throw new IllegalArgumentException("Улучшение задано 'с " + upgradeFrom + " на " + upgradeTo
                         + "': нужен старший уровень выше младшего (например, 1 2)");
             }
-            return List.of(DemoPlanner.plan(building, upgradeFrom, anchor, lookDx, lookDz, rotation),
+            return List.of(
+                    DemoPlanner.plan(building, upgradeFrom, anchor, lookDx, lookDz, rotation),
                     DemoPlanner.plan(building, upgradeTo, anchor, lookDx, lookDz, rotation));
         }
         return List.of(DemoPlanner.plan(building, levelRequested, anchor, lookDx, lookDz, rotation));
@@ -155,7 +166,9 @@ public final class DemoService {
         BlockPos hitPos = blockHit.getBlockPos();
         int groundY;
         try {
-            groundY = GroundAnchor.groundY(hitPos.getY(), level.getMinBuildHeight(),
+            groundY = GroundAnchor.groundY(
+                    hitPos.getY(),
+                    level.getMinBuildHeight(),
                     y -> isGround(new BlockPos(hitPos.getX(), y, hitPos.getZ())));
         } catch (IllegalArgumentException noGround) {
             return Optional.empty();
@@ -172,10 +185,17 @@ public final class DemoService {
         if (plans.size() == 1) {
             return plans.get(0).name() + " (" + plans.get(0).scheme() + ")";
         }
-        return plans.get(0).name() + " (" + plans.get(0).scheme() + " → " + plans.get(1).scheme() + ")";
+        return plans.get(0).name() + " (" + plans.get(0).scheme() + " → "
+                + plans.get(1).scheme() + ")";
     }
 
-    private record PlanRequest(DemoBuildings.Building building, int levelRequested, BlockPos anchor, int lookDx,
-            int lookDz, BuildRotation rotation, int upgradeFrom, int upgradeTo) {
-    }
+    private record PlanRequest(
+            DemoBuildings.Building building,
+            int levelRequested,
+            BlockPos anchor,
+            int lookDx,
+            int lookDz,
+            BuildRotation rotation,
+            int upgradeFrom,
+            int upgradeTo) {}
 }

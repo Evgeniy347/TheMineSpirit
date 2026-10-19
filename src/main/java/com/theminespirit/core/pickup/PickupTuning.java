@@ -17,8 +17,8 @@ public record PickupTuning(int refreshTicks, double pickupReach, int totalTimeou
                     + " тиков меньше единицы: опрос каждый тик нагружает сервер зря");
         }
         if (!(pickupReach > 0)) {
-            throw new IllegalArgumentException("Дальность подбора " + pickupReach
-                    + " не положительна: дух никогда не окажется достаточно близко");
+            throw new IllegalArgumentException(
+                    "Дальность подбора " + pickupReach + " не положительна: дух никогда не окажется достаточно близко");
         }
         if (totalTimeoutTicks < 1) {
             throw new IllegalArgumentException("Общий тайм-аут подбора " + totalTimeoutTicks

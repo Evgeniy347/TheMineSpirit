@@ -72,8 +72,8 @@ public final class TacticsService {
     private final CoreFactCollector situations = new CoreFactCollector(settings);
     private final IntentActionExecutor intents = new IntentActionExecutor();
     private final TacticsSchedule schedule = new TacticsSchedule(settings.evalIntervalTicks());
-    private final DecisionJournal journal = new DecisionJournal(settings.journalCapacity(),
-            settings.journalMaxPerSecond());
+    private final DecisionJournal journal =
+            new DecisionJournal(settings.journalCapacity(), settings.journalMaxPerSecond());
     private final HelpCallGate helpGate = new HelpCallGate();
     private final Approach approach;
     private final CombatActuator combat;
@@ -150,8 +150,12 @@ public final class TacticsService {
             lastFailure = error.toString();
             suspendedUntil = now + FAILURE_BACKOFF_TICKS;
             release();
-            LOGGER.error("Дух {} не провёл тактику и приостановил её на {} тиков: {}", spirit.getUUID(),
-                    FAILURE_BACKOFF_TICKS, error.getMessage(), error);
+            LOGGER.error(
+                    "Дух {} не провёл тактику и приостановил её на {} тиков: {}",
+                    spirit.getUUID(),
+                    FAILURE_BACKOFF_TICKS,
+                    error.getMessage(),
+                    error);
         }
     }
 
@@ -233,8 +237,8 @@ public final class TacticsService {
         ownership.cleared();
         forcedTarget = null;
         setForcedRetreat(RetreatMethod.NONE, Optional.empty());
-        restore(preDirective.orElse(new StoredTactics(DEFAULT_MODE, Optional.empty(), Optional.empty(),
-                Optional.empty(), RetreatTracker.IDLE)));
+        restore(preDirective.orElse(new StoredTactics(
+                DEFAULT_MODE, Optional.empty(), Optional.empty(), Optional.empty(), RetreatTracker.IDLE)));
         preDirective = Optional.empty();
         spirit.setTarget(null);
         return true;
@@ -251,8 +255,8 @@ public final class TacticsService {
 
     public void setForcedRetreat(RetreatMethod method, Optional<Point> point) {
         if (method == null) {
-            throw new IllegalArgumentException("Способ отхода = null: укажите RetreatMethod, "
-                    + "для «способ не навязан» — RetreatMethod.NONE");
+            throw new IllegalArgumentException(
+                    "Способ отхода = null: укажите RetreatMethod, " + "для «способ не навязан» — RetreatMethod.NONE");
         }
         if (point == null) {
             throw new IllegalArgumentException("Точка отхода = null: отсутствие точки передаётся Optional.empty()");
@@ -266,7 +270,11 @@ public final class TacticsService {
     }
 
     public boolean hasState() {
-        return memory != null || ordered != DEFAULT_MODE || zone.isPresent() || ward.isPresent() || retreat.retreating();
+        return memory != null
+                || ordered != DEFAULT_MODE
+                || zone.isPresent()
+                || ward.isPresent()
+                || retreat.retreating();
     }
 
     public boolean wantsControl() {
@@ -274,7 +282,8 @@ public final class TacticsService {
     }
 
     public PolicyExemptions exemptions() {
-        return active && retreat.method() == RetreatMethod.WATER ? PolicyExemptions.of(PolicyId.WATER)
+        return active && retreat.method() == RetreatMethod.WATER
+                ? PolicyExemptions.of(PolicyId.WATER)
                 : PolicyExemptions.empty();
     }
 
@@ -365,8 +374,8 @@ public final class TacticsService {
     }
 
     private void evaluate(long now, boolean byEvent) {
-        TacticsInputs inputs = new TacticsInputs(ordered, zone, ward, ticksSince(lastHurtTick),
-                ticksSince(combat.lastStrikeTick()), designatedTarget());
+        TacticsInputs inputs = new TacticsInputs(
+                ordered, zone, ward, ticksSince(lastHurtTick), ticksSince(combat.lastStrikeTick()), designatedTarget());
         WorldFactCollector.Collected collected = collector.collect(spirit, inputs);
         blockReads += collected.blockReads();
         entityQueries += collected.entityQueries();
@@ -389,11 +398,19 @@ public final class TacticsService {
         } else {
             boolean engages = engages(designated);
             targetId = engages ? designated.map(EnemyFact::id).orElse(null) : null;
-            spirit.setTarget(engages ? designated.map(enemy -> collected.entities().get(enemy.id())).orElse(null) : null);
+            spirit.setTarget(
+                    engages
+                            ? designated
+                                    .map(enemy -> collected.entities().get(enemy.id()))
+                                    .orElse(null)
+                            : null);
         }
-        shootTargetId = collected.context().enemies().stream().filter(EnemyFact::visible)
-                .min(Comparator.comparingDouble(enemy -> enemy.pos().distanceTo(situation.self().pos())))
-                .map(EnemyFact::id).orElse(null);
+        shootTargetId = collected.context().enemies().stream()
+                .filter(EnemyFact::visible)
+                .min(Comparator.comparingDouble(
+                        enemy -> enemy.pos().distanceTo(situation.self().pos())))
+                .map(EnemyFact::id)
+                .orElse(null);
         replan(collected, situation);
         returnTarget = next.returnTo();
         returned = false;
@@ -406,9 +423,11 @@ public final class TacticsService {
 
     private void updateHelpCall(long now, TacticalOutcome next, Situation situation) {
         RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
-        boolean calls = next.decision() == TacticalOption.RETREAT
-                && situation.enemies().size() >= tuning.callMinEnemies();
-        helpCall = calls ? Optional.of(new HelpCall(spirit.getUUID(), situation.self().pos(), now)) : Optional.empty();
+        boolean calls =
+                next.decision() == TacticalOption.RETREAT && situation.enemies().size() >= tuning.callMinEnemies();
+        helpCall = calls
+                ? Optional.of(new HelpCall(spirit.getUUID(), situation.self().pos(), now))
+                : Optional.empty();
         if (!calls || !helpGate.ready(now, tuning.callIntervalTicks())) {
             return;
         }
@@ -427,10 +446,15 @@ public final class TacticsService {
     }
 
     private void journalDecision(long now, TacticalOutcome next, Situation situation) {
-        DecisionOrder order = DecisionOrder.of(ordered, zone.isPresent(), ward.map(UUID::toString),
-                activeDirective());
-        journal.offer(new DecisionObservation(now, spirit.getUUID().toString(), spirit.displayName(), next,
-                Optional.ofNullable(targetId), order, DecisionFacts.of(situation)))
+        DecisionOrder order = DecisionOrder.of(ordered, zone.isPresent(), ward.map(UUID::toString), activeDirective());
+        journal.offer(new DecisionObservation(
+                        now,
+                        spirit.getUUID().toString(),
+                        spirit.displayName(),
+                        next,
+                        Optional.ofNullable(targetId),
+                        order,
+                        DecisionFacts.of(situation)))
                 .ifPresent(record -> LOGGER.info("{}", DecisionText.format(record)));
     }
 
@@ -445,7 +469,8 @@ public final class TacticsService {
         if (TacticsConfig.loadDefault().modes().of(ordered).initiates()) {
             return true;
         }
-        return spirit.getLastHurtByMob() != null || designated.map(EnemyFact::targetingSelf).orElse(false);
+        return spirit.getLastHurtByMob() != null
+                || designated.map(EnemyFact::targetingSelf).orElse(false);
     }
 
     private void replan(WorldFactCollector.Collected collected, Situation situation) {
@@ -465,22 +490,38 @@ public final class TacticsService {
         if (directive == null || directive.retreat().isEmpty()) {
             return next;
         }
-        RetreatMethod method = forcedMethod != RetreatMethod.NONE ? forcedMethod
+        RetreatMethod method = forcedMethod != RetreatMethod.NONE
+                ? forcedMethod
                 : next.retreatMethod() != RetreatMethod.NONE ? next.retreatMethod() : RetreatMethod.AWAY;
         if (next.decision() == TacticalOption.RETREAT && next.retreatMethod() == method) {
             return next;
         }
-        return new TacticalOutcome(TacticalOption.RETREAT, next.action(), method, next.callHelp(), next.state(),
-                next.mode(), next.returnTo(), next.trace(), next.memory());
+        return new TacticalOutcome(
+                TacticalOption.RETREAT,
+                next.action(),
+                method,
+                next.callHelp(),
+                next.state(),
+                next.mode(),
+                next.returnTo(),
+                next.trace(),
+                next.memory());
     }
 
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
         BlockPos feet = spirit.blockPosition();
-        Optional<Point> retreatPoint = forcedPoint.isPresent() ? forcedPoint
+        Optional<Point> retreatPoint = forcedPoint.isPresent()
+                ? forcedPoint
                 : SafePointChoice.nearest(situation.self().pos(), collected.home(), collected.camp());
-        RetreatPlanner.Input input = new RetreatPlanner.Input(situation.self().pos(),
-                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), collected.context().enemies(), collected.env(),
-                retreatPoint, situation.self().blocks(), collected.rally(), situation.self().hasWaterBucket());
+        RetreatPlanner.Input input = new RetreatPlanner.Input(
+                situation.self().pos(),
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                collected.context().enemies(),
+                collected.env(),
+                retreatPoint,
+                situation.self().blocks(),
+                collected.rally(),
+                situation.self().hasWaterBucket());
         return RetreatPlanner.plan(retreat.method(), input);
     }
 
@@ -493,7 +534,8 @@ public final class TacticsService {
             progress = retreating.step(plan.get(), entity(shootTargetId));
             return;
         }
-        LivingEntity target = forcedTarget != null && forcedTarget.isAlive() ? forcedTarget
+        LivingEntity target = forcedTarget != null && forcedTarget.isAlive()
+                ? forcedTarget
                 : entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
@@ -550,7 +592,9 @@ public final class TacticsService {
     }
 
     private void logChange(TacticalOutcome next) {
-        if (outcome == null || outcome.decision() != next.decision() || outcome.retreatMethod() != next.retreatMethod()) {
+        if (outcome == null
+                || outcome.decision() != next.decision()
+                || outcome.retreatMethod() != next.retreatMethod()) {
             LOGGER.debug("Дух {}: {}", spirit.getUUID(), TacticsTrace.format(next));
         }
     }

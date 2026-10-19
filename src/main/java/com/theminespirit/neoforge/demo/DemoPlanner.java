@@ -16,13 +16,20 @@ import net.minecraft.core.BlockPos;
 
 /** Сборка демо-постройки из библиотеки пресетов: раскладка, материалы сундука и блоки без предмета. */
 final class DemoPlanner {
-    private DemoPlanner() {
-    }
+    private DemoPlanner() {}
 
-    static DemoPlan plan(DemoBuildings.Building building, int level, BlockPos anchor, int lookDx, int lookDz,
+    static DemoPlan plan(
+            DemoBuildings.Building building,
+            int level,
+            BlockPos anchor,
+            int lookDx,
+            int lookDz,
             BuildRotation rotation) {
         DemoBuildings.Level chosen = building.level(level);
-        Preset preset = DataTables.INSTANCE.presets().current().byId(chosen.scheme())
+        Preset preset = DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(chosen.scheme())
                 .orElseThrow(() -> new IllegalArgumentException("Постройка '" + chosen.scheme()
                         + "' не найдена в библиотеке пресетов: проверьте presets.json и файл "
                         + chosen.scheme() + ".txt (/spirit tables)"));
@@ -30,7 +37,13 @@ final class DemoPlanner {
         BlockCoord entry = preset.entry();
         String name = preset.name();
         Map<String, Integer> materials = preset.materials();
-        DemoPlacement placement = DemoPlacement.compute(new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()), new DemoPlacement.Look(lookDx, lookDz), entry.x(), entry.z(), new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()), rotation);
+        DemoPlacement placement = DemoPlacement.compute(
+                new DemoPlacement.Anchor(anchor.getX(), anchor.getY(), anchor.getZ()),
+                new DemoPlacement.Look(lookDx, lookDz),
+                entry.x(),
+                entry.z(),
+                new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
+                rotation);
         List<DemoPlan.Placement> preplaced = new ArrayList<>();
         for (Schematic.PlacedEntry placed : schematic.entries(placement.origin(), placement.rotation())) {
             if (!BlockItems.hasBlockItem(placed.block())) {

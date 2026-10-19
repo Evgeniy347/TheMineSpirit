@@ -9,8 +9,7 @@ public record NutritionTable(Map<String, Double> nutrition) {
                     "Таблица сытности не может быть null: ранг еды считается по данным, а не по коду");
         }
         if (nutrition.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Таблица сытности пуста: без данных о еде норма на душу не считается");
+            throw new IllegalArgumentException("Таблица сытности пуста: без данных о еде норма на душу не считается");
         }
         for (Map.Entry<String, Double> entry : nutrition.entrySet()) {
             if (entry.getKey() == null || entry.getKey().isBlank()) {

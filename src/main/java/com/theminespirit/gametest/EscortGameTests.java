@@ -19,15 +19,16 @@ public final class EscortGameTests {
     private static final String PLAYER = "gt_escort_ward";
     private static final int ARRIVAL_LIMIT_TICKS = 150;
 
-    private EscortGameTests() {
-    }
+    private EscortGameTests() {}
 
     @GameTest(template = "arena", batch = "escort_follow", timeoutTicks = 400)
     public static void escort_MovingPlayer_FollowsAndHoldsRadiusAtEachStop(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 4));
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(5, 1, 4), PLAYER);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
                 MovementScene.call("escort", Map.of("target", PLAYER, "radius", RADIUS)),
                 MovementScene.SETTLE_TICKS);
         int[] firstArrival = {-1};
@@ -64,11 +65,13 @@ public final class EscortGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(firstArrival[0] >= 0,
+            helper.assertTrue(
+                    firstArrival[0] >= 0,
                     "escort обязан подойти к игроку и держать радиус " + RADIUS + ": первая стоянка не достигнута");
-            helper.assertTrue(secondArrival[0] >= 0,
-                    "escort обязан идти за движущейся целью: вторая стоянка не достигнута");
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
+            helper.assertTrue(
+                    secondArrival[0] >= 0, "escort обязан идти за движущейся целью: вторая стоянка не достигнута");
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
                     "escort не заканчивается у цели, пока задачу не отменят: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));

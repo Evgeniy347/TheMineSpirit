@@ -25,8 +25,7 @@ final class SpiritRegistry extends SavedData {
 
     private final Set<UUID> alive = new HashSet<>();
 
-    private SpiritRegistry() {
-    }
+    private SpiritRegistry() {}
 
     static SpiritRegistry get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);

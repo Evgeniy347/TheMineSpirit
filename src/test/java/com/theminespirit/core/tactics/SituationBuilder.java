@@ -105,8 +105,14 @@ final class SituationBuilder {
 
     SituationBuilder enemies(String type, double distance, int count) {
         for (int i = 0; i < count; i++) {
-            enemies.add(new EnemyFact(qualified(type), "e" + nextId++, new Point(distance, 0, 0),
-                    ScenarioDefaults.ENEMY_HP_FRACTION, ScenarioDefaults.ENEMY_ARMOR, true, true));
+            enemies.add(new EnemyFact(
+                    qualified(type),
+                    "e" + nextId++,
+                    new Point(distance, 0, 0),
+                    ScenarioDefaults.ENEMY_HP_FRACTION,
+                    ScenarioDefaults.ENEMY_ARMOR,
+                    true,
+                    true));
         }
         return this;
     }
@@ -185,10 +191,9 @@ final class SituationBuilder {
     }
 
     Situation build() {
-        SelfFacts self = new SelfFacts(pos, hp, maxHp, armor, dps, speed, food, blocks, ammo, bucket, allies,
-                healItems);
-        EnvFacts env = new EnvFacts(lava, drop, light, time, homeDistance, homeReachable, coverDistance,
-                waterDistance);
+        SelfFacts self =
+                new SelfFacts(pos, hp, maxHp, armor, dps, speed, food, blocks, ammo, bucket, allies, healItems);
+        EnvFacts env = new EnvFacts(lava, drop, light, time, homeDistance, homeReachable, coverDistance, waterDistance);
         Orders orders = new Orders(mode, zoneCenter, zoneRadius, ward, wardThreatened, help);
         return new Situation(self, enemies, env, orders, sinceHit, sinceStrike);
     }

@@ -1,19 +1,39 @@
 package com.theminespirit.core.tactics;
 
 final class FactorScalesParser {
-    private static final String[] FIELDS = {"armorPerPoint", "armorCap", "minDps", "winMarginDivisor", "lowHpFloor",
-            "proximityRange", "rangedRange", "rangedFull", "explosiveRange", "allyFull", "routesFull",
-            "lavaRange", "dropSafe", "dropRange", "nightFloor", "hungerThreshold", "healFull", "leashMargin",
-            "speedRatioCap", "urgencyHorizon"};
+    private static final String[] FIELDS = {
+        "armorPerPoint",
+        "armorCap",
+        "minDps",
+        "winMarginDivisor",
+        "lowHpFloor",
+        "proximityRange",
+        "rangedRange",
+        "rangedFull",
+        "explosiveRange",
+        "allyFull",
+        "routesFull",
+        "lavaRange",
+        "dropSafe",
+        "dropRange",
+        "nightFloor",
+        "hungerThreshold",
+        "healFull",
+        "leashMargin",
+        "speedRatioCap",
+        "urgencyHorizon"
+    };
 
-    private FactorScalesParser() {
-    }
+    private FactorScalesParser() {}
 
     static FactorScales parse(ConfigNode node) {
         node.fields(FIELDS);
-        ArmorModel armor = node.build("armor",
-                () -> new ArmorModel(node.get("armorPerPoint").number(), node.get("armorCap").number()));
-        return node.build(() -> new FactorScales(armor,
+        ArmorModel armor = node.build(
+                "armor",
+                () -> new ArmorModel(
+                        node.get("armorPerPoint").number(), node.get("armorCap").number()));
+        return node.build(() -> new FactorScales(
+                armor,
                 node.get("minDps").number(),
                 node.get("winMarginDivisor").number(),
                 node.get("lowHpFloor").number(),

@@ -34,8 +34,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
 final class SpiritTaskCommands {
-    private SpiritTaskCommands() {
-    }
+    private SpiritTaskCommands() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("goal")
@@ -43,11 +42,9 @@ final class SpiritTaskCommands {
                         .then(argument("goal", StringArgumentType.greedyString())
                                 .executes(SpiritTaskCommands::goal))));
         spirit.then(literal("status")
-                .then(argument("spirits", EntityArgument.entities())
-                        .executes(SpiritTaskCommands::status)));
+                .then(argument("spirits", EntityArgument.entities()).executes(SpiritTaskCommands::status)));
         spirit.then(literal("cancel")
-                .then(argument("spirits", EntityArgument.entities())
-                        .executes(SpiritTaskCommands::cancel)));
+                .then(argument("spirits", EntityArgument.entities()).executes(SpiritTaskCommands::cancel)));
     }
 
     private static int goal(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -56,8 +53,8 @@ final class SpiritTaskCommands {
         String text = StringArgumentType.getString(ctx, "goal");
         List<SpiritEntity> spirits = filterSpirits(selected);
         if (spirits.isEmpty()) {
-            source.sendFailure(Component.literal(
-                    "Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
+            source.sendFailure(
+                    Component.literal("Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
         ServerPlayer speaker = source.getPlayer();
@@ -82,8 +79,8 @@ final class SpiritTaskCommands {
                     + failed.getStringUUID() + "' не смог её принять: " + e.getMessage()));
             return 0;
         } catch (IllegalArgumentException e) {
-            source.sendFailure(Component.literal("Цель '" + text + "' не поставлена ни одному духу: "
-                    + e.getMessage()));
+            source.sendFailure(
+                    Component.literal("Цель '" + text + "' не поставлена ни одному духу: " + e.getMessage()));
             return 0;
         }
         List<String> assigned = new ArrayList<>(spirits.size());
@@ -91,16 +88,24 @@ final class SpiritTaskCommands {
             spirits.get(i).startTask(plans.get(i));
             assigned.add(spirits.get(i).getStringUUID());
         }
-        source.sendSuccess(() -> Component.literal("Цель '" + text + "' поставлена духам: "
-                + String.join(", ", assigned) + ". Состояние — /spirit status"), true);
+        source.sendSuccess(
+                () -> Component.literal("Цель '" + text + "' поставлена духам: " + String.join(", ", assigned)
+                        + ". Состояние — /spirit status"),
+                true);
         return spirits.size();
     }
 
     private static WorldObservation goalObservation(SpiritEntity spirit) {
         BlockPos pos = spirit.blockPosition();
-        return new WorldObservation("spirit_" + spirit.getStringUUID(), spirit.level().getGameTime(),
-                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), inventoryEntries(spirit),
-                List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
+        return new WorldObservation(
+                "spirit_" + spirit.getStringUUID(),
+                spirit.level().getGameTime(),
+                new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
+                inventoryEntries(spirit),
+                List.of(),
+                List.of(),
+                List.of(),
+                ScanRadius.DEFAULT.value());
     }
 
     private static List<ItemCount> inventoryEntries(SpiritEntity spirit) {
@@ -124,16 +129,18 @@ final class SpiritTaskCommands {
             source.sendFailure(Component.literal("Среди выбранных сущностей нет духа: статус смотреть нечего"));
             return 0;
         }
-        source.sendSuccess(() -> {
-            StringBuilder line = new StringBuilder();
-            for (SpiritEntity spirit : spirits) {
-                if (!line.isEmpty()) {
-                    line.append('\n');
-                }
-                line.append(describe(spirit));
-            }
-            return Component.literal(line.toString());
-        }, false);
+        source.sendSuccess(
+                () -> {
+                    StringBuilder line = new StringBuilder();
+                    for (SpiritEntity spirit : spirits) {
+                        if (!line.isEmpty()) {
+                            line.append('\n');
+                        }
+                        line.append(describe(spirit));
+                    }
+                    return Component.literal(line.toString());
+                },
+                false);
         return spirits.size();
     }
 
@@ -148,7 +155,8 @@ final class SpiritTaskCommands {
         List<String> cancelled = new ArrayList<>();
         List<String> idle = new ArrayList<>();
         for (SpiritEntity spirit : spirits) {
-            boolean wasRunning = spirit.taskStatus().filter(s -> s == RunStatus.RUNNING).isPresent();
+            boolean wasRunning =
+                    spirit.taskStatus().filter(s -> s == RunStatus.RUNNING).isPresent();
             spirit.cancelTask();
             if (wasRunning) {
                 cancelled.add(spirit.getStringUUID());
@@ -160,8 +168,10 @@ final class SpiritTaskCommands {
             source.sendFailure(Component.literal("У духов не было выполняемой задачи: " + String.join(", ", idle)));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("Задача духов отменена: " + String.join(", ", cancelled)
-                + (idle.isEmpty() ? "" : ". Без выполняемой задачи: " + String.join(", ", idle))), true);
+        source.sendSuccess(
+                () -> Component.literal("Задача духов отменена: " + String.join(", ", cancelled)
+                        + (idle.isEmpty() ? "" : ". Без выполняемой задачи: " + String.join(", ", idle))),
+                true);
         return cancelled.size();
     }
 
@@ -187,7 +197,8 @@ final class SpiritTaskCommands {
         }
         RunStatus value = status.get();
         if (value == RunStatus.RUNNING) {
-            String script = spirit.currentTaskScript().map(s -> ", скрипт '" + s + "'").orElse("");
+            String script =
+                    spirit.currentTaskScript().map(s -> ", скрипт '" + s + "'").orElse("");
             return id + " задача выполняется" + script;
         }
         String reason = spirit.taskFailureReason().map(r -> ", причина: " + r).orElse("");

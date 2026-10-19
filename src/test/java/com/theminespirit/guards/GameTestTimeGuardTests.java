@@ -11,9 +11,7 @@ import org.junit.jupiter.api.Test;
 class GameTestTimeGuardTests {
     private static final String HELPER = "GameTestFixtures.java";
     private static final String[] TIME_MARKERS = {
-            "setDayTime",
-            "setRainLevel",
-            "setWeatherParameters",
+        "setDayTime", "setRainLevel", "setWeatherParameters",
     };
 
     @Test
@@ -21,7 +19,9 @@ class GameTestTimeGuardTests {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Время дня и погоду в GameTest меняет только GameTestFixtures.holdDayTime: он запоминает значение, "
                         + "ставит нужное и возвращает его и при успехе, и при провале сцены. Прямой setDayTime в теле "
                         + "сцены при тайм-ауте не выполняется — ночь паука spider_NextToSpiritAtNight утекала "
@@ -31,40 +31,49 @@ class GameTestTimeGuardTests {
 
     @Test
     void dayTimePattern_DirectCallOutsideHelper_IsReported() {
-        Map<Path, String> sources = Map.of(Path.of("MobTargetsGameTests.java"),
+        Map<Path, String> sources = Map.of(
+                Path.of("MobTargetsGameTests.java"),
                 "class Sample {\n"
                         + "    public static void spider_NextToSpiritAtNight_TakesTarget(GameTestHelper helper) {\n"
                         + "        helper.getLevel().setDayTime(18000);\n"
                         + "    }\n"
                         + "}\n");
 
-        assertEquals(List.of("MobTargetsGameTests.java:3"), offendersIn(sources),
+        assertEquals(
+                List.of("MobTargetsGameTests.java:3"),
+                offendersIn(sources),
                 "Сторож ослеп: прямой setDayTime вне хелпера должен попадать в нарушители");
     }
 
     @Test
     void dayTimePattern_HelperCallOutsideHelper_IsAccepted() {
-        Map<Path, String> sources = Map.of(Path.of("MobTargetsGameTests.java"),
+        Map<Path, String> sources = Map.of(
+                Path.of("MobTargetsGameTests.java"),
                 "class Sample {\n"
                         + "    public static void spider_NextToSpiritAtNight_TakesTarget(GameTestHelper helper) {\n"
                         + "        GameTestFixtures.holdDayTime(helper, 18000);\n"
                         + "    }\n"
                         + "}\n");
 
-        assertEquals(List.of(), offendersIn(sources),
+        assertEquals(
+                List.of(),
+                offendersIn(sources),
                 "Сторож ложно срабатывает: holdDayTime из сцены — законный способ держать ночь");
     }
 
     @Test
     void dayTimePattern_DirectCallInsideHelper_IsAccepted() {
-        Map<Path, String> sources = Map.of(Path.of(HELPER),
+        Map<Path, String> sources = Map.of(
+                Path.of(HELPER),
                 "class Sample {\n"
                         + "    static void holdDayTime(GameTestHelper helper, long dayTime) {\n"
                         + "        helper.getLevel().setDayTime(dayTime);\n"
                         + "    }\n"
                         + "}\n");
 
-        assertEquals(List.of(), offendersIn(sources),
+        assertEquals(
+                List.of(),
+                offendersIn(sources),
                 "Сторож ложно срабатывает: сам хелпер менять время обязан — запрет только для сцен");
     }
 

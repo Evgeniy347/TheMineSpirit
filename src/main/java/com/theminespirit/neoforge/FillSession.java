@@ -176,8 +176,7 @@ public final class FillSession {
             approach.begin(new Vec3(exit.x() + 0.5, exit.y(), exit.z() + 0.5), BuildTuning.STAND_ARRIVAL);
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.PICK;
             case STUCK, TIMEOUT -> state = State.PICK;
         }
@@ -230,8 +229,7 @@ public final class FillSession {
 
     private void approachTick() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> placeCurrent();
             case STUCK, TIMEOUT -> {
                 noStand++;

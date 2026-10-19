@@ -13,8 +13,8 @@ final class SpiritRun {
     private final BooleanSupplier ready;
     private int startTickCount = -1;
 
-    private SpiritRun(GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks,
-            BooleanSupplier ready) {
+    private SpiritRun(
+            GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks, BooleanSupplier ready) {
         this.helper = helper;
         this.spirit = spirit;
         this.call = call;
@@ -28,8 +28,8 @@ final class SpiritRun {
 
     // Условие ready — для состояния мира, которое готовится не за тики, а в другом потоке (свет): число тиков
     // ожидания там не гарантия, а гонка.
-    static SpiritRun launch(GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks,
-            BooleanSupplier ready) {
+    static SpiritRun launch(
+            GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks, BooleanSupplier ready) {
         SpiritRun run = new SpiritRun(helper, spirit, call, settleTicks, ready);
         helper.onEachTick(run::startWhenSettled);
         return run;
@@ -40,7 +40,8 @@ final class SpiritRun {
     }
 
     void assertStarted() {
-        helper.assertTrue(startTickCount >= 0,
+        helper.assertTrue(
+                startTickCount >= 0,
                 "дух ещё не начал тикать (чанк площадки не стал активным) или не выполнено условие запуска, "
                         + "задача не запущена: тик духа " + spirit.tickCount);
     }

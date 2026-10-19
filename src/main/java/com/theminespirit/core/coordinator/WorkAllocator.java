@@ -11,11 +11,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class WorkAllocator {
-    public WorkAllocator() {
-    }
+    public WorkAllocator() {}
 
-    public List<WorkAssignment> allocate(List<SpiritSnapshot> free, List<WorkTarget> candidates,
-            WorkReservations reservations, long now) {
+    public List<WorkAssignment> allocate(
+            List<SpiritSnapshot> free, List<WorkTarget> candidates, WorkReservations reservations, long now) {
         if (free == null) {
             throw new IllegalArgumentException("free не может быть null: нет свободных — пустой список");
         }
@@ -44,10 +43,12 @@ public final class WorkAllocator {
             WorkTarget best = null;
             double bestScore = Double.POSITIVE_INFINITY;
             for (WorkTarget target : freeTargets) {
-                double score = spirit.pos().distanceTo(anchorOf(target))
-                        + crowdPenalty * assigned.getOrDefault(target, 0L);
-                if (score < bestScore || (score == bestScore && best != null
-                        && target.anchor().compareTo(best.anchor()) < 0)) {
+                double score =
+                        spirit.pos().distanceTo(anchorOf(target)) + crowdPenalty * assigned.getOrDefault(target, 0L);
+                if (score < bestScore
+                        || (score == bestScore
+                                && best != null
+                                && target.anchor().compareTo(best.anchor()) < 0)) {
                     best = target;
                     bestScore = score;
                 }
@@ -70,6 +71,5 @@ public final class WorkAllocator {
         return new Point(anchor.x(), anchor.y(), anchor.z());
     }
 
-    private record Planned(WorkAssignment assignment, double score) {
-    }
+    private record Planned(WorkAssignment assignment, double score) {}
 }

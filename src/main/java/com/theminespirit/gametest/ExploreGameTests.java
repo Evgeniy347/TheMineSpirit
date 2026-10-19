@@ -24,8 +24,7 @@ public final class ExploreGameTests {
     private static final long NIGHT = 13000L;
     private static final BlockPos HOME = new BlockPos(-30, 1, 1);
 
-    private ExploreGameTests() {
-    }
+    private ExploreGameTests() {}
 
     @GameTest(template = "arena", batch = "explore_survey", timeoutTicks = 400)
     public static void explore_IronOreInRadius_RemembersResourceAndReturnsToStart(GameTestHelper helper) {
@@ -33,22 +32,27 @@ public final class ExploreGameTests {
         helper.setBlock(ORE, Blocks.IRON_ORE);
         SpiritEntity spirit = MovementScene.spirit(helper, CENTER);
         BlockCoord ore = MovementScene.coord(helper, ORE);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
                 MovementScene.call("explore", Map.of("radius", RADIUS, "budget", BUDGET)),
                 MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "explore обязан обойти маршрут и вернуться: статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(spirit.memory().recallAll(MemoryType.RESOURCE).stream()
+            helper.assertTrue(
+                    spirit.memory().recallAll(MemoryType.RESOURCE).stream()
                             .anyMatch(point -> point.pos().equals(ore)),
                     "руда в радиусе обхода обязана попасть в память ресурсов: точка " + ore + ", память "
                             + spirit.memory().recallAll(MemoryType.RESOURCE));
             double distance = MovementScene.distanceTo(helper, spirit, CENTER);
-            helper.assertTrue(distance <= RETURN_TOLERANCE,
+            helper.assertTrue(
+                    distance <= RETURN_TOLERANCE,
                     "разведка обязана закончиться у точки старта, а дух в " + distance + " блоках от неё");
             MovementScene.finish(helper);
         });
@@ -62,20 +66,26 @@ public final class ExploreGameTests {
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 1));
         spirit.setHome(MovementScene.coord(helper, HOME));
         GameTestFixtures.holdDayTime(helper, NIGHT);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                MovementScene.call("explore", Map.of("radius", 3, "budget", 4)), MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                MovementScene.call("explore", Map.of("radius", 3, "budget", 4)),
+                MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "ночью разведка за границу поселения обязана быть отвергнута, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + "; "
                             + MovementScene.facts(helper, spirit, NIGHT));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("ночь: внешняя работа не назначается"),
+            helper.assertTrue(
+                    reason.contains("ночь: внешняя работа не назначается"),
                     "причина обязана называть ночной запрет, фактически: " + reason);
             double distance = MovementScene.distanceTo(helper, spirit, new BlockPos(1, 1, 1));
-            helper.assertTrue(distance <= RETURN_TOLERANCE,
+            helper.assertTrue(
+                    distance <= RETURN_TOLERANCE,
                     "отказанная разведка не двигает духа: расстояние от старта " + distance);
             MovementScene.finish(helper);
         });

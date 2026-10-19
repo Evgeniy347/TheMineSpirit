@@ -60,8 +60,12 @@ public final class SafeMineSession {
     private static final int FALL_WAIT_TICKS = 60;
     private static final String TORCH_BLOCK_ID = "minecraft:torch";
     private static final List<String> FILL_BLOCKS = List.of(
-            "minecraft:cobblestone", "minecraft:stone", "minecraft:dirt",
-            "minecraft:gravel", "minecraft:sand", "minecraft:oak_planks");
+            "minecraft:cobblestone",
+            "minecraft:stone",
+            "minecraft:dirt",
+            "minecraft:gravel",
+            "minecraft:sand",
+            "minecraft:oak_planks");
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -101,10 +105,10 @@ public final class SafeMineSession {
         BlockPos feet = spirit.blockPosition();
         BlockCoord entry = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         this.plan = switch (params.mode()) {
-            case STAIRCASE -> SafeMinePlan.staircase(safety, entry, params.direction(), params.y(),
-                    params.torchInterval());
-            case TUNNEL -> SafeMinePlan.tunnel(safety, entry, params.direction(), params.length(),
-                    params.torchInterval());
+            case STAIRCASE ->
+                SafeMinePlan.staircase(safety, entry, params.direction(), params.y(), params.torchInterval());
+            case TUNNEL ->
+                SafeMinePlan.tunnel(safety, entry, params.direction(), params.length(), params.torchInterval());
         };
     }
 
@@ -205,11 +209,10 @@ public final class SafeMineSession {
         state = State.PLAN_CHECK;
     }
 
-    private SafeMinePlan rebuild(BlockCoord entry, SafeMineMode mode, DescentDirection direction,
-            int torchInterval, int plannedSteps) {
+    private SafeMinePlan rebuild(
+            BlockCoord entry, SafeMineMode mode, DescentDirection direction, int torchInterval, int plannedSteps) {
         return switch (mode) {
-            case STAIRCASE -> SafeMinePlan.staircase(safety, entry, direction, entry.y() - plannedSteps,
-                    torchInterval);
+            case STAIRCASE -> SafeMinePlan.staircase(safety, entry, direction, entry.y() - plannedSteps, torchInterval);
             case TUNNEL -> SafeMinePlan.tunnel(safety, entry, direction, plannedSteps, torchInterval);
         };
     }
@@ -324,8 +327,7 @@ public final class SafeMineSession {
 
     private void breakTick() {
         switch (breaker.tick()) {
-            case BREAKING -> {
-            }
+            case BREAKING -> {}
             case BROKEN -> {
                 blocksDug++;
                 cellCursor++;
@@ -351,7 +353,9 @@ public final class SafeMineSession {
                 return;
             }
         }
-        BlockCoord ceiling = new BlockCoord(step.stand().x(), step.floor() + step.passage().size() + 1,
+        BlockCoord ceiling = new BlockCoord(
+                step.stand().x(),
+                step.floor() + step.passage().size() + 1,
                 step.stand().z());
         if (safety.cellAt(ceiling) == Cell.FALLING || fallingEntityAbove(step)) {
             if (fallWait >= FALL_WAIT_TICKS) {
@@ -366,8 +370,13 @@ public final class SafeMineSession {
     }
 
     private boolean fallingEntityAbove(SafeMineStep step) {
-        AABB column = new AABB(step.stand().x(), step.stand().y() - 1, step.stand().z(),
-                step.stand().x() + 1, step.stand().y() + 4, step.stand().z() + 1);
+        AABB column = new AABB(
+                step.stand().x(),
+                step.stand().y() - 1,
+                step.stand().z(),
+                step.stand().x() + 1,
+                step.stand().y() + 4,
+                step.stand().z() + 1);
         return !level.getEntitiesOfClass(FallingBlockEntity.class, column).isEmpty();
     }
 
@@ -392,11 +401,15 @@ public final class SafeMineSession {
             approachBegun = true;
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
-                collector = new DropCollector(spirit, IdFilter.matchAll(), step.stand(), COLLECT_RADIUS,
-                        PickupTuning.DEFAULT, OverflowMode.BY_VALUE);
+                collector = new DropCollector(
+                        spirit,
+                        IdFilter.matchAll(),
+                        step.stand(),
+                        COLLECT_RADIUS,
+                        PickupTuning.DEFAULT,
+                        OverflowMode.BY_VALUE);
                 state = State.COLLECT;
             }
             case STUCK, TIMEOUT -> {
@@ -485,10 +498,12 @@ public final class SafeMineSession {
     private static int number(Map<String, Object> map, String key) {
         Object value = map.get(key);
         if (value == null) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' отсутствует: без него проходку не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' отсутствует: без него проходку не восстановить");
         }
         if (!(value instanceof Number number)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть числом: иначе проходку не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть числом: иначе проходку не восстановить");
         }
         return number.intValue();
     }
@@ -496,7 +511,8 @@ public final class SafeMineSession {
     private static String text(Map<String, Object> map, String key) {
         Object value = map.get(key);
         if (!(value instanceof String text)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть строкой: иначе проходку не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть строкой: иначе проходку не восстановить");
         }
         return text;
     }

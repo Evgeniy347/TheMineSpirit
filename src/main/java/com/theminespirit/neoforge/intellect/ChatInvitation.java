@@ -14,8 +14,7 @@ import org.slf4j.Logger;
 public final class ChatInvitation {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private ChatInvitation() {
-    }
+    private ChatInvitation() {}
 
     public static int send(ServerLevel level, SpiritEntity inviter, UUID expedition, int teamSize) {
         if (level == null || inviter == null || expedition == null) {
@@ -24,18 +23,18 @@ public final class ChatInvitation {
         }
         String id = expedition.toString();
         Component message = Component.literal("<" + inviter.getDisplayName().getString()
-                + "> Нужна помощь в шахте! Команда " + teamSize + " духа ждёт решения. ")
+                        + "> Нужна помощь в шахте! Команда " + teamSize + " духа ждёт решения. ")
                 .append(Component.literal("[Иду с вами]")
-                        .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                "/spirit invite " + id + " join"))))
+                        .setStyle(Style.EMPTY.withClickEvent(
+                                new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/spirit invite " + id + " join"))))
                 .append(Component.literal(" "))
                 .append(Component.literal("[Подождите, я собираюсь (+60 с)]")
-                        .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                "/spirit invite " + id + " wait"))))
+                        .setStyle(Style.EMPTY.withClickEvent(
+                                new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/spirit invite " + id + " wait"))))
                 .append(Component.literal(" "))
                 .append(Component.literal("[Идите без меня]")
-                        .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-                                "/spirit invite " + id + " go"))));
+                        .setStyle(Style.EMPTY.withClickEvent(
+                                new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/spirit invite " + id + " go"))));
         int heard = 0;
         for (ServerPlayer player : level.players()) {
             if (player.distanceTo(inviter) > CatalogLimits.SAY_HEARING_RADIUS) {
@@ -44,8 +43,12 @@ public final class ChatInvitation {
             player.sendSystemMessage(message);
             heard++;
         }
-        LOGGER.info("Дух {} зовёт в шахту команду {} в радиусе {}: слышат {} игроков",
-                inviter.getDisplayName().getString(), teamSize, CatalogLimits.SAY_HEARING_RADIUS, heard);
+        LOGGER.info(
+                "Дух {} зовёт в шахту команду {} в радиусе {}: слышат {} игроков",
+                inviter.getDisplayName().getString(),
+                teamSize,
+                CatalogLimits.SAY_HEARING_RADIUS,
+                heard);
         return heard;
     }
 }

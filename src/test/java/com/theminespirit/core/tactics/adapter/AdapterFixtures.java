@@ -25,8 +25,7 @@ final class AdapterFixtures {
     static final double FAR = EnvFacts.FAR_DISTANCE;
     static final double RADIUS = TacticsAdapterSettings.defaults().factRadius();
 
-    private AdapterFixtures() {
-    }
+    private AdapterFixtures() {}
 
     static SelfFacts self() {
         return new SelfFacts(new Point(0, 0, 0), 20, 20, 0, 6, 0.3, 1, 0, 0, false, 0, 0);
@@ -57,13 +56,30 @@ final class AdapterFixtures {
     }
 
     static TacticalOutcome outcome(TacticalOption option, TacticalAction action, RetreatMethod method) {
-        return new TacticalOutcome(option, action, method, false, TacticalState.CALM, CombatMode.AGGRESSIVE,
-                Optional.empty(), trace(), TacticsMemory.initial(CombatMode.AGGRESSIVE, 0, 1));
+        return new TacticalOutcome(
+                option,
+                action,
+                method,
+                false,
+                TacticalState.CALM,
+                CombatMode.AGGRESSIVE,
+                Optional.empty(),
+                trace(),
+                TacticsMemory.initial(CombatMode.AGGRESSIVE, 0, 1));
     }
 
     static Trace trace() {
-        return new Trace("score", HoldStatus.NONE, List.of(), Map.of(), List.of(), "action", Optional.empty(),
-                Optional.empty(), Optional.empty(), "");
+        return new Trace(
+                "score",
+                HoldStatus.NONE,
+                List.of(),
+                Map.of(),
+                List.of(),
+                "action",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                "");
     }
 
     static SituationContext context(List<EnemyFact> enemies) {
@@ -84,8 +100,8 @@ final class AdapterFixtures {
 
     static Situation tiredCollect(List<EnemyFact> enemies, double hpFraction, double armor) {
         SelfFacts self = tired(hpFraction, armor);
-        return CoreFactCollector.withDefaultSettings().collect(new SituationContext(self, enemies,
-                env(TimeOfDay.DAY), orders(CombatMode.AGGRESSIVE), 0, 0));
+        return CoreFactCollector.withDefaultSettings()
+                .collect(new SituationContext(self, enemies, env(TimeOfDay.DAY), orders(CombatMode.AGGRESSIVE), 0, 0));
     }
 
     static List<EnemyFact> many(String type, int count, double from) {

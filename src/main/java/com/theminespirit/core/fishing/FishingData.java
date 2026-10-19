@@ -11,8 +11,7 @@ import java.util.Set;
  * предел рыбы в вёдрах за один заход ({@code bucketCount}) и порог рыбы для коптильни
  * ({@code smokerFish}). Читается из {@code fishing.json} датапака мира и перечитывается по /reload.
  */
-public record FishingData(int minWidth, int minDepth, int workWidth, int workDepth, int bucketCount,
-        int smokerFish) {
+public record FishingData(int minWidth, int minDepth, int workWidth, int workDepth, int bucketCount, int smokerFish) {
     public static final String RESOURCE = "data/theminespirit/fishing/fishing.json";
 
     public static final int MIN_WIDTH_MIN = 2;
@@ -29,28 +28,51 @@ public record FishingData(int minWidth, int minDepth, int workWidth, int workDep
     public static final int SMOKER_FISH_MAX = 256;
     public static final int SMOKER_FISH_DEFAULT = 16;
 
-    private static final Set<String> FIELDS = Set.of("minWidth", "minDepth", "workWidth", "workDepth",
-            "bucketCount", "smokerFish");
-    private static final FishingData DEFAULTS = new FishingData(2, 1, WORK_WIDTH_DEFAULT, WORK_DEPTH_DEFAULT,
-            BUCKET_COUNT_DEFAULT, SMOKER_FISH_DEFAULT);
+    private static final Set<String> FIELDS =
+            Set.of("minWidth", "minDepth", "workWidth", "workDepth", "bucketCount", "smokerFish");
+    private static final FishingData DEFAULTS =
+            new FishingData(2, 1, WORK_WIDTH_DEFAULT, WORK_DEPTH_DEFAULT, BUCKET_COUNT_DEFAULT, SMOKER_FISH_DEFAULT);
 
     public FishingData(int minWidth, int minDepth) {
-        this(minWidth, minDepth, WORK_WIDTH_DEFAULT, WORK_DEPTH_DEFAULT, BUCKET_COUNT_DEFAULT,
-                SMOKER_FISH_DEFAULT);
+        this(minWidth, minDepth, WORK_WIDTH_DEFAULT, WORK_DEPTH_DEFAULT, BUCKET_COUNT_DEFAULT, SMOKER_FISH_DEFAULT);
     }
 
     public FishingData {
-        checkWater("Сторона открытой воды", minWidth, MIN_WIDTH_MIN, MIN_WIDTH_MAX,
+        checkWater(
+                "Сторона открытой воды",
+                minWidth,
+                MIN_WIDTH_MIN,
+                MIN_WIDTH_MAX,
                 "уже 2x2 дух не забросит удочку, шире 8x8 рыбалка ищет море вместо пруда");
-        checkWater("Глубина открытой воды", minDepth, MIN_DEPTH_MIN, MIN_DEPTH_MAX,
+        checkWater(
+                "Глубина открытой воды",
+                minDepth,
+                MIN_DEPTH_MIN,
+                MIN_DEPTH_MAX,
                 "на мели нет рыбы, а глубже 8 блоков вода уже не пруд");
-        checkWater("Сторона рабочей точки", workWidth, MIN_WIDTH_MIN, MIN_WIDTH_MAX,
+        checkWater(
+                "Сторона рабочей точки",
+                workWidth,
+                MIN_WIDTH_MIN,
+                MIN_WIDTH_MAX,
                 "рабочая точка ставится у открытой воды того же порядка, что и разовая ловля");
-        checkWater("Глубина рабочей точки", workDepth, MIN_DEPTH_MIN, MIN_DEPTH_MAX,
+        checkWater(
+                "Глубина рабочей точки",
+                workDepth,
+                MIN_DEPTH_MIN,
+                MIN_DEPTH_MAX,
                 "рабочая точка ставится у открытой воды того же порядка, что и разовая ловля");
-        checkCount("Предел рыбы в вёдрах", bucketCount, BUCKET_COUNT_MIN, BUCKET_COUNT_MAX,
+        checkCount(
+                "Предел рыбы в вёдрах",
+                bucketCount,
+                BUCKET_COUNT_MIN,
+                BUCKET_COUNT_MAX,
                 "за один заход ведром ловят 1..64 рыбы, иначе запас ведёрной рыбы неограничен");
-        checkCount("Порог рыбы для коптильни", smokerFish, SMOKER_FISH_MIN, SMOKER_FISH_MAX,
+        checkCount(
+                "Порог рыбы для коптильни",
+                smokerFish,
+                SMOKER_FISH_MIN,
+                SMOKER_FISH_MAX,
                 "коптильню крафтят, когда сырой рыбы набралось на этот порог");
     }
 
@@ -88,15 +110,15 @@ public record FishingData(int minWidth, int minDepth, int workWidth, int workDep
 
     private static void checkWater(String name, int value, int min, int max, String why) {
         if (value < min || value > max) {
-            throw new IllegalArgumentException(name + " " + value + " вне диапазона [" + min + ", " + max
-                    + "]: " + why);
+            throw new IllegalArgumentException(
+                    name + " " + value + " вне диапазона [" + min + ", " + max + "]: " + why);
         }
     }
 
     private static void checkCount(String name, int value, int min, int max, String why) {
         if (value < min || value > max) {
-            throw new IllegalArgumentException(name + " " + value + " вне диапазона [" + min + ", " + max
-                    + "]: " + why);
+            throw new IllegalArgumentException(
+                    name + " " + value + " вне диапазона [" + min + ", " + max + "]: " + why);
         }
     }
 }

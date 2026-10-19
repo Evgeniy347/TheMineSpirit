@@ -18,16 +18,16 @@ public record SpiritHome(Optional<BlockCoord> point) {
     }
 
     public static SpiritHome at(BlockCoord point) {
-        return new SpiritHome(Optional.of(Objects.requireNonNull(point,
-                "Дом духа без координаты не ставится: без точки дом некуда вести")));
+        return new SpiritHome(Optional.of(
+                Objects.requireNonNull(point, "Дом духа без координаты не ставится: без точки дом некуда вести")));
     }
 
     public boolean isSet() {
         return point.isPresent();
     }
 
-    public static SpiritHome resolve(Optional<SpiritHome> stored, List<MemoryPoint> memories, String dimension,
-            BlockCoord self) {
+    public static SpiritHome resolve(
+            Optional<SpiritHome> stored, List<MemoryPoint> memories, String dimension, BlockCoord self) {
         Objects.requireNonNull(stored, "Сохранённый дом не может быть null: нет дома — Optional.empty()");
         Objects.requireNonNull(memories, "Память духа не может быть null: легаси-точки переносятся из неё");
         Objects.requireNonNull(dimension, "Измерение не может быть null: дом ищется только в текущем мире");

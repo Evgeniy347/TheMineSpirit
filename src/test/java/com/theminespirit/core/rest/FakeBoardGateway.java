@@ -53,9 +53,18 @@ final class FakeBoardGateway implements BoardGateway {
         String id = ID_PREFIX + request.requestId();
         lastRequest = request;
         submits.add(id);
-        BoardTask task = new BoardTask(id, request.boardCase().name(), 50,
-                request.assignee().map(UUID::toString).orElse(null), "PENDING", request.requiredItems(),
-                Map.of(), request.dependsOn(), 0, request.level(), request.cause());
+        BoardTask task = new BoardTask(
+                id,
+                request.boardCase().name(),
+                50,
+                request.assignee().map(UUID::toString).orElse(null),
+                "PENDING",
+                request.requiredItems(),
+                Map.of(),
+                request.dependsOn(),
+                0,
+                request.level(),
+                request.cause());
         tasks.put(id, task);
         return task;
     }
@@ -64,14 +73,24 @@ final class FakeBoardGateway implements BoardGateway {
     public BoardTask cancel(String ticketId) {
         BoardTask task = tasks.get(ticketId);
         if (task == null) {
-            throw new ApiException(ErrorCode.NOT_FOUND,
+            throw new ApiException(
+                    ErrorCode.NOT_FOUND,
                     "Задание доски '" + ticketId + "' не найдено: список заданий — GET /v1/board",
                     Map.of("id", ticketId));
         }
         cancels.add(ticketId);
-        BoardTask cancelled = new BoardTask(task.id(), task.boardCase(), task.priority(), task.assignee(),
-                "CANCELLED", task.requiredItems(), task.missing(), task.dependsOn(), task.createdAt(),
-                task.level(), task.cause());
+        BoardTask cancelled = new BoardTask(
+                task.id(),
+                task.boardCase(),
+                task.priority(),
+                task.assignee(),
+                "CANCELLED",
+                task.requiredItems(),
+                task.missing(),
+                task.dependsOn(),
+                task.createdAt(),
+                task.level(),
+                task.cause());
         tasks.put(ticketId, cancelled);
         return cancelled;
     }

@@ -22,14 +22,13 @@ public final class SettlementExperience extends SavedData {
 
     private int pending;
 
-    private SettlementExperience() {
-    }
+    private SettlementExperience() {}
 
     public static SettlementExperience get(MinecraftServer server) {
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) {
-            throw new IllegalStateException("Уровень Верхнего мира не найден: пул опыта поселения хранится там, "
-                    + "а его нет у сервера");
+            throw new IllegalStateException(
+                    "Уровень Верхнего мира не найден: пул опыта поселения хранится там, " + "а его нет у сервера");
         }
         return overworld.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
     }
@@ -52,8 +51,8 @@ public final class SettlementExperience extends SavedData {
 
     public int add(int amount) {
         if (amount < 0) {
-            throw new IllegalArgumentException("Опыт " + amount + " отрицательный: в пул кладут только "
-                    + "положительный опыт");
+            throw new IllegalArgumentException(
+                    "Опыт " + amount + " отрицательный: в пул кладут только " + "положительный опыт");
         }
         if (amount > 0) {
             pending += amount;

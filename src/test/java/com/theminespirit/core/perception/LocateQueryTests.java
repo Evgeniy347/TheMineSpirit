@@ -36,10 +36,11 @@ class LocateQueryTests {
 
     @ParameterizedTest(name = "{0} {1} вид={2} r={3} -> принят={4}")
     @MethodSource("queries")
-    void constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent(LocateType type, List<String> patterns,
-            String species, int radius, boolean accepted) {
+    void constructor_TypeFilterSpeciesRadius_AcceptedOnlyWhenConsistent(
+            LocateType type, List<String> patterns, String species, int radius, boolean accepted) {
         if (!accepted) {
-            assertThrows(IllegalArgumentException.class,
+            assertThrows(
+                    IllegalArgumentException.class,
                     () -> new LocateQuery(type, IdFilter.of(patterns), species, new ScanRadius(radius)),
                     "поиск " + type + " с фильтром " + patterns + ", видом '" + species + "' и радиусом " + radius
                             + " обязан отклоняться: иначе скрипт поиска получит параметр, который не применит");
@@ -50,7 +51,9 @@ class LocateQueryTests {
         assertEquals(type, query.type(), "тип поиска обязан сохраняться как задан: по нему скрипт выбирает поисковик");
         assertEquals(species, query.species(), "вид дерева обязан сохраняться как задан");
         assertEquals(radius, query.radius().value(), "радиус поиска обязан сохраняться как задан");
-        assertEquals(IdFilter.of(patterns).patterns(), query.filter().patterns(),
+        assertEquals(
+                IdFilter.of(patterns).patterns(),
+                query.filter().patterns(),
                 "фильтр поиска обязан сохраняться как задан: иначе поиск вернёт не тот блок");
     }
 
@@ -71,7 +74,9 @@ class LocateQueryTests {
 
     @Test
     void anySpecies_Constant_IsLowercaseAny() {
-        assertEquals("any", LocateQuery.ANY_SPECIES,
+        assertEquals(
+                "any",
+                LocateQuery.ANY_SPECIES,
                 "значение по умолчанию для вида дерева обязано быть any: так его называет каталог скриптов");
     }
 }

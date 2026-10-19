@@ -20,20 +20,22 @@ public final class FallbackPlanner implements Planner {
     private static final String SPEAKER = "speaker";
 
     private static final List<Rule> RULES = List.of(
-            new Rule(List.of("сруб", "дерев"), List.of(
-                    new Step("scan", List.of("radius"), Map.of("filter", List.of("*_log"))),
-                    new Step("chop_tree", List.of("species", "count"), Map.of()))),
-            new Rule(List.of("руд", "шахт"), List.of(
-                    new Step("scan", List.of("radius"), Map.of("filter", List.of("*_ore"))),
-                    new Step("mine_vein", List.of("ore", "count"), Map.of()))),
-            new Rule(List.of("следу", "за мной"), List.of(
-                    new Step("follow", List.of("radius", "target"), Map.of(SPEAKER, "target"), Map.of()))),
-            new Rule(List.of("домой", "верни"), List.of(
-                    new Step("return_home", List.of(), Map.of()))),
-            new Rule(List.of("разгруз", "склад", "сложи"), List.of(
-                    new Step("unload", List.of(), Map.of()))),
-            new Rule(List.of("атак", "убей"), List.of(
-                    new Step("attack", List.of("target"), Map.of()))));
+            new Rule(
+                    List.of("сруб", "дерев"),
+                    List.of(
+                            new Step("scan", List.of("radius"), Map.of("filter", List.of("*_log"))),
+                            new Step("chop_tree", List.of("species", "count"), Map.of()))),
+            new Rule(
+                    List.of("руд", "шахт"),
+                    List.of(
+                            new Step("scan", List.of("radius"), Map.of("filter", List.of("*_ore"))),
+                            new Step("mine_vein", List.of("ore", "count"), Map.of()))),
+            new Rule(
+                    List.of("следу", "за мной"),
+                    List.of(new Step("follow", List.of("radius", "target"), Map.of(SPEAKER, "target"), Map.of()))),
+            new Rule(List.of("домой", "верни"), List.of(new Step("return_home", List.of(), Map.of()))),
+            new Rule(List.of("разгруз", "склад", "сложи"), List.of(new Step("unload", List.of(), Map.of()))),
+            new Rule(List.of("атак", "убей"), List.of(new Step("attack", List.of("target"), Map.of()))));
 
     private final ScriptCatalog scripts;
     private final ConditionCatalog conditions;
@@ -44,15 +46,16 @@ public final class FallbackPlanner implements Planner {
 
     public FallbackPlanner(ScriptCatalog scripts, ConditionCatalog conditions) {
         this.scripts = Objects.requireNonNull(scripts, "scripts не может быть null: план валидируется по каталогу");
-        this.conditions = Objects.requireNonNull(conditions,
-                "conditions не может быть null: каталог проверок обязателен");
+        this.conditions =
+                Objects.requireNonNull(conditions, "conditions не может быть null: каталог проверок обязателен");
     }
 
     @Override
     public PlanResult plan(Goal goal, WorldObservation observation) {
         Objects.requireNonNull(goal, "goal не может быть null: без текста цели сценарий не выбрать");
-        Rule rule = match(goal.text()).orElseThrow(() -> new UnplannableGoalException("Цель '" + goal.text()
-                + "' не распознана: измените формулировку или передайте её ИИ-планировщику"));
+        Rule rule = match(goal.text())
+                .orElseThrow(() -> new UnplannableGoalException("Цель '" + goal.text()
+                        + "' не распознана: измените формулировку или передайте её ИИ-планировщику"));
         TaskNode validated = PlanValidator.validate(build(rule, goal), scripts, conditions);
         return new PlanResult(validated, PlanSource.FALLBACK, Optional.empty());
     }
@@ -78,7 +81,8 @@ public final class FallbackPlanner implements Planner {
 
     public static boolean requiresPlayerSource(String text) {
         return match(text)
-                .map(rule -> rule.steps().stream().anyMatch(step -> step.renamed().containsKey(SPEAKER)))
+                .map(rule ->
+                        rule.steps().stream().anyMatch(step -> step.renamed().containsKey(SPEAKER)))
                 .orElse(false);
     }
 
@@ -139,8 +143,7 @@ public final class FallbackPlanner implements Planner {
         return tokens;
     }
 
-    private record Rule(List<String> stems, List<Step> steps) {
-    }
+    private record Rule(List<String> stems, List<Step> steps) {}
 
     private record Step(String script, List<String> sameName, Map<String, String> renamed, Map<String, Object> fixed) {
         private Step(String script, List<String> sameName, Map<String, Object> fixed) {

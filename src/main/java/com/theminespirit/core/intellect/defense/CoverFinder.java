@@ -7,8 +7,7 @@ import java.util.Optional;
 public final class CoverFinder {
     private static final double TIE = 1e-9;
 
-    private CoverFinder() {
-    }
+    private CoverFinder() {}
 
     public static Optional<Point> between(Point self, Point threat, List<Point> blockers, double corridor) {
         if (self == null) {
@@ -51,9 +50,11 @@ public final class CoverFinder {
                 continue;
             }
             double along = Math.sqrt(rx * rx + ry * ry + rz * rz);
-            if (best == null || across < bestAcross - TIE || (Math.abs(across - bestAcross) <= TIE
-                    && (along < bestAlong - TIE
-                            || (Math.abs(along - bestAlong) <= TIE && before(blocker, best))))) {
+            if (best == null
+                    || across < bestAcross - TIE
+                    || (Math.abs(across - bestAcross) <= TIE
+                            && (along < bestAlong - TIE
+                                    || (Math.abs(along - bestAlong) <= TIE && before(blocker, best))))) {
                 best = blocker;
                 bestAcross = across;
                 bestAlong = along;

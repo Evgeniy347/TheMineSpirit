@@ -102,15 +102,19 @@ final class SchematicSite {
         return second == null || matches(second);
     }
 
-    private static Optional<Schematic.PlacedEntry> firstPartOf(Schematic.PlacedEntry second,
-            Map<BlockCoord, Schematic.PlacedEntry> byCell) {
+    private static Optional<Schematic.PlacedEntry> firstPartOf(
+            Schematic.PlacedEntry second, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
         BlockCoord at = second.pos();
-        List<BlockCoord> neighbours = List.of(new BlockCoord(at.x(), at.y() - 1, at.z()),
-                new BlockCoord(at.x() + 1, at.y(), at.z()), new BlockCoord(at.x() - 1, at.y(), at.z()),
-                new BlockCoord(at.x(), at.y(), at.z() + 1), new BlockCoord(at.x(), at.y(), at.z() - 1));
+        List<BlockCoord> neighbours = List.of(
+                new BlockCoord(at.x(), at.y() - 1, at.z()),
+                new BlockCoord(at.x() + 1, at.y(), at.z()),
+                new BlockCoord(at.x() - 1, at.y(), at.z()),
+                new BlockCoord(at.x(), at.y(), at.z() + 1),
+                new BlockCoord(at.x(), at.y(), at.z() - 1));
         for (BlockCoord cell : neighbours) {
             Schematic.PlacedEntry candidate = byCell.get(cell);
-            if (candidate != null && candidate.block().equals(second.block())
+            if (candidate != null
+                    && candidate.block().equals(second.block())
                     && !SchematicBlocks.isSecondaryPart(candidate.block(), candidate.state())) {
                 return Optional.of(candidate);
             }
@@ -150,7 +154,9 @@ final class SchematicSite {
         }
         for (Schematic.PlacedEntry entry : entries) {
             BlockState current = level.getBlockState(toPos(entry.pos()));
-            if (current.isAir() || current.canBeReplaced() || current.is(wanted(entry).getBlock())) {
+            if (current.isAir()
+                    || current.canBeReplaced()
+                    || current.is(wanted(entry).getBlock())) {
                 continue;
             }
             cells.add(entry.pos());

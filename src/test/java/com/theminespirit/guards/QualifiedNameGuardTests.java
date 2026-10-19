@@ -22,7 +22,9 @@ class QualifiedNameGuardTests {
         collect(SourceFiles.javaUnder(SourceFiles.MAIN), offenders);
         collect(SourceFiles.javaUnder(SourceFiles.TEST), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Полное имя класса в коде (net.minecraft.world.entity.EntityType.getKey(...), "
                         + "com.mojang.brigadier.CommandDispatcher<...>) прячет зависимости файла: по импортам больше "
                         + "не видно, с чем он работает, а строки разрастаются. Импортируй тип. Если два типа с "
@@ -34,7 +36,9 @@ class QualifiedNameGuardTests {
     void qualifiedNamePattern_TypeUsedInCode_IsReported() {
         String sample = "        String type = net.minecraft.world.entity.EntityType.getKey(entity.getType());\n";
 
-        assertEquals(List.of("1 net.minecraft.world.entity.EntityType"), qualifiedNames(sample),
+        assertEquals(
+                List.of("1 net.minecraft.world.entity.EntityType"),
+                qualifiedNames(sample),
                 "Сторож ослеп: полное имя типа в строке кода должно находиться");
     }
 
@@ -44,7 +48,9 @@ class QualifiedNameGuardTests {
                 + "        String hint = \"см. net.minecraft.world.entity.EntityType\";\n"
                 + "        // net.minecraft.world.entity.EntityType упомянут в комментарии\n";
 
-        assertEquals(List.of(), qualifiedNames(sample),
+        assertEquals(
+                List.of(),
+                qualifiedNames(sample),
                 "Сторож ложно срабатывает: импорт, строковый литерал и комментарий — не использование в коде");
     }
 
@@ -64,7 +70,9 @@ class QualifiedNameGuardTests {
             if (line.startsWith("import ") || line.startsWith("package ")) {
                 continue;
             }
-            String code = LINE_COMMENT.matcher(STRING_LITERAL.matcher(lines[i]).replaceAll("\"\"")).replaceAll("");
+            String code = LINE_COMMENT
+                    .matcher(STRING_LITERAL.matcher(lines[i]).replaceAll("\"\""))
+                    .replaceAll("");
             Matcher matcher = QUALIFIED_TYPE.matcher(code);
             while (matcher.find()) {
                 found.add((i + 1) + " " + matcher.group());

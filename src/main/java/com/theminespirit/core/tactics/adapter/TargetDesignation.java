@@ -8,8 +8,7 @@ import java.util.Optional;
 public final class TargetDesignation {
     private static final IntentActionExecutor INTENT = new IntentActionExecutor();
 
-    private TargetDesignation() {
-    }
+    private TargetDesignation() {}
 
     public static Optional<EnemyFact> pick(TacticalOutcome outcome, SituationContext context) {
         if (outcome == null || context == null) {

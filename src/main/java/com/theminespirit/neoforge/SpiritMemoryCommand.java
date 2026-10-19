@@ -23,8 +23,7 @@ final class SpiritMemoryCommand {
     private static final String NAME = "name";
     private static final String TYPE = "type";
 
-    private SpiritMemoryCommand() {
-    }
+    private SpiritMemoryCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("memory")
@@ -75,7 +74,8 @@ final class SpiritMemoryCommand {
         }
         StringBuilder text = new StringBuilder();
         for (SpiritEntity spirit : spirits) {
-            MemoryOutcome outcome = call.apply(spirit.memory(), spirit.level().dimension().location().toString());
+            MemoryOutcome outcome = call.apply(
+                    spirit.memory(), spirit.level().dimension().location().toString());
             spirit.updateMemory(outcome.store());
             if (!text.isEmpty()) {
                 text.append('\n');

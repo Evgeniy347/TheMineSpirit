@@ -72,8 +72,7 @@ public final class SpiritTargets {
             Map.entry("minecraft:zombie", Condition.ALWAYS),
             Map.entry("minecraft:zombie_villager", Condition.ALWAYS));
 
-    private SpiritTargets() {
-    }
+    private SpiritTargets() {}
 
     public static boolean attacksSpirits(String entityTypeId) {
         return conditionFor(entityTypeId).isPresent();
@@ -81,8 +80,8 @@ public final class SpiritTargets {
 
     public static Optional<Condition> conditionFor(String entityTypeId) {
         if (entityTypeId == null || entityTypeId.isBlank()) {
-            throw new IllegalArgumentException("entityTypeId пуст: тип моба называется его id, "
-                    + "например minecraft:zombie");
+            throw new IllegalArgumentException(
+                    "entityTypeId пуст: тип моба называется его id, " + "например minecraft:zombie");
         }
         return Optional.ofNullable(RULES.get(entityTypeId));
     }

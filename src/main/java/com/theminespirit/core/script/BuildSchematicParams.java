@@ -7,7 +7,8 @@ import java.util.Objects;
 public record BuildSchematicParams(String file, int x, int y, int z, BuildRotation rotation) {
     public BuildSchematicParams {
         if (file == null || file.isBlank()) {
-            throw new IllegalArgumentException("Не задан файл для build_schematic: без него скрипт не знает, что строить");
+            throw new IllegalArgumentException(
+                    "Не задан файл для build_schematic: без него скрипт не знает, что строить");
         }
         BuildingCoords.checkX(x);
         BuildingCoords.checkY(y);

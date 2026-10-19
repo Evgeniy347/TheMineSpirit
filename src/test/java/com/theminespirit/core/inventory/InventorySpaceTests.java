@@ -13,7 +13,8 @@ class InventorySpaceTests {
         List<Stack> inventory = List.of();
         Stack incoming = new Stack("cobblestone", 0, 10, 64);
 
-        assertTrue(InventorySpace.holds(inventory, incoming),
+        assertTrue(
+                InventorySpace.holds(inventory, incoming),
                 "Пустой инвентарь обязан вмещать стопку: правило «не выкидывать» начинается с проверки места, "
                         + "и пустой инвентарь место имеет");
     }
@@ -28,7 +29,8 @@ class InventorySpaceTests {
         }
         Stack incoming = new Stack("cobblestone", 0, 1, 64);
 
-        assertFalse(InventorySpace.holds(full, incoming),
+        assertFalse(
+                InventorySpace.holds(full, incoming),
                 "Полный инвентарь не обязан вмещать ещё один предмет: иначе дух выбросил бы стопку, "
                         + "нарушая политику «не выкидывать предметы»");
     }
@@ -42,7 +44,8 @@ class InventorySpaceTests {
         }
         Stack incoming = new Stack("cobblestone", 0, 1, 64);
 
-        assertTrue(InventorySpace.holds(inventory, incoming),
+        assertTrue(
+                InventorySpace.holds(inventory, incoming),
                 "Частичная стопка булыжника обязана принять один предмет в тот же слот: место есть, "
                         + "иначе отказ был бы ложным");
     }
@@ -54,11 +57,10 @@ class InventorySpaceTests {
             inventory.add(new Stack("cobblestone", 0, 64, 64));
         }
         inventory.add(new Stack("cobblestone", 0, 63, 64));
-        List<Stack> incoming = List.of(
-                new Stack("cobblestone", 0, 1, 64),
-                new Stack("cobblestone", 0, 1, 64));
+        List<Stack> incoming = List.of(new Stack("cobblestone", 0, 1, 64), new Stack("cobblestone", 0, 1, 64));
 
-        assertFalse(InventorySpace.holds(inventory, incoming),
+        assertFalse(
+                InventorySpace.holds(inventory, incoming),
                 "Двух предметов при одном свободном месте не влезает: проверка обязана учитывать весь набор, "
                         + "а не только первый");
     }

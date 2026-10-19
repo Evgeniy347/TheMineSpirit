@@ -9,11 +9,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import net.jqwik.api.Arbitraries;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
-import net.jqwik.api.Arbitrary;
-import net.jqwik.api.Arbitraries;
 
 class ActivityCatalogProperties {
     private static final class FixedActivity implements Activity {
@@ -59,10 +59,13 @@ class ActivityCatalogProperties {
     void ordered_AnyCatalog_SortedByActivityId(@ForAll("catalogs") ActivityCatalog catalog) {
         List<Activity> ordered = catalog.ordered();
 
-        assertEquals(catalog.forChild(false).size(), ordered.size(),
+        assertEquals(
+                catalog.forChild(false).size(),
+                ordered.size(),
                 "Обход отдаёт каждую деятельность каталога ровно раз: иначе часть работ не получит спроса");
         for (int index = 1; index < ordered.size(); index++) {
-            assertTrue(ordered.get(index - 1).id().compareTo(ordered.get(index).id()) < 0,
+            assertTrue(
+                    ordered.get(index - 1).id().compareTo(ordered.get(index).id()) < 0,
                     "Обход каталога упорядочен по ActivityId: иначе порядок спроса зависит от hash карты");
         }
     }

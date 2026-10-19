@@ -8,8 +8,7 @@ import java.util.Optional;
 public final class HerdSafety {
     public static final double MOTHER_WATCH_RADIUS = 2.0;
 
-    private HerdSafety() {
-    }
+    private HerdSafety() {}
 
     public static Optional<String> dangerReason(Hazards hazards) {
         if (hazards.inLava()) {
@@ -28,7 +27,9 @@ public final class HerdSafety {
         Objects.requireNonNull(target, "Цель не может быть null: неизвестно, рядом с кем ищут детёныша");
         Objects.requireNonNull(herd, "Снимок стада не может быть null: пустое стадо задают пустым списком");
         for (AnimalRef animal : herd) {
-            if (animal.baby() && animal.species() == target.species() && !animal.id().equals(target.id())
+            if (animal.baby()
+                    && animal.species() == target.species()
+                    && !animal.id().equals(target.id())
                     && distanceSquared(target.pos(), animal.pos()) <= MOTHER_WATCH_RADIUS * MOTHER_WATCH_RADIUS) {
                 return true;
             }
@@ -43,6 +44,5 @@ public final class HerdSafety {
         return (double) dx * dx + dy * dy + dz * dz;
     }
 
-    public record Hazards(boolean inLava, boolean onFire, boolean inWater) {
-    }
+    public record Hazards(boolean inLava, boolean onFire, boolean inWater) {}
 }

@@ -23,10 +23,16 @@ public final class ActivityAssigner {
     private final ActivityCatalog catalog;
 
     public ActivityAssigner() {
-        this(ActivityCatalog.adultsOnly(
-                List.of(new ChopActivity(), new FarmActivity(), new ForageActivity(), new MineActivity(),
-                        new RestActivity(), new DefendActivity(), new UnloadActivity(),
-                        new SmeltActivity(), new CraftActivity())));
+        this(ActivityCatalog.adultsOnly(List.of(
+                new ChopActivity(),
+                new FarmActivity(),
+                new ForageActivity(),
+                new MineActivity(),
+                new RestActivity(),
+                new DefendActivity(),
+                new UnloadActivity(),
+                new SmeltActivity(),
+                new CraftActivity())));
     }
 
     public ActivityAssigner(ActivityCatalog catalog) {
@@ -55,12 +61,16 @@ public final class ActivityAssigner {
         for (SpiritSnapshot spirit : view.spirits()) {
             present.add(spirit.id());
         }
-        List<UUID> dropped = ledger.all().stream().map(ActivityAssignment::spirit)
-                .filter(id -> !present.contains(id)).sorted().toList();
+        List<UUID> dropped = ledger.all().stream()
+                .map(ActivityAssignment::spirit)
+                .filter(id -> !present.contains(id))
+                .sorted()
+                .toList();
         List<ActivityAssignment> assignments = new ArrayList<>();
         Map<ActivityId, Integer> taken = new EnumMap<>(ActivityId.class);
         int defenders = 0;
-        int defendersNeeded = Math.min(view.threats(), IntellectTuning.loadDefault().maxFighters());
+        int defendersNeeded =
+                Math.min(view.threats(), IntellectTuning.loadDefault().maxFighters());
         for (SpiritSnapshot spirit : view.spirits()) {
             Optional<ActivityAssignment> current = ledger.of(spirit.id());
             if (current.isEmpty() && spirit.workTarget().isPresent()) {
@@ -71,7 +81,9 @@ public final class ActivityAssigner {
             if (chosen == null) {
                 continue;
             }
-            long since = current.isPresent() && current.get().activity() == chosen ? current.get().since() : now;
+            long since = current.isPresent() && current.get().activity() == chosen
+                    ? current.get().since()
+                    : now;
             assignments.add(new ActivityAssignment(spirit.id(), chosen, since, demandById.get(chosen)));
             taken.merge(chosen, 1, Integer::sum);
             if (chosen == ActivityId.DEFEND) {
@@ -94,7 +106,9 @@ public final class ActivityAssigner {
         if (view.threats() > 0 && threatened && defendOffered && eligible(ActivityId.DEFEND, spirit, view)) {
             return ActivityId.DEFEND;
         }
-        if (view.threats() > 0 && defendOffered && defenders < defendersNeeded
+        if (view.threats() > 0
+                && defendOffered
+                && defenders < defendersNeeded
                 && eligible(ActivityId.DEFEND, spirit, view)) {
             return ActivityId.DEFEND;
         }
@@ -108,19 +122,25 @@ public final class ActivityAssigner {
                 return null;
             }
         }
-        if (current.isPresent() && current.get().activity() != ActivityId.DEFEND
+        if (current.isPresent()
+                && current.get().activity() != ActivityId.DEFEND
                 && demandById.containsKey(current.get().activity())
                 && eligible(current.get().activity(), spirit, view)
                 && now - current.get().since() < tuning.minSwitchTicks()
-                && scored(best, demandById, taken) < demandById.get(current.get().activity())
-                        + tuning.hysteresisMargin()) {
+                && scored(best, demandById, taken)
+                        < demandById.get(current.get().activity()) + tuning.hysteresisMargin()) {
             return current.get().activity();
         }
         return best;
     }
 
-    private ActivityId bestScored(SpiritSnapshot spirit, SettlementView view, List<ActivityDemand> demands,
-            Map<ActivityId, Double> demandById, Map<ActivityId, Integer> taken, ActivityId excluded) {
+    private ActivityId bestScored(
+            SpiritSnapshot spirit,
+            SettlementView view,
+            List<ActivityDemand> demands,
+            Map<ActivityId, Double> demandById,
+            Map<ActivityId, Integer> taken,
+            ActivityId excluded) {
         IntellectTuning tuning = IntellectTuning.loadDefault();
         ActivityId best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
@@ -129,7 +149,9 @@ public final class ActivityAssigner {
                 continue;
             }
             double score = demand.demand() - tuning.crowdPenalty() * taken.getOrDefault(demand.id(), 0);
-            if (best == null || score > bestScore || (score == bestScore && demand.id().compareTo(best) < 0)) {
+            if (best == null
+                    || score > bestScore
+                    || (score == bestScore && demand.id().compareTo(best) < 0)) {
                 best = demand.id();
                 bestScore = score;
             }
@@ -153,14 +175,18 @@ public final class ActivityAssigner {
                         "Спрос с null-записью не распределяется: каждая запись — ActivityDemand");
             }
             if (demandById.put(demand.id(), demand.demand()) != null) {
-                throw new IllegalArgumentException("Спрос " + demand.id()
-                        + " дважды в списке: распределитель не решит, какое число верное");
+                throw new IllegalArgumentException(
+                        "Спрос " + demand.id() + " дважды в списке: распределитель не решит, какое число верное");
             }
         }
         return demandById;
     }
 
-    private record ChoiceContext(List<ActivityDemand> demands, Map<ActivityId, Double> demandById,
-            Map<ActivityId, Integer> taken, Optional<ActivityAssignment> current, long now, int defendersNeeded) {
-    }
+    private record ChoiceContext(
+            List<ActivityDemand> demands,
+            Map<ActivityId, Double> demandById,
+            Map<ActivityId, Integer> taken,
+            Optional<ActivityAssignment> current,
+            long now,
+            int defendersNeeded) {}
 }

@@ -42,8 +42,7 @@ public final class FirstToolsGameTests {
     private static final int COBBLESTONE_ROW = 9;
     private static final int FURNACE_COBBLESTONE = 8;
 
-    private FirstToolsGameTests() {
-    }
+    private FirstToolsGameTests() {}
 
     @BeforeBatch(batch = "first_tools_wood")
     public static void mobsOffWood(ServerLevel level) {
@@ -94,10 +93,12 @@ public final class FirstToolsGameTests {
             assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "деревянная кирка");
             assertCount(helper, spirit, Items.WOODEN_AXE, 1, "деревянный топор");
             assertCount(helper, spirit, Items.WOODEN_SHOVEL, 1, "деревянная лопата");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE) == 1,
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE) == 1,
                     "Без верстака в сцене дух обязан скрафтить его сам и поставить в мир: в мире "
                             + FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE));
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == 2,
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == 2,
                     "Цепочка трёх деревянных инструментов берёт ровно 7 брёвен из трёх деревьев по 3 "
                             + "(1 на верстак, 2 на кирку, по 2 на топор и лопату), остаток 2, а не "
                             + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
@@ -127,9 +128,14 @@ public final class FirstToolsGameTests {
             assertCount(helper, spirit, Items.STONE_AXE, 1, "каменный топор");
             assertCount(helper, spirit, Items.STONE_SHOVEL, 1, "каменная лопата");
             assertCount(helper, spirit, Items.STONE_SWORD, 1, "каменный меч");
-            assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1,
+            assertCount(
+                    helper,
+                    spirit,
+                    Items.WOODEN_PICKAXE,
+                    1,
                     "деревянная кирка остаётся в инвентаре: каменные инструменты делаются после неё");
-            helper.assertTrue(FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE) == 1,
+            helper.assertTrue(
+                    FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE) == 1,
                     "Верстак в сцене не поставлен — дух обязан получить и поставить один: в мире "
                             + FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE));
             cleanup(helper, spirit);
@@ -171,10 +177,13 @@ public final class FirstToolsGameTests {
             BlockPos table = findBlock(helper, Blocks.CRAFTING_TABLE);
             BlockPos furnace = findBlock(helper, Blocks.FURNACE);
             helper.assertTrue(table != null, "дух обязан поставить верстак: без него не сделать кирку и печь");
-            helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не получить древесный уголь; "
-                    + "печей в сцене " + FullCycleScene.countBlocks(helper, Blocks.FURNACE)
-                    + "; станции рядом: " + stationsNear(helper, spirit));
-            helper.assertTrue(table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
+            helper.assertTrue(
+                    furnace != null,
+                    "дух обязан поставить печь: без неё не получить древесный уголь; "
+                            + "печей в сцене " + FullCycleScene.countBlocks(helper, Blocks.FURNACE)
+                            + "; станции рядом: " + stationsNear(helper, spirit));
+            helper.assertTrue(
+                    table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
                     "Рабочий угол: печь обязана стоять рядом с верстаком (не дальше " + CORNER_DISTANCE
                             + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
                             + ", печь " + furnace);
@@ -194,15 +203,19 @@ public final class FirstToolsGameTests {
         spirit.getInventory().addItem(new ItemStack(Items.RAW_IRON, 2));
         spirit.getInventory().addItem(new ItemStack(Items.COAL, 1));
         speedUpFurnaces(helper);
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 1, "radius", 16)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("smelt", Map.of("item", "iron_ingot", "count", 1, "radius", 16)),
+                SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             BlockPos table = helper.absolutePos(new BlockPos(2, 1, 5));
             BlockPos furnace = findBlock(helper, Blocks.FURNACE);
             helper.assertTrue(furnace != null, "дух обязан поставить печь: без неё не переплавить железо");
-            helper.assertTrue(table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
+            helper.assertTrue(
+                    table.distSqr(furnace) <= CORNER_DISTANCE * CORNER_DISTANCE,
                     "печь обязана встать в рабочий угол рядом с верстаком (не дальше " + CORNER_DISTANCE
                             + " блоков), а стоит " + table.distSqr(furnace) + "² от него: верстак " + table
                             + ", печь " + furnace);
@@ -214,9 +227,11 @@ public final class FirstToolsGameTests {
     private static void assertCornerChests(GameTestHelper helper, BlockPos table) {
         BlockPos[] chests = {new BlockPos(3, 1, 3), new BlockPos(5, 1, 3)};
         for (BlockPos chest : chests) {
-            helper.assertTrue(helper.getBlockState(chest).is(Blocks.CHEST),
+            helper.assertTrue(
+                    helper.getBlockState(chest).is(Blocks.CHEST),
                     "Сундук рабочего угла обязан остаться на месте: " + chest);
-            helper.assertTrue(helper.absolutePos(chest).distSqr(table) <= CORNER_DISTANCE * CORNER_DISTANCE,
+            helper.assertTrue(
+                    helper.absolutePos(chest).distSqr(table) <= CORNER_DISTANCE * CORNER_DISTANCE,
                     "Сундук рабочего угла обязан стоять рядом с верстаком (не дальше " + CORNER_DISTANCE
                             + " блоков): сундук " + chest + ", верстак " + table);
         }

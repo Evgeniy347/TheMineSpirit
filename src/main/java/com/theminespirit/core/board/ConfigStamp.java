@@ -9,8 +9,7 @@ import java.util.Objects;
  * правила, по которым жило задание или решение, и видят, что /reload сменил таблицу.
  */
 public final class ConfigStamp {
-    private ConfigStamp() {
-    }
+    private ConfigStamp() {}
 
     public static String current() {
         return DataTables.INSTANCE.board().status().hash();

@@ -10,8 +10,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class ModLoadingGameTests {
-    private ModLoadingGameTests() {
-    }
+    private ModLoadingGameTests() {}
 
     @GameTest(template = "empty")
     public static void modList_ServerStarted_ContainsTheMineSpirit(GameTestHelper helper) {

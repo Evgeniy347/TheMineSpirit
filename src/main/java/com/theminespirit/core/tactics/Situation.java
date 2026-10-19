@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public record Situation(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int ticksSinceHit,
-        int ticksSinceStrike) {
+public record Situation(
+        SelfFacts self, List<EnemyFact> enemies, EnvFacts env, Orders orders, int ticksSinceHit, int ticksSinceStrike) {
     public static final int MAX_ENEMIES = 16;
     public static final int MAX_TICKS = 1_000_000;
 
@@ -79,7 +79,14 @@ public record Situation(SelfFacts self, List<EnemyFact> enemies, EnvFacts env, O
             visible |= enemy.visible();
             targeting |= enemy.targetingSelf();
         }
-        return new EnemyFact(first.type(), first.id(), first.pos(), Math.min(1, hp / count),
-                armor, visible, targeting, Math.min(EnemyFact.MAX_COUNT, count));
+        return new EnemyFact(
+                first.type(),
+                first.id(),
+                first.pos(),
+                Math.min(1, hp / count),
+                armor,
+                visible,
+                targeting,
+                Math.min(EnemyFact.MAX_COUNT, count));
     }
 }

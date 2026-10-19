@@ -32,8 +32,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class PresetBuildGameTests {
     private static final int SETTLE_TICKS = 5;
 
-    private PresetBuildGameTests() {
-    }
+    private PresetBuildGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -58,8 +57,9 @@ public final class PresetBuildGameTests {
 
     private static ScriptCall buildCall(GameTestHelper helper, String file, BlockPos anchor) {
         BlockPos absolute = helper.absolutePos(anchor);
-        return new ScriptCall("build_schematic", Map.of("file", file, "x", absolute.getX(), "y", absolute.getY(),
-                "z", absolute.getZ()));
+        return new ScriptCall(
+                "build_schematic",
+                Map.of("file", file, "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ()));
     }
 
     private static int countMatches(GameTestHelper helper, Schematic schematic, BlockPos anchor) {
@@ -67,7 +67,9 @@ public final class PresetBuildGameTests {
         BlockCoord origin = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
         int matches = 0;
         for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
-            if (helper.getLevel().getBlockState(new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z()))
+            if (helper.getLevel()
+                    .getBlockState(new BlockPos(
+                            entry.pos().x(), entry.pos().y(), entry.pos().z()))
                     .is(BlockStates.blockFor(entry.block()))) {
                 matches++;
             }
@@ -81,9 +83,15 @@ public final class PresetBuildGameTests {
         StringBuilder report = new StringBuilder();
         int shown = 0;
         for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
-            var state = helper.getLevel().getBlockState(new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z()));
+            var state = helper.getLevel()
+                    .getBlockState(new BlockPos(
+                            entry.pos().x(), entry.pos().y(), entry.pos().z()));
             if (!state.is(BlockStates.blockFor(entry.block())) && shown < 12) {
-                report.append(entry.block()).append("@").append(entry.pos()).append("->").append(state.getBlock())
+                report.append(entry.block())
+                        .append("@")
+                        .append(entry.pos())
+                        .append("->")
+                        .append(state.getBlock())
                         .append("; ");
                 shown++;
             }
@@ -96,8 +104,13 @@ public final class PresetBuildGameTests {
         BlockCoord origin = new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
         int matches = 0;
         for (Schematic.PlacedEntry entry : schematic.entries(origin)) {
-            if (entry.block().equals(block) && helper.getLevel().getBlockState(
-                    new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z())).is(BlockStates.blockFor(block))) {
+            if (entry.block().equals(block)
+                    && helper.getLevel()
+                            .getBlockState(new BlockPos(
+                                    entry.pos().x(),
+                                    entry.pos().y(),
+                                    entry.pos().z()))
+                            .is(BlockStates.blockFor(block))) {
                 matches++;
             }
         }
@@ -123,22 +136,26 @@ public final class PresetBuildGameTests {
         Schematic schematic = SchematicResources.load(scheme);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(9, 1, 9));
         int slot = 0;
-        for (Map.Entry<String, Integer> material : PresetLibrary.countMaterials(schematic).entrySet()) {
+        for (Map.Entry<String, Integer> material :
+                PresetLibrary.countMaterials(schematic).entrySet()) {
             Item item = BlockItems.itemFor(material.getKey());
             for (int left = material.getValue(); left > 0; left -= item.getDefaultMaxStackSize()) {
-                spirit.getInventory().setItem(slot++, new ItemStack(item, Math.min(left, item.getDefaultMaxStackSize())));
+                spirit.getInventory()
+                        .setItem(slot++, new ItemStack(item, Math.min(left, item.getDefaultMaxStackSize())));
             }
         }
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, scheme, anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     title + " по пресету обязан построиться целиком из ровно своих материалов, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             int matches = countMatches(helper, schematic, anchor);
-            helper.assertTrue(matches == schematic.blocks().size(),
+            helper.assertTrue(
+                    matches == schematic.blocks().size(),
                     title + " обязан совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
             GameTestFixtures.finish(helper);
@@ -153,7 +170,9 @@ public final class PresetBuildGameTests {
         wideFloor(helper);
         BlockPos anchor = new BlockPos(1, 1, 1);
         Schematic schematic = SchematicResources.load("enchant_room_v1");
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(0, 1, 0),
+        SpiritEntity spirit = spawnWith(
+                helper,
+                new BlockPos(0, 1, 0),
                 new ItemStack(Items.COBBLESTONE, 64),
                 new ItemStack(Items.STONE_BRICKS, 64),
                 new ItemStack(Items.STONE_BRICKS, 64),
@@ -167,17 +186,20 @@ public final class PresetBuildGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "чаровальня уровня 1 по пресету обязана построиться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             int matches = countMatches(helper, schematic, anchor);
-            helper.assertTrue(matches == schematic.blocks().size(),
+            helper.assertTrue(
+                    matches == schematic.blocks().size(),
                     "постройка обязана совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size() + "; расхождения: "
                             + mismatchReport(helper, schematic, anchor));
             int shelves = countOf(helper, schematic, anchor, "minecraft:bookshelf");
-            helper.assertTrue(shelves == 15,
+            helper.assertTrue(
+                    shelves == 15,
                     "в чаровальне уровня 1 обязано стоять 15 книжных полок под 30 уровень: на месте " + shelves);
             GameTestFixtures.finish(helper);
         });
@@ -188,19 +210,23 @@ public final class PresetBuildGameTests {
         prepare(helper);
         BlockPos anchor = new BlockPos(0, 1, 1);
         Schematic schematic = SchematicResources.load("palisade_section");
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(4, 1, 6),
+        SpiritEntity spirit = spawnWith(
+                helper,
+                new BlockPos(4, 1, 6),
                 new ItemStack(Items.OAK_FENCE, 7),
                 new ItemStack(Items.OAK_FENCE_GATE, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "palisade_section", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "палисад-секция по пресету обязана построиться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             int matches = countMatches(helper, schematic, anchor);
-            helper.assertTrue(matches == schematic.blocks().size(),
+            helper.assertTrue(
+                    matches == schematic.blocks().size(),
                     "палисад обязан совпасть с пресетом блок в блок: поставлено " + matches + " из "
                             + schematic.blocks().size());
             GameTestFixtures.finish(helper);

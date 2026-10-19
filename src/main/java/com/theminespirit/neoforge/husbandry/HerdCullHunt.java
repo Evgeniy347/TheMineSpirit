@@ -34,8 +34,7 @@ final class HerdCullHunt {
             return;
         }
         session.planCalls++;
-        CullPolicy.Outcome result = CullPolicy.pick(candidates, session.home, species, session.goal,
-                session.swordTier);
+        CullPolicy.Outcome result = CullPolicy.pick(candidates, session.home, species, session.goal, session.swordTier);
         if (result instanceof CullPolicy.Refused refused) {
             session.fail(refused.reason() + ": забито " + session.culled);
             return;
@@ -67,7 +66,8 @@ final class HerdCullHunt {
         Species species = session.wanted.get(0);
         List<AnimalRef> wild = new ArrayList<>();
         for (AnimalRef animal : session.herd) {
-            if (animal.species() == species && !session.homePen.inside(animal.pos())
+            if (animal.species() == species
+                    && !session.homePen.inside(animal.pos())
                     && !session.handledIds.contains(animal.id())) {
                 wild.add(animal);
             }
@@ -128,7 +128,8 @@ final class HerdCullHunt {
         rest.sort(flock::byDistanceToHome);
         rest = rest.reversed();
         for (AnimalRef animal : rest) {
-            if (!animal.baby() && ordered.stream().noneMatch(placed -> placed.id().equals(animal.id()))) {
+            if (!animal.baby()
+                    && ordered.stream().noneMatch(placed -> placed.id().equals(animal.id()))) {
                 ordered.add(animal);
             }
         }

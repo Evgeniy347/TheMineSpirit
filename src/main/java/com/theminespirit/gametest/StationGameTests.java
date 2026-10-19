@@ -28,23 +28,24 @@ public final class StationGameTests {
     private static final int SEARCH_TIMEOUT = 100;
     private static final int PLACE_TIMEOUT = 40;
 
-    private StationGameTests() {
-    }
+    private StationGameTests() {}
 
     @GameTest(template = FIELD, batch = "station_finder", timeoutTicks = SEARCH_TIMEOUT)
     public static void finder_TwoTables_FindsTheNearestOne(GameTestHelper helper) {
         prepareField(helper);
         helper.setBlock(3, 1, 3, Blocks.CRAFTING_TABLE);
         helper.setBlock(8, 1, 8, Blocks.CRAFTING_TABLE);
-        StationFinder finder = new StationFinder(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 3)), 9,
-                StationType.CRAFTING_TABLE);
+        StationFinder finder = new StationFinder(
+                helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 3)), 9, StationType.CRAFTING_TABLE);
 
         helper.succeedWhen(() -> {
             helper.assertTrue(finder.step(), "поиск станции ещё идёт");
             Optional<BlockPos> found = finder.found();
-            helper.assertTrue(found.isPresent() && found.get().equals(helper.absolutePos(new BlockPos(3, 1, 3))),
+            helper.assertTrue(
+                    found.isPresent() && found.get().equals(helper.absolutePos(new BlockPos(3, 1, 3))),
                     "из двух верстаков обязан быть найден ближайший (3,1,3), найдено " + found);
-            helper.assertTrue(finder.maxSlicesPerTick() <= 4,
+            helper.assertTrue(
+                    finder.maxSlicesPerTick() <= 4,
                     "поиск станции обязан брать не больше 4 срезов за тик, взял " + finder.maxSlicesPerTick());
             clearField(helper);
         });
@@ -54,12 +55,13 @@ public final class StationGameTests {
     public static void finder_TableOutsideRadius_NothingFound(GameTestHelper helper) {
         prepareField(helper);
         helper.setBlock(8, 1, 8, Blocks.CRAFTING_TABLE);
-        StationFinder finder = new StationFinder(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), 3,
-                StationType.CRAFTING_TABLE);
+        StationFinder finder = new StationFinder(
+                helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), 3, StationType.CRAFTING_TABLE);
 
         helper.succeedWhen(() -> {
             helper.assertTrue(finder.step(), "поиск станции ещё идёт");
-            helper.assertTrue(finder.found().isEmpty(),
+            helper.assertTrue(
+                    finder.found().isEmpty(),
                     "верстак за пределами радиуса 3 не должен находиться, найдено " + finder.found());
             clearField(helper);
         });
@@ -70,12 +72,13 @@ public final class StationGameTests {
         prepareField(helper);
         helper.setBlock(3, 1, 3, Blocks.FURNACE);
         helper.setBlock(4, 1, 3, Blocks.BLAST_FURNACE);
-        StationFinder finder = new StationFinder(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 3)), 5,
-                StationType.CRAFTING_TABLE);
+        StationFinder finder = new StationFinder(
+                helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 3)), 5, StationType.CRAFTING_TABLE);
 
         helper.succeedWhen(() -> {
             helper.assertTrue(finder.step(), "поиск станции ещё идёт");
-            helper.assertTrue(finder.found().isEmpty(),
+            helper.assertTrue(
+                    finder.found().isEmpty(),
                     "печи не верстак: поиск верстака не должен находить чужие станции, найдено " + finder.found());
             clearField(helper);
         });
@@ -91,15 +94,21 @@ public final class StationGameTests {
 
         helper.assertTrue(placed.isPresent(), "верстак из инвентаря обязан ставиться рядом на ровном полу");
         BlockPos cell = placed.get();
-        helper.assertTrue(helper.getLevel().getBlockState(cell).is(Blocks.CRAFTING_TABLE),
-                "в клетке " + cell + " обязан стоять верстак, стоит " + helper.getLevel().getBlockState(cell));
-        helper.assertTrue(!cell.equals(spirit.blockPosition()),
+        helper.assertTrue(
+                helper.getLevel().getBlockState(cell).is(Blocks.CRAFTING_TABLE),
+                "в клетке " + cell + " обязан стоять верстак, стоит "
+                        + helper.getLevel().getBlockState(cell));
+        helper.assertTrue(
+                !cell.equals(spirit.blockPosition()),
                 "верстак не должен ставиться в клетку самого духа " + spirit.blockPosition());
-        helper.assertTrue(cell.getY() == spirit.blockPosition().getY(),
+        helper.assertTrue(
+                cell.getY() == spirit.blockPosition().getY(),
                 "верстак обязан стоять на уровне ног духа, а не выше или ниже: " + cell);
-        helper.assertTrue(cell.distSqr(spirit.blockPosition()) <= 2 * CraftTuning.PLACE_SEARCH_RADIUS
-                * CraftTuning.PLACE_SEARCH_RADIUS, "верстак обязан стоять в зоне досягаемости духа, а не дальше "
-                + CraftTuning.PLACE_SEARCH_RADIUS + " клеток: " + cell);
+        helper.assertTrue(
+                cell.distSqr(spirit.blockPosition())
+                        <= 2 * CraftTuning.PLACE_SEARCH_RADIUS * CraftTuning.PLACE_SEARCH_RADIUS,
+                "верстак обязан стоять в зоне досягаемости духа, а не дальше " + CraftTuning.PLACE_SEARCH_RADIUS
+                        + " клеток: " + cell);
         int left = GameTestFixtures.countInInventory(spirit.getInventory(), Items.CRAFTING_TABLE);
         helper.assertTrue(left == 0, "поставленный верстак обязан списаться из инвентаря, осталось " + left);
         spirit.discard();
@@ -120,7 +129,8 @@ public final class StationGameTests {
         Direction facing = helper.getLevel().getBlockState(cell).getValue(HorizontalDirectionalBlock.FACING);
         double towardSpiritX = spirit.getX() - (cell.getX() + 0.5);
         double towardSpiritZ = spirit.getZ() - (cell.getZ() + 0.5);
-        helper.assertTrue(facing.getStepX() * towardSpiritX + facing.getStepZ() * towardSpiritZ > 0,
+        helper.assertTrue(
+                facing.getStepX() * towardSpiritX + facing.getStepZ() * towardSpiritZ > 0,
                 "печь обязана смотреть на духа (дверца к нему), а не от него: клетка " + cell + ", FACING " + facing
                         + ", дух в " + spirit.position());
         spirit.discard();
@@ -160,7 +170,8 @@ public final class StationGameTests {
 
         Optional<BlockPos> placed = StationPlacer.place(spirit, StationType.CRAFTING_TABLE);
 
-        helper.assertTrue(placed.isEmpty(),
+        helper.assertTrue(
+                placed.isEmpty(),
                 "без твёрдого пола под клеткой верстак не ставится (он повис бы в воздухе), поставлено в " + placed);
         spirit.discard();
         clearField(helper);
@@ -176,8 +187,8 @@ public final class StationGameTests {
         Optional<BlockPos> placed = StationPlacer.place(spirit, StationType.CRAFTING_TABLE);
 
         helper.assertTrue(placed.isEmpty(), "без верстака в инвентаре ставить нечего, поставлено в " + placed);
-        helper.assertTrue(!hasTableAround(helper),
-                "станция не должна появляться из воздуха, когда предмета в инвентаре нет");
+        helper.assertTrue(
+                !hasTableAround(helper), "станция не должна появляться из воздуха, когда предмета в инвентаре нет");
         spirit.discard();
         clearField(helper);
         helper.succeed();

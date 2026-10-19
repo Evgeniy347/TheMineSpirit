@@ -28,11 +28,11 @@ class TacticsProperties {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String CORNERED = "cornered_fight";
     private static final Set<String> NO_ROUTE_FIGHT = CONFIG.rules().hard().stream()
-            .filter(rule -> rule.noRouteOption().equals(Optional.of(TacticalOption.FIGHT))).map(HardRule::id)
+            .filter(rule -> rule.noRouteOption().equals(Optional.of(TacticalOption.FIGHT)))
+            .map(HardRule::id)
             .collect(Collectors.toSet());
 
-    record Case(Situation situation, TacticsMemory memory, long tick) {
-    }
+    record Case(Situation situation, TacticsMemory memory, long tick) {}
 
     @Provide
     Arbitrary<Case> cases() {
@@ -55,38 +55,72 @@ class TacticsProperties {
     }
 
     private static Arbitrary<Case> hostile(Arbitrary<CombatMode> modes, double hpFraction) {
-        return Situations.anyWith(modes, 8).filter(situation -> !situation.enemies().isEmpty())
-                .map(situation -> invincible(situation, hpFraction)).flatMap(TacticsProperties::withMemory);
+        return Situations.anyWith(modes, 8)
+                .filter(situation -> !situation.enemies().isEmpty())
+                .map(situation -> invincible(situation, hpFraction))
+                .flatMap(TacticsProperties::withMemory);
     }
 
     private static Arbitrary<Case> withMemory(Situation situation) {
         Arbitrary<TacticsMemory> memory = Combinators.combine(
-                Arbitraries.of(Optional.<TacticalOption>empty(), Optional.of(TacticalOption.FIGHT),
-                        Optional.of(TacticalOption.RETREAT), Optional.of(TacticalOption.IGNORE)),
-                Arbitraries.of(TacticalState.values()), Arbitraries.integers().between(0, 300),
-                Arbitraries.integers().between(0, 300), Arbitraries.of(true, false),
-                Arbitraries.of(true, false))
-                .as((previous, state, decidedAgo, inState, degraded, anchored) -> memoryOf(situation, previous, state,
-                        decidedAgo, inState, degraded, anchored));
+                        Arbitraries.of(
+                                Optional.<TacticalOption>empty(),
+                                Optional.of(TacticalOption.FIGHT),
+                                Optional.of(TacticalOption.RETREAT),
+                                Optional.of(TacticalOption.IGNORE)),
+                        Arbitraries.of(TacticalState.values()),
+                        Arbitraries.integers().between(0, 300),
+                        Arbitraries.integers().between(0, 300),
+                        Arbitraries.of(true, false),
+                        Arbitraries.of(true, false))
+                .as((previous, state, decidedAgo, inState, degraded, anchored) ->
+                        memoryOf(situation, previous, state, decidedAgo, inState, degraded, anchored));
         return memory.map(value -> new Case(situation, value, 1000));
     }
 
-    private static TacticsMemory memoryOf(Situation situation, Optional<TacticalOption> previous,
-            TacticalState state, int decidedAgo, int inState, boolean degraded, boolean anchored) {
+    private static TacticsMemory memoryOf(
+            Situation situation,
+            Optional<TacticalOption> previous,
+            TacticalState state,
+            int decidedAgo,
+            int inState,
+            boolean degraded,
+            boolean anchored) {
         CombatMode ordered = situation.orders().mode();
         CombatMode mode = degraded && ordered != CombatMode.PASSIVE ? CombatMode.DEFENSIVE : ordered;
-        Optional<Point> anchor = anchored && state != TacticalState.CALM ? Optional.of(situation.self().pos())
+        Optional<Point> anchor = anchored && state != TacticalState.CALM
+                ? Optional.of(situation.self().pos())
                 : Optional.empty();
-        return new TacticsMemory(previous, DecisionSource.SCORE, 1000 - decidedAgo, state, 1000 - inState, mode, ordered, anchor, 900,
-                situation.self().hpFraction(), 1000);
+        return new TacticsMemory(
+                previous,
+                DecisionSource.SCORE,
+                1000 - decidedAgo,
+                state,
+                1000 - inState,
+                mode,
+                ordered,
+                anchor,
+                900,
+                situation.self().hpFraction(),
+                1000);
     }
 
     private static Situation invincible(Situation situation, double hpFraction) {
         SelfFacts self = situation.self();
         double hp = hpFraction < 0 ? self.hp() : self.maxHp() * hpFraction;
-        List<EnemyFact> hostile = situation.enemies().stream().map(enemy -> new EnemyFact(enemy.type(), enemy.id(),
-                enemy.pos(), enemy.hpFraction(), enemy.armor(), true, true, enemy.count())).toList();
-        return Situations.withEnemies(Situations.withSelf(situation, Situations.withStats(self, hp, 20, 1000)), hostile);
+        List<EnemyFact> hostile = situation.enemies().stream()
+                .map(enemy -> new EnemyFact(
+                        enemy.type(),
+                        enemy.id(),
+                        enemy.pos(),
+                        enemy.hpFraction(),
+                        enemy.armor(),
+                        true,
+                        true,
+                        enemy.count()))
+                .toList();
+        return Situations.withEnemies(
+                Situations.withSelf(situation, Situations.withStats(self, hp, 20, 1000)), hostile);
     }
 
     private static boolean anyTargeting(Situation situation) {
@@ -108,12 +142,16 @@ class TacticsProperties {
     void step_AnyAdmissibleFacts_ReturnsConsistentDecisionAndAction(@ForAll("cases") Case c) {
         TacticalOutcome outcome = run(c);
 
-        assertEquals(outcome.decision(), outcome.action().option(),
+        assertEquals(
+                outcome.decision(),
+                outcome.action().option(),
                 "Действие " + outcome.action() + " обязано согласоваться с решением " + outcome.decision()
                         + ": иначе адаптер получит «драться и бежать» одновременно");
-        assertTrue(outcome.decision() == TacticalOption.RETREAT || outcome.retreatMethod() == RetreatMethod.NONE,
+        assertTrue(
+                outcome.decision() == TacticalOption.RETREAT || outcome.retreatMethod() == RetreatMethod.NONE,
                 "Способ отхода называется только при решении RETREAT: " + outcome.retreatMethod());
-        assertTrue(outcome.decision() == TacticalOption.RETREAT || !outcome.callHelp(),
+        assertTrue(
+                outcome.decision() == TacticalOption.RETREAT || !outcome.callHelp(),
                 "Зов на помощь - побочное действие отхода, при другом решении его нет");
     }
 
@@ -121,14 +159,17 @@ class TacticsProperties {
     void step_AnyAdmissibleCase_RetreatAlwaysNamesAWay(@ForAll("cases") Case c) {
         TacticalOutcome outcome = run(c);
 
-        assertTrue(outcome.decision() != TacticalOption.RETREAT || outcome.retreatMethod() != RetreatMethod.NONE,
+        assertTrue(
+                outcome.decision() != TacticalOption.RETREAT || outcome.retreatMethod() != RetreatMethod.NONE,
                 "Решение RETREAT без способа отхода (rule " + outcome.trace().rule() + ") отправило бы духа в никуда: "
                         + "если способов нет совсем, замена по правилам noRoute");
     }
 
     @Property
     void step_TwoEnginesSameInput_ReturnEqualOutcomesIncludingTrace(@ForAll("cases") Case c) {
-        assertEquals(run(c), run(c),
+        assertEquals(
+                run(c),
+                run(c),
                 "Тактика детерминирована: те же факты и память дают побитово тот же результат вместе с trace");
     }
 
@@ -137,10 +178,17 @@ class TacticsProperties {
         List<EnemyFact> shuffled = new ArrayList<>(c.situation().enemies());
         Collections.shuffle(shuffled, new Random(seed));
         Situation original = c.situation();
-        Situation permuted = new Situation(original.self(), shuffled, original.env(), original.orders(),
-                original.ticksSinceHit(), original.ticksSinceStrike());
+        Situation permuted = new Situation(
+                original.self(),
+                shuffled,
+                original.env(),
+                original.orders(),
+                original.ticksSinceHit(),
+                original.ticksSinceStrike());
 
-        assertEquals(run(c), run(new Case(permuted, c.memory(), c.tick())),
+        assertEquals(
+                run(c),
+                run(new Case(permuted, c.memory(), c.tick())),
                 "Порядок, в котором адаптер нашёл врагов, не должен менять решение");
     }
 
@@ -149,9 +197,11 @@ class TacticsProperties {
         TacticalOutcome outcome = run(c);
 
         if (outcome.decision() == TacticalOption.FIGHT) {
-            assertTrue(fightJustified(c.situation(), outcome.trace().rule()),
+            assertTrue(
+                    fightJustified(c.situation(), outcome.trace().rule()),
                     "При HP 20 % и врагах рядом бой допустим только когда загнан в угол (враг ближе 3 блоков) или отступать некуда, "
-                            + "а враг целится в духа; решило правило " + outcome.trace().rule()
+                            + "а враг целится в духа; решило правило "
+                            + outcome.trace().rule()
                             + ": иначе дух героически гибнет вместо отхода");
         }
     }
@@ -161,7 +211,8 @@ class TacticsProperties {
         TacticalOutcome outcome = run(c);
 
         if (!c.situation().enemies().isEmpty() && outcome.decision() == TacticalOption.FIGHT) {
-            assertTrue(fightJustified(c.situation(), outcome.trace().rule()),
+            assertTrue(
+                    fightJustified(c.situation(), outcome.trace().rule()),
                     "Пассивный режим не нападает: бой только если загнан в угол (враг ближе 3 блоков) или отступать некуда, "
                             + "а враг целится в духа; решило " + outcome.trace().rule());
         }
@@ -171,13 +222,18 @@ class TacticsProperties {
     void step_BeyondLeashInGuardModes_DoesNotFightUnlessEnemyWithinThree(@ForAll("guardCases") Case c) {
         TacticalOutcome outcome = run(c);
         Situation situation = c.situation();
-        ModeGeometry geometry = ModeGeometry.of(situation, CONFIG.modes().of(outcome.mode()), c.memory().anchor());
-        double nearest = situation.enemies().stream().mapToDouble(situation::distance).min().orElse(Double.MAX_VALUE);
+        ModeGeometry geometry = ModeGeometry.of(
+                situation, CONFIG.modes().of(outcome.mode()), c.memory().anchor());
+        double nearest = situation.enemies().stream()
+                .mapToDouble(situation::distance)
+                .min()
+                .orElse(Double.MAX_VALUE);
         boolean guarded = outcome.mode() == CombatMode.GUARD_AREA || outcome.mode() == CombatMode.DEFENSIVE;
 
         if (guarded && geometry.leashLeft() < 0 && nearest > 3) {
-            assertTrue(outcome.decision() != TacticalOption.FIGHT || (NO_ROUTE_FIGHT.contains(outcome.trace().rule())
-                    && anyTargeting(situation)),
+            assertTrue(
+                    outcome.decision() != TacticalOption.FIGHT
+                            || (NO_ROUTE_FIGHT.contains(outcome.trace().rule()) && anyTargeting(situation)),
                     "За поводком (остаток " + geometry.leashLeft() + ") в режиме " + outcome.mode()
                             + " враг дальше 3 блоков не повод драться (кроме замены noRoute, когда враг целится в духа и бежать некуда); "
                             + "решило " + outcome.trace().rule() + ": дух не преследует за пределы зоны");
@@ -188,20 +244,26 @@ class TacticsProperties {
     void step_ConfigWithShuffledKeysAndWhitespace_GivesSameOutcome(@ForAll("cases") Case c, @ForAll long seed) {
         TacticsConfig shuffled = shuffledConfig(seed);
 
-        assertEquals(run(c), new TacticsEngine(shuffled).step(c.situation(), c.memory(), c.tick()),
+        assertEquals(
+                run(c),
+                new TacticsEngine(shuffled).step(c.situation(), c.memory(), c.tick()),
                 "Порядок ключей и пробелы в JSON не влияют на поведение: значение имеет только содержание файлов");
     }
 
     private static TacticsConfig shuffledConfig(long seed) {
         Random random = new Random(seed);
-        return TacticsConfig.fromJson(rewrite("enemies.json", random), rewrite("weights.json", random),
-                rewrite("rules.json", random), rewrite("modes.json", random));
+        return TacticsConfig.fromJson(
+                rewrite("enemies.json", random),
+                rewrite("weights.json", random),
+                rewrite("rules.json", random),
+                rewrite("modes.json", random));
     }
 
     private static String rewrite(String file, Random random) {
         try {
             JsonNode shuffled = shuffleKeys(MAPPER.readTree(TacticsTexts.read(file)), random);
-            return random.nextBoolean() ? MAPPER.writeValueAsString(shuffled)
+            return random.nextBoolean()
+                    ? MAPPER.writeValueAsString(shuffled)
                     : MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(shuffled);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Тест не смог переписать " + file, e);
@@ -211,7 +273,7 @@ class TacticsProperties {
     private static JsonNode shuffleKeys(JsonNode node, Random random) {
         if (node.isObject()) {
             List<String> names = new ArrayList<>();
-            for (Iterator<String> it = node.fieldNames(); it.hasNext();) {
+            for (Iterator<String> it = node.fieldNames(); it.hasNext(); ) {
                 names.add(it.next());
             }
             Collections.shuffle(names, random);

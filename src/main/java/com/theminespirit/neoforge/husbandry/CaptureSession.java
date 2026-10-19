@@ -134,11 +134,21 @@ public final class CaptureSession {
             return known;
         }
         AABB box = spirit.getBoundingBox().inflate(searchRadius);
-        List<Animal> found = level.getEntitiesOfClass(Animal.class, box, animal -> animal.isAlive()
-                && speciesId().equals(BuiltInRegistries.ENTITY_TYPE.getKey(animal.getType()).toString())
-                && !pen.inside(coord(animal.blockPosition())) && !animal.isLeashed());
-        return found.stream().min(Comparator.comparingDouble((Entity animal) -> animal.distanceToSqr(spirit))
-                .thenComparing(Entity::getStringUUID)).map(Animal.class::cast).orElse(null);
+        List<Animal> found = level.getEntitiesOfClass(
+                Animal.class,
+                box,
+                animal -> animal.isAlive()
+                        && speciesId()
+                                .equals(BuiltInRegistries.ENTITY_TYPE
+                                        .getKey(animal.getType())
+                                        .toString())
+                        && !pen.inside(coord(animal.blockPosition()))
+                        && !animal.isLeashed());
+        return found.stream()
+                .min(Comparator.comparingDouble((Entity animal) -> animal.distanceToSqr(spirit))
+                        .thenComparing(Entity::getStringUUID))
+                .map(Animal.class::cast)
+                .orElse(null);
     }
 
     private boolean hasFeed() {
@@ -211,8 +221,8 @@ public final class CaptureSession {
             try {
                 targetId = UUID.fromString(id);
             } catch (IllegalArgumentException broken) {
-                throw new IllegalArgumentException("Состояние capture: target '" + id
-                        + "' — не UUID животного: снимок задачи повреждён", broken);
+                throw new IllegalArgumentException(
+                        "Состояние capture: target '" + id + "' — не UUID животного: снимок задачи повреждён", broken);
             }
         }
         if (saved.get("ticks") instanceof Number number) {

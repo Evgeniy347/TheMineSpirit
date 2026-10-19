@@ -39,14 +39,16 @@ public record ActivityCatalog(Map<ActivityId, Activity> adults, Map<ActivityId, 
             activity = children.get(id);
         }
         if (activity == null) {
-            throw new IllegalArgumentException("Деятельности " + id + " нет в каталоге: "
-                    + "неизвестную работу дух не возьмёт");
+            throw new IllegalArgumentException(
+                    "Деятельности " + id + " нет в каталоге: " + "неизвестную работу дух не возьмёт");
         }
         return activity;
     }
 
     public List<Activity> ordered() {
-        return adults.values().stream().sorted(Comparator.comparing(Activity::id)).toList();
+        return adults.values().stream()
+                .sorted(Comparator.comparing(Activity::id))
+                .toList();
     }
 
     private static Map<ActivityId, Activity> checked(String name, Map<ActivityId, Activity> catalog) {
@@ -60,8 +62,8 @@ public record ActivityCatalog(Map<ActivityId, Activity> adults, Map<ActivityId, 
                         + "не собирается: каждая деятельность — класс с id");
             }
             if (entry.getValue().id() != entry.getKey()) {
-                throw new IllegalArgumentException("Деятельность под ключом " + entry.getKey()
-                        + " называет себя " + entry.getValue().id() + ": ключ обязан совпадать с Activity.id()");
+                throw new IllegalArgumentException("Деятельность под ключом " + entry.getKey() + " называет себя "
+                        + entry.getValue().id() + ": ключ обязан совпадать с Activity.id()");
             }
         }
         return Map.copyOf(catalog);

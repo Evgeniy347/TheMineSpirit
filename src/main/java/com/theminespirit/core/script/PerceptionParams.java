@@ -6,8 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class PerceptionParams {
-    private PerceptionParams() {
-    }
+    private PerceptionParams() {}
 
     public static PerceptionQuery blocks(Map<String, Object> params) {
         ScanParams scan = ScanParams.from(params);

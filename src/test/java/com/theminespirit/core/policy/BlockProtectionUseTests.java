@@ -40,50 +40,79 @@ class BlockProtectionUseTests {
                 Arguments.of("рычаг в доме из восьми блоков", house, false, false, false, PolicyId.PLAYER_BUILDINGS),
                 Arguments.of("рычаг, поставленный игроком", wild, true, false, false, PolicyId.PLAYER_BUILDINGS),
                 Arguments.of("рычаг в защищённой зоне", wild, false, true, false, PolicyId.PROTECTED_ZONE),
-                Arguments.of("рычаг игрока, но в зоне: зона раньше игрока", wild, true, true, false, PolicyId.PROTECTED_ZONE),
+                Arguments.of(
+                        "рычаг игрока, но в зоне: зона раньше игрока",
+                        wild,
+                        true,
+                        true,
+                        false,
+                        PolicyId.PROTECTED_ZONE),
                 Arguments.of("рычаг, поставленный игроком, но в разрешённой области", wild, true, false, true, null),
                 Arguments.of("рычаг в разрешённой области: здания рядом не мешают", house, false, false, true, null),
-                Arguments.of("рычаг игрока в защищённой зоне и разрешённой области: зона сильнее", wild, true, true, true,
+                Arguments.of(
+                        "рычаг игрока в защищённой зоне и разрешённой области: зона сильнее",
+                        wild,
+                        true,
+                        true,
+                        true,
                         PolicyId.PROTECTED_ZONE));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("table")
-    void checkUse_Table_RefusesOnlyPlayerMechanisms(String name, List<String> neighbours, boolean placed,
-            boolean zone, boolean unprotectArea, PolicyId refusedBy) {
-        BlockProtection.Decision decision = protection.checkUse(neighbours, new BlockProtection.Placement(placed, zone, unprotectArea));
+    void checkUse_Table_RefusesOnlyPlayerMechanisms(
+            String name,
+            List<String> neighbours,
+            boolean placed,
+            boolean zone,
+            boolean unprotectArea,
+            PolicyId refusedBy) {
+        BlockProtection.Decision decision =
+                protection.checkUse(neighbours, new BlockProtection.Placement(placed, zone, unprotectArea));
 
         if (refusedBy == null) {
-            assertInstanceOf(BlockProtection.Allowed.class, decision,
+            assertInstanceOf(
+                    BlockProtection.Allowed.class,
+                    decision,
                     "«" + name + "»: механизм без чужой постройки обязан нажиматься, иначе дух не откроет дверь "
                             + "собственной базы");
         } else {
-            BlockProtection.Refused refused = assertInstanceOf(BlockProtection.Refused.class, decision,
+            BlockProtection.Refused refused = assertInstanceOf(
+                    BlockProtection.Refused.class,
+                    decision,
                     "«" + name + "»: чужой или запрещённый механизм обязан отвергаться. Ответ: " + decision);
-            assertEquals(refusedBy, refused.policy(),
+            assertEquals(
+                    refusedBy,
+                    refused.policy(),
                     "«" + name + "»: политика отказа должна называть причину, чтобы скрипт показал понятное сообщение");
         }
     }
 
     @Test
     void checkUse_DeniedByBreakList_IsStillUsable() {
-        BlockProtection.Decision decision = protection.checkUse(around(0, "", "minecraft:stone"), new BlockProtection.Placement(false, false, false));
+        BlockProtection.Decision decision = protection.checkUse(
+                around(0, "", "minecraft:stone"), new BlockProtection.Placement(false, false, false));
 
-        assertInstanceOf(BlockProtection.Allowed.class, decision,
+        assertInstanceOf(
+                BlockProtection.Allowed.class,
+                decision,
                 "Использовать рычаг — не ломать его: чёрный список защиты (deny) на нажатие не распространяется, "
                         + "иначе дверь и рычаг собственной базы никогда не сработают");
     }
 
     @Test
     void checkUse_WrongNeighbourCount_IsRejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> protection.checkUse(List.of("minecraft:air"), new BlockProtection.Placement(false, false, false)),
                 "Список соседей обязан быть 26: иное число значит, что постройку считают не по 3×3×3");
     }
 
     @Test
     void checkUse_NullNeighbours_IsRejected() {
-        assertThrows(NullPointerException.class, () -> protection.checkUse(null, new BlockProtection.Placement(false, false, false)),
+        assertThrows(
+                NullPointerException.class,
+                () -> protection.checkUse(null, new BlockProtection.Placement(false, false, false)),
                 "Без списка соседей нельзя отличить постройку от природы: null обязан отказывать");
     }
 }

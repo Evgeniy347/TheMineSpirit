@@ -17,7 +17,9 @@ class LayerArbiterTests {
             boolean reflex = step == 'r' || step == 'x';
             boolean tactics = step == 't';
             boolean task = step != 'i' && step != 'x';
-            PolicyVerdict verdict = reflex ? new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.StopMoving(), "тест") : new PolicyVerdict.Clear();
+            PolicyVerdict verdict = reflex
+                    ? new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.StopMoving(), "тест")
+                    : new PolicyVerdict.Clear();
             owners.append(letter(arbiter.step(verdict, tactics, task)));
         }
         return owners.toString();
@@ -41,25 +43,39 @@ class LayerArbiterTests {
                 Arguments.of("рефлекс прерывает тактику — POLICY сразу", "tr", "TP"),
                 Arguments.of("тактика прерывает стратегию сразу", "st", "ST"),
                 Arguments.of("политика держит владение 9 безопасных тиков", "sr" + "s".repeat(9), "S" + "P".repeat(10)),
-                Arguments.of("на 10-й безопасный тик задача возобновляется", "sr" + "s".repeat(10), "S" + "P".repeat(10) + "S"),
-                Arguments.of("новый рефлекс обнуляет отсчёт", "r" + "s".repeat(9) + "r" + "s".repeat(10), "P".repeat(20) + "S"),
-                Arguments.of("после политики без задачи — IDLE через задержку", "x" + "i".repeat(10), "P".repeat(10) + "I"),
+                Arguments.of(
+                        "на 10-й безопасный тик задача возобновляется",
+                        "sr" + "s".repeat(10),
+                        "S" + "P".repeat(10) + "S"),
+                Arguments.of(
+                        "новый рефлекс обнуляет отсчёт",
+                        "r" + "s".repeat(9) + "r" + "s".repeat(10),
+                        "P".repeat(20) + "S"),
+                Arguments.of(
+                        "после политики без задачи — IDLE через задержку", "x" + "i".repeat(10), "P".repeat(10) + "I"),
                 Arguments.of("тактика держит владение 9 тиков после конца боя", "t" + "i".repeat(9), "T".repeat(10)),
-                Arguments.of("тактика отдаёт владение стратегии на 10-й тик", "t" + "s".repeat(10), "T".repeat(10) + "S"),
+                Arguments.of(
+                        "тактика отдаёт владение стратегии на 10-й тик", "t" + "s".repeat(10), "T".repeat(10) + "S"),
                 Arguments.of("конец задачи без прерывателя — IDLE сразу", "ssi", "SSI"),
-                Arguments.of("бой сразу после рефлекса ждёт задержки", "rt", "PP")
-        );
+                Arguments.of("бой сразу после рефлекса ждёт задержки", "rt", "PP"));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("rows")
     void step_Script_GivesExpectedOwners(String name, String script, String expected) {
-        assertEquals(expected, run(script), "Сценарий «" + name + "» (" + script + "): политика всегда выигрывает, нижний слой ждёт 10 тиков, пока верхний не уступил");
+        assertEquals(
+                expected,
+                run(script),
+                "Сценарий «" + name + "» (" + script
+                        + "): политика всегда выигрывает, нижний слой ждёт 10 тиков, пока верхний не уступил");
     }
 
     @Test
     void delay_Constant_IsTenTicks() {
-        assertEquals(10, LayerArbiter.RESUME_DELAY_TICKS, "Возобновление после 10 подряд безопасных тиков (полсекунды): достаточно, чтобы дух вышел из зоны опасности");
+        assertEquals(
+                10,
+                LayerArbiter.RESUME_DELAY_TICKS,
+                "Возобновление после 10 подряд безопасных тиков (полсекунды): достаточно, чтобы дух вышел из зоны опасности");
     }
 
     @Test

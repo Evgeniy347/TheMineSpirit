@@ -6,7 +6,8 @@ import java.util.Objects;
 public record SmeltParams(String item, int count, int radius) {
     public SmeltParams {
         if (item == null || item.isBlank()) {
-            throw new IllegalArgumentException("Не задан предмет для smelt: без него скрипт не знает, какой продукт получать");
+            throw new IllegalArgumentException(
+                    "Не задан предмет для smelt: без него скрипт не знает, какой продукт получать");
         }
         if (count < CatalogLimits.COUNT_MIN || count > CatalogLimits.COUNT_MAX) {
             throw new IllegalArgumentException("Число предметов " + count + " вне диапазона ["

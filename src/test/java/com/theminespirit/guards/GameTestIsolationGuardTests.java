@@ -11,35 +11,36 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class GameTestIsolationGuardTests {
-    private static final Pattern GAMETEST_ANNOTATION = Pattern.compile(
-            "@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
+    private static final Pattern GAMETEST_ANNOTATION =
+            Pattern.compile("@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final String[] SPAWN_MARKERS = {
-            ".spawn(",
-            "ModEntities.SPIRIT",
-            "mockPlayer",
-            "makeMockServerPlayer",
-            "spawnSpirit",
-            "Scene.spirit(",
-            "spawnWith(",
+        ".spawn(",
+        "ModEntities.SPIRIT",
+        "mockPlayer",
+        "makeMockServerPlayer",
+        "spawnSpirit",
+        "Scene.spirit(",
+        "spawnWith(",
     };
     private static final String[] CLEANUP_MARKERS = {
-            "GameTestFixtures.reset",
-            "GameTestFixtures.sweepEntities",
-            "GameTestFixtures.begin",
-            "GameTestFixtures.finish",
-            "TacticsScene.prepare",
-            "MovementScene.prepare",
+        "GameTestFixtures.reset",
+        "GameTestFixtures.sweepEntities",
+        "GameTestFixtures.begin",
+        "GameTestFixtures.finish",
+        "TacticsScene.prepare",
+        "MovementScene.prepare",
     };
     private static final Pattern HELPER_DEFINITION = Pattern.compile(
-            "static\\s+[\\w<>,\\[\\] ?.]+\\s+(\\w+)\\s*\\([^)]*GameTestHelper[^)]*\\)[^{]*\\{",
-            Pattern.MULTILINE);
+            "static\\s+[\\w<>,\\[\\] ?.]+\\s+(\\w+)\\s*\\([^)]*GameTestHelper[^)]*\\)[^{]*\\{", Pattern.MULTILINE);
 
     @Test
     void gameTestSpawn_WithoutStartCleanup_IsReported() {
         List<String> offenders = new ArrayList<>();
         collectOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "GameTest со спавном обязан начинать сцену с общей зачистки: фреймворк не чистит мир между "
                         + "пачками (clearOnBatch=false), сущности прошлых сцен живут дальше, а тактика духа видит "
                         + "врагов в радиусе 32 блоков — чужой моб замораживает духа (tactics.wantsControl → "
@@ -64,7 +65,9 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), offendersOf(sample),
+        assertEquals(
+                List.of(),
+                offendersOf(sample),
                 "Сторож ложно срабатывает: локальный помощник с зачисткой — законное начало сцены");
     }
 
@@ -82,7 +85,9 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("till_WithoutHoe_FailsFast"), offendersOf(sample),
+        assertEquals(
+                List.of("till_WithoutHoe_FailsFast"),
+                offendersOf(sample),
                 "Сторож ослеп: помощник без зачистки не изолирует сцену, даже если вызван до спавна");
     }
 
@@ -96,7 +101,9 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("zombie_NearSpirit_TakesTarget"), offendersOf(sample),
+        assertEquals(
+                List.of("zombie_NearSpirit_TakesTarget"),
+                offendersOf(sample),
                 "Сторож ослеп: спавн без стартовой зачистки должен попадать в нарушители");
     }
 
@@ -111,7 +118,9 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("zombie_NearSpirit_TakesTarget"), offendersOf(sample),
+        assertEquals(
+                List.of("zombie_NearSpirit_TakesTarget"),
+                offendersOf(sample),
                 "Сторож ослеп: зачистка после спавна не защищает от чужих сущностей — она обязана быть до спавна");
     }
 
@@ -126,8 +135,8 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), offendersOf(sample),
-                "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
+        assertEquals(
+                List.of(), offendersOf(sample), "Сторож ложно срабатывает: зачистка до спавна — законное начало сцены");
     }
 
     @Test
@@ -143,7 +152,9 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"), finishOffendersOf(sample),
+        assertEquals(
+                List.of("fill_TwoCubeBottomUp_SpiritEndsOutside"),
+                finishOffendersOf(sample),
                 "Сторож ослеп: поздний reset в лямбде убивает давно бегущих соседей по пачке — там обязан "
                         + "быть узкий finish");
     }
@@ -161,7 +172,9 @@ class GameTestIsolationGuardTests {
                 + "    }\n"
                 + "}\n";
 
-        assertEquals(List.of(), finishOffendersOf(sample),
+        assertEquals(
+                List.of(),
+                finishOffendersOf(sample),
                 "Сторож ложно срабатывает: стартовый reset плюс узкий finish в лямбде — законная сцена");
     }
 
@@ -170,7 +183,9 @@ class GameTestIsolationGuardTests {
         List<String> offenders = new ArrayList<>();
         collectFinishOffenders(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Поздняя зачистка (внутри лямбды succeedWhen/runAfterDelay) обязана быть узкой "
                         + "GameTestFixtures.finish: широкая убивает давно бегущих соседей по пачке — тесты "
                         + "пачки идут одновременно, что доказал красный прогон after1 (20 падений, 5 тиков 0 "
@@ -182,8 +197,8 @@ class GameTestIsolationGuardTests {
         sources.forEach((file, text) -> {
             for (Method method : gameTestMethods(text)) {
                 if (countOccurrences(method.body(), "GameTestFixtures.reset(") > 1) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
-                            + " — " + method.name());
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, method.annotationStart()) + " — " + method.name());
                 }
             }
         });
@@ -214,8 +229,8 @@ class GameTestIsolationGuardTests {
             List<String> cleanHelpers = cleanHelpers(text);
             for (Method method : gameTestMethods(text)) {
                 if (spawns(method.body()) && !cleanedBeforeSpawn(method.body(), cleanHelpers)) {
-                    offenders.add(file + ":" + SourceFiles.lineOf(text, method.annotationStart())
-                            + " — " + method.name());
+                    offenders.add(
+                            file + ":" + SourceFiles.lineOf(text, method.annotationStart()) + " — " + method.name());
                 }
             }
         });
@@ -319,6 +334,5 @@ class GameTestIsolationGuardTests {
         return first;
     }
 
-    private record Method(String name, int annotationStart, String body) {
-    }
+    private record Method(String name, int annotationStart, String body) {}
 }

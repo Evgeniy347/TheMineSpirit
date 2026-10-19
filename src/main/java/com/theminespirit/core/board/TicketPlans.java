@@ -43,8 +43,7 @@ public final class TicketPlans {
 
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
 
-    private TicketPlans() {
-    }
+    private TicketPlans() {}
 
     public static Optional<String> craftItem(BoardCase boardCase) {
         Objects.requireNonNull(boardCase, "Кейс крафта не может быть null: без него неизвестен предмет");
@@ -75,8 +74,8 @@ public final class TicketPlans {
         }
         int max = BuildingLevels.maxLevel(boardCase);
         if (level > max) {
-            throw new IllegalArgumentException("Уровень " + level + " кейса " + boardCase + " выше максимального "
-                    + max + ": уровень постройки не существует и выдавать его нельзя");
+            throw new IllegalArgumentException("Уровень " + level + " кейса " + boardCase + " выше максимального " + max
+                    + ": уровень постройки не существует и выдавать его нельзя");
         }
         return switch (boardCase) {
             case BUILD_MINE -> buildMineLevel(level, target);
@@ -106,12 +105,20 @@ public final class TicketPlans {
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
             case FISH -> fishWorkPoint(target);
-            case CRAFT_WOODEN_PICKAXE, CRAFT_WOODEN_AXE, CRAFT_WOODEN_SHOVEL, CRAFT_STONE_PICKAXE,
-                    CRAFT_STONE_AXE, CRAFT_STONE_SHOVEL, CRAFT_STONE_SWORD -> craftTool(boardCase, target);
+            case CRAFT_WOODEN_PICKAXE,
+                    CRAFT_WOODEN_AXE,
+                    CRAFT_WOODEN_SHOVEL,
+                    CRAFT_STONE_PICKAXE,
+                    CRAFT_STONE_AXE,
+                    CRAFT_STONE_SHOVEL,
+                    CRAFT_STONE_SWORD -> craftTool(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
             case CRAFT_BED -> craft(bedItem(target), target.count() > 0 ? target.count() : 1, target);
-            case WEAVE_WOOL -> craft(target.craftItem() == null ? WoolRules.CRAFTED_WOOL : target.craftItem(),
-                    target.count() > 0 ? target.count() : 1, target);
+            case WEAVE_WOOL ->
+                craft(
+                        target.craftItem() == null ? WoolRules.CRAFTED_WOOL : target.craftItem(),
+                        target.count() > 0 ? target.count() : 1,
+                        target);
             case SHEAR_SHEEP -> shearSheep(target);
             case HUNT_WILD_SHEEP -> huntWildSheep(target);
             case HARVEST_HIVE -> harvestHive();
@@ -125,32 +132,80 @@ public final class TicketPlans {
             case RELOCATE_BUILDING -> relocateBuilding(target);
             case RESTOCK_FOOD -> restockFood(target);
             case TRANSFER_ITEM -> transferItem(target);
-            default -> throw new IllegalArgumentException("Кейс " + boardCase
-                    + " не имеет плана на доске: выдача задания без плана оставила бы духа "
-                    + "без задачи — новый кейс обязан прийти со своей строкой плана "
-                    + "или записью в EXTERNAL_CASES");
+            default ->
+                throw new IllegalArgumentException("Кейс " + boardCase
+                        + " не имеет плана на доске: выдача задания без плана оставила бы духа "
+                        + "без задачи — новый кейс обязан прийти со своей строкой плана "
+                        + "или записью в EXTERNAL_CASES");
         };
     }
 
     private static TaskNode buildMineLevel(int level, TicketTarget target) {
         return switch (level) {
-            case 1 -> new ScriptCall("dig_descent", Map.of("direction", "south",
-                    "y", DescentData.loadDefault().targetY()));
-            case 2 -> new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
-                    "z", target.target().z(), "size", MINE_TUNNEL_SIZE));
-            case 3 -> sequence(
-                    new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
-                            "z", target.target().z(), "size", MINE_STEPS_SIZE)),
-                    new ScriptCall("fill", Map.of("block", "minecraft:cobblestone",
-                            "x1", target.target().x() - MINE_STEPS_SIZE,
-                            "y1", target.target().y() - 1,
-                            "z1", target.target().z() - MINE_STEPS_SIZE,
-                            "x2", target.target().x() + MINE_STEPS_SIZE,
-                            "y2", target.target().y() - 1,
-                            "z2", target.target().z() + MINE_STEPS_SIZE)));
-            default -> sequence(gotoPoint(target.target()),
-                    new ScriptCall("dig_area", Map.of("x", target.target().x(), "y", target.target().y(),
-                            "z", target.target().z(), "size", MINE_TUNNEL_SIZE)));
+            case 1 ->
+                new ScriptCall(
+                        "dig_descent",
+                        Map.of(
+                                "direction",
+                                "south",
+                                "y",
+                                DescentData.loadDefault().targetY()));
+            case 2 ->
+                new ScriptCall(
+                        "dig_area",
+                        Map.of(
+                                "x",
+                                target.target().x(),
+                                "y",
+                                target.target().y(),
+                                "z",
+                                target.target().z(),
+                                "size",
+                                MINE_TUNNEL_SIZE));
+            case 3 ->
+                sequence(
+                        new ScriptCall(
+                                "dig_area",
+                                Map.of(
+                                        "x",
+                                        target.target().x(),
+                                        "y",
+                                        target.target().y(),
+                                        "z",
+                                        target.target().z(),
+                                        "size",
+                                        MINE_STEPS_SIZE)),
+                        new ScriptCall(
+                                "fill",
+                                Map.of(
+                                        "block",
+                                        "minecraft:cobblestone",
+                                        "x1",
+                                        target.target().x() - MINE_STEPS_SIZE,
+                                        "y1",
+                                        target.target().y() - 1,
+                                        "z1",
+                                        target.target().z() - MINE_STEPS_SIZE,
+                                        "x2",
+                                        target.target().x() + MINE_STEPS_SIZE,
+                                        "y2",
+                                        target.target().y() - 1,
+                                        "z2",
+                                        target.target().z() + MINE_STEPS_SIZE)));
+            default ->
+                sequence(
+                        gotoPoint(target.target()),
+                        new ScriptCall(
+                                "dig_area",
+                                Map.of(
+                                        "x",
+                                        target.target().x(),
+                                        "y",
+                                        target.target().y(),
+                                        "z",
+                                        target.target().z(),
+                                        "size",
+                                        MINE_TUNNEL_SIZE)));
         };
     }
 
@@ -160,9 +215,19 @@ public final class TicketPlans {
             case 2 -> "pen_7x7";
             default -> "pen_9x9";
         };
-        return sequence(gotoTarget(target), new ScriptCall("build_schematic",
-                Map.of("file", scheme, "x", target.target().x(), "y", target.target().y(),
-                        "z", target.target().z())));
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "build_schematic",
+                        Map.of(
+                                "file",
+                                scheme,
+                                "x",
+                                target.target().x(),
+                                "y",
+                                target.target().y(),
+                                "z",
+                                target.target().z())));
     }
 
     private static TaskNode buildWarehouseLevel(int level, TicketTarget target) {
@@ -175,12 +240,12 @@ public final class TicketPlans {
     }
 
     private static TaskNode fillCrater(TicketTarget target) {
-        int blocks = target.craterBlocks() > 0 ? target.craterBlocks()
+        int blocks = target.craterBlocks() > 0
+                ? target.craterBlocks()
                 : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
         return sequence(
                 gotoTarget(target),
-                new ScriptCall("acquire", Map.of("item", "dirt", "count",
-                        Math.min(blocks, CatalogLimits.COUNT_MAX))),
+                new ScriptCall("acquire", Map.of("item", "dirt", "count", Math.min(blocks, CatalogLimits.COUNT_MAX))),
                 fillArea(target, "dirt", CRATER_FILL_RADIUS));
     }
 
@@ -207,20 +272,31 @@ public final class TicketPlans {
     private static TaskNode luredCapture(Species species, String feed) {
         return sequence(
                 new ScriptCall("withdraw", Map.of("container", "nearest", "item", feed, "count", 1)),
-                new ScriptCall("capture", Map.of("species", species.name().toLowerCase(Locale.ROOT),
-                        "radius", CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
+                new ScriptCall(
+                        "capture",
+                        Map.of(
+                                "species",
+                                species.name().toLowerCase(Locale.ROOT),
+                                "radius",
+                                CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
     private static TaskNode craft(String item, int count, TicketTarget target) {
-        return sequence(gotoTarget(target), new ScriptCall("craft",
-                Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "craft", Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
     private static TaskNode fishWorkPoint(TicketTarget target) {
-        return sequence(gotoTarget(target), new ScriptCall("fish", Map.of(
-                "count", CatalogLimits.FISH_COUNT_DEFAULT,
-                "duration_ticks", CatalogLimits.FISH_DURATION_DEFAULT,
-                "radius", CatalogLimits.FISH_RADIUS_DEFAULT)));
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "fish",
+                        Map.of(
+                                "count", CatalogLimits.FISH_COUNT_DEFAULT,
+                                "duration_ticks", CatalogLimits.FISH_DURATION_DEFAULT,
+                                "radius", CatalogLimits.FISH_RADIUS_DEFAULT)));
     }
 
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
@@ -229,38 +305,68 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
-        int[][] offsets = {{LIGHTING_OFFSET, LIGHTING_OFFSET}, {-LIGHTING_OFFSET, LIGHTING_OFFSET},
-                {LIGHTING_OFFSET, -LIGHTING_OFFSET}, {-LIGHTING_OFFSET, -LIGHTING_OFFSET}};
+        int[][] offsets = {
+            {LIGHTING_OFFSET, LIGHTING_OFFSET},
+            {-LIGHTING_OFFSET, LIGHTING_OFFSET},
+            {LIGHTING_OFFSET, -LIGHTING_OFFSET},
+            {-LIGHTING_OFFSET, -LIGHTING_OFFSET}
+        };
         int torches = Math.min(LIGHTING_TORCHES, offsets.length);
         List<TaskNode> steps = new ArrayList<>(torches + 1);
         steps.add(gotoTarget(target));
         for (int index = 0; index < torches; index++) {
             int[] offset = offsets[index];
-            steps.add(new ScriptCall("place_block", Map.of("block", "minecraft:torch",
-                    "x", target.target().x() + offset[0], "y", target.target().y() + 1,
-                    "z", target.target().z() + offset[1])));
+            steps.add(new ScriptCall(
+                    "place_block",
+                    Map.of(
+                            "block",
+                            "minecraft:torch",
+                            "x",
+                            target.target().x() + offset[0],
+                            "y",
+                            target.target().y() + 1,
+                            "z",
+                            target.target().z() + offset[1])));
         }
         return new SequenceNode(steps);
     }
 
     private static TaskNode dismantleShelter(TicketTarget target) {
-        return new ScriptCall("clear_area", Map.of(
-                "x1", target.target().x() - DISMANTLE_RADIUS,
-                "y1", target.target().y(),
-                "z1", target.target().z() - DISMANTLE_RADIUS,
-                "x2", target.target().x() + DISMANTLE_RADIUS,
-                "y2", target.target().y() + 2,
-                "z2", target.target().z() + DISMANTLE_RADIUS));
+        return new ScriptCall(
+                "clear_area",
+                Map.of(
+                        "x1",
+                        target.target().x() - DISMANTLE_RADIUS,
+                        "y1",
+                        target.target().y(),
+                        "z1",
+                        target.target().z() - DISMANTLE_RADIUS,
+                        "x2",
+                        target.target().x() + DISMANTLE_RADIUS,
+                        "y2",
+                        target.target().y() + 2,
+                        "z2",
+                        target.target().z() + DISMANTLE_RADIUS));
     }
 
     private static TaskNode supplySite(TicketTarget target) {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : DEFAULT_SUPPLY_COUNT;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        return sequence(gotoTarget(target),
+        return sequence(
+                gotoTarget(target),
                 new ScriptCall("acquire", Map.of("item", item, "count", batch)),
-                new ScriptCall("deposit", Map.of("container", "nearest", "item", item, "count", batch,
-                        "radius", SUPPLY_CONTAINER_RADIUS)));
+                new ScriptCall(
+                        "deposit",
+                        Map.of(
+                                "container",
+                                "nearest",
+                                "item",
+                                item,
+                                "count",
+                                batch,
+                                "radius",
+                                SUPPLY_CONTAINER_RADIUS)));
     }
 
     private static TaskNode collectDrops(TicketTarget target) {
@@ -274,18 +380,25 @@ public final class TicketPlans {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        return sequence(gotoTarget(target),
-                new ScriptCall("acquire", Map.of("item", item, "count", batch)));
+        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of("item", item, "count", batch)));
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {
-        return new ScriptCall("clear_area", Map.of(
-                "x1", target.target().x() - GROUNDS_CLEAR_RADIUS,
-                "y1", target.target().y() - 1,
-                "z1", target.target().z() - GROUNDS_CLEAR_RADIUS,
-                "x2", target.target().x() + GROUNDS_CLEAR_RADIUS,
-                "y2", target.target().y() + 2,
-                "z2", target.target().z() + GROUNDS_CLEAR_RADIUS));
+        return new ScriptCall(
+                "clear_area",
+                Map.of(
+                        "x1",
+                        target.target().x() - GROUNDS_CLEAR_RADIUS,
+                        "y1",
+                        target.target().y() - 1,
+                        "z1",
+                        target.target().z() - GROUNDS_CLEAR_RADIUS,
+                        "x2",
+                        target.target().x() + GROUNDS_CLEAR_RADIUS,
+                        "y2",
+                        target.target().y() + 2,
+                        "z2",
+                        target.target().z() + GROUNDS_CLEAR_RADIUS));
     }
 
     private static TaskNode buildHouse(TicketTarget target) {
@@ -308,30 +421,42 @@ public final class TicketPlans {
 
     private static TaskNode breedAnimals(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
-        return new ScriptCall("breed", Map.of("species",
-                species.name().toLowerCase(Locale.ROOT),
-                "radius", CatalogLimits.HERD_RADIUS_DEFAULT,
-                "pairs", CatalogLimits.HERD_PAIRS_DEFAULT));
+        return new ScriptCall(
+                "breed",
+                Map.of(
+                        "species",
+                        species.name().toLowerCase(Locale.ROOT),
+                        "radius",
+                        CatalogLimits.HERD_RADIUS_DEFAULT,
+                        "pairs",
+                        CatalogLimits.HERD_PAIRS_DEFAULT));
     }
 
     private static TaskNode herdCull(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
-        return new ScriptCall("cull", Map.of("species",
-                species.name().toLowerCase(Locale.ROOT),
-                "radius", CatalogLimits.HERD_RADIUS_DEFAULT));
+        return new ScriptCall(
+                "cull",
+                Map.of(
+                        "species",
+                        species.name().toLowerCase(Locale.ROOT),
+                        "radius",
+                        CatalogLimits.HERD_RADIUS_DEFAULT));
     }
 
     private static TaskNode shearSheep(TicketTarget target) {
         int count = target.count() > 0 ? target.count() : WoolRules.minPenSheep();
-        return sequence(gotoTarget(target), new ScriptCall("shear", Map.of(
-                "radius", WoolRules.shearRadius(),
-                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "shear",
+                        Map.of(
+                                "radius", WoolRules.shearRadius(),
+                                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
     }
 
     private static TaskNode harvestHive() {
-        return new ScriptCall("harvest_hive", Map.of(
-                "radius", HiveRules.hiveRadius(),
-                "count", CatalogLimits.HIVE_COUNT_DEFAULT));
+        return new ScriptCall(
+                "harvest_hive", Map.of("radius", HiveRules.hiveRadius(), "count", CatalogLimits.HIVE_COUNT_DEFAULT));
     }
 
     private static TaskNode placeBeehive(TicketTarget target) {
@@ -339,16 +464,21 @@ public final class TicketPlans {
         BlockCoord cell = new BlockCoord(point.x(), point.y() + 1, point.z());
         return sequence(
                 craft(HiveRules.CRAFTED_BEEHIVE, 1, target),
-                new ScriptCall("place_block", Map.of("block", HiveRules.CRAFTED_BEEHIVE,
-                        "x", cell.x(), "y", cell.y(), "z", cell.z())));
+                new ScriptCall(
+                        "place_block",
+                        Map.of("block", HiveRules.CRAFTED_BEEHIVE, "x", cell.x(), "y", cell.y(), "z", cell.z())));
     }
 
     private static TaskNode huntWildSheep(TicketTarget target) {
         int count = target.count() > 0 ? target.count() : WoolRules.wildSheepPerDay();
-        return sequence(gotoTarget(target), new ScriptCall("hunt", Map.of(
-                "species", Species.SHEEP.name().toLowerCase(Locale.ROOT),
-                "radius", WoolRules.wildSheepRadius(),
-                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "hunt",
+                        Map.of(
+                                "species", Species.SHEEP.name().toLowerCase(Locale.ROOT),
+                                "radius", WoolRules.wildSheepRadius(),
+                                "count", Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
     }
 
     private static String bedItem(TicketTarget target) {
@@ -360,12 +490,12 @@ public final class TicketPlans {
 
     private static TaskNode relocateBuilding(TicketTarget target) {
         if (target.from() == null || target.to() == null) {
-            throw new IllegalArgumentException("Перенос без from/to: снос идёт в from, "
-                    + "стройка — в to, без обеих точек план не собрать");
+            throw new IllegalArgumentException(
+                    "Перенос без from/to: снос идёт в from, " + "стройка — в to, без обеих точек план не собрать");
         }
         if (target.from().equals(target.to())) {
-            throw new IllegalArgumentException("Перенос из " + target.from() + " в ту же точку: "
-                    + "сносить и строить на одном месте нечего");
+            throw new IllegalArgumentException(
+                    "Перенос из " + target.from() + " в ту же точку: " + "сносить и строить на одном месте нечего");
         }
         if (target.schemeFile() == null) {
             throw new IllegalArgumentException("Перенос без схемы: в to строится та же постройка, "
@@ -378,8 +508,17 @@ public final class TicketPlans {
                 gotoPoint(target.from()),
                 demolishBox(target.from(), RELOCATE_CLEAR_RADIUS),
                 gotoPoint(target.to()),
-                new ScriptCall("build_schematic", Map.of("file", target.schemeFile(),
-                        "x", target.to().x(), "y", target.to().y(), "z", target.to().z()))));
+                new ScriptCall(
+                        "build_schematic",
+                        Map.of(
+                                "file",
+                                target.schemeFile(),
+                                "x",
+                                target.to().x(),
+                                "y",
+                                target.to().y(),
+                                "z",
+                                target.to().z()))));
     }
 
     private static TaskNode warehouseRelocate(TicketTarget target) {
@@ -390,14 +529,15 @@ public final class TicketPlans {
                 demolishBox(target.from(), radius),
                 new ScriptCall("collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX)),
                 gotoPoint(target.to()),
-                new ScriptCall("unload", Map.of("container", "auto", "radius",
-                        CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true))));
+                new ScriptCall(
+                        "unload",
+                        Map.of("container", "auto", "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true))));
     }
 
     private static int warehouseRadius(int level) {
         if (level < 1 || level > WarehouseRules.MAX_LEVEL) {
-            throw new IllegalArgumentException("Уровень склада " + level + " вне 1.."
-                    + WarehouseRules.MAX_LEVEL + ": радиуса сноса для него нет");
+            throw new IllegalArgumentException(
+                    "Уровень склада " + level + " вне 1.." + WarehouseRules.MAX_LEVEL + ": радиуса сноса для него нет");
         }
         return switch (level) {
             case 1 -> 4;
@@ -413,16 +553,26 @@ public final class TicketPlans {
                     + "а withdraw — чей инвентарь пополнять");
         }
         if (target.supplyItem() == null || target.supplyCount() <= 0) {
-            throw new IllegalArgumentException("Передача без предмета или количества: "
-                    + "нечего нести и нечем закрыть нехватку");
+            throw new IllegalArgumentException(
+                    "Передача без предмета или количества: " + "нечего нести и нечем закрыть нехватку");
         }
         int count = Math.min(target.supplyCount(), CatalogLimits.COUNT_MAX);
         if (target.transferFrom() != null) {
-            return new ScriptCall("deliver", Map.of("item", target.supplyItem(), "count", count,
-                    "to", "spirit:" + target.transferTo()));
+            return new ScriptCall(
+                    "deliver",
+                    Map.of("item", target.supplyItem(), "count", count, "to", "spirit:" + target.transferTo()));
         }
-        return new ScriptCall("withdraw", Map.of("container", "nearest", "item", target.supplyItem(),
-                "count", count, "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT));
+        return new ScriptCall(
+                "withdraw",
+                Map.of(
+                        "container",
+                        "nearest",
+                        "item",
+                        target.supplyItem(),
+                        "count",
+                        count,
+                        "radius",
+                        CatalogLimits.CONTAINER_RADIUS_DEFAULT));
     }
 
     private static TaskNode restockFood(TicketTarget target) {
@@ -430,24 +580,51 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Пополнение еды без supplyItem: со склада забирают "
                     + "конкретный продукт, без имени предмета withdraw нечего взять");
         }
-        return new ScriptCall("withdraw", Map.of("container", "nearest", "item", target.supplyItem(),
-                "count", RESTOCK_FOOD_COUNT, "radius", CatalogLimits.CONTAINER_RADIUS_DEFAULT));
+        return new ScriptCall(
+                "withdraw",
+                Map.of(
+                        "container",
+                        "nearest",
+                        "item",
+                        target.supplyItem(),
+                        "count",
+                        RESTOCK_FOOD_COUNT,
+                        "radius",
+                        CatalogLimits.CONTAINER_RADIUS_DEFAULT));
     }
 
     private static ScriptCall schematic(String scheme, TicketTarget target) {
-        return new ScriptCall("build_schematic", Map.of("file", scheme, "x", target.target().x(),
-                "y", target.target().y(), "z", target.target().z()));
+        return new ScriptCall(
+                "build_schematic",
+                Map.of(
+                        "file",
+                        scheme,
+                        "x",
+                        target.target().x(),
+                        "y",
+                        target.target().y(),
+                        "z",
+                        target.target().z()));
     }
 
     private static TaskNode fillArea(TicketTarget target, String block, int radius) {
-        return new ScriptCall("fill", Map.of(
-                "block", block,
-                "x1", target.target().x() - radius,
-                "y1", target.target().y(),
-                "z1", target.target().z() - radius,
-                "x2", target.target().x() + radius,
-                "y2", target.target().y(),
-                "z2", target.target().z() + radius));
+        return new ScriptCall(
+                "fill",
+                Map.of(
+                        "block",
+                        block,
+                        "x1",
+                        target.target().x() - radius,
+                        "y1",
+                        target.target().y(),
+                        "z1",
+                        target.target().z() - radius,
+                        "x2",
+                        target.target().x() + radius,
+                        "y2",
+                        target.target().y(),
+                        "z2",
+                        target.target().z() + radius));
     }
 
     private static ScriptCall gotoTarget(TicketTarget target) {
@@ -455,20 +632,27 @@ public final class TicketPlans {
     }
 
     private static ScriptCall gotoPoint(BlockCoord point) {
-        return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(),
-                "z", point.z()));
+        return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
     }
 
-
     private static ScriptCall demolishBox(BlockCoord center, int radius) {
-        return new ScriptCall("clear_area", Map.of(
-                "x1", center.x() - radius,
-                "y1", center.y(),
-                "z1", center.z() - radius,
-                "x2", center.x() + radius,
-                "y2", center.y() + 2,
-                "z2", center.z() + radius,
-                "demolish", true));
+        return new ScriptCall(
+                "clear_area",
+                Map.of(
+                        "x1",
+                        center.x() - radius,
+                        "y1",
+                        center.y(),
+                        "z1",
+                        center.z() - radius,
+                        "x2",
+                        center.x() + radius,
+                        "y2",
+                        center.y() + 2,
+                        "z2",
+                        center.z() + radius,
+                        "demolish",
+                        true));
     }
 
     private static TaskNode sequence(TaskNode... steps) {

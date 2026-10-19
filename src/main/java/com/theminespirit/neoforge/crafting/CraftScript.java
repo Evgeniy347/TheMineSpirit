@@ -33,8 +33,7 @@ public final class CraftScript implements ScriptInstance {
         CRAFT
     }
 
-    private record Step(List<Item> consumed, List<ItemStack> produced, int output) {
-    }
+    private record Step(List<Item> consumed, List<ItemStack> produced, int output) {}
 
     private final SpiritEntity spirit;
     private final CraftParams params;
@@ -146,8 +145,7 @@ public final class CraftScript implements ScriptInstance {
                 }
             }
             if (!CraftInventory.apply(simulation, items, produced)) {
-                return Optional.of("инвентарь полон: не помещаются результат и остатки крафта '" + params.item()
-                        + "'");
+                return Optional.of("инвентарь полон: не помещаются результат и остатки крафта '" + params.item() + "'");
             }
             built.add(new Step(items, produced, produced.get(0).getCount()));
         }
@@ -175,8 +173,12 @@ public final class CraftScript implements ScriptInstance {
         if (key == null) {
             return Optional.empty();
         }
-        return spirit.level().getRecipeManager().byKey(key).map(RecipeHolder::value)
-                .filter(CraftingRecipe.class::isInstance).map(CraftingRecipe.class::cast);
+        return spirit.level()
+                .getRecipeManager()
+                .byKey(key)
+                .map(RecipeHolder::value)
+                .filter(CraftingRecipe.class::isInstance)
+                .map(CraftingRecipe.class::cast);
     }
 
     private ScriptStatus useStation() {
@@ -216,7 +218,9 @@ public final class CraftScript implements ScriptInstance {
 
     private static String shortage(CraftPlan plan) {
         StringJoiner joiner = new StringJoiner(", ");
-        plan.missing().forEach((item, lack) -> joiner.add(item + " " + lack + " из " + plan.required().get(item)));
+        plan.missing()
+                .forEach((item, lack) ->
+                        joiner.add(item + " " + lack + " из " + plan.required().get(item)));
         return joiner.toString();
     }
 

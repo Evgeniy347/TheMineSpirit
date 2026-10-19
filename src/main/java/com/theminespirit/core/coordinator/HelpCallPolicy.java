@@ -8,8 +8,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class HelpCallPolicy {
-    public List<AssistOrder> answer(List<HelpCall> calls, List<SpiritSnapshot> spirits, double helpRadius,
-            int maxHelpers) {
+    public List<AssistOrder> answer(
+            List<HelpCall> calls, List<SpiritSnapshot> spirits, double helpRadius, int maxHelpers) {
         if (calls == null || spirits == null) {
             throw new IllegalArgumentException("HelpCallPolicy.answer: calls и spirits обязательны — "
                     + "без зова или без духов отвечать некому, пустые списки допустимы");
@@ -40,7 +40,8 @@ public final class HelpCallPolicy {
                     .filter(spirit -> !calling.contains(spirit.id()))
                     .filter(spirit -> !spirit.attacked())
                     .filter(spirit -> spirit.pos().distanceTo(call.pos()) <= helpRadius)
-                    .sorted(Comparator.comparingDouble((SpiritSnapshot spirit) -> spirit.pos().distanceTo(call.pos()))
+                    .sorted(Comparator.comparingDouble(
+                                    (SpiritSnapshot spirit) -> spirit.pos().distanceTo(call.pos()))
                             .thenComparing(SpiritSnapshot::id))
                     .limit(maxHelpers)
                     .toList();

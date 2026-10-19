@@ -25,24 +25,32 @@ class BoardTransferTests {
                 assertEquals(GIVER, holder, "Передачу исполняет дающий: груз везут от источника");
             }
         });
-        BoardTicket ticket = new BoardTicket("transfer:craft:CRAFT_TOOLS:stick", BoardCase.TRANSFER_ITEM,
-                Optional.of(GIVER), 45, 10, 1, "transfer:CRAFT_TOOLS", List.of(), Map.of(),
+        BoardTicket ticket = new BoardTicket(
+                "transfer:craft:CRAFT_TOOLS:stick",
+                BoardCase.TRANSFER_ITEM,
+                Optional.of(GIVER),
+                45,
+                10,
+                1,
+                "transfer:CRAFT_TOOLS",
+                List.of(),
+                Map.of(),
                 List.of("to=" + TAKER, "item=stick", "count=2", "from=" + GIVER));
 
         assertEquals(BoardOutcome.ACCEPTED, board.submit(ticket), "Задание передачи обязано встать в очередь");
-        assertTrue(board.claimable(new StockView(Map.of()), 10).contains(ticket),
+        assertTrue(
+                board.claimable(new StockView(Map.of()), 10).contains(ticket),
                 "Передача не ждёт предметов на складе: груз уже в инвентаре источника");
-        assertEquals(BoardOutcome.CLAIMED, board.claim(ticket.id(), GIVER, 10),
-                "Задание передачи берёт дающий дух");
+        assertEquals(BoardOutcome.CLAIMED, board.claim(ticket.id(), GIVER, 10), "Задание передачи берёт дающий дух");
         assertTrue(board.complete(ticket.id()), "Завершённая передача закрывает задание доски");
 
-        assertEquals(List.of(BoardLog.Event.SUBMITTED, BoardLog.Event.ASSIGNED, BoardLog.Event.DONE),
+        assertEquals(
+                List.of(BoardLog.Event.SUBMITTED, BoardLog.Event.ASSIGNED, BoardLog.Event.DONE),
                 events,
                 "Журнал обязан назвать выдачу (кому) и итог: без них передачу не отличить от зависшей");
-        assertTrue(modifiers.contains("to=" + TAKER) && modifiers.contains("item=stick"),
-                "Журнал передачи обязан назвать получателя и предмет, а не только исполнителя: "
-                        + modifiers);
-        assertTrue(modifiers.contains("count=2"),
-                "Журнал передачи обязан назвать число предметов: " + modifiers);
+        assertTrue(
+                modifiers.contains("to=" + TAKER) && modifiers.contains("item=stick"),
+                "Журнал передачи обязан назвать получателя и предмет, а не только исполнителя: " + modifiers);
+        assertTrue(modifiers.contains("count=2"), "Журнал передачи обязан назвать число предметов: " + modifiers);
     }
 }

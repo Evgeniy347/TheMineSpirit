@@ -54,8 +54,8 @@ public record SafeMinePlan(
         }
     }
 
-    public static SafeMinePlan staircase(SafetyView view, BlockCoord entry, DescentDirection direction,
-            int targetY, int torchInterval) {
+    public static SafeMinePlan staircase(
+            SafetyView view, BlockCoord entry, DescentDirection direction, int targetY, int torchInterval) {
         requireView(view);
         requireEntry(entry);
         requireDirection(direction);
@@ -68,10 +68,10 @@ public record SafeMinePlan(
         String dangerReason = null;
         int index = 0;
         for (int floor = entryFloor; floor >= targetY; floor--, index++) {
-            BlockCoord column = new BlockCoord(entry.x() + index * direction.dx, floor,
-                    entry.z() + index * direction.dz);
-            Outcome outcome = stepOrDanger(view, index, floor, column, direction, torchInterval,
-                    STAIRCASE_PASSAGE_HEIGHT);
+            BlockCoord column =
+                    new BlockCoord(entry.x() + index * direction.dx, floor, entry.z() + index * direction.dz);
+            Outcome outcome =
+                    stepOrDanger(view, index, floor, column, direction, torchInterval, STAIRCASE_PASSAGE_HEIGHT);
             if (outcome instanceof Danger danger) {
                 dangerReason = danger.reason();
                 break;
@@ -81,8 +81,8 @@ public record SafeMinePlan(
         return finish(entry, SafeMineMode.STAIRCASE, direction, torchInterval, steps, dangerReason);
     }
 
-    public static SafeMinePlan tunnel(SafetyView view, BlockCoord entry, DescentDirection direction,
-            int length, int torchInterval) {
+    public static SafeMinePlan tunnel(
+            SafetyView view, BlockCoord entry, DescentDirection direction, int length, int torchInterval) {
         requireView(view);
         requireEntry(entry);
         requireDirection(direction);
@@ -94,10 +94,9 @@ public record SafeMinePlan(
         List<SafeMineStep> steps = new ArrayList<>();
         String dangerReason = null;
         for (int index = 0; index < length; index++) {
-            BlockCoord column = new BlockCoord(entry.x() + index * direction.dx, floor,
-                    entry.z() + index * direction.dz);
-            Outcome outcome = stepOrDanger(view, index, floor, column, direction, torchInterval,
-                    TUNNEL_PASSAGE_HEIGHT);
+            BlockCoord column =
+                    new BlockCoord(entry.x() + index * direction.dx, floor, entry.z() + index * direction.dz);
+            Outcome outcome = stepOrDanger(view, index, floor, column, direction, torchInterval, TUNNEL_PASSAGE_HEIGHT);
             if (outcome instanceof Danger danger) {
                 dangerReason = danger.reason();
                 break;
@@ -107,15 +106,26 @@ public record SafeMinePlan(
         return finish(entry, SafeMineMode.TUNNEL, direction, torchInterval, steps, dangerReason);
     }
 
-    private static SafeMinePlan finish(BlockCoord entry, SafeMineMode mode, DescentDirection direction,
-            int torchInterval, List<SafeMineStep> steps, String dangerReason) {
+    private static SafeMinePlan finish(
+            BlockCoord entry,
+            SafeMineMode mode,
+            DescentDirection direction,
+            int torchInterval,
+            List<SafeMineStep> steps,
+            String dangerReason) {
         DescentStop stop = dangerReason == null ? DescentStop.TARGET_Y : DescentStop.DANGER;
-        return new SafeMinePlan(entry, mode, direction, torchInterval, steps, stop,
-                dangerReason == null ? "" : dangerReason);
+        return new SafeMinePlan(
+                entry, mode, direction, torchInterval, steps, stop, dangerReason == null ? "" : dangerReason);
     }
 
-    private static Outcome stepOrDanger(SafetyView view, int index, int floor, BlockCoord column,
-            DescentDirection direction, int torchInterval, int passageHeight) {
+    private static Outcome stepOrDanger(
+            SafetyView view,
+            int index,
+            int floor,
+            BlockCoord column,
+            DescentDirection direction,
+            int torchInterval,
+            int passageHeight) {
         BlockCoord stand = new BlockCoord(column.x(), floor + 1, column.z());
         List<BlockCoord> passage = new ArrayList<>(passageHeight);
         for (int offset = 0; offset < passageHeight; offset++) {
@@ -184,12 +194,9 @@ public record SafeMinePlan(
         Objects.requireNonNull(direction, "Направление не может быть null: без него неизвестно, куда копать");
     }
 
-    private sealed interface Outcome permits Step, Danger {
-    }
+    private sealed interface Outcome permits Step, Danger {}
 
-    private record Step(SafeMineStep step) implements Outcome {
-    }
+    private record Step(SafeMineStep step) implements Outcome {}
 
-    private record Danger(String reason) implements Outcome {
-    }
+    private record Danger(String reason) implements Outcome {}
 }

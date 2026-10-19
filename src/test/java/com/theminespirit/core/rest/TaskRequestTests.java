@@ -35,10 +35,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 class TaskRequestTests {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String UUID_TEXT = "3f1c2d3e-0000-4000-8000-000000000000";
-    private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog()
-            .restrictedTo(Set.of("scan", "goto", "follow", "collect_drops", "wait"));
-    private static final WorldObservation OBSERVATION = new WorldObservation("bot", 1, new BlockCoord(0, 64, 0),
-            List.of(), List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
+    private static final ScriptCatalog CATALOG =
+            CoreScripts.defaultCatalog().restrictedTo(Set.of("scan", "goto", "follow", "collect_drops", "wait"));
+    private static final WorldObservation OBSERVATION = new WorldObservation(
+            "bot", 1, new BlockCoord(0, 64, 0), List.of(), List.of(), List.of(), List.of(), ScanRadius.DEFAULT.value());
 
     private static byte[] body(String json) {
         return json.getBytes(StandardCharsets.UTF_8);
@@ -74,12 +74,13 @@ class TaskRequestTests {
                 Arguments.of(request(",\"goal\":\"цель\",\"params\":{\"bad\":[1]}"), 400, "строкой или целым"),
                 Arguments.of(request(",\"goal\":\"цель\",\"foo\":1"), 400, "Неизвестное поле 'foo'"),
                 Arguments.of(request(",\"goal\":\"цель\",\"params\":{\"target\":\"Стив\"}"), 200, ""),
-                Arguments.of("{\"request_id\":\"" + UUID_TEXT + "\",\"goal\":\"с рубкой\",\"params\":{\"x\":1}}", 200, ""),
+                Arguments.of(
+                        "{\"request_id\":\"" + UUID_TEXT + "\",\"goal\":\"с рубкой\",\"params\":{\"x\":1}}", 200, ""),
                 Arguments.of("{", 400, "не разобрано как JSON"),
                 Arguments.of("[1]", 400, "JSON-объектом"),
                 Arguments.of("", 400, "JSON-объектом"),
-                Arguments.of(request(",\"goal\":\"цель\",\"request_id\":\"" + UUID_TEXT + "\""), 400,
-                        "Duplicate field"));
+                Arguments.of(
+                        request(",\"goal\":\"цель\",\"request_id\":\"" + UUID_TEXT + "\""), 400, "Duplicate field"));
     }
 
     @ParameterizedTest(name = "{index}: status {1}")
@@ -88,12 +89,17 @@ class TaskRequestTests {
         try {
             TaskRequest parsed = TaskRequest.parse(body(json));
             assertEquals(200, status, "Запрос обязан разобраться, но таблица ждёт отказ для тела " + json);
-            assertEquals(UUID.fromString(UUID_TEXT), parsed.requestId(),
+            assertEquals(
+                    UUID.fromString(UUID_TEXT),
+                    parsed.requestId(),
                     "request_id обязан разбираться в UUID дословно: он склеивает повтор запроса");
         } catch (ApiException rejected) {
-            assertEquals(status, rejected.error().code().status(),
+            assertEquals(
+                    status,
+                    rejected.error().code().status(),
                     "Код ошибки для тела " + json + " обязан быть " + status + ": " + rejected.getMessage());
-            assertTrue(rejected.getMessage().contains(fragment),
+            assertTrue(
+                    rejected.getMessage().contains(fragment),
                     "Сообщение обязано содержать '" + fragment + "': " + rejected.getMessage());
         }
     }
@@ -108,10 +114,12 @@ class TaskRequestTests {
 
     @Test
     void parse_ParamsObject_CarriesStringsAndInts() {
-        TaskRequest parsed = TaskRequest.parse(body(
-                request(",\"goal\":\"цель\",\"params\":{\"target\":\"Steve\",\"radius\":3}")));
+        TaskRequest parsed =
+                TaskRequest.parse(body(request(",\"goal\":\"цель\",\"params\":{\"target\":\"Steve\",\"radius\":3}")));
 
-        assertEquals(Map.of("target", "Steve", "radius", 3), parsed.params(),
+        assertEquals(
+                Map.of("target", "Steve", "radius", 3),
+                parsed.params(),
                 "params обязан нести строки и целые как есть: планировщик получит их goal-параметрами");
     }
 
@@ -119,10 +127,12 @@ class TaskRequestTests {
     void validatePlan_ImplementedScript_FillsCatalogDefault() {
         PlanningService service = new PlanningService(CATALOG, ConditionCatalog.empty());
 
-        TaskNode plan = service.validatePlan(MAPPER.createObjectNode()
-                .put("type", "script").put("script", "scan"));
+        TaskNode plan = service.validatePlan(
+                MAPPER.createObjectNode().put("type", "script").put("script", "scan"));
 
-        assertEquals(new ScriptCall("scan", Map.of("radius", 8)), plan,
+        assertEquals(
+                new ScriptCall("scan", Map.of("radius", 8)),
+                plan,
                 "Валидный план обязан проходить и получать умолчания каталога (radius=8 у scan)");
     }
 
@@ -130,10 +140,13 @@ class TaskRequestTests {
     void validatePlan_UnimplementedScript_InvalidPlanNamesScript() {
         PlanningService service = new PlanningService(CATALOG, ConditionCatalog.empty());
 
-        ApiException failure = expectApi(ErrorCode.INVALID_PLAN, () -> service.validatePlan(MAPPER.createObjectNode()
-                .put("type", "script").put("script", "return_home")));
+        ApiException failure = expectApi(
+                ErrorCode.INVALID_PLAN,
+                () -> service.validatePlan(
+                        MAPPER.createObjectNode().put("type", "script").put("script", "return_home")));
 
-        assertTrue(failure.getMessage().contains("return_home"),
+        assertTrue(
+                failure.getMessage().contains("return_home"),
                 "invalid_plan обязан называть неизвестный скрипт: " + failure.getMessage());
     }
 
@@ -144,7 +157,8 @@ class TaskRequestTests {
 
         ApiException failure = expectApi(ErrorCode.INVALID_PLAN, () -> service.planGoal(request, OBSERVATION));
 
-        assertTrue(failure.getMessage().contains("target"),
+        assertTrue(
+                failure.getMessage().contains("target"),
                 "«Следуй за мной» без params.target обязано давать 422 с пояснением про target: "
                         + failure.getMessage());
     }
@@ -152,12 +166,14 @@ class TaskRequestTests {
     @Test
     void planGoal_FollowWithTarget_BuildsFollowScript() {
         PlanningService service = new PlanningService(CATALOG, ConditionCatalog.empty());
-        TaskRequest request = TaskRequest.parse(body(
-                request(",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Steve\"}")));
+        TaskRequest request =
+                TaskRequest.parse(body(request(",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Steve\"}")));
 
         TaskNode plan = service.planGoal(request, OBSERVATION);
 
-        assertEquals(new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)), plan,
+        assertEquals(
+                new ScriptCall("follow", Map.of("target", "Steve", "radius", 3)),
+                plan,
                 "Цель «следуй за мной» с params.target обязана планировать follow за названной целью");
     }
 
@@ -168,7 +184,8 @@ class TaskRequestTests {
 
         ApiException failure = expectApi(ErrorCode.INVALID_PLAN, () -> service.planGoal(request, OBSERVATION));
 
-        assertTrue(failure.getMessage().contains("не распознана"),
+        assertTrue(
+                failure.getMessage().contains("не распознана"),
                 "Бессмысленная цель обязана давать invalid_plan «не распознана»: " + failure.getMessage());
     }
 
@@ -179,7 +196,8 @@ class TaskRequestTests {
 
         ApiException failure = expectApi(ErrorCode.INVALID_PLAN, () -> service.planGoal(request, OBSERVATION));
 
-        assertTrue(failure.getMessage().contains("return_home"),
+        assertTrue(
+                failure.getMessage().contains("return_home"),
                 "«Верни домой» обязано давать 422 с названием скрипта return_home: " + failure.getMessage());
     }
 
@@ -208,12 +226,19 @@ class TaskRequestTests {
     @Provide
     Arbitrary<String> jsonBodies() {
         return Arbitraries.oneOf(
-                Arbitraries.strings().withChars('{', '}', '"', ':', ',', 'а', '1').ofMinLength(0).ofMaxLength(80),
+                Arbitraries.strings()
+                        .withChars('{', '}', '"', ':', ',', 'а', '1')
+                        .ofMinLength(0)
+                        .ofMaxLength(80),
                 Arbitraries.of(
                         request(",\"goal\":\"цель\""),
                         request(",\"plan\":{\"type\":\"script\",\"script\":\"scan\"}"),
                         "{\"request_id\":\"" + UUID_TEXT + "\",\"goal\":\"x\",\"params\":{\"target\":\"a\"}}",
-                        "{\"foo\":1}", "[1]", "null", "\"строка\"", ""));
+                        "{\"foo\":1}",
+                        "[1]",
+                        "null",
+                        "\"строка\"",
+                        ""));
     }
 
     @Property(tries = 200)
@@ -221,9 +246,11 @@ class TaskRequestTests {
         try {
             TaskRequest.parse(body(json));
         } catch (ApiException expected) {
-            assertTrue(expected.error().code() == ErrorCode.INVALID_REQUEST
+            assertTrue(
+                    expected.error().code() == ErrorCode.INVALID_REQUEST
                             || expected.error().code() == ErrorCode.INVALID_PLAN,
-                    "Parse обязан отказывать только invalid_request/invalid_plan, получен " + expected.error().code());
+                    "Parse обязан отказывать только invalid_request/invalid_plan, получен "
+                            + expected.error().code());
         }
     }
 
@@ -253,7 +280,9 @@ class TaskRequestTests {
     void requestId_ParsedValue_MatchesUuidInBody() {
         TaskRequest parsed = TaskRequest.parse(body(request(",\"goal\":\"цель\"")));
 
-        assertEquals(UUID.fromString(UUID_TEXT), parsed.requestId(),
+        assertEquals(
+                UUID.fromString(UUID_TEXT),
+                parsed.requestId(),
                 "request_id обязан разбираться в UUID дословно: он склеивает повтор запроса");
         assertInstanceOf(UUID.class, parsed.requestId(), "request_id — UUID, а не строка");
     }

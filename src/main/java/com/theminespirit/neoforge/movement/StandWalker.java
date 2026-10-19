@@ -78,8 +78,8 @@ public final class StandWalker {
     private boolean startAttempt() {
         BlockPos feet = spirit.blockPosition();
         standChoices++;
-        Optional<BlockCoord> chosen = StandChoice.choose(target, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                withoutFailedStands);
+        Optional<BlockCoord> chosen =
+                StandChoice.choose(target, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), withoutFailedStands);
         if (chosen.isEmpty()) {
             return false;
         }

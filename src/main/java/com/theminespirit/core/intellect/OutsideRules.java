@@ -16,10 +16,13 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
 
     private static final Set<String> FIELDS = Set.of("partyMin", "escortRadius", "mineKit");
     private static final Set<String> NEED_FIELDS = Set.of("match", "category", "count");
-    private static final OutsideRules DEFAULTS = new OutsideRules(MIN_PARTY, 8.0, List.of(
-            new Need(List.of("*_pickaxe"), null, 1),
-            new Need(List.of("torch"), null, 8),
-            new Need(null, "food", 3)));
+    private static final OutsideRules DEFAULTS = new OutsideRules(
+            MIN_PARTY,
+            8.0,
+            List.of(
+                    new Need(List.of("*_pickaxe"), null, 1),
+                    new Need(List.of("torch"), null, 8),
+                    new Need(null, "food", 3)));
 
     public OutsideRules {
         if (partyMin < MIN_PARTY) {
@@ -64,14 +67,15 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
         List<Need> kit = new ArrayList<>(items.size());
         for (JsonNode item : items) {
             if (!item.isObject()) {
-                throw new IllegalStateException("Файл '" + origin
-                        + "': у mineKit элемент не объект с полями match, category, count");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': у mineKit элемент не объект с полями match, category, count");
             }
             JsonResource.checkFields(item, NEED_FIELDS, origin, "mineKit");
-            List<String> match = item.has("match")
-                    ? JsonResource.strings(item.get("match"), origin, "match набора шахты") : null;
+            List<String> match =
+                    item.has("match") ? JsonResource.strings(item.get("match"), origin, "match набора шахты") : null;
             String category = item.has("category")
-                    ? JsonResource.text(item.get("category"), origin, "category набора шахты") : null;
+                    ? JsonResource.text(item.get("category"), origin, "category набора шахты")
+                    : null;
             int count = JsonResource.integer(item.get("count"), origin, "count набора шахты");
             try {
                 kit.add(new Need(match, category, count));
@@ -90,15 +94,15 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
             }
             if (match != null) {
                 if (match.isEmpty()) {
-                    throw new IllegalArgumentException("У нужды набора пустой match: "
-                            + "без шаблонов нужда не описывает ни один предмет");
+                    throw new IllegalArgumentException(
+                            "У нужды набора пустой match: " + "без шаблонов нужда не описывает ни один предмет");
                 }
                 IdFilter.of(match);
                 match = List.copyOf(match);
             }
             if (category != null && category.isBlank()) {
-                throw new IllegalArgumentException("Категория нужды набора пуста: "
-                        + "имя категории берётся из файла ценностей");
+                throw new IllegalArgumentException(
+                        "Категория нужды набора пуста: " + "имя категории берётся из файла ценностей");
             }
             if (count < 1) {
                 throw new IllegalArgumentException("Количество нужды набора " + count

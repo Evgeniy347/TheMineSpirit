@@ -2,8 +2,8 @@ package com.theminespirit.core.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.observation.WorldObservation;
-import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.PlanParser;
+import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.FallbackPlanner;
 import com.theminespirit.core.planner.Goal;
@@ -20,7 +20,8 @@ public final class PlanningService {
 
     public PlanningService(ScriptCatalog catalog, ConditionCatalog conditions) {
         this.catalog = Objects.requireNonNull(catalog, "catalog не может быть null: план валидируется по каталогу");
-        this.conditions = Objects.requireNonNull(conditions, "conditions не может быть null: каталог проверок обязателен");
+        this.conditions =
+                Objects.requireNonNull(conditions, "conditions не может быть null: каталог проверок обязателен");
         this.planner = new FallbackPlanner(catalog, conditions);
     }
 
@@ -41,7 +42,8 @@ public final class PlanningService {
     public TaskNode planGoal(String goal, Map<String, Object> params, WorldObservation observation) {
         Objects.requireNonNull(observation, "observation не может быть null: планировщик выбирает сценарий по миру");
         if (goal == null || goal.isBlank()) {
-            throw new ApiException(ErrorCode.INVALID_REQUEST,
+            throw new ApiException(
+                    ErrorCode.INVALID_REQUEST,
                     "Цель пуста: для planGoal нужен непустой goal, а для плана — поле plan в теле POST tasks",
                     Map.of("field", "goal"));
         }

@@ -16,9 +16,8 @@ import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 
 class DemandModelProperties {
-    private static final ActivityCatalog CATALOG = ActivityCatalog.adultsOnly(
-            List.of(new ChopActivity(), new FarmActivity(), new MineActivity(), new RestActivity(),
-                    new DefendActivity()));
+    private static final ActivityCatalog CATALOG = ActivityCatalog.adultsOnly(List.of(
+            new ChopActivity(), new FarmActivity(), new MineActivity(), new RestActivity(), new DefendActivity()));
 
     @Provide
     Arbitrary<SettlementView> views() {
@@ -30,17 +29,21 @@ class DemandModelProperties {
         List<ActivityDemand> first = DemandModel.evaluate(view, CATALOG);
         List<ActivityDemand> second = DemandModel.evaluate(view, CATALOG);
 
-        assertEquals(first, second,
-                "Тот же вход даёт тот же спрос: иначе назначения мигают между пересборками");
-        assertEquals(CATALOG.forChild(false).size(), first.size(),
+        assertEquals(first, second, "Тот же вход даёт тот же спрос: иначе назначения мигают между пересборками");
+        assertEquals(
+                CATALOG.forChild(false).size(),
+                first.size(),
                 "Каждый id каталога встречается ровно раз: иначе часть работ не получит спроса");
-        assertEquals(first.size(), new HashSet<>(first.stream().map(ActivityDemand::id).toList()).size(),
+        assertEquals(
+                first.size(),
+                new HashSet<>(first.stream().map(ActivityDemand::id).toList()).size(),
                 "Повторов id в спросе нет: иначе одна деятельность займёт два места в очереди работ");
         for (int index = 1; index < first.size(); index++) {
             ActivityDemand prev = first.get(index - 1);
             ActivityDemand next = first.get(index);
-            assertTrue(prev.demand() > next.demand()
-                    || (prev.demand() == next.demand() && prev.id().compareTo(next.id()) < 0),
+            assertTrue(
+                    prev.demand() > next.demand()
+                            || (prev.demand() == next.demand() && prev.id().compareTo(next.id()) < 0),
                     "Спрос отсортирован по убыванию с тай-брейком по id: иначе выбор работы зависит от обхода");
         }
     }

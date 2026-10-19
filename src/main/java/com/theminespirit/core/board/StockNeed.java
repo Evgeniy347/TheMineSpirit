@@ -7,12 +7,12 @@ import java.util.Objects;
 public record StockNeed(Map<String, Integer> items) {
 
     public StockNeed {
-        Objects.requireNonNull(items, "items не может быть null: задание без ресурсов "
-                + "задают пустой картой, а не null");
+        Objects.requireNonNull(
+                items, "items не может быть null: задание без ресурсов " + "задают пустой картой, а не null");
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
             if (entry.getValue() == null || entry.getValue() < 0) {
-                throw new IllegalArgumentException("Нужда в предмете '" + entry.getKey() + "' равна "
-                        + entry.getValue() + ": количество не может быть отрицательным или null");
+                throw new IllegalArgumentException("Нужда в предмете '" + entry.getKey() + "' равна " + entry.getValue()
+                        + ": количество не может быть отрицательным или null");
             }
         }
         items = Map.copyOf(items);

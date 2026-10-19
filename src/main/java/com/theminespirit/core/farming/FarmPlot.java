@@ -8,8 +8,9 @@ import java.util.List;
 public record FarmPlot(int minX, int minZ, int maxX, int maxZ) {
     public FarmPlot {
         if (minX > maxX || minZ > maxZ) {
-            throw new IllegalArgumentException("Минимум грядки больше максимума: углы обязаны нормализоваться через of(...), "
-                    + "а не конструктором");
+            throw new IllegalArgumentException(
+                    "Минимум грядки больше максимума: углы обязаны нормализоваться через of(...), "
+                            + "а не конструктором");
         }
         int sideX = maxX - minX + 1;
         int sideZ = maxZ - minZ + 1;

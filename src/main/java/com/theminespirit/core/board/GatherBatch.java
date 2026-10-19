@@ -5,8 +5,7 @@ package com.theminespirit.core.board;
  * не дробил рецепт. Выход рецепта — данные игры, а не число в коде.
  */
 public final class GatherBatch {
-    private GatherBatch() {
-    }
+    private GatherBatch() {}
 
     public static int round(int shortage, int craftOutput) {
         if (shortage <= 0) {

@@ -9,8 +9,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 
 final class RecipeInputs {
-    private RecipeInputs() {
-    }
+    private RecipeInputs() {}
 
     static ItemStack resultOf(Recipe<?> recipe, HolderLookup.Provider registries) {
         return recipe.getResultItem(registries);

@@ -5,8 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class WorkCorner {
-    private WorkCorner() {
-    }
+    private WorkCorner() {}
 
     public static BlockCoord anchor(BlockCoord spirit, Optional<BlockCoord> station, int maxRange) {
         Objects.requireNonNull(spirit, "Точка духа не может быть null: без неё некуда ставить станцию");

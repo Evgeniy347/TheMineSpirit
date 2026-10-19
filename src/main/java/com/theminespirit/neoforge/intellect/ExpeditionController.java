@@ -56,8 +56,7 @@ public final class ExpeditionController {
         return expeditionId;
     }
 
-    public record Dispatch(String script, List<UUID> team, long tick) {
-    }
+    public record Dispatch(String script, List<UUID> team, long tick) {}
 
     public Optional<Dispatch> lastDispatch() {
         return Optional.ofNullable(lastDispatch);
@@ -69,8 +68,7 @@ public final class ExpeditionController {
 
     public boolean onAnswer(String expedition, InvitationAnswer answer, long now) {
         if (expedition == null || answer == null) {
-            throw new IllegalArgumentException(
-                    "Ответ без похода не принять: кнопки зовут конкретную команду");
+            throw new IllegalArgumentException("Ответ без похода не принять: кнопки зовут конкретную команду");
         }
         if (active == null || expeditionId == null || !expeditionId.toString().equals(expedition)) {
             return false;
@@ -84,14 +82,15 @@ public final class ExpeditionController {
         return true;
     }
 
-    public void update(ServerLevel level, Optional<Expedition> planned, List<SpiritEntity> members,
-            long now) {
+    public void update(ServerLevel level, Optional<Expedition> planned, List<SpiritEntity> members, long now) {
         if (level == null || planned == null || members == null) {
             throw new IllegalArgumentException(
                     "Поход без уровня, плана или духов не ведётся: команда идёт конкретным составом");
         }
         monitorMission(members, now);
-        if (active == null && planned.isPresent() && !dispatched
+        if (active == null
+                && planned.isPresent()
+                && !dispatched
                 && (closedAt == Long.MIN_VALUE
                         || now - closedAt >= IntellectTuning.loadDefault().inviteTtlTicks())) {
             active = planned.get();
@@ -116,7 +115,8 @@ public final class ExpeditionController {
             }
             return;
         }
-        if (inviter != null && now - lastRepeatTick >= IntellectTuning.loadDefault().inviteRepeatTicks()
+        if (inviter != null
+                && now - lastRepeatTick >= IntellectTuning.loadDefault().inviteRepeatTicks()
                 && !state.goWithout()) {
             ChatInvitation.send(level, inviter, expeditionId, active.team().size());
             lastRepeatTick = now;
@@ -138,13 +138,12 @@ public final class ExpeditionController {
         }
     }
 
-    private boolean dispatchFollow(List<SpiritEntity> members, Expedition expedition, ServerPlayer guide,
-            long now) {
+    private boolean dispatchFollow(List<SpiritEntity> members, Expedition expedition, ServerPlayer guide, long now) {
         String guideName = guide.getGameProfile().getName();
         boolean launched = false;
         for (SpiritEntity spirit : team(members, expedition)) {
-            launched |= starter.start(spirit, "follow", new ScriptCall("follow",
-                    Map.of("target", guideName, "radius", 3)), now);
+            launched |= starter.start(
+                    spirit, "follow", new ScriptCall("follow", Map.of("target", guideName, "radius", 3)), now);
         }
         if (launched) {
             lastDispatch = new Dispatch("follow", List.copyOf(expedition.team()), now);
@@ -160,17 +159,25 @@ public final class ExpeditionController {
             return false;
         }
         UUID leaderId = expedition.team().get(0);
-        SpiritEntity leader = team.stream().filter(spirit -> spirit.getUUID().equals(leaderId))
-                .findFirst().orElse(team.get(0));
+        SpiritEntity leader = team.stream()
+                .filter(spirit -> spirit.getUUID().equals(leaderId))
+                .findFirst()
+                .orElse(team.get(0));
         boolean launched = false;
         for (SpiritEntity spirit : team) {
             if (spirit.getUUID().equals(leader.getUUID())) {
-                launched |= starter.start(spirit, "mine_vein", new SequenceNode(List.of(
-                        new ScriptCall("mine_vein", MINE_PARAMS),
-                        new ScriptCall("return_home", Map.of()))), now);
+                launched |= starter.start(
+                        spirit,
+                        "mine_vein",
+                        new SequenceNode(List.of(
+                                new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall("return_home", Map.of()))),
+                        now);
             } else {
-                launched |= starter.start(spirit, "follow", new ScriptCall("follow",
-                        Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)), now);
+                launched |= starter.start(
+                        spirit,
+                        "follow",
+                        new ScriptCall("follow", Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)),
+                        now);
             }
         }
         if (launched) {

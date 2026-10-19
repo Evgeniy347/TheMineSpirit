@@ -53,7 +53,8 @@ final class FallbackExecutor extends SingleChildExecutor {
 
     @Override
     TaskProgress buildProgress() {
-        return new TaskProgress.FallbackAt(index, lastReason, current() == null ? null : current().snapshot());
+        return new TaskProgress.FallbackAt(
+                index, lastReason, current() == null ? null : current().snapshot());
     }
 
     @Override

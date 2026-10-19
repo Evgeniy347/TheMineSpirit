@@ -7,7 +7,8 @@ public record FoodNeed(long items, double nutrition) {
                     "Нужно предметов = " + items + ": нужда в еде не может быть отрицательной");
         }
         if (Double.isNaN(nutrition) || Double.isInfinite(nutrition) || nutrition < 0) {
-            throw new IllegalArgumentException("Нужно сытности = " + nutrition + ": нужда обязана быть конечной и >= 0");
+            throw new IllegalArgumentException(
+                    "Нужно сытности = " + nutrition + ": нужда обязана быть конечной и >= 0");
         }
     }
 }

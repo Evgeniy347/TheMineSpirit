@@ -22,8 +22,7 @@ final class MovementScene {
     static final double REACH = 4.5;
     static final double EYE_HEIGHT = 1.62;
 
-    private MovementScene() {
-    }
+    private MovementScene() {}
 
     static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -40,8 +39,8 @@ final class MovementScene {
     }
 
     static TaskNode call(String script, Map<String, Object> params) {
-        return PlanValidator.validate(new ScriptCall(script, params), SpiritScripts.catalog(),
-                SpiritScripts.conditionCatalog());
+        return PlanValidator.validate(
+                new ScriptCall(script, params), SpiritScripts.catalog(), SpiritScripts.conditionCatalog());
     }
 
     static TaskNode pointCall(GameTestHelper helper, String script, BlockPos relative) {
@@ -83,8 +82,10 @@ final class MovementScene {
                 + ", поводок взведён=" + spirit.nightLeashArmed()
                 + ", режим тактики=" + spirit.tactics().combatMode()
                 + ", тактика владеет=" + spirit.tactics().wantsControl()
-                + ", мозг заморожен=" + spirit.brainIfPresent().map(brain -> brain.suspendReason()
-                        .orElse("нет")).orElse("нет мозга")
+                + ", мозг заморожен="
+                + spirit.brainIfPresent()
+                        .map(brain -> brain.suspendReason().orElse("нет"))
+                        .orElse("нет мозга")
                 + ", дом=" + spirit.home().map(Object::toString).orElse("нет")
                 + ", лагерь=" + spirit.camp().map(Object::toString).orElse("нет");
     }
@@ -96,8 +97,7 @@ final class MovementScene {
     private static final AtomicInteger PLAYER_COUNTER = new AtomicInteger();
 
     static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
-        return GameTestFixtures.mockPlayer(helper, relative,
-                "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());
+        return GameTestFixtures.mockPlayer(helper, relative, "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());
     }
 
     static void removePlayer(GameTestHelper helper, ServerPlayer player) {

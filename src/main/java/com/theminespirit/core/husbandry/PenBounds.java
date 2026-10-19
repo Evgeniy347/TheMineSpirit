@@ -27,8 +27,8 @@ public record PenBounds(BlockCoord center, int radius) {
 
     public BlockCoord lureTarget(BlockCoord pos, int preferredInset) {
         if (preferredInset < 0) {
-            throw new IllegalArgumentException("Отступ возврата " + preferredInset
-                    + " отрицательный: он двигал бы цель наружу загона");
+            throw new IllegalArgumentException(
+                    "Отступ возврата " + preferredInset + " отрицательный: он двигал бы цель наружу загона");
         }
         return nearestInside(pos, Math.min(preferredInset, radius - 1));
     }
@@ -49,8 +49,8 @@ public record PenBounds(BlockCoord center, int radius) {
             return new BlockCoord(center.x() + target, pos.y(), center.z());
         }
         double scale = target / Math.sqrt(dx * dx + dz * dz);
-        BlockCoord inside = new BlockCoord(center.x() + (int) Math.round(dx * scale), pos.y(),
-                center.z() + (int) Math.round(dz * scale));
+        BlockCoord inside = new BlockCoord(
+                center.x() + (int) Math.round(dx * scale), pos.y(), center.z() + (int) Math.round(dz * scale));
         while (!shallowInside(inside, target)) {
             int stepX = Integer.compare(center.x(), inside.x());
             int stepZ = Integer.compare(center.z(), inside.z());

@@ -12,7 +12,9 @@ import net.jqwik.api.Provide;
 class TreeSpeciesProperties {
     @Property
     void ofLog_AnySpeciesLogId_ReturnsThatSpecies(@ForAll("species") TreeSpecies species) {
-        assertEquals(Optional.of(species), TreeSpecies.ofLog(species.logId()),
+        assertEquals(
+                Optional.of(species),
+                TreeSpecies.ofLog(species.logId()),
                 "ofLog(s.logId) обязан вернуть ровно s для каждой породы: иначе поиск разойдётся с таблицей пород "
                         + "и найденное бревно не распознается как дерево");
     }

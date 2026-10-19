@@ -30,8 +30,7 @@ public final class SpiritCommandGameTests {
     // ломаться, когда очередной скрипт начнёт реализовывать «сруби дерево» или «добудь руду».
     private static final String UNPLANNABLE_GOAL = "построй дом";
 
-    private SpiritCommandGameTests() {
-    }
+    private SpiritCommandGameTests() {}
 
     private static String tagSelector(String tag) {
         return "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + tag + "]";
@@ -58,28 +57,38 @@ public final class SpiritCommandGameTests {
         SpiritEntity spirit = spawnTagged(helper, new BlockPos(0, 1, 1), tag);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 1), "gt_follow_player");
         CommandSourceStack source = playerSource(player);
-        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                .getCommands().getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
 
-        helper.assertTrue(dispatcher.getRoot().getChild("spirit") != null,
+        helper.assertTrue(
+                dispatcher.getRoot().getChild("spirit") != null,
                 "Команда /spirit обязана быть зарегистрирована на сервере: без неё оператор не получит канал управления духом");
 
         double before = spirit.position().distanceTo(player.position());
         int accepted = dispatcher.execute("spirit goal " + tagSelector(tag) + " следуй за мной", source);
-        helper.assertTrue(accepted == 1,
+        helper.assertTrue(
+                accepted == 1,
                 "Выполненная игроком цель «следуй за мной» обязана ставить задачу: подстановка заглушки 'player' "
                         + "или потеря имени игрока-источника приводит к отказу, результат=" + accepted);
-        helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+        helper.assertTrue(
+                spirit.taskStatus()
+                        .filter(status -> status == RunStatus.RUNNING)
+                        .isPresent(),
                 "Сразу после команды дух обязан быть в состоянии «выполняется»: команда не запустила задачу. "
                         + "Состояние=" + spirit.taskStatus() + ", причина=" + spirit.taskFailureReason());
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(spirit.taskStatus().filter(status -> status != RunStatus.FAILED).isPresent(),
-                    "Сопровождение не должно быть провалено: цель '" + player.getName().getString()
+            helper.assertTrue(
+                    spirit.taskStatus()
+                            .filter(status -> status != RunStatus.FAILED)
+                            .isPresent(),
+                    "Сопровождение не должно быть провалено: цель '"
+                            + player.getName().getString()
                             + "' не найдена, потому что команда не передала имя игрока. Состояние="
                             + spirit.taskStatus() + ", причина=" + spirit.taskFailureReason());
             double after = spirit.position().distanceTo(player.position());
-            helper.assertTrue(after < before,
+            helper.assertTrue(
+                    after < before,
                     "Дух обязан приближаться к игроку-источнику: было " + before + ", стало " + after
                             + ". Иначе follow не выполняет сопровождение");
         });
@@ -93,28 +102,39 @@ public final class SpiritCommandGameTests {
         SpiritEntity spirit = spawnTagged(helper, new BlockPos(1, 1, 1), tag);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 1), "gt_cancel_player");
         CommandSourceStack source = playerSource(player);
-        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                .getCommands().getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
         String selector = tagSelector(tag);
 
         int accepted = dispatcher.execute("spirit goal " + selector + " следуй за мной", source);
-        helper.assertTrue(accepted == 1,
-                "Команда goal обязана вернуть число принявших цель духов: результат=" + accepted);
-        helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+        helper.assertTrue(
+                accepted == 1, "Команда goal обязана вернуть число принявших цель духов: результат=" + accepted);
+        helper.assertTrue(
+                spirit.taskStatus()
+                        .filter(status -> status == RunStatus.RUNNING)
+                        .isPresent(),
                 "После /spirit goal дух обязан быть в состоянии «выполняется»: команда не запустила задачу. "
                         + "Состояние=" + spirit.taskStatus() + ", причина=" + spirit.taskFailureReason());
 
         int rejected = dispatcher.execute("spirit goal " + selector + " " + UNPLANNABLE_GOAL, source);
-        helper.assertTrue(rejected == 0,
+        helper.assertTrue(
+                rejected == 0,
                 "Цель '" + UNPLANNABLE_GOAL + "', которую не умеет планировщик и не реализует ни один скрипт, "
                         + "обязана вернуть 0 и не заменить выполняемую задачу: результат=" + rejected);
-        helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+        helper.assertTrue(
+                spirit.taskStatus()
+                        .filter(status -> status == RunStatus.RUNNING)
+                        .isPresent(),
                 "Отклонённая команда goal не должна трогать уже выполняемую задачу: статус духа изменился");
 
         int cancelled = dispatcher.execute("spirit cancel " + selector, source);
-        helper.assertTrue(cancelled == 1,
+        helper.assertTrue(
+                cancelled == 1,
                 "Команда cancel обязана вернуть число духов с отменённой задачей: результат=" + cancelled);
-        helper.assertTrue(spirit.taskStatus().filter(status -> status == RunStatus.CANCELLED).isPresent(),
+        helper.assertTrue(
+                spirit.taskStatus()
+                        .filter(status -> status == RunStatus.CANCELLED)
+                        .isPresent(),
                 "После /spirit cancel задача духа обязана считаться отменённой: команда не остановила задачу");
 
         helper.succeed();
@@ -130,23 +150,27 @@ public final class SpiritCommandGameTests {
         SpiritEntity second = spawnTagged(helper, new BlockPos(0, 1, 2), tag);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 1), "gt_pair_player");
         CommandSourceStack source = playerSource(player);
-        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                .getCommands().getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
         String both = tagSelector(tag);
 
         int rejected = dispatcher.execute("spirit goal " + both + " " + UNPLANNABLE_GOAL, source);
-        helper.assertTrue(rejected == 0,
+        helper.assertTrue(
+                rejected == 0,
                 "Цель '" + UNPLANNABLE_GOAL + "', которую не умеет планировщик и не реализует ни один скрипт, "
                         + "обязана вернуть 0: результат=" + rejected);
-        helper.assertTrue(first.taskStatus().isEmpty() && second.taskStatus().isEmpty(),
+        helper.assertTrue(
+                first.taskStatus().isEmpty() && second.taskStatus().isEmpty(),
                 "При отказе планирования ни один дух не должен получить задачу: первый=" + first.taskStatus()
                         + ", второй=" + second.taskStatus());
 
         int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
-        helper.assertTrue(accepted == 2,
-                "Выполнимая цель обязана стать задачей обоим духам: результат=" + accepted);
-        helper.assertTrue(first.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
-                        && second.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
+        helper.assertTrue(accepted == 2, "Выполнимая цель обязана стать задачей обоим духам: результат=" + accepted);
+        helper.assertTrue(
+                first.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
+                        && second.taskStatus()
+                                .filter(status -> status == RunStatus.RUNNING)
+                                .isPresent(),
                 "После /spirit goal оба духа обязаны быть в состоянии «выполняется»: первый=" + first.taskStatus()
                         + ", второй=" + second.taskStatus());
 
@@ -164,24 +188,31 @@ public final class SpiritCommandGameTests {
         SpiritEntity first = spawnTagged(helper, new BlockPos(0, 1, 0), tag);
         SpiritEntity second = spawnTagged(helper, new BlockPos(10, 1, 10), tag);
         second.getInventory().setItem(0, new ItemStack(Items.IRON_AXE, 1));
-        helper.assertTrue(GameTestFixtures.countInInventory(second.getInventory(), Items.IRON_AXE) == 1,
+        helper.assertTrue(
+                GameTestFixtures.countInInventory(second.getInventory(), Items.IRON_AXE) == 1,
                 "Подготовка обязана положить топор в инвентарь второго духа: без разного инвентаря наблюдения "
                         + "духов неразличимы и тест не доказывает по-духовые наблюдения");
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(5, 1, 5), "gt_observe_each");
         try {
             CommandSourceStack source = playerSource(player);
-            CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                    .getCommands().getDispatcher();
+            CommandDispatcher<CommandSourceStack> dispatcher =
+                    helper.getLevel().getServer().getCommands().getDispatcher();
             String both = tagSelector(tag);
 
             int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
-            helper.assertTrue(accepted == 2,
+            helper.assertTrue(
+                    accepted == 2,
                     "Одна команда на двух духов обязана ставить задачу обоим: общее наблюдение первого духа "
                             + "сторож BatchPlanner отклоняет, и задача не ставится никому. Результат=" + accepted);
-            helper.assertTrue(first.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
-                            && second.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent(),
-                    "После /spirit goal оба духа обязаны выполняться: первый=" + first.taskStatus()
-                            + ", второй=" + second.taskStatus());
+            helper.assertTrue(
+                    first.taskStatus()
+                                    .filter(status -> status == RunStatus.RUNNING)
+                                    .isPresent()
+                            && second.taskStatus()
+                                    .filter(status -> status == RunStatus.RUNNING)
+                                    .isPresent(),
+                    "После /spirit goal оба духа обязаны выполняться: первый=" + first.taskStatus() + ", второй="
+                            + second.taskStatus());
 
             helper.succeed();
         } finally {
@@ -195,7 +226,9 @@ public final class SpiritCommandGameTests {
             throws CommandSyntaxException {
         String tag = freshTag("server_source");
         SpiritEntity spirit = spawnTagged(helper, new BlockPos(1, 1, 1), tag);
-        CommandSourceStack base = helper.getLevel().getServer().createCommandSourceStack()
+        CommandSourceStack base = helper.getLevel()
+                .getServer()
+                .createCommandSourceStack()
                 .withPosition(Vec3.atCenterOf(helper.absolutePos(new BlockPos(1, 1, 1))))
                 .withPermission(4);
         List<String> failures = new ArrayList<>();
@@ -220,18 +253,20 @@ public final class SpiritCommandGameTests {
                 return false;
             }
         });
-        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                .getCommands().getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
 
         int accepted = dispatcher.execute("spirit goal " + tagSelector(tag) + " следуй за мной", source);
 
-        helper.assertTrue(accepted == 0,
+        helper.assertTrue(
+                accepted == 0,
                 "Цель 'за мной' без игрока-источника обязана возвращать 0, а не ставиться с пустым target: "
                         + "результат=" + accepted);
-        helper.assertTrue(spirit.taskStatus().isEmpty(),
-                "Отказ без игрока-источника не должен запускать задачу: у духа появился статус "
-                        + spirit.taskStatus());
-        helper.assertTrue(failures.size() == 1
+        helper.assertTrue(
+                spirit.taskStatus().isEmpty(),
+                "Отказ без игрока-источника не должен запускать задачу: у духа появился статус " + spirit.taskStatus());
+        helper.assertTrue(
+                failures.size() == 1
                         && failures.get(0).contains("требует игрока-источника")
                         && failures.get(0).contains("следуй за мной"),
                 "Отказ без игрока-источника обязан называть причину текстом с целью и подсказкой: молчаливый отказ "
@@ -247,25 +282,26 @@ public final class SpiritCommandGameTests {
         buildFloor(helper);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(2, 1, 1), "gt_spawn_names");
         CommandSourceStack source = playerSource(player);
-        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer()
-                .getCommands().getDispatcher();
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
 
-        helper.assertTrue(dispatcher.execute("spirit spawn", source) == 1,
-                "Первый /spirit spawn обязан призвать духа");
-        helper.assertTrue(dispatcher.execute("spirit spawn", source) == 1,
-                "Второй /spirit spawn обязан призвать второго духа");
+        helper.assertTrue(dispatcher.execute("spirit spawn", source) == 1, "Первый /spirit spawn обязан призвать духа");
+        helper.assertTrue(
+                dispatcher.execute("spirit spawn", source) == 1, "Второй /spirit spawn обязан призвать второго духа");
 
-        List<SpiritEntity> spawned = helper.getLevel().getEntitiesOfClass(SpiritEntity.class,
-                player.getBoundingBox().inflate(2), spirit -> !spirit.isRemoved());
-        helper.assertTrue(spawned.size() == 2,
-                "После двух /spirit spawn рядом с игроком два духа, фактически " + spawned.size());
+        List<SpiritEntity> spawned = helper.getLevel()
+                .getEntitiesOfClass(
+                        SpiritEntity.class, player.getBoundingBox().inflate(2), spirit -> !spirit.isRemoved());
+        helper.assertTrue(
+                spawned.size() == 2, "После двух /spirit spawn рядом с игроком два духа, фактически " + spawned.size());
         String first = spawned.get(0).displayName();
         String second = spawned.get(1).displayName();
-        helper.assertTrue(!first.equals(second),
-                "Два заспавненных духа обязаны иметь разные имена, фактически '" + first + "' и '"
-                        + second + "': иначе журнал не различит исполнителей");
-        helper.assertTrue(!SpiritEntity.DEFAULT_NAME.equals(first)
-                        && !SpiritEntity.DEFAULT_NAME.equals(second),
+        helper.assertTrue(
+                !first.equals(second),
+                "Два заспавненных духа обязаны иметь разные имена, фактически '" + first + "' и '" + second
+                        + "': иначе журнал не различит исполнителей");
+        helper.assertTrue(
+                !SpiritEntity.DEFAULT_NAME.equals(first) && !SpiritEntity.DEFAULT_NAME.equals(second),
                 "Имена после /spirit spawn не остаются общим «spirit»: " + first + ", " + second);
         for (SpiritEntity spirit : spawned) {
             spirit.discard();
@@ -275,7 +311,8 @@ public final class SpiritCommandGameTests {
     }
 
     private static CommandSourceStack playerSource(ServerPlayer player) {
-        return player.server.createCommandSourceStack()
+        return player.server
+                .createCommandSourceStack()
                 .withEntity(player)
                 .withPosition(player.position())
                 .withPermission(4);

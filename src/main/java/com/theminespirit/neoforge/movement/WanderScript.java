@@ -42,7 +42,8 @@ public final class WanderScript implements ScriptInstance {
         this.durationTicks = params.durationTicks();
         this.approach = new Approach(spirit);
         this.safety = new LevelSafetyView(spirit.level());
-        this.seed = spirit.getUUID().getLeastSignificantBits() ^ spirit.getUUID().getMostSignificantBits();
+        this.seed =
+                spirit.getUUID().getLeastSignificantBits() ^ spirit.getUUID().getMostSignificantBits();
     }
 
     @Override
@@ -110,8 +111,11 @@ public final class WanderScript implements ScriptInstance {
         if (state.get(ELAPSED_KEY) instanceof Number number) {
             elapsed = Math.max(0, number.intValue());
         }
-        if (state.get(ORIGIN_KEY) instanceof List<?> list && list.size() == 3
-                && list.get(0) instanceof Number x && list.get(1) instanceof Number y && list.get(2) instanceof Number z) {
+        if (state.get(ORIGIN_KEY) instanceof List<?> list
+                && list.size() == 3
+                && list.get(0) instanceof Number x
+                && list.get(1) instanceof Number y
+                && list.get(2) instanceof Number z) {
             origin = new BlockCoord(x.intValue(), y.intValue(), z.intValue());
         }
     }
@@ -121,8 +125,8 @@ public final class WanderScript implements ScriptInstance {
         for (int drop = 0; drop <= GROUND_SEARCH_DEPTH; drop++) {
             BlockCoord stand = new BlockCoord(drawn.x(), drawn.y() - drop, drawn.z());
             if (MiningSafety.canStand(stand, safety) && TravelCheck.refusal(spirit, stand) == null) {
-                approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5),
-                        CatalogLimits.NAV_ARRIVAL_TOLERANCE);
+                approach.begin(
+                        new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), CatalogLimits.NAV_ARRIVAL_TOLERANCE);
                 return true;
             }
         }

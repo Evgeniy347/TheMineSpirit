@@ -13,8 +13,9 @@ public record FarmTile(Ground ground, Above above, Optional<CropState> crop) {
                     "Верх CROP без посева: раз над землёй посев, нужны его вид и возраст для проверки зрелости");
         }
         if (above != Above.CROP && crop.isPresent()) {
-            throw new IllegalArgumentException("Посев " + crop.orElseThrow() + " при верхе " + above
-                    + ": посев растёт только над землёй с верхом CROP, иначе планировщик увидит урожай там, где его нет");
+            throw new IllegalArgumentException(
+                    "Посев " + crop.orElseThrow() + " при верхе " + above
+                            + ": посев растёт только над землёй с верхом CROP, иначе планировщик увидит урожай там, где его нет");
         }
     }
 }

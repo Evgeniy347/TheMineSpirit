@@ -32,10 +32,14 @@ public final class PlacedBlockSet {
 
     public static long pack(BlockCoord coord) {
         Objects.requireNonNull(coord, "Координата не может быть null: её сжимают в long");
-        if (coord.x() < MIN_HORIZONTAL || coord.x() > MAX_HORIZONTAL || coord.z() < MIN_HORIZONTAL || coord.z() > MAX_HORIZONTAL
-                || coord.y() < MIN_VERTICAL || coord.y() > MAX_VERTICAL) {
-            throw new IllegalArgumentException("Координата " + coord + " вне диапазона сжатия: x и z от " + MIN_HORIZONTAL + " до "
-                    + MAX_HORIZONTAL + ", y от " + MIN_VERTICAL + " до " + MAX_VERTICAL);
+        if (coord.x() < MIN_HORIZONTAL
+                || coord.x() > MAX_HORIZONTAL
+                || coord.z() < MIN_HORIZONTAL
+                || coord.z() > MAX_HORIZONTAL
+                || coord.y() < MIN_VERTICAL
+                || coord.y() > MAX_VERTICAL) {
+            throw new IllegalArgumentException("Координата " + coord + " вне диапазона сжатия: x и z от "
+                    + MIN_HORIZONTAL + " до " + MAX_HORIZONTAL + ", y от " + MIN_VERTICAL + " до " + MAX_VERTICAL);
         }
         return ((coord.x() & X_MASK) << X_SHIFT) | ((coord.z() & X_MASK) << Z_SHIFT) | (coord.y() & Y_MASK);
     }
@@ -119,13 +123,18 @@ public final class PlacedBlockSet {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof PlacedBlockSet that) || size != that.size || !chunks.keySet().equals(that.chunks.keySet())) {
+        if (!(other instanceof PlacedBlockSet that)
+                || size != that.size
+                || !chunks.keySet().equals(that.chunks.keySet())) {
             return false;
         }
         for (Map.Entry<Long, Chunk> entry : chunks.entrySet()) {
             Chunk mine = entry.getValue();
             Chunk theirs = that.chunks.get(entry.getKey());
-            if (mine.overflowed != theirs.overflowed || !mine.positions.stream().toList().equals(theirs.positions.stream().toList())) {
+            if (mine.overflowed != theirs.overflowed
+                    || !mine.positions.stream()
+                            .toList()
+                            .equals(theirs.positions.stream().toList())) {
                 return false;
             }
         }

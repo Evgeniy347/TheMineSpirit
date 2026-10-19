@@ -1,10 +1,25 @@
 package com.theminespirit.core.farming;
 
-public record FarmTally(int done, int requested, int ineligible, int noStand, int noSeeds, int noTool, int dry,
-        int unreachable, int radius) {
+public record FarmTally(
+        int done,
+        int requested,
+        int ineligible,
+        int noStand,
+        int noSeeds,
+        int noTool,
+        int dry,
+        int unreachable,
+        int radius) {
     public FarmTally {
-        if (done < 0 || requested < 0 || ineligible < 0 || noStand < 0 || noSeeds < 0 || noTool < 0 || dry < 0
-                || unreachable < 0 || radius < 0) {
+        if (done < 0
+                || requested < 0
+                || ineligible < 0
+                || noStand < 0
+                || noSeeds < 0
+                || noTool < 0
+                || dry < 0
+                || unreachable < 0
+                || radius < 0) {
             throw new IllegalArgumentException("Счётчики итога работы не могут быть отрицательными: done=" + done
                     + ", requested=" + requested + ", ineligible=" + ineligible + ", noStand=" + noStand
                     + ", noSeeds=" + noSeeds + ", noTool=" + noTool + ", dry=" + dry + ", unreachable=" + unreachable
@@ -92,11 +107,9 @@ public record FarmTally(int done, int requested, int ineligible, int noStand, in
         }
     }
 
-    public sealed interface Outcome permits Succeeded, Failed {
-    }
+    public sealed interface Outcome permits Succeeded, Failed {}
 
-    public record Succeeded() implements Outcome {
-    }
+    public record Succeeded() implements Outcome {}
 
     public record Failed(String text) implements Outcome {
         public Failed {

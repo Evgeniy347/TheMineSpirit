@@ -13,14 +13,14 @@ import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class ShelterMaterial {
-    private ShelterMaterial() {
-    }
+    private ShelterMaterial() {}
 
     public static Optional<String> placeableBlockId(Container inventory) {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (placeable(stack)) {
-                return Optional.of(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+                return Optional.of(
+                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
             }
         }
         return Optional.empty();

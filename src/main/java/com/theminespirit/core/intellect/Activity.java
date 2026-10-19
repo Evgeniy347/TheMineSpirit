@@ -17,8 +17,7 @@ public interface Activity {
 
     static double checkedDemand(ActivityId id, double demand) {
         double maxDemand = IntellectTuning.loadDefault().maxDemand();
-        if (Double.isNaN(demand) || Double.isInfinite(demand) || demand < 0
-                || demand > maxDemand) {
+        if (Double.isNaN(demand) || Double.isInfinite(demand) || demand < 0 || demand > maxDemand) {
             throw new IllegalArgumentException("Спрос " + id + " = " + demand + ": обязан быть конечным числом в 0.."
                     + maxDemand + ", иначе распределение сравнивает несравнимое");
         }

@@ -22,10 +22,12 @@ public final class LlmPlanner implements Planner {
 
     public LlmPlanner(LlmClient client, ScriptCatalog catalog, ConditionCatalog conditions, Planner fallback) {
         this.client = Objects.requireNonNull(client, "client не может быть null: без клиента ИИ некому строить план");
-        this.catalog = Objects.requireNonNull(catalog, "catalog не может быть null: план валидируется по каталогу скриптов");
-        this.conditions = Objects.requireNonNull(conditions,
-                "conditions не может быть null: каталог проверок обязателен");
-        this.fallback = Objects.requireNonNull(fallback,
+        this.catalog =
+                Objects.requireNonNull(catalog, "catalog не может быть null: план валидируется по каталогу скриптов");
+        this.conditions =
+                Objects.requireNonNull(conditions, "conditions не может быть null: каталог проверок обязателен");
+        this.fallback = Objects.requireNonNull(
+                fallback,
                 "fallback не может быть null: невалидный ответ ИИ должен передаваться в запасной планировщик");
     }
 

@@ -19,8 +19,7 @@ public final class WarehouseRules {
     public static final int MAX_INTERMEDIATE = 3;
     public static final int SITE_SPACING = 32;
 
-    private WarehouseRules() {
-    }
+    private WarehouseRules() {}
 
     public static int nextLevel(Collection<Integer> standing) {
         Objects.requireNonNull(standing, "Список стоящих складов не может быть null: уровни берутся из него");
@@ -35,8 +34,8 @@ public final class WarehouseRules {
     public static boolean canBuild(int level, Collection<Integer> standing) {
         Objects.requireNonNull(standing, "Список стоящих складов не может быть null: лимит считается по нему");
         if (level < 1 || level > MAX_LEVEL) {
-            throw new IllegalArgumentException("Уровень склада " + level + " вне 1.." + MAX_LEVEL
-                    + ": другого уровня постройки нет");
+            throw new IllegalArgumentException(
+                    "Уровень склада " + level + " вне 1.." + MAX_LEVEL + ": другого уровня постройки нет");
         }
         if (level == LAST_LEVEL) {
             return true;
@@ -68,16 +67,16 @@ public final class WarehouseRules {
     public static BlockCoord site(BlockCoord home, int level) {
         Objects.requireNonNull(home, "Дом не может быть null: склад ставится от него");
         if (level < 1 || level > MAX_LEVEL) {
-            throw new IllegalArgumentException("Уровень склада " + level + " вне 1.." + MAX_LEVEL
-                    + ": места для такого уровня нет");
+            throw new IllegalArgumentException(
+                    "Уровень склада " + level + " вне 1.." + MAX_LEVEL + ": места для такого уровня нет");
         }
         return new BlockCoord(home.x() + (level - 1) * SITE_SPACING, home.y(), home.z());
     }
 
     public static String scheme(int level) {
         if (level < 1 || level > MAX_LEVEL) {
-            throw new IllegalArgumentException("Уровень склада " + level + " вне 1.." + MAX_LEVEL
-                    + ": схемы для него нет");
+            throw new IllegalArgumentException(
+                    "Уровень склада " + level + " вне 1.." + MAX_LEVEL + ": схемы для него нет");
         }
         return "storage_v" + level;
     }

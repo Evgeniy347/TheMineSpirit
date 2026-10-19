@@ -35,8 +35,8 @@ public final class TableRegistry {
         return registerLazy(definition, seed, TableStatus.Source.MOD, "classpath (мод)");
     }
 
-    private <T> TableHolder<T> registerLazy(TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source source,
-            String origin) {
+    private <T> TableHolder<T> registerLazy(
+            TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source source, String origin) {
         Objects.requireNonNull(definition, "Определение таблицы не может быть null: регистрировать нечего");
         Objects.requireNonNull(seed, "Источник начальной версии не может быть null: читатель не должен видеть пустоту");
         if (byId.containsKey(definition.id())) {
@@ -86,7 +86,11 @@ public final class TableRegistry {
         private final Clock clock;
         private volatile TableHolder<T> holder;
 
-        Registered(TableDefinition<T> definition, Supplier<T> seed, TableStatus.Source seedSource, String seedOrigin,
+        Registered(
+                TableDefinition<T> definition,
+                Supplier<T> seed,
+                TableStatus.Source seedSource,
+                String seedOrigin,
                 Clock clock) {
             this.definition = definition;
             this.seed = seed;
@@ -102,8 +106,13 @@ public final class TableRegistry {
         synchronized TableHolder<T> holder() {
             if (holder == null) {
                 T value = seed.get();
-                holder = new TableHolder<>(definition.id(), value, seedSource, seedOrigin,
-                        TableHolder.hashOf(String.valueOf(value)), clock);
+                holder = new TableHolder<>(
+                        definition.id(),
+                        value,
+                        seedSource,
+                        seedOrigin,
+                        TableHolder.hashOf(String.valueOf(value)),
+                        clock);
             }
             return holder;
         }

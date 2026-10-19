@@ -21,12 +21,11 @@ public final class BreedingRules {
         NONE
     }
 
-    private BreedingRules() {
-    }
+    private BreedingRules() {}
 
     public static Action action(Species species, int housed, boolean penBuilt) {
-        Objects.requireNonNull(species, "Вид разведения не может быть null: без него неизвестно, "
-                + "чей загон и лимит считать");
+        Objects.requireNonNull(
+                species, "Вид разведения не может быть null: без него неизвестно, " + "чей загон и лимит считать");
         if (housed < 0) {
             throw new IllegalArgumentException("Поголовье " + housed + " отрицательное: минус голов "
                     + "прятал бы перебор и ломал переход к контролю численности");
@@ -59,7 +58,10 @@ public final class BreedingRules {
 
     public static Map<String, Integer> stockPerCapita(Species species) {
         Objects.requireNonNull(species, "Вид нормы не может быть null: без него неизвестно, что считать");
-        Map<String, Integer> perCapita = DataTables.INSTANCE.board().current().products()
+        Map<String, Integer> perCapita = DataTables.INSTANCE
+                .board()
+                .current()
+                .products()
                 .get(species.name().toLowerCase(Locale.ROOT));
         return perCapita == null ? Map.of() : perCapita;
     }
@@ -67,8 +69,8 @@ public final class BreedingRules {
     public static Map<String, Integer> stockFor(Species species, int population) {
         Objects.requireNonNull(species, "Вид запаса не может быть null: без него неизвестно, что считать");
         if (population < 0) {
-            throw new IllegalArgumentException("Численность " + population + " отрицательная: запас на "
-                    + "минус голов не считается");
+            throw new IllegalArgumentException(
+                    "Численность " + population + " отрицательная: запас на " + "минус голов не считается");
         }
         Map<String, Integer> stock = new LinkedHashMap<>();
         stockPerCapita(species).forEach((item, perCapita) -> stock.put(item, perCapita * population));

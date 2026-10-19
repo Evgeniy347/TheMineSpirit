@@ -22,8 +22,7 @@ import java.util.stream.Stream;
 public final class SchematicTool {
     static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 
-    private SchematicTool() {
-    }
+    private SchematicTool() {}
 
     public static void main(String[] args) {
         System.exit(run(args, System.out));
@@ -75,8 +74,8 @@ public final class SchematicTool {
         int failed = 0;
         for (Path file : files) {
             try {
-                SchematicCheck.Report report = SchematicCheck.check(idOf(file),
-                        SchematicTextParser.parse(read(file), file.toString()));
+                SchematicCheck.Report report =
+                        SchematicCheck.check(idOf(file), SchematicTextParser.parse(read(file), file.toString()));
                 if (report.ok()) {
                     out.println("OK " + idOf(file));
                 } else {
@@ -88,7 +87,10 @@ public final class SchematicTool {
                 out.println("ОШИБКА " + error.getMessage());
             }
         }
-        out.println(failed == 0 ? "Все постройки прошли: " + files.size() : "С ошибками: " + failed + " из " + files.size());
+        out.println(
+                failed == 0
+                        ? "Все постройки прошли: " + files.size()
+                        : "С ошибками: " + failed + " из " + files.size());
         return failed == 0 ? 0 : 1;
     }
 
@@ -97,11 +99,24 @@ public final class SchematicTool {
         StringBuilder out = new StringBuilder();
         out.append("Постройка ").append(id);
         document.header().name().ifPresent(name -> out.append(" — ").append(name));
-        out.append('\n').append("Габариты ").append(schematic.sizeX()).append('×').append(schematic.sizeY())
-                .append('×').append(schematic.sizeZ()).append(", поворот ").append(rotation.id()).append('\n');
+        out.append('\n')
+                .append("Габариты ")
+                .append(schematic.sizeX())
+                .append('×')
+                .append(schematic.sizeY())
+                .append('×')
+                .append(schematic.sizeZ())
+                .append(", поворот ")
+                .append(rotation.id())
+                .append('\n');
         out.append("Материалы:\n");
-        for (Map.Entry<String, Integer> material : PresetLibrary.countMaterials(schematic).entrySet()) {
-            out.append("  ").append(material.getKey()).append(" × ").append(material.getValue()).append('\n');
+        for (Map.Entry<String, Integer> material :
+                PresetLibrary.countMaterials(schematic).entrySet()) {
+            out.append("  ")
+                    .append(material.getKey())
+                    .append(" × ")
+                    .append(material.getValue())
+                    .append('\n');
         }
         out.append(slices(schematic, rotation));
         return out.toString();
@@ -126,7 +141,8 @@ public final class SchematicTool {
             grid[entry.pos().y()][entry.pos().z()][entry.pos().x()] = symbol;
         }
         StringBuilder out = new StringBuilder("Легенда среза:");
-        symbols.forEach((block, symbol) -> out.append(' ').append(symbol).append('=').append(SchematicBlocks.path(block)));
+        symbols.forEach(
+                (block, symbol) -> out.append(' ').append(symbol).append('=').append(SchematicBlocks.path(block)));
         out.append('\n');
         for (int y = 0; y < grid.length; y++) {
             out.append("y").append(y).append(":\n");
@@ -144,10 +160,12 @@ public final class SchematicTool {
 
     private static List<Path> all() {
         try (Stream<Path> files = Files.list(ROOT)) {
-            return files.filter(path -> path.toString().endsWith(SchematicTextParser.EXTENSION)).sorted().toList();
+            return files.filter(path -> path.toString().endsWith(SchematicTextParser.EXTENSION))
+                    .sorted()
+                    .toList();
         } catch (IOException error) {
-            throw new UncheckedIOException("Каталог построек " + ROOT + " не прочитан: запускайте из корня проекта",
-                    error);
+            throw new UncheckedIOException(
+                    "Каталог построек " + ROOT + " не прочитан: запускайте из корня проекта", error);
         }
     }
 
@@ -166,7 +184,8 @@ public final class SchematicTool {
     private static String idOf(Path file) {
         String name = file.getFileName().toString();
         return name.endsWith(SchematicTextParser.EXTENSION)
-                ? name.substring(0, name.length() - SchematicTextParser.EXTENSION.length()) : name;
+                ? name.substring(0, name.length() - SchematicTextParser.EXTENSION.length())
+                : name;
     }
 
     private static String read(Path file) {

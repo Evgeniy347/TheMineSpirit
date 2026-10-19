@@ -1,6 +1,9 @@
 package com.theminespirit.neoforge.coordinator;
 
+import com.theminespirit.core.base.Camp;
+import com.theminespirit.core.coordinator.AssistOrder;
 import com.theminespirit.core.coordinator.Coordinator;
+import com.theminespirit.core.coordinator.CoordinatorDirectives;
 import com.theminespirit.core.coordinator.CoordinatorPlan;
 import com.theminespirit.core.coordinator.CoordinatorState;
 import com.theminespirit.core.coordinator.CoordinatorTuning;
@@ -9,26 +12,20 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
-import com.theminespirit.core.base.Camp;
-import com.theminespirit.core.coordinator.CoordinatorDirectives;
-import com.theminespirit.core.coordinator.AssistOrder;
 import com.theminespirit.core.intellect.defense.DefenseIssuedOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
+import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.DirectiveOwner;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TargetSelector;
-import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.defense.DefenseService;
 import com.theminespirit.neoforge.intellect.SettlementIntellect;
 import com.theminespirit.neoforge.tactics.TacticsService;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,6 +36,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 
 public final class SpiritCoordinator {
     private final ServerLevel level;
@@ -117,8 +116,7 @@ public final class SpiritCoordinator {
             return home;
         }
         Point reference = centroid(members);
-        Optional<Point> camp = camps.stream().map(Camp::center)
-                .min(Comparator.comparingDouble(reference::distanceTo));
+        Optional<Point> camp = camps.stream().map(Camp::center).min(Comparator.comparingDouble(reference::distanceTo));
         return SafePointChoice.nearest(reference, home, camp);
     }
 
@@ -197,8 +195,12 @@ public final class SpiritCoordinator {
         return coordinator.plan(lastState, reservations, lastState.tick());
     }
 
-    private void applyPlan(CoordinatorPlan plan, Map<UUID, DefenseIssuedOrder> overlay, Map<UUID, Point> posts,
-            List<HelpCall> helpCalls, long now) {
+    private void applyPlan(
+            CoordinatorPlan plan,
+            Map<UUID, DefenseIssuedOrder> overlay,
+            Map<UUID, Point> posts,
+            List<HelpCall> helpCalls,
+            long now) {
         Map<UUID, CombatDirective> directives = new HashMap<>(CoordinatorDirectives.of(plan));
         Set<UUID> callers = new HashSet<>();
         for (HelpCall call : helpCalls) {
@@ -267,10 +269,11 @@ public final class SpiritCoordinator {
                     spirit.tactics().setWard(null);
                     Point post = posts.get(id);
                     if (post != null) {
-                        spirit.tactics().setGuardZone(
-                                new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()),
-                                        (int) Math.floor(post.z())),
-                                CoordinatorTuning.DEFENSE_POST_RADIUS);
+                        spirit.tactics()
+                                .setGuardZone(
+                                        new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()), (int)
+                                                Math.floor(post.z())),
+                                        CoordinatorTuning.DEFENSE_POST_RADIUS);
                     }
                     continue;
                 }
@@ -306,8 +309,11 @@ public final class SpiritCoordinator {
             if (spirit == null || spirit.isRemoved()) {
                 continue;
             }
-            if (spirit.currentTaskScript().isPresent() && spirit.tactics().activeDirective()
-                    .map(current -> !current.equals(last)).orElse(false)) {
+            if (spirit.currentTaskScript().isPresent()
+                    && spirit.tactics()
+                            .activeDirective()
+                            .map(current -> !current.equals(last))
+                            .orElse(false)) {
                 continue;
             }
             spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
@@ -323,11 +329,13 @@ public final class SpiritCoordinator {
         // guard zone при GUARD_AREA
         if (d.safePoint().isPresent()) {
             Point safe = d.safePoint().get();
-            tactics.setGuardZone(new BlockCoord((int) Math.floor(safe.x()), (int) Math.floor(safe.y()), (int) Math.floor(safe.z())), CoordinatorTuning.DEFENSE_POST_RADIUS);
-        } else if (post != null
-                && (forcedTargetId != null || d.mode() == CombatMode.PROTECT)) {
-            tactics.setGuardZone(new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()),
-                    (int) Math.floor(post.z())), CoordinatorTuning.DEFENSE_POST_RADIUS);
+            tactics.setGuardZone(
+                    new BlockCoord((int) Math.floor(safe.x()), (int) Math.floor(safe.y()), (int) Math.floor(safe.z())),
+                    CoordinatorTuning.DEFENSE_POST_RADIUS);
+        } else if (post != null && (forcedTargetId != null || d.mode() == CombatMode.PROTECT)) {
+            tactics.setGuardZone(
+                    new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()), (int) Math.floor(post.z())),
+                    CoordinatorTuning.DEFENSE_POST_RADIUS);
         }
         // ward
         if (d.target().isPresent()) {

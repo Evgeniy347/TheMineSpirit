@@ -26,30 +26,59 @@ class TacticsEngineTests {
 
         TacticalOutcome outcome = first(situation);
 
-        assertEquals(List.of(TacticalOption.FIGHT, TacticalAction.ENGAGE, RetreatMethod.NONE, TacticalState.ENGAGED,
-                CombatMode.AGGRESSIVE), List.of(outcome.decision(), outcome.action(), outcome.retreatMethod(),
-                outcome.state(), outcome.mode()),
+        assertEquals(
+                List.of(
+                        TacticalOption.FIGHT,
+                        TacticalAction.ENGAGE,
+                        RetreatMethod.NONE,
+                        TacticalState.ENGAGED,
+                        CombatMode.AGGRESSIVE),
+                List.of(outcome.decision(), outcome.action(), outcome.retreatMethod(), outcome.state(), outcome.mode()),
                 "Один зомби при полном HP и мече: бой, обычная атака, отход не нужен, состояние ENGAGED");
-        assertEquals(List.of(Decision.BY_SCORE, "engage_default", Optional.of("calm_to_engaged"), ""),
-                List.of(outcome.trace().rule(), outcome.trace().actionRule(), outcome.trace().stateRule(),
+        assertEquals(
+                List.of(Decision.BY_SCORE, "engage_default", Optional.of("calm_to_engaged"), ""),
+                List.of(
+                        outcome.trace().rule(),
+                        outcome.trace().actionRule(),
+                        outcome.trace().stateRule(),
                         outcome.trace().whyNotFight()),
                 "Trace называет, чем решено: оценка, затем действие по умолчанию и переход CALM → ENGAGED");
-        assertEquals(Optional.of(situation.self().pos()), outcome.memory().anchor(),
+        assertEquals(
+                Optional.of(situation.self().pos()),
+                outcome.memory().anchor(),
                 "Бой начался: точка начала боя запоминается якорем для оборонительного режима");
-        assertEquals(Factor.values().length, outcome.trace().factors().size(),
+        assertEquals(
+                Factor.values().length,
+                outcome.trace().factors().size(),
                 "Trace перечисляет вклад каждого из факторов");
     }
 
     @Test
     void step_CreeperCloseWithCoverAndBlocks_RetreatsByHardRuleToCover() {
-        Situation situation = SituationBuilder.create().dps(1).enemy("creeper", 3).cover(4).blocks(10).build();
+        Situation situation = SituationBuilder.create()
+                .dps(1)
+                .enemy("creeper", 3)
+                .cover(4)
+                .blocks(10)
+                .build();
 
         TacticalOutcome outcome = first(situation);
 
-        assertEquals(List.of(TacticalOption.RETREAT, TacticalAction.RETREAT, RetreatMethod.COVER,
-                TacticalState.RETREATING, "explosive_close_retreat", "решило правило explosive_close_retreat"),
-                List.of(outcome.decision(), outcome.action(), outcome.retreatMethod(), outcome.state(),
-                        outcome.trace().rule(), outcome.trace().whyNotFight()),
+        assertEquals(
+                List.of(
+                        TacticalOption.RETREAT,
+                        TacticalAction.RETREAT,
+                        RetreatMethod.COVER,
+                        TacticalState.RETREATING,
+                        "explosive_close_retreat",
+                        "решило правило explosive_close_retreat"),
+                List.of(
+                        outcome.decision(),
+                        outcome.action(),
+                        outcome.retreatMethod(),
+                        outcome.state(),
+                        outcome.trace().rule(),
+                        outcome.trace().whyNotFight()),
                 "Крипер в 3 блоках без меча: жёсткое правило отхода, укрытие и столб равны по полезности, выигрывает укрытие "
                         + "по порядку способов, баррикада закрыта взрывчаткой");
     }
@@ -58,37 +87,68 @@ class TacticsEngineTests {
     void step_NoEnemies_IgnoresAndStaysCalm() {
         TacticalOutcome outcome = first(SituationBuilder.create().build());
 
-        assertEquals(List.of(TacticalOption.IGNORE, TacticalAction.CONTINUE, TacticalState.CALM,
-                "no_enemies_ignore", Optional.empty()),
-                List.of(outcome.decision(), outcome.action(), outcome.state(), outcome.trace().rule(),
+        assertEquals(
+                List.of(
+                        TacticalOption.IGNORE,
+                        TacticalAction.CONTINUE,
+                        TacticalState.CALM,
+                        "no_enemies_ignore",
+                        Optional.empty()),
+                List.of(
+                        outcome.decision(),
+                        outcome.action(),
+                        outcome.state(),
+                        outcome.trace().rule(),
                         outcome.returnTo()),
                 "Без врагов: игнор, продолжать прежнее дело, покой, возвращаться некуда");
     }
 
     @Test
     void step_GuardAreaEnemyBeyondLeash_IgnoresAndReturnsToZoneCenter() {
-        Situation situation = SituationBuilder.create().mode(CombatMode.GUARD_AREA).pos(12, 0).zone(0, 0, 10)
-                .enemy("zombie", 20).build();
+        Situation situation = SituationBuilder.create()
+                .mode(CombatMode.GUARD_AREA)
+                .pos(12, 0)
+                .zone(0, 0, 10)
+                .enemy("zombie", 20)
+                .build();
 
         TacticalOutcome outcome = first(situation);
 
-        assertEquals(List.of(TacticalOption.IGNORE, "outside_leash_ignore", Optional.of(new Point(0, 0, 0))),
+        assertEquals(
+                List.of(TacticalOption.IGNORE, "outside_leash_ignore", Optional.of(new Point(0, 0, 0))),
                 List.of(outcome.decision(), outcome.trace().rule(), outcome.returnTo()),
                 "Враг за поводком охраны (пределы зоны 10 + 4): не преследуем и возвращаемся к центру зоны");
     }
 
     @Test
     void step_AggressiveWithLowHp_DegradesModeAndRestoresItWhenHealthy() {
-        Situation hurt = SituationBuilder.create().hpFraction(0.28).enemy("zombie", 10).cover(5).build();
-        Situation healed = SituationBuilder.create().hpFraction(0.8).enemy("zombie", 10).cover(5).build();
+        Situation hurt = SituationBuilder.create()
+                .hpFraction(0.28)
+                .enemy("zombie", 10)
+                .cover(5)
+                .build();
+        Situation healed = SituationBuilder.create()
+                .hpFraction(0.8)
+                .enemy("zombie", 10)
+                .cover(5)
+                .build();
         TacticsEngine engine = engine();
 
         TacticalOutcome low = engine.step(hurt, Memories.fresh(hurt), 0);
         TacticalOutcome recovered = engine.step(healed, low.memory(), 10);
 
-        assertEquals(List.of(CombatMode.DEFENSIVE, CombatMode.AGGRESSIVE, CombatMode.AGGRESSIVE,
-                Optional.of("aggressive_tires"), Optional.of("aggressive_recovers")),
-                List.of(low.mode(), low.memory().orderedMode(), recovered.mode(), low.trace().modeRule(),
+        assertEquals(
+                List.of(
+                        CombatMode.DEFENSIVE,
+                        CombatMode.AGGRESSIVE,
+                        CombatMode.AGGRESSIVE,
+                        Optional.of("aggressive_tires"),
+                        Optional.of("aggressive_recovers")),
+                List.of(
+                        low.mode(),
+                        low.memory().orderedMode(),
+                        recovered.mode(),
+                        low.trace().modeRule(),
                         recovered.trace().modeRule()),
                 "Приказ aggressive не теряется: при HP 28 % режим временно defensive, при 80 % возвращается");
     }
@@ -103,30 +163,41 @@ class TacticsEngineTests {
         TacticalOutcome stillEngaged = engine.step(clear, engaged.memory(), 10);
         TacticalOutcome calm = engine.step(clear, stillEngaged.memory(), 30);
 
-        assertEquals(List.of(TacticalState.ENGAGED, TacticalState.CALM, Optional.of("engaged_to_calm"),
-                Optional.empty()),
-                List.of(stillEngaged.state(), calm.state(), calm.trace().stateRule(), calm.memory().anchor()),
+        assertEquals(
+                List.of(TacticalState.ENGAGED, TacticalState.CALM, Optional.of("engaged_to_calm"), Optional.empty()),
+                List.of(
+                        stillEngaged.state(),
+                        calm.state(),
+                        calm.trace().stateRule(),
+                        calm.memory().anchor()),
                 "Враг пропал: через 10 тиков бой ещё не окончен, через 30 (≥ 20) — покой, якорь забыт");
     }
 
     @Test
     void step_HordeOnScore_ExplainsWhyNotFightWithTopFactors() {
-        Situation situation = SituationBuilder.create().enemies("zombie", 8, 6).cover(5).build();
+        Situation situation =
+                SituationBuilder.create().enemies("zombie", 8, 6).cover(5).build();
 
         TacticalOutcome outcome = first(situation);
 
         assertEquals(TacticalOption.RETREAT, outcome.decision(), "Шестеро зомби при одном мече: отход по оценке");
         String why = outcome.trace().whyNotFight();
-        assertTrue(why.startsWith("перевес RETREAT над FIGHT:") && why.contains("WIN_MARGIN"),
+        assertTrue(
+                why.startsWith("перевес RETREAT над FIGHT:") && why.contains("WIN_MARGIN"),
                 "Trace объясняет, почему не бой: называет факторы, которые перевесили (WIN_MARGIN здесь главный), а "
                         + "получили: " + why);
-        assertTrue(outcome.trace().explain().contains(why),
+        assertTrue(
+                outcome.trace().explain().contains(why),
                 "Текстовое объяснение содержит ту же причину, что и поле trace");
     }
 
     @Test
     void step_SameInputTwice_GivesEqualOutcomesIncludingTrace() {
-        Situation situation = SituationBuilder.create().enemies("zombie", 6, 3).enemy("skeleton", 12).cover(5).build();
+        Situation situation = SituationBuilder.create()
+                .enemies("zombie", 6, 3)
+                .enemy("skeleton", 12)
+                .cover(5)
+                .build();
         TacticsMemory memory = Memories.fresh(situation);
 
         TacticalOutcome one = engine().step(situation, memory, 7);
@@ -139,24 +210,35 @@ class TacticsEngineTests {
     void step_NegativeTick_IsRejected() {
         Situation situation = SituationBuilder.create().build();
 
-        assertThrows(IllegalArgumentException.class, () -> engine().step(situation, Memories.fresh(situation), -1),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> engine().step(situation, Memories.fresh(situation), -1),
                 "Номер тика обязан быть неотрицательным: отрицательный означает ошибку адаптера, а не момент до начала мира");
     }
 
     @Test
     void step_NoRouteIgnoreAfterCriticalHp_ExplainsExcludedFight() {
-        Situation situation = SituationBuilder.create().hpFraction(0.2).lava(1).enemy("pillager", 6).build();
+        Situation situation = SituationBuilder.create()
+                .hpFraction(0.2)
+                .lava(1)
+                .enemy("pillager", 6)
+                .build();
 
         TacticalOutcome outcome = first(situation);
 
-        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"),
+        assertEquals(
+                List.of(TacticalOption.IGNORE, "no_route_ignore"),
                 List.of(outcome.decision(), outcome.trace().rule()),
                 "HP 20 % при лаве рядом и целящемся враге: отходить некуда (от быстрого стрелка не убежать), бой "
                         + "вычеркнут, подмена noRoute выбирает IGNORE");
-        assertEquals(List.of("no_fight_near_lava"), outcome.trace().excludingRules(),
+        assertEquals(
+                List.of("no_fight_near_lava"),
+                outcome.trace().excludingRules(),
                 "Trace подмены обязан хранить вычёркивания, которые она учла: иначе вычеркнутый бой теряется "
                         + "в Decision.excluded. Проверьте слияние вычёркиваний подмены в Decider");
-        assertEquals("бой вычеркнут правилами [no_fight_near_lava]", outcome.trace().whyNotFight(),
+        assertEquals(
+                "бой вычеркнут правилами [no_fight_near_lava]",
+                outcome.trace().whyNotFight(),
                 "Trace обязан объяснять, почему не FIGHT: игрок видит IGNORE и должен узнать про лаву, а не "
                         + "«решило правило no_route_ignore» без причины");
     }
@@ -168,15 +250,27 @@ class TacticsEngineTests {
         TacticsMemory memory = null;
         List<TacticalOption> decisions = new ArrayList<>();
         for (int i = 0; i < distances.length; i++) {
-            Situation situation = SituationBuilder.create().dps(1).enemy("creeper", distances[i]).cover(5).build();
+            Situation situation = SituationBuilder.create()
+                    .dps(1)
+                    .enemy("creeper", distances[i])
+                    .cover(5)
+                    .build();
             memory = memory == null ? Memories.fresh(situation) : memory;
             TacticalOutcome outcome = engine.step(situation, memory, 1000 + 10L * i);
             decisions.add(outcome.decision());
             memory = outcome.memory();
         }
 
-        assertEquals(List.of(TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.FIGHT, TacticalOption.RETREAT,
-                TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT, TacticalOption.RETREAT),
+        assertEquals(
+                List.of(
+                        TacticalOption.FIGHT,
+                        TacticalOption.FIGHT,
+                        TacticalOption.FIGHT,
+                        TacticalOption.RETREAT,
+                        TacticalOption.RETREAT,
+                        TacticalOption.RETREAT,
+                        TacticalOption.RETREAT,
+                        TacticalOption.RETREAT),
                 decisions,
                 "Крипер без меча подходит до 5 и отходит до 6–7 блоков: после первого отхода дух не возвращается в бой, пока "
                         + "крипер ближе 8 блоков (правило explosive_band_retreat). Иначе качка 5/6 ведёт духа к взрыву");

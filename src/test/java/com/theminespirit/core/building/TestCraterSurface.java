@@ -34,7 +34,8 @@ final class TestCraterSurface implements CraterSurface {
 
     TestCraterSurface hole(int x, int z, int depth) {
         if (depth < 1) {
-            throw new IllegalArgumentException("Глубина ямы " + depth + " меньше 1: выкопанная яма минимум в одну клетку");
+            throw new IllegalArgumentException(
+                    "Глубина ямы " + depth + " меньше 1: выкопанная яма минимум в одну клетку");
         }
         depths.put(key(x, z), depth);
         return this;

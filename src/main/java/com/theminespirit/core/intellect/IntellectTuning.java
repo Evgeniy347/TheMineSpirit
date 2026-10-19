@@ -47,17 +47,44 @@ public record IntellectTuning(
 
     public static final String RESOURCE = "data/theminespirit/tactics/intellect.json";
 
-    private static final Set<String> FIELDS = Set.of("demandIntervalTicks", "minSwitchTicks", "failBackoffTicks",
-            "hysteresisMargin", "crowdPenalty", "workCrowdPenalty", "maxDemand", "fleeMargin", "maxFighters",
-            "foodDays", "foodRation",
-            "foodChildRation", "foodDemandMin", "foodDemandMax", "forageWithdrawCount", "forageWithdrawRadius",
-            "forageHuntRadius", "forageHuntCount", "forageFishRadius", "forageFishCount", "forageFishDuration",
-            "oreTarget", "ironTarget", "weaponTarget", "teamMin", "teamMax", "inviteTtlTicks", "inviteRepeatTicks",
-            "inviteExtendTicks", "inviteMaxExtends", "strategicTtlTicks", "healFraction", "armedDps");
+    private static final Set<String> FIELDS = Set.of(
+            "demandIntervalTicks",
+            "minSwitchTicks",
+            "failBackoffTicks",
+            "hysteresisMargin",
+            "crowdPenalty",
+            "workCrowdPenalty",
+            "maxDemand",
+            "fleeMargin",
+            "maxFighters",
+            "foodDays",
+            "foodRation",
+            "foodChildRation",
+            "foodDemandMin",
+            "foodDemandMax",
+            "forageWithdrawCount",
+            "forageWithdrawRadius",
+            "forageHuntRadius",
+            "forageHuntCount",
+            "forageFishRadius",
+            "forageFishCount",
+            "forageFishDuration",
+            "oreTarget",
+            "ironTarget",
+            "weaponTarget",
+            "teamMin",
+            "teamMax",
+            "inviteTtlTicks",
+            "inviteRepeatTicks",
+            "inviteExtendTicks",
+            "inviteMaxExtends",
+            "strategicTtlTicks",
+            "healFraction",
+            "armedDps");
 
     private static final IntellectTuning DEFAULTS = new IntellectTuning(
-            100, 200, 200, 0.15, 0.2, 8.0, 10.0, 1.0, 3, 1, 1.5, 0.75, 4.0, 9.0,
-            1, 8, 16, 1, 16, 1, 1200, 64, 32, 2, 2, 3, 3600, 600, 1200, 3, 6000, 0.35, 6.0);
+            100, 200, 200, 0.15, 0.2, 8.0, 10.0, 1.0, 3, 1, 1.5, 0.75, 4.0, 9.0, 1, 8, 16, 1, 16, 1, 1200, 64, 32, 2, 2,
+            3, 3600, 600, 1200, 3, 6000, 0.35, 6.0);
 
     public IntellectTuning {
         requireTicks("demandIntervalTicks", demandIntervalTicks);

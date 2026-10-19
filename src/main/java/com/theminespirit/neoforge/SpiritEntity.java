@@ -259,7 +259,6 @@ public final class SpiritEntity extends PathfinderMob {
         this.bed = bed;
     }
 
-
     public boolean nightLeashArmed() {
         return nightLeashArmed;
     }
@@ -373,7 +372,9 @@ public final class SpiritEntity extends PathfinderMob {
     private void restoreHome(CompoundTag compound) {
         try {
             BlockPos pos = blockPosition();
-            home = SpiritHome.resolve(SpiritHomeStore.read(compound), memory.recallAll(MemoryType.BASE),
+            home = SpiritHome.resolve(
+                    SpiritHomeStore.read(compound),
+                    memory.recallAll(MemoryType.BASE),
                     level().dimension().location().toString(),
                     new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         } catch (RuntimeException e) {
@@ -412,8 +413,11 @@ public final class SpiritEntity extends PathfinderMob {
                 tactics.restore(stored);
             } catch (TacticsFormatException e) {
                 tactics.failRestore(e.getMessage());
-                LOGGER.error("Дух {} потерял состояние тактики, начнёт с чистого листа. Причина: {}", getUUID(),
-                        e.getMessage(), e);
+                LOGGER.error(
+                        "Дух {} потерял состояние тактики, начнёт с чистого листа. Причина: {}",
+                        getUUID(),
+                        e.getMessage(),
+                        e);
             }
         });
     }
@@ -422,8 +426,11 @@ public final class SpiritEntity extends PathfinderMob {
         try {
             return MemoryCodec.decode(json);
         } catch (MemoryFormatException e) {
-            LOGGER.error("Дух {} потерял память: сохранённые точки не прочитаны, память пуста. Причина: {}",
-                    getUUID(), e.getMessage(), e);
+            LOGGER.error(
+                    "Дух {} потерял память: сохранённые точки не прочитаны, память пуста. Причина: {}",
+                    getUUID(),
+                    e.getMessage(),
+                    e);
             return MemoryStore.empty();
         }
     }
@@ -497,7 +504,9 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public boolean isFollowingPlayer() {
-        return currentTaskScript().filter(NightLeashGate.FOLLOW_SCRIPTS::contains).isPresent();
+        return currentTaskScript()
+                .filter(NightLeashGate.FOLLOW_SCRIPTS::contains)
+                .isPresent();
     }
 
     public Optional<RunProgress> taskProgress() {
@@ -540,7 +549,6 @@ public final class SpiritEntity extends PathfinderMob {
         this.finding = finding;
     }
 
-
     public int snapshotBuilds() {
         return snapshotBuilds;
     }
@@ -563,7 +571,6 @@ public final class SpiritEntity extends PathfinderMob {
     public int teleports() {
         return teleports;
     }
-
 
     public int claimMagnetPulls(AABB area, IdFilter items, long since) {
         return magnet.claim(area, items, since);
@@ -608,8 +615,8 @@ public final class SpiritEntity extends PathfinderMob {
 
     private void restoreSnapshot(TaskSnapshot snapshot) {
         try {
-            TaskSnapshot validated = SnapshotRestorer.withValidatedPlan(snapshot, SpiritScripts.catalogFor(this),
-                    SpiritScripts.conditionCatalog());
+            TaskSnapshot validated = SnapshotRestorer.withValidatedPlan(
+                    snapshot, SpiritScripts.catalogFor(this), SpiritScripts.conditionCatalog());
             brain().restore(validated);
         } catch (RuntimeException e) {
             String reason = "не удалось восстановить задачу: " + e.getMessage();
@@ -618,4 +625,3 @@ public final class SpiritEntity extends PathfinderMob {
         }
     }
 }
-

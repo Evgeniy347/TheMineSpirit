@@ -12,18 +12,15 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class BatchPlanner {
-    private BatchPlanner() {
-    }
+    private BatchPlanner() {}
 
-    public static List<TaskNode> planAll(List<ScriptCatalog> catalogs, Goal goal,
-            List<WorldObservation> observations) {
+    public static List<TaskNode> planAll(List<ScriptCatalog> catalogs, Goal goal, List<WorldObservation> observations) {
         Objects.requireNonNull(catalogs, "catalogs не может быть null: без каталогов планировать нечего");
         Objects.requireNonNull(goal, "goal не может быть null: план строится по цели");
-        Objects.requireNonNull(observations,
-                "observations не может быть null: каждому духу нужно своё наблюдение");
+        Objects.requireNonNull(observations, "observations не может быть null: каждому духу нужно своё наблюдение");
         if (catalogs.size() != observations.size()) {
-            throw new IllegalArgumentException("Каталогов " + catalogs.size() + ", а наблюдений "
-                    + observations.size() + ": каждому духу нужны свой каталог и своё наблюдение");
+            throw new IllegalArgumentException("Каталогов " + catalogs.size() + ", а наблюдений " + observations.size()
+                    + ": каждому духу нужны свой каталог и своё наблюдение");
         }
         Set<String> seen = new HashSet<>();
         for (WorldObservation observation : observations) {
@@ -37,7 +34,8 @@ public final class BatchPlanner {
         for (int i = 0; i < catalogs.size(); i++) {
             try {
                 plans.add(new FallbackPlanner(catalogs.get(i), ConditionCatalog.empty())
-                        .plan(goal, observations.get(i)).plan());
+                        .plan(goal, observations.get(i))
+                        .plan());
             } catch (UnplannableGoalException | PlanValidationException rejection) {
                 throw new BatchPlanException(i, rejection);
             }

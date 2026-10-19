@@ -34,21 +34,27 @@ class DropProfileTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("profileTable")
     void blocksCarefulStep_HeightProfile_BlockDecisionMatches(ProfileRow row) {
-        assertEquals(row.blocked(), DropProfile.blocksCarefulStep(row.floors()),
+        assertEquals(
+                row.blocked(),
+                DropProfile.blocksCarefulStep(row.floors()),
                 "Профиль " + row.floors() + (row.blocked() ? " обязан запрещать" : " обязан разрешать")
                         + " осторожный шаг: пропуск обрыва роняет духа, а ложный запрет останавливает его на ровном месте");
     }
 
     @Test
     void maxSafeDrop_ValueCheck_EqualsTwo() {
-        assertEquals(2, DropProfile.MAX_SAFE_DROP,
+        assertEquals(
+                2,
+                DropProfile.MAX_SAFE_DROP,
                 "Безопасный спуск — 2 блока: большее падение ранит духа, осторожный шаг через такой край "
                         + "не строится; при осознанной смене сверьте политики безопасности");
     }
 
     @Test
     void lookahead_ValueCheck_EqualsEight() {
-        assertEquals(8, DropProfile.LOOKAHEAD_CELLS,
+        assertEquals(
+                8,
+                DropProfile.LOOKAHEAD_CELLS,
                 "Заглядывание осторожного шага — 8 клеток пути: короче — поздняя остановка перед обрывом, "
                         + "длиннее — лишние чтения столбцов при каждом перестроении пути");
     }

@@ -6,8 +6,8 @@ import net.minecraft.nbt.Tag;
 
 public final class SpiritMemoryStore {
     public static final String KEY = "SpiritMemory";
-    private SpiritMemoryStore() {
-    }
+
+    private SpiritMemoryStore() {}
 
     public static void write(CompoundTag tag, String memoryJson) {
         if (tag == null) {
@@ -27,5 +27,4 @@ public final class SpiritMemoryStore {
         String value = tag.getString(KEY);
         return value.isBlank() ? Optional.empty() : Optional.of(value);
     }
-
 }

@@ -34,8 +34,8 @@ import net.minecraft.world.level.block.Block;
  */
 public final class SpiritSupplies implements AcquireSupplies {
     private static final int SLICES_PER_TICK = 4;
-    private static final Set<Block> STATION_BLOCKS = Stream.of(StationType.values()).map(StationType::block)
-            .collect(Collectors.toUnmodifiableSet());
+    private static final Set<Block> STATION_BLOCKS =
+            Stream.of(StationType.values()).map(StationType::block).collect(Collectors.toUnmodifiableSet());
 
     private final SpiritEntity spirit;
     private final int radius;
@@ -86,8 +86,8 @@ public final class SpiritSupplies implements AcquireSupplies {
         }
         IdFilter filter = IdFilter.of(List.of(item));
         BlockPos center = spirit.blockPosition();
-        BlockLocator.Search search = BlockLocator.search(spirit.level(), center, radius,
-                ContainerAccess.allowedBlocks());
+        BlockLocator.Search search =
+                BlockLocator.search(spirit.level(), center, radius, ContainerAccess.allowedBlocks());
         List<BlockPos> found = new ArrayList<>();
         while (!search.done()) {
             found.addAll(search.step(SLICES_PER_TICK));
@@ -121,10 +121,12 @@ public final class SpiritSupplies implements AcquireSupplies {
                 continue;
             }
             int take = Math.min(left, available);
-            steps.add(new ScriptCall("withdraw", Map.of(
-                    "container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
-                    "item", item,
-                    "count", take)));
+            steps.add(new ScriptCall(
+                    "withdraw",
+                    Map.of(
+                            "container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
+                            "item", item,
+                            "count", take)));
             left -= take;
         }
         return steps;
@@ -132,8 +134,8 @@ public final class SpiritSupplies implements AcquireSupplies {
 
     @Override
     public Set<String> nearbyStations() {
-        BlockLocator.Search search = BlockLocator.search(spirit.level(), spirit.blockPosition(),
-                CatalogLimits.STATION_RADIUS_DEFAULT, STATION_BLOCKS);
+        BlockLocator.Search search = BlockLocator.search(
+                spirit.level(), spirit.blockPosition(), CatalogLimits.STATION_RADIUS_DEFAULT, STATION_BLOCKS);
         Set<String> found = new LinkedHashSet<>();
         while (!search.done()) {
             for (BlockPos pos : search.step(SLICES_PER_TICK)) {

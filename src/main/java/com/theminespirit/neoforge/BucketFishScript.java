@@ -8,7 +8,6 @@ import com.theminespirit.core.fishing.FishBuckets;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.script.BucketFishParams;
 import com.theminespirit.neoforge.crafting.ItemIds;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -64,7 +63,8 @@ public final class BucketFishScript implements ScriptInstance {
             return ScriptStatus.SUCCEEDED;
         }
         if (elapsed++ >= timeoutTicks) {
-            return caught > 0 ? ScriptStatus.SUCCEEDED
+            return caught > 0
+                    ? ScriptStatus.SUCCEEDED
                     : fail("за " + timeoutTicks + " тиков ведром не поймано ни одной рыбы");
         }
         return switch (phase) {
@@ -181,12 +181,20 @@ public final class BucketFishScript implements ScriptInstance {
     private Entity nearestFish() {
         Vec3 center = spirit.position();
         double radius = params.radius();
-        AABB box = new AABB(center.x - radius, center.y - radius, center.z - radius,
-                center.x + radius, center.y + radius, center.z + radius);
+        AABB box = new AABB(
+                center.x - radius,
+                center.y - radius,
+                center.z - radius,
+                center.x + radius,
+                center.y + radius,
+                center.z + radius);
         Entity best = null;
         double bestDistance = Double.MAX_VALUE;
-        for (Entity entity : spirit.level().getEntities(spirit, box,
-                candidate -> !candidate.isRemoved() && FishBuckets.isBucketable(entityTypeId(candidate)))) {
+        for (Entity entity : spirit.level()
+                .getEntities(
+                        spirit,
+                        box,
+                        candidate -> !candidate.isRemoved() && FishBuckets.isBucketable(entityTypeId(candidate)))) {
             double distance = spirit.distanceToSqr(entity);
             if (distance < bestDistance) {
                 best = entity;

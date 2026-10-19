@@ -7,11 +7,10 @@ import com.theminespirit.core.script.ScriptCatalog;
 import java.util.Objects;
 
 public final class SnapshotRestorer {
-    private SnapshotRestorer() {
-    }
+    private SnapshotRestorer() {}
 
-    public static TaskSnapshot withValidatedPlan(TaskSnapshot snapshot, ScriptCatalog scripts,
-            ConditionCatalog conditions) {
+    public static TaskSnapshot withValidatedPlan(
+            TaskSnapshot snapshot, ScriptCatalog scripts, ConditionCatalog conditions) {
         Objects.requireNonNull(snapshot, "snapshot не может быть null: восстанавливать нечего");
         Objects.requireNonNull(scripts, "Каталог скриптов не может быть null: без него не проверить план снимка");
         Objects.requireNonNull(conditions, "Каталог проверок не может быть null: без него не проверить план снимка");
@@ -19,7 +18,7 @@ public final class SnapshotRestorer {
             return snapshot;
         }
         TaskNode validated = PlanValidator.validate(snapshot.plan(), scripts, conditions);
-        return new TaskSnapshot(snapshot.version(), RunStatus.RUNNING, snapshot.reason(), validated,
-                snapshot.progress());
+        return new TaskSnapshot(
+                snapshot.version(), RunStatus.RUNNING, snapshot.reason(), validated, snapshot.progress());
     }
 }

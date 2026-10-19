@@ -36,7 +36,9 @@ class TaskRunnerRestoreTests {
         created.clear();
         TaskRunner resumed = restore(runner, registry, conditions());
         assertEquals(RunStatus.SUCCEEDED, runToTerminal(resumed), "восстановленный sequence обязан дойти до конца");
-        assertEquals(List.of("b", "c"), created,
+        assertEquals(
+                List.of("b", "c"),
+                created,
                 "после восстановления с шага 1 создаются только b и c: повтор a означал бы, что индекс шага "
                         + "потерян и дух повторит уже сделанное");
     }
@@ -45,7 +47,7 @@ class TaskRunnerRestoreTests {
     void restore_RepeatAfterTwoPasses_RunsRemainingThree() {
         List<String> created = new ArrayList<>();
         TaskNode plan = new RepeatNode(5, script("step"));
-        ScriptRegistry registry = registry( factory("step", created, 1, ScriptStatus.SUCCEEDED, null));
+        ScriptRegistry registry = registry(factory("step", created, 1, ScriptStatus.SUCCEEDED, null));
         TaskRunner runner = TaskRunner.start(plan, registry, conditions());
         assertEquals(RunStatus.RUNNING, runner.tick(), "первый повтор завершён");
         assertEquals(RunStatus.RUNNING, runner.tick(), "второй повтор завершён");
@@ -53,7 +55,9 @@ class TaskRunnerRestoreTests {
         created.clear();
         TaskRunner resumed = restore(runner, registry, conditions());
         assertEquals(RunStatus.SUCCEEDED, runToTerminal(resumed), "repeat(5) обязан завершиться успехом");
-        assertEquals(3, created.size(),
+        assertEquals(
+                3,
+                created.size(),
                 "после двух пройденных повторов остаётся три: неверный индекс заставил бы духа выполнить лишние "
                         + "или недостающие итерации, создано " + created.size());
     }
@@ -71,7 +75,9 @@ class TaskRunnerRestoreTests {
         created.clear();
         TaskRunner resumed = restore(runner, registry, conditions());
         assertEquals(RunStatus.SUCCEEDED, runToTerminal(resumed), "вторая ветка обязана принести успех");
-        assertEquals(List.of("second"), created,
+        assertEquals(
+                List.of("second"),
+                created,
                 "после восстановления на второй ветке fallback не возвращается к первой: повтор первой ветки "
                         + "заново выполнил бы уже провалившееся действие");
     }
@@ -89,7 +95,9 @@ class TaskRunnerRestoreTests {
         created.clear();
         TaskRunner resumed = restore(runner, registry, conditions());
         assertEquals(RunStatus.SUCCEEDED, runToTerminal(resumed), "parallel(all) обязан завершиться успехом");
-        assertEquals(List.of("slow"), created,
+        assertEquals(
+                List.of("slow"),
+                created,
                 "завершённый потомок parallel не перезапускается, доделывается только running: иначе дух заново "
                         + "сделает уже выполненный шаг");
     }
@@ -114,7 +122,9 @@ class TaskRunnerRestoreTests {
         created.clear();
         TaskRunner resumed = restore(runner, registry, conditions);
         assertEquals(RunStatus.SUCCEEDED, runToTerminal(resumed), "выбранная ветка обязана дойти до конца");
-        assertEquals(0, evaluations.get(),
+        assertEquals(
+                0,
+                evaluations.get(),
                 "после восстановления condition не вычисляется второй раз: повторный расчёт мог бы увести "
                         + "в другую ветку и изменить уже принятое решение");
         assertEquals(List.of("thenStep"), created, "исполняется только уже выбранная ветка");
@@ -135,9 +145,13 @@ class TaskRunnerRestoreTests {
         restoredElapsed.clear();
         created.clear();
         TaskRunner resumed = restore(runner, registry, conditions());
-        assertEquals(RunStatus.SUCCEEDED, runToTerminal(resumed),
+        assertEquals(
+                RunStatus.SUCCEEDED,
+                runToTerminal(resumed),
                 "восстановленный скрипт обязан завершиться за оставшиеся три тика, а не начать пять заново");
-        assertEquals(List.of(2), restoredElapsed,
+        assertEquals(
+                List.of(2),
+                restoredElapsed,
                 "состояние из saveState обязано дойти до экземпляра через restoreState: иначе счётный скрипт "
                         + "начнёт счёт заново. Получено " + restoredElapsed);
     }
@@ -156,7 +170,9 @@ class TaskRunnerRestoreTests {
 
         TaskRunner failed = TaskRunner.restore(terminal(RunStatus.FAILED, "не дошёл до цели"), counting, conditions());
         assertEquals(RunStatus.FAILED, failed.status(), "восстановленный FAILED хранит итог");
-        assertEquals("не дошёл до цели", failed.failureReason().orElse(null),
+        assertEquals(
+                "не дошёл до цели",
+                failed.failureReason().orElse(null),
                 "причина провала сохраняется дословно: без неё отчёт о задаче теряет смысл");
         assertEquals(RunStatus.FAILED, failed.tick(), "FAILED не запускает ничего");
 
@@ -172,8 +188,8 @@ class TaskRunnerRestoreTests {
     }
 
     private static TaskRunner restore(TaskRunner runner, ScriptRegistry registry, ConditionRegistry conditions) {
-        TaskSnapshot snapshot = runner.snapshot().orElseThrow(() -> new AssertionError(
-                "работающая задача обязана отдавать снимок для восстановления"));
+        TaskSnapshot snapshot = runner.snapshot()
+                .orElseThrow(() -> new AssertionError("работающая задача обязана отдавать снимок для восстановления"));
         TaskSnapshot decoded = TaskSnapshotCodec.decode(TaskSnapshotCodec.encode(snapshot));
         return TaskRunner.restore(decoded, registry, conditions);
     }
@@ -200,8 +216,8 @@ class TaskRunnerRestoreTests {
         return ScriptRegistry.of(byId);
     }
 
-    private static NamedFactory factory(String id, List<String> created, int ticks, ScriptStatus terminal,
-            String reason) {
+    private static NamedFactory factory(
+            String id, List<String> created, int ticks, ScriptStatus terminal, String reason) {
         return named(id, params -> {
             created.add(id);
             return new CountingInstance(ticks, terminal, reason);

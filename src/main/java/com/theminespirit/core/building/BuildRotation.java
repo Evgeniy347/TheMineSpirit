@@ -49,8 +49,9 @@ public enum BuildRotation {
             case "90", "clockwise_90" -> CLOCKWISE_90;
             case "180", "clockwise_180" -> CLOCKWISE_180;
             case "270", "-90", "counterclockwise_90" -> COUNTERCLOCKWISE_90;
-            default -> throw new IllegalArgumentException("Неизвестный поворот '" + text
-                    + "': допустимы 0, 90, 180, 270 или none, clockwise_90, clockwise_180, counterclockwise_90");
+            default ->
+                throw new IllegalArgumentException("Неизвестный поворот '" + text
+                        + "': допустимы 0, 90, 180, 270 или none, clockwise_90, clockwise_180, counterclockwise_90");
         };
     }
 
@@ -80,8 +81,7 @@ public enum BuildRotation {
         };
     }
 
-    public record Cell(int x, int z) {
-    }
+    public record Cell(int x, int z) {}
 
     public record DirectionVector(int dx, int dz) {
         public boolean equalsVector(int otherDx, int otherDz) {

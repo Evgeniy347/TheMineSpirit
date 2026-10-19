@@ -19,9 +19,17 @@ public record HungerRules(
 
     public static final String RESOURCE = "data/theminespirit/hunger/hunger.json";
 
-    private static final Set<String> FIELDS = Set.of("regenFoodThreshold", "regenIntervalTicks", "regenExhaustion",
-            "starveIntervalTicks", "starveFloor", "eatFoodThreshold", "sprintExhaustionPerMeter",
-            "combatExhaustionPerAttack", "digExhaustionPerBlock", "damageExhaustionPerHit");
+    private static final Set<String> FIELDS = Set.of(
+            "regenFoodThreshold",
+            "regenIntervalTicks",
+            "regenExhaustion",
+            "starveIntervalTicks",
+            "starveFloor",
+            "eatFoodThreshold",
+            "sprintExhaustionPerMeter",
+            "combatExhaustionPerAttack",
+            "digExhaustionPerBlock",
+            "damageExhaustionPerHit");
 
     private static final HungerRules DEFAULTS = new HungerRules(18, 80, 6.0, 80, 1.0F, 14, 0.1, 0.1, 0.005, 0.1);
 
@@ -74,10 +82,8 @@ public record HungerRules(
                     JsonResource.integer(root.get("starveIntervalTicks"), origin, "starveIntervalTicks"),
                     (float) JsonResource.decimal(root.get("starveFloor"), origin, "starveFloor"),
                     JsonResource.integer(root.get("eatFoodThreshold"), origin, "eatFoodThreshold"),
-                    JsonResource.decimal(root.get("sprintExhaustionPerMeter"), origin,
-                            "sprintExhaustionPerMeter"),
-                    JsonResource.decimal(root.get("combatExhaustionPerAttack"), origin,
-                            "combatExhaustionPerAttack"),
+                    JsonResource.decimal(root.get("sprintExhaustionPerMeter"), origin, "sprintExhaustionPerMeter"),
+                    JsonResource.decimal(root.get("combatExhaustionPerAttack"), origin, "combatExhaustionPerAttack"),
                     JsonResource.decimal(root.get("digExhaustionPerBlock"), origin, "digExhaustionPerBlock"),
                     JsonResource.decimal(root.get("damageExhaustionPerHit"), origin, "damageExhaustionPerHit"));
         } catch (IllegalArgumentException error) {

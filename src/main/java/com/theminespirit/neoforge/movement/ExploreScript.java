@@ -5,6 +5,7 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.intellect.OutsideGate;
 import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.movement.ExploreRoute;
 import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.MemoryPoint;
@@ -12,7 +13,6 @@ import com.theminespirit.core.perception.MemoryStore;
 import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ExploreParams;
-import com.theminespirit.core.movement.ExploreRoute;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -135,23 +135,21 @@ public final class ExploreScript implements ScriptInstance {
 
     private ScriptStatus tickReturn() {
         if (!approach.isActive()) {
-            approach.begin(new Vec3(origin.x() + 0.5, origin.y(), origin.z() + 0.5),
-                    CatalogLimits.NAV_ARRIVAL_TOLERANCE);
+            approach.begin(
+                    new Vec3(origin.x() + 0.5, origin.y(), origin.z() + 0.5), CatalogLimits.NAV_ARRIVAL_TOLERANCE);
         }
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> succeed();
-            case STUCK, TIMEOUT -> fail("не вернулся к точке старта (" + origin.x() + ", " + origin.y() + ", "
-                    + origin.z() + ") после разведки");
+            case STUCK, TIMEOUT ->
+                fail("не вернулся к точке старта (" + origin.x() + ", " + origin.y() + ", " + origin.z()
+                        + ") после разведки");
         };
     }
 
     private ScriptStatus succeed() {
         result = new ScriptResult.Data(Map.of(
-                "radius", params.radius(),
-                "budget", params.budget(),
-                "surveyed", surveyed,
-                "recorded", recorded));
+                "radius", params.radius(), "budget", params.budget(), "surveyed", surveyed, "recorded", recorded));
         return ScriptStatus.SUCCEEDED;
     }
 
@@ -165,8 +163,8 @@ public final class ExploreScript implements ScriptInstance {
         for (int drop = 0; drop <= GROUND_SEARCH_DEPTH; drop++) {
             BlockCoord stand = new BlockCoord(point.x(), point.y() - drop, point.z());
             if (MiningSafety.canStand(stand, safety) && TravelCheck.refusal(spirit, stand) == null) {
-                approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5),
-                        CatalogLimits.NAV_ARRIVAL_TOLERANCE);
+                approach.begin(
+                        new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), CatalogLimits.NAV_ARRIVAL_TOLERANCE);
                 return true;
             }
         }
@@ -210,11 +208,15 @@ public final class ExploreScript implements ScriptInstance {
     private LivingEntity nearestEnemy(BlockCoord point) {
         Vec3 center = new Vec3(point.x() + 0.5, point.y() + 0.5, point.z() + 0.5);
         AABB box = new AABB(center, center).inflate(SURVEY_RADIUS + 1.0);
-        return spirit.level().getEntitiesOfClass(LivingEntity.class, box,
+        return spirit
+                .level()
+                .getEntitiesOfClass(
+                        LivingEntity.class,
+                        box,
                         entity -> entity instanceof Enemy && entity.isAlive() && !entity.isRemoved())
                 .stream()
-                .min((first, second) -> Double.compare(first.position().distanceTo(center),
-                        second.position().distanceTo(center)))
+                .min((first, second) -> Double.compare(
+                        first.position().distanceTo(center), second.position().distanceTo(center)))
                 .orElse(null);
     }
 
@@ -225,7 +227,8 @@ public final class ExploreScript implements ScriptInstance {
         if (memory.recall(name) != null || memory.recallAll(type).size() >= MemoryStore.MAX_PER_TYPE) {
             return true;
         }
-        MemoryPoint point = new MemoryPoint(name, type, spirit.level().dimension().location().toString(), cell);
+        MemoryPoint point = new MemoryPoint(
+                name, type, spirit.level().dimension().location().toString(), cell);
         spirit.updateMemory(memory.remember(point));
         recorded++;
         return true;
@@ -243,21 +246,25 @@ public final class ExploreScript implements ScriptInstance {
             return null;
         }
         NightLeash leash = NightLeash.withDefaultRules();
-        boolean outside = route.stream()
-                .anyMatch(point -> !leash.insideSettlement(point, home.get(), leash.settlementRadius()));
+        boolean outside =
+                route.stream().anyMatch(point -> !leash.insideSettlement(point, home.get(), leash.settlementRadius()));
         if (!outside) {
             return null;
         }
         OutsideGate gate = OutsideGate.withDefaults();
-        OutsideGate.Decision decision = gate.admitExternal(partySize(), playerNear(home.get(), gate.escortRadius()),
-                leash.isEvening(dayFraction()));
+        OutsideGate.Decision decision = gate.admitExternal(
+                partySize(), playerNear(home.get(), gate.escortRadius()), leash.isEvening(dayFraction()));
         return decision instanceof OutsideGate.Refused refused ? refused.reason() : null;
     }
 
     private int partySize() {
         spirit.countEntityQuery();
-        int nearby = spirit.level().getEntitiesOfClass(SpiritEntity.class, spirit.getBoundingBox().inflate(PARTY_RADIUS),
-                other -> other != spirit && other.isAlive()).size();
+        int nearby = spirit.level()
+                .getEntitiesOfClass(
+                        SpiritEntity.class,
+                        spirit.getBoundingBox().inflate(PARTY_RADIUS),
+                        other -> other != spirit && other.isAlive())
+                .size();
         return 1 + nearby;
     }
 

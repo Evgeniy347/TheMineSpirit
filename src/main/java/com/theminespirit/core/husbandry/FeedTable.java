@@ -80,8 +80,8 @@ public record FeedTable(Map<Species, List<String>> feeds) {
         try {
             root = MAPPER.readTree(json);
         } catch (JsonProcessingException error) {
-            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: "
-                    + error.getOriginalMessage() + ". Исправьте синтаксис файла");
+            throw new IllegalStateException("Таблица '" + origin + "' — не разобран JSON: " + error.getOriginalMessage()
+                    + ". Исправьте синтаксис файла");
         }
         if (root == null || !root.isObject()) {
             throw new IllegalStateException("Таблица '" + origin + "' — не объект: на верхнем уровне ожидается "

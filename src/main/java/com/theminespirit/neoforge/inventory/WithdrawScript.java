@@ -30,18 +30,20 @@ public final class WithdrawScript extends ContainerTask {
         if (transferRemaining() <= 0) {
             return null;
         }
-        return TransferRunner.filtered(container, spirit.getInventory(),
-                IdFilter.of(List.of(params.item())), transferRemaining());
+        return TransferRunner.filtered(
+                container, spirit.getInventory(), IdFilter.of(List.of(params.item())), transferRemaining());
     }
 
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         return switch (shortage) {
             case NONE -> ScriptStatus.SUCCEEDED;
-            case SOURCE_LACK -> failed("в контейнере только " + moved + " из " + params.count() + " '"
-                    + params.item() + "': перенесено " + moved + ", остального в контейнере нет");
-            case DEST_FULL -> failed("инвентарь духа полон: перенесено " + moved + " из " + params.count() + " '"
-                    + params.item() + "', остальное осталось в контейнере");
+            case SOURCE_LACK ->
+                failed("в контейнере только " + moved + " из " + params.count() + " '" + params.item()
+                        + "': перенесено " + moved + ", остального в контейнере нет");
+            case DEST_FULL ->
+                failed("инвентарь духа полон: перенесено " + moved + " из " + params.count() + " '" + params.item()
+                        + "', остальное осталось в контейнере");
         };
     }
 }

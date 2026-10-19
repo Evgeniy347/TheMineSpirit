@@ -15,12 +15,16 @@ public final class PlanBudget {
         }
     }
 
-    private PlanBudget() {
-    }
+    private PlanBudget() {}
 
     public static Budget measure(TaskNode root) {
         Objects.requireNonNull(root, "root не может быть null: бюджет считается по дереву задач");
-        return new Budget(depth(root), 1 + children(root).stream().mapToInt(child -> measure(child).nodes()).sum());
+        return new Budget(
+                depth(root),
+                1
+                        + children(root).stream()
+                                .mapToInt(child -> measure(child).nodes())
+                                .sum());
     }
 
     private static int depth(TaskNode node) {
@@ -38,9 +42,10 @@ public final class PlanBudget {
             case FallbackNode fallback -> fallback.steps();
             case ParallelNode parallel -> parallel.steps();
             case RepeatNode repeat -> List.of(repeat.step());
-            case ConditionNode condition -> condition.elseStep() == null
-                    ? List.of(condition.thenStep())
-                    : List.of(condition.thenStep(), condition.elseStep());
+            case ConditionNode condition ->
+                condition.elseStep() == null
+                        ? List.of(condition.thenStep())
+                        : List.of(condition.thenStep(), condition.elseStep());
         };
     }
 }

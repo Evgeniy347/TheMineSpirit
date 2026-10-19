@@ -86,8 +86,10 @@ public enum FactName {
 
     public List<String> enumValues() {
         return switch (this) {
-            case ORDER_MODE, ORDER_ORDERED -> Arrays.stream(CombatMode.values()).map(CombatMode::id).toList();
-            case STATE_TACTICAL -> Arrays.stream(TacticalState.values()).map(TacticalState::id).toList();
+            case ORDER_MODE, ORDER_ORDERED ->
+                Arrays.stream(CombatMode.values()).map(CombatMode::id).toList();
+            case STATE_TACTICAL ->
+                Arrays.stream(TacticalState.values()).map(TacticalState::id).toList();
             default -> List.of();
         };
     }

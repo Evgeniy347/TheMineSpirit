@@ -9,8 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class RecipeCurator {
-    private RecipeCurator() {
-    }
+    private RecipeCurator() {}
 
     public static List<RecipeSpec> curate(List<RecipeSpec> recipes) {
         Objects.requireNonNull(recipes, "recipes не может быть null: куратору нечего отбирать");
@@ -59,7 +58,8 @@ public final class RecipeCurator {
         Map<String, List<RecipeSpec>> byOutput = new HashMap<>();
         for (RecipeSpec recipe : recipes) {
             if (recipe.kind() != RecipeKind.SMELTING) {
-                byOutput.computeIfAbsent(recipe.outputItem(), key -> new ArrayList<>()).add(recipe);
+                byOutput.computeIfAbsent(recipe.outputItem(), key -> new ArrayList<>())
+                        .add(recipe);
             }
         }
         return byOutput;

@@ -11,8 +11,7 @@ public final class SpiritHungerStore {
 
     private static final String VERSION_KEY = "Version";
 
-    private SpiritHungerStore() {
-    }
+    private SpiritHungerStore() {}
 
     public static void write(CompoundTag tag, SpiritHunger hunger) {
         if (hunger == null) {
@@ -38,7 +37,10 @@ public final class SpiritHungerStore {
             throw new IllegalStateException("Сытость духа записана версией " + version + ", поддерживается " + VERSION
                     + ": обновите мод или накормите духа заново");
         }
-        return Optional.of(new SpiritHunger(stored.getInt("FoodLevel"), stored.getDouble("Saturation"),
-                stored.getDouble("Exhaustion"), stored.getInt("RegenTimer")));
+        return Optional.of(new SpiritHunger(
+                stored.getInt("FoodLevel"),
+                stored.getDouble("Saturation"),
+                stored.getDouble("Exhaustion"),
+                stored.getInt("RegenTimer")));
     }
 }

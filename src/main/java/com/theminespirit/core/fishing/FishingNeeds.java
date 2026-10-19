@@ -13,8 +13,7 @@ import java.util.Map;
  * Числа порогов приходят из {@link FishingData}, а не из кода.
  */
 public final class FishingNeeds {
-    private FishingNeeds() {
-    }
+    private FishingNeeds() {}
 
     public static int cookableFish(Map<String, Integer> available) {
         if (available == null) {
@@ -51,8 +50,8 @@ public final class FishingNeeds {
             throw new IllegalArgumentException("Опись склада без карты не читается: пустой склад задают пустой картой");
         }
         if (population < 0) {
-            throw new IllegalArgumentException("Население " + population
-                    + ": норма еды считается на душу, душ не может быть отрицательно");
+            throw new IllegalArgumentException(
+                    "Население " + population + ": норма еды считается на душу, душ не может быть отрицательно");
         }
         NutritionTable table = StockCatalog.defaultTable();
         double have = 0;
@@ -64,8 +63,8 @@ public final class FishingNeeds {
             }
         }
         IntellectTuning tuning = IntellectTuning.loadDefault();
-        FoodDeficit deficit = FoodNorm.deficit(population, 0, tuning.foodDays(), tuning.foodRation(),
-                tuning.foodChildRation(), have);
+        FoodDeficit deficit =
+                FoodNorm.deficit(population, 0, tuning.foodDays(), tuning.foodRation(), tuning.foodChildRation(), have);
         return deficit.share();
     }
 

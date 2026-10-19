@@ -66,7 +66,8 @@ public final class EscortScript implements ScriptInstance {
         if (refusal != null) {
             return fail("цель вышла за границы, куда духу нельзя: " + refusal);
         }
-        if (pathRefresh.shouldRefresh(ward.getX(), ward.getY(), ward.getZ(), spirit.getNavigation().isDone())) {
+        if (pathRefresh.shouldRefresh(
+                ward.getX(), ward.getY(), ward.getZ(), spirit.getNavigation().isDone())) {
             spirit.getNavigation().moveTo(ward, MOVE_SPEED);
             spirit.countPathBuild();
         }
@@ -111,7 +112,9 @@ public final class EscortScript implements ScriptInstance {
     }
 
     private static BlockCoord cellOf(LivingEntity target) {
-        return new BlockCoord(target.blockPosition().getX(), target.blockPosition().getY(),
+        return new BlockCoord(
+                target.blockPosition().getX(),
+                target.blockPosition().getY(),
                 target.blockPosition().getZ());
     }
 }

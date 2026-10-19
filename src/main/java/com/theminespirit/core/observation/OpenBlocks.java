@@ -12,8 +12,7 @@ public final class OpenBlocks {
             .thenComparing(OpenBlock::item)
             .thenComparing(OpenBlock::pos);
 
-    private OpenBlocks() {
-    }
+    private OpenBlocks() {}
 
     public static boolean isImportant(String blockId) {
         if (blockId == null) {

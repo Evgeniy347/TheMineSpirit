@@ -14,18 +14,15 @@ import java.util.Objects;
 public final class IdempotencyCache {
     public static final int CAPACITY = 1024;
 
-    private static final ObjectMapper CANONICAL = new ObjectMapper()
-            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+    private static final ObjectMapper CANONICAL =
+            new ObjectMapper().enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
     public sealed interface Result {
-        record New() implements Result {
-        }
+        record New() implements Result {}
 
-        record Replay(String storedResponse) implements Result {
-        }
+        record Replay(String storedResponse) implements Result {}
 
-        record Conflict() implements Result {
-        }
+        record Conflict() implements Result {}
     }
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
@@ -46,7 +43,8 @@ public final class IdempotencyCache {
                 wait();
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
-                throw new ApiException(ErrorCode.INTERNAL,
+                throw new ApiException(
+                        ErrorCode.INTERNAL,
                         "Ожидание идемпотентного повтора request_id " + requestId + " прервано: мост останавливается",
                         Map.of("request_id", requestId));
             }
@@ -105,11 +103,13 @@ public final class IdempotencyCache {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(canonical.getBytes(StandardCharsets.UTF_8)));
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Тело запроса не сериализуется в канонический JSON для отпечатка: "
-                    + "проверьте типы значений params", e);
+            throw new IllegalStateException(
+                    "Тело запроса не сериализуется в канонический JSON для отпечатка: "
+                            + "проверьте типы значений params",
+                    e);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 недоступен в этой JVM: идемпотентность REST не может "
-                    + "сравнивать тела запросов", e);
+            throw new IllegalStateException(
+                    "SHA-256 недоступен в этой JVM: идемпотентность REST не может " + "сравнивать тела запросов", e);
         }
     }
 

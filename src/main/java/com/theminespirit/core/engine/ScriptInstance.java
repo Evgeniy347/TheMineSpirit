@@ -11,7 +11,8 @@ public interface ScriptInstance {
                 throw new IllegalArgumentException("done=" + done + " отрицателен: сделанного не бывает меньше нуля");
             }
             if (target < 1) {
-                throw new IllegalArgumentException("target=" + target + " меньше 1: счётный скрипт стремится к положительной цели");
+                throw new IllegalArgumentException(
+                        "target=" + target + " меньше 1: счётный скрипт стремится к положительной цели");
             }
         }
     }
@@ -22,14 +23,11 @@ public interface ScriptInstance {
         return Optional.empty();
     }
 
-    default void cancel() {
-    }
+    default void cancel() {}
 
-    default void suspend() {
-    }
+    default void suspend() {}
 
-    default void resume() {
-    }
+    default void resume() {}
 
     default PolicyExemptions policyExemptions() {
         return PolicyExemptions.empty();
@@ -47,6 +45,5 @@ public interface ScriptInstance {
         return Map.of();
     }
 
-    default void restoreState(Map<String, Object> state) {
-    }
+    default void restoreState(Map<String, Object> state) {}
 }

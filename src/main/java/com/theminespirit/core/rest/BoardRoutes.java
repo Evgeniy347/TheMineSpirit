@@ -15,10 +15,10 @@ public final class BoardRoutes {
     private final IdempotencyCache idempotency;
 
     public BoardRoutes(BoardGateway gateway, IdempotencyCache idempotency) {
-        this.gateway = Objects.requireNonNull(gateway,
-                "gateway не может быть null: очередь доски читает и меняет только платформа");
-        this.idempotency = Objects.requireNonNull(idempotency,
-                "idempotency не может быть null: повтор request_id обязан вернуть прежнее задание");
+        this.gateway = Objects.requireNonNull(
+                gateway, "gateway не может быть null: очередь доски читает и меняет только платформа");
+        this.idempotency = Objects.requireNonNull(
+                idempotency, "idempotency не может быть null: повтор request_id обязан вернуть прежнее задание");
     }
 
     public List<Route> routes() {
@@ -47,7 +47,8 @@ public final class BoardRoutes {
             return RestResponse.json(202, replay.storedResponse());
         }
         if (verdict instanceof IdempotencyCache.Result.Conflict) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "request_id " + requestId + " уже использован с другим телом запроса: повторите с новым "
                             + "request_id или пришлите исходное тело",
                     Map.of("request_id", requestId));

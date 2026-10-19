@@ -3,8 +3,15 @@ package com.theminespirit.core.crafting;
 import java.util.List;
 import java.util.Objects;
 
-public record RecipeSpec(String id, String outputItem, int outputCount, RecipeKind kind, int width, int height,
-        List<IngredientSpec> ingredients, int cookTicks) {
+public record RecipeSpec(
+        String id,
+        String outputItem,
+        int outputCount,
+        RecipeKind kind,
+        int width,
+        int height,
+        List<IngredientSpec> ingredients,
+        int cookTicks) {
     public static final int GRID_SIDE = 3;
     public static final int INVENTORY_GRID_SIDE = 2;
     public static final int GRID_SLOTS = GRID_SIDE * GRID_SIDE;
@@ -30,18 +37,18 @@ public record RecipeSpec(String id, String outputItem, int outputCount, RecipeKi
         checkShape(id, kind, width, height, ingredients, cookTicks);
     }
 
-    public static RecipeSpec shaped(String id, String outputItem, int outputCount, int width, int height,
-            List<IngredientSpec> ingredients) {
+    public static RecipeSpec shaped(
+            String id, String outputItem, int outputCount, int width, int height, List<IngredientSpec> ingredients) {
         return new RecipeSpec(id, outputItem, outputCount, RecipeKind.SHAPED, width, height, ingredients, 0);
     }
 
-    public static RecipeSpec shapeless(String id, String outputItem, int outputCount,
-            List<IngredientSpec> ingredients) {
+    public static RecipeSpec shapeless(
+            String id, String outputItem, int outputCount, List<IngredientSpec> ingredients) {
         return new RecipeSpec(id, outputItem, outputCount, RecipeKind.SHAPELESS, 1, 1, ingredients, 0);
     }
 
-    public static RecipeSpec smelting(String id, String outputItem, int outputCount, IngredientSpec input,
-            int cookTicks) {
+    public static RecipeSpec smelting(
+            String id, String outputItem, int outputCount, IngredientSpec input, int cookTicks) {
         return new RecipeSpec(id, outputItem, outputCount, RecipeKind.SMELTING, 1, 1, List.of(input), cookTicks);
     }
 
@@ -53,8 +60,8 @@ public record RecipeSpec(String id, String outputItem, int outputCount, RecipeKi
         };
     }
 
-    private static void checkShape(String id, RecipeKind kind, int width, int height,
-            List<IngredientSpec> ingredients, int cookTicks) {
+    private static void checkShape(
+            String id, RecipeKind kind, int width, int height, List<IngredientSpec> ingredients, int cookTicks) {
         int slots = switch (kind) {
             case SHAPED -> {
                 if (width > GRID_SIDE || height > GRID_SIDE) {
@@ -75,8 +82,8 @@ public record RecipeSpec(String id, String outputItem, int outputCount, RecipeKi
                     + cookTicks + ": по нему считается ожидание печи");
         }
         if (kind != RecipeKind.SMELTING && cookTicks != 0) {
-            throw new IllegalArgumentException("У крафта '" + id + "' время плавки " + cookTicks
-                    + ": оно бывает только у рецептов плавки");
+            throw new IllegalArgumentException(
+                    "У крафта '" + id + "' время плавки " + cookTicks + ": оно бывает только у рецептов плавки");
         }
     }
 }

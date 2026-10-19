@@ -161,7 +161,8 @@ final class RestFixture {
     private final SpiritIndex index;
     private final SpiritBotGateway gateway;
     private final RestServer server;
-    private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+    private final HttpClient client =
+            HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
     private final List<SpiritEntity> spirits = new ArrayList<>();
     private final List<ServerPlayer> players = new ArrayList<>();
     private int playerCounter;
@@ -173,8 +174,8 @@ final class RestFixture {
         return thread;
     });
 
-    private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server,
-            SseSlots slots) {
+    private RestFixture(
+            MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server, SseSlots slots) {
         this.minecraft = minecraft;
         this.slots = slots;
         this.index = index;
@@ -196,13 +197,13 @@ final class RestFixture {
     }
 
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
-        await(helper, rest, scenario, () -> { });
+        await(helper, rest, scenario, () -> {});
     }
 
-    static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario,
-            Runnable worldChecks) {
-        CompletableFuture<List<String>> outcome = scenario.exceptionally(
-                error -> List.of("сценарий завершился исключением: " + error));
+    static void await(
+            GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario, Runnable worldChecks) {
+        CompletableFuture<List<String>> outcome =
+                scenario.exceptionally(error -> List.of("сценарий завершился исключением: " + error));
         long started = System.nanoTime();
         helper.onEachTick(() -> {
             if (outcome.isDone() && !outcome.join().isEmpty()) {
@@ -216,12 +217,13 @@ final class RestFixture {
             }
         });
         helper.succeedWhen(() -> {
-            helper.assertTrue(outcome.isDone(),
+            helper.assertTrue(
+                    outcome.isDone(),
                     "REST-сценарий не завершился: ответ моста не пришёл, серверный поток не отвечает или запрос завис");
             worldChecks.run();
             rest.close();
-            helper.assertTrue(outcome.join().isEmpty(),
-                    "REST-сценарий нарушил контракт: " + String.join("; ", outcome.join()));
+            helper.assertTrue(
+                    outcome.join().isEmpty(), "REST-сценарий нарушил контракт: " + String.join("; ", outcome.join()));
         });
     }
 
@@ -242,7 +244,9 @@ final class RestFixture {
     }
 
     CompletableFuture<Reply> post(String path, byte[] body) {
-        return send(HttpRequest.newBuilder(uri(path)).POST(HttpRequest.BodyPublishers.ofByteArray(body)).build());
+        return send(HttpRequest.newBuilder(uri(path))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                .build());
     }
 
     CompletableFuture<Reply> post(String path, String json) {

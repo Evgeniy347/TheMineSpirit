@@ -8,8 +8,7 @@ import java.util.UUID;
  */
 @FunctionalInterface
 public interface BoardEvents {
-    BoardEvents NONE = (event, ticket, holder, tick) -> {
-    };
+    BoardEvents NONE = (event, ticket, holder, tick) -> {};
 
     void transition(BoardLog.Event event, BoardTicket ticket, UUID holder, long tick);
 }

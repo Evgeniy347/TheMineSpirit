@@ -19,11 +19,11 @@ public final class SourceFiles {
 
     private static final Map<Path, Map<Path, String>> CACHE = new ConcurrentHashMap<>();
 
-    private SourceFiles() {
-    }
+    private SourceFiles() {}
 
     public static Map<Path, String> javaUnder(Path root) {
-        assertTrue(Files.isDirectory(root),
+        assertTrue(
+                Files.isDirectory(root),
                 "Сторож не нашёл каталог " + root + ": тесты запускаются из корня проекта (./gradlew test)");
         return CACHE.computeIfAbsent(root, SourceFiles::readJava);
     }
@@ -31,7 +31,8 @@ public final class SourceFiles {
     private static Map<Path, String> readJava(Path root) {
         try (Stream<Path> files = Files.walk(root)) {
             TreeMap<Path, String> sources = new TreeMap<>();
-            for (Path file : files.filter(path -> path.toString().endsWith(".java")).toList()) {
+            for (Path file :
+                    files.filter(path -> path.toString().endsWith(".java")).toList()) {
                 sources.put(file, Files.readString(file));
             }
             return Collections.unmodifiableSortedMap(sources);

@@ -3,8 +3,7 @@ package com.theminespirit.core.script;
 import com.theminespirit.core.observation.ScanRadius;
 
 public final class CatalogLimits {
-    private CatalogLimits() {
-    }
+    private CatalogLimits() {}
 
     // docs/api/README.md: count 1..256
     public static final int COUNT_MIN = 1;

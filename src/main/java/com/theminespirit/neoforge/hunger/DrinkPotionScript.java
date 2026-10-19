@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
@@ -50,7 +49,8 @@ public final class DrinkPotionScript implements ScriptInstance {
         if (contents == null) {
             return fail("предмет в слоте " + slot + " не несёт содержимого зелья: пить нечего");
         }
-        String potionId = contents.potion().flatMap(Holder::unwrapKey)
+        String potionId = contents.potion()
+                .flatMap(Holder::unwrapKey)
                 .map(key -> key.location().toString())
                 .orElse("minecraft:potion");
         List<MobEffectInstance> applied = new ArrayList<>();
@@ -71,8 +71,7 @@ public final class DrinkPotionScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
     public String failureReason() {
@@ -101,7 +100,8 @@ public final class DrinkPotionScript implements ScriptInstance {
     private static boolean matches(PotionContents contents, String wanted) {
         Optional<Holder<Potion>> potion = contents.potion();
         if (potion.isPresent()) {
-            String path = potion.get().unwrapKey()
+            String path = potion.get()
+                    .unwrapKey()
                     .map(key -> key.location().getPath())
                     .orElse("");
             if (sameType(path, wanted)) {
@@ -110,7 +110,8 @@ public final class DrinkPotionScript implements ScriptInstance {
         }
         for (MobEffectInstance effect : contents.getAllEffects()) {
             Holder<MobEffect> holder = effect.getEffect();
-            String path = holder.unwrapKey().map(key -> key.location().getPath()).orElse("");
+            String path =
+                    holder.unwrapKey().map(key -> key.location().getPath()).orElse("");
             if (sameType(path, wanted)) {
                 return true;
             }
@@ -119,8 +120,7 @@ public final class DrinkPotionScript implements ScriptInstance {
     }
 
     private static boolean sameType(String path, String wanted) {
-        return !path.isEmpty() && (path.equals(wanted) || path.endsWith("_" + wanted)
-                || path.startsWith(wanted + "_"));
+        return !path.isEmpty() && (path.equals(wanted) || path.endsWith("_" + wanted) || path.startsWith(wanted + "_"));
     }
 
     private static String normalize(String type) {

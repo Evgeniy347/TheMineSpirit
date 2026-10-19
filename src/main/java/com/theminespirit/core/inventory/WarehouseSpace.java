@@ -5,8 +5,7 @@ import java.util.Objects;
 public final class WarehouseSpace {
     public static final int MIN_FREE_PERCENT = 20;
 
-    private WarehouseSpace() {
-    }
+    private WarehouseSpace() {}
 
     public static boolean canTakeNewSlot(ContainerSnapshot snapshot, int minFreeSlotsPercent) {
         Objects.requireNonNull(snapshot, "Снимок контейнера не может быть null: по нему считают свободные слоты");

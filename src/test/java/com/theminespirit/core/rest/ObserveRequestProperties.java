@@ -10,8 +10,10 @@ import net.jqwik.api.Provide;
 class ObserveRequestProperties {
     @Provide
     Arbitrary<String> jsonLikeText() {
-        return Arbitraries.strings().withChars("{}[]\":,. -0123456789truefalsn")
-                .withChars("radiusfilterinclude_entities*").ofMaxLength(80);
+        return Arbitraries.strings()
+                .withChars("{}[]\":,. -0123456789truefalsn")
+                .withChars("radiusfilterinclude_entities*")
+                .ofMaxLength(80);
     }
 
     @Property
@@ -29,8 +31,10 @@ class ObserveRequestProperties {
             ObserveRequest.parse(body);
         } catch (ApiException expected) {
             if (expected.error().code() != ErrorCode.INVALID_REQUEST) {
-                throw new AssertionError("Разбор тела observe обязан отвечать только invalid_request, а не "
-                        + expected.error().code() + ": любое другое исключение превратится в 500 для клиента", expected);
+                throw new AssertionError(
+                        "Разбор тела observe обязан отвечать только invalid_request, а не "
+                                + expected.error().code() + ": любое другое исключение превратится в 500 для клиента",
+                        expected);
             }
         }
     }

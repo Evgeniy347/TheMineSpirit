@@ -12,9 +12,13 @@ final class CollectDropsScript implements ScriptInstance {
 
     CollectDropsScript(SpiritEntity spirit, CollectDropsParams params) {
         BlockPos position = spirit.blockPosition();
-        this.collector = new DropCollector(spirit, params.items(),
-                new BlockCoord(position.getX(), position.getY(), position.getZ()), params.radius(),
-                PickupTuning.DEFAULT, params.overflow());
+        this.collector = new DropCollector(
+                spirit,
+                params.items(),
+                new BlockCoord(position.getX(), position.getY(), position.getZ()),
+                params.radius(),
+                PickupTuning.DEFAULT,
+                params.overflow());
     }
 
     @Override

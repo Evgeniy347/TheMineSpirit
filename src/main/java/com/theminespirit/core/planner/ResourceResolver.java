@@ -18,44 +18,65 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class ResourceResolver {
-    private ResourceResolver() {
-    }
+    private ResourceResolver() {}
 
     public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge) {
         return resolve(item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
     }
 
-    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge,
-            Map<String, Integer> inventory) {
+    public static TaskNode resolve(
+            String item, int count, ResourceKnowledge knowledge, Map<String, Integer> inventory) {
         return resolve(item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), inventory);
     }
 
-    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge,
-            Map<String, Integer> inventory, Set<String> presentStations) {
-        return resolve(item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), inventory,
+    public static TaskNode resolve(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            Map<String, Integer> inventory,
+            Set<String> presentStations) {
+        return resolve(
+                item,
+                count,
+                knowledge,
+                CoreScripts.defaultCatalog(),
+                ConditionCatalog.empty(),
+                inventory,
                 presentStations);
     }
 
-    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
-            ConditionCatalog conditions) {
+    public static TaskNode resolve(
+            String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts, ConditionCatalog conditions) {
         return resolve(item, count, knowledge, scripts, conditions, Map.of());
     }
 
-    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
-            ConditionCatalog conditions, Map<String, Integer> inventory) {
+    public static TaskNode resolve(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            ScriptCatalog scripts,
+            ConditionCatalog conditions,
+            Map<String, Integer> inventory) {
         return resolve(item, count, knowledge, scripts, conditions, inventory, Set.of());
     }
 
-    public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge, ScriptCatalog scripts,
-            ConditionCatalog conditions, Map<String, Integer> inventory, Set<String> presentStations) {
+    public static TaskNode resolve(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            ScriptCatalog scripts,
+            ConditionCatalog conditions,
+            Map<String, Integer> inventory,
+            Set<String> presentStations) {
         Objects.requireNonNull(item, "item не может быть null: без имени предмета резолвер не найдёт способ добычи");
-        Objects.requireNonNull(knowledge,
-                "knowledge не может быть null: без знаний резолвер не отличит крафт от сбора");
+        Objects.requireNonNull(
+                knowledge, "knowledge не может быть null: без знаний резолвер не отличит крафт от сбора");
         Objects.requireNonNull(scripts, "scripts не может быть null");
         Objects.requireNonNull(conditions, "conditions не может быть null");
-        Objects.requireNonNull(inventory,
-                "inventory не может быть null: без инвентаря резолвер не предпочтёт имеющееся топливо");
-        Objects.requireNonNull(presentStations,
+        Objects.requireNonNull(
+                inventory, "inventory не может быть null: без инвентаря резолвер не предпочтёт имеющееся топливо");
+        Objects.requireNonNull(
+                presentStations,
                 "presentStations не может быть null: без снимка станций резолвер построит печь там, где она уже стоит");
         if (count <= 0) {
             throw new IllegalArgumentException(
@@ -66,8 +87,8 @@ public final class ResourceResolver {
     }
 
     private static final class Resolution {
-        private static final List<String> PICKAXES = List.of(
-                "wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
+        private static final List<String> PICKAXES =
+                List.of("wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
 
         private final ResourceKnowledge knowledge;
         private final Map<String, Integer> remaining;
@@ -88,8 +109,10 @@ public final class ResourceResolver {
 
         private TaskNode resolve(String item, int count, boolean topLevel) {
             if (!path.add(item)) {
-                throw new UnplannableGoalException(item, "Зацикленный способ добычи предмета '" + item
-                        + "': предмет снова встретился на цепочке рецептов");
+                throw new UnplannableGoalException(
+                        item,
+                        "Зацикленный способ добычи предмета '" + item
+                                + "': предмет снова встретился на цепочке рецептов");
             }
             try {
                 if (knowledge.isCraftable(item)) {
@@ -104,8 +127,10 @@ public final class ResourceResolver {
                 if (knowledge.isGatherable(item)) {
                     return gatherPlan(item, count, topLevel);
                 }
-                throw new UnplannableGoalException(item, "Для предмета '" + item
-                        + "' не найден способ добычи: добавьте его в знания как gatherable, smeltable или craftable");
+                throw new UnplannableGoalException(
+                        item,
+                        "Для предмета '" + item
+                                + "' не найден способ добычи: добавьте его в знания как gatherable, smeltable или craftable");
             } finally {
                 path.remove(item);
             }
@@ -118,7 +143,8 @@ public final class ResourceResolver {
         private TaskNode gatherPlan(String item, int count, boolean topLevel) {
             Optional<TaskNode> tool = toolStep(knowledge.gatherBlockFor(item));
             TaskNode gather = batched("gather", item, count, topLevel);
-            return tool.map(step -> (TaskNode) new SequenceNode(List.of(step, gather))).orElse(gather);
+            return tool.map(step -> (TaskNode) new SequenceNode(List.of(step, gather)))
+                    .orElse(gather);
         }
 
         private Optional<TaskNode> toolStep(String block) {
@@ -165,23 +191,37 @@ public final class ResourceResolver {
 
         private ScriptCall single(String script, String item, int count) {
             return switch (script) {
-                case "gather" -> new ScriptCall("gather",
-                        Map.of("block", knowledge.gatherBlockFor(item), "count", count,
-                                "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
-                case "craft" -> new ScriptCall("craft", Map.of("item", item, "count", count,
-                        "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
-                case "smelt" -> new ScriptCall("smelt", Map.of("item", item, "count", count,
-                        "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
-                default -> throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
-                        + "батчинг знает только gather, craft и smelt");
+                case "gather" ->
+                    new ScriptCall(
+                            "gather",
+                            Map.of(
+                                    "block",
+                                    knowledge.gatherBlockFor(item),
+                                    "count",
+                                    count,
+                                    "radius",
+                                    CatalogLimits.HARVEST_RADIUS_DEFAULT));
+                case "craft" ->
+                    new ScriptCall(
+                            "craft",
+                            Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                case "smelt" ->
+                    new ScriptCall(
+                            "smelt",
+                            Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                default ->
+                    throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
+                            + "батчинг знает только gather, craft и smelt");
             };
         }
 
         private TaskNode craftPlan(String item, int count, boolean topLevel) {
             int output = knowledge.outputCount(item);
             if (output <= 0) {
-                throw new UnplannableGoalException(item, "Рецепт предмета '" + item + "' даёт " + output
-                        + " предметов за крафт: выход рецепта обязан быть положительным");
+                throw new UnplannableGoalException(
+                        item,
+                        "Рецепт предмета '" + item + "' даёт " + output
+                                + " предметов за крафт: выход рецепта обязан быть положительным");
             }
             long crafts = (count + (long) output - 1) / output;
             List<TaskNode> steps = new ArrayList<>();
@@ -218,8 +258,10 @@ public final class ResourceResolver {
         private static int ingredientCount(Ingredient ingredient, long crafts, String item) {
             long total = ingredient.count() * crafts;
             if (total > Integer.MAX_VALUE) {
-                throw new UnplannableGoalException(item, "Для '" + item + "' нужно " + total + " предмета '"
-                        + ingredient.item() + "' на цепочке рецептов: количество переполняет int, уменьшите цель");
+                throw new UnplannableGoalException(
+                        item,
+                        "Для '" + item + "' нужно " + total + " предмета '" + ingredient.item()
+                                + "' на цепочке рецептов: количество переполняет int, уменьшите цель");
             }
             return (int) total;
         }

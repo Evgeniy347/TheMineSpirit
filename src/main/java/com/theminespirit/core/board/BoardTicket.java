@@ -14,14 +14,29 @@ import java.util.UUID;
  * Неизменяем: доска хранит билеты в очереди и отдаёт наблюдателю, подмена полей
  * сломала бы и сортировку, и гейт.
  */
-public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assignee, int priority,
-        long createdAt, int level, String cause, List<String> dependsOn, Map<String, Integer> requiredItems,
+public record BoardTicket(
+        String id,
+        BoardCase boardCase,
+        Optional<UUID> assignee,
+        int priority,
+        long createdAt,
+        int level,
+        String cause,
+        List<String> dependsOn,
+        Map<String, Integer> requiredItems,
         List<String> modifiers) {
 
     public static final String ALWAYS_CAUSE = "always";
 
-    public BoardTicket(String id, BoardCase boardCase, Optional<UUID> assignee, int priority,
-            long createdAt, int level, String cause, List<String> dependsOn,
+    public BoardTicket(
+            String id,
+            BoardCase boardCase,
+            Optional<UUID> assignee,
+            int priority,
+            long createdAt,
+            int level,
+            String cause,
+            List<String> dependsOn,
             Map<String, Integer> requiredItems) {
         this(id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, List.of());
     }
@@ -31,8 +46,9 @@ public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assigne
             throw new IllegalArgumentException("id задания пустое: по id доска находит "
                     + "задание в очереди, связывает зависимости и отдаёт наблюдателю");
         }
-        Objects.requireNonNull(boardCase, "Кейс задания не может быть null: без него доска "
-                + "не знает приоритет, гейт и план выдачи");
+        Objects.requireNonNull(
+                boardCase,
+                "Кейс задания не может быть null: без него доска " + "не знает приоритет, гейт и план выдачи");
         if (createdAt < 0) {
             throw new IllegalArgumentException("createdAt равен " + createdAt
                     + " и отрицателен: время постановки задания не может быть до начала отсчёта");
@@ -51,18 +67,18 @@ public record BoardTicket(String id, BoardCase boardCase, Optional<UUID> assigne
                     + BoardTuning.MAX_PRIORITY + "]: доска сравнивает задания с ремонтом, "
                     + "выход за границу сломает сортировку выдачи");
         }
-        Objects.requireNonNull(assignee, "assignee не может быть null: «любой свободный дух» "
-                + "задают пустым Optional, а не null");
-        dependsOn = List.copyOf(Objects.requireNonNull(dependsOn,
-                "dependsOn не может быть null: задание без зависимостей задают пустым списком"));
+        Objects.requireNonNull(
+                assignee, "assignee не может быть null: «любой свободный дух» " + "задают пустым Optional, а не null");
+        dependsOn = List.copyOf(Objects.requireNonNull(
+                dependsOn, "dependsOn не может быть null: задание без зависимостей задают пустым списком"));
         if (dependsOn.contains(id)) {
             throw new IllegalArgumentException("Задание '" + id + "' зависит от самого себя: "
                     + "самозависимость навсегда блокирует выдачу — проверьте источник задания");
         }
-        requiredItems = Map.copyOf(Objects.requireNonNull(requiredItems,
-                "requiredItems не может быть null: задание без ресурсов задают пустой картой"));
-        modifiers = List.copyOf(Objects.requireNonNull(modifiers,
-                "modifiers не может быть null: задание без модификаторов задают пустым списком"));
+        requiredItems = Map.copyOf(Objects.requireNonNull(
+                requiredItems, "requiredItems не может быть null: задание без ресурсов задают пустой картой"));
+        modifiers = List.copyOf(Objects.requireNonNull(
+                modifiers, "modifiers не может быть null: задание без модификаторов задают пустым списком"));
         for (String modifier : modifiers) {
             if (modifier == null || modifier.isBlank()) {
                 throw new IllegalArgumentException("Сработавший модификатор назван пустой строкой: "

@@ -104,7 +104,8 @@ public final class LevelFarmView implements FarmView {
         Objects.requireNonNull(ground, "Координата не может быть null: неизвестно, где считать высоту столба");
         BlockPos base = new BlockPos(ground.x(), ground.y() + 1, ground.z());
         BlockState baseState = read(base);
-        Optional<CropKind> kind = CropKind.ofBlock(BuiltInRegistries.BLOCK.getKey(baseState.getBlock()).toString());
+        Optional<CropKind> kind = CropKind.ofBlock(
+                BuiltInRegistries.BLOCK.getKey(baseState.getBlock()).toString());
         if (kind.isEmpty() || kind.get().harvestMethod() != HarvestMethod.BREAK_COLUMN) {
             return 1;
         }
@@ -112,7 +113,8 @@ public final class LevelFarmView implements FarmView {
         BlockPos cursor = base;
         while (height < 8) {
             BlockState state = height == 0 ? baseState : read(cursor);
-            Optional<CropKind> curKind = CropKind.ofBlock(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+            Optional<CropKind> curKind = CropKind.ofBlock(
+                    BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
             if (curKind.isEmpty() || curKind.get() != kind.get()) {
                 break;
             }
@@ -151,7 +153,8 @@ public final class LevelFarmView implements FarmView {
     }
 
     private CropState stateOf(Attached attached) {
-        return new CropState(attached.kind(), ageOf(attached.state(), attached.kind().blockId()));
+        return new CropState(
+                attached.kind(), ageOf(attached.state(), attached.kind().blockId()));
     }
 
     private static boolean isFruitGround(BlockState state) {
@@ -189,8 +192,8 @@ public final class LevelFarmView implements FarmView {
         if (state.isAir()) {
             return Above.AIR;
         }
-        boolean replaceablePlant = state.canBeReplaced() && state.getFluidState().isEmpty()
-                && state.getDestroySpeed(level, pos) == 0.0F;
+        boolean replaceablePlant =
+                state.canBeReplaced() && state.getFluidState().isEmpty() && state.getDestroySpeed(level, pos) == 0.0F;
         return replaceablePlant ? Above.WEED : Above.BLOCKED;
     }
 
@@ -208,6 +211,5 @@ public final class LevelFarmView implements FarmView {
                 + ": зрелость не определить, проверь id в CropKind и версию игры");
     }
 
-    private record Attached(BlockPos pos, CropKind kind, BlockState state) {
-    }
+    private record Attached(BlockPos pos, CropKind kind, BlockState state) {}
 }

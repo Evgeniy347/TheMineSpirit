@@ -24,28 +24,42 @@ class LowHpRetreatTests {
     }
 
     @Property(tries = 200)
-    void step_LowHpSingleMeleeEnemyAndHomeRoute_RetreatsInsteadOfFighting(@ForAll("lowHp") double hpFraction,
+    void step_LowHpSingleMeleeEnemyAndHomeRoute_RetreatsInsteadOfFighting(
+            @ForAll("lowHp") double hpFraction,
             @ForAll @DoubleRange(min = 1, max = 20) double dps,
             @ForAll @DoubleRange(min = 3.5, max = 10) double distance) {
-        Situation situation = SituationBuilder.create().hpFraction(hpFraction).dps(dps).home(HOME)
-                .enemy("zombie", distance).build();
+        Situation situation = SituationBuilder.create()
+                .hpFraction(hpFraction)
+                .dps(dps)
+                .home(HOME)
+                .enemy("zombie", distance)
+                .build();
 
         TacticalOutcome outcome = decide(situation);
 
-        assertEquals(TacticalOption.RETREAT, outcome.decision(),
+        assertEquals(
+                TacticalOption.RETREAT,
+                outcome.decision(),
                 "HP " + Math.round(hpFraction * 100) + " %, урон " + dps + ", зомби в " + distance
                         + " блоках: при низком HP отход обязан перевесить атаку даже у сильного духа, иначе "
-                        + "вес RETREAT в weights.json снова стал малым. Трасса: " + outcome.trace().explain());
+                        + "вес RETREAT в weights.json снова стал малым. Трасса: "
+                        + outcome.trace().explain());
     }
 
     @Example
     void step_HpFortyPercentStrongSwordZombieAdjacent_RetreatsByLargerLowHpWeight() {
-        Situation situation = SituationBuilder.create().hpFraction(0.4).dps(20).home(HOME)
-                .enemy("zombie", 3.5).build();
+        Situation situation = SituationBuilder.create()
+                .hpFraction(0.4)
+                .dps(20)
+                .home(HOME)
+                .enemy("zombie", 3.5)
+                .build();
 
         TacticalOutcome outcome = decide(situation);
 
-        assertEquals(TacticalOption.RETREAT, outcome.decision(),
+        assertEquals(
+                TacticalOption.RETREAT,
+                outcome.decision(),
                 "HP 40 % и сильный меч против одного зомби в 3.5 блоках при доме в 20: вес LOW_HP поднят "
                         + "(RETREAT 2.5, FIGHT −2.0), поэтому низкое HP побеждает атаку; иначе отход снова решает "
                         + "перевес боя. Трасса: " + outcome.trace().explain());

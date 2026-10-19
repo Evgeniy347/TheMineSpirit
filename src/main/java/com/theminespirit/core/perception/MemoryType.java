@@ -10,7 +10,8 @@ public enum MemoryType {
     DANGER,
     BASE;
 
-    private static final List<String> IDS = Arrays.stream(values()).map(MemoryType::id).toList();
+    private static final List<String> IDS =
+            Arrays.stream(values()).map(MemoryType::id).toList();
 
     public String id() {
         return name().toLowerCase(Locale.ROOT);
@@ -27,7 +28,7 @@ public enum MemoryType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Неизвестный тип точки памяти '" + id + "': допустимы " + IDS
-                + " строчными буквами");
+        throw new IllegalArgumentException(
+                "Неизвестный тип точки памяти '" + id + "': допустимы " + IDS + " строчными буквами");
     }
 }

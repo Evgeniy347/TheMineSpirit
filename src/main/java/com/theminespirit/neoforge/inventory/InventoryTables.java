@@ -7,8 +7,7 @@ import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.reload.DataTables;
 
 public final class InventoryTables {
-    private InventoryTables() {
-    }
+    private InventoryTables() {}
 
     public static ValueTable values() {
         return DataTables.INSTANCE.values().current();
@@ -25,5 +24,4 @@ public final class InventoryTables {
     public static ArmorTable armor() {
         return DataTables.INSTANCE.armor().current();
     }
-
 }

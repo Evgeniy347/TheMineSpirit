@@ -7,12 +7,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class MemoryParams {
-    private MemoryParams() {
-    }
+    private MemoryParams() {}
 
     public static MemoryCall remember(Map<String, Object> params) {
         GotoParams point = GotoParams.from(params);
-        return new MemoryCall.Remember(ScriptArgs.requireString(params, "name"), type(params),
+        return new MemoryCall.Remember(
+                ScriptArgs.requireString(params, "name"),
+                type(params),
                 new BlockCoord(point.x(), point.y(), point.z()));
     }
 

@@ -32,8 +32,7 @@ public final class MobTargetsGameTests {
     private static final BlockPos SPIRIT_AT = new BlockPos(4, 1, 4);
     private static final BlockPos MOB_AT = new BlockPos(4, 1, 10);
 
-    private MobTargetsGameTests() {
-    }
+    private MobTargetsGameTests() {}
 
     private static SpiritEntity spirit(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -46,8 +45,8 @@ public final class MobTargetsGameTests {
             return "null";
         }
         String who = target == ownSpirit ? "свой дух" : "чужая цель";
-        return who + " " + target.getType().getDescriptionId() + " uuid=" + target.getUUID()
-                + " pos=" + target.blockPosition().toShortString();
+        return who + " " + target.getType().getDescriptionId() + " uuid=" + target.getUUID() + " pos="
+                + target.blockPosition().toShortString();
     }
 
     private static String nearby(GameTestHelper helper, Entity center, SpiritEntity spirit) {
@@ -65,8 +64,9 @@ public final class MobTargetsGameTests {
             hurtBy = String.valueOf(mob.getLastHurtByMob());
         }
         boolean targetingSelf = entity instanceof Mob mob && mob.getTarget() == spirit;
-        return entity.getType().getDescriptionId() + "@" + entity.blockPosition().toShortString()
-                + " цель=" + target + " бил=" + hurtBy + " targetingSelf=" + targetingSelf;
+        return entity.getType().getDescriptionId() + "@"
+                + entity.blockPosition().toShortString() + " цель=" + target + " бил=" + hurtBy + " targetingSelf="
+                + targetingSelf;
     }
 
     @SuppressWarnings("deprecation") // ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
@@ -79,7 +79,9 @@ public final class MobTargetsGameTests {
 
     private static String spiritUuids(GameTestHelper helper, Entity center) {
         ServerLevel level = helper.getLevel();
-        return level.getEntitiesOfClass(SpiritEntity.class, center.getBoundingBox().inflate(16)).stream()
+        return level
+                .getEntitiesOfClass(SpiritEntity.class, center.getBoundingBox().inflate(16))
+                .stream()
                 .map(spirit -> spirit.getUUID() + "@" + spirit.blockPosition().toShortString())
                 .collect(Collectors.joining("; "));
     }
@@ -100,9 +102,11 @@ public final class MobTargetsGameTests {
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, MOB_AT);
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(helper.getTick() <= OBSERVED_TICKS,
+            helper.assertTrue(
+                    helper.getTick() <= OBSERVED_TICKS,
                     "зомби обязан взять духа целью за " + OBSERVED_TICKS + " тиков, прошло " + helper.getTick());
-            helper.assertTrue(zombie.getTarget() == spirit,
+            helper.assertTrue(
+                    zombie.getTarget() == spirit,
                     "зомби в шести блоках от духа без игроков рядом обязан сам выбрать духа целью, а его цель "
                             + zombie.getTarget());
             GameTestFixtures.finish(helper);
@@ -117,12 +121,14 @@ public final class MobTargetsGameTests {
         helper.onEachTick(() -> spiritTookTarget[0] |= spirit.getTarget() != null);
 
         helper.runAfterDelay(OBSERVED_TICKS, () -> {
-            helper.assertTrue(piglin.getTarget() == null,
+            helper.assertTrue(
+                    piglin.getTarget() == null,
                     "зомбифицированный пиглин нейтрален и не трогает духов без зла, а его цель "
                             + describeTarget(piglin.getTarget(), spirit)
                             + "; конфиг mobsTargetSpirits=" + SpiritConfig.mobsTargetSpirits()
                             + "; рядом в 16 блоках: [" + nearby(helper, piglin, spirit) + "]");
-            helper.assertTrue(!spiritTookTarget[0],
+            helper.assertTrue(
+                    !spiritTookTarget[0],
                     "дух не дерётся первым с мирным мобом, а его цель " + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.finish(helper);
             helper.succeed();
@@ -137,12 +143,14 @@ public final class MobTargetsGameTests {
         helper.onEachTick(() -> spiritTookTarget[0] |= spirit.getTarget() != null);
 
         helper.runAfterDelay(OBSERVED_TICKS, () -> {
-            helper.assertTrue(zombie.getTarget() == null,
+            helper.assertTrue(
+                    zombie.getTarget() == null,
                     "при mobsTargetSpirits=false зомби не берёт духа целью, а его цель "
                             + describeTarget(zombie.getTarget(), spirit)
                             + "; конфиг mobsTargetSpirits=" + SpiritConfig.mobsTargetSpirits()
                             + "; рядом в 16 блоках: [" + nearby(helper, zombie, spirit) + "]");
-            helper.assertTrue(!spiritTookTarget[0],
+            helper.assertTrue(
+                    !spiritTookTarget[0],
                     "дух не дерётся первым, а его цель " + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.finish(helper);
             helper.succeed();
@@ -160,15 +168,18 @@ public final class MobTargetsGameTests {
 
         helper.runAfterDelay(OBSERVED_TICKS, () -> {
             Spider current = spider.get();
-            helper.assertTrue(current.getTarget() == null,
+            helper.assertTrue(
+                    current.getTarget() == null,
                     "Паук днём на открытом месте не должен брать духа целью: ванильный SpiderTargetGoal при свете "
                             + "≥ 0.5 цель не берёт, а его цель "
                             + describeTarget(current.getTarget(), spirit)
                             + "; " + spiderLight(helper, current)
-                            + "; дух свой uuid=" + spirit.getUUID() + " pos=" + spirit.blockPosition().toShortString()
+                            + "; дух свой uuid=" + spirit.getUUID() + " pos="
+                            + spirit.blockPosition().toShortString()
                             + "; цель духа " + describeTarget(spirit.getTarget(), spirit)
                             + "; духи в радиусе 16: [" + spiritUuids(helper, current) + "]");
-            helper.assertTrue(!spiritTookTarget[0],
+            helper.assertTrue(
+                    !spiritTookTarget[0],
                     "дух не дерётся первым днём на открытом месте, а его цель "
                             + describeTarget(spirit.getTarget(), spirit));
             GameTestFixtures.finish(helper);
@@ -185,7 +196,8 @@ public final class MobTargetsGameTests {
 
         helper.succeedWhen(() -> {
             Spider current = spider.get();
-            helper.assertTrue(current != null && current.getTarget() == spirit,
+            helper.assertTrue(
+                    current != null && current.getTarget() == spirit,
                     "Паук ночью рядом с духом обязан сам выбрать духа целью за " + OBSERVED_TICKS
                             + " тиков, а его цель " + (current == null ? "ещё не заспавнен" : current.getTarget()));
             GameTestFixtures.finish(helper);

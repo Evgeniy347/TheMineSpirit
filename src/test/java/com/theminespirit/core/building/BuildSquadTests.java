@@ -82,7 +82,9 @@ class BuildSquadTests {
         squad.join(BETA);
         squad.join(GAMMA);
 
-        assertEquals(List.of(BETA, GAMMA), squad.members(),
+        assertEquals(
+                List.of(BETA, GAMMA),
+                squad.members(),
                 "Снимок участников идёт в порядке входа: по нему строится разбиение");
     }
 

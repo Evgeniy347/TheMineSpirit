@@ -133,8 +133,12 @@ public final class SleepScript implements ScriptInstance {
 
     private boolean threatNear() {
         AABB box = spirit.getBoundingBox().inflate(THREAT_RADIUS);
-        return !spirit.level().getEntitiesOfClass(LivingEntity.class, box,
-                entity -> entity != spirit && entity.isAlive() && entity instanceof Enemy).isEmpty();
+        return !spirit.level()
+                .getEntitiesOfClass(
+                        LivingEntity.class,
+                        box,
+                        entity -> entity != spirit && entity.isAlive() && entity instanceof Enemy)
+                .isEmpty();
     }
 
     private BlockCoord cell() {
@@ -152,6 +156,8 @@ public final class SleepScript implements ScriptInstance {
     }
 
     private static String unreachable(String detail) {
-        return detail == null || detail.isBlank() ? "кровать недоступна: путь перекрыт" : "кровать недоступна: " + detail;
+        return detail == null || detail.isBlank()
+                ? "кровать недоступна: путь перекрыт"
+                : "кровать недоступна: " + detail;
     }
 }

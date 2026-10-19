@@ -10,8 +10,8 @@ public final class ValueRule {
     private final IdFilter filter;
 
     public ValueRule(List<String> match, int value) {
-        Objects.requireNonNull(match,
-                "Список шаблонов правила не может быть null: правило без шаблонов не описывает предметы");
+        Objects.requireNonNull(
+                match, "Список шаблонов правила не может быть null: правило без шаблонов не описывает предметы");
         this.match = List.copyOf(match);
         if (this.match.isEmpty()) {
             throw new IllegalArgumentException(

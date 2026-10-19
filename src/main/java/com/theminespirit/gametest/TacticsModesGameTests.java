@@ -25,8 +25,7 @@ public final class TacticsModesGameTests {
     private static final int GUARD_ZONE_RADIUS = 1;
     private static final double GUARD_LEASH = 5.0;
 
-    private TacticsModesGameTests() {
-    }
+    private TacticsModesGameTests() {}
 
     private static boolean dead(Husk husk) {
         return husk.isDeadOrDying() || husk.isRemoved();
@@ -44,23 +43,32 @@ public final class TacticsModesGameTests {
         boolean[] retreated = {false};
         helper.onEachTick(() -> {
             if (scene.started()) {
-                retreated[0] |= spirit.tactics().lastOutcome().map(o -> o.decision() == TacticalOption.RETREAT).orElse(false);
+                retreated[0] |= spirit.tactics()
+                        .lastOutcome()
+                        .map(o -> o.decision() == TacticalOption.RETREAT)
+                        .orElse(false);
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(scene.ticks() >= PASSIVE_OBSERVED_TICKS, "наблюдение за пассивным духом ещё идёт: " + scene.ticks());
-            helper.assertTrue(retreated[0], "пассивный дух обязан отходить от нападающего, иначе тест ничего не доказывает");
-            helper.assertTrue(spirit.tactics().combat().strikes() == 0, "PASSIVE не бьёт никогда: ударов "
-                    + spirit.tactics().combat().strikes());
+            helper.assertTrue(
+                    scene.ticks() >= PASSIVE_OBSERVED_TICKS,
+                    "наблюдение за пассивным духом ещё идёт: " + scene.ticks());
+            helper.assertTrue(
+                    retreated[0], "пассивный дух обязан отходить от нападающего, иначе тест ничего не доказывает");
+            helper.assertTrue(
+                    spirit.tactics().combat().strikes() == 0,
+                    "PASSIVE не бьёт никогда: ударов "
+                            + spirit.tactics().combat().strikes());
             helper.assertTrue(husk.getHealth() == husk.getMaxHealth(), "враг не ранен, здоровье " + husk.getHealth());
             TacticsScene.finish(helper, spirit);
         });
     }
 
     @GameTest(template = "arena", batch = "tactics_mode_defensive", timeoutTicks = 300)
-    public static void defensive_TwoHusksOnlyFarOneAttacks_SpiritKillsAttackerAndLeavesPeacefulOne(GameTestHelper helper) {
+    public static void defensive_TwoHusksOnlyFarOneAttacks_SpiritKillsAttackerAndLeavesPeacefulOne(
+            GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
         TacticsScene.wearIronArmor(spirit);
@@ -73,13 +81,20 @@ public final class TacticsModesGameTests {
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(dead(attacker), "бьющий первым враг обязан пасть, его здоровье " + attacker.getHealth() + ", решение "
-                    + spirit.tactics().explain().orElse("нет") + ", ударов " + spirit.tactics().combat().strikes()
-                    + ", позиция " + helper.relativeVec(spirit.position()) + ", враг " + helper.relativeVec(attacker.position()));
-            helper.assertTrue(peaceful.getHealth() == peaceful.getMaxHealth(),
+            helper.assertTrue(
+                    dead(attacker),
+                    "бьющий первым враг обязан пасть, его здоровье " + attacker.getHealth() + ", решение "
+                            + spirit.tactics().explain().orElse("нет") + ", ударов "
+                            + spirit.tactics().combat().strikes()
+                            + ", позиция " + helper.relativeVec(spirit.position()) + ", враг "
+                            + helper.relativeVec(attacker.position()));
+            helper.assertTrue(
+                    peaceful.getHealth() == peaceful.getMaxHealth(),
                     "DEFENSIVE не трогает того, кто не бил: здоровье мирного " + peaceful.getHealth());
-            helper.assertTrue(spirit.tactics().combat().strikes() >= 2, "убить за несколько ударов: ударов "
-                    + spirit.tactics().combat().strikes());
+            helper.assertTrue(
+                    spirit.tactics().combat().strikes() >= 2,
+                    "убить за несколько ударов: ударов "
+                            + spirit.tactics().combat().strikes());
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -104,17 +119,20 @@ public final class TacticsModesGameTests {
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(dead(husk), "напавший на подопечного враг обязан пасть от защитника, здоровье " + husk.getHealth());
+            helper.assertTrue(
+                    dead(husk), "напавший на подопечного враг обязан пасть от защитника, здоровье " + husk.getHealth());
             helper.assertTrue(ward.isAlive(), "подопечный жив");
-            helper.assertTrue(protector.tactics().combat().strikes() >= 2, "защитник бил: ударов "
-                    + protector.tactics().combat().strikes());
+            helper.assertTrue(
+                    protector.tactics().combat().strikes() >= 2,
+                    "защитник бил: ударов " + protector.tactics().combat().strikes());
             ward.discard();
             TacticsScene.finish(helper, protector);
         });
     }
 
     @GameTest(template = "arena", batch = "tactics_mode_guard", timeoutTicks = 300)
-    public static void guardArea_HuskInsideZoneAndHuskFarOutside_SpiritKillsInsideOneAndStaysOnPost(GameTestHelper helper) {
+    public static void guardArea_HuskInsideZoneAndHuskFarOutside_SpiritKillsInsideOneAndStaysOnPost(
+            GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos post = new BlockPos(1, 1, 5);
         SpiritEntity spirit = TacticsScene.spirit(helper, post);
@@ -122,18 +140,24 @@ public final class TacticsModesGameTests {
         BlockPos absolute = helper.absolutePos(post);
         TacticsScene.wearIronArmor(spirit);
         TacticsScene.giveHome(helper, spirit, new BlockPos(1, 1, 9));
-        spirit.tactics().setGuardZone(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()), GUARD_ZONE_RADIUS);
+        spirit.tactics()
+                .setGuardZone(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()), GUARD_ZONE_RADIUS);
         spirit.tactics().setCombatMode(CombatMode.GUARD_AREA);
         Husk inside = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(2, 1, 5));
         Husk outside = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(9, 1, 5));
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(dead(inside), "враг в зоне охраны обязан пасть, здоровье " + inside.getHealth() + ", решение "
-                    + spirit.tactics().explain().orElse("нет"));
-            helper.assertTrue(outside.getHealth() == outside.getMaxHealth(),
+            helper.assertTrue(
+                    dead(inside),
+                    "враг в зоне охраны обязан пасть, здоровье " + inside.getHealth() + ", решение "
+                            + spirit.tactics().explain().orElse("нет"));
+            helper.assertTrue(
+                    outside.getHealth() == outside.getMaxHealth(),
                     "враг далеко за зоной и поводком не тронут, здоровье " + outside.getHealth());
-            helper.assertTrue(TacticsScene.distance(helper, spirit, post) <= GUARD_LEASH,
-                    "охранник не уходит от поста дальше поводка " + GUARD_LEASH + ": " + TacticsScene.distance(helper, spirit, post));
+            helper.assertTrue(
+                    TacticsScene.distance(helper, spirit, post) <= GUARD_LEASH,
+                    "охранник не уходит от поста дальше поводка " + GUARD_LEASH + ": "
+                            + TacticsScene.distance(helper, spirit, post));
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -145,13 +169,15 @@ public final class TacticsModesGameTests {
         spirit.getInventory().addItem(new ItemStack(Items.IRON_SWORD));
         spirit.tactics().setCombatMode(CombatMode.AGGRESSIVE);
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(9, 1, 9));
-        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {
-        });
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {});
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(scene.ticks() <= KILL_LIMIT_TICKS, "AGGRESSIVE обязан убить врага за " + KILL_LIMIT_TICKS + " тиков");
-            helper.assertTrue(dead(husk), "AGGRESSIVE нападает на любого врага в радиусе, здоровье " + husk.getHealth());
+            helper.assertTrue(
+                    scene.ticks() <= KILL_LIMIT_TICKS,
+                    "AGGRESSIVE обязан убить врага за " + KILL_LIMIT_TICKS + " тиков");
+            helper.assertTrue(
+                    dead(husk), "AGGRESSIVE нападает на любого врага в радиусе, здоровье " + husk.getHealth());
             TacticsScene.finish(helper, spirit);
         });
     }

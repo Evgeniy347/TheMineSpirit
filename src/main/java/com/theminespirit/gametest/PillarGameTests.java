@@ -4,8 +4,8 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.CellCentering;
-import com.theminespirit.core.script.PillarUpParams;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.PillarUpParams;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.PillarUpScript;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -26,8 +26,7 @@ public final class PillarGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final BlockPos SPIRIT_START = new BlockPos(5, 1, 5);
 
-    private PillarGameTests() {
-    }
+    private PillarGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -46,10 +45,10 @@ public final class PillarGameTests {
     public static void pillarUp_FourBlocksThenDown_ReturnsAllBlocks(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithDirt(helper, 8);
-        int[] phase = { 0 };
-        int[] topY = { 0 };
-        int[] startY = { spirit.blockPosition().getY() };
-        int[] downDoneAt = { -1 };
+        int[] phase = {0};
+        int[] topY = {0};
+        int[] startY = {spirit.blockPosition().getY()};
+        int[] downDoneAt = {-1};
 
         helper.onEachTick(() -> {
             if (phase[0] == 0) {
@@ -81,15 +80,20 @@ public final class PillarGameTests {
             int dirtInWorld = countDirtInWorld(helper);
             int dirtInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT);
             try {
-                helper.assertTrue(topY[0] >= startY[0] + 4,
-                        "pillar_up высотой 4 обязан поднять духа с y=" + startY[0] + " минимум до y="
-                                + (startY[0] + 4) + ", а он на y=" + topY[0]);
-                helper.assertTrue(dirtInWorld == 0,
+                helper.assertTrue(
+                        topY[0] >= startY[0] + 4,
+                        "pillar_up высотой 4 обязан поднять духа с y=" + startY[0] + " минимум до y=" + (startY[0] + 4)
+                                + ", а он на y=" + topY[0]);
+                helper.assertTrue(
+                        dirtInWorld == 0,
                         "после pillar_down в мире не остаётся ни одного своего блока столба, найдено " + dirtInWorld);
-                helper.assertTrue(dirtInInventory == 8,
+                helper.assertTrue(
+                        dirtInInventory == 8,
                         "четыре блока столба обязаны вернуться в инвентарь: было 8, стало " + dirtInInventory);
-                helper.assertTrue(spirit.blockPosition().getY() <= startY[0] + 1,
-                        "после разбора дух снова на земле, а он на y=" + spirit.blockPosition().getY());
+                helper.assertTrue(
+                        spirit.blockPosition().getY() <= startY[0] + 1,
+                        "после разбора дух снова на земле, а он на y="
+                                + spirit.blockPosition().getY());
             } finally {
                 GameTestFixtures.finish(helper);
             }
@@ -105,10 +109,12 @@ public final class PillarGameTests {
 
         ScriptStatus status = script.tick();
 
-        helper.assertTrue(status == ScriptStatus.FAILED,
+        helper.assertTrue(
+                status == ScriptStatus.FAILED,
                 "без блоков столб не строится: статус " + status + ", причина " + script.failureReason());
         String reason = script.failureReason() == null ? "" : script.failureReason();
-        helper.assertTrue(reason.contains("нет материала") && reason.contains("0"),
+        helper.assertTrue(
+                reason.contains("нет материала") && reason.contains("0"),
                 "причина обязана называть нехватку материала и число (0), фактически: " + reason);
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -123,12 +129,12 @@ public final class PillarGameTests {
 
         ScriptStatus status = script.tick();
 
-        helper.assertTrue(status == ScriptStatus.FAILED,
+        helper.assertTrue(
+                status == ScriptStatus.FAILED,
                 "потолок над столбом обязан остановить подъём: статус " + status + ", причина "
                         + script.failureReason());
         String reason = script.failureReason() == null ? "" : script.failureReason();
-        helper.assertTrue(reason.contains("потолок"),
-                "причина обязана называть потолок, фактически: " + reason);
+        helper.assertTrue(reason.contains("потолок"), "причина обязана называть потолок, фактически: " + reason);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -154,31 +160,33 @@ public final class PillarGameTests {
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(status[0] == ScriptStatus.FAILED,
+            helper.assertTrue(
+                    status[0] == ScriptStatus.FAILED,
                     "потолок над головой обязан остановить pillar_up, а не держать его в RUNNING вечно: статус "
                             + status[0] + ", тиков " + ticks[0] + ", причина "
                             + script.failureReason());
             String reason = script.failureReason() == null ? "" : script.failureReason();
-            helper.assertTrue(reason.contains("не поднялся") || reason.contains("потолок"),
+            helper.assertTrue(
+                    reason.contains("не поднялся") || reason.contains("потолок"),
                     "причина обязана называть неподнятие или потолок, фактически: " + reason);
             GameTestFixtures.finish(helper);
         });
     }
 
     @GameTest(template = TEMPLATE, batch = "pillar_up_water", timeoutTicks = 100)
-    public static void pillarUp_WaterAbove_FailsWithFluidReason(GameTestHelper helper) {        prepare(helper);
+    public static void pillarUp_WaterAbove_FailsWithFluidReason(GameTestHelper helper) {
+        prepare(helper);
         helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 1, SPIRIT_START.getZ(), Blocks.WATER);
         SpiritEntity spirit = spawnWithDirt(helper, 8);
         PillarUpScript script = new PillarUpScript(spirit, PillarUpParams.from(Map.of("height", 3)));
 
         ScriptStatus status = script.tick();
 
-        helper.assertTrue(status == ScriptStatus.FAILED,
-                "вода над столбом обязана остановить подъём: статус " + status + ", причина "
-                        + script.failureReason());
+        helper.assertTrue(
+                status == ScriptStatus.FAILED,
+                "вода над столбом обязана остановить подъём: статус " + status + ", причина " + script.failureReason());
         String reason = script.failureReason() == null ? "" : script.failureReason();
-        helper.assertTrue(reason.contains("жидкость"),
-                "причина обязана называть жидкость, фактически: " + reason);
+        helper.assertTrue(reason.contains("жидкость"), "причина обязана называть жидкость, фактически: " + reason);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -212,7 +220,8 @@ public final class PillarGameTests {
         helper.succeedWhen(() -> {
             double dx = spirit.getX() - centerX;
             double dz = spirit.getZ() - centerZ;
-            helper.assertTrue(status[0] == ScriptStatus.SUCCEEDED
+            helper.assertTrue(
+                    status[0] == ScriptStatus.SUCCEEDED
                             && dx * dx + dz * dz <= CellCentering.TOLERANCE * CellCentering.TOLERANCE,
                     "дух, стартовавший у самого ствола, обязан вернуться в центр клетки столба и построить "
                             + "его за " + ticks[0] + " тиков: сдвиг к стволу задевает бревно на прыжке "

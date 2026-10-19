@@ -22,7 +22,9 @@ class WeakAssertionGuardTests {
             }
         });
 
-        assertEquals(List.of(), offenders,
+        assertEquals(
+                List.of(),
+                offenders,
                 "Проверки «не null» и «не упало» (assertNotNull, assertDoesNotThrow) зеленеют на любом неверном "
                         + "результате: план из одного не того скрипта или радиус, принятый молча, их проходят. "
                         + "Проверяй само поведение: assertEquals с ожидаемым значением или состоянием, "
@@ -33,13 +35,19 @@ class WeakAssertionGuardTests {
 
     @Test
     void weakAssertionPattern_NotNullCall_IsDetected() {
-        assertTrue(WEAK_ASSERTION.matcher("        assert" + "NotNull(plan, \"сообщение\");").find(),
+        assertTrue(
+                WEAK_ASSERTION
+                        .matcher("        assert" + "NotNull(plan, \"сообщение\");")
+                        .find(),
                 "Сторож ослеп: вызов проверки «не null» должен находиться");
     }
 
     @Test
     void weakAssertionPattern_StaticImportLine_IsIgnored() {
-        assertTrue(!WEAK_ASSERTION.matcher("import static org.junit.jupiter.api.Assertions.assert" + "NotNull;").find(),
+        assertTrue(
+                !WEAK_ASSERTION
+                        .matcher("import static org.junit.jupiter.api.Assertions.assert" + "NotNull;")
+                        .find(),
                 "Сторож ложно срабатывает: строка импорта без вызова не нарушение, компилятор сам отметит лишний импорт");
     }
 }

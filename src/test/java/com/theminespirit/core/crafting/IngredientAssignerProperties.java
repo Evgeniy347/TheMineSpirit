@@ -26,7 +26,9 @@ class IngredientAssignerProperties {
 
         Optional<List<String>> assignment = IngredientAssigner.assign(slots, available);
 
-        assertEquals(bruteForceExists(slots, new HashMap<>(available), 0), assignment.isPresent(),
+        assertEquals(
+                bruteForceExists(slots, new HashMap<>(available), 0),
+                assignment.isPresent(),
                 "Ассигнатор обязан находить назначение ровно тогда, когда оно существует: иначе выполнимый рецепт "
                         + "объявляется невыполнимым (дух не крафтит при наличии материалов) или наоборот. Места: "
                         + masks + ", наличие: " + stock);
@@ -46,13 +48,15 @@ class IngredientAssignerProperties {
             assertEquals(slots.size(), chosen.size(), "На каждое место рецепта обязан быть назначен предмет");
             Map<String, Integer> used = new HashMap<>();
             for (int i = 0; i < chosen.size(); i++) {
-                assertTrue(slots.get(i).alternatives().contains(chosen.get(i)),
+                assertTrue(
+                        slots.get(i).alternatives().contains(chosen.get(i)),
                         "Предмет '" + chosen.get(i) + "' назначен на место " + i + ", которое его не допускает");
                 used.merge(chosen.get(i), 1, Integer::sum);
             }
-            used.forEach((item, count) -> assertTrue(count <= available.getOrDefault(item, 0),
-                    "Назначение расходует " + item + " " + count + " раз при наличии "
-                            + available.getOrDefault(item, 0) + ": дух не может отдать то, чего нет"));
+            used.forEach((item, count) -> assertTrue(
+                    count <= available.getOrDefault(item, 0),
+                    "Назначение расходует " + item + " " + count + " раз при наличии " + available.getOrDefault(item, 0)
+                            + ": дух не может отдать то, чего нет"));
         }
     }
 

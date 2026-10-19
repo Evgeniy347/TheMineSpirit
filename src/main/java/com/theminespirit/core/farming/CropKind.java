@@ -12,17 +12,13 @@ public enum CropKind {
     CARROT("minecraft:carrots", 7, "carrot", "carrot", HarvestMethod.BREAK),
     POTATO("minecraft:potatoes", 7, "potato", "potato", HarvestMethod.BREAK),
     BEETROOT("minecraft:beetroots", 3, "beetroot_seeds", "beetroot", HarvestMethod.BREAK),
-    SWEET_BERRY_BUSH("minecraft:sweet_berry_bush", 3, "sweet_berries", "sweet_berries",
-            HarvestMethod.PICK),
+    SWEET_BERRY_BUSH("minecraft:sweet_berry_bush", 3, "sweet_berries", "sweet_berries", HarvestMethod.PICK),
     SUGAR_CANE("minecraft:sugar_cane", 15, "sugar_cane", "sugar_cane", HarvestMethod.BREAK_COLUMN),
     BAMBOO("minecraft:bamboo", 1, "bamboo", "bamboo", HarvestMethod.BREAK_COLUMN),
     CACTUS("minecraft:cactus", 15, "cactus", "cactus", HarvestMethod.BREAK_COLUMN),
-    MELON("minecraft:melon_stem", 7, "melon_seeds", "melon_slice", HarvestMethod.BREAK_FRUIT,
-            "minecraft:melon"),
-    PUMPKIN("minecraft:pumpkin_stem", 7, "pumpkin_seeds", "pumpkin", HarvestMethod.BREAK_FRUIT,
-            "minecraft:pumpkin"),
-    COCOA("minecraft:cocoa", 2, "cocoa_beans", "cocoa_beans", HarvestMethod.BREAK, null,
-            "minecraft:jungle_log");
+    MELON("minecraft:melon_stem", 7, "melon_seeds", "melon_slice", HarvestMethod.BREAK_FRUIT, "minecraft:melon"),
+    PUMPKIN("minecraft:pumpkin_stem", 7, "pumpkin_seeds", "pumpkin", HarvestMethod.BREAK_FRUIT, "minecraft:pumpkin"),
+    COCOA("minecraft:cocoa", 2, "cocoa_beans", "cocoa_beans", HarvestMethod.BREAK, null, "minecraft:jungle_log");
 
     private static final String MINECRAFT_NAMESPACE = "minecraft:";
     private static final List<String> NAMES = Arrays.stream(values())
@@ -53,13 +49,24 @@ public enum CropKind {
         this(blockId, maxAge, plantItem, produceItem, harvestMethod, null, null);
     }
 
-    CropKind(String blockId, int maxAge, String plantItem, String produceItem, HarvestMethod harvestMethod,
+    CropKind(
+            String blockId,
+            int maxAge,
+            String plantItem,
+            String produceItem,
+            HarvestMethod harvestMethod,
             String fruitBlockId) {
         this(blockId, maxAge, plantItem, produceItem, harvestMethod, fruitBlockId, null);
     }
 
-    CropKind(String blockId, int maxAge, String plantItem, String produceItem, HarvestMethod harvestMethod,
-            String fruitBlockId, String supportBlockId) {
+    CropKind(
+            String blockId,
+            int maxAge,
+            String plantItem,
+            String produceItem,
+            HarvestMethod harvestMethod,
+            String fruitBlockId,
+            String supportBlockId) {
         this.blockId = blockId;
         this.maxAge = maxAge;
         this.plantItem = plantItem;
@@ -161,8 +168,10 @@ public enum CropKind {
         try {
             return valueOf(kind.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException error) {
-            throw new IllegalArgumentException("Неизвестный вид культуры '" + kind + "': допустимы " + NAMES
-                    + ", сверьте значение с каталогом /v1/capabilities", error);
+            throw new IllegalArgumentException(
+                    "Неизвестный вид культуры '" + kind + "': допустимы " + NAMES
+                            + ", сверьте значение с каталогом /v1/capabilities",
+                    error);
         }
     }
 

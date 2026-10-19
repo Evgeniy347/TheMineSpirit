@@ -13,8 +13,7 @@ import java.util.Set;
 public final class FishBuckets {
     private static final Map<String, String> ENTITY_TO_BUCKET = build();
 
-    private FishBuckets() {
-    }
+    private FishBuckets() {}
 
     public static boolean isBucketable(String entityType) {
         return entityType != null && ENTITY_TO_BUCKET.containsKey(entityType);

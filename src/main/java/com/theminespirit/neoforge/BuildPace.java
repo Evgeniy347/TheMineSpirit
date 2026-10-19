@@ -8,8 +8,7 @@ import com.theminespirit.core.reload.DataTables;
  * сцен, и ожидание 10 тиков на блок умножило бы прогон без пользы для проверки (docs/TESTING.md).
  */
 public final class BuildPace {
-    private BuildPace() {
-    }
+    private BuildPace() {}
 
     public static int intervalTicks() {
         return DataTables.INSTANCE.building().current().placeIntervalTicks();

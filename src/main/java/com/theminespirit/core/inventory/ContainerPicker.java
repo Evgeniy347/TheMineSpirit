@@ -7,23 +7,24 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class ContainerPicker {
-    private ContainerPicker() {
-    }
+    private ContainerPicker() {}
 
     public static ContainerChoice choose(List<ContainerSnapshot> containers, BlockCoord origin, Stack incoming) {
         return choose(containers, origin, incoming, 0);
     }
 
-    public static ContainerChoice choose(List<ContainerSnapshot> containers, BlockCoord origin, Stack incoming,
-            int minFreeSlotsPercent) {
+    public static ContainerChoice choose(
+            List<ContainerSnapshot> containers, BlockCoord origin, Stack incoming, int minFreeSlotsPercent) {
         Objects.requireNonNull(containers, "Список контейнеров не может быть null: выбирать не из чего");
         Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
         Objects.requireNonNull(incoming, "Предмет не может быть null: без него непонятно, что докладывать");
         String category = DataTables.INSTANCE.warehouseCategories().current().categoryOf(incoming.item());
-        int own = nearestMatching(containers, origin,
+        int own = nearestMatching(
+                containers,
+                origin,
                 container -> category.equals(container.category())
                         && (container.hasPartial(incoming)
-                        || WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent)));
+                                || WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent)));
         if (own >= 0) {
             return new ContainerChoice.Chosen(own);
         }
@@ -31,14 +32,16 @@ public final class ContainerPicker {
         if (partial >= 0) {
             return new ContainerChoice.Chosen(partial);
         }
-        int present = nearestMatching(containers, origin,
-                container -> WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent)
-                        && container.hasKind(incoming));
+        int present = nearestMatching(
+                containers,
+                origin,
+                container ->
+                        WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent) && container.hasKind(incoming));
         if (present >= 0) {
             return new ContainerChoice.Chosen(present);
         }
-        int free = nearestMatching(containers, origin,
-                container -> WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent));
+        int free = nearestMatching(
+                containers, origin, container -> WarehouseSpace.canTakeNewSlot(container, minFreeSlotsPercent));
         if (free >= 0) {
             return new ContainerChoice.Chosen(free);
         }
@@ -61,8 +64,8 @@ public final class ContainerPicker {
                 + "предметом " + withKind + ". Освободите место или увеличьте радиус";
     }
 
-    private static int nearestMatching(List<ContainerSnapshot> containers, BlockCoord origin,
-            Predicate<ContainerSnapshot> test) {
+    private static int nearestMatching(
+            List<ContainerSnapshot> containers, BlockCoord origin, Predicate<ContainerSnapshot> test) {
         int best = -1;
         long bestDistance = Long.MAX_VALUE;
         for (int index = 0; index < containers.size(); index++) {

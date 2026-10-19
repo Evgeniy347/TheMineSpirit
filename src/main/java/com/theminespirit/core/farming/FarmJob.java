@@ -14,12 +14,16 @@ public enum FarmJob {
         return switch (this) {
             case TILL -> isTillable(tile.ground()) && isClearForTill(tile.above()) && watered;
             case PLANT -> isPlantable(tile, filter);
-            case HARVEST -> tile.above() == Above.CROP && tile.crop().isPresent()
-                    && matches(tile.crop().orElseThrow().kind(), filter)
-                    && tile.crop().orElseThrow().isMature();
-            case BONE_MEAL -> tile.above() == Above.CROP && tile.crop().isPresent()
-                    && matches(tile.crop().orElseThrow().kind(), filter)
-                    && !tile.crop().orElseThrow().isMature();
+            case HARVEST ->
+                tile.above() == Above.CROP
+                        && tile.crop().isPresent()
+                        && matches(tile.crop().orElseThrow().kind(), filter)
+                        && tile.crop().orElseThrow().isMature();
+            case BONE_MEAL ->
+                tile.above() == Above.CROP
+                        && tile.crop().isPresent()
+                        && matches(tile.crop().orElseThrow().kind(), filter)
+                        && !tile.crop().orElseThrow().isMature();
         };
     }
 

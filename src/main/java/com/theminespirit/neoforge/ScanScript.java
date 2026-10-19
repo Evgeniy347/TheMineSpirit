@@ -36,9 +36,14 @@ public final class ScanScript implements ScriptInstance {
         this.focus = focus;
         this.radius = params.radius();
         BlockPos position = spirit.blockPosition();
-        this.session = new WorldScanner.Session(spirit.level(), spirit.getUUID().toString(),
-                new BlockCoord(position.getX(), position.getY(), position.getZ()), params.radius(), params.filter(),
-                spirit.getInventory(), focus);
+        this.session = new WorldScanner.Session(
+                spirit.level(),
+                spirit.getUUID().toString(),
+                new BlockCoord(position.getX(), position.getY(), position.getZ()),
+                params.radius(),
+                params.filter(),
+                spirit.getInventory(),
+                focus);
     }
 
     @Override
@@ -52,16 +57,20 @@ public final class ScanScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         WorldObservation observation = session.result().observation();
-        focus.resultOf(observation, radius).ifPresentOrElse(result -> {
-            published = result;
-            spirit.updatePerceptionResult(result);
-        }, () -> spirit.updateObservation(observation));
+        focus.resultOf(observation, radius)
+                .ifPresentOrElse(
+                        result -> {
+                            published = result;
+                            spirit.updatePerceptionResult(result);
+                        },
+                        () -> spirit.updateObservation(observation));
         return ScriptStatus.SUCCEEDED;
     }
 
     @Override
     public Optional<ScriptResult> result() {
-        return published == null ? Optional.empty()
+        return published == null
+                ? Optional.empty()
                 : Optional.of(new ScriptResult.Data(PerceptionResultCodec.toMap(published)));
     }
 

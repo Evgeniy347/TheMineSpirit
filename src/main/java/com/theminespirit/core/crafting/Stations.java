@@ -13,8 +13,7 @@ public final class Stations {
     public static final String CAMPFIRE = "campfire";
     public static final int CAMPFIRE_SLOTS = 4;
 
-    private Stations() {
-    }
+    private Stations() {}
 
     public static Optional<String> forRecipe(RecipeSpec recipe) {
         if (recipe.kind() == RecipeKind.SMELTING) {

@@ -12,15 +12,17 @@ public final class KitRule {
     private final KitMode mode;
 
     KitRule(List<String> match, String category, int keep, KitMode mode) {
-        Objects.requireNonNull(mode, "Режим правила набора не может быть null: по режиму решают, "
-                + "оставлять лучший предмет или любое количество");
+        Objects.requireNonNull(
+                mode,
+                "Режим правила набора не может быть null: по режиму решают, "
+                        + "оставлять лучший предмет или любое количество");
         if (keep < 0) {
             throw new IllegalArgumentException("Квота правила набора " + keep
                     + " отрицательна: квота «сколько оставить» не может быть меньше нуля");
         }
         if (match == null && category == null) {
-            throw new IllegalArgumentException("У правила набора нет ни match, ни category: "
-                    + "правило без шаблонов не описывает предметы");
+            throw new IllegalArgumentException(
+                    "У правила набора нет ни match, ни category: " + "правило без шаблонов не описывает предметы");
         }
         if (match != null && category != null) {
             throw new IllegalArgumentException("У правила набора заданы и match, и category: "
@@ -28,12 +30,12 @@ public final class KitRule {
         }
         this.match = match == null ? List.of() : List.copyOf(match);
         if (match != null && this.match.isEmpty()) {
-            throw new IllegalArgumentException("У правила набора пустой match: "
-                    + "правило без шаблонов не описывает предметы");
+            throw new IllegalArgumentException(
+                    "У правила набора пустой match: " + "правило без шаблонов не описывает предметы");
         }
         if (category != null && category.isBlank()) {
-            throw new IllegalArgumentException("Категория правила набора пуста: "
-                    + "имя категории берётся из файла ценностей");
+            throw new IllegalArgumentException(
+                    "Категория правила набора пуста: " + "имя категории берётся из файла ценностей");
         }
         this.category = category;
         this.filter = this.match.isEmpty() ? null : IdFilter.of(this.match);
@@ -58,8 +60,8 @@ public final class KitRule {
     }
 
     public boolean covers(String item, ValueTable values) {
-        Objects.requireNonNull(values, "Таблица ценностей не может быть null: "
-                + "по ней правило набора находит категорию предмета");
+        Objects.requireNonNull(
+                values, "Таблица ценностей не может быть null: " + "по ней правило набора находит категорию предмета");
         if (category != null) {
             return values.categoryOf(item).equals(category);
         }

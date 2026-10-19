@@ -133,8 +133,7 @@ public final class BoardTuning {
         return (int) interval("transferMaxCount", TRANSFER_MAX_COUNT);
     }
 
-    private BoardTuning() {
-    }
+    private BoardTuning() {}
 
     private static long interval(String key, long fallback) {
         Long value = DataTables.INSTANCE.board().current().intervals().get(key);
@@ -143,8 +142,8 @@ public final class BoardTuning {
 
     static String intervalKey(String key) {
         if (!INTERVAL_KEYS.contains(key)) {
-            throw new IllegalArgumentException("Неизвестный ключ интервала '" + key + "': допустимы "
-                    + INTERVAL_KEYS + ", сверьтесь с BoardTuning.INTERVAL_KEYS");
+            throw new IllegalArgumentException("Неизвестный ключ интервала '" + key + "': допустимы " + INTERVAL_KEYS
+                    + ", сверьтесь с BoardTuning.INTERVAL_KEYS");
         }
         return key;
     }

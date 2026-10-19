@@ -7,8 +7,8 @@ import java.util.Objects;
 public record BuildState(int placed, int removed, int skipped, int failed, boolean unfinished) {
     public BuildState {
         if (placed < 0 || removed < 0 || skipped < 0 || failed < 0) {
-            throw new IllegalArgumentException("Счётчики прогресса не бывают отрицательными: placed=" + placed + ", removed=" + removed
-                    + ", skipped=" + skipped + ", failed=" + failed);
+            throw new IllegalArgumentException("Счётчики прогресса не бывают отрицательными: placed=" + placed
+                    + ", removed=" + removed + ", skipped=" + skipped + ", failed=" + failed);
         }
     }
 
@@ -28,7 +28,11 @@ public record BuildState(int placed, int removed, int skipped, int failed, boole
 
     public static BuildState fromMap(Map<String, Object> map) {
         Objects.requireNonNull(map, "Снимок не может быть null: пустое состояние задают пустой картой");
-        return new BuildState(number(map, "placed"), number(map, "removed"), number(map, "skipped"), number(map, "failed"),
+        return new BuildState(
+                number(map, "placed"),
+                number(map, "removed"),
+                number(map, "skipped"),
+                number(map, "failed"),
                 unfinished(map));
     }
 
@@ -38,11 +42,13 @@ public record BuildState(int placed, int removed, int skipped, int failed, boole
             return 0;
         }
         if (!(value instanceof Number number)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть числом: иначе прогресс не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть числом: иначе прогресс не восстановить");
         }
         int parsed = number.intValue();
         if (parsed < 0) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' отрицательно: счётчики не бывают меньше нуля");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' отрицательно: счётчики не бывают меньше нуля");
         }
         return parsed;
     }

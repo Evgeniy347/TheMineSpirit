@@ -26,7 +26,8 @@ final class RoutePattern {
                     + "не заканчивается '/' и не содержит '//', пример — /v1/bots/{id}");
         }
         for (String segment : segments.get()) {
-            if ((segment.contains("{") || segment.contains("}")) && !PARAM_SEGMENT.matcher(segment).matches()) {
+            if ((segment.contains("{") || segment.contains("}"))
+                    && !PARAM_SEGMENT.matcher(segment).matches()) {
                 throw new IllegalArgumentException("Сегмент '" + segment + "' шаблона '" + pattern
                         + "' неверен: параметр пути записывается целым сегментом {имя}, имя — латиница с малой буквы");
             }

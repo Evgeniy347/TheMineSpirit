@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class V1Routes {
-    private V1Routes() {
-    }
+    private V1Routes() {}
 
     public static List<Route> routes(BotGateway gateway, ScriptCatalog catalog) {
         List<Route> routes = new ArrayList<>(CapabilitiesRoutes.of(catalog));

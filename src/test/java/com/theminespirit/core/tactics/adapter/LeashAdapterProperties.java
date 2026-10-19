@@ -28,33 +28,40 @@ class LeashAdapterProperties {
 
     private static SituationContext context(double distance) {
         EnemyFact enemy = new EnemyFact("minecraft:zombie", "z", new Point(distance, 0, 0), 1, 0, true, true);
-        Orders orders = OrdersBuilder.build(CombatMode.GUARD_AREA, Optional.of(new OrdersBuilder.Zone(POST, ZONE_RADIUS)),
-                Optional.empty(), false);
-        return new SituationContext(AdapterFixtures.self(), List.of(enemy), AdapterFixtures.env(TimeOfDay.DAY), orders,
-                100, 100);
+        Orders orders = OrdersBuilder.build(
+                CombatMode.GUARD_AREA, Optional.of(new OrdersBuilder.Zone(POST, ZONE_RADIUS)), Optional.empty(), false);
+        return new SituationContext(
+                AdapterFixtures.self(), List.of(enemy), AdapterFixtures.env(TimeOfDay.DAY), orders, 100, 100);
     }
 
     @Property(tries = 200)
-    void leashLeft_AnyTargetDistance_NeverExceedsPursuitRadius(@ForAll @DoubleRange(min = 0, max = 32) double distance) {
+    void leashLeft_AnyTargetDistance_NeverExceedsPursuitRadius(
+            @ForAll @DoubleRange(min = 0, max = 32) double distance) {
         Situation situation = CoreFactCollector.withDefaultSettings().collect(context(distance));
         ModeParams params = CONFIG.modes().of(CombatMode.GUARD_AREA);
 
         ModeGeometry geometry = ModeGeometry.of(situation, params, Optional.empty());
 
-        assertTrue(geometry.leashLeft() <= params.pursuit(ZONE_RADIUS),
+        assertTrue(
+                geometry.leashLeft() <= params.pursuit(ZONE_RADIUS),
                 "Запас поводка не больше радиуса преследования " + params.pursuit(ZONE_RADIUS) + ": цель на расстоянии "
-                        + distance + " дала " + geometry.leashLeft() + "; запас больше радиуса значил бы, что цель дальше от поста, чем сам пост");
+                        + distance + " дала " + geometry.leashLeft()
+                        + "; запас больше радиуса значил бы, что цель дальше от поста, чем сам пост");
     }
 
     @Property(tries = 200)
     void pick_TargetBeyondLeash_NeverDesignated(@ForAll @DoubleRange(min = 6.01, max = 32) double distance) {
         SituationContext context = context(distance);
-        TacticalOutcome outcome = ENGINE.step(CoreFactCollector.withDefaultSettings().collect(context),
-                TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1), 1);
+        TacticalOutcome outcome = ENGINE.step(
+                CoreFactCollector.withDefaultSettings().collect(context),
+                TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1),
+                1);
 
         Optional<EnemyFact> target = TargetDesignation.pick(outcome, context);
 
-        assertTrue(target.isEmpty(), "Цель за поводком (" + distance + " > 6) не выставляется: решение "
-                + outcome.decision() + ", правило " + outcome.trace().rule());
+        assertTrue(
+                target.isEmpty(),
+                "Цель за поводком (" + distance + " > 6) не выставляется: решение " + outcome.decision() + ", правило "
+                        + outcome.trace().rule());
     }
 }

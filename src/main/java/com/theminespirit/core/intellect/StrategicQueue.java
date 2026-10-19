@@ -41,7 +41,8 @@ public final class StrategicQueue {
             if (!order.spirit().equals(spirit)) {
                 continue;
             }
-            if (head == null || order.enqueuedAt() < head.enqueuedAt()
+            if (head == null
+                    || order.enqueuedAt() < head.enqueuedAt()
                     || (order.enqueuedAt() == head.enqueuedAt()
                             && order.requestId().compareTo(head.requestId()) < 0)) {
                 head = order;
@@ -77,8 +78,7 @@ public final class StrategicQueue {
 
     public List<StrategicOrder> ordered() {
         return byRequest.values().stream()
-                .sorted(Comparator.comparingLong(StrategicOrder::enqueuedAt)
-                        .thenComparing(StrategicOrder::requestId))
+                .sorted(Comparator.comparingLong(StrategicOrder::enqueuedAt).thenComparing(StrategicOrder::requestId))
                 .toList();
     }
 }

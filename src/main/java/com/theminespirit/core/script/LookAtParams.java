@@ -4,8 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
 
 public final class LookAtParams {
-    private LookAtParams() {
-    }
+    private LookAtParams() {}
 
     public static BlockCoord target(Map<String, Object> params) {
         GotoParams point = GotoParams.from(params);

@@ -26,7 +26,9 @@ class SpiritCommandDocGuardTests {
     void subcommand_RegisteredButNotDocumented_IsReported() throws IOException {
         List<String> missing = missingCommands(registeredCommands(), commandsSection(readReadme()));
 
-        assertEquals(List.of(), missing,
+        assertEquals(
+                List.of(),
+                missing,
                 "Подкоманда /spirit зарегистрирована в neoforge (SpiritCommands → Spirit*Command), но не описана "
                         + "в README.md → «Команды духов»: игрок и ИИ-агент не узнают, что команда существует, "
                         + "а карта команд расходится с кодом. Допишите строку вида «/spirit <имя> <аргументы>» "
@@ -39,7 +41,9 @@ class SpiritCommandDocGuardTests {
         List<String> unknown = documentedCommands(commandsSection(readReadme()));
         unknown.removeAll(registeredCommands());
 
-        assertEquals(List.of(), unknown,
+        assertEquals(
+                List.of(),
+                unknown,
                 "В README.md → «Команды духов» описана подкоманда /spirit, которой нет среди зарегистрированных: "
                         + "игрок наберёт её и получит ошибку, а документ обещает то, чего мод не умеет. "
                         + "Уберите устаревшую строку или зарегистрируйте команду в SpiritCommands.register. "
@@ -48,37 +52,49 @@ class SpiritCommandDocGuardTests {
 
     @Test
     void missingCommands_RegisteredCommandAbsentFromDoc_IsReported() {
-        assertEquals(List.of("observe"), missingCommands(Set.of("spawn", "observe"), "тут `/spirit spawn [pos]`"),
+        assertEquals(
+                List.of("observe"),
+                missingCommands(Set.of("spawn", "observe"), "тут `/spirit spawn [pos]`"),
                 "Сторож ослеп: зарегистрированная подкоманда, которой нет в разделе команд, обязана попасть в пропажу");
     }
 
     @Test
     void missingCommands_AllDocumented_ReportsNothing() {
-        assertEquals(List.of(), missingCommands(Set.of("spawn", "observe"), "тут `/spirit spawn` и `/spirit observe`"),
+        assertEquals(
+                List.of(),
+                missingCommands(Set.of("spawn", "observe"), "тут `/spirit spawn` и `/spirit observe`"),
                 "Сторож ложно срабатывает: упомянутые в разделе подкоманды — не пропажа");
     }
 
     @Test
     void registeredCommands_RegistrationLine_IsFound() {
-        assertEquals(List.of("spawn"), registeredCommands("spirit.then(literal(\"spawn\").executes(context -> 0));"),
+        assertEquals(
+                List.of("spawn"),
+                registeredCommands("spirit.then(literal(\"spawn\").executes(context -> 0));"),
                 "Сторож ослеп: строка регистрации подкоманды spirit.then(literal(\"…\")) обязана находиться");
     }
 
     @Test
     void registeredCommands_NestedLiteral_NotReported() {
-        assertEquals(List.of(), registeredCommands(".then(literal(\"clear\").executes(context -> 0))"),
+        assertEquals(
+                List.of(),
+                registeredCommands(".then(literal(\"clear\").executes(context -> 0))"),
                 "Сторож ложно срабатывает: вложенный литерал (аргумент подкоманды) — не подкоманда /spirit");
     }
 
     @Test
     void documentedCommands_CommandInBackticks_IsFound() {
-        assertEquals(List.of("spawn"), documentedCommands("`/spirit spawn [pos]`"),
+        assertEquals(
+                List.of("spawn"),
+                documentedCommands("`/spirit spawn [pos]`"),
                 "Сторож ослеп: подкоманда, записанная обратными кавычками, обязана находиться");
     }
 
     @Test
     void documentedCommands_TextOutsideBackticks_NotReported() {
-        assertEquals(List.of(), documentedCommands("команда /spirit spawn без кавычек"),
+        assertEquals(
+                List.of(),
+                documentedCommands("команда /spirit spawn без кавычек"),
                 "Сторож ложно срабатывает: имя подкоманды вне обратных кавычек — не упоминание команды");
     }
 
@@ -86,14 +102,17 @@ class SpiritCommandDocGuardTests {
     void commandsSection_Readme_IsFound() {
         String section = commandsSection("## Команды духов\nПодкоманды `/spirit spawn`.\n## Конфиг\n");
 
-        assertTrue(section.contains("/spirit spawn"),
+        assertTrue(
+                section.contains("/spirit spawn"),
                 "Сторож ослеп: раздел команд обязан находиться по заголовку и содержать текст до следующего заголовка");
-        assertTrue(!section.contains("## Конфиг"),
+        assertTrue(
+                !section.contains("## Конфиг"),
                 "Сторож слеп к границе: раздел команд обязан кончаться на следующем заголовке `## `");
     }
 
     private static String readReadme() throws IOException {
-        assertTrue(Files.isRegularFile(README),
+        assertTrue(
+                Files.isRegularFile(README),
                 "Сторож не нашёл " + README + ": тесты запускаются из корня проекта (./gradlew test)");
         return Files.readString(README, StandardCharsets.UTF_8);
     }
@@ -137,7 +156,8 @@ class SpiritCommandDocGuardTests {
 
     private static String commandsSection(String readme) {
         int start = readme.indexOf(COMMANDS_HEADING);
-        assertTrue(start >= 0,
+        assertTrue(
+                start >= 0,
                 "В README.md нет раздела «" + COMMANDS_HEADING + "»: заголовок переименован — поправь сторожа");
         int next = readme.indexOf("\n## ", start + COMMANDS_HEADING.length());
         return next < 0 ? readme.substring(start) : readme.substring(start, next);

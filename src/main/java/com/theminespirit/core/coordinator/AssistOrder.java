@@ -9,8 +9,8 @@ public record AssistOrder(UUID helper, UUID ward, boolean urgent) {
                     + "или без подопечного не исполним");
         }
         if (helper.equals(ward)) {
-            throw new IllegalArgumentException("AssistOrder: дух " + helper
-                    + " не может помогать сам себе — в помощники выбирается другой дух");
+            throw new IllegalArgumentException(
+                    "AssistOrder: дух " + helper + " не может помогать сам себе — в помощники выбирается другой дух");
         }
     }
 

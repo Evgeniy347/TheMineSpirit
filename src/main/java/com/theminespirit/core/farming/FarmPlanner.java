@@ -12,11 +12,16 @@ public final class FarmPlanner {
 
     private static final int MAX_STAND_OFFSET_SQUARED = 11;
 
-    private FarmPlanner() {
-    }
+    private FarmPlanner() {}
 
-    public static Outcome next(FarmJob job, CropKind filter, BlockCoord from, List<BlockCoord> candidates,
-            FarmView view, SafetyView safety, Hydration hydration) {
+    public static Outcome next(
+            FarmJob job,
+            CropKind filter,
+            BlockCoord from,
+            List<BlockCoord> candidates,
+            FarmView view,
+            SafetyView safety,
+            Hydration hydration) {
         Objects.requireNonNull(job, "Работа не может быть null: без неё неизвестно, что проверять в клетке");
         Objects.requireNonNull(filter, "Фильтр вида не может быть null: «любой вид» задают CropKind.ANY");
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней выбирается ближайшая цель");
@@ -51,25 +56,31 @@ public final class FarmPlanner {
                 }
                 continue;
             }
-            if (job == FarmJob.HARVEST && tile.crop().isPresent()
+            if (job == FarmJob.HARVEST
+                    && tile.crop().isPresent()
                     && tile.crop().orElseThrow().kind().harvestMethod() == HarvestMethod.BREAK_COLUMN
                     && view.columnHeight(target) < 2) {
                 ineligible++;
                 continue;
             }
-            if (job == FarmJob.HARVEST && tile.crop().isPresent()
+            if (job == FarmJob.HARVEST
+                    && tile.crop().isPresent()
                     && tile.crop().orElseThrow().kind().harvestMethod() == HarvestMethod.BREAK_FRUIT
                     && view.fruitAt(target, tile.crop().orElseThrow().kind()).isEmpty()) {
                 ineligible++;
                 continue;
             }
-            if (job == FarmJob.PLANT && filter.hasSupport()
-                    && (tile.crop().isPresent() || view.attachedSpot(target, filter).isEmpty())) {
+            if (job == FarmJob.PLANT
+                    && filter.hasSupport()
+                    && (tile.crop().isPresent()
+                            || view.attachedSpot(target, filter).isEmpty())) {
                 ineligible++;
                 continue;
             }
-            if (job == FarmJob.PLANT && filter != CropKind.ANY
-                    && filter.harvestMethod() == HarvestMethod.BREAK_FRUIT && !view.hasFruitSpace(target)) {
+            if (job == FarmJob.PLANT
+                    && filter != CropKind.ANY
+                    && filter.harvestMethod() == HarvestMethod.BREAK_FRUIT
+                    && !view.hasFruitSpace(target)) {
                 ineligible++;
                 continue;
             }
@@ -116,8 +127,7 @@ public final class FarmPlanner {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    public sealed interface Outcome permits Next, Exhausted {
-    }
+    public sealed interface Outcome permits Next, Exhausted {}
 
     public record Next(BlockCoord target, BlockCoord stand) implements Outcome {
         public Next {
@@ -129,8 +139,9 @@ public final class FarmPlanner {
     public record Exhausted(int ineligible, int noStand, int dry) implements Outcome {
         public Exhausted {
             if (ineligible < 0 || noStand < 0 || dry < 0) {
-                throw new IllegalArgumentException("Счётчики пропущенных целей не могут быть отрицательными: ineligible="
-                        + ineligible + ", noStand=" + noStand + ", dry=" + dry);
+                throw new IllegalArgumentException(
+                        "Счётчики пропущенных целей не могут быть отрицательными: ineligible=" + ineligible
+                                + ", noStand=" + noStand + ", dry=" + dry);
             }
         }
     }

@@ -47,10 +47,11 @@ public final class ApproachScript implements ScriptInstance {
         return switch (walker.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> arrived();
-            case STUCK -> fail("застрял по дороге к стоянке у цели " + target + "; стоянок опробовано: "
-                    + walker.failedStands());
-            case TIMEOUT -> fail("не дошёл до стоянки у цели " + target + " за отведённое время; стоянок опробовано: "
-                    + walker.failedStands());
+            case STUCK ->
+                fail("застрял по дороге к стоянке у цели " + target + "; стоянок опробовано: " + walker.failedStands());
+            case TIMEOUT ->
+                fail("не дошёл до стоянки у цели " + target + " за отведённое время; стоянок опробовано: "
+                        + walker.failedStands());
         };
     }
 

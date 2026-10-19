@@ -17,9 +17,12 @@ class DeciderTests {
     }
 
     private static TacticsConfig lavaExcluding(String options) {
-        String rules = TacticsTexts.mutate(TacticsTexts.read("rules.json"), LAVA_RULE,
-                "\"then\": {\"exclude\": " + options + "}");
-        return TacticsConfig.fromJson(TacticsTexts.read("enemies.json"), TacticsTexts.read("weights.json"), rules,
+        String rules = TacticsTexts.mutate(
+                TacticsTexts.read("rules.json"), LAVA_RULE, "\"then\": {\"exclude\": " + options + "}");
+        return TacticsConfig.fromJson(
+                TacticsTexts.read("enemies.json"),
+                TacticsTexts.read("weights.json"),
+                rules,
                 TacticsTexts.read("modes.json"));
     }
 
@@ -29,9 +32,14 @@ class DeciderTests {
 
     @Test
     void decide_NoHardRuleMatches_ChoosesByScore() {
-        Decision decision = decide(TacticsConfig.loadDefault(), SituationBuilder.create().enemy("zombie", 8).build(), 1);
+        Decision decision = decide(
+                TacticsConfig.loadDefault(),
+                SituationBuilder.create().enemy("zombie", 8).build(),
+                1);
 
-        assertEquals(List.of(TacticalOption.FIGHT, Decision.BY_SCORE), List.of(decision.option(), decision.rule()),
+        assertEquals(
+                List.of(TacticalOption.FIGHT, Decision.BY_SCORE),
+                List.of(decision.option(), decision.rule()),
                 "Один зомби при полном HP — обычная оценка без жёстких правил: бой, победа по счёту");
     }
 
@@ -39,8 +47,12 @@ class DeciderTests {
     void decide_ExcludeLeavesOneOption_ThatOptionIsChosen() {
         Decision decision = decide(lavaExcluding("[\"FIGHT\", \"IGNORE\"]"), onLava(), 1);
 
-        assertEquals(List.of(TacticalOption.RETREAT, Decision.SOLE_CANDIDATE, Set.of(TacticalOption.FIGHT,
-                TacticalOption.IGNORE)), List.of(decision.option(), decision.rule(), decision.excluded()),
+        assertEquals(
+                List.of(
+                        TacticalOption.RETREAT,
+                        Decision.SOLE_CANDIDATE,
+                        Set.of(TacticalOption.FIGHT, TacticalOption.IGNORE)),
+                List.of(decision.option(), decision.rule(), decision.excluded()),
                 "Когда вычеркнуты два варианта из трёх, остаётся один и выбирается без оценки");
     }
 
@@ -48,10 +60,13 @@ class DeciderTests {
     void decide_ExcludeLeavesTwoOptions_BestOfRemainingWins() {
         Decision decision = decide(TacticsConfig.loadDefault(), onLava(), 1);
 
-        assertEquals(List.of(Decision.BY_SCORE, Set.of(TacticalOption.FIGHT)),
+        assertEquals(
+                List.of(Decision.BY_SCORE, Set.of(TacticalOption.FIGHT)),
                 List.of(decision.rule(), decision.excluded()),
                 "Лава рядом вычёркивает FIGHT, а выбор между отходом и игнором идёт по счёту");
-        assertEquals(false, decision.option() == TacticalOption.FIGHT,
+        assertEquals(
+                false,
+                decision.option() == TacticalOption.FIGHT,
                 "Драться у лавы нельзя ни при каких весах: вычеркнутый вариант не может победить");
     }
 
@@ -59,7 +74,8 @@ class DeciderTests {
     void decide_AllOptionsExcludedAndRetreatPossible_RetreatIsChosen() {
         Decision decision = decide(lavaExcluding("[\"FIGHT\", \"RETREAT\", \"IGNORE\"]"), onLava(), 2);
 
-        assertEquals(List.of(TacticalOption.RETREAT, Decision.ALL_EXCLUDED),
+        assertEquals(
+                List.of(TacticalOption.RETREAT, Decision.ALL_EXCLUDED),
                 List.of(decision.option(), decision.rule()),
                 "Если вычеркнуто всё и есть куда отходить, дух отступает: это самый безопасный остаток");
     }
@@ -68,7 +84,8 @@ class DeciderTests {
     void decide_AllOptionsExcludedAndNoRetreat_FightIsChosen() {
         Decision decision = decide(lavaExcluding("[\"FIGHT\", \"RETREAT\", \"IGNORE\"]"), onLava(), 0);
 
-        assertEquals(List.of(TacticalOption.FIGHT, Decision.ALL_EXCLUDED),
+        assertEquals(
+                List.of(TacticalOption.FIGHT, Decision.ALL_EXCLUDED),
                 List.of(decision.option(), decision.rule()),
                 "Если вычеркнуто всё и отступать некуда, остаётся драться: выбирать между гибелью и боем не из чего");
     }
@@ -79,7 +96,8 @@ class DeciderTests {
 
         Decision decision = decide(TacticsConfig.loadDefault(), burning, 1);
 
-        assertEquals(List.of(TacticalOption.RETREAT, "explosive_close_retreat"),
+        assertEquals(
+                List.of(TacticalOption.RETREAT, "explosive_close_retreat"),
                 List.of(decision.option(), decision.rule()),
                 "Решение жёсткого правила называет его id: trace объясняет, какое правило сработало "
                         + "(крипер в 4 блоках, дух без меча)");
@@ -93,10 +111,15 @@ class DeciderTests {
         Scores scores = new Scorer().score(situation, assessment, config.weights());
         Decider decider = new Decider(new HardRules(config.rules().hard(), new RuleCounter()), config.weights());
 
-        Decision decision = decider.decide(FactMap.from(situation, assessment), scores, 0,
-                Memories.holding(situation, TacticalOption.RETREAT, 0), 10);
+        Decision decision = decider.decide(
+                FactMap.from(situation, assessment),
+                scores,
+                0,
+                Memories.holding(situation, TacticalOption.RETREAT, 0),
+                10);
 
-        assertEquals(List.of(TacticalOption.FIGHT, "no_route_fight_targeted", HoldStatus.NONE),
+        assertEquals(
+                List.of(TacticalOption.FIGHT, "no_route_fight_targeted", HoldStatus.NONE),
                 List.of(decision.option(), decision.rule(), decision.hold()),
                 "Удерживаемое RETREAT без способа отхода подменено боем: подмена — решение правила, а не удержания, "
                         + "поэтому hold = NONE, а не HELD внутреннего решения");
@@ -104,24 +127,39 @@ class DeciderTests {
 
     @Test
     void decide_NoRouteAndFightExcluded_ReplacesRetreatWithIgnore() {
-        Decision decision = decide(TacticsConfig.loadDefault(), SituationBuilder.create().lava(1).enemy("zombie", 6).build(), 0);
+        Decision decision = decide(
+                TacticsConfig.loadDefault(),
+                SituationBuilder.create().lava(1).enemy("zombie", 6).build(),
+                0);
 
-        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"), List.of(decision.option(), decision.rule()),
+        assertEquals(
+                List.of(TacticalOption.IGNORE, "no_route_ignore"),
+                List.of(decision.option(), decision.rule()),
                 "Бой у лавы вычеркнут: подмена RETREAT без пути обязана уйти на невычеркнутый вариант IGNORE");
     }
 
     @Test
     void decide_NoRouteAfterDecisiveRetreat_KeepsExclusionsConsideredByReplacement() {
-        Situation situation = SituationBuilder.create().hpFraction(0.2).lava(1).enemy("zombie", 6).build();
+        Situation situation = SituationBuilder.create()
+                .hpFraction(0.2)
+                .lava(1)
+                .enemy("zombie", 6)
+                .build();
 
         Decision decision = decide(TacticsConfig.loadDefault(), situation, 0);
 
-        assertEquals(List.of(TacticalOption.IGNORE, "no_route_ignore"), List.of(decision.option(), decision.rule()),
+        assertEquals(
+                List.of(TacticalOption.IGNORE, "no_route_ignore"),
+                List.of(decision.option(), decision.rule()),
                 "HP 20 % даёт жёсткий отход, путей нет, враг целится: подмена уходит в IGNORE, а не в вычеркнутый бой");
-        assertEquals(Set.of(TacticalOption.FIGHT), decision.excluded(),
+        assertEquals(
+                Set.of(TacticalOption.FIGHT),
+                decision.excluded(),
                 "Подмена noRoute учла вычёркивание боя у лавы: иначе trace не объяснит, почему дух не дерётся. "
                         + "Проверьте слияние вычёркиваний подмены в Decider");
-        assertEquals(List.of("no_fight_near_lava"), decision.excludingRules(),
+        assertEquals(
+                List.of("no_fight_near_lava"),
+                decision.excludingRules(),
                 "Trace обязан называть правило, вычеркнувшее бой: иначе «почему не FIGHT» сошлётся на подмену без причины");
     }
 }

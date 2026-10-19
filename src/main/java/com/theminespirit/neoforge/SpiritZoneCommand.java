@@ -19,8 +19,7 @@ import net.minecraft.network.chat.Component;
 final class SpiritZoneCommand {
     private static final int MAX_RADIUS = 1024;
 
-    private SpiritZoneCommand() {
-    }
+    private SpiritZoneCommand() {}
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> spirit) {
         spirit.then(literal("zone")
@@ -36,20 +35,26 @@ final class SpiritZoneCommand {
         BlockPos center = BlockPosArgument.getLoadedBlockPos(context, "center");
         int radius = IntegerArgumentType.getInteger(context, "radius");
         if (spirits.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Рабочая зона некому поставить: среди выбранных сущностей нет духа"));
+            context.getSource()
+                    .sendFailure(
+                            Component.literal("Рабочая зона некому поставить: среди выбранных сущностей нет духа"));
             return 0;
         }
         WorkZone zone = new WorkZone(new BlockCoord(center.getX(), center.getY(), center.getZ()), radius);
         spirits.forEach(spirit -> spirit.setWorkZone(zone));
-        context.getSource().sendSuccess(() -> Component.literal("Рабочая зона радиуса " + radius + " вокруг " + center.toShortString()
-                + " поставлена духам: " + spirits.size()), true);
+        context.getSource()
+                .sendSuccess(
+                        () -> Component.literal("Рабочая зона радиуса " + radius + " вокруг " + center.toShortString()
+                                + " поставлена духам: " + spirits.size()),
+                        true);
         return spirits.size();
     }
 
     private static int clear(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         List<SpiritEntity> spirits = SelectedSpirits.selected(context);
         if (spirits.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("Рабочую зону некому снять: среди выбранных сущностей нет духа"));
+            context.getSource()
+                    .sendFailure(Component.literal("Рабочую зону некому снять: среди выбранных сущностей нет духа"));
             return 0;
         }
         spirits.forEach(SpiritEntity::clearWorkZone);

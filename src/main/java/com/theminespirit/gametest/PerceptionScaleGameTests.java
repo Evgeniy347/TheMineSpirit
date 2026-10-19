@@ -29,14 +29,14 @@ public final class PerceptionScaleGameTests {
     private static final int SLAB_REACH = 40;
     private static final int SCAN_RADIUS = 32;
 
-    private PerceptionScaleGameTests() {
-    }
+    private PerceptionScaleGameTests() {}
 
     @GameTest(template = "arena", batch = "perception_scale", timeoutTicks = 400)
     public static void scanBlocks_TwentySpiritsHundredTicks_StaysWithinPortionBudgets(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         List<BlockPos> slab = buildSlab(helper);
-        PerceptionQuery query = PerceptionParams.blocks(Map.of("radius", SCAN_RADIUS, "filter", List.of("minecraft:stone")));
+        PerceptionQuery query =
+                PerceptionParams.blocks(Map.of("radius", SCAN_RADIUS, "filter", List.of("minecraft:stone")));
         List<SpiritEntity> spirits = new ArrayList<>();
         for (int i = 0; i < SPIRITS; i++) {
             spirits.add(spawnSpirit(helper, 1 + i % 8, 1, 1 + i / 8));
@@ -68,25 +68,32 @@ public final class PerceptionScaleGameTests {
         });
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(driven[0] >= DRIVEN_TICKS,
+            helper.assertTrue(
+                    driven[0] >= DRIVEN_TICKS,
                     "наблюдение идёт: отработано тиков " + driven[0] + " из " + DRIVEN_TICKS);
-            long examined = totals[0] + current.stream().mapToLong(ScanScript::examinedPositions).sum();
-            long steps = totals[1] + current.stream().mapToLong(ScanScript::stepCalls).sum();
-            long entityQueries = totals[2] + current.stream().mapToLong(ScanScript::entityQueries).sum();
-            helper.assertTrue(examined > 0,
-                    "тест не доказывает бюджет: плита из камня не прочитана ни одним духом");
-            helper.assertTrue(maxReadsPerStep[0] <= ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
+            long examined = totals[0]
+                    + current.stream().mapToLong(ScanScript::examinedPositions).sum();
+            long steps = totals[1]
+                    + current.stream().mapToLong(ScanScript::stepCalls).sum();
+            long entityQueries = totals[2]
+                    + current.stream().mapToLong(ScanScript::entityQueries).sum();
+            helper.assertTrue(examined > 0, "тест не доказывает бюджет: плита из камня не прочитана ни одним духом");
+            helper.assertTrue(
+                    maxReadsPerStep[0] <= ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
                     "один дух за один тик обязан читать не больше " + ScanTuning.SLICES_PER_TICK + " срезов по "
                             + POSITIONS_PER_SLICE + " позиций, а прочитал " + maxReadsPerStep[0]
                             + ": порция скана снята, куб читается разом");
-            helper.assertTrue(examined <= (long) SPIRITS * DRIVEN_TICKS * ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
+            helper.assertTrue(
+                    examined <= (long) SPIRITS * DRIVEN_TICKS * ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE,
                     "за " + DRIVEN_TICKS + " тиков " + SPIRITS + " духов обязаны прочитать не больше "
                             + (long) SPIRITS * DRIVEN_TICKS * ScanTuning.SLICES_PER_TICK * POSITIONS_PER_SLICE
                             + " позиций, а прочитали " + examined);
-            helper.assertTrue(steps <= (long) SPIRITS * DRIVEN_TICKS,
+            helper.assertTrue(
+                    steps <= (long) SPIRITS * DRIVEN_TICKS,
                     "скан делает не больше одного шага порции за тик на духа: шагов " + steps + " при пределе "
                             + (long) SPIRITS * DRIVEN_TICKS);
-            helper.assertTrue(entityQueries <= (long) SPIRITS * DRIVEN_TICKS,
+            helper.assertTrue(
+                    entityQueries <= (long) SPIRITS * DRIVEN_TICKS,
                     "запросов сущностей не больше, чем завершённых сканов, то есть не больше одного на тик на духа: "
                             + entityQueries + " при пределе " + (long) SPIRITS * DRIVEN_TICKS);
             clearSlab(helper, slab);

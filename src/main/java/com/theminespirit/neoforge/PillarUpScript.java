@@ -106,9 +106,8 @@ public final class PillarUpScript implements ScriptInstance {
             return Optional.empty();
         }
         int built = column == null ? 0 : column.built();
-        String text = "поднято на " + built + (down
-                ? "; столб разобран, блоков возвращено " + returned
-                : "; столб оставлен");
+        String text =
+                "поднято на " + built + (down ? "; столб разобран, блоков возвращено " + returned : "; столб оставлен");
         return Optional.of(new ScriptResult.Text(text));
     }
 
@@ -123,6 +122,5 @@ public final class PillarUpScript implements ScriptInstance {
     }
 
     @Override
-    public void restoreState(Map<String, Object> state) {
-    }
+    public void restoreState(Map<String, Object> state) {}
 }

@@ -25,13 +25,14 @@ public final class SectionCursor {
         List<SectionSlice> slices = new ArrayList<>();
         for (int sx = sectionOf(box.min().x()); sx <= sectionOf(box.max().x()); sx++) {
             for (int sy = sectionOf(box.min().y()); sy <= sectionOf(box.max().y()); sy++) {
-                for (int sz = sectionOf(box.min().z()); sz <= sectionOf(box.max().z()); sz++) {
+                for (int sz = sectionOf(box.min().z());
+                        sz <= sectionOf(box.max().z());
+                        sz++) {
                     slices.add(new SectionSlice(sx, sy, sz, sliceBounds(box, sx, sy, sz)));
                 }
             }
         }
-        slices.sort(Comparator
-                .comparingLong((SectionSlice slice) -> slice.distanceSquared(center))
+        slices.sort(Comparator.comparingLong((SectionSlice slice) -> slice.distanceSquared(center))
                 .thenComparingInt(SectionSlice::sectionX)
                 .thenComparingInt(SectionSlice::sectionY)
                 .thenComparingInt(SectionSlice::sectionZ));
@@ -67,9 +68,12 @@ public final class SectionCursor {
 
     private static BlockBox sliceBounds(BlockBox box, int sx, int sy, int sz) {
         return new BlockBox(
-                new BlockCoord(Math.max(box.min().x(), sx * SECTION_SIZE), Math.max(box.min().y(), sy * SECTION_SIZE),
+                new BlockCoord(
+                        Math.max(box.min().x(), sx * SECTION_SIZE),
+                        Math.max(box.min().y(), sy * SECTION_SIZE),
                         Math.max(box.min().z(), sz * SECTION_SIZE)),
-                new BlockCoord(Math.min(box.max().x(), sx * SECTION_SIZE + SECTION_SIZE - 1),
+                new BlockCoord(
+                        Math.min(box.max().x(), sx * SECTION_SIZE + SECTION_SIZE - 1),
                         Math.min(box.max().y(), sy * SECTION_SIZE + SECTION_SIZE - 1),
                         Math.min(box.max().z(), sz * SECTION_SIZE + SECTION_SIZE - 1)));
     }

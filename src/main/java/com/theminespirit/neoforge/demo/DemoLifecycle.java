@@ -7,8 +7,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Демо-стройки на шине событий: каждый серверный тик ведут свои сессии, при остановке забываются. */
 public final class DemoLifecycle {
-    private DemoLifecycle() {
-    }
+    private DemoLifecycle() {}
 
     public static void register(IEventBus bus) {
         if (bus == null) {

@@ -36,8 +36,7 @@ class FuelPlannerProperties {
                     gatherable.add("ancestor_" + index);
                     crafts.put(fuel, List.of(new Ingredient("ancestor_" + index, 1)));
                 }
-                default -> {
-                }
+                default -> {}
             }
         }
         FuelKnowledge knowledge = new FuelKnowledge(candidates, gatherable, crafts, burn);
@@ -56,7 +55,8 @@ class FuelPlannerProperties {
         }
 
         if (expected < 0) {
-            assertThrows(UnplannableGoalException.class,
+            assertThrows(
+                    UnplannableGoalException.class,
                     () -> FuelPlanner.select("iron_ingot", count, knowledge, path, new HashMap<>()),
                     "Если ни один кандидат не добывается или все на текущей цепочке, выбор топлива обязан "
                             + "отказать: молчаливый пропуск даст план без топлива и холодную печь. Режимы=" + modes
@@ -65,15 +65,18 @@ class FuelPlannerProperties {
         }
         String fuel = "fuel_" + expected;
         int expectedBurn = 100 + expected * 100;
-        FuelPlanner.FuelRequirement chosen = FuelPlanner.select("iron_ingot", count, knowledge, path,
-                        new HashMap<>())
-                .orElseThrow(() -> new AssertionError("Ожидалось топливо '" + fuel + "': режимы=" + modes
-                        + ", путь=" + path));
+        FuelPlanner.FuelRequirement chosen = FuelPlanner.select("iron_ingot", count, knowledge, path, new HashMap<>())
+                .orElseThrow(() ->
+                        new AssertionError("Ожидалось топливо '" + fuel + "': режимы=" + modes + ", путь=" + path));
 
-        assertEquals(fuel, chosen.fuel(),
+        assertEquals(
+                fuel,
+                chosen.fuel(),
                 "Выбор обязан взять первого кандидата, который добывается (цепочкой предков тоже) и не стоит на "
                         + "текущей цепочке резолвера: режимы=" + modes + ", путь=" + path);
-        assertEquals(FuelTable.fuelNeeded(count, expectedBurn), chosen.count(),
+        assertEquals(
+                FuelTable.fuelNeeded(count, expectedBurn),
+                chosen.count(),
                 "Топлива надо ровно на плавку без излишка: перебор оставит духа с лишним грузом, недобор встанет "
                         + "посреди работы. Топливо=" + fuel + ", количество плавок=" + count);
     }
@@ -84,8 +87,11 @@ class FuelPlannerProperties {
         private final Map<String, List<Ingredient>> crafts;
         private final Map<String, Integer> burn;
 
-        private FuelKnowledge(List<String> candidates, Set<String> gatherable,
-                Map<String, List<Ingredient>> crafts, Map<String, Integer> burn) {
+        private FuelKnowledge(
+                List<String> candidates,
+                Set<String> gatherable,
+                Map<String, List<Ingredient>> crafts,
+                Map<String, Integer> burn) {
             this.candidates = List.copyOf(candidates);
             this.gatherable = Set.copyOf(gatherable);
             this.crafts = Map.copyOf(crafts);

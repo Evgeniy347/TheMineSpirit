@@ -2,7 +2,8 @@ package com.theminespirit.core.script;
 
 import java.util.Objects;
 
-public sealed interface ContainerTarget permits ContainerTarget.Nearest, ContainerTarget.Position, ContainerTarget.Auto {
+public sealed interface ContainerTarget
+        permits ContainerTarget.Nearest, ContainerTarget.Position, ContainerTarget.Auto {
     ContainerTarget NEAREST = new Nearest();
     ContainerTarget AUTO = new Auto();
 
@@ -21,7 +22,8 @@ public sealed interface ContainerTarget permits ContainerTarget.Nearest, Contain
                     + "'auto' или координаты блока x,y,z (например \"12,64,-7\"). Получено " + parts.length
                     + " части вместо 3");
         }
-        return new Position(coordinate(parts[0].strip(), "x", text),
+        return new Position(
+                coordinate(parts[0].strip(), "x", text),
                 coordinate(parts[1].strip(), "y", text),
                 coordinate(parts[2].strip(), "z", text));
     }
@@ -31,8 +33,8 @@ public sealed interface ContainerTarget permits ContainerTarget.Nearest, Contain
         try {
             value = Integer.parseInt(text);
         } catch (NumberFormatException error) {
-            throw new IllegalArgumentException("Координата " + name + " контейнера '" + origin
-                    + "' не число: '" + text + "'. Формат цели — 'nearest' или x,y,z (например \"12,64,-7\")");
+            throw new IllegalArgumentException("Координата " + name + " контейнера '" + origin + "' не число: '" + text
+                    + "'. Формат цели — 'nearest' или x,y,z (например \"12,64,-7\")");
         }
         if (name.equals("y")) {
             if (value < CatalogLimits.WORLD_Y_MIN || value > CatalogLimits.WORLD_Y_MAX) {
@@ -52,12 +54,9 @@ public sealed interface ContainerTarget permits ContainerTarget.Nearest, Contain
         return value;
     }
 
-    record Nearest() implements ContainerTarget {
-    }
+    record Nearest() implements ContainerTarget {}
 
-    record Auto() implements ContainerTarget {
-    }
+    record Auto() implements ContainerTarget {}
 
-    record Position(int x, int y, int z) implements ContainerTarget {
-    }
+    record Position(int x, int y, int z) implements ContainerTarget {}
 }

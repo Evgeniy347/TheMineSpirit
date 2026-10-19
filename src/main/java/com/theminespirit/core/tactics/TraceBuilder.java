@@ -11,23 +11,38 @@ import java.util.Optional;
 final class TraceBuilder {
     private static final int TOP_REASONS = 3;
 
-    private TraceBuilder() {
-    }
+    private TraceBuilder() {}
 
-    static Trace build(Decision decision, Scores scores, ActionChoice action, RetreatChoice retreat, StateStep state,
+    static Trace build(
+            Decision decision,
+            Scores scores,
+            ActionChoice action,
+            RetreatChoice retreat,
+            StateStep state,
             ModeStep mode) {
         Map<TacticalOption, Double> totals = new EnumMap<>(TacticalOption.class);
         for (TacticalOption option : TacticalOption.values()) {
             totals.put(option, scores.total(option));
         }
-        return new Trace(decision.rule(), decision.hold(), decision.excludingRules(), totals, shares(scores),
-                action.rule(), retreat.rule(), state.rule(), mode.rule(), whyNotFight(decision, scores));
+        return new Trace(
+                decision.rule(),
+                decision.hold(),
+                decision.excludingRules(),
+                totals,
+                shares(scores),
+                action.rule(),
+                retreat.rule(),
+                state.rule(),
+                mode.rule(),
+                whyNotFight(decision, scores));
     }
 
     private static List<Trace.FactorShare> shares(Scores scores) {
         List<Trace.FactorShare> shares = new ArrayList<>();
         for (Factor factor : Factor.values()) {
-            shares.add(new Trace.FactorShare(factor, scores.factor(factor),
+            shares.add(new Trace.FactorShare(
+                    factor,
+                    scores.factor(factor),
                     scores.contribution(TacticalOption.FIGHT, factor),
                     scores.contribution(TacticalOption.RETREAT, factor),
                     scores.contribution(TacticalOption.IGNORE, factor)));
@@ -51,7 +66,8 @@ final class TraceBuilder {
     private static String topReasons(TacticalOption chosen, Scores scores) {
         Optional<String> reasons = Arrays.stream(Factor.values())
                 .filter(factor -> gain(chosen, factor, scores) > 0)
-                .sorted(Comparator.comparingDouble((Factor factor) -> gain(chosen, factor, scores)).reversed())
+                .sorted(Comparator.comparingDouble((Factor factor) -> gain(chosen, factor, scores))
+                        .reversed())
                 .limit(TOP_REASONS)
                 .map(factor -> factor + " (+" + Math.round(gain(chosen, factor, scores) * 100) / 100.0 + ")")
                 .reduce((left, right) -> left + ", " + right);

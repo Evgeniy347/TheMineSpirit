@@ -45,8 +45,7 @@ public final class BoardV2ScaleGameTests {
     private static final int TIMEOUT_TICKS = 1000;
     private static final int CRATERS = 3;
 
-    private BoardV2ScaleGameTests() {
-    }
+    private BoardV2ScaleGameTests() {}
 
     @BeforeBatch(batch = BATCH)
     public static void prepareBatch(ServerLevel level) {
@@ -91,15 +90,32 @@ public final class BoardV2ScaleGameTests {
             BlockCoord cell = absolute(helper, hole);
             String cause = CraterProfiles.cause(cell);
             board.craters().remember(cause, List.of(cell));
-            board.submit(new BoardTicket("scale_crater_" + crater, BoardCase.FILL_CRATER,
-                    Optional.of(UUID.randomUUID()), BoardRules.priorityOf(BoardCase.FILL_CRATER),
-                    now, 1, cause, List.of(), Map.of("dirt", 9)),
+            board.submit(
+                    new BoardTicket(
+                            "scale_crater_" + crater,
+                            BoardCase.FILL_CRATER,
+                            Optional.of(UUID.randomUUID()),
+                            BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                            now,
+                            1,
+                            cause,
+                            List.of(),
+                            Map.of("dirt", 9)),
                     TicketTarget.at(cell));
         }
         BlockCoord from = absolute(helper, new BlockPos(2, 1, 6));
         BlockCoord to = absolute(helper, new BlockPos(4, 1, 1));
-        board.submit(new BoardTicket("scale_relocate", BoardCase.RELOCATE_BUILDING,
-                Optional.of(UUID.randomUUID()), 60, now, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()),
+        board.submit(
+                new BoardTicket(
+                        "scale_relocate",
+                        BoardCase.RELOCATE_BUILDING,
+                        Optional.of(UUID.randomUUID()),
+                        60,
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
                 TicketTarget.at(to).withRelocate(from, to).withScheme("pen_4x5"));
 
         int baseRebuilds = board.rebuilds();
@@ -111,7 +127,8 @@ public final class BoardV2ScaleGameTests {
 
         helper.succeedWhen(() -> {
             for (SpiritEntity spirit : spirits) {
-                helper.assertTrue(spirit.tickCount >= OBSERVED_TICKS,
+                helper.assertTrue(
+                        spirit.tickCount >= OBSERVED_TICKS,
                         "дух ещё не отработал " + OBSERVED_TICKS + " тиков: " + spirit.tickCount);
             }
             board.journal().flushAll();
@@ -125,29 +142,38 @@ public final class BoardV2ScaleGameTests {
             long maxReads = (long) BoardTuning.stockBlockBudget() * maxRebuilds;
             int maxScans = (int) (OBSERVED_TICKS / BoardTuning.herdScanIntervalTicks()) + 1;
             long maxClaims = (long) maxRebuilds * SPIRITS * BoardTuning.maxActivePerSpirit();
-            helper.assertTrue(rebuilds > 0 && claims > 0 && enqueued > 0,
-                    "доска обязана работать, иначе предел ничего не доказывает: пересборок "
-                            + rebuilds + ", выдач " + claims + ", записей журнала " + enqueued);
-            helper.assertTrue(rebuilds <= maxRebuilds,
+            helper.assertTrue(
+                    rebuilds > 0 && claims > 0 && enqueued > 0,
+                    "доска обязана работать, иначе предел ничего не доказывает: пересборок " + rebuilds + ", выдач "
+                            + claims + ", записей журнала " + enqueued);
+            helper.assertTrue(
+                    rebuilds <= maxRebuilds,
                     "пересборок за " + OBSERVED_TICKS + " тиков не больше " + maxRebuilds
                             + " (раз в " + BoardTuning.boardIntervalTicks() + " тиков), было "
                             + rebuilds + ": доска не пересобирается каждый тик");
-            helper.assertTrue(reads <= maxReads,
-                    "чтений блоков складом не больше " + maxReads + " (бюджет "
-                            + BoardTuning.stockBlockBudget() + " × " + maxRebuilds + "), было " + reads);
-            helper.assertTrue(scans <= maxScans,
+            helper.assertTrue(
+                    reads <= maxReads,
+                    "чтений блоков складом не больше " + maxReads + " (бюджет " + BoardTuning.stockBlockBudget() + " × "
+                            + maxRebuilds + "), было " + reads);
+            helper.assertTrue(
+                    scans <= maxScans,
                     "сканов животных не больше " + maxScans + " (раз в "
                             + BoardTuning.herdScanIntervalTicks() + " тиков), было " + scans
                             + ": тяжёлый scan_entities не идёт каждый тик");
-            helper.assertTrue(retains <= rebuilds,
+            helper.assertTrue(
+                    retains <= rebuilds,
                     "проверок актуальности не больше пересборок: " + retains + " при " + rebuilds
                             + " — retain каждый тик взвинтил бы счётчики и чтение профилей воронок");
-            helper.assertTrue(retains == rebuilds,
+            helper.assertTrue(
+                    retains == rebuilds,
                     "ровно одна проверка актуальности на пересборку: " + retains + " при " + rebuilds);
-            helper.assertTrue(claims <= maxClaims,
+            helper.assertTrue(
+                    claims <= maxClaims,
                     "выдач не больше " + maxClaims + " (свободные духи × пересборки), было " + claims);
-            helper.assertTrue(board.journal().written() == board.journal().enqueued(),
-                    "строк журнала ровно по числу переходов: на диске " + board.journal().written()
+            helper.assertTrue(
+                    board.journal().written() == board.journal().enqueued(),
+                    "строк журнала ровно по числу переходов: на диске "
+                            + board.journal().written()
                             + ", переходов " + board.journal().enqueued()
                             + ": потерянная или задвоенная строка ломает журнал");
             for (BoardTicket ticket : board.board().all()) {

@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildResult;
+import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
@@ -75,7 +75,8 @@ final class PlaceBlockScript implements ScriptInstance {
                     }
                     case ARRIVED -> approached = true;
                     case STUCK, TIMEOUT -> {
-                        return fail("к клетке " + pos.toShortString() + " не подойти: стоянка недостижима; поставлено 0 из 1");
+                        return fail("к клетке " + pos.toShortString()
+                                + " не подойти: стоянка недостижима; поставлено 0 из 1");
                     }
                 }
             } else {
@@ -97,10 +98,14 @@ final class PlaceBlockScript implements ScriptInstance {
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
         return switch (refused.reason()) {
             case NO_MATERIAL -> fail("нет материала '" + blockId + "': нужно 1, есть 0; поставлено 0 из 1");
-            case OCCUPIED -> fail("клетка " + toPos(target).toShortString() + " занята: место занято; поставлено 0 из 1");
+            case OCCUPIED ->
+                fail("клетка " + toPos(target).toShortString() + " занята: место занято; поставлено 0 из 1");
             case NO_SUPPORT -> fail("под клеткой " + toPos(target).toShortString() + " нет опоры; поставлено 0 из 1");
-            case OUT_OF_REACH -> fail("клетка " + toPos(target).toShortString() + " вне досягаемости: стоянка недостижима; поставлено 0 из 1");
-            case CHUNK_NOT_LOADED -> fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
+            case OUT_OF_REACH ->
+                fail("клетка " + toPos(target).toShortString()
+                        + " вне досягаемости: стоянка недостижима; поставлено 0 из 1");
+            case CHUNK_NOT_LOADED ->
+                fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
         };
     }
 
@@ -118,7 +123,8 @@ final class PlaceBlockScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return outcome == ScriptStatus.SUCCEEDED ? Optional.of(new ScriptResult.Data(tally.toData()))
+        return outcome == ScriptStatus.SUCCEEDED
+                ? Optional.of(new ScriptResult.Data(tally.toData()))
                 : Optional.empty();
     }
 
@@ -139,7 +145,8 @@ final class PlaceBlockScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return new BuildState(placed, 0, 0, outcome == ScriptStatus.FAILED ? 1 : 0, outcome == ScriptStatus.RUNNING).toMap();
+        return new BuildState(placed, 0, 0, outcome == ScriptStatus.FAILED ? 1 : 0, outcome == ScriptStatus.RUNNING)
+                .toMap();
     }
 
     @Override

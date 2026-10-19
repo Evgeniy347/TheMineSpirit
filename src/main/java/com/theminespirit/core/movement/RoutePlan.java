@@ -19,7 +19,8 @@ public final class RoutePlan {
 
     public RoutePlan(List<BlockCoord> points, Mode mode) {
         Objects.requireNonNull(points, "Точки маршрута не могут быть null: без них патрулю некуда идти");
-        Objects.requireNonNull(mode, "Режим маршрута не может быть null: без него неизвестно, кругом идти или туда-обратно");
+        Objects.requireNonNull(
+                mode, "Режим маршрута не может быть null: без него неизвестно, кругом идти или туда-обратно");
         if (points.isEmpty()) {
             throw new IllegalArgumentException("Маршрут без точек: патрулю некуда идти, дух встанет до первого шага");
         }

@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Arbitraries;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
@@ -20,11 +20,20 @@ import net.jqwik.api.constraints.LongRange;
 class StrategicQueueProperties {
     @Provide
     Arbitrary<List<StrategicOrder>> orders() {
-        return Arbitraries.integers().between(0, 5000)
-                .flatMap(at -> Arbitraries.integers().between(1, 6000)
-                        .map(ttl -> new StrategicOrder(UUID.fromString("11111111-1111-1111-1111-111111111111"),
-                                "r-" + at + "-" + ttl, new ScriptCall("goto", Map.of("x", 1)), at, ttl)))
-                .list().ofMinSize(1).ofMaxSize(6).map(list -> {
+        return Arbitraries.integers()
+                .between(0, 5000)
+                .flatMap(at -> Arbitraries.integers()
+                        .between(1, 6000)
+                        .map(ttl -> new StrategicOrder(
+                                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                                "r-" + at + "-" + ttl,
+                                new ScriptCall("goto", Map.of("x", 1)),
+                                at,
+                                ttl)))
+                .list()
+                .ofMinSize(1)
+                .ofMaxSize(6)
+                .map(list -> {
                     List<StrategicOrder> unique = new ArrayList<>();
                     for (StrategicOrder order : list) {
                         boolean seen = false;
@@ -50,8 +59,7 @@ class StrategicQueueProperties {
         }
         List<String> polled = new ArrayList<>();
         while (true) {
-            Optional<StrategicOrder> head =
-                    queue.poll(UUID.fromString("11111111-1111-1111-1111-111111111111"));
+            Optional<StrategicOrder> head = queue.poll(UUID.fromString("11111111-1111-1111-1111-111111111111"));
             if (head.isEmpty()) {
                 break;
             }
@@ -59,16 +67,16 @@ class StrategicQueueProperties {
         }
 
         List<String> expected = orders.stream()
-                .sorted(Comparator.comparingLong(StrategicOrder::enqueuedAt)
-                        .thenComparing(StrategicOrder::requestId))
-                .map(StrategicOrder::requestId).toList();
-        assertEquals(expected, polled,
-                "Порядок выхода равен порядку входа: иначе дух перепрыгнет через приказ стратега");
+                .sorted(Comparator.comparingLong(StrategicOrder::enqueuedAt).thenComparing(StrategicOrder::requestId))
+                .map(StrategicOrder::requestId)
+                .toList();
+        assertEquals(
+                expected, polled, "Порядок выхода равен порядку входа: иначе дух перепрыгнет через приказ стратега");
     }
 
     @Property
-    void prune_AfterPrune_NoExpiredLeft(@ForAll("orders") List<StrategicOrder> orders,
-            @ForAll @LongRange(min = 0, max = 12000) long now) {
+    void prune_AfterPrune_NoExpiredLeft(
+            @ForAll("orders") List<StrategicOrder> orders, @ForAll @LongRange(min = 0, max = 12000) long now) {
         StrategicQueue queue = new StrategicQueue();
         for (StrategicOrder order : orders) {
             queue.enqueue(order);
@@ -76,7 +84,8 @@ class StrategicQueueProperties {
         queue.prune(now);
 
         for (StrategicOrder left : queue.ordered()) {
-            assertTrue(left.enqueuedAt() + left.ttlTicks() > now,
+            assertTrue(
+                    left.enqueuedAt() + left.ttlTicks() > now,
                     "После чистки просроченных нет: иначе мёртвый приказ дождётся исполнения");
         }
     }
@@ -90,7 +99,9 @@ class StrategicQueueProperties {
             second.enqueue(order);
         }
 
-        assertEquals(first.ordered(), second.ordered(),
+        assertEquals(
+                first.ordered(),
+                second.ordered(),
                 "Та же последовательность даёт ту же очередь: иначе приказы зависят от случая");
     }
 }

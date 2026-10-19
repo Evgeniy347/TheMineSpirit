@@ -57,8 +57,8 @@ public sealed interface TaskProgress {
 
     private static void requireNonNegative(int index) {
         if (index < 0) {
-            throw new IllegalArgumentException("Индекс прогресса не может быть отрицательным: позиция шага в узле "
-                    + "нумеруется с нуля");
+            throw new IllegalArgumentException(
+                    "Индекс прогресса не может быть отрицательным: позиция шага в узле " + "нумеруется с нуля");
         }
     }
 }

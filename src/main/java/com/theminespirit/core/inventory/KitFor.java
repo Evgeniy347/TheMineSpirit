@@ -1,6 +1,5 @@
 package com.theminespirit.core.inventory;
 
-import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
@@ -9,6 +8,7 @@ import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,8 +25,8 @@ public final class KitFor {
     private final List<KitRule> childRules;
     private final List<String> childNeverGiveAway;
 
-    private KitFor(String origin, List<Activity> activities, List<KitRule> childRules,
-            List<String> childNeverGiveAway) {
+    private KitFor(
+            String origin, List<Activity> activities, List<KitRule> childRules, List<String> childNeverGiveAway) {
         this.origin = origin;
         this.activities = List.copyOf(activities);
         this.childRules = List.copyOf(childRules);
@@ -38,7 +38,8 @@ public final class KitFor {
     }
 
     public static KitFor readClasspath() {
-        return parse(JsonResource.readClasspath("data/theminespirit/inventory/kit_activities.json"),
+        return parse(
+                JsonResource.readClasspath("data/theminespirit/inventory/kit_activities.json"),
                 "data/theminespirit/inventory/kit_activities.json");
     }
 
@@ -61,12 +62,12 @@ public final class KitFor {
             String name = names.get(index);
             JsonNode value = activitiesNode.get(name);
             if (!value.isObject()) {
-                throw new IllegalStateException("Файл '" + origin + "': деятельность '" + name
-                        + "' — не объект с полями scripts и rules");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': деятельность '" + name + "' — не объект с полями scripts и rules");
             }
             JsonResource.checkFields(value, ACTIVITY_FIELDS, origin, "деятельности '" + name + "'");
-            List<String> scripts = JsonResource.strings(value.get("scripts"), origin,
-                    "поля scripts деятельности '" + name + "'");
+            List<String> scripts =
+                    JsonResource.strings(value.get("scripts"), origin, "поля scripts деятельности '" + name + "'");
             if (scripts.isEmpty()) {
                 throw new IllegalStateException("Файл '" + origin + "': у деятельности '" + name
                         + "' пустой список scripts: деятельность без скриптов не узнаётся в задачах духа");
@@ -156,7 +157,8 @@ public final class KitFor {
         }
         if (node instanceof ConditionNode condition) {
             Optional<String> then = activityOfNode(condition.thenStep());
-            return then.isPresent() ? then
+            return then.isPresent()
+                    ? then
                     : condition.elseStep() == null ? Optional.empty() : activityOfNode(condition.elseStep());
         }
         return Optional.empty();
@@ -201,27 +203,32 @@ public final class KitFor {
             JsonNode ruleNode = nodes.get(index);
             String what = "правила №" + index + " деятельности '" + activity + "'";
             if (!ruleNode.isObject()) {
-                throw new IllegalStateException("Файл '" + origin + "': " + what + " — не объект с полями "
-                        + "match/category, keep и mode");
+                throw new IllegalStateException(
+                        "Файл '" + origin + "': " + what + " — не объект с полями " + "match/category, keep и mode");
             }
             JsonResource.checkFields(ruleNode, BaseKit.RULE_FIELDS, origin, what);
             JsonNode matchNode = ruleNode.get("match");
-            List<String> match = matchNode == null || matchNode.isNull() ? null
+            List<String> match = matchNode == null || matchNode.isNull()
+                    ? null
                     : JsonResource.optionalStrings(matchNode, origin, "поля match " + what);
-            rules.add(rule(match, BaseKit.textField(ruleNode.get("category"), origin, what),
+            rules.add(rule(
+                    match,
+                    BaseKit.textField(ruleNode.get("category"), origin, what),
                     BaseKit.keepField(ruleNode.get("keep"), origin, "поля keep " + what),
-                    BaseKit.modeField(ruleNode.get("mode"), origin, "поля mode " + what), origin, what));
+                    BaseKit.modeField(ruleNode.get("mode"), origin, "поля mode " + what),
+                    origin,
+                    what));
         }
         return rules;
     }
 
-    private static KitRule rule(List<String> match, String category, int keep, KitMode mode, String origin,
-            String what) {
+    private static KitRule rule(
+            List<String> match, String category, int keep, KitMode mode, String origin, String what) {
         try {
             return new KitRule(match, category, keep, mode);
         } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл '" + origin + "': " + what + " неверно — "
-                    + error.getMessage(), error);
+            throw new IllegalStateException(
+                    "Файл '" + origin + "': " + what + " неверно — " + error.getMessage(), error);
         }
     }
 

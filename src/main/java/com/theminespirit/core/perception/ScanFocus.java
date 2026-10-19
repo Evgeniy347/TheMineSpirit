@@ -16,8 +16,10 @@ public enum ScanFocus {
         return switch (type) {
             case BLOCKS -> BLOCKS;
             case ENTITIES -> ENTITIES;
-            case HAZARDS -> throw new IllegalArgumentException("Запрос опасностей не сканируется срезами блоков: "
-                    + "опасности ищет отдельный скрипт sense_hazard, а ScanFocus отвечает за scan_blocks и scan_entities");
+            case HAZARDS ->
+                throw new IllegalArgumentException(
+                        "Запрос опасностей не сканируется срезами блоков: "
+                                + "опасности ищет отдельный скрипт sense_hazard, а ScanFocus отвечает за scan_blocks и scan_entities");
         };
     }
 

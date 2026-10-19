@@ -14,13 +14,12 @@ public final class Category {
             throw new IllegalArgumentException(
                     "Категория без имени: по имени сортёр сундука расставляет группы предметов");
         }
-        Objects.requireNonNull(match,
-                "Список шаблонов категории не может быть null: категория без шаблонов пуста");
+        Objects.requireNonNull(match, "Список шаблонов категории не может быть null: категория без шаблонов пуста");
         this.name = name;
         this.match = List.copyOf(match);
         if (this.match.isEmpty()) {
-            throw new IllegalArgumentException("У категории '" + name
-                    + "' нет шаблонов: пустая категория не описывает никаких предметов");
+            throw new IllegalArgumentException(
+                    "У категории '" + name + "' нет шаблонов: пустая категория не описывает никаких предметов");
         }
         this.filter = IdFilter.of(this.match);
     }

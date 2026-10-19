@@ -23,8 +23,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforgespi.language.ModFileScanData;
 import org.apache.logging.log4j.LogManager;
@@ -35,8 +35,7 @@ public final class GameTestFilter {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String FILTER_PROPERTY = "theminespirit.gametest.filter";
 
-    private GameTestFilter() {
-    }
+    private GameTestFilter() {}
 
     @SubscribeEvent
     public static void onServerAboutToStart(ServerAboutToStartEvent event) {
@@ -102,8 +101,10 @@ public final class GameTestFilter {
                 batches.merge(batch, new Settlement(selected.board(), selected.coordinator()), Settlement::combined);
             }
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("GameTest-класс " + className + " из сканирования не загрузился: "
-                    + "размеченная пачка осталась бы без доски/координатора", e);
+            throw new IllegalStateException(
+                    "GameTest-класс " + className + " из сканирования не загрузился: "
+                            + "размеченная пачка осталась бы без доски/координатора",
+                    e);
         }
     }
 
@@ -136,7 +137,8 @@ public final class GameTestFilter {
     }
 
     private static void setSpiritValue(String path, boolean value) {
-        ModConfigSpec.ConfigValue<Boolean> configValue = SpiritConfig.spec().getValues().get(path);
+        ModConfigSpec.ConfigValue<Boolean> configValue =
+                SpiritConfig.spec().getValues().get(path);
         configValue.set(value);
     }
 
@@ -147,8 +149,10 @@ public final class GameTestFilter {
             field.setAccessible(true);
             return (Map<String, Consumer<ServerLevel>>) field.get(null);
         } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Не удалось получить хуки пачек GameTest (" + fieldName
-                    + "): размеченные пачки остались бы без доски/координатора", e);
+            throw new IllegalStateException(
+                    "Не удалось получить хуки пачек GameTest (" + fieldName
+                            + "): размеченные пачки остались бы без доски/координатора",
+                    e);
         }
     }
 
@@ -182,7 +186,8 @@ public final class GameTestFilter {
             throw new IllegalStateException("Фильтр GameTest " + filters + " не совпал ни с одной пачкой, "
                     + "классом или тестом — проверьте имя: прогон не состоится");
         }
-        LOGGER.info("GameTest filter {}: удалено {} тестов из {}, осталось {}", filters, removed, before, functions.size());
+        LOGGER.info(
+                "GameTest filter {}: удалено {} тестов из {}, осталось {}", filters, removed, before, functions.size());
     }
 
     private static boolean matches(TestFunction function, String filter, Map<String, Set<String>> classTests) {
@@ -194,7 +199,9 @@ public final class GameTestFilter {
         int dot = filter.indexOf('.');
         if (dot >= 0) {
             return filter.substring(dot + 1).equals(test)
-                    && classTests.getOrDefault(filter.substring(0, dot), Set.of()).contains(test);
+                    && classTests
+                            .getOrDefault(filter.substring(0, dot), Set.of())
+                            .contains(test);
         }
         return classTests.getOrDefault(filter, Set.of()).contains(test);
     }
@@ -214,7 +221,8 @@ public final class GameTestFilter {
             for (Method method : testClass.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(GameTest.class)) {
                     String simpleName = testClass.getSimpleName().toLowerCase(Locale.ROOT);
-                    classTests.computeIfAbsent(simpleName, key -> new HashSet<>())
+                    classTests
+                            .computeIfAbsent(simpleName, key -> new HashSet<>())
                             .add(method.getName().toLowerCase(Locale.ROOT));
                 }
             }

@@ -39,7 +39,9 @@ class LayerArbiterProperties {
 
         for (int i = 0; i < script.length(); i++) {
             if (demandsPolicy(script.charAt(i))) {
-                assertTrue(owners.charAt(i) == 'P', "В тик с рефлексом владеет политика всегда: " + script + " → " + owners + ", шаг " + i);
+                assertTrue(
+                        owners.charAt(i) == 'P',
+                        "В тик с рефлексом владеет политика всегда: " + script + " → " + owners + ", шаг " + i);
             }
         }
     }
@@ -51,10 +53,13 @@ class LayerArbiterProperties {
 
         for (int i = 1; i < script.length(); i++) {
             if (owners.charAt(i - 1) == 'P' && owners.charAt(i) != 'P') {
-                assertTrue(i >= 9, "Политика не уступает раньше десяти тиков: " + script + " → " + owners + ", шаг " + i);
+                assertTrue(
+                        i >= 9, "Политика не уступает раньше десяти тиков: " + script + " → " + owners + ", шаг " + i);
                 for (int back = i - 9; back <= i; back++) {
-                    assertTrue(!demandsPolicy(script.charAt(back)),
-                            "Перед уходом политики 10 тиков подряд без рефлекса: " + script + " → " + owners + ", шаг " + i);
+                    assertTrue(
+                            !demandsPolicy(script.charAt(back)),
+                            "Перед уходом политики 10 тиков подряд без рефлекса: " + script + " → " + owners + ", шаг "
+                                    + i);
                 }
             }
         }
@@ -67,9 +72,13 @@ class LayerArbiterProperties {
 
         for (int i = 1; i < script.length(); i++) {
             if (owners.charAt(i - 1) == 'T' && owners.charAt(i) != 'T' && owners.charAt(i) != 'P') {
-                assertTrue(i >= 9, "Тактика не уступает стратегии раньше десяти тиков: " + script + " → " + owners + ", шаг " + i);
+                assertTrue(
+                        i >= 9,
+                        "Тактика не уступает стратегии раньше десяти тиков: " + script + " → " + owners + ", шаг " + i);
                 for (int back = i - 9; back <= i; back++) {
-                    assertTrue(script.charAt(back) != 't', "Перед уходом тактики 10 тиков подряд без боя: " + script + " → " + owners + ", шаг " + i);
+                    assertTrue(
+                            script.charAt(back) != 't',
+                            "Перед уходом тактики 10 тиков подряд без боя: " + script + " → " + owners + ", шаг " + i);
                 }
             }
         }

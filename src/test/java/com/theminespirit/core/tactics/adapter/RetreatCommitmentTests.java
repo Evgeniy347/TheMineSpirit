@@ -15,48 +15,104 @@ class RetreatCommitmentTests {
     private static final TacticsAdapterSettings SETTINGS = TacticsAdapterSettings.defaults();
     private static final long START = 100;
 
-    record Row(String name, RetreatTracker current, TacticalOption option, RetreatMethod method, long now,
-            RetreatTracker expected) {
-    }
+    record Row(
+            String name,
+            RetreatTracker current,
+            TacticalOption option,
+            RetreatMethod method,
+            long now,
+            RetreatTracker expected) {}
 
     static Stream<Row> rows() {
         RetreatTracker home = new RetreatTracker(RetreatMethod.HOME, START);
         RetreatTracker away = new RetreatTracker(RetreatMethod.AWAY, START);
         return Stream.of(
-                new Row("из простоя: RETREAT/HOME начинает отход", RetreatTracker.IDLE, TacticalOption.RETREAT,
-                        RetreatMethod.HOME, START, home),
-                new Row("из простоя: FIGHT отхода не начинает", RetreatTracker.IDLE, TacticalOption.FIGHT,
-                        RetreatMethod.NONE, START, RetreatTracker.IDLE),
-                new Row("бег прерывается боем", home, TacticalOption.FIGHT, RetreatMethod.NONE, START + 10,
+                new Row(
+                        "из простоя: RETREAT/HOME начинает отход",
+                        RetreatTracker.IDLE,
+                        TacticalOption.RETREAT,
+                        RetreatMethod.HOME,
+                        START,
+                        home),
+                new Row(
+                        "из простоя: FIGHT отхода не начинает",
+                        RetreatTracker.IDLE,
+                        TacticalOption.FIGHT,
+                        RetreatMethod.NONE,
+                        START,
                         RetreatTracker.IDLE),
-                new Row("запасной AWAY вытесняется найденной водой", away, TacticalOption.RETREAT, RetreatMethod.WATER,
-                        START + 10, new RetreatTracker(RetreatMethod.WATER, START + 10)),
-                new Row("AWAY остаётся, пока лучшего способа нет", away, TacticalOption.RETREAT, RetreatMethod.AWAY,
-                        START + 10, away),
-                new Row("HOME держится против воды в пределах удержания", home, TacticalOption.RETREAT,
-                        RetreatMethod.WATER, START + 10, home),
-                new Row("HOME уступает воде после удержания", home, TacticalOption.RETREAT, RetreatMethod.WATER,
+                new Row(
+                        "бег прерывается боем",
+                        home,
+                        TacticalOption.FIGHT,
+                        RetreatMethod.NONE,
+                        START + 10,
+                        RetreatTracker.IDLE),
+                new Row(
+                        "запасной AWAY вытесняется найденной водой",
+                        away,
+                        TacticalOption.RETREAT,
+                        RetreatMethod.WATER,
+                        START + 10,
+                        new RetreatTracker(RetreatMethod.WATER, START + 10)),
+                new Row(
+                        "AWAY остаётся, пока лучшего способа нет",
+                        away,
+                        TacticalOption.RETREAT,
+                        RetreatMethod.AWAY,
+                        START + 10,
+                        away),
+                new Row(
+                        "HOME держится против воды в пределах удержания",
+                        home,
+                        TacticalOption.RETREAT,
+                        RetreatMethod.WATER,
+                        START + 10,
+                        home),
+                new Row(
+                        "HOME уступает воде после удержания",
+                        home,
+                        TacticalOption.RETREAT,
+                        RetreatMethod.WATER,
                         START + SETTINGS.retreatHoldTicks(),
                         new RetreatTracker(RetreatMethod.WATER, START + SETTINGS.retreatHoldTicks())),
-                new Row("IGNORE в пределах удержания сохраняет отход", home, TacticalOption.IGNORE, RetreatMethod.NONE,
-                        START + 50, home),
-                new Row("IGNORE после удержания снимает отход", home, TacticalOption.IGNORE, RetreatMethod.NONE,
-                        START + SETTINGS.retreatHoldTicks(), RetreatTracker.IDLE));
+                new Row(
+                        "IGNORE в пределах удержания сохраняет отход",
+                        home,
+                        TacticalOption.IGNORE,
+                        RetreatMethod.NONE,
+                        START + 50,
+                        home),
+                new Row(
+                        "IGNORE после удержания снимает отход",
+                        home,
+                        TacticalOption.IGNORE,
+                        RetreatMethod.NONE,
+                        START + SETTINGS.retreatHoldTicks(),
+                        RetreatTracker.IDLE));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("rows")
     void next_Outcome_GivesExpectedCommitment(Row row) {
-        RetreatTracker next = RetreatCommitment.next(row.current(),
-                AdapterFixtures.outcome(row.option(), actionOf(row.option()), row.method()), row.now(), SETTINGS);
+        RetreatTracker next = RetreatCommitment.next(
+                row.current(),
+                AdapterFixtures.outcome(row.option(), actionOf(row.option()), row.method()),
+                row.now(),
+                SETTINGS);
 
-        assertEquals(row.expected(), next, "Обязательство отхода («" + row.name() + "»): бой прерывает бег; запасной AWAY уступает найденному лучшему способу; остальные держатся "
-                + SETTINGS.retreatHoldTicks() + " тиков");
+        assertEquals(
+                row.expected(),
+                next,
+                "Обязательство отхода («" + row.name()
+                        + "»): бой прерывает бег; запасной AWAY уступает найденному лучшему способу; остальные держатся "
+                        + SETTINGS.retreatHoldTicks() + " тиков");
     }
 
     @Test
     void next_NullOutcome_Rejected() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> RetreatCommitment.next(RetreatTracker.IDLE, null, 0, SETTINGS),
                 "Без решения ядра обязательство не обновить: ошибка вызова, а не молчаливый простой");
     }

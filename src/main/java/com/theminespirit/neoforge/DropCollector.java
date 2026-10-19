@@ -9,7 +9,6 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.DropRef;
-import com.theminespirit.core.pickup.DropRoute;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupSpot;
 import com.theminespirit.core.pickup.PickupTuning;
@@ -22,9 +21,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -65,7 +64,12 @@ public final class DropCollector {
     private int delayWaited;
     private boolean queriedThisTick;
 
-    public DropCollector(SpiritEntity spirit, IdFilter items, BlockCoord center, int radius, PickupTuning tuning,
+    public DropCollector(
+            SpiritEntity spirit,
+            IdFilter items,
+            BlockCoord center,
+            int radius,
+            PickupTuning tuning,
             OverflowMode overflow) {
         this.spirit = spirit;
         this.items = items;
@@ -74,8 +78,13 @@ public final class DropCollector {
         this.decider = new OverflowDecider(spirit);
         this.approach = new Approach(spirit);
         this.safety = new LevelSafetyView(spirit.level());
-        this.area = new AABB(center.x() - radius, center.y() - radius, center.z() - radius,
-                center.x() + radius + 1.0, center.y() + radius + 1.0, center.z() + radius + 1.0);
+        this.area = new AABB(
+                center.x() - radius,
+                center.y() - radius,
+                center.z() - radius,
+                center.x() + radius + 1.0,
+                center.y() + radius + 1.0,
+                center.z() + radius + 1.0);
         this.startTick = spirit.level().getGameTime();
     }
 
@@ -153,9 +162,14 @@ public final class DropCollector {
     }
 
     private void refresh() {
-        nearby = spirit.level().getEntitiesOfClass(ItemEntity.class, area,
-                drop -> !drop.isRemoved() && addressedToAnyone(drop) && !isOwnRecentDrop(drop)
-                        && items.matches(itemId(drop.getItem())));
+        nearby = spirit.level()
+                .getEntitiesOfClass(
+                        ItemEntity.class,
+                        area,
+                        drop -> !drop.isRemoved()
+                                && addressedToAnyone(drop)
+                                && !isOwnRecentDrop(drop)
+                                && items.matches(itemId(drop.getItem())));
         entityQueries++;
         ticksSinceQuery = 0;
         queriedThisTick = true;
@@ -176,7 +190,10 @@ public final class DropCollector {
             return null;
         }
         held = pick.get();
-        return candidates.stream().filter(drop -> dropTarget(drop).equals(held)).findFirst().orElse(null);
+        return candidates.stream()
+                .filter(drop -> dropTarget(drop).equals(held))
+                .findFirst()
+                .orElse(null);
     }
 
     private static WorkTarget dropTarget(ItemEntity drop) {
@@ -218,8 +235,8 @@ public final class DropCollector {
     private String unreachableDetail() {
         for (ItemEntity drop : nearby) {
             if (!drop.isRemoved() && skipped.contains(drop.getStringUUID())) {
-                return " (" + itemId(drop.getItem()) + " в " + drop.blockPosition().toShortString()
-                        + " дольше " + (elapsed) + " тиков)";
+                return " (" + itemId(drop.getItem()) + " в "
+                        + drop.blockPosition().toShortString() + " дольше " + (elapsed) + " тиков)";
             }
         }
         return "";
@@ -294,8 +311,8 @@ public final class DropCollector {
         if (safety.cellAt(access) != Cell.HAZARD) {
             return false;
         }
-        AABB cellBox = new AABB(access.x(), access.y(), access.z(),
-                access.x() + 1.0, access.y() + 1.0, access.z() + 1.0);
+        AABB cellBox =
+                new AABB(access.x(), access.y(), access.z(), access.x() + 1.0, access.y() + 1.0, access.z() + 1.0);
         return spirit.getBoundingBox().inflate(reach).intersects(cellBox);
     }
 
@@ -304,7 +321,8 @@ public final class DropCollector {
         BlockPos feet = spirit.blockPosition();
         return MiningSafety.canStepFrom(
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                new BlockCoord(itemCell.getX(), itemCell.getY(), itemCell.getZ()), safety);
+                new BlockCoord(itemCell.getX(), itemCell.getY(), itemCell.getZ()),
+                safety);
     }
 
     private boolean addressedToAnyone(ItemEntity drop) {
@@ -349,7 +367,13 @@ public final class DropCollector {
 
     private DropRef toRef(ItemEntity drop) {
         ItemStack stack = drop.getItem();
-        return new DropRef(drop.getStringUUID(), itemId(stack), stack.getCount(), drop.getX(), drop.getY(), drop.getZ(),
+        return new DropRef(
+                drop.getStringUUID(),
+                itemId(stack),
+                stack.getCount(),
+                drop.getX(),
+                drop.getY(),
+                drop.getZ(),
                 pickable(stack));
     }
 
@@ -360,8 +384,7 @@ public final class DropCollector {
         if (overflow == OverflowMode.RETURN_TO_BASE) {
             return true;
         }
-        return overflow == OverflowMode.BY_VALUE
-                && decider.decide(stack).action() != OverflowPolicy.Action.REFUSE;
+        return overflow == OverflowMode.BY_VALUE && decider.decide(stack).action() != OverflowPolicy.Action.REFUSE;
     }
 
     private State startRelief(ItemStack stack) {
@@ -425,7 +448,8 @@ public final class DropCollector {
     }
 
     private boolean isOwnRecentDrop(ItemEntity drop) {
-        return drop.getOwner() != null && drop.getOwner().getUUID().equals(spirit.getUUID())
+        return drop.getOwner() != null
+                && drop.getOwner().getUUID().equals(spirit.getUUID())
                 && drop.getAge() < PickupTuning.OWN_DROP_SKIP_TICKS;
     }
 

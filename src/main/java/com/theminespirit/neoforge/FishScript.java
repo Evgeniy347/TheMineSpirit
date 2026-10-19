@@ -87,7 +87,8 @@ public final class FishScript implements ScriptInstance {
             return totalCaught > 0 ? ScriptStatus.SUCCEEDED : fail("удочка сломалась до первой рыбы");
         }
         if (elapsed >= params.durationTicks()) {
-            return totalCaught > 0 ? ScriptStatus.SUCCEEDED
+            return totalCaught > 0
+                    ? ScriptStatus.SUCCEEDED
                     : fail("за " + params.durationTicks() + " тиков не поймано ни одной рыбы: " + waterText());
         }
         elapsed++;
@@ -166,8 +167,9 @@ public final class FishScript implements ScriptInstance {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> startWait();
-            case STUCK, TIMEOUT -> fail("не дошёл до берега " + spot.stand()
-                    + (approach.refusal() == null ? "" : ": " + approach.refusal()));
+            case STUCK, TIMEOUT ->
+                fail("не дошёл до берега " + spot.stand()
+                        + (approach.refusal() == null ? "" : ": " + approach.refusal()));
         };
     }
 
@@ -175,8 +177,7 @@ public final class FishScript implements ScriptInstance {
         ItemStack rod = spirit.getInventory().getItem(rodSlot);
         int lureSpeed = (int) (EnchantmentHelper.getFishingTimeReduction(level, rod, spirit) * 20.0F);
         FishingWait wait = DataTables.INSTANCE.fishingWait().current();
-        int base = Mth.nextInt(spirit.getRandom(), wait.waitMinTicks(), wait.waitMaxTicks())
-                - lureSpeed;
+        int base = Mth.nextInt(spirit.getRandom(), wait.waitMinTicks(), wait.waitMaxTicks()) - lureSpeed;
         int hooked = Mth.nextInt(spirit.getRandom(), wait.hookedMinTicks(), wait.hookedMaxTicks());
         waitTicks = Math.max(1, Math.max(0, base) + hooked);
         phase = Phase.WAIT;

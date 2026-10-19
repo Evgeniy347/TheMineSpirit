@@ -8,15 +8,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 public final class BlockItems {
-    private BlockItems() {
-    }
+    private BlockItems() {}
 
     public static Item itemFor(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, какой предмет списывать");
         Block block = BlockStates.blockFor(blockId);
         Item item = block.asItem();
         if (!(item instanceof BlockItem)) {
-            throw new IllegalArgumentException("Блок '" + blockId + "' не имеет предмета для постановки: без BlockItem его не удержать в инвентаре");
+            throw new IllegalArgumentException("Блок '" + blockId
+                    + "' не имеет предмета для постановки: без BlockItem его не удержать в инвентаре");
         }
         return item;
     }
@@ -43,5 +43,4 @@ public final class BlockItems {
         }
         return total;
     }
-
 }

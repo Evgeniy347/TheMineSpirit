@@ -12,8 +12,7 @@ class SafeMinePlanProperties {
 
     @Property(tries = 150)
     void staircase_SafeShaft_StepsStayContinuous(
-            @ForAll @IntRange(min = 1, max = 40) int depth,
-            @ForAll @IntRange(min = -10, max = 60) int entryY) {
+            @ForAll @IntRange(min = 1, max = 40) int depth, @ForAll @IntRange(min = -10, max = 60) int entryY) {
         int targetY = entryY - depth;
         if (entryY > SafeMinePlan.WORLD_MAX_Y || targetY < SafeMinePlan.WORLD_MIN_Y) {
             return;
@@ -26,7 +25,9 @@ class SafeMinePlanProperties {
 
         SafeMinePlan plan = SafeMinePlan.staircase(world, entry, EAST, targetY, 4);
 
-        assertEquals(depth, plan.steps().size(),
+        assertEquals(
+                depth,
+                plan.steps().size(),
                 "Число шагов лесенки обязано равняться глубине спуска (этаж входа минус целевой): "
                         + "иначе дух либо стоит рано, либо копает под дно мира");
         assertEquals(DescentStop.TARGET_Y, plan.stop(), "Безопасная шахта обязана заканчиваться целью");
@@ -40,8 +41,7 @@ class SafeMinePlanProperties {
     }
 
     @Property(tries = 150)
-    void tunnel_SafeTunnel_HasExactlyRequestedLength(
-            @ForAll @IntRange(min = 1, max = 30) int length) {
+    void tunnel_SafeTunnel_HasExactlyRequestedLength(@ForAll @IntRange(min = 1, max = 30) int length) {
         BlockCoord entry = new BlockCoord(0, 10, 0);
         CellWorld world = new CellWorld();
         for (int index = 0; index < length; index++) {
@@ -58,8 +58,7 @@ class SafeMinePlanProperties {
 
     @Property(tries = 150)
     void tunnel_FluidInSideCell_AlwaysBecomesFillNotDanger(
-            @ForAll @IntRange(min = 0, max = 9) int index,
-            @ForAll @IntRange(min = 0, max = 1) int side) {
+            @ForAll @IntRange(min = 0, max = 9) int index, @ForAll @IntRange(min = 0, max = 1) int side) {
         BlockCoord entry = new BlockCoord(0, 10, 0);
         CellWorld world = new CellWorld();
         for (int column = 0; column < 10; column++) {
@@ -70,10 +69,12 @@ class SafeMinePlanProperties {
 
         SafeMinePlan plan = SafeMinePlan.tunnel(world, entry, EAST, 10, 4);
 
-        assertEquals(DescentStop.TARGET_Y, plan.stop(),
+        assertEquals(
+                DescentStop.TARGET_Y,
+                plan.stop(),
                 "Лава в боковой стенке обязана закладываться, а не останавливать штольню");
         SafeMineStep step = plan.steps().get(index);
-        assertEquals(true, step.fill().contains(hazard),
-                "Опасная боковая клетка обязана попасть в заделки своего шага");
+        assertEquals(
+                true, step.fill().contains(hazard), "Опасная боковая клетка обязана попасть в заделки своего шага");
     }
 }

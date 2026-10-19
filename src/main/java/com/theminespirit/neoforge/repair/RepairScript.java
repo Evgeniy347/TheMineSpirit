@@ -33,9 +33,13 @@ public final class RepairScript implements ScriptInstance {
     private static final int ANVIL_RADIUS = CatalogLimits.STATION_RADIUS_DEFAULT;
     private static final int ANVIL_SLICE_BUDGET = CraftTuning.STATION_SLICES_PER_TICK;
 
-    private record Plan(RepairMethod method, int toolSlot, int secondSlot, String materialItem, int durability,
-            int maxDurability) {
-    }
+    private record Plan(
+            RepairMethod method,
+            int toolSlot,
+            int secondSlot,
+            String materialItem,
+            int durability,
+            int maxDurability) {}
 
     private final SpiritEntity spirit;
     private final RepairParams params;
@@ -94,7 +98,8 @@ public final class RepairScript implements ScriptInstance {
         boolean damaged = RepairCalculator.damagedEnoughToRepair(durability, maxDurability, percent);
         Optional<String> material = RepairMaterials.materialFor(itemId);
         boolean materialAvailable = material.isPresent() && countMaterial(inventory, material.orElseThrow()) > 0;
-        RepairMethod method = RepairCalculator.chooseMethod(RepairCosts.defaults(),
+        RepairMethod method = RepairCalculator.chooseMethod(
+                RepairCosts.defaults(),
                 new RepairCalculator.Availability(materialAvailable, secondSlot >= 0, enchanted, damaged));
         if (method == RepairMethod.NONE) {
             fail(nothingReason(durability, maxDurability, percent, enchanted, materialAvailable, secondSlot));
@@ -108,8 +113,8 @@ public final class RepairScript implements ScriptInstance {
             return applyAnvil(inventory);
         }
         if (anvilSearch == null) {
-            anvilSearch = BlockLocator.search(spirit.level(), spirit.blockPosition(), ANVIL_RADIUS,
-                    Set.of(Blocks.ANVIL));
+            anvilSearch =
+                    BlockLocator.search(spirit.level(), spirit.blockPosition(), ANVIL_RADIUS, Set.of(Blocks.ANVIL));
         }
         List<BlockPos> slices = anvilSearch.step(ANVIL_SLICE_BUDGET);
         if (!slices.isEmpty()) {
@@ -136,8 +141,8 @@ public final class RepairScript implements ScriptInstance {
         if (countMaterial(inventory, plan.materialItem()) < 1) {
             return fail("нет материала '" + plan.materialItem() + "' для ремонта '" + params.item() + "'");
         }
-        int repaired = RepairCalculator.anvilResult(plan.durability(), plan.maxDurability(),
-                RepairCalculator.ANVIL_REPAIR_PERCENT);
+        int repaired = RepairCalculator.anvilResult(
+                plan.durability(), plan.maxDurability(), RepairCalculator.ANVIL_REPAIR_PERCENT);
         consumeMaterial(inventory, material.orElseThrow(), 1);
         inventory.getItem(plan.toolSlot()).setDamageValue(plan.maxDurability() - repaired);
         this.result = new ScriptResult.Data(Map.of(
@@ -153,8 +158,8 @@ public final class RepairScript implements ScriptInstance {
         ItemStack stackA = inventory.getItem(plan.toolSlot());
         ItemStack stackB = inventory.getItem(plan.secondSlot());
         int maxDurability = stackA.getMaxDamage();
-        int repaired = RepairCalculator.grindstoneResult(plan.durability(), maxDurability - stackB.getDamageValue(),
-                maxDurability);
+        int repaired = RepairCalculator.grindstoneResult(
+                plan.durability(), maxDurability - stackB.getDamageValue(), maxDurability);
         ItemStack combined = stackA.copy();
         combined.setCount(1);
         combined.setDamageValue(maxDurability - repaired);
@@ -165,10 +170,7 @@ public final class RepairScript implements ScriptInstance {
             return fail("нет места в инвентаре для результата ремонта");
         }
         this.result = new ScriptResult.Data(Map.of(
-                "item", params.item(),
-                "method", "grindstone",
-                "repaired", repaired,
-                "max_durability", maxDurability));
+                "item", params.item(), "method", "grindstone", "repaired", repaired, "max_durability", maxDurability));
         return succeed();
     }
 
@@ -194,8 +196,11 @@ public final class RepairScript implements ScriptInstance {
                 continue;
             }
             ItemStack stack = inventory.getItem(index);
-            if (stack.isEmpty() || stack.getDamageValue() <= 0 || stack.getItem() != item
-                    || !filter.matches(itemId(stack)) || isEnchanted(stack)) {
+            if (stack.isEmpty()
+                    || stack.getDamageValue() <= 0
+                    || stack.getItem() != item
+                    || !filter.matches(itemId(stack))
+                    || isEnchanted(stack)) {
                 continue;
             }
             return index;
@@ -210,8 +215,13 @@ public final class RepairScript implements ScriptInstance {
         return "в инвентаре нет повреждённого предмета '" + params.item() + "'";
     }
 
-    private String nothingReason(int durability, int maxDurability, int percent, boolean enchanted,
-            boolean materialAvailable, int secondSlot) {
+    private String nothingReason(
+            int durability,
+            int maxDurability,
+            int percent,
+            boolean enchanted,
+            boolean materialAvailable,
+            int secondSlot) {
         if (!RepairCalculator.damagedEnoughToRepair(durability, maxDurability, percent)) {
             return "предмет '" + params.item() + "' ещё крепок (прочность " + durability + " из " + maxDurability
                     + ", порог " + percent + "%): чинить не нужно";
@@ -228,8 +238,7 @@ public final class RepairScript implements ScriptInstance {
     private boolean hasEnchantedDamaged(SpiritInventory inventory, IdFilter filter) {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (!stack.isEmpty() && stack.getDamageValue() > 0 && filter.matches(itemId(stack))
-                    && isEnchanted(stack)) {
+            if (!stack.isEmpty() && stack.getDamageValue() > 0 && filter.matches(itemId(stack)) && isEnchanted(stack)) {
                 return true;
             }
         }
@@ -270,8 +279,7 @@ public final class RepairScript implements ScriptInstance {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
     public String failureReason() {

@@ -6,8 +6,8 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.BodyFlags;
 import com.theminespirit.core.policy.BreakVeto;
 import com.theminespirit.core.policy.LocalSurroundings;
-import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -45,7 +44,8 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
-        if (spirit.level() instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+        if (spirit.level() instanceof ServerLevel server
+                && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
             return new BlockProtection.Allowed();
         }
         return checkBreak(pos, state);
@@ -65,34 +65,43 @@ public final class ProtectionGate {
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         BlockProtection.Decision decision;
         if (tended) {
-            decision = PROTECTION.check(blockId(state),
+            decision = PROTECTION.check(
+                    blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
                     new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
-        } else if (level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+        } else if (level instanceof ServerLevel server
+                && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
             decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
         } else {
-            boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
-            decision = PROTECTION.check(blockId(state), neighbours(level, pos),
+            boolean placedByPlayer = level instanceof ServerLevel server
+                    && PlacedBlocksData.get(server).isMarked(pos);
+            decision = PROTECTION.check(
+                    blockId(state),
+                    neighbours(level, pos),
                     new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
         }
         BlockPos feet = spirit.blockPosition();
-        BreakSafety veto = BreakVeto.checkBelowFeet(coord, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new LevelSafetyView(level));
+        BreakSafety veto = BreakVeto.checkBelowFeet(
+                coord, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new LevelSafetyView(level));
         if (veto instanceof BreakSafety.Unsafe unsafe) {
             return new BlockProtection.Refused(PolicyId.DROP, unsafe.reason());
         }
         return decision;
     }
 
-    public BlockProtection.Decision checkPlace(BlockPos pos) {        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    public BlockProtection.Decision checkPlace(BlockPos pos) {
+        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         BlockProtection.Decision outside = checkTravel(coord);
         if (outside instanceof BlockProtection.Refused) {
             return outside;
         }
         if (PolicyConfig.zones().contains(spirit.level().dimension().location().toString(), coord)) {
-            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "позиция " + pos.toShortString() + " лежит в защищённой зоне: ставить там блоки нельзя");
+            return new BlockProtection.Refused(
+                    PolicyId.PROTECTED_ZONE,
+                    "позиция " + pos.toShortString() + " лежит в защищённой зоне: ставить там блоки нельзя");
         }
         return new BlockProtection.Allowed();
     }
@@ -119,16 +128,20 @@ public final class ProtectionGate {
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
-        boolean placedByPlayer = level instanceof ServerLevel server && PlacedBlocksData.get(server).isMarked(pos);
-        return PROTECTION.checkUse(neighbours(level, pos),
-                new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+        boolean placedByPlayer = level instanceof ServerLevel server
+                && PlacedBlocksData.get(server).isMarked(pos);
+        return PROTECTION.checkUse(
+                neighbours(level, pos), new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
     }
 
     public BlockProtection.Decision checkPortalTarget(BlockCoord target) {
-        LocalSurroundings around = LocalSurroundings.read(target, new LevelSafetyView(spirit.level()), BodyFlags.CALM, Optional.empty());
+        LocalSurroundings around =
+                LocalSurroundings.read(target, new LevelSafetyView(spirit.level()), BodyFlags.CALM, Optional.empty());
         if (PortalPolicy.vetoesTarget(around, target, spirit.policies().exemptions())) {
-            return new BlockProtection.Refused(PolicyId.PORTAL, "цель (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z()
-                    + ") — клетка портала: без исключения PORTAL дух в порталы не заходит");
+            return new BlockProtection.Refused(
+                    PolicyId.PORTAL,
+                    "цель (x=" + target.x() + ", y=" + target.y() + ", z=" + target.z()
+                            + ") — клетка портала: без исключения PORTAL дух в порталы не заходит");
         }
         return new BlockProtection.Allowed();
     }

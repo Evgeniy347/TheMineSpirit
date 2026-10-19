@@ -23,27 +23,29 @@ public final class MovementStepGameTests {
     private static final double STANDS_STILL = 0.1;
     private static final double STEP_TOLERANCE = 0.6;
 
-    private MovementStepGameTests() {
-    }
+    private MovementStepGameTests() {}
 
     @GameTest(template = "arena", batch = "move_step_up", timeoutTicks = 100)
     public static void stepOver_OneBlockStepAhead_StandsOnItWithinFortyTicks(GameTestHelper helper) {
         MovementScene.prepare(helper);
         helper.setBlock(STEP_BLOCK, Blocks.STONE);
         SpiritEntity spirit = MovementScene.spirit(helper, STEP_START);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("step_over", Map.of("dx", 1, "dz", 0)),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.call("step_over", Map.of("dx", 1, "dz", 0)), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "ступенька на 1 блок вверх проходима: step_over обязан закончиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double distance = spirit.position().distanceTo(Vec3.atBottomCenterOf(helper.absolutePos(STEP_CELL)));
-            helper.assertTrue(distance <= STEP_TOLERANCE,
+            helper.assertTrue(
+                    distance <= STEP_TOLERANCE,
                     "дух обязан стоять на ступеньке (центр клетки " + STEP_CELL + "), а до неё " + distance);
-            helper.assertTrue(run.spiritTicks() <= STEP_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= STEP_LIMIT_TICKS,
                     "один шаг обязан уложиться в " + STEP_LIMIT_TICKS + " тиков духа, ушло " + run.spiritTicks());
             MovementScene.finish(helper);
         });
@@ -55,8 +57,8 @@ public final class MovementStepGameTests {
         helper.setBlock(STEP_BLOCK, Blocks.STONE);
         helper.setBlock(STEP_CELL, Blocks.STONE);
         SpiritEntity spirit = MovementScene.spirit(helper, STEP_START);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.call("step_over", Map.of("dx", 1, "dz", 0)),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.call("step_over", Map.of("dx", 1, "dz", 0)), MovementScene.SETTLE_TICKS);
         Vec3[] startAt = new Vec3[1];
         helper.onEachTick(() -> {
             if (startAt[0] == null && spirit.tickCount >= MovementScene.SETTLE_TICKS) {
@@ -66,15 +68,20 @@ public final class MovementStepGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "стена в 2 блока выше шага: step_over обязан провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
-            helper.assertTrue(run.spiritTicks() <= STEP_REFUSAL_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= STEP_REFUSAL_LIMIT_TICKS,
                     "отказ идёт до первого шага, за " + STEP_REFUSAL_LIMIT_TICKS + " тика, а прошло "
                             + run.spiritTicks());
-            helper.assertTrue(spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
-                    "при отказе дух стоит, а он сдвинулся на " + spirit.position().distanceTo(startAt[0]));
-            helper.assertTrue(spirit.pathBuilds() == 0, "при отказе путь не строится, построено " + spirit.pathBuilds());
+            helper.assertTrue(
+                    spirit.position().distanceTo(startAt[0]) < STANDS_STILL,
+                    "при отказе дух стоит, а он сдвинулся на "
+                            + spirit.position().distanceTo(startAt[0]));
+            helper.assertTrue(
+                    spirit.pathBuilds() == 0, "при отказе путь не строится, построено " + spirit.pathBuilds());
             MovementScene.finish(helper);
         });
     }

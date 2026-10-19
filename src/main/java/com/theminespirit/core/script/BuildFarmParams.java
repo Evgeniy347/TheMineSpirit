@@ -29,7 +29,7 @@ public record BuildFarmParams(CropKind crop, FarmPlot plot) {
         BuildingCoords.checkZ(z1);
         BuildingCoords.checkX(x2);
         BuildingCoords.checkZ(z2);
-        return new BuildFarmParams(CropKind.parse(ScriptArgs.requireString(params, "crop")),
-                FarmPlot.of(x1, z1, x2, z2));
+        return new BuildFarmParams(
+                CropKind.parse(ScriptArgs.requireString(params, "crop")), FarmPlot.of(x1, z1, x2, z2));
     }
 }

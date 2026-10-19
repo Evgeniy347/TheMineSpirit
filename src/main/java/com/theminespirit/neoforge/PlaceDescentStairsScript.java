@@ -54,13 +54,20 @@ final class PlaceDescentStairsScript implements ScriptInstance {
             return Optional.empty();
         }
         int entryFloor = plan.entry().y() - 1;
-        int y = plan.steps().isEmpty() ? entryFloor : plan.steps().get(plan.steps().size() - 1).floor();
+        int y = plan.steps().isEmpty()
+                ? entryFloor
+                : plan.steps().get(plan.steps().size() - 1).floor();
         return Optional.of(new ScriptResult.Data(Map.of(
-                "reached", plan.stop() == DescentStop.TARGET_Y,
-                "y", y,
-                "depth", entryFloor - y,
-                "blocks_placed", session.placed(),
-                "reason", plan.dangerReason())));
+                "reached",
+                plan.stop() == DescentStop.TARGET_Y,
+                "y",
+                y,
+                "depth",
+                entryFloor - y,
+                "blocks_placed",
+                session.placed(),
+                "reason",
+                plan.dangerReason())));
     }
 
     @Override
@@ -88,16 +95,15 @@ final class PlaceDescentStairsScript implements ScriptInstance {
         session.restoreState(state);
     }
 
-    private record Setup(SpiritEntity spirit, DescentStairsPlan plan, List<BlockCoord> cells) {
-    }
+    private record Setup(SpiritEntity spirit, DescentStairsPlan plan, List<BlockCoord> cells) {}
 
     private static Setup setup(SpiritEntity spirit, DescentDirection direction, int targetY, DescentLevels levels) {
         Level level = spirit.level();
         LevelSafetyView safety = new LevelSafetyView(level);
         BlockPos feet = spirit.blockPosition();
         BlockCoord entry = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        DescentPlan level1 = DescentPlan.from(safety, entry, direction, targetY,
-                DescentData.loadDefault().torchInterval());
+        DescentPlan level1 = DescentPlan.from(
+                safety, entry, direction, targetY, DescentData.loadDefault().torchInterval());
         DescentStairsPlan plan = DescentStairsPlan.from(safety, level1, levels.widenWidth(), levels.stairWidth());
         List<BlockCoord> cells = new ArrayList<>();
         for (DescentStairStep step : plan.steps()) {

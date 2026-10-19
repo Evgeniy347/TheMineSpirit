@@ -8,8 +8,7 @@ import java.util.Optional;
 public final class LineOfSight {
     public static final double STEP = 1.0;
 
-    private LineOfSight() {
-    }
+    private LineOfSight() {}
 
     public static Visibility trace(Point from, Point to, CellReader reader) {
         double distance = from.distanceTo(to);
@@ -17,7 +16,8 @@ public final class LineOfSight {
         BlockCoord last = null;
         for (int i = 1; i < steps; i++) {
             double t = (double) i / steps;
-            BlockCoord cell = new BlockCoord((int) Math.floor(from.x() + (to.x() - from.x()) * t),
+            BlockCoord cell = new BlockCoord(
+                    (int) Math.floor(from.x() + (to.x() - from.x()) * t),
                     (int) Math.floor(from.y() + (to.y() - from.y()) * t),
                     (int) Math.floor(from.z() + (to.z() - from.z()) * t));
             if (cell.equals(last)) {

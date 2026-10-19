@@ -6,11 +6,11 @@ import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +30,8 @@ public final class TestCostListener implements TestExecutionListener {
     private final ThreadMXBean threadMx = ManagementFactory.getThreadMXBean();
     private final List<GarbageCollectorMXBean> gcMbeans = ManagementFactory.getGarbageCollectorMXBeans();
     private final ClassLoadingMXBean classMx = ManagementFactory.getClassLoadingMXBean();
-    private final boolean cpuSupported = threadMx.isThreadCpuTimeSupported() && threadMx.isCurrentThreadCpuTimeSupported();
+    private final boolean cpuSupported =
+            threadMx.isThreadCpuTimeSupported() && threadMx.isCurrentThreadCpuTimeSupported();
 
     private final Path csv;
     private final ConcurrentHashMap<String, Long> startWall = new ConcurrentHashMap<>();
@@ -89,8 +90,15 @@ public final class TestCostListener implements TestExecutionListener {
         String className = classOf(id);
         String testName = testName(id);
         String kind = kindOf(className, testName);
-        String line = String.format(Locale.ROOT, "%s,%s,%s,%d,%d,%d,%s\n",
-                escape(className), escape(testName), kind, cpuNs / 1_000_000L, wallNs / 1_000_000L, gcMsDelta,
+        String line = String.format(
+                Locale.ROOT,
+                "%s,%s,%s,%d,%d,%d,%s\n",
+                escape(className),
+                escape(testName),
+                kind,
+                cpuNs / 1_000_000L,
+                wallNs / 1_000_000L,
+                gcMsDelta,
                 warmup ? "true" : "false");
         try {
             Files.writeString(csv, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -110,7 +118,8 @@ public final class TestCostListener implements TestExecutionListener {
 
     private String kindOf(String className, String testName) {
         try {
-            Class<?> clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+            Class<?> clazz =
+                    Class.forName(className, false, Thread.currentThread().getContextClassLoader());
             for (Method method : clazz.getDeclaredMethods()) {
                 if (method.getName().equals(testName) && method.isAnnotationPresent(Property.class)) {
                     return "jqwik";

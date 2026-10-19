@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Objects;
 
 public final class InventoryNorm {
-    private InventoryNorm() {
-    }
+    private InventoryNorm() {}
 
-    public static List<Slice> extra(List<Stack> inventory, BaseKit kit, List<String> taskNeeds,
-            ValueTable values) {
+    public static List<Slice> extra(List<Stack> inventory, BaseKit kit, List<String> taskNeeds, ValueTable values) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: норма считается по его слотам");
         Objects.requireNonNull(kit, "Базовый набор не может быть null: без него норма не определена");
         Objects.requireNonNull(taskNeeds, "Нужды задачи не могут быть null: пустые задают пустым списком");
@@ -28,8 +26,7 @@ public final class InventoryNorm {
         return List.copyOf(extra);
     }
 
-    public static InventoryFill fill(List<Stack> inventory, BaseKit kit, List<String> taskNeeds,
-            ValueTable values) {
+    public static InventoryFill fill(List<Stack> inventory, BaseKit kit, List<String> taskNeeds, ValueTable values) {
         Objects.requireNonNull(inventory, "Инвентарь не может быть null: заполнение считается по его слотам");
         List<Slice> surplus = extra(inventory, kit, taskNeeds, values);
         int occupied = 0;

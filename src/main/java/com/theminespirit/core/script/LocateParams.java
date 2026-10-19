@@ -9,8 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class LocateParams {
-    private LocateParams() {
-    }
+    private LocateParams() {}
 
     public static LocateQuery block(Map<String, Object> params) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");

@@ -25,8 +25,7 @@ final class SpiritDemoCommand {
     private static final List<String> ROTATIONS =
             List.of("none", "clockwise_90", "clockwise_180", "counterclockwise_90");
 
-    private SpiritDemoCommand() {
-    }
+    private SpiritDemoCommand() {}
 
     @FunctionalInterface
     private interface Starter {
@@ -57,8 +56,7 @@ final class SpiritDemoCommand {
         LiteralArgumentBuilder<CommandSourceStack> node = literal(building.id());
         node.executes(context -> start(context, building, 0, null, null, 0, 0));
 
-        RequiredArgumentBuilder<CommandSourceStack, Integer> level = argument("level",
-                IntegerArgumentType.integer(0));
+        RequiredArgumentBuilder<CommandSourceStack, Integer> level = argument("level", IntegerArgumentType.integer(0));
         level.executes(context -> start(context, building, level(context), null, null, 0, 0));
         attachPos(level, (context, pos, rotation) -> start(context, building, level(context), pos, rotation, 0, 0));
         node.then(level);
@@ -68,10 +66,22 @@ final class SpiritDemoCommand {
         node.then(literal("upgrade")
                 .then(argument("from", IntegerArgumentType.integer(1))
                         .then(argument("to", IntegerArgumentType.integer(1))
-                                .executes(context -> start(context, building, 0, null, null,
-                                        integer(context, "from"), integer(context, "to")))
-                                .then(posAndRotation((context, pos, rotation) -> start(context, building, 0, pos,
-                                        rotation, integer(context, "from"), integer(context, "to")))))));
+                                .executes(context -> start(
+                                        context,
+                                        building,
+                                        0,
+                                        null,
+                                        null,
+                                        integer(context, "from"),
+                                        integer(context, "to")))
+                                .then(posAndRotation((context, pos, rotation) -> start(
+                                        context,
+                                        building,
+                                        0,
+                                        pos,
+                                        rotation,
+                                        integer(context, "from"),
+                                        integer(context, "to")))))));
         return node;
     }
 
@@ -96,8 +106,14 @@ final class SpiritDemoCommand {
                         }));
     }
 
-    private static int start(CommandContext<CommandSourceStack> context, DemoBuildings.Building building, int level,
-            BlockPos pos, BuildRotation rotation, int from, int to) {
+    private static int start(
+            CommandContext<CommandSourceStack> context,
+            DemoBuildings.Building building,
+            int level,
+            BlockPos pos,
+            BuildRotation rotation,
+            int from,
+            int to) {
         CommandSourceStack source = context.getSource();
         return DemoRegistry.get(source.getLevel()).start(source, building, level, pos, rotation, from, to);
     }
@@ -115,11 +131,13 @@ final class SpiritDemoCommand {
         source.sendSuccess(() -> Component.literal("Демо-стройки (только оператор):"), false);
         for (DemoBuildings.Building building : DemoBuildings.all()) {
             String levels = building.leveled()
-                    ? "уровни " + building.levels().stream()
-                            .map(entry -> entry.level() + "→" + entry.scheme()).toList()
+                    ? "уровни "
+                            + building.levels().stream()
+                                    .map(entry -> entry.level() + "→" + entry.scheme())
+                                    .toList()
                     : "схема " + building.levels().get(0).scheme();
-            source.sendSuccess(() -> Component.literal("  " + building.id() + " — " + building.name() + "; " + levels),
-                    false);
+            source.sendSuccess(
+                    () -> Component.literal("  " + building.id() + " — " + building.name() + "; " + levels), false);
         }
         return DemoBuildings.all().size();
     }

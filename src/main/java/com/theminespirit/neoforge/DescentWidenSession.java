@@ -71,8 +71,8 @@ public final class DescentWidenSession {
         this.reservations = BuildReservationHub.forLevel(level);
         BlockPos feet = spirit.blockPosition();
         this.entry = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        this.direction = Objects.requireNonNull(direction,
-                "Направление расширения не может быть null: без него неизвестно, куда копать");
+        this.direction = Objects.requireNonNull(
+                direction, "Направление расширения не может быть null: без него неизвестно, куда копать");
         this.targetY = targetY;
         rebuild(levels);
     }
@@ -117,11 +117,16 @@ public final class DescentWidenSession {
     public Map<String, Object> resultData() {
         int y = stepIndex == 0 ? entryFloor : plan.steps().get(stepIndex - 1).floor();
         return Map.of(
-                "reached", stopReason == null && plan.stop() == DescentStop.TARGET_Y,
-                "y", y,
-                "depth", entryFloor - y,
-                "blocks_dug", blocksDug,
-                "reason", stopReason == null ? plan.dangerReason() : stopReason);
+                "reached",
+                stopReason == null && plan.stop() == DescentStop.TARGET_Y,
+                "y",
+                y,
+                "depth",
+                entryFloor - y,
+                "blocks_dug",
+                blocksDug,
+                "reason",
+                stopReason == null ? plan.dangerReason() : stopReason);
     }
 
     public Map<String, Object> saveState() {
@@ -150,8 +155,8 @@ public final class DescentWidenSession {
     }
 
     private void rebuild(DescentLevels levels) {
-        DescentPlan level1 = DescentPlan.from(safety, entry, direction, targetY,
-                DescentData.loadDefault().torchInterval());
+        DescentPlan level1 = DescentPlan.from(
+                safety, entry, direction, targetY, DescentData.loadDefault().torchInterval());
         plan = DescentWidenPlan.from(safety, level1, levels.widenWidth(), levels.widenHeight());
         entryFloor = entry.y() - 1;
         List<List<BlockCoord>> perStep = new ArrayList<>();
@@ -180,8 +185,7 @@ public final class DescentWidenSession {
             approachBegun = true;
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
                 approachBegun = false;
                 cellCursor = 0;
@@ -230,8 +234,7 @@ public final class DescentWidenSession {
 
     private void breakTick() {
         switch (breaker.tick()) {
-            case BREAKING -> {
-            }
+            case BREAKING -> {}
             case BROKEN -> {
                 blocksDug++;
                 cellCursor++;
@@ -266,7 +269,8 @@ public final class DescentWidenSession {
     private static int number(Map<String, Object> map, String key) {
         Object value = map.get(key);
         if (!(value instanceof Number number)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть числом: иначе расширение не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть числом: иначе расширение не восстановить");
         }
         return number.intValue();
     }
@@ -274,7 +278,8 @@ public final class DescentWidenSession {
     private static String text(Map<String, Object> map, String key) {
         Object value = map.get(key);
         if (!(value instanceof String text)) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' обязано быть строкой: иначе расширение не восстановить");
+            throw new IllegalArgumentException(
+                    "Поле снимка '" + key + "' обязано быть строкой: иначе расширение не восстановить");
         }
         return text;
     }

@@ -22,14 +22,16 @@ class EnvScannerProperties {
     private static final Point SELF = new Point(0.5, 1, 0.5);
     private static final BlockCoord FEET = new BlockCoord(0, 1, 0);
 
-    record Feature(int dx, int dz, int kind, int height) {
-    }
+    record Feature(int dx, int dz, int kind, int height) {}
 
     @Provide
     Arbitrary<List<Feature>> features() {
-        Arbitrary<Feature> feature = Combinators.combine(Arbitraries.integers().between(-12, 12),
-                Arbitraries.integers().between(-12, 12), Arbitraries.integers().between(0, 3),
-                Arbitraries.integers().between(1, 3)).as(Feature::new);
+        Arbitrary<Feature> feature = Combinators.combine(
+                        Arbitraries.integers().between(-12, 12),
+                        Arbitraries.integers().between(-12, 12),
+                        Arbitraries.integers().between(0, 3),
+                        Arbitraries.integers().between(1, 3))
+                .as(Feature::new);
         return feature.list().ofMaxSize(40);
     }
 
@@ -47,27 +49,33 @@ class EnvScannerProperties {
     }
 
     @Property(tries = 200)
-    void scan_AnyTerrain_ReadsNeverExceedBudget(@ForAll("features") List<Feature> features,
-            @ForAll @IntRange(min = 0, max = 200) int budget) {
+    void scan_AnyTerrain_ReadsNeverExceedBudget(
+            @ForAll("features") List<Feature> features, @ForAll @IntRange(min = 0, max = 200) int budget) {
         FakeTerrain terrain = build(features);
         ReadBudget readBudget = new ReadBudget(budget);
 
-        EnvReading reading = new EnvScanner().scan(SELF, FEET, Optional.of(new Point(0.5, 1, -9.5)), terrain, readBudget, 0);
+        EnvReading reading =
+                new EnvScanner().scan(SELF, FEET, Optional.of(new Point(0.5, 1, -9.5)), terrain, readBudget, 0);
 
-        assertTrue(terrain.reads() <= budget, "Реальных чтений мира " + terrain.reads() + " при бюджете " + budget
-                + ": предел чтений за цикл держит стоимость тика, превышение множится на число духов");
+        assertTrue(
+                terrain.reads() <= budget,
+                "Реальных чтений мира " + terrain.reads() + " при бюджете " + budget
+                        + ": предел чтений за цикл держит стоимость тика, превышение множится на число духов");
         assertEquals(readBudget.used(), reading.reads(), "Отчёт о чтениях обязан совпадать со списанным бюджетом");
     }
 
     @Property(tries = 200)
     void scan_AnyTerrain_FactsStayInEnvFactsRange(@ForAll("features") List<Feature> features) {
-        EnvReading reading = new EnvScanner().scan(SELF, FEET, Optional.of(new Point(0.5, 1, -9.5)), build(features),
-                new ReadBudget(5000), 0);
+        EnvReading reading = new EnvScanner()
+                .scan(SELF, FEET, Optional.of(new Point(0.5, 1, -9.5)), build(features), new ReadBudget(5000), 0);
 
         EnvFacts facts = EnvFactsBuilder.build(reading, SELF, 15, TimeOfDay.DAY, Optional.empty());
 
-        assertTrue(facts.waterDistance() <= EnvFacts.FAR_DISTANCE && facts.coverDistance() <= EnvFacts.FAR_DISTANCE
-                && facts.lavaNear() <= EnvFacts.FAR_DISTANCE, "Факты окружения обязаны лежать в пределах EnvFacts, иначе ядро бросит исключение в тике духа");
+        assertTrue(
+                facts.waterDistance() <= EnvFacts.FAR_DISTANCE
+                        && facts.coverDistance() <= EnvFacts.FAR_DISTANCE
+                        && facts.lavaNear() <= EnvFacts.FAR_DISTANCE,
+                "Факты окружения обязаны лежать в пределах EnvFacts, иначе ядро бросит исключение в тике духа");
     }
 
     @Property(tries = 200)

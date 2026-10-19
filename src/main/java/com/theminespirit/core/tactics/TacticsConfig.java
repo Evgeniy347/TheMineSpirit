@@ -16,7 +16,10 @@ public record TacticsConfig(EnemyProfiles enemies, ScoreWeights weights, Rules r
     }
 
     public static TacticsConfig readFromClasspath() {
-        return fromJson(TacticsResources.read("enemies.json"), TacticsResources.read("weights.json"),
-                TacticsResources.read("rules.json"), TacticsResources.read("modes.json"));
+        return fromJson(
+                TacticsResources.read("enemies.json"),
+                TacticsResources.read("weights.json"),
+                TacticsResources.read("rules.json"),
+                TacticsResources.read("modes.json"));
     }
 }

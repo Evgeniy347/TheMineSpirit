@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public record CoordinatorState(Optional<Point> defendedPoint, double defendedRadius, List<SpiritSnapshot> spirits,
-        long tick) {
+public record CoordinatorState(
+        Optional<Point> defendedPoint, double defendedRadius, List<SpiritSnapshot> spirits, long tick) {
 
     public CoordinatorState {
         if (defendedPoint == null) {
@@ -15,10 +15,11 @@ public record CoordinatorState(Optional<Point> defendedPoint, double defendedRad
                     "defendedPoint не может быть null: обороны нет — передайте Optional.empty()");
         }
         if (spirits == null) {
-            throw new IllegalArgumentException(
-                    "spirits не может быть null: пустое состояние — пустой список");
+            throw new IllegalArgumentException("spirits не может быть null: пустое состояние — пустой список");
         }
-        spirits = spirits.stream().sorted(Comparator.comparing(SpiritSnapshot::id)).toList();
+        spirits = spirits.stream()
+                .sorted(Comparator.comparing(SpiritSnapshot::id))
+                .toList();
         if (defendedPoint.isPresent() && defendedRadius <= 0) {
             throw new IllegalArgumentException("defendedRadius = " + defendedRadius
                     + " при защищаемой точке: радиус обороны обязан быть больше нуля, иначе сектора вырождены");
@@ -29,11 +30,15 @@ public record CoordinatorState(Optional<Point> defendedPoint, double defendedRad
     }
 
     public List<SpiritSnapshot> defenders() {
-        return spirits.stream().filter(spirit -> spirit.role() == SpiritRole.DEFENDER).toList();
+        return spirits.stream()
+                .filter(spirit -> spirit.role() == SpiritRole.DEFENDER)
+                .toList();
     }
 
     public List<SpiritSnapshot> workers() {
-        return spirits.stream().filter(spirit -> spirit.role() == SpiritRole.WORKER).toList();
+        return spirits.stream()
+                .filter(spirit -> spirit.role() == SpiritRole.WORKER)
+                .toList();
     }
 
     public Optional<SpiritSnapshot> byId(UUID id) {

@@ -27,7 +27,8 @@ public final class RetreatExecutor {
     private RetreatPlan current;
     private Vec3 lastTarget;
 
-    public RetreatExecutor(SpiritEntity spirit, Approach approach, CombatActuator combat, WorldFactCollector collector) {
+    public RetreatExecutor(
+            SpiritEntity spirit, Approach approach, CombatActuator combat, WorldFactCollector collector) {
         this.spirit = spirit;
         this.approach = approach;
         this.combat = combat;

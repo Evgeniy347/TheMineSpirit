@@ -4,13 +4,12 @@ import com.theminespirit.core.tactics.Point;
 import java.util.Optional;
 
 public final class CampSpot {
-    private CampSpot() {
-    }
+    private CampSpot() {}
 
-    public static Optional<Point> choose(Point self, Optional<Point> objective, Optional<Point> home,
-            double standoff) {
+    public static Optional<Point> choose(Point self, Optional<Point> objective, Optional<Point> home, double standoff) {
         if (self == null) {
-            throw new IllegalArgumentException("Постановка лагеря без духа не считается: лагерь ставят со стороны духа");
+            throw new IllegalArgumentException(
+                    "Постановка лагеря без духа не считается: лагерь ставят со стороны духа");
         }
         if (objective == null) {
             throw new IllegalArgumentException(
@@ -37,7 +36,9 @@ public final class CampSpot {
             return Optional.empty();
         }
         double reach = Math.min(Math.max(distance, CampTuning.CAMP_MIN_OBJECTIVE_DISTANCE), standoff);
-        Point camp = new Point(target.x() + dx / distance * reach, target.y() + dy / distance * reach,
+        Point camp = new Point(
+                target.x() + dx / distance * reach,
+                target.y() + dy / distance * reach,
                 target.z() + dz / distance * reach);
         if (home.isPresent() && home.get().distanceTo(camp) < standoff) {
             Optional<Point> pushed = pushFromHome(camp, home.get(), standoff);
@@ -57,7 +58,9 @@ public final class CampSpot {
         if (distance < 1e-6) {
             return Optional.empty();
         }
-        return Optional.of(new Point(home.x() + dx / distance * standoff, home.y() + dy / distance * standoff,
+        return Optional.of(new Point(
+                home.x() + dx / distance * standoff,
+                home.y() + dy / distance * standoff,
                 home.z() + dz / distance * standoff));
     }
 }

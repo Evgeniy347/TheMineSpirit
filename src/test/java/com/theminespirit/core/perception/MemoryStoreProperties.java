@@ -19,21 +19,29 @@ import net.jqwik.api.Provide;
 class MemoryStoreProperties {
     private static final int MAX_OPERATIONS = 16;
 
-    record Operation(boolean forget, MemoryPoint point) {
-    }
+    record Operation(boolean forget, MemoryPoint point) {}
 
     @Provide
     Arbitrary<MemoryPoint> points() {
         Arbitrary<String> name = Arbitraries.of("a", "b", "c", "d", "e", "f");
-        Arbitrary<BlockCoord> pos = Combinators.combine(Arbitraries.integers().between(-50, 50),
-                Arbitraries.integers().between(0, 100), Arbitraries.integers().between(-50, 50)).as(BlockCoord::new);
-        return Combinators.combine(name, Arbitraries.of(MemoryType.class),
-                Arbitraries.of("minecraft:overworld", "minecraft:the_nether"), pos).as(MemoryPoint::new);
+        Arbitrary<BlockCoord> pos = Combinators.combine(
+                        Arbitraries.integers().between(-50, 50),
+                        Arbitraries.integers().between(0, 100),
+                        Arbitraries.integers().between(-50, 50))
+                .as(BlockCoord::new);
+        return Combinators.combine(
+                        name,
+                        Arbitraries.of(MemoryType.class),
+                        Arbitraries.of("minecraft:overworld", "minecraft:the_nether"),
+                        pos)
+                .as(MemoryPoint::new);
     }
 
     @Provide
     Arbitrary<List<Operation>> operations() {
-        return Combinators.combine(Arbitraries.of(true, false, false), points()).as(Operation::new).list()
+        return Combinators.combine(Arbitraries.of(true, false, false), points())
+                .as(Operation::new)
+                .list()
                 .ofMaxSize(MAX_OPERATIONS);
     }
 
@@ -56,7 +64,9 @@ class MemoryStoreProperties {
             }
         }
 
-        assertEquals(new ArrayList<>(model.values()), apply(operations).all(),
+        assertEquals(
+                new ArrayList<>(model.values()),
+                apply(operations).all(),
                 "память после remember/forget обязана совпадать с простой моделью «имя -> точка»: повтор имени "
                         + "заменяет точку на месте, forget убирает");
     }
@@ -69,16 +79,18 @@ class MemoryStoreProperties {
         int total = 0;
         for (MemoryType type : MemoryType.values()) {
             List<MemoryPoint> ofType = store.recallAll(type);
-            assertTrue(ofType.stream().allMatch(point -> point.type() == type),
+            assertTrue(
+                    ofType.stream().allMatch(point -> point.type() == type),
                     "recallAll(" + type.id() + ") вернул точку другого типа");
             total += ofType.size();
         }
-        assertEquals(store.all().size(), total, "точки трёх типов вместе обязаны давать всю память без потерь и повторов");
+        assertEquals(
+                store.all().size(), total, "точки трёх типов вместе обязаны давать всю память без потерь и повторов");
     }
 
     @Property
-    void forget_AnyStoreAndKnownName_PointIsGoneAndOthersUntouched(@ForAll("operations") List<Operation> operations,
-            @ForAll("points") MemoryPoint victim) {
+    void forget_AnyStoreAndKnownName_PointIsGoneAndOthersUntouched(
+            @ForAll("operations") List<Operation> operations, @ForAll("points") MemoryPoint victim) {
         MemoryStore store = apply(operations).remember(victim);
 
         MemoryStore after = store.forget(victim.name());

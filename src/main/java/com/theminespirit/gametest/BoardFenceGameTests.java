@@ -42,8 +42,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class BoardFenceGameTests {
     private static final String BATCH = "board_fence";
 
-    private BoardFenceGameTests() {
-    }
+    private BoardFenceGameTests() {}
 
     @BeforeBatch(batch = BATCH)
     public static void stopMobsTargetingSpirits(ServerLevel level) {
@@ -64,59 +63,69 @@ public final class BoardFenceGameTests {
         spirit.setHome(home);
         ServerLevel level = helper.getLevel();
         long now = level.getGameTime();
-        ServerPlayer witness =
-                GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 2), "board_fence_witness");
+        ServerPlayer witness = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 2), "board_fence_witness");
         BlockPos fence = new BlockPos(5, 1, 5);
         helper.setBlock(fence, Blocks.OAK_FENCE);
         BlockPos fenceAbs = helper.absolutePos(fence);
         BlockState fenceState = level.getBlockState(fenceAbs);
         NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, fenceAbs, fenceState, witness));
         helper.setBlock(fence, Blocks.AIR);
-        String repairId = "repair_fence:" + fenceAbs.getX() + "," + fenceAbs.getY() + ","
-                + fenceAbs.getZ();
+        String repairId = "repair_fence:" + fenceAbs.getX() + "," + fenceAbs.getY() + "," + fenceAbs.getZ();
         BlockPos stone = new BlockPos(2, 1, 6);
         helper.setBlock(stone, Blocks.STONE);
         BlockPos stoneAbs = helper.absolutePos(stone);
-        NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, stoneAbs,
-                level.getBlockState(stoneAbs), witness));
-        String stoneId = "repair_fence:" + stoneAbs.getX() + "," + stoneAbs.getY() + ","
-                + stoneAbs.getZ();
+        NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, stoneAbs, level.getBlockState(stoneAbs), witness));
+        String stoneId = "repair_fence:" + stoneAbs.getX() + "," + stoneAbs.getY() + "," + stoneAbs.getZ();
         BoardService board = BoardRegistry.get(level);
-        board.submit(new BoardTicket("board_test_build_low", BoardCase.BUILD_HOUSE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE), now, 1, BoardTicket.ALWAYS_CAUSE,
-                List.of(), Map.of()), TicketTarget.at(home));
+        board.submit(
+                new BoardTicket(
+                        "board_test_build_low",
+                        BoardCase.BUILD_HOUSE,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(home));
 
         BoardTicket repair = board.board().find(repairId).orElse(null);
-        helper.assertTrue(repair != null,
+        helper.assertTrue(
+                repair != null,
                 "Сломанный забор рядом с поселением обязан поднять REPAIR_FENCE " + repairId
                         + ": иначе дыра в ограждении стоит открытой");
-        helper.assertTrue(repair.boardCase() == BoardCase.REPAIR_FENCE,
+        helper.assertTrue(
+                repair.boardCase() == BoardCase.REPAIR_FENCE,
                 "Задание сломанного забора — кейс REPAIR_FENCE, фактически " + repair.boardCase());
-        helper.assertTrue(BoardRules.priorityOf(BoardCase.REPAIR_FENCE) == 100,
+        helper.assertTrue(
+                BoardRules.priorityOf(BoardCase.REPAIR_FENCE) == 100,
                 "Приоритет ремонта ограждений — 100, высший на доске, фактически "
                         + BoardRules.priorityOf(BoardCase.REPAIR_FENCE));
-        helper.assertTrue(board.board().find(stoneId).isEmpty(),
-                "Сломанный природный камень — не ограждение: задание " + stoneId
-                        + " поднялось зря");
+        helper.assertTrue(
+                board.board().find(stoneId).isEmpty(),
+                "Сломанный природный камень — не ограждение: задание " + stoneId + " поднялось зря");
         List<String> queue = board.board().claimable(new StockView(Map.of()), now).stream()
                 .map(BoardTicket::id)
                 .filter(id -> id.equals(repairId) || id.equals("board_test_build_low"))
                 .toList();
-        helper.assertTrue(List.of(repairId, "board_test_build_low").equals(queue),
+        helper.assertTrue(
+                List.of(repairId, "board_test_build_low").equals(queue),
                 "Ремонт выше стройки: очередь " + queue + ": стройка, обошедшая ремонт, "
                         + "оставляет поселение без забора");
-        helper.assertTrue(board.board().claim(repairId, spirit.getUUID(), now)
-                        == BoardOutcome.CLAIMED,
+        helper.assertTrue(
+                board.board().claim(repairId, spirit.getUUID(), now) == BoardOutcome.CLAIMED,
                 "Ремонт берёт свободный дух");
-        helper.assertTrue(board.board().claim(repairId, UUID.randomUUID(), now)
-                        == BoardOutcome.TAKEN_BY_OTHER,
+        helper.assertTrue(
+                board.board().claim(repairId, UUID.randomUUID(), now) == BoardOutcome.TAKEN_BY_OTHER,
                 "Второй дух тот же ремонт не берёт: чинит один, остальные прикрывают "
                         + "существующим механизмом координатора, а не толпой");
-        helper.assertTrue(spirit.getUUID().equals(board.board().holderOf(repairId).orElse(null)),
+        helper.assertTrue(
+                spirit.getUUID().equals(board.board().holderOf(repairId).orElse(null)),
                 "Держатель ремонта — взявший его дух: держатель "
                         + board.board().holderOf(repairId).orElse(null));
-        helper.assertTrue(board.board().statusOf("board_test_build_low").orElse(null)
-                        == BoardStatus.PENDING,
+        helper.assertTrue(
+                board.board().statusOf("board_test_build_low").orElse(null) == BoardStatus.PENDING,
                 "Пока ремонт не закрыт, стройка ждёт: статус "
                         + board.board().statusOf("board_test_build_low").orElse(null));
         // Ремонт и стройку снимаем с доски: иначе стройка без гейта уйдёт свободному духу

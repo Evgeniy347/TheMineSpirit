@@ -6,8 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class PortalPolicy {
-    private PortalPolicy() {
-    }
+    private PortalPolicy() {}
 
     public static PolicyVerdict evaluate(LocalSurroundings surroundings, PolicyExemptions exemptions) {
         Objects.requireNonNull(surroundings, "Снимок не может быть null: по нему решается, стоит ли дух в портале");
@@ -18,9 +17,11 @@ public final class PortalPolicy {
         }
         Optional<BlockCoord> exit = NearestExit.find(surroundings, surroundings);
         if (exit.isPresent()) {
-            return new PolicyVerdict.Reflex(PolicyId.PORTAL, new ReflexAction.StepOutOfPortal(exit.get()), "дух стоит в клетке портала");
+            return new PolicyVerdict.Reflex(
+                    PolicyId.PORTAL, new ReflexAction.StepOutOfPortal(exit.get()), "дух стоит в клетке портала");
         }
-        return new PolicyVerdict.Reflex(PolicyId.PORTAL, new ReflexAction.StopMoving(), "дух стоит в клетке портала, выхода рядом нет");
+        return new PolicyVerdict.Reflex(
+                PolicyId.PORTAL, new ReflexAction.StopMoving(), "дух стоит в клетке портала, выхода рядом нет");
     }
 
     public static boolean vetoesTarget(LocalSurroundings surroundings, BlockCoord target, PolicyExemptions exemptions) {

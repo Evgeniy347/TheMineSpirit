@@ -47,8 +47,10 @@ public enum OreKind {
         try {
             return valueOf(kind.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException error) {
-            throw new IllegalArgumentException("Неизвестный вид руды '" + kind + "': допустимы " + NAMES
-                    + ", сверьте значение с каталогом /v1/capabilities", error);
+            throw new IllegalArgumentException(
+                    "Неизвестный вид руды '" + kind + "': допустимы " + NAMES
+                            + ", сверьте значение с каталогом /v1/capabilities",
+                    error);
         }
     }
 

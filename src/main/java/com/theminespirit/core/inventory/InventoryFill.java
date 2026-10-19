@@ -5,8 +5,8 @@ public record InventoryFill(int occupiedSlots, int capacity, int extraItems, int
 
     public InventoryFill {
         if (occupiedSlots < 0) {
-            throw new IllegalArgumentException("Занятых ячеек " + occupiedSlots
-                    + ": число не может быть отрицательным");
+            throw new IllegalArgumentException(
+                    "Занятых ячеек " + occupiedSlots + ": число не может быть отрицательным");
         }
         if (capacity < 0) {
             throw new IllegalArgumentException("Вместимость " + capacity + ": число не может быть отрицательным");
@@ -16,8 +16,8 @@ public record InventoryFill(int occupiedSlots, int capacity, int extraItems, int
                     + ": занятое не может превышать вместимость");
         }
         if (extraItems < 0 || storedItems < 0) {
-            throw new IllegalArgumentException("Лишних " + extraItems + " из " + storedItems
-                    + ": предметов не может быть отрицательное число");
+            throw new IllegalArgumentException(
+                    "Лишних " + extraItems + " из " + storedItems + ": предметов не может быть отрицательное число");
         }
         if (extraItems > storedItems) {
             throw new IllegalArgumentException("Лишних предметов " + extraItems + " при лежащих " + storedItems

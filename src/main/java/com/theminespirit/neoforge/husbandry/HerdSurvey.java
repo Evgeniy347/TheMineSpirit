@@ -14,14 +14,18 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public final class HerdSurvey {
-    private HerdSurvey() {
-    }
+    private HerdSurvey() {}
 
     public static List<Animal> query(Level level, Vec3 center, double radius) {
         Objects.requireNonNull(level, "Уровень не может быть null: без него стадо не опросить");
         Objects.requireNonNull(center, "Центр поиска не может быть null: без него неизвестно, где стадо");
-        AABB area = new AABB(center.x - radius, center.y - radius, center.z - radius, center.x + radius + 1.0,
-                center.y + radius + 1.0, center.z + radius + 1.0);
+        AABB area = new AABB(
+                center.x - radius,
+                center.y - radius,
+                center.z - radius,
+                center.x + radius + 1.0,
+                center.y + radius + 1.0,
+                center.z + radius + 1.0);
         return List.copyOf(level.getEntitiesOfClass(Animal.class, area, candidate -> !candidate.isRemoved()));
     }
 
@@ -31,7 +35,9 @@ public final class HerdSurvey {
             return Optional.empty();
         }
         boolean baby = animal.isBaby();
-        BlockCoord pos = new BlockCoord(animal.blockPosition().getX(), animal.blockPosition().getY(),
+        BlockCoord pos = new BlockCoord(
+                animal.blockPosition().getX(),
+                animal.blockPosition().getY(),
                 animal.blockPosition().getZ());
         return Optional.of(new AnimalRef(
                 animal.getStringUUID(),

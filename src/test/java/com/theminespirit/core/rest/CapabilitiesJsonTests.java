@@ -18,7 +18,9 @@ class CapabilitiesJsonTests {
 
     private static ScriptCatalog smallCatalog() {
         return ScriptCatalog.of(List.of(
-                new ScriptSpec("demo", "демо",
+                new ScriptSpec(
+                        "demo",
+                        "демо",
                         List.of(
                                 ParamSpec.integer("count", false, 1, 256, 1),
                                 ParamSpec.number("ratio", true, 0.5, 2.5),
@@ -26,7 +28,8 @@ class CapabilitiesJsonTests {
                                 ParamSpec.textList("filter", false),
                                 ParamSpec.bool("silent", false),
                                 ParamSpec.enumeration("mode", true, List.of("fast", "slow"))),
-                        List.of("есть цель"), List.of("цель достигнута")),
+                        List.of("есть цель"),
+                        List.of("цель достигнута")),
                 new ScriptSpec("idle", "ничего не делать", List.of(), List.of(), List.of())));
     }
 
@@ -47,7 +50,9 @@ class CapabilitiesJsonTests {
 
         String actual = CapabilitiesJson.toJson(smallCatalog());
 
-        assertEquals(expected, actual,
+        assertEquals(
+                expected,
+                actual,
                 "Каталог в JSON — контракт docs/api/README.md для ИИ-планировщика: типы параметров в JSON-Schema "
                         + "(integer/number/string/array/boolean/enum), границы, умолчания, required и порядок скриптов "
                         + "как в каталоге. Меняя формат осознанно, правь docs/api/README.md");
@@ -55,13 +60,16 @@ class CapabilitiesJsonTests {
 
     @Test
     void toJson_EmptyCatalog_WritesEmptyScriptList() {
-        assertEquals("{\"scripts\":[]}", CapabilitiesJson.toJson(ScriptCatalog.of(List.of())),
+        assertEquals(
+                "{\"scripts\":[]}",
+                CapabilitiesJson.toJson(ScriptCatalog.of(List.of())),
                 "Пустой каталог — пустой список скриптов, а не null или ошибка: клиент отличает его от сбоя");
     }
 
     @Test
     void toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog() throws Exception {
-        JsonNode scripts = MAPPER.readTree(CapabilitiesJson.toJson(CoreScripts.defaultCatalog())).get("scripts");
+        JsonNode scripts = MAPPER.readTree(CapabilitiesJson.toJson(CoreScripts.defaultCatalog()))
+                .get("scripts");
 
         JsonNode ore = requires(scripts, "mine_vein");
         assertEquals("tool", ore.get("kind").textValue(), "требование кирки — инструментальное");
@@ -97,7 +105,8 @@ class CapabilitiesJsonTests {
         String json = CapabilitiesJson.toJson(catalog);
 
         for (ScriptSpec spec : catalog.all()) {
-            assertTrue(json.contains("\"id\":\"" + spec.id() + "\""),
+            assertTrue(
+                    json.contains("\"id\":\"" + spec.id() + "\""),
                     "Скрипт '" + spec.id() + "' из CoreScripts.defaultCatalog() обязан быть в JSON каталога");
         }
     }

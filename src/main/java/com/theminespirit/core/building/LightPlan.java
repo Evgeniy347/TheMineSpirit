@@ -30,8 +30,7 @@ public final class LightPlan {
         }
     }
 
-    private LightPlan() {
-    }
+    private LightPlan() {}
 
     public static Plan plan(int centerX, int centerZ, int radius, List<LightCell> cells) {
         Objects.requireNonNull(cells, "Карта света не может быть null: по ней ставится план");

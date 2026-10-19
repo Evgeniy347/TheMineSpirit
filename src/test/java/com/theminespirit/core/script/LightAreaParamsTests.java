@@ -19,23 +19,26 @@ class LightAreaParamsTests {
 
     @Test
     void from_RadiusBelowMinimum_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> LightAreaParams.from(Map.of("x", 0, "y", 64, "z", 0,
-                        "radius", CatalogLimits.LIGHT_RADIUS_MIN - 1)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> LightAreaParams.from(
+                        Map.of("x", 0, "y", 64, "z", 0, "radius", CatalogLimits.LIGHT_RADIUS_MIN - 1)),
                 "Радиус ниже минимума каталога обязан падать: иначе план осветит пустую область");
     }
 
     @Test
     void from_RadiusAboveMaximum_Throws() {
-        assertThrows(IllegalArgumentException.class,
-                () -> LightAreaParams.from(Map.of("x", 0, "y", 64, "z", 0,
-                        "radius", CatalogLimits.LIGHT_RADIUS_MAX + 1)),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> LightAreaParams.from(
+                        Map.of("x", 0, "y", 64, "z", 0, "radius", CatalogLimits.LIGHT_RADIUS_MAX + 1)),
                 "Радиус выше максимума каталога обязан падать: большой радиус кладёт серверный тик");
     }
 
     @Test
     void from_MissingRadius_Throws() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> LightAreaParams.from(Map.of("x", 0, "y", 64, "z", 0)),
                 "Без радиуса скрипт не знает область: параметр обязателен");
     }

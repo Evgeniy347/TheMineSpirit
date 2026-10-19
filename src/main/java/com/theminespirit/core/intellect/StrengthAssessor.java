@@ -22,11 +22,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class StrengthAssessor {
-    private StrengthAssessor() {
-    }
+    private StrengthAssessor() {}
 
-    public static List<StrengthVerdict> assess(List<SpiritSnapshot> spirits, List<EnemyFact> enemies,
-            EnemyProfiles profiles, ArmorModel armor, boolean weaponAvailable) {
+    public static List<StrengthVerdict> assess(
+            List<SpiritSnapshot> spirits,
+            List<EnemyFact> enemies,
+            EnemyProfiles profiles,
+            ArmorModel armor,
+            boolean weaponAvailable) {
         if (spirits == null) {
             throw new IllegalArgumentException("Оценка сил без духов не считается: бой ведут конкретные духи");
         }
@@ -34,7 +37,8 @@ public final class StrengthAssessor {
             throw new IllegalArgumentException("Оценка сил без врагов не считается: пустой список — нет угроз");
         }
         if (profiles == null) {
-            throw new IllegalArgumentException("Оценка сил без профилей врагов не считается: урон берут из enemies.json");
+            throw new IllegalArgumentException(
+                    "Оценка сил без профилей врагов не считается: урон берут из enemies.json");
         }
         if (armor == null) {
             throw new IllegalArgumentException("Оценка сил без модели брони не считается: входит в запас победы");
@@ -44,7 +48,9 @@ public final class StrengthAssessor {
         }
         FactorScales scales = scalesWith(armor);
         IntellectTuning tuning = IntellectTuning.loadDefault();
-        List<SpiritSnapshot> ordered = spirits.stream().sorted(Comparator.comparing(SpiritSnapshot::id)).toList();
+        List<SpiritSnapshot> ordered = spirits.stream()
+                .sorted(Comparator.comparing(SpiritSnapshot::id))
+                .toList();
         List<StrengthVerdict> verdicts = new ArrayList<>();
         List<Fighter> fighters = new ArrayList<>();
         for (SpiritSnapshot spirit : ordered) {
@@ -62,13 +68,14 @@ public final class StrengthAssessor {
         }
         fighters.sort(Comparator.comparingDouble(Fighter::margin).reversed().thenComparing(Fighter::spirit));
         int target = fighterTarget(enemies, profiles);
-        for (int index = 0; index < fighters.size(); index++) {            Fighter fighter = fighters.get(index);
+        for (int index = 0; index < fighters.size(); index++) {
+            Fighter fighter = fighters.get(index);
             if (index < target && fighter.margin() >= 1 - tuning.fleeMargin()) {
-                verdicts.add(new StrengthVerdict(fighter.spirit(), StrengthAction.FIGHT, fighter.margin(),
-                        fighter.enemy()));
+                verdicts.add(
+                        new StrengthVerdict(fighter.spirit(), StrengthAction.FIGHT, fighter.margin(), fighter.enemy()));
             } else {
-                verdicts.add(new StrengthVerdict(fighter.spirit(), StrengthAction.FLEE, fighter.margin(),
-                        fighter.enemy()));
+                verdicts.add(
+                        new StrengthVerdict(fighter.spirit(), StrengthAction.FLEE, fighter.margin(), fighter.enemy()));
             }
         }
         verdicts.sort(Comparator.comparing(StrengthVerdict::spirit));
@@ -90,30 +97,64 @@ public final class StrengthAssessor {
     }
 
     private static SelfFacts selfFacts(SpiritSnapshot spirit) {
-        return new SelfFacts(spirit.pos(), spirit.hpFraction() * 20, 20, 0,
-                spirit.role() == SpiritRole.DEFENDER ? IntellectTuning.loadDefault().armedDps() : 1, 0.25, spirit.food(), 0, 0,
-                false, 0, 0);
+        return new SelfFacts(
+                spirit.pos(),
+                spirit.hpFraction() * 20,
+                20,
+                0,
+                spirit.role() == SpiritRole.DEFENDER
+                        ? IntellectTuning.loadDefault().armedDps()
+                        : 1,
+                0.25,
+                spirit.food(),
+                0,
+                0,
+                false,
+                0,
+                0);
     }
 
-    private static double marginOf(SelfFacts self, EnemyFact enemy, EnemyProfiles profiles, ArmorModel armor,
-            FactorScales scales) {
+    private static double marginOf(
+            SelfFacts self, EnemyFact enemy, EnemyProfiles profiles, ArmorModel armor, FactorScales scales) {
         Situation duel = new Situation(self, List.of(enemy), neutralEnv(), Orders.mode(CombatMode.DEFENSIVE), 0, 0);
         EnemyMetrics metrics = EnemyMetrics.of(duel, profiles, armor);
         return WinMargin.of(self, metrics, scales);
     }
 
     private static EnvFacts neutralEnv() {
-        return new EnvFacts(EnvFacts.FAR_DISTANCE, 0, EnvFacts.MAX_LIGHT, TimeOfDay.DAY, EnvFacts.FAR_DISTANCE,
-                false, EnvFacts.FAR_DISTANCE, EnvFacts.FAR_DISTANCE);
+        return new EnvFacts(
+                EnvFacts.FAR_DISTANCE,
+                0,
+                EnvFacts.MAX_LIGHT,
+                TimeOfDay.DAY,
+                EnvFacts.FAR_DISTANCE,
+                false,
+                EnvFacts.FAR_DISTANCE,
+                EnvFacts.FAR_DISTANCE);
     }
 
     private static FactorScales scalesWith(ArmorModel armor) {
         FactorScales defaults = TacticsConfig.loadDefault().weights().scales();
-        return new FactorScales(armor, defaults.minDps(), defaults.winMarginDivisor(), defaults.lowHpFloor(),
-                defaults.proximityRange(), defaults.rangedRange(), defaults.rangedFull(), defaults.explosiveRange(),
-                defaults.allyFull(), defaults.routesFull(), defaults.lavaRange(), defaults.dropSafe(),
-                defaults.dropRange(), defaults.nightFloor(), defaults.hungerThreshold(), defaults.healFull(),
-                defaults.leashMargin(), defaults.speedRatioCap(), defaults.urgencyHorizon());
+        return new FactorScales(
+                armor,
+                defaults.minDps(),
+                defaults.winMarginDivisor(),
+                defaults.lowHpFloor(),
+                defaults.proximityRange(),
+                defaults.rangedRange(),
+                defaults.rangedFull(),
+                defaults.explosiveRange(),
+                defaults.allyFull(),
+                defaults.routesFull(),
+                defaults.lavaRange(),
+                defaults.dropSafe(),
+                defaults.dropRange(),
+                defaults.nightFloor(),
+                defaults.hungerThreshold(),
+                defaults.healFull(),
+                defaults.leashMargin(),
+                defaults.speedRatioCap(),
+                defaults.urgencyHorizon());
     }
 
     private static EnemyFact nearest(SpiritSnapshot spirit, List<EnemyFact> enemies) {
@@ -121,7 +162,8 @@ public final class StrengthAssessor {
         double nearestDistance = Double.POSITIVE_INFINITY;
         for (EnemyFact enemy : enemies) {
             double distance = enemy.pos().distanceTo(spirit.pos());
-            if (nearest == null || distance < nearestDistance
+            if (nearest == null
+                    || distance < nearestDistance
                     || (distance == nearestDistance && enemy.id().compareTo(nearest.id()) < 0)) {
                 nearest = enemy;
                 nearestDistance = distance;
@@ -138,6 +180,5 @@ public final class StrengthAssessor {
         }
     }
 
-    private record Fighter(UUID spirit, double margin, Optional<UUID> enemy) {
-    }
+    private record Fighter(UUID spirit, double margin, Optional<UUID> enemy) {}
 }

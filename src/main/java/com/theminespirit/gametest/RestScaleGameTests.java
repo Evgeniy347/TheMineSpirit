@@ -27,8 +27,7 @@ public final class RestScaleGameTests {
     private static final int FIVE_OBSERVES = 5;
     private static final int OBSERVE_READS_PER_SLICE = 4096;
 
-    private RestScaleGameTests() {
-    }
+    private RestScaleGameTests() {}
 
     @GameTest(batch = "rest_concurrency", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach(GameTestHelper helper)
@@ -41,11 +40,15 @@ public final class RestScaleGameTests {
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = CompletableFuture.allOf(replies.toArray(new CompletableFuture<?>[0]))
                 .thenApply(done -> {
-                    long ok = replies.stream().filter(reply -> reply.join().status() == 200).count();
-                    problems.expect(ok == PARALLEL_REQUESTS,
+                    long ok = replies.stream()
+                            .filter(reply -> reply.join().status() == 200)
+                            .count();
+                    problems.expect(
+                            ok == PARALLEL_REQUESTS,
                             "Все " + PARALLEL_REQUESTS + " параллельных запросов обязаны получить 200, получили " + ok);
                     int hops = rest.gateway().serverCall().submittedCount();
-                    problems.expect(hops == PARALLEL_REQUESTS,
+                    problems.expect(
+                            hops == PARALLEL_REQUESTS,
                             "На запрос приходится ровно один переход на серверный поток: ожидалось " + PARALLEL_REQUESTS
                                     + ", перешли " + hops + ". Лишние переходы нагружают тик, недостающие значат, что "
                                     + "часть запросов трогает мир с HTTP-потока");
@@ -66,13 +69,14 @@ public final class RestScaleGameTests {
                 .thenApply(reply -> {
                     problems.expect(reply.status() == 200, "observe радиуса 32 обязан отвечать 200: " + reply.body());
                     int reads = rest.gateway().maxObserveReadsPerTick();
-                    problems.expect(reads > 0 && reads <= budget,
+                    problems.expect(
+                            reads > 0 && reads <= budget,
                             "observe обязан читать не больше " + budget + " позиций за тик (по "
                                     + OBSERVE_READS_PER_SLICE + " на срез из " + ScanTuning.SLICES_PER_TICK
                                     + " срезов), прочитано максимум " + reads
                                     + ": иначе одно наблюдение уронит тик сервера");
-                            return problems.found();
-                        });
+                    return problems.found();
+                });
         RestFixture.await(helper, rest, scenario);
     }
 
@@ -90,18 +94,27 @@ public final class RestScaleGameTests {
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = CompletableFuture.allOf(replies.toArray(new CompletableFuture<?>[0]))
                 .thenApply(done -> {
-                    long ok = replies.stream().filter(reply -> reply.join().status() == 200).count();
+                    long ok = replies.stream()
+                            .filter(reply -> reply.join().status() == 200)
+                            .count();
                     long limited = replies.stream()
                             .filter(reply -> reply.join().status() == 429
-                                    && reply.join().json().path("error").path("code").asText().equals("rate_limited"))
+                                    && reply.join()
+                                            .json()
+                                            .path("error")
+                                            .path("code")
+                                            .asText()
+                                            .equals("rate_limited"))
                             .count();
-                    problems.expect(ok == FIVE_OBSERVES - 1 && limited == 1,
+                    problems.expect(
+                            ok == FIVE_OBSERVES - 1 && limited == 1,
                             "Пять запросов в один тик обязаны дать ровно четыре 200 и один 429 rate_limited, "
                                     + "получили ok " + ok + ", rate_limited " + limited);
                     int peak = rest.gateway().peakObserveJobs();
-                    problems.expect(peak == RestTuning.MAX_OBSERVES,
-                            "Пик одновременных наблюдений обязан быть ровно " + RestTuning.MAX_OBSERVES
-                                    + ", вырос до " + peak);
+                    problems.expect(
+                            peak == RestTuning.MAX_OBSERVES,
+                            "Пик одновременных наблюдений обязан быть ровно " + RestTuning.MAX_OBSERVES + ", вырос до "
+                                    + peak);
                     return problems.found();
                 });
         RestFixture.await(helper, rest, scenario);
@@ -124,10 +137,12 @@ public final class RestScaleGameTests {
 
         index.unregister(NeoForge.EVENT_BUS);
         spirits.forEach(SpiritEntity::discard);
-        helper.assertTrue(listed == SPIRITS,
+        helper.assertTrue(
+                listed == SPIRITS,
                 "Индекс обязан видеть всех " + SPIRITS + " заспавненных духов, увидел " + listed
                         + ": join-событие не доходит до индекса");
-        helper.assertTrue(read == SPIRITS,
+        helper.assertTrue(
+                read == SPIRITS,
                 "Список духов обязан читать ровно по записи на духа (" + SPIRITS + "), прочитано " + read
                         + ": обход сущностей мира вместо индекса растёт с числом сущностей, а не духов");
         helper.succeed();

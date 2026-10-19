@@ -19,11 +19,24 @@ class BaseKitProperties {
     @Provide
     Arbitrary<List<Stack>> inventories() {
         Arbitrary<Stack> stack = Combinators.combine(
-                Arbitraries.of("wooden_pickaxe", "iron_pickaxe", "diamond_pickaxe", "stone_axe", "iron_sword",
-                        "bread", "cooked_beef", "apple", "torch", "cobblestone", "dirt", "oak_log", "iron_ingot",
-                        "crafting_table", "bucket"),
-                Arbitraries.integers().between(0, 3),
-                Arbitraries.integers().between(1, 64))
+                        Arbitraries.of(
+                                "wooden_pickaxe",
+                                "iron_pickaxe",
+                                "diamond_pickaxe",
+                                "stone_axe",
+                                "iron_sword",
+                                "bread",
+                                "cooked_beef",
+                                "apple",
+                                "torch",
+                                "cobblestone",
+                                "dirt",
+                                "oak_log",
+                                "iron_ingot",
+                                "crafting_table",
+                                "bucket"),
+                        Arbitraries.integers().between(0, 3),
+                        Arbitraries.integers().between(1, 64))
                 .as((item, variant, count) -> new Stack(item, variant, count, 64));
         return stack.list().ofMaxSize(12);
     }
@@ -33,7 +46,8 @@ class BaseKitProperties {
         List<Slice> surplus = KIT.surplus(inventory, VALUES);
         List<Stack> left = remove(inventory, surplus);
 
-        assertTrue(KIT.isSatisfiedBy(left, VALUES),
+        assertTrue(
+                KIT.isSatisfiedBy(left, VALUES),
                 "Инвентарь без излишка обязан удовлетворять базовому набору: разгрузка за один проход "
                         + "должна оставить духу ровно набор, а не часть его. Было " + inventory + ", излишек "
                         + surplus + ", осталось " + left);
@@ -43,7 +57,9 @@ class BaseKitProperties {
     void surplus_GivenAwayTwice_GivesNothingMore(@ForAll("inventories") List<Stack> inventory) {
         List<Stack> left = remove(inventory, KIT.surplus(inventory, VALUES));
 
-        assertEquals(List.of(), KIT.surplus(left, VALUES),
+        assertEquals(
+                List.of(),
+                KIT.surplus(left, VALUES),
                 "Повторный расчёт излишка обязан быть пустым: иначе разгрузка одного инвентаря двумя "
                         + "проходами отдала бы в контейнер разное количество, и скрипт unload зависел бы "
                         + "от числа вызовов. Инвентарь " + inventory + ", осталось " + left);
@@ -53,7 +69,8 @@ class BaseKitProperties {
     void surplus_SliceCount_NeverExceedsSlotCount(@ForAll("inventories") List<Stack> inventory) {
         for (Slice slice : KIT.surplus(inventory, VALUES)) {
             Stack stack = inventory.get(slice.slot());
-            assertTrue(stack != null && slice.count() <= stack.count(),
+            assertTrue(
+                    stack != null && slice.count() <= stack.count(),
                     "Излишек слота " + slice.slot() + " (" + slice.count() + ") не может превышать то, "
                             + "что в слоте есть (" + stack + "): иначе перенос отдал бы предметы, "
                             + "которых у духа нет. Инвентарь " + inventory);
@@ -67,7 +84,8 @@ class BaseKitProperties {
         for (String item : items(inventory)) {
             int before = countOf(inventory, item);
             int after = countOf(left, item);
-            assertTrue(after <= before,
+            assertTrue(
+                    after <= before,
                     "После вычитания излишка предметов '" + item + "' не может стать больше: было " + before
                             + ", стало " + after + ". Инвентарь " + inventory + ", осталось " + left);
         }

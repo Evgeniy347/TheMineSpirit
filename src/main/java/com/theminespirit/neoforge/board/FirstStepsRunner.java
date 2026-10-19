@@ -13,8 +13,8 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.observation.BlockCoord;
@@ -33,7 +33,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
@@ -50,11 +49,10 @@ public final class FirstStepsRunner {
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
 
-    private FirstStepsRunner() {
-    }
+    private FirstStepsRunner() {}
 
-    public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits,
-            StockView stock, long now) {
+    public static void tick(
+            ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
@@ -86,8 +84,18 @@ public final class FirstStepsRunner {
         }
         String id = "first:" + caseValue.name().toLowerCase(Locale.ROOT);
         LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
-        service.submit(new BoardTicket(id, caseValue, Optional.empty(), BoardRules.priorityOf(caseValue), now,
-                1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of()), target);
+        service.submit(
+                new BoardTicket(
+                        id,
+                        caseValue,
+                        Optional.empty(),
+                        BoardRules.priorityOf(caseValue),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                target);
     }
 
     private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, int spirits) {
@@ -95,23 +103,32 @@ public final class FirstStepsRunner {
         return ToolSet.isTool(caseValue) ? target.withToolCount(ToolSet.count(spirits)) : target;
     }
 
-    private static void postGather(BoardService service, MaterialSource source, BlockCoord home, String item,
-            int shortage, long now) {
+    private static void postGather(
+            BoardService service, MaterialSource source, BlockCoord home, String item, int shortage, long now) {
         String id = GATHER_PREFIX + item;
         BoardStatus status = service.board().statusOf(id).orElse(null);
-        if (status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES
+        if (status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED) {
             return;
         }
         int batch = GatherBatch.round(shortage, source.outputCount(item));
         LOGGER.info("Поставлено: добыть {} ×{} (кейс первых шагов ждёт)", item, batch);
-        service.submit(new BoardTicket(id, BoardCase.GATHER_MATERIALS, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS), now, 1, BoardTicket.ALWAYS_CAUSE,
-                List.of(), Map.of()), TicketTarget.at(home).withSupply(item, batch));
+        service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.GATHER_MATERIALS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(home).withSupply(item, batch));
     }
 
-    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue,
-            TicketTarget target) {
+    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
         try {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             return CaseMaterials.need(plan, source);
@@ -144,8 +161,10 @@ public final class FirstStepsRunner {
     private static boolean hasActive(BoardService service, BoardCase boardCase) {
         return service.board().all().stream()
                 .filter(t -> t.boardCase() == boardCase)
-                .anyMatch(t -> service.board().statusOf(t.id())
-                        .map(s -> s == BoardStatus.PENDING || s == BoardStatus.WAITING_RESOURCES
+                .anyMatch(t -> service.board()
+                        .statusOf(t.id())
+                        .map(s -> s == BoardStatus.PENDING
+                                || s == BoardStatus.WAITING_RESOURCES
                                 || s == BoardStatus.ASSIGNED)
                         .orElse(false));
     }
@@ -205,8 +224,18 @@ public final class FirstStepsRunner {
             }
         }
         Set<String> tools = toolStock(stock);
-        return new SettlementFacts(hasHome, groundsCleared, chests, craftingStation, tools, mineEntrance, fence,
-                lighting, houses, smithingTable, anvil);
+        return new SettlementFacts(
+                hasHome,
+                groundsCleared,
+                chests,
+                craftingStation,
+                tools,
+                mineEntrance,
+                fence,
+                lighting,
+                houses,
+                smithingTable,
+                anvil);
     }
 
     private static Set<String> toolStock(StockView stock) {

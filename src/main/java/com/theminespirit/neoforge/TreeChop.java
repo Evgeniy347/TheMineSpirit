@@ -25,7 +25,12 @@ final class TreeChop {
         FAILED
     }
 
-    record Outcome(State state, int standingLogs, int plantedSaplings, int skippedCells, boolean lackedSaplings,
+    record Outcome(
+            State state,
+            int standingLogs,
+            int plantedSaplings,
+            int skippedCells,
+            boolean lackedSaplings,
             String reason) {
         static Outcome running() {
             return new Outcome(State.RUNNING, 0, 0, 0, false, null);
@@ -95,8 +100,7 @@ final class TreeChop {
         skippedCells = 0;
         lackedSaplings = false;
         breaking = false;
-        Vec3 approachPoint = stand == null ? Vec3.atCenterOf(toPos(target.base()))
-                : Vec3.atBottomCenterOf(stand);
+        Vec3 approachPoint = stand == null ? Vec3.atCenterOf(toPos(target.base())) : Vec3.atBottomCenterOf(stand);
         approach.begin(approachPoint, ChopTuning.STAND_DISTANCE);
         phase = Phase.APPROACH;
     }
@@ -176,7 +180,11 @@ final class TreeChop {
     }
 
     private Outcome startCollect() {
-        collector = new DropCollector(spirit, logFilter, tree.base(), ChopTuning.COLLECT_RADIUS,
+        collector = new DropCollector(
+                spirit,
+                logFilter,
+                tree.base(),
+                ChopTuning.COLLECT_RADIUS,
                 PickupTuning.DEFAULT,
                 OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         phase = Phase.COLLECT;
@@ -199,7 +207,10 @@ final class TreeChop {
 
     private Outcome startReplant() {
         int baseY = tree.base().y();
-        List<BlockPos> cells = tree.logs().stream().filter(log -> log.y() == baseY).map(TreeChop::toPos).toList();
+        List<BlockPos> cells = tree.logs().stream()
+                .filter(log -> log.y() == baseY)
+                .map(TreeChop::toPos)
+                .toList();
         replanter = new Replanter(spirit, species, cells, view);
         phase = Phase.REPLANT;
         return Outcome.running();
@@ -254,7 +265,8 @@ final class TreeChop {
         Level level = spirit.level();
         BlockPos below = pos.below();
         return (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced())
-                && (level.getBlockState(pos.above()).isAir() || level.getBlockState(pos.above()).canBeReplaced())
+                && (level.getBlockState(pos.above()).isAir()
+                        || level.getBlockState(pos.above()).canBeReplaced())
                 && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)
                 && level.getFluidState(pos).isEmpty()
                 && level.getFluidState(pos.above()).isEmpty();
@@ -262,9 +274,12 @@ final class TreeChop {
 
     private TreeSpecies speciesOf(Tree found) {
         BlockCoord base = found.base();
-        String blockId = BuiltInRegistries.BLOCK.getKey(spirit.level().getBlockState(toPos(base)).getBlock()).toString();
-        return TreeSpecies.ofLog(blockId).orElseThrow(() -> new IllegalStateException("Основание дерева " + base
-                + " — блок '" + blockId + "', а не бревно известной породы: поиск брал только брёвна из TreeSpecies"));
+        String blockId = BuiltInRegistries.BLOCK
+                .getKey(spirit.level().getBlockState(toPos(base)).getBlock())
+                .toString();
+        return TreeSpecies.ofLog(blockId)
+                .orElseThrow(() -> new IllegalStateException("Основание дерева " + base + " — блок '" + blockId
+                        + "', а не бревно известной породы: поиск брал только брёвна из TreeSpecies"));
     }
 
     private static BlockPos toPos(BlockCoord coord) {

@@ -9,8 +9,7 @@ import java.util.StringJoiner;
 public final class DecisionText {
     public static final String LOG_PREFIX = "[tactics]";
 
-    private DecisionText() {
-    }
+    private DecisionText() {}
 
     public static String format(DecisionRecord record) {
         StringJoiner text = new StringJoiner("; ");
@@ -28,9 +27,10 @@ public final class DecisionText {
             case DecisionSnapshot.MODE -> "режим";
             case DecisionSnapshot.TARGET -> "цель";
             case DecisionSnapshot.ORDER -> "приказ";
-            default -> throw new IllegalArgumentException("Поле записи '" + field + "' неизвестно: подписи есть у "
-                    + DecisionSnapshot.DECISION + ", " + DecisionSnapshot.MODE + ", " + DecisionSnapshot.TARGET
-                    + " и " + DecisionSnapshot.ORDER);
+            default ->
+                throw new IllegalArgumentException("Поле записи '" + field + "' неизвестно: подписи есть у "
+                        + DecisionSnapshot.DECISION + ", " + DecisionSnapshot.MODE + ", " + DecisionSnapshot.TARGET
+                        + " и " + DecisionSnapshot.ORDER);
         };
     }
 

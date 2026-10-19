@@ -16,10 +16,14 @@ class DropRetriesTests {
         retries.failed(new BlockCoord(10, 20, 30));
         retries.failed(new BlockCoord(10, 20, 30));
 
-        assertEquals(1, retries.size(),
+        assertEquals(
+                1,
+                retries.size(),
                 "Повторный провал в той же клетке не добавляет обход: один сборщик с тем же радиусом уже "
                         + "накрывает этот дроп, лишний проход только тратит тики");
-        assertEquals(new BlockCoord(10, 20, 30), retries.poll(),
+        assertEquals(
+                new BlockCoord(10, 20, 30),
+                retries.poll(),
                 "Очередь возвращает место провала, а не пустую клетку: повтор должен собирать дроп там же");
     }
 
@@ -30,7 +34,9 @@ class DropRetriesTests {
         retries.failed(new BlockCoord(0, 0, 0));
         retries.failed(new BlockCoord(4, 0, 0));
 
-        assertEquals(1, retries.size(),
+        assertEquals(
+                1,
+                retries.size(),
                 "Точки на границе радиуса входят в один обход: сборщик с радиусом 4 накрывает обе, "
                         + "второй проход по тому же дропу не нужен");
     }
@@ -42,7 +48,9 @@ class DropRetriesTests {
         retries.failed(new BlockCoord(0, 0, 0));
         retries.failed(new BlockCoord(9, 0, 0));
 
-        assertEquals(2, retries.size(),
+        assertEquals(
+                2,
+                retries.size(),
                 "Провалы дальше радиуса — разные места: один обход второй дроп не накрыл бы, и он остался бы "
                         + "в мире");
         assertEquals(new BlockCoord(0, 0, 0), retries.poll(), "Первым повторяется более ранний провал");
@@ -61,7 +69,9 @@ class DropRetriesTests {
 
     @Test
     void retries_RadiusBelowOne_Throws() {
-        assertThrows(IllegalArgumentException.class, () -> new DropRetries(0),
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new DropRetries(0),
                 "Нулевой радиус повтора обязан отвергаться: обход не накрыл бы даже клетку провала");
     }
 
@@ -69,7 +79,9 @@ class DropRetriesTests {
     void retries_NullSpot_Throws() {
         DropRetries retries = new DropRetries(4);
 
-        assertThrows(NullPointerException.class, () -> retries.failed(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> retries.failed(null),
                 "Место провала без координат некуда повторять: null обязан отвергаться");
     }
 }

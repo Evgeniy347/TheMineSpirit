@@ -10,11 +10,15 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class InstinctRules {
-    private InstinctRules() {
-    }
+    private InstinctRules() {}
 
-    public static InstinctDecision decide(DefenderCapability self, RankedTarget target, List<EnemyFact> enemies,
-            List<DefenderCapability> allies, Set<UUID> busy, DefenseProfile profile) {
+    public static InstinctDecision decide(
+            DefenderCapability self,
+            RankedTarget target,
+            List<EnemyFact> enemies,
+            List<DefenderCapability> allies,
+            Set<UUID> busy,
+            DefenseProfile profile) {
         if (self == null) {
             throw new IllegalArgumentException("self не может быть null: стойка выбирается конкретному духу");
         }
@@ -42,42 +46,74 @@ public final class InstinctRules {
         }
         boolean wounded = self.hpFraction() < DefenseTuning.LOW_HP_FRACTION;
         if (wounded && self.heal()) {
-            return new InstinctDecision(CombatStance.HEAL, Optional.empty(), Optional.empty(), Optional.empty(),
+            return new InstinctDecision(
+                    CombatStance.HEAL,
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
                     "здоровье низкое, есть лечилка: дух отходит и лечится");
         }
         if (wounded) {
             Optional<UUID> next = TargetHandoff.handOff(self.id(), target.enemy(), allies, busy, profile);
-            return new InstinctDecision(CombatStance.WITHDRAW, Optional.empty(), Optional.empty(), next,
+            return new InstinctDecision(
+                    CombatStance.WITHDRAW,
+                    Optional.empty(),
+                    Optional.empty(),
+                    next,
                     "здоровье низкое, лечилки нет: дух отходит и передаёт цель");
         }
-        boolean archerPresent = self.bow() || allies.stream().anyMatch(
-                ally -> ally.bow() && !busy.contains(ally.id())
-                        && ally.hpFraction() >= DefenseTuning.LOW_HP_FRACTION);
+        boolean archerPresent = self.bow()
+                || allies.stream()
+                        .anyMatch(ally -> ally.bow()
+                                && !busy.contains(ally.id())
+                                && ally.hpFraction() >= DefenseTuning.LOW_HP_FRACTION);
         if (target.cls() == TargetClass.CREEPER && self.role() == DefenderRole.MELEE) {
-            return new InstinctDecision(CombatStance.STRIKE_AND_RETREAT,
-                    Optional.of(ExplosionAvoidance.CREEPER_HOLD), Optional.empty(), Optional.empty(),
+            return new InstinctDecision(
+                    CombatStance.STRIKE_AND_RETREAT,
+                    Optional.of(ExplosionAvoidance.CREEPER_HOLD),
+                    Optional.empty(),
+                    Optional.empty(),
                     "мечник против крипера: удар и отскок за радиус взрыва");
         }
         if (target.cls() == TargetClass.SKELETON && self.role() == DefenderRole.MELEE && !archerPresent) {
-            return new InstinctDecision(CombatStance.RUSH_RANGED, Optional.empty(), Optional.empty(), Optional.empty(),
+            return new InstinctDecision(
+                    CombatStance.RUSH_RANGED,
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
                     "лучника нет: мечник быстро сближается со скелетом");
         }
         if (target.cls() == TargetClass.MELEE) {
             Optional<EnemyFact> skeleton = nearestSkeleton(self.pos(), enemies, profile);
             if (skeleton.isPresent()) {
-                Optional<Point> cover = CoverFinder.between(self.pos(), skeleton.get().pos(), blockers(enemies,
-                        skeleton.get()), DefenseTuning.COVER_CORRIDOR);
+                Optional<Point> cover = CoverFinder.between(
+                        self.pos(),
+                        skeleton.get().pos(),
+                        blockers(enemies, skeleton.get()),
+                        DefenseTuning.COVER_CORRIDOR);
                 if (cover.isPresent()) {
-                    return new InstinctDecision(CombatStance.COVER_ENGAGE, Optional.empty(), cover, Optional.empty(),
+                    return new InstinctDecision(
+                            CombatStance.COVER_ENGAGE,
+                            Optional.empty(),
+                            cover,
+                            Optional.empty(),
                             "скелет рядом: бой с ближней целью из-за укрытия");
                 }
             }
         }
         if (self.role() == DefenderRole.ARCHER) {
-            return new InstinctDecision(CombatStance.HOLD_DISTANCE, Optional.empty(), Optional.empty(),
-                    Optional.empty(), "лучник держит дистанцию и обстреливает цель");
+            return new InstinctDecision(
+                    CombatStance.HOLD_DISTANCE,
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    "лучник держит дистанцию и обстреливает цель");
         }
-        return new InstinctDecision(CombatStance.ENGAGE, Optional.empty(), Optional.empty(), Optional.empty(),
+        return new InstinctDecision(
+                CombatStance.ENGAGE,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 "ближний бой с выбранной целью");
     }
 
@@ -92,7 +128,8 @@ public final class InstinctRules {
             if (distance > DefenseTuning.RUSH_MARGIN) {
                 continue;
             }
-            if (nearest == null || distance < nearestDistance
+            if (nearest == null
+                    || distance < nearestDistance
                     || (distance == nearestDistance && enemy.id().compareTo(nearest.id()) < 0)) {
                 nearest = enemy;
                 nearestDistance = distance;

@@ -10,8 +10,7 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 
 public final class PolicyEvents {
-    private PolicyEvents() {
-    }
+    private PolicyEvents() {}
 
     public static void register(ModContainer container, IEventBus modEventBus) {
         PolicyConfig.register(container, modEventBus);

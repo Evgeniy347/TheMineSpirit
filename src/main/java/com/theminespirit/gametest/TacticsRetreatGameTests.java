@@ -34,11 +34,11 @@ public final class TacticsRetreatGameTests {
     private static final int FIRE_LIMIT_TICKS = 60;
     private static final int WATER_CLEAR_RADIUS = 10;
 
-    private TacticsRetreatGameTests() {
-    }
+    private TacticsRetreatGameTests() {}
 
     @GameTest(template = "arena", batch = "tactics_retreat_home", timeoutTicks = 300)
-    public static void retreatHome_LowHpHuskFourBlocksAway_RunsToHomeEightBlocksAwayWithoutStriking(GameTestHelper helper) {
+    public static void retreatHome_LowHpHuskFourBlocksAway_RunsToHomeEightBlocksAwayWithoutStriking(
+            GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(9, 1, 1));
         BlockPos home = new BlockPos(1, 1, 1);
@@ -55,7 +55,8 @@ public final class TacticsRetreatGameTests {
             }
             if (arrivedAt[0] < 0 && scene.ticks() > HOME_LIMIT_TICKS) {
                 helper.fail("дух не дошёл до дома за " + HOME_LIMIT_TICKS + " тиков, расстояние "
-                        + TacticsScene.distance(helper, spirit, home) + ", решение " + spirit.tactics().explain().orElse("нет"));
+                        + TacticsScene.distance(helper, spirit, home) + ", решение "
+                        + spirit.tactics().explain().orElse("нет"));
             }
         });
 
@@ -63,9 +64,13 @@ public final class TacticsRetreatGameTests {
             scene.assertStarted();
             helper.assertTrue(arrivedAt[0] >= 0, "дух ещё не дошёл до дома");
             helper.assertTrue(spirit.tactics().combat().strikes() == 0, "отступающий дух не бьёт врага");
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.HOME,
-                    "исполняемый отход — HOME, получено " + spirit.tactics().retreat().method());
-            helper.assertTrue(spirit.getHealth() == TacticsScene.LOW_HP, "по бегущему духу не попали: здоровье " + spirit.getHealth());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.HOME,
+                    "исполняемый отход — HOME, получено "
+                            + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.getHealth() == TacticsScene.LOW_HP,
+                    "по бегущему духу не попали: здоровье " + spirit.getHealth());
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -91,15 +96,19 @@ public final class TacticsRetreatGameTests {
                 hiddenAt[0] = scene.ticks();
             }
             if (hiddenAt[0] < 0 && scene.ticks() > COVER_LIMIT_TICKS) {
-                helper.fail("дух не спрятался за стеной за " + COVER_LIMIT_TICKS + " тиков, позиция " + helper.relativeVec(spirit.position()) + ", видимость " + witch.hasLineOfSight(spirit) + ", решение " + spirit.tactics().explain().orElse("нет"));
+                helper.fail("дух не спрятался за стеной за " + COVER_LIMIT_TICKS + " тиков, позиция "
+                        + helper.relativeVec(spirit.position()) + ", видимость " + witch.hasLineOfSight(spirit)
+                        + ", решение " + spirit.tactics().explain().orElse("нет"));
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(hiddenAt[0] >= 0, "дух ещё не спрятался");
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.COVER,
-                    "исполняемый отход — COVER, получено " + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.COVER,
+                    "исполняемый отход — COVER, получено "
+                            + spirit.tactics().retreat().method());
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -125,17 +134,22 @@ public final class TacticsRetreatGameTests {
             }
             if (hitAt[0] < 0 && scene.ticks() > KITE_LIMIT_TICKS) {
                 helper.fail("стрела не попала во врага за " + KITE_LIMIT_TICKS + " тиков, выстрелов "
-                        + spirit.tactics().combat().shots() + ", решение " + spirit.tactics().explain().orElse("нет"));
+                        + spirit.tactics().combat().shots() + ", решение "
+                        + spirit.tactics().explain().orElse("нет"));
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(hitAt[0] >= 0, "стрела ещё не попала во врага");
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.KITE,
-                    "исполняемый отход — KITE, получено " + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.KITE,
+                    "исполняемый отход — KITE, получено "
+                            + spirit.tactics().retreat().method());
             helper.assertTrue(spirit.tactics().combat().strikes() == 0, "кайт не рукопашная: ударов мечом нет");
-            helper.assertTrue(spirit.distanceTo(husk) > 4.0, "дух держит дистанцию больше начальной, сейчас " + spirit.distanceTo(husk));
+            helper.assertTrue(
+                    spirit.distanceTo(husk) > 4.0,
+                    "дух держит дистанцию больше начальной, сейчас " + spirit.distanceTo(husk));
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -162,16 +176,20 @@ public final class TacticsRetreatGameTests {
             }
             if (inWaterAt[0] < 0 && scene.ticks() > WATER_LIMIT_TICKS) {
                 helper.fail("дух не вошёл в воду за " + WATER_LIMIT_TICKS + " тиков, позиция "
-                        + helper.relativeVec(spirit.position()) + ", решение " + spirit.tactics().explain().orElse("нет"));
+                        + helper.relativeVec(spirit.position()) + ", решение "
+                        + spirit.tactics().explain().orElse("нет"));
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(inWaterAt[0] >= 0, "дух ещё не в воде");
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.WATER,
-                    "исполняемый отход — WATER, получено " + spirit.tactics().retreat().method());
-            helper.assertTrue(spirit.tactics().wantsControl(),
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.WATER,
+                    "исполняемый отход — WATER, получено "
+                            + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.tactics().wantsControl(),
                     "в воде дух остаётся под тактикой: политика воды не вытаскивает его на сушу");
             TacticsScene.finish(helper, spirit);
         });
@@ -211,20 +229,24 @@ public final class TacticsRetreatGameTests {
             }
             if (burned[0] && spirit.getRemainingFireTicks() > 0 && scene.ticks() > FIRE_LIMIT_TICKS) {
                 helper.fail("дух с ведром не потушился за " + FIRE_LIMIT_TICKS + " тиков, огонь "
-                        + spirit.getRemainingFireTicks() + ", решение " + spirit.tactics().explain().orElse("нет"));
+                        + spirit.getRemainingFireTicks() + ", решение "
+                        + spirit.tactics().explain().orElse("нет"));
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(burned[0], "дух ещё не горел");
-            helper.assertTrue(spirit.getRemainingFireTicks() <= 0, "огонь на духе не погашен: "
-                    + spirit.getRemainingFireTicks());
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.WATER,
-                    "исполняемый отход — WATER (ведро), получено " + spirit.tactics().retreat().method()
+            helper.assertTrue(
+                    spirit.getRemainingFireTicks() <= 0, "огонь на духе не погашен: " + spirit.getRemainingFireTicks());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.WATER,
+                    "исполняемый отход — WATER (ведро), получено "
+                            + spirit.tactics().retreat().method()
                             + ", ведро в инвентаре " + spirit.gear().hasWaterBucket() + ", блок в клетке "
                             + spirit.blockPosition() + " = " + helper.getBlockState(spirit.blockPosition()));
-            helper.assertTrue(spirit.level().getBlockState(spirit.blockPosition()).is(Blocks.WATER),
+            helper.assertTrue(
+                    spirit.level().getBlockState(spirit.blockPosition()).is(Blocks.WATER),
                     "ведро вылито под себя: в клетке духа " + spirit.blockPosition() + " должна быть вода, а там "
                             + spirit.level().getBlockState(spirit.blockPosition()));
             spirit.level().setBlock(spirit.blockPosition(), Blocks.AIR.defaultBlockState(), 3);
@@ -259,7 +281,8 @@ public final class TacticsRetreatGameTests {
             }
             if (farAt[0] < 0 && scene.ticks() > FIRE_LIMIT_TICKS) {
                 helper.fail("дух без ведра не ушёл от врага за " + FIRE_LIMIT_TICKS + " тиков: дистанция "
-                        + spirit.distanceTo(husk) + ", решение " + spirit.tactics().explain().orElse("нет"));
+                        + spirit.distanceTo(husk) + ", решение "
+                        + spirit.tactics().explain().orElse("нет"));
             }
         });
 
@@ -267,10 +290,14 @@ public final class TacticsRetreatGameTests {
             scene.assertStarted();
             helper.assertTrue(burned[0], "дух ещё не горел");
             helper.assertTrue(farAt[0] >= 0, "дистанция ещё не выросла");
-            helper.assertTrue(spirit.tactics().retreat().method() != RetreatMethod.WATER,
-                    "без ведра WATER не исполняется, получено " + spirit.tactics().retreat().method());
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.AWAY,
-                    "вместо воды обычный отход — AWAY, получено " + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() != RetreatMethod.WATER,
+                    "без ведра WATER не исполняется, получено "
+                            + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.AWAY,
+                    "вместо воды обычный отход — AWAY, получено "
+                            + spirit.tactics().retreat().method());
             TacticsScene.finish(helper, spirit);
         });
     }
@@ -287,20 +314,25 @@ public final class TacticsRetreatGameTests {
         PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, huskAt, false, TacticsScene.LOW_HP);
         int[] retreatedAt = {-1};
         helper.onEachTick(() -> {
-            if (scene.started() && retreatedAt[0] < 0 && spirit.tactics().retreat().retreating()) {
+            if (scene.started()
+                    && retreatedAt[0] < 0
+                    && spirit.tactics().retreat().retreating()) {
                 retreatedAt[0] = scene.ticks();
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(retreatedAt[0] >= 0 && scene.ticks() >= retreatedAt[0] + NO_BUILD_WATCH_TICKS,
+            helper.assertTrue(
+                    retreatedAt[0] >= 0 && scene.ticks() >= retreatedAt[0] + NO_BUILD_WATCH_TICKS,
                     "дух с низким здоровьем обязан отступать и мы смотрим " + NO_BUILD_WATCH_TICKS + " тиков отхода; "
                             + "решение " + spirit.tactics().explain().orElse("нет"));
-            helper.assertTrue(spirit.gear().blocks() == TOWER_BLOCKS,
-                    "отход не тратит блоки: столб и баррикада убраны, а в инвентаре осталось " + spirit.gear().blocks()
-                            + " из " + TOWER_BLOCKS);
-            helper.assertTrue(cobblestoneAround(helper) == 0,
+            helper.assertTrue(
+                    spirit.gear().blocks() == TOWER_BLOCKS,
+                    "отход не тратит блоки: столб и баррикада убраны, а в инвентаре осталось "
+                            + spirit.gear().blocks() + " из " + TOWER_BLOCKS);
+            helper.assertTrue(
+                    cobblestoneAround(helper) == 0,
                     "у места отхода не появилось ни одного булыжника: отход только уходит, фактически "
                             + cobblestoneAround(helper));
             TacticsScene.finish(helper, spirit);
@@ -339,16 +371,21 @@ public final class TacticsRetreatGameTests {
             }
             if (farAt[0] < 0 && scene.ticks() > AWAY_LIMIT_TICKS) {
                 helper.fail("дистанция не выросла на " + MIN_SEPARATION_GAIN + " за " + AWAY_LIMIT_TICKS + " тиков: "
-                        + spirit.distanceTo(husk) + ", решение " + spirit.tactics().explain().orElse("нет"));
+                        + spirit.distanceTo(husk) + ", решение "
+                        + spirit.tactics().explain().orElse("нет"));
             }
         });
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
             helper.assertTrue(farAt[0] >= 0, "дистанция ещё не выросла");
-            helper.assertTrue(spirit.tactics().retreat().method() == RetreatMethod.AWAY,
-                    "исполняемый отход — AWAY, получено " + spirit.tactics().retreat().method());
-            helper.assertTrue(spirit.getHealth() == TacticsScene.LOW_HP, "по убегающему духу не попали: здоровье " + spirit.getHealth());
+            helper.assertTrue(
+                    spirit.tactics().retreat().method() == RetreatMethod.AWAY,
+                    "исполняемый отход — AWAY, получено "
+                            + spirit.tactics().retreat().method());
+            helper.assertTrue(
+                    spirit.getHealth() == TacticsScene.LOW_HP,
+                    "по убегающему духу не попали: здоровье " + spirit.getHealth());
             TacticsScene.finish(helper, spirit);
         });
     }

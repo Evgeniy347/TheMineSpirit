@@ -112,14 +112,11 @@ abstract class NodeExecutor {
         return 1;
     }
 
-    void cancel() {
-    }
+    void cancel() {}
 
-    void suspend() {
-    }
+    void suspend() {}
 
-    void resume() {
-    }
+    void resume() {}
 
     PolicyExemptions exemptions() {
         return PolicyExemptions.empty();

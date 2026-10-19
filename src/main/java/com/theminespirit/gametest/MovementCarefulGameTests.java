@@ -34,8 +34,7 @@ public final class MovementCarefulGameTests {
     private static final double STANDS_STILL = 0.1;
     private static final int FLOOR_UNDER_FEET_CHECK = 2;
 
-    private MovementCarefulGameTests() {
-    }
+    private MovementCarefulGameTests() {}
 
     @GameTest(template = "arena", batch = "move_careful_pit2", timeoutTicks = 300)
     public static void walkCareful_TargetAtBottomOfTwoDeepPit_StepsDownAndSucceeds(GameTestHelper helper) {
@@ -43,19 +42,22 @@ public final class MovementCarefulGameTests {
         SavedBlocks saved = digPit(helper, PIT_DEPTH_OK);
         BlockPos bottom = new BlockPos(PIT_X, 1 - PIT_DEPTH_OK, PIT_Z);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "walk_careful", bottom),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.pointCall(helper, "walk_careful", bottom), MovementScene.SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "спуск на " + PIT_DEPTH_OK + " блока не выше MAX_DROP: walk_careful обязан дойти, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double distance = MovementScene.distanceTo(helper, spirit, bottom);
-            helper.assertTrue(distance <= MovementScene.ARRIVAL,
+            helper.assertTrue(
+                    distance <= MovementScene.ARRIVAL,
                     "дух обязан стоять на дне ямы в пределах " + MovementScene.ARRIVAL + ", расстояние " + distance);
-            helper.assertTrue(run.spiritTicks() <= ARRIVE_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= ARRIVE_LIMIT_TICKS,
                     "яма в 5 блоках обязана пройтись за " + ARRIVE_LIMIT_TICKS + " тиков духа, ушло "
                             + run.spiritTicks());
             saved.restore();
@@ -69,8 +71,8 @@ public final class MovementCarefulGameTests {
         SavedBlocks saved = digPit(helper, PIT_DEPTH_TOO_DEEP);
         BlockPos bottom = new BlockPos(PIT_X, 1 - PIT_DEPTH_TOO_DEEP, PIT_Z);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "walk_careful", bottom),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.pointCall(helper, "walk_careful", bottom), MovementScene.SETTLE_TICKS);
         double[] startY = {Double.NaN};
         double[] lowestY = {Double.MAX_VALUE};
         helper.onEachTick(() -> {
@@ -84,19 +86,24 @@ public final class MovementCarefulGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "обрыв в " + PIT_DEPTH_TOO_DEEP + " блока глубже MAX_DROP: walk_careful обязан отказать, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("недостижимо осторожным шагом"),
+            helper.assertTrue(
+                    reason.contains("недостижимо осторожным шагом"),
                     "причина обязана быть отказом осторожного шага, а не тайм-аутом или застреванием: " + reason);
-            helper.assertTrue(run.spiritTicks() <= REFUSAL_LIMIT_TICKS,
+            helper.assertTrue(
+                    run.spiritTicks() <= REFUSAL_LIMIT_TICKS,
                     "отказ идёт при первом построении пути, за " + REFUSAL_LIMIT_TICKS + " тиков, а прошло "
                             + run.spiritTicks());
-            helper.assertTrue(lowestY[0] >= startY[0] - DropProfile.MAX_SAFE_DROP,
+            helper.assertTrue(
+                    lowestY[0] >= startY[0] - DropProfile.MAX_SAFE_DROP,
                     "дух не падал ниже " + DropProfile.MAX_SAFE_DROP + " блоков от старта " + startY[0]
                             + ", самая низкая точка " + lowestY[0]);
-            helper.assertTrue(lowestY[0] >= startY[0] - STANDS_STILL,
+            helper.assertTrue(
+                    lowestY[0] >= startY[0] - STANDS_STILL,
                     "отказавший дух стоит на месте и вообще не спускается: старт " + startY[0] + ", ниже всего "
                             + lowestY[0]);
             saved.restore();
@@ -115,8 +122,8 @@ public final class MovementCarefulGameTests {
         SavedBlocks saved = digChasm(helper);
         BlockPos goal = new BlockPos(7, 1, EDGE_Z);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, EDGE_Z));
-        SpiritRun run = SpiritRun.launch(helper, spirit, MovementScene.pointCall(helper, "walk_careful", goal),
-                MovementScene.SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, MovementScene.pointCall(helper, "walk_careful", goal), MovementScene.SETTLE_TICKS);
         helper.onEachTick(() -> {
             if (spirit.tickCount < MovementScene.SETTLE_TICKS) {
                 return;
@@ -134,12 +141,14 @@ public final class MovementCarefulGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "цель вдоль края достижима по ровному полу: walk_careful обязан дойти, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             double distance = MovementScene.distanceTo(helper, spirit, goal);
-            helper.assertTrue(distance <= MovementScene.ARRIVAL,
+            helper.assertTrue(
+                    distance <= MovementScene.ARRIVAL,
                     "дух обязан дойти до цели в пределах " + MovementScene.ARRIVAL + ", расстояние " + distance);
             saved.restore();
             MovementScene.finish(helper);
@@ -148,30 +157,37 @@ public final class MovementCarefulGameTests {
 
     @GameTest(template = "arena", batch = "move_careful_path")
     public static void carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing(GameTestHelper helper) {
-        helper.assertTrue(DropProfile.LOOKAHEAD_CELLS == 8,
+        helper.assertTrue(
+                DropProfile.LOOKAHEAD_CELLS == 8,
                 "заглядывание вперёд — 8 клеток (решение главного агента к чеклисту 24), в коде "
                         + DropProfile.LOOKAHEAD_CELLS);
-        helper.assertTrue(DropProfile.MAX_SAFE_DROP == 2,
+        helper.assertTrue(
+                DropProfile.MAX_SAFE_DROP == 2,
                 "безопасный спуск — 2 блока (MAX_DROP чеклиста 20), в коде " + DropProfile.MAX_SAFE_DROP);
         helper.assertTrue(CarefulPath.refusal(path(true, 5, 5, 5, 5)) == null, "ровный путь осторожный шаг пропускает");
-        helper.assertTrue(CarefulPath.refusal(path(true, 5, 5, 3, 3)) == null,
+        helper.assertTrue(
+                CarefulPath.refusal(path(true, 5, 5, 3, 3)) == null,
                 "спуск на 2 блока (MAX_DROP) осторожный шаг пропускает");
         String drop = CarefulPath.refusal(path(true, 5, 5, 2, 2));
-        helper.assertTrue(drop != null && drop.contains("обрыв"),
+        helper.assertTrue(
+                drop != null && drop.contains("обрыв"),
                 "спуск на 3 блока обязан отказать с причиной про обрыв, получено: " + drop);
-        helper.assertTrue(CarefulPath.refusal(path(false, 5, 5, 5, 5)) != null,
+        helper.assertTrue(
+                CarefulPath.refusal(path(false, 5, 5, 5, 5)) != null,
                 "путь, не доходящий до цели, осторожный шаг отвергает: цель за преградой или обрывом");
         helper.assertTrue(CarefulPath.refusal(null) != null, "отсутствие пути осторожный шаг отвергает");
         int[] farDrop = new int[DropProfile.LOOKAHEAD_CELLS + 3];
         Arrays.fill(farDrop, 9);
         farDrop[farDrop.length - 1] = 4;
-        helper.assertTrue(CarefulPath.refusal(path(true, farDrop)) == null,
+        helper.assertTrue(
+                CarefulPath.refusal(path(true, farDrop)) == null,
                 "обрыв дальше " + DropProfile.LOOKAHEAD_CELLS + " клеток впереди осторожный шаг пока не проверяет: "
                         + "он увидит его при следующем перестроении пути");
         int[] nearDrop = new int[DropProfile.LOOKAHEAD_CELLS + 1];
         Arrays.fill(nearDrop, 9);
         nearDrop[nearDrop.length - 1] = 4;
-        helper.assertTrue(CarefulPath.refusal(path(true, nearDrop)) != null,
+        helper.assertTrue(
+                CarefulPath.refusal(path(true, nearDrop)) != null,
                 "обрыв ровно на границе заглядывания (клетка " + DropProfile.LOOKAHEAD_CELLS + ") обязан отказать");
         helper.succeed();
     }

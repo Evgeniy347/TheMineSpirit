@@ -25,8 +25,7 @@ public final class StockReader {
     public static final int STOCK_RADIUS = 8;
     public static final int STOCK_HEIGHT = 4;
 
-    private StockReader() {
-    }
+    private StockReader() {}
 
     public record Stocks(StockLots lots, String containerFood, int reads, int containers) {
         public Stocks {
@@ -59,8 +58,7 @@ public final class StockReader {
         if (center != null) {
             for (int dx = -STOCK_RADIUS; dx <= STOCK_RADIUS && containers < STOCK_CONTAINER_BUDGET; dx++) {
                 for (int dy = -STOCK_HEIGHT; dy <= STOCK_HEIGHT && containers < STOCK_CONTAINER_BUDGET; dy++) {
-                    for (int dz = -STOCK_RADIUS; dz <= STOCK_RADIUS
-                            && containers < STOCK_CONTAINER_BUDGET; dz++) {
+                    for (int dz = -STOCK_RADIUS; dz <= STOCK_RADIUS && containers < STOCK_CONTAINER_BUDGET; dz++) {
                         reads++;
                         BlockPos pos = center.offset(dx, dy, dz);
                         if (!level.isLoaded(pos)) {
@@ -79,8 +77,8 @@ public final class StockReader {
             }
         }
         NutritionTable table = StockCatalog.defaultTable();
-        return new Stocks(new StockCatalog(table).tally(items), FoodNorm.best(table, containerItems), reads,
-                containers);
+        return new Stocks(
+                new StockCatalog(table).tally(items), FoodNorm.best(table, containerItems), reads, containers);
     }
 
     private static void tallyContainer(Container container, Map<String, Integer> items) {
@@ -96,8 +94,7 @@ public final class StockReader {
     private static BlockPos centerOf(List<SpiritEntity> members, Optional<Point> home) {
         if (home.isPresent()) {
             Point point = home.get();
-            return new BlockPos((int) Math.floor(point.x()), (int) Math.floor(point.y()),
-                    (int) Math.floor(point.z()));
+            return new BlockPos((int) Math.floor(point.x()), (int) Math.floor(point.y()), (int) Math.floor(point.z()));
         }
         for (SpiritEntity spirit : members) {
             if (!spirit.isRemoved()) {

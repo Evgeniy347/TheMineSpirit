@@ -12,11 +12,11 @@ public final class ProtectedZoneParser {
     private static final Pattern DIMENSION = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
     private static final int PARTS = 7;
 
-    private ProtectedZoneParser() {
-    }
+    private ProtectedZoneParser() {}
 
     public static ProtectedZones parse(List<String> lines) {
-        Objects.requireNonNull(lines, "Список строк защищённых зон не может быть null: пустой список задаётся List.of()");
+        Objects.requireNonNull(
+                lines, "Список строк защищённых зон не может быть null: пустой список задаётся List.of()");
         List<ProtectedZone> zones = new ArrayList<>(lines.size());
         for (int index = 0; index < lines.size(); index++) {
             zones.add(parseLine(index, lines.get(index)));
@@ -41,8 +41,10 @@ public final class ProtectedZoneParser {
                 throw bad(index, line, "координата '" + parts[i + 1] + "' не целое число");
             }
         }
-        BlockCoord low = new BlockCoord(Math.min(numbers[0], numbers[3]), Math.min(numbers[1], numbers[4]), Math.min(numbers[2], numbers[5]));
-        BlockCoord high = new BlockCoord(Math.max(numbers[0], numbers[3]), Math.max(numbers[1], numbers[4]), Math.max(numbers[2], numbers[5]));
+        BlockCoord low = new BlockCoord(
+                Math.min(numbers[0], numbers[3]), Math.min(numbers[1], numbers[4]), Math.min(numbers[2], numbers[5]));
+        BlockCoord high = new BlockCoord(
+                Math.max(numbers[0], numbers[3]), Math.max(numbers[1], numbers[4]), Math.max(numbers[2], numbers[5]));
         return new ProtectedZone(parts[0], new BlockBox(low, high));
     }
 

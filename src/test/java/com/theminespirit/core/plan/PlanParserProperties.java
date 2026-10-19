@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.theminespirit.core.script.CoreScripts;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.Map;
 import net.jqwik.api.Arbitrary;
@@ -31,8 +31,7 @@ class PlanParserProperties {
     }
 
     @Property
-    void parse_SequenceWithinDepthLimit_Succeeds(
-            @ForAll @IntRange(min = 1, max = MAX_ALLOWED_DEPTH) int depth) {
+    void parse_SequenceWithinDepthLimit_Succeeds(@ForAll @IntRange(min = 1, max = MAX_ALLOWED_DEPTH) int depth) {
         assertInstanceOf(
                 SequenceNode.class,
                 PlanParser.parse(nestedSequence(depth), CATALOG),
@@ -59,10 +58,12 @@ class PlanParserProperties {
             PlanParser.parse(json, CATALOG);
         } catch (PlanValidationException expected) {
         } catch (RuntimeException other) {
-            fail("парсер плана на любом JSON-дереве обязан бросать только PlanValidationException, а упал с "
-                    + other.getClass().getSimpleName() + ": " + other.getMessage()
-                    + ". Исключение другого типа прорвётся в серверный тик и замаскирует дефект валидатора. JSON="
-                    + json, other);
+            fail(
+                    "парсер плана на любом JSON-дереве обязан бросать только PlanValidationException, а упал с "
+                            + other.getClass().getSimpleName() + ": " + other.getMessage()
+                            + ". Исключение другого типа прорвётся в серверный тик и замаскирует дефект валидатора. JSON="
+                            + json,
+                    other);
         }
     }
 

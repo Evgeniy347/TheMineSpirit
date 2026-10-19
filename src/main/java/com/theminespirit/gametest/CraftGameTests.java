@@ -35,8 +35,7 @@ public final class CraftGameTests {
     private static final BlockPos TABLE_FAR = new BlockPos(5, 1, 1);
     private static final int PLAYER_SLOTS = 36;
 
-    private CraftGameTests() {
-    }
+    private CraftGameTests() {}
 
     @GameTest(template = FIELD, batch = "craft_planks", timeoutTicks = TIMEOUT)
     public static void craft_TwoLogsEightPlanks_ConsumesLogsExactly(GameTestHelper helper) {
@@ -81,11 +80,15 @@ public final class CraftGameTests {
             assertCount(helper, spirit, Items.STICK, 0, "палки после крафта кирки");
             BlockPos table = helper.absolutePos(TABLE_FAR);
             BlockPos feet = spirit.blockPosition();
-            helper.assertTrue(spirit.getX() > startX + 0.5 && SpiritReach.reachable(
-                            new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                            new BlockCoord(table.getX(), table.getY(), table.getZ())),
-                    "дух обязан подойти к верстаку на досягаемость (" + SpiritReach.current().describe()
-                            + ", упрощение 44.2): стоит в " + feet.toShortString() + ", верстак " + table.toShortString()
+            helper.assertTrue(
+                    spirit.getX() > startX + 0.5
+                            && SpiritReach.reachable(
+                                    new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                                    new BlockCoord(table.getX(), table.getY(), table.getZ())),
+                    "дух обязан подойти к верстаку на досягаемость ("
+                            + SpiritReach.current().describe()
+                            + ", упрощение 44.2): стоит в " + feet.toShortString() + ", верстак "
+                            + table.toShortString()
                             + ", сдвинулся по x на " + (spirit.getX() - startX));
             cleanup(helper, spirit);
         });
@@ -94,15 +97,16 @@ public final class CraftGameTests {
     @GameTest(template = FIELD, batch = "craft_table_in_inventory", timeoutTicks = TIMEOUT)
     public static void craft_TableOnlyInInventory_PlacedOnFloorAndUsed(GameTestHelper helper) {
         field(helper);
-        SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 3),
-                stack(Items.STICK, 2));
+        SpiritEntity spirit =
+                prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 3), stack(Items.STICK, 2));
         SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "кирка у поставленного верстака");
             assertCount(helper, spirit, Items.CRAFTING_TABLE, 0, "верстак в инвентаре после установки");
-            helper.assertTrue(tablesOnField(helper) == 1,
+            helper.assertTrue(
+                    tablesOnField(helper) == 1,
                     "дух обязан поставить ровно один верстак из инвентаря, на поле их " + tablesOnField(helper));
             cleanup(helper, spirit);
         });
@@ -144,8 +148,8 @@ public final class CraftGameTests {
     public static void craft_MixedPlanks_PickaxeFromBirchAndOak(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
-        SpiritEntity spirit = prepare(helper, stack(Items.BIRCH_PLANKS, 1), stack(Items.OAK_PLANKS, 2),
-                stack(Items.STICK, 2));
+        SpiritEntity spirit =
+                prepare(helper, stack(Items.BIRCH_PLANKS, 1), stack(Items.OAK_PLANKS, 2), stack(Items.STICK, 2));
         SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
 
         helper.succeedWhen(() -> {
@@ -176,11 +180,13 @@ public final class CraftGameTests {
             assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
             assertCount(helper, spirit, Items.STICK, 64, "палки после крафта 64 штук");
             assertCount(helper, spirit, Items.OAK_PLANKS, 0, "доски после крафта 64 палок");
-            helper.assertTrue(craftTicks.size() == 16, "64 палки при выходе 4 — ровно 16 крафтов, зафиксировано "
-                    + craftTicks.size());
+            helper.assertTrue(
+                    craftTicks.size() == 16,
+                    "64 палки при выходе 4 — ровно 16 крафтов, зафиксировано " + craftTicks.size());
             for (int i = 1; i < craftTicks.size(); i++) {
                 int gap = craftTicks.get(i) - craftTicks.get(i - 1);
-                helper.assertTrue(gap >= CraftTuning.CRAFT_INTERVAL_TICKS,
+                helper.assertTrue(
+                        gap >= CraftTuning.CRAFT_INTERVAL_TICKS,
                         "между крафтами обязано пройти не меньше " + CraftTuning.CRAFT_INTERVAL_TICKS
                                 + " тиков, между крафтами " + (i - 1) + " и " + i + " прошло " + gap);
             }
@@ -205,9 +211,11 @@ public final class CraftGameTests {
         helper.succeedWhen(() -> {
             helper.assertTrue(reloaded[0], "перезагрузка духа ещё не выполнена");
             SpiritEntity now = current[0];
-            helper.assertTrue(now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "восстановленный craft обязан завершиться успехом, статус: " + now.taskStatus().orElse(null)
-                            + ", причина: " + now.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    now.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "восстановленный craft обязан завершиться успехом, статус: "
+                            + now.taskStatus().orElse(null) + ", причина: "
+                            + now.taskFailureReason().orElse("нет"));
             assertCount(helper, now, Items.STICK, 64, "палки после перезапуска: недостающее число, а не заново 64");
             assertCount(helper, now, Items.OAK_PLANKS, 0, "доски после перезапуска");
             cleanup(helper, now);
@@ -218,8 +226,8 @@ public final class CraftGameTests {
     public static void craft_Cake_EmptyBucketsReturnToInventory(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
-        SpiritEntity spirit = prepare(helper, stack(Items.MILK_BUCKET, 3), stack(Items.SUGAR, 2),
-                stack(Items.EGG, 1), stack(Items.WHEAT, 3));
+        SpiritEntity spirit = prepare(
+                helper, stack(Items.MILK_BUCKET, 3), stack(Items.SUGAR, 2), stack(Items.EGG, 1), stack(Items.WHEAT, 3));
         SpiritRun run = launch(helper, spirit, "craft", "cake", 1);
 
         helper.succeedWhen(() -> {

@@ -19,25 +19,40 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class TacticsStateCodecTests {
     static StoredTactics full() {
-        TacticsMemory memory = new TacticsMemory(Optional.of(TacticalOption.RETREAT), DecisionSource.RULE, 1200,
-                TacticalState.RETREATING, 1180, CombatMode.DEFENSIVE, CombatMode.AGGRESSIVE,
-                Optional.of(new Point(10.5, 64, -3.25)), 1190, 0.35, 1100);
-        return new StoredTactics(CombatMode.AGGRESSIVE, Optional.of(new OrdersBuilder.Zone(new Point(1, 2, 3), 12)),
-                Optional.of("0b9c3c1e-0000-4000-8000-000000000001"), Optional.of(memory),
+        TacticsMemory memory = new TacticsMemory(
+                Optional.of(TacticalOption.RETREAT),
+                DecisionSource.RULE,
+                1200,
+                TacticalState.RETREATING,
+                1180,
+                CombatMode.DEFENSIVE,
+                CombatMode.AGGRESSIVE,
+                Optional.of(new Point(10.5, 64, -3.25)),
+                1190,
+                0.35,
+                1100);
+        return new StoredTactics(
+                CombatMode.AGGRESSIVE,
+                Optional.of(new OrdersBuilder.Zone(new Point(1, 2, 3), 12)),
+                Optional.of("0b9c3c1e-0000-4000-8000-000000000001"),
+                Optional.of(memory),
                 new RetreatTracker(RetreatMethod.HOME, 1185));
     }
 
     static StoredTactics minimal() {
-        return new StoredTactics(CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), Optional.empty(),
-                RetreatTracker.IDLE);
+        return new StoredTactics(
+                CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), Optional.empty(), RetreatTracker.IDLE);
     }
 
     @Test
     void decode_EncodedFullState_RestoresEveryField() {
         StoredTactics restored = TacticsStateCodec.decode(TacticsStateCodec.encode(full()));
 
-        assertEquals(full(), restored, "Сохранение духа обязано вернуть память тактики, зону, подопечного и "
-                + "исполняемый отход без потерь, иначе после перезапуска дух забудет бой");
+        assertEquals(
+                full(),
+                restored,
+                "Сохранение духа обязано вернуть память тактики, зону, подопечного и "
+                        + "исполняемый отход без потерь, иначе после перезапуска дух забудет бой");
     }
 
     @Test
@@ -51,12 +66,12 @@ class TacticsStateCodecTests {
     void encode_Full_CarriesCurrentVersion() {
         String json = TacticsStateCodec.encode(full());
 
-        assertTrue(json.contains("\"version\":" + TacticsStateCodec.VERSION),
+        assertTrue(
+                json.contains("\"version\":" + TacticsStateCodec.VERSION),
                 "Состояние тактики пишется с версией формата: читатель выбирает разбор по ней");
     }
 
-    record Corrupt(String name, String json) {
-    }
+    record Corrupt(String name, String json) {}
 
     static Stream<Corrupt> corrupt() {
         String valid = TacticsStateCodec.encode(minimal());
@@ -76,7 +91,9 @@ class TacticsStateCodecTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("corrupt")
     void decode_CorruptState_ThrowsFormatException(Corrupt corrupt) {
-        assertThrows(TacticsFormatException.class, () -> TacticsStateCodec.decode(corrupt.json()),
+        assertThrows(
+                TacticsFormatException.class,
+                () -> TacticsStateCodec.decode(corrupt.json()),
                 "Повреждённое состояние («" + corrupt.name() + "») обязано кончаться ошибкой, а не тихим "
                         + "значением по умолчанию: молчаливый сброс прячет потерю памяти боя");
     }
@@ -85,10 +102,13 @@ class TacticsStateCodecTests {
     void decode_BrokenMemory_ThrowsFormatExceptionWithReason() {
         String json = TacticsStateCodec.encode(full()).replace("\"hpWindowRef\":0.35", "\"hpWindowRef\":7.5");
 
-        TacticsFormatException error = assertThrows(TacticsFormatException.class, () -> TacticsStateCodec.decode(json),
+        TacticsFormatException error = assertThrows(
+                TacticsFormatException.class,
+                () -> TacticsStateCodec.decode(json),
                 "Доля HP больше единицы — не память тактики, а повреждение");
 
-        assertTrue(error.getMessage().contains("SpiritTactics"),
+        assertTrue(
+                error.getMessage().contains("SpiritTactics"),
                 "Сообщение называет ключ, который проверять: " + error.getMessage());
     }
 }

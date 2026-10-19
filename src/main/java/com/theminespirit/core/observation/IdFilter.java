@@ -26,7 +26,9 @@ public final class IdFilter {
         for (String pattern : patterns) {
             normalized.add(normalizePattern(pattern));
         }
-        return normalized.isEmpty() || normalized.contains(ANY_PATTERN) ? MATCH_ALL : new IdFilter(List.copyOf(normalized));
+        return normalized.isEmpty() || normalized.contains(ANY_PATTERN)
+                ? MATCH_ALL
+                : new IdFilter(List.copyOf(normalized));
     }
 
     public boolean matches(String id) {

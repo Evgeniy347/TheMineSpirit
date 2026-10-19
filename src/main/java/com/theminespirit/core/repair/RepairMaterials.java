@@ -26,8 +26,7 @@ public final class RepairMaterials {
 
     private static final String MINECRAFT_PREFIX = "minecraft:";
 
-    private RepairMaterials() {
-    }
+    private RepairMaterials() {}
 
     public static Optional<String> materialFor(String itemId) {
         if (itemId == null || itemId.isBlank()) {

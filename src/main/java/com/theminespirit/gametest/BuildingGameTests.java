@@ -30,8 +30,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class BuildingGameTests {
     private static final int SETTLE_TICKS = 5;
 
-    private BuildingGameTests() {
-    }
+    private BuildingGameTests() {}
 
     private static void prepare(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -49,8 +48,23 @@ public final class BuildingGameTests {
     private static ScriptCall fillCall(GameTestHelper helper, BlockPos first, BlockPos second) {
         BlockPos from = helper.absolutePos(first);
         BlockPos to = helper.absolutePos(second);
-        return new ScriptCall("fill", Map.of("block", "cobblestone", "x1", from.getX(), "y1", from.getY(), "z1", from.getZ(),
-                "x2", to.getX(), "y2", to.getY(), "z2", to.getZ()));
+        return new ScriptCall(
+                "fill",
+                Map.of(
+                        "block",
+                        "cobblestone",
+                        "x1",
+                        from.getX(),
+                        "y1",
+                        from.getY(),
+                        "z1",
+                        from.getZ(),
+                        "x2",
+                        to.getX(),
+                        "y2",
+                        to.getY(),
+                        "z2",
+                        to.getZ()));
     }
 
     @GameTest(template = "arena", batch = "build_fill", timeoutTicks = 400)
@@ -79,30 +93,36 @@ public final class BuildingGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "коробка 2×2×2 обязана залиться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(seenAt.size() == 8,
-                    "все 8 клеток обязаны появиться в мире, замечено " + seenAt.size());
+            helper.assertTrue(seenAt.size() == 8, "все 8 клеток обязаны появиться в мире, замечено " + seenAt.size());
             List<BlockPos> sequence = new ArrayList<>(seenAt.keySet());
             sequence.sort((left, right) -> Integer.compare(seenAt.get(left), seenAt.get(right)));
             for (int i = 1; i < sequence.size(); i++) {
-                helper.assertTrue(sequence.get(i - 1).getY() <= sequence.get(i).getY(),
+                helper.assertTrue(
+                        sequence.get(i - 1).getY() <= sequence.get(i).getY(),
                         "порядок постановки обязан идти снизу вверх: клетка " + sequence.get(i - 1) + " позже "
                                 + sequence.get(i) + ", верхний блок без опоры снизу обвалится");
             }
             BlockPos feet = spirit.blockPosition();
             BlockPos boxMin = helper.absolutePos(first);
             BlockPos boxMax = helper.absolutePos(second);
-            boolean inside = feet.getX() >= boxMin.getX() && feet.getX() <= boxMax.getX()
-                    && feet.getY() >= boxMin.getY() && feet.getY() <= boxMax.getY()
-                    && feet.getZ() >= boxMin.getZ() && feet.getZ() <= boxMax.getZ();
-            helper.assertTrue(!inside,
-                    "дух обязан стоять снаружи залитого: иначе он замуровал себя, клетка духа " + feet);
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+            boolean inside = feet.getX() >= boxMin.getX()
+                    && feet.getX() <= boxMax.getX()
+                    && feet.getY() >= boxMin.getY()
+                    && feet.getY() <= boxMax.getY()
+                    && feet.getZ() >= boxMin.getZ()
+                    && feet.getZ() <= boxMax.getZ();
+            helper.assertTrue(
+                    !inside, "дух обязан стоять снаружи залитого: иначе он замуровал себя, клетка духа " + feet);
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "8 блоков обязаны израсходоваться ровно: двойного расхода нет");
-            helper.assertTrue(run.spiritTicks() <= 380,
+            helper.assertTrue(
+                    run.spiritTicks() <= 380,
                     "заливка 8 блоков обязана уложиться в 380 тиков духа, заняло " + run.spiritTicks());
             GameTestFixtures.finish(helper);
         });
@@ -121,8 +141,11 @@ public final class BuildingGameTests {
         helper.succeedWhen(() -> {
             firstRun.assertStarted();
             secondRun.assertStarted();
-            helper.assertTrue(firstSpirit.taskStatus().isPresent() && firstSpirit.taskStatus().orElse(null) != RunStatus.RUNNING
-                    && secondSpirit.taskStatus().isPresent() && secondSpirit.taskStatus().orElse(null) != RunStatus.RUNNING,
+            helper.assertTrue(
+                    firstSpirit.taskStatus().isPresent()
+                            && firstSpirit.taskStatus().orElse(null) != RunStatus.RUNNING
+                            && secondSpirit.taskStatus().isPresent()
+                            && secondSpirit.taskStatus().orElse(null) != RunStatus.RUNNING,
                     "обе задачи обязаны завершиться: первая "
                             + firstSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", вторая "
                             + secondSpirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
@@ -134,12 +157,16 @@ public final class BuildingGameTests {
                     }
                 }
             }
-            helper.assertTrue(inWorld == 4,
+            helper.assertTrue(
+                    inWorld == 4,
                     "все 4 клетки обязаны стоять: каждая поставлена ровно одним духом, в мире " + inWorld);
-            int spent = 8 - GameTestFixtures.countInInventory(firstSpirit.getInventory(), Items.COBBLESTONE)
+            int spent = 8
+                    - GameTestFixtures.countInInventory(firstSpirit.getInventory(), Items.COBBLESTONE)
                     - GameTestFixtures.countInInventory(secondSpirit.getInventory(), Items.COBBLESTONE);
-            helper.assertTrue(spent == 4,
-                    "потрачено обязано быть ровно 4 блока: двойной постановки и двойного расхода нет, потрачено " + spent);
+            helper.assertTrue(
+                    spent == 4,
+                    "потрачено обязано быть ровно 4 блока: двойной постановки и двойного расхода нет, потрачено "
+                            + spent);
             GameTestFixtures.finish(helper);
         });
     }
@@ -154,11 +181,13 @@ public final class BuildingGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "нехватка материала обязана провалить задачу, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("8") && reason.contains("3"),
+            helper.assertTrue(
+                    reason.contains("8") && reason.contains("3"),
                     "причина обязана называть числа 8 и 3 (нужно и есть), фактически: " + reason);
             int inWorld = 0;
             for (int x = 4; x <= 5; x++) {
@@ -170,8 +199,10 @@ public final class BuildingGameTests {
                     }
                 }
             }
-            helper.assertTrue(inWorld == 3,
-                    "в мире обязано стоять ровно 3 блока: что было, то поставили, дальше честный отказ, стоит " + inWorld);
+            helper.assertTrue(
+                    inWorld == 3,
+                    "в мире обязано стоять ровно 3 блока: что было, то поставили, дальше честный отказ, стоит "
+                            + inWorld);
             GameTestFixtures.finish(helper);
         });
     }
@@ -186,17 +217,20 @@ public final class BuildingGameTests {
         String dimension = helper.getLevel().dimension().location().toString();
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 8);
         try {
-            GameTestFilter.setProtectedZones(List.of(dimension + " " + from.getX() + " "
-                    + from.getY() + " " + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
+            GameTestFilter.setProtectedZones(List.of(dimension + " " + from.getX() + " " + from.getY() + " "
+                    + from.getZ() + " " + to.getX() + " " + to.getY() + " " + to.getZ()));
             SpiritRun run = SpiritRun.launch(helper, spirit, fillCall(helper, first, second), SETTLE_TICKS);
 
             helper.succeedWhen(() -> {
                 run.assertStarted();
-                helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                helper.assertTrue(
+                        spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                         "коробка в защищённой зоне обязана провалиться, статус "
                                 + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-                helper.assertTrue(spirit.taskFailureReason().orElse("").contains("защищён"),
-                        "причина обязана называть защищённую зону, фактически: " + spirit.taskFailureReason().orElse("нет"));
+                helper.assertTrue(
+                        spirit.taskFailureReason().orElse("").contains("защищён"),
+                        "причина обязана называть защищённую зону, фактически: "
+                                + spirit.taskFailureReason().orElse("нет"));
                 int inWorld = 0;
                 for (int x = 4; x <= 5; x++) {
                     for (int y = 1; y <= 2; y++) {
@@ -207,9 +241,9 @@ public final class BuildingGameTests {
                         }
                     }
                 }
-                helper.assertTrue(inWorld == 0,
-                        "мир обязан остаться нетронутым: в зону ни блока, стоит " + inWorld);
-                helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 8,
+                helper.assertTrue(inWorld == 0, "мир обязан остаться нетронутым: в зону ни блока, стоит " + inWorld);
+                helper.assertTrue(
+                        GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 8,
                         "материал при отказе по зоне обязан остаться целым");
                 GameTestFilter.setProtectedZones(List.of());
                 GameTestFixtures.finish(helper);
@@ -240,30 +274,40 @@ public final class BuildingGameTests {
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 2);
         SpiritBuildSupplies supplies = new SpiritBuildSupplies(spirit);
 
-        helper.assertTrue(supplies.inInventory("cobblestone") == 2,
+        helper.assertTrue(
+                supplies.inInventory("cobblestone") == 2,
                 "счёт обязан идти из инвентаря духа: 2 булыжника, посчитано " + supplies.inInventory("cobblestone"));
-        helper.assertTrue(supplies.inInventory("nope_block") == 0,
-                "неизвестный блок обязан считаться нулём, а не падать");
+        helper.assertTrue(
+                supplies.inInventory("nope_block") == 0, "неизвестный блок обязан считаться нулём, а не падать");
         var steps = supplies.withdraw("cobblestone", 8);
-        helper.assertTrue(steps.size() == 2,
-                "шагов обязано быть 2: ближний сундук (5) и дальний (3), пустой и печь пропускаются, дальний за радиусом исключён, шагов " + steps.size());
+        helper.assertTrue(
+                steps.size() == 2,
+                "шагов обязано быть 2: ближний сундук (5) и дальний (3), пустой и печь пропускаются, дальний за радиусом исключён, шагов "
+                        + steps.size());
         BlockPos nearAbs = helper.absolutePos(near);
         BlockPos farAbs = helper.absolutePos(far);
-        helper.assertTrue(steps.get(0).params().get("container").equals(nearAbs.getX() + "," + nearAbs.getY() + "," + nearAbs.getZ())
-                && steps.get(0).params().get("count").equals(5),
-                "первым обязан идти ближний сундук с пятёркой: ближний первым, фактически " + steps.get(0).params());
-        helper.assertTrue(steps.get(1).params().get("container").equals(farAbs.getX() + "," + farAbs.getY() + "," + farAbs.getZ())
-                && steps.get(1).params().get("count").equals(3),
-                "вторым обязан идти дальний с остатком 3, фактически " + steps.get(1).params());
-        helper.assertTrue(supplies.withdraw("cobblestone", 0).isEmpty(),
-                "запрос на ноль обязан давать пустые шаги");
+        helper.assertTrue(
+                steps.get(0)
+                                .params()
+                                .get("container")
+                                .equals(nearAbs.getX() + "," + nearAbs.getY() + "," + nearAbs.getZ())
+                        && steps.get(0).params().get("count").equals(5),
+                "первым обязан идти ближний сундук с пятёркой: ближний первым, фактически "
+                        + steps.get(0).params());
+        helper.assertTrue(
+                steps.get(1).params().get("container").equals(farAbs.getX() + "," + farAbs.getY() + "," + farAbs.getZ())
+                        && steps.get(1).params().get("count").equals(3),
+                "вторым обязан идти дальний с остатком 3, фактически "
+                        + steps.get(1).params());
+        helper.assertTrue(supplies.withdraw("cobblestone", 0).isEmpty(), "запрос на ноль обязан давать пустые шаги");
         GameTestFixtures.reset(helper);
         helper.succeed();
     }
 
     private static ScriptCall placeCall(GameTestHelper helper, BlockPos relative) {
         BlockPos absolute = helper.absolutePos(relative);
-        return new ScriptCall("place_block",
+        return new ScriptCall(
+                "place_block",
                 Map.of("block", "cobblestone", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ()));
     }
 
@@ -276,18 +320,22 @@ public final class BuildingGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "пустая клетка с блоком в инвентаре обязана застроиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(helper.getBlockState(target).is(Blocks.COBBLESTONE),
-                    "в целевой клетке обязан стоять булыжник");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
+            helper.assertTrue(
+                    helper.getBlockState(target).is(Blocks.COBBLESTONE), "в целевой клетке обязан стоять булыжник");
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 0,
                     "предмет обязан израсходоваться: стройка бесплатно не строит, в инвентаре "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
-            helper.assertTrue(PlacedBlocksData.get(helper.getLevel()).isSpiritMarked(helper.absolutePos(target)),
+            helper.assertTrue(
+                    PlacedBlocksData.get(helper.getLevel()).isSpiritMarked(helper.absolutePos(target)),
                     "поставленный духом блок обязан помечаться меткой духа: иначе дух не разберёт свою постройку");
-            helper.assertTrue(run.spiritTicks() <= 300,
+            helper.assertTrue(
+                    run.spiritTicks() <= 300,
                     "постановка одного блока обязана уложиться в 300 тиков духа, заняло " + run.spiritTicks());
             GameTestFixtures.finish(helper);
         });
@@ -303,14 +351,17 @@ public final class BuildingGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "занятая клетка обязана дать отказ, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(spirit.taskFailureReason().orElse("").contains("занята"),
-                    "причина обязана называть, что место занято, фактически: " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(helper.getBlockState(target).is(Blocks.STONE),
-                    "занятая клетка обязана остаться камнем");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
+            helper.assertTrue(
+                    spirit.taskFailureReason().orElse("").contains("занята"),
+                    "причина обязана называть, что место занято, фактически: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(helper.getBlockState(target).is(Blocks.STONE), "занятая клетка обязана остаться камнем");
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 1,
                     "материал при отказе обязан остаться в инвентаре");
             GameTestFixtures.finish(helper);
         });
@@ -325,11 +376,13 @@ public final class BuildingGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "далёкая клетка обязана застроиться после подхода, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(helper.getBlockState(target).is(Blocks.COBBLESTONE),
+            helper.assertTrue(
+                    helper.getBlockState(target).is(Blocks.COBBLESTONE),
                     "в дальней клетке обязан стоять булыжник: дух подошёл и поставил");
             GameTestFixtures.finish(helper);
         });
@@ -344,14 +397,15 @@ public final class BuildingGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
                     "без материала задача обязана провалиться, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("нужно 1, есть 0"),
+            helper.assertTrue(
+                    reason.contains("нужно 1, есть 0"),
                     "причина обязана называть числа «нужно 1, есть 0», фактически: " + reason);
-            helper.assertTrue(helper.getBlockState(target).isAir(),
-                    "без материала клетка обязана остаться пустой");
+            helper.assertTrue(helper.getBlockState(target).isAir(), "без материала клетка обязана остаться пустой");
             GameTestFixtures.finish(helper);
         });
     }
@@ -366,23 +420,25 @@ public final class BuildingGameTests {
         BlockState wanted = BlockStates.stateFor("cobblestone");
 
         BlockPlacer.Begin busy = placer.begin(helper.absolutePos(occupied), wanted, "cobblestone");
-        helper.assertTrue(busy instanceof BlockPlacer.Refused refused
-                && refused.reason() == BlockPlacer.RefuseReason.OCCUPIED,
-                "занятая клетка без материала обязана отказать занятостью, а не нехваткой: проверка места идёт раньше материала, ответ " + busy);
+        helper.assertTrue(
+                busy instanceof BlockPlacer.Refused refused && refused.reason() == BlockPlacer.RefuseReason.OCCUPIED,
+                "занятая клетка без материала обязана отказать занятостью, а не нехваткой: проверка места идёт раньше материала, ответ "
+                        + busy);
 
         BlockPos far = new BlockPos(8, 1, 8);
         BlockPlacer.Begin distant = placer.begin(helper.absolutePos(far), wanted, "cobblestone");
-        helper.assertTrue(distant instanceof BlockPlacer.Refused refused
-                && refused.reason() == BlockPlacer.RefuseReason.OUT_OF_REACH,
-                "далёкая клетка без материала обязана отказать досягаемостью: подход идёт раньше списания, ответ " + distant);
+        helper.assertTrue(
+                distant instanceof BlockPlacer.Refused refused
+                        && refused.reason() == BlockPlacer.RefuseReason.OUT_OF_REACH,
+                "далёкая клетка без материала обязана отказать досягаемостью: подход идёт раньше списания, ответ "
+                        + distant);
 
         BlockPos free = new BlockPos(2, 1, 2);
         BlockPlacer.Begin poor = placer.begin(helper.absolutePos(free), wanted, "cobblestone");
-        helper.assertTrue(poor instanceof BlockPlacer.Refused refused
-                && refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL,
+        helper.assertTrue(
+                poor instanceof BlockPlacer.Refused refused && refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL,
                 "пустая клетка рядом без материала обязана отказать нехваткой с числами, ответ " + poor);
-        helper.assertTrue(helper.getBlockState(free).isAir(),
-                "отказ не трогает мир: клетка обязана остаться пустой");
+        helper.assertTrue(helper.getBlockState(free).isAir(), "отказ не трогает мир: клетка обязана остаться пустой");
         GameTestFixtures.reset(helper);
         helper.succeed();
     }

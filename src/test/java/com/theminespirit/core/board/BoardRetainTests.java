@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -22,14 +21,13 @@ class BoardRetainTests {
     }
 
     private static BoardTicket ticket(String id, BoardCase boardCase, String cause) {
-        return new BoardTicket(id, boardCase, Optional.empty(),
-                BoardRules.priorityOf(boardCase), 0, 1, cause, List.of(), Map.of());
+        return new BoardTicket(
+                id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase), 0, 1, cause, List.of(), Map.of());
     }
 
-    private static BoardTicket ticket(String id, BoardCase boardCase, String cause,
-            List<String> dependsOn) {
-        return new BoardTicket(id, boardCase, Optional.empty(),
-                BoardRules.priorityOf(boardCase), 0, 1, cause, dependsOn, Map.of());
+    private static BoardTicket ticket(String id, BoardCase boardCase, String cause, List<String> dependsOn) {
+        return new BoardTicket(
+                id, boardCase, Optional.empty(), BoardRules.priorityOf(boardCase), 0, 1, cause, dependsOn, Map.of());
     }
 
     @Test
@@ -39,9 +37,13 @@ class BoardRetainTests {
 
         List<String> detached = board.retain(Set.of(), 0);
 
-        assertEquals(List.of("crater_1"), detached,
+        assertEquals(
+                List.of("crater_1"),
+                detached,
                 "Исчезнувшая воронка снимает FILL_CRATER: причина отпала, а не срок истёк");
-        assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("crater_1"),
+        assertEquals(
+                Optional.of(BoardStatus.CANCELLED),
+                board.statusOf("crater_1"),
                 "Снятое по актуальности задание помечается CANCELLED: prune уберёт его из очереди");
     }
 
@@ -52,9 +54,10 @@ class BoardRetainTests {
 
         List<String> detached = board.retain(Set.of("crater:1:64:2"), 0);
 
-        assertEquals(List.of(), detached,
-                "Живая причина оставляет задание: воронка на месте — задание висит");
-        assertEquals(Optional.of(BoardStatus.PENDING), board.statusOf("crater_1"),
+        assertEquals(List.of(), detached, "Живая причина оставляет задание: воронка на месте — задание висит");
+        assertEquals(
+                Optional.of(BoardStatus.PENDING),
+                board.statusOf("crater_1"),
                 "Задание с живой причиной остаётся в выдаче");
     }
 
@@ -65,7 +68,9 @@ class BoardRetainTests {
 
         List<String> detached = board.retain(Set.of(), 0);
 
-        assertEquals(List.of(), detached,
+        assertEquals(
+                List.of(),
+                detached,
                 "Постоянное задание не снимается никогда: always переживает любое снятие "
                         + "по актуальности, иначе вечное задание умрёт на первой пересборке");
     }
@@ -74,16 +79,19 @@ class BoardRetainTests {
     void retain_Cascade_DetachesDependants() {
         Board board = boardAt(0);
         board.submit(ticket("lure_1", BoardCase.LURE_ANIMAL, "animal:capture_1"));
-        board.submit(ticket("dismantle_1", BoardCase.DISMANTLE_SHELTER, "shelter:5:64:5",
-                List.of("lure_1")));
+        board.submit(ticket("dismantle_1", BoardCase.DISMANTLE_SHELTER, "shelter:5:64:5", List.of("lure_1")));
 
         List<String> detached = board.retain(Set.of("shelter:5:64:5"), 0);
 
-        assertEquals(List.of("lure_1"), detached,
+        assertEquals(
+                List.of("lure_1"),
+                detached,
                 "Напрямую снято только «приманить»: причина укрытия жива, само укрытие стоит");
-        assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("lure_1"),
-                "«Приманить» снято: животное погибло");
-        assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("dismantle_1"),
+        assertEquals(
+                Optional.of(BoardStatus.CANCELLED), board.statusOf("lure_1"), "«Приманить» снято: животное погибло");
+        assertEquals(
+                Optional.of(BoardStatus.CANCELLED),
+                board.statusOf("dismantle_1"),
                 "«Разобрать укрытие» снято каскадом при живой причине: без приманки разбирать "
                         + "нечего, иначе задание ждало бы отменённого предшественника навсегда");
     }
@@ -98,10 +106,13 @@ class BoardRetainTests {
 
         board.retain(Set.of(), 0);
 
-        assertEquals(Optional.of(BoardStatus.DONE), board.statusOf("pen_1"),
-                "Выполненная постройка не трогается снятием: DONE остаётся условием "
-                        + "для других заданий");
-        assertEquals(Optional.of(BoardStatus.CANCELLED), board.statusOf("lure_1"),
+        assertEquals(
+                Optional.of(BoardStatus.DONE),
+                board.statusOf("pen_1"),
+                "Выполненная постройка не трогается снятием: DONE остаётся условием " + "для других заданий");
+        assertEquals(
+                Optional.of(BoardStatus.CANCELLED),
+                board.statusOf("lure_1"),
                 "Незавершённое с мёртвой причиной снято, выполненное — нет");
     }
 
@@ -113,9 +124,10 @@ class BoardRetainTests {
 
         List<String> detached = board.retain(Set.of(), 0);
 
-        assertEquals(List.of("crater_1"), detached,
-                "Пустой набор причин снимает только не-always: постоянное остаётся, "
-                        + "событийное уходит");
+        assertEquals(
+                List.of("crater_1"),
+                detached,
+                "Пустой набор причин снимает только не-always: постоянное остаётся, " + "событийное уходит");
     }
 
     @Test
@@ -126,7 +138,9 @@ class BoardRetainTests {
         board.retain(Set.of(), 0);
         List<String> second = board.retain(Set.of(), 0);
 
-        assertEquals(List.of(), second,
+        assertEquals(
+                List.of(),
+                second,
                 "Двойное снятие идемпотентно: второе снятие не находит работу, иначе "
                         + "пересборка писала бы дубли в журнал");
     }
@@ -139,7 +153,9 @@ class BoardRetainTests {
         List<String> firstRun = first.retain(live, 0);
         List<String> secondRun = second.retain(live, 0);
 
-        assertEquals(firstRun, secondRun,
+        assertEquals(
+                firstRun,
+                secondRun,
                 "Снятие детерминировано: при тех же живых причинах те же задания снимаются "
                         + "в том же порядке, иначе журнал плывёт между пересборками");
     }
@@ -153,6 +169,9 @@ class BoardRetainTests {
 
     @Provide
     Arbitrary<Set<String>> causeSets() {
-        return Arbitraries.of("", "crater:1:64:2", "fence:9:64:9").set().ofMinSize(0).ofMaxSize(2);
+        return Arbitraries.of("", "crater:1:64:2", "fence:9:64:9")
+                .set()
+                .ofMinSize(0)
+                .ofMaxSize(2);
     }
 }

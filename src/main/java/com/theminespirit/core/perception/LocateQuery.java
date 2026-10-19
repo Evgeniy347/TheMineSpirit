@@ -17,8 +17,8 @@ public record LocateQuery(LocateType type, IdFilter filter, String species, Scan
                     + ": фильтр id применим только к поиску блока");
         }
         if (type != LocateType.TREE && !species.equals(ANY_SPECIES)) {
-            throw new IllegalArgumentException("Вид '" + species + "' задан для поиска " + type
-                    + ": вид применим только к поиску дерева");
+            throw new IllegalArgumentException(
+                    "Вид '" + species + "' задан для поиска " + type + ": вид применим только к поиску дерева");
         }
         requireSpeciesName(species);
     }

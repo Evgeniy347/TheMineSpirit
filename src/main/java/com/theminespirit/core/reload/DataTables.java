@@ -6,8 +6,8 @@ import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
-import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.doors.DoorTuning;
+import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingWait;
 import com.theminespirit.core.forestry.ReplantData;
@@ -55,8 +55,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * работать в classpath-версии: отсутствие файла — не ошибка, ошибкой считается только нечитаемый/битый json.
  */
 public final class DataTables {
-    private static final List<String> LIVE_SCHEMATIC_FILES = List.of("fixture_plate", "fence", "storage_v1",
-            "storage_v2", "storage_v3", "storage_v4", "reach_wall", "state_demo");
+    private static final List<String> LIVE_SCHEMATIC_FILES = List.of(
+            "fixture_plate",
+            "fence",
+            "storage_v1",
+            "storage_v2",
+            "storage_v3",
+            "storage_v4",
+            "reach_wall",
+            "state_demo");
 
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 
@@ -100,25 +107,35 @@ public final class DataTables {
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
-        this.tactics = registry.registerLazy(TableDefinition.composite("tactics",
-                List.of(TACTICS_ROOT + "enemies.json", TACTICS_ROOT + "weights.json", TACTICS_ROOT + "rules.json",
-                        TACTICS_ROOT + "modes.json"),
-                contents -> TacticsConfig.fromJson(contents.get(0).json(), contents.get(1).json(),
-                        contents.get(2).json(), contents.get(3).json())),
+        this.tactics = registry.registerLazy(
+                TableDefinition.composite(
+                        "tactics",
+                        List.of(
+                                TACTICS_ROOT + "enemies.json",
+                                TACTICS_ROOT + "weights.json",
+                                TACTICS_ROOT + "rules.json",
+                                TACTICS_ROOT + "modes.json"),
+                        contents -> TacticsConfig.fromJson(
+                                contents.get(0).json(),
+                                contents.get(1).json(),
+                                contents.get(2).json(),
+                                contents.get(3).json())),
                 TacticsConfig::readFromClasspath);
         this.adapter = registry.registerLazy(
-                TableDefinition.single("adapter", TACTICS_ROOT + "adapter.json",
+                TableDefinition.single(
+                        "adapter",
+                        TACTICS_ROOT + "adapter.json",
                         (json, origin) -> TacticsAdapterSettings.fromJson(json)),
                 TacticsAdapterSettings::readFromClasspath);
         this.values = registry.registerLazy(
-                TableDefinition.single("item_values", "data/theminespirit/inventory/item_values.json",
-                        ValueTable::parse),
+                TableDefinition.single(
+                        "item_values", "data/theminespirit/inventory/item_values.json", ValueTable::parse),
                 () -> {
                     return ValueTable.load();
                 });
         this.warehouseCategories = registry.registerLazy(
-                TableDefinition.single("warehouse_categories", WarehouseCategories.RESOURCE,
-                        WarehouseCategories::parse),
+                TableDefinition.single(
+                        "warehouse_categories", WarehouseCategories.RESOURCE, WarehouseCategories::parse),
                 WarehouseCategories::load);
         this.kit = registry.registerLazy(
                 TableDefinition.single("base_kit", "data/theminespirit/inventory/base_kit.json", BaseKit::parse),
@@ -126,8 +143,8 @@ public final class DataTables {
                     return BaseKit.load();
                 });
         this.kitFor = registry.registerLazy(
-                TableDefinition.single("kit_activities", "data/theminespirit/inventory/kit_activities.json",
-                        KitFor::parse),
+                TableDefinition.single(
+                        "kit_activities", "data/theminespirit/inventory/kit_activities.json", KitFor::parse),
                 KitFor::readClasspath);
         this.inventoryNorm = registry.registerLazy(
                 TableDefinition.single("inventory_norm", InventoryNormTable.RESOURCE, InventoryNormTable::parse),
@@ -139,11 +156,9 @@ public final class DataTables {
                 TableDefinition.single("overflow", OverflowTuning.RESOURCE, OverflowTuning::parse),
                 OverflowTuning::load);
         this.outside = registry.registerLazy(
-                TableDefinition.single("outside", OutsideRules.RESOURCE, OutsideRules::parse),
-                OutsideRules::load);
+                TableDefinition.single("outside", OutsideRules.RESOURCE, OutsideRules::parse), OutsideRules::load);
         this.armor = registry.registerLazy(
-                TableDefinition.single("armor", "data/theminespirit/armor/armor_table.json", ArmorTable::parse),
-                () -> {
+                TableDefinition.single("armor", "data/theminespirit/armor/armor_table.json", ArmorTable::parse), () -> {
                     armorSeeds.incrementAndGet();
                     return ArmorTable.load();
                 });
@@ -157,14 +172,14 @@ public final class DataTables {
                 TableDefinition.single("drops", "data/theminespirit/acquire/drops.json", DropTable::parse),
                 DropTable::load);
         this.toolReplace = registry.registerLazy(
-                TableDefinition.single("tool_replace", ToolReserve.RESOURCE, ToolReserve::parse),
-                ToolReserve::load);
+                TableDefinition.single("tool_replace", ToolReserve.RESOURCE, ToolReserve::parse), ToolReserve::load);
         this.protection = registry.registerLazy(
-                TableDefinition.single("protection", "data/theminespirit/policy/protection.json",
-                        ProtectionConfig::parse),
+                TableDefinition.single(
+                        "protection", "data/theminespirit/policy/protection.json", ProtectionConfig::parse),
                 ProtectionConfig::readClasspath);
         this.presets = registry.registerLazy(
-                TableDefinition.indexed(PresetLibrary.INDEX_ID,
+                TableDefinition.indexed(
+                        PresetLibrary.INDEX_ID,
                         PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json",
                         index -> PresetLibrary.bodyPaths(index.json(), index.origin()),
                         PresetLibrary::parse),
@@ -184,42 +199,43 @@ public final class DataTables {
                 TableDefinition.single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse),
                 DoorTuning::loadDefault);
         this.hunger = registry.registerLazy(
-                TableDefinition.single("hunger", HungerRules.RESOURCE, HungerRules::parse),
-                HungerRules::load);
+                TableDefinition.single("hunger", HungerRules.RESOURCE, HungerRules::parse), HungerRules::load);
         this.fishing = registry.registerLazy(
-                TableDefinition.single("fishing", FishingData.RESOURCE, FishingData::parse),
-                FishingData::load);
+                TableDefinition.single("fishing", FishingData.RESOURCE, FishingData::parse), FishingData::load);
         this.replant = registry.registerLazy(
-                TableDefinition.single("replant", ReplantData.RESOURCE, ReplantData::parse),
-                ReplantData::load);
+                TableDefinition.single("replant", ReplantData.RESOURCE, ReplantData::parse), ReplantData::load);
         this.descent = registry.registerLazy(
-                TableDefinition.single("descent", DescentData.RESOURCE, DescentData::parse),
-                DescentData::load);
+                TableDefinition.single("descent", DescentData.RESOURCE, DescentData::parse), DescentData::load);
         this.descentLevels = registry.registerLazy(
                 TableDefinition.single("descent_levels", DescentLevels.RESOURCE, DescentLevels::parse),
                 DescentLevels::load);
         this.priorities = registry.registerLazy(
-                TableDefinition.single("priorities", DefenseProfile.RESOURCE,
-                        (json, origin) -> DefenseProfileParser.fromJson(json)),
+                TableDefinition.single(
+                        "priorities", DefenseProfile.RESOURCE, (json, origin) -> DefenseProfileParser.fromJson(json)),
                 DefenseProfile::readFromClasspath);
         this.repair = registry.registerLazy(
-                TableDefinition.single("repair", RepairData.RESOURCE, RepairData::parse),
-                RepairData::load);
+                TableDefinition.single("repair", RepairData.RESOURCE, RepairData::parse), RepairData::load);
         this.observation = registry.registerLazy(
                 TableDefinition.single("observation", ObservationLimits.RESOURCE, ObservationLimits::parse),
                 ObservationLimits::load);
         Map<String, TableHolder<Schematic>> liveSchematics = new LinkedHashMap<>();
         for (String file : LIVE_SCHEMATIC_FILES) {
             String path = PresetLibrary.SCHEMATICS_ROOT + file + SchematicTextParser.EXTENSION;
-            liveSchematics.put(file, registry.registerLazy(
-                    TableDefinition.single("schematic_" + file, path,
-                            (text, origin) -> SchematicTextParser.parse(text, origin).schematic()),
-                    () -> SchematicTextParser.parse(JsonResource.readClasspath(path), path).schematic()));
+            liveSchematics.put(
+                    file,
+                    registry.registerLazy(
+                            TableDefinition.single(
+                                    "schematic_" + file,
+                                    path,
+                                    (text, origin) -> SchematicTextParser.parse(text, origin)
+                                            .schematic()),
+                            () -> SchematicTextParser.parse(JsonResource.readClasspath(path), path)
+                                    .schematic()));
         }
         this.schematics = Map.copyOf(liveSchematics);
         this.processing = registry.registerLazy(
-                TableDefinition.single("processing", ProcessingRules.RESOURCE,
-                        (json, origin) -> ProcessingRules.parse(json, origin)),
+                TableDefinition.single(
+                        "processing", ProcessingRules.RESOURCE, (json, origin) -> ProcessingRules.parse(json, origin)),
                 ProcessingRules::load);
     }
 

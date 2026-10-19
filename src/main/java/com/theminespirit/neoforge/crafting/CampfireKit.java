@@ -8,8 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public final class CampfireKit {
-    private CampfireKit() {
-    }
+    private CampfireKit() {}
 
     public static boolean ensure(SpiritEntity spirit) {
         if (spirit.getInventory().countItem(StationType.CAMPFIRE.item()) > 0) {
@@ -20,12 +19,16 @@ public final class CampfireKit {
         if (cost.isEmpty() || !resolvable(spirit, cost.get())) {
             return false;
         }
-        cost.get().consumed().forEach((id, count) ->
-                ItemIds.item(id).ifPresent(item -> spirit.getInventory().removeItemType(item, count)));
+        cost.get()
+                .consumed()
+                .forEach((id, count) ->
+                        ItemIds.item(id).ifPresent(item -> spirit.getInventory().removeItemType(item, count)));
         ItemStack leftover = spirit.getInventory().addItem(new ItemStack(StationType.CAMPFIRE.item()));
         if (!leftover.isEmpty()) {
-            cost.get().consumed().forEach((id, count) -> ItemIds.item(id)
-                    .ifPresent(item -> spirit.getInventory().addItem(new ItemStack(item, count))));
+            cost.get()
+                    .consumed()
+                    .forEach((id, count) -> ItemIds.item(id)
+                            .ifPresent(item -> spirit.getInventory().addItem(new ItemStack(item, count))));
             return false;
         }
         return true;

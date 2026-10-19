@@ -18,8 +18,12 @@ public final class Coordinator {
         return plan(state, reservations, now, List.of(), 0);
     }
 
-    public CoordinatorPlan plan(CoordinatorState state, WorkReservations reservations, long now,
-            List<HelpCall> helpCalls, double helpRadius) {
+    public CoordinatorPlan plan(
+            CoordinatorState state,
+            WorkReservations reservations,
+            long now,
+            List<HelpCall> helpCalls,
+            double helpRadius) {
         if (state == null) {
             throw new IllegalArgumentException("state не может быть null: план строится из состояния поселения");
         }
@@ -33,7 +37,9 @@ public final class Coordinator {
         double radius = state.defendedRadius();
         List<SpiritSnapshot> defenders = state.defenders();
         List<DefenseAssignment> defense = point.isPresent() && !defenders.isEmpty()
-                ? sectorAssigner.assign(point.get(), radius,
+                ? sectorAssigner.assign(
+                        point.get(),
+                        radius,
                         defenders.stream().map(SpiritSnapshot::id).toList())
                 : List.of();
         List<AssistOrder> assists = new ArrayList<>();

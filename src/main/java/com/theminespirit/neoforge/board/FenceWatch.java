@@ -32,8 +32,7 @@ import net.neoforged.neoforge.event.level.BlockEvent;
  * не ставится. Слушатель — O(1) на поломку, мир не обходит.
  */
 public final class FenceWatch {
-    private FenceWatch() {
-    }
+    private FenceWatch() {}
 
     public static void register(IEventBus bus) {
         if (bus == null) {
@@ -57,9 +56,17 @@ public final class FenceWatch {
         String blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
         BoardService service = BoardRegistry.get(level);
         BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        service.submit(new BoardTicket(fenceId(pos), BoardCase.REPAIR_FENCE, Optional.empty(),
-                BoardRules.priorityOf(BoardCase.REPAIR_FENCE), level.getGameTime(),
-                1, fenceCause(pos), List.of(), Map.of()),
+        service.submit(
+                new BoardTicket(
+                        fenceId(pos),
+                        BoardCase.REPAIR_FENCE,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.REPAIR_FENCE),
+                        level.getGameTime(),
+                        1,
+                        fenceCause(pos),
+                        List.of(),
+                        Map.of()),
                 TicketTarget.at(target).withFenceBlock(blockId));
     }
 
@@ -75,8 +82,8 @@ public final class FenceWatch {
                 continue;
             }
             try {
-                BlockPos pos = new BlockPos(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
-                        Integer.parseInt(parts[3]));
+                BlockPos pos = new BlockPos(
+                        Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
                 if (!isFence(level.getBlockState(pos))) {
                     live.add(cause);
                 }
@@ -93,7 +100,9 @@ public final class FenceWatch {
 
     static boolean isFence(BlockState state) {
         Block block = state.getBlock();
-        return block instanceof FenceBlock || block instanceof WallBlock || block instanceof FenceGateBlock
+        return block instanceof FenceBlock
+                || block instanceof WallBlock
+                || block instanceof FenceGateBlock
                 || block instanceof IronBarsBlock;
     }
 

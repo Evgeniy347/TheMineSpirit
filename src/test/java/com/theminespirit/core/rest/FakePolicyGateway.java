@@ -47,9 +47,14 @@ final class FakePolicyGateway implements PolicyGateway {
         String id = ID_PREFIX + request.requestId();
         grants.add(id);
         long expiresAt = request.ttlSeconds() == 0 ? 0 : 1_000_000L + request.ttlSeconds() * 1000L;
-        UnprotectArea area = new UnprotectArea(id, request.dimension(),
+        UnprotectArea area = new UnprotectArea(
+                id,
+                request.dimension(),
                 new BlockBox(request.min(), request.max()),
-                request.grantedBy(), 1_000_000L, request.reason(), expiresAt);
+                request.grantedBy(),
+                1_000_000L,
+                request.reason(),
+                expiresAt);
         areas.put(id, area);
         return area;
     }

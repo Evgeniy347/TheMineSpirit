@@ -25,8 +25,12 @@ final class HerdBreedFeed {
         }
         Species species = session.wanted.get(0);
         session.planCalls++;
-        BreedPlanner.Outcome result = BreedPlanner.next(flock.unhandled(flock.inPenOf(species)),
-                flock.spiritCoord(), species, flock.feedCounts(species), false);
+        BreedPlanner.Outcome result = BreedPlanner.next(
+                flock.unhandled(flock.inPenOf(species)),
+                flock.spiritCoord(),
+                species,
+                flock.feedCounts(species),
+                false);
         if (result instanceof BreedPlanner.Feed feed) {
             Animal first = session.live.get(feed.targetId());
             Animal partner = session.live.get(feed.partnerId());
@@ -45,12 +49,12 @@ final class HerdBreedFeed {
             return;
         }
         if (result instanceof BreedPlanner.NeedsMoreFeed needs) {
-            session.fail("нет корма: нужен " + needs.feedId() + ", не хватает " + needs.missing()
-                    + ": сделано пар " + session.done + " из " + session.goal);
+            session.fail("нет корма: нужен " + needs.feedId() + ", не хватает " + needs.missing() + ": сделано пар "
+                    + session.done + " из " + session.goal);
             return;
         }
-        session.fail(((BreedPlanner.NothingToDo) result).reason() + ": сделано пар " + session.done + " из "
-                + session.goal);
+        session.fail(
+                ((BreedPlanner.NothingToDo) result).reason() + ": сделано пар " + session.done + " из " + session.goal);
     }
 
     void pickFeed() {
@@ -81,7 +85,8 @@ final class HerdBreedFeed {
             return;
         }
         if (!flock.hasFeed(session.wanted.get(0))) {
-            session.fail("нет корма: нужен " + FeedTable.feedFor(session.wanted.get(0)).get(0)
+            session.fail("нет корма: нужен "
+                    + FeedTable.feedFor(session.wanted.get(0)).get(0)
                     + ": без приманки отбившихся не вернуть, покормлено " + session.fed + " из " + session.goal);
             return;
         }
@@ -161,8 +166,9 @@ final class HerdBreedFeed {
             eaten = session.actions.feedAdult(session.current, feed);
         }
         if (!eaten) {
-            session.fail("корм закончился: нужен " + FeedTable.feedFor(session.wanted.get(0)).get(0)
-                    + ", покормлено " + session.fed + " из " + session.goal);
+            session.fail("корм закончился: нужен "
+                    + FeedTable.feedFor(session.wanted.get(0)).get(0) + ", покормлено " + session.fed + " из "
+                    + session.goal);
             return;
         }
         session.recordAction();

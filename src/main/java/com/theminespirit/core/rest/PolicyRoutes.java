@@ -15,10 +15,10 @@ public final class PolicyRoutes {
     private final IdempotencyCache idempotency;
 
     public PolicyRoutes(PolicyGateway gateway, IdempotencyCache idempotency) {
-        this.gateway = Objects.requireNonNull(gateway,
-                "gateway не может быть null: разрешения читает и меняет только платформа");
-        this.idempotency = Objects.requireNonNull(idempotency,
-                "idempotency не может быть null: повтор request_id обязан вернуть прежнее разрешение");
+        this.gateway = Objects.requireNonNull(
+                gateway, "gateway не может быть null: разрешения читает и меняет только платформа");
+        this.idempotency = Objects.requireNonNull(
+                idempotency, "idempotency не может быть null: повтор request_id обязан вернуть прежнее разрешение");
     }
 
     public List<Route> routes() {
@@ -41,7 +41,8 @@ public final class PolicyRoutes {
             return RestResponse.json(201, replay.storedResponse());
         }
         if (verdict instanceof IdempotencyCache.Result.Conflict) {
-            throw new ApiException(ErrorCode.CONFLICT,
+            throw new ApiException(
+                    ErrorCode.CONFLICT,
                     "request_id " + requestId + " уже использован с другим телом запроса: повторите с новым "
                             + "request_id или пришлите исходное тело",
                     Map.of("request_id", requestId));
@@ -68,7 +69,8 @@ public final class PolicyRoutes {
         String id = params.get("id");
         UnprotectArea removed = gateway.revoke(id);
         if (removed == null) {
-            throw new ApiException(ErrorCode.NOT_FOUND,
+            throw new ApiException(
+                    ErrorCode.NOT_FOUND,
                     "Разрешение '" + id + "' не найдено: список разрешений — GET /v1/policy/unprotect",
                     Map.of("id", id));
         }
@@ -84,8 +86,12 @@ public final class PolicyRoutes {
     private static String fingerprint(UnprotectRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("dimension", request.dimension());
-        body.put("min", List.of(request.min().x(), request.min().y(), request.min().z()));
-        body.put("max", List.of(request.max().x(), request.max().y(), request.max().z()));
+        body.put(
+                "min",
+                List.of(request.min().x(), request.min().y(), request.min().z()));
+        body.put(
+                "max",
+                List.of(request.max().x(), request.max().y(), request.max().z()));
         body.put("granted_by", request.grantedBy());
         body.put("reason", request.reason());
         body.put("ttl_seconds", request.ttlSeconds());

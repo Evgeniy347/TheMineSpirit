@@ -20,8 +20,7 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     // Один шаг раскладки "auto": выбранный контейнер и готовый перенос в него.
-    protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {
-    }
+    protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {}
 
     protected final SpiritEntity spirit;
 
@@ -212,8 +211,7 @@ abstract class ContainerTask implements ScriptInstance {
 
     private void approach() {
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> {
                 runner = isAuto() ? current.runner() : beginTransfer(container);
                 phase = Phase.TRANSFER;
@@ -228,8 +226,7 @@ abstract class ContainerTask implements ScriptInstance {
             return;
         }
         switch (runner.tick()) {
-            case RUNNING -> {
-            }
+            case RUNNING -> {}
             case DONE -> {
                 lastShortage = runner.shortage();
                 if (isAuto()) {

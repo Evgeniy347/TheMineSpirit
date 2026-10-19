@@ -14,11 +14,14 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class DefenseAllocator {
-    private DefenseAllocator() {
-    }
+    private DefenseAllocator() {}
 
-    public static List<DefenseAssignment> allocate(Point center, double radius, List<DefenderCapability> defenders,
-            List<EnemyFact> enemies, EnemyProfiles profiles) {
+    public static List<DefenseAssignment> allocate(
+            Point center,
+            double radius,
+            List<DefenderCapability> defenders,
+            List<EnemyFact> enemies,
+            EnemyProfiles profiles) {
         if (center == null) {
             throw new IllegalArgumentException("center не может быть null: круг без центра не построить");
         }
@@ -50,15 +53,20 @@ public final class DefenseAllocator {
         }
         List<DirectionThreat> threats = ThreatBearing.sum(enemies, center, profiles);
         if (threats.isEmpty()) {
-            return new SectorAssigner().assign(center, radius,
-                    defenders.stream().map(DefenderCapability::id).toList());
+            return new SectorAssigner()
+                    .assign(
+                            center,
+                            radius,
+                            defenders.stream().map(DefenderCapability::id).toList());
         }
         List<DefenderCapability> ordered = defenders.stream()
-                .sorted(Comparator.comparingDouble(DefenderCapability::frontRank).reversed()
+                .sorted(Comparator.comparingDouble(DefenderCapability::frontRank)
+                        .reversed()
                         .thenComparing(DefenderCapability::id))
                 .toList();
         List<DirectionThreat> byStrength = threats.stream()
-                .sorted(Comparator.comparingDouble(DirectionThreat::strength).reversed()
+                .sorted(Comparator.comparingDouble(DirectionThreat::strength)
+                        .reversed()
                         .thenComparingDouble(DirectionThreat::bearing))
                 .toList();
         int[] quotas = quotas(byStrength, ordered.size());
@@ -69,7 +77,9 @@ public final class DefenseAllocator {
             DirectionThreat threat = byStrength.get(index);
             for (int slot = 0; slot < quotas[index]; slot++) {
                 DefenderCapability defender = ordered.get(cursor++);
-                Point post = new Point(center.x() + Math.cos(threat.bearing()) * postDistance, center.y(),
+                Point post = new Point(
+                        center.x() + Math.cos(threat.bearing()) * postDistance,
+                        center.y(),
                         center.z() + Math.sin(threat.bearing()) * postDistance);
                 posts.add(new DefenseAssignment(defender.id(), post, threat.bearing()));
             }

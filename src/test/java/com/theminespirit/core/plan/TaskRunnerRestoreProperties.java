@@ -46,8 +46,8 @@ class TaskRunnerRestoreProperties {
         for (int i = 0; i < cut; i++) {
             runner.tick();
         }
-        TaskSnapshot snapshot = runner.snapshot().orElseThrow(() -> new AssertionError(
-                "работающая задача обязана отдавать снимок для сохранения"));
+        TaskSnapshot snapshot = runner.snapshot()
+                .orElseThrow(() -> new AssertionError("работающая задача обязана отдавать снимок для сохранения"));
         TaskSnapshot decoded = TaskSnapshotCodec.decode(TaskSnapshotCodec.encode(snapshot));
         TaskRunner resumed = TaskRunner.restore(decoded, registryFor(restarted), conditions());
         RunStatus restartedStatus = runToTerminal(resumed, MAX_TICKS).status();
@@ -55,13 +55,17 @@ class TaskRunnerRestoreProperties {
         // Сравниваем в порядке выполнения, без сортировки: переставленные или повторённые шаги обязаны быть видны.
         // Исход задаёт план (say с текстом "fail" проваливается, limit=0 у проверки — ложь), поэтому список
         // завершённых скриптов непрерывного и перезапущенного прогона обязан совпадать поэлементно.
-        assertEquals(continuous, restarted,
+        assertEquals(
+                continuous,
+                restarted,
                 "перезапуск с тика " + cut + " обязан дать тот же порядок завершённых скриптов, что и непрерывный "
                         + "прогон: пропуск шага, повтор уже сделанного или неверная ветка fallback/else видны в списке. "
                         + "seed=" + seed + ", план=" + plan);
-        assertEquals(continuousOutcome.status(), restartedStatus,
-                "итоговый статус перезапущенной задачи обязан совпасть с непрерывным прогоном. seed=" + seed
-                        + ", план=" + plan);
+        assertEquals(
+                continuousOutcome.status(),
+                restartedStatus,
+                "итоговый статус перезапущенной задачи обязан совпасть с непрерывным прогоном. seed=" + seed + ", план="
+                        + plan);
     }
 
     private static Outcome runToTerminal(TaskNode plan, List<String> recorder, int maxTicks) {
@@ -103,13 +107,13 @@ class TaskRunnerRestoreProperties {
             case FallbackNode fallback -> anyOf(fallback.steps());
             case ParallelNode parallel -> parallel.mode() == ParallelMode.ANY || anyOf(parallel.steps());
             case RepeatNode repeat -> containsAny(repeat.step());
-            case ConditionNode condition -> containsAny(condition.thenStep())
-                    || (condition.elseStep() != null && containsAny(condition.elseStep()));
+            case ConditionNode condition ->
+                containsAny(condition.thenStep())
+                        || (condition.elseStep() != null && containsAny(condition.elseStep()));
         };
     }
 
-    private record Outcome(RunStatus status, int ticks) {
-    }
+    private record Outcome(RunStatus status, int ticks) {}
 
     private static boolean anyOf(List<TaskNode> steps) {
         for (TaskNode step : steps) {

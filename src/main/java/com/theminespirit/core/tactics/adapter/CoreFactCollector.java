@@ -8,8 +8,9 @@ import java.util.List;
 public record CoreFactCollector(TacticsAdapterSettings settings) implements FactCollector {
     public CoreFactCollector {
         if (settings == null) {
-            throw new IllegalArgumentException("CoreFactCollector.settings = null: без настроек неизвестен факт-радиус; "
-                    + "передайте TacticsAdapterSettings.loadDefault()");
+            throw new IllegalArgumentException(
+                    "CoreFactCollector.settings = null: без настроек неизвестен факт-радиус; "
+                            + "передайте TacticsAdapterSettings.loadDefault()");
         }
     }
 
@@ -28,7 +29,12 @@ public record CoreFactCollector(TacticsAdapterSettings settings) implements Fact
         List<EnemyFact> inRange = context.enemies().stream()
                 .filter(enemy -> enemy.pos().distanceTo(self) <= radius)
                 .toList();
-        return new Situation(context.self(), inRange, context.env(), context.orders(), context.ticksSinceHit(),
+        return new Situation(
+                context.self(),
+                inRange,
+                context.env(),
+                context.orders(),
+                context.ticksSinceHit(),
                 context.ticksSinceStrike());
     }
 }

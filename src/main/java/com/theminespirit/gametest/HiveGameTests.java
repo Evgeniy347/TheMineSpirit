@@ -29,8 +29,7 @@ public final class HiveGameTests {
     private static final BlockPos HIVE = new BlockPos(4, 2, 4);
     private static final BlockPos CAMPFIRE = new BlockPos(4, 0, 4);
 
-    private HiveGameTests() {
-    }
+    private HiveGameTests() {}
 
     @GameTest(template = "arena", batch = "hive_campfire", timeoutTicks = 400)
     public static void harvest_FullHiveWithCampfire_HoneycombCollectedBeesCalm(GameTestHelper helper) {
@@ -40,22 +39,26 @@ public final class HiveGameTests {
         Bee first = helper.spawn(EntityType.BEE, new BlockPos(2, 1, 2));
         Bee second = helper.spawn(EntityType.BEE, new BlockPos(6, 1, 6));
         SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START, new ItemStack(Items.SHEARS));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             HusbandryGameTests.assertSucceeded(helper, spirit, "полный улей с костром обязан собраться");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB) == 3,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB) == 3,
                     "ножницы дают 3 соты, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB));
-            helper.assertTrue(honeyLevel(helper) == 0,
+            helper.assertTrue(
+                    honeyLevel(helper) == 0,
                     "улей обязан опустеть после сбора, фактически уровень " + honeyLevel(helper));
-            helper.assertTrue(helper.getBlockState(HIVE).is(Blocks.BEEHIVE),
+            helper.assertTrue(
+                    helper.getBlockState(HIVE).is(Blocks.BEEHIVE),
                     "улей обязан остаться на месте: сбор не ломает дом пчёл");
-            helper.assertTrue(calm(first) && calm(second),
-                    "при дыме костра пчёлы не гибнут, не жалят и не выбирают цель: " + describe(first)
-                            + "; " + describe(second));
+            helper.assertTrue(
+                    calm(first) && calm(second),
+                    "при дыме костра пчёлы не гибнут, не жалят и не выбирают цель: " + describe(first) + "; "
+                            + describe(second));
             GameTestFixtures.finish(helper);
         });
     }
@@ -66,34 +69,38 @@ public final class HiveGameTests {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         helper.setBlock(HIVE, fullHive());
         Bee bee = helper.spawn(EntityType.BEE, new BlockPos(2, 1, 2));
-        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START,
+        SpiritEntity spirit = HusbandryGameTests.spawnWith(
+                helper,
+                START,
                 new ItemStack(Items.SHEARS),
                 new ItemStack(Items.OAK_LOG, 3),
                 new ItemStack(Items.STICK, 3),
                 new ItemStack(Items.COAL, 1));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             HusbandryGameTests.assertSucceeded(helper, spirit, "без костра дух обязан поставить его и собрать");
             BlockState fire = helper.getBlockState(new BlockPos(4, 1, 4));
-            helper.assertTrue(fire.is(Blocks.CAMPFIRE) && fire.getValue(CampfireBlock.LIT),
+            helper.assertTrue(
+                    fire.is(Blocks.CAMPFIRE) && fire.getValue(CampfireBlock.LIT),
                     "под ульем обязан стоять горящий костёр, фактически " + fire);
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) == 0
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) == 0
                             && GameTestFixtures.countInInventory(spirit.getInventory(), Items.STICK) == 0
                             && GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL) == 0,
                     "материалы ушли на костёр: брёвен "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG)
                             + ", палок " + GameTestFixtures.countInInventory(spirit.getInventory(), Items.STICK)
                             + ", угля " + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COAL));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB) == 3,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB) == 3,
                     "после костра соты обязаны собраться, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB));
-            helper.assertTrue(honeyLevel(helper) == 0,
-                    "улей обязан опустеть, фактически уровень " + honeyLevel(helper));
-            helper.assertTrue(calm(bee),
-                    "пчела обязана остаться невредимой и спокойной: " + describe(bee));
+            helper.assertTrue(
+                    honeyLevel(helper) == 0, "улей обязан опустеть, фактически уровень " + honeyLevel(helper));
+            helper.assertTrue(calm(bee), "пчела обязана остаться невредимой и спокойной: " + describe(bee));
             GameTestFixtures.finish(helper);
         });
     }
@@ -107,21 +114,26 @@ public final class HiveGameTests {
         helper.setBlock(HIVE, fullHive());
         Bee bee = helper.spawn(EntityType.BEE, new BlockPos(4, 1, 4));
         bee.setNoAi(true);
-        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START,
+        SpiritEntity spirit = HusbandryGameTests.spawnWith(
+                helper,
+                START,
                 new ItemStack(Items.SHEARS),
                 new ItemStack(Items.OAK_LOG, 3),
                 new ItemStack(Items.STICK, 3),
                 new ItemStack(Items.COAL, 1));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
         Vec3 away = helper.absoluteVec(new Vec3(1.5, 1, 7.5));
         helper.runAfterDelay(40, () -> bee.teleportTo(away.x, away.y, away.z));
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            HusbandryGameTests.assertSucceeded(helper, spirit,
+            HusbandryGameTests.assertSucceeded(
+                    helper,
+                    spirit,
                     "пчела в клетке костра улетела — дух обязан дождаться и поставить костёр, а не провалить сбор");
-            helper.assertTrue(helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.CAMPFIRE),
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.CAMPFIRE),
                     "костёр обязан стоять в клетке, которую освободила пчела");
             GameTestFixtures.finish(helper);
         });
@@ -132,22 +144,25 @@ public final class HiveGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         campfireUnderHive(helper);
-        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START,
-                new ItemStack(Items.GLASS_BOTTLE, 1));
-        SpiritRun run = SpiritRun.launch(helper, spirit,
-                new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
+        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START, new ItemStack(Items.GLASS_BOTTLE, 1));
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("harvest_hive", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             HusbandryGameTests.assertSucceeded(helper, spirit, "бутылка обязана дать мёд");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEY_BOTTLE) == 1,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEY_BOTTLE) == 1,
                     "бутылка мёда обязана появиться в инвентаре, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEY_BOTTLE));
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.GLASS_BOTTLE) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.GLASS_BOTTLE) == 0,
                     "пустая бутылка обязана уйти на мёд");
-            helper.assertTrue(GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB) == 0,
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.HONEYCOMB) == 0,
                     "без ножниц соты не берут: бутылка даёт только мёд");
-            helper.assertTrue(honeyLevel(helper) == 0,
+            helper.assertTrue(
+                    honeyLevel(helper) == 0,
                     "улей обязан опустеть после бутылки, фактически уровень " + honeyLevel(helper));
             GameTestFixtures.finish(helper);
         });
@@ -164,7 +179,8 @@ public final class HiveGameTests {
     }
 
     private static BlockState fullHive() {
-        return Blocks.BEEHIVE.defaultBlockState()
+        return Blocks.BEEHIVE
+                .defaultBlockState()
                 .setValue(BeehiveBlock.FACING, Direction.NORTH)
                 .setValue(BeehiveBlock.HONEY_LEVEL, 5);
     }

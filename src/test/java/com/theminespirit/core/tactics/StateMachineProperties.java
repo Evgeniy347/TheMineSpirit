@@ -18,17 +18,24 @@ class StateMachineProperties {
     }
 
     @Property
-    void next_AnyFacts_ResultIsDescribedByTable(@ForAll("situations") Situation situation, @ForAll TacticalState from,
-            @ForAll TacticalOption decision, @ForAll @IntRange(min = 0, max = 1000) int inState,
+    void next_AnyFacts_ResultIsDescribedByTable(
+            @ForAll("situations") Situation situation,
+            @ForAll TacticalState from,
+            @ForAll TacticalOption decision,
+            @ForAll @IntRange(min = 0, max = 1000) int inState,
             @ForAll @IntRange(min = 0, max = 1000) int sinceSeen) {
         StateMachine machine = new StateMachine(CONFIG.rules().states(), new RuleCounter());
 
         StateStep step = machine.next(from, decision, Assessments.timed(situation, from, inState, sinceSeen));
 
         Optional<StateTransition> described = CONFIG.rules().states().stream()
-                .filter(transition -> step.rule().equals(Optional.of(transition.id()))).findFirst();
-        assertTrue(step.rule().isEmpty() ? step.state() == from
-                        : described.isPresent() && described.get().from().contains(from)
+                .filter(transition -> step.rule().equals(Optional.of(transition.id())))
+                .findFirst();
+        assertTrue(
+                step.rule().isEmpty()
+                        ? step.state() == from
+                        : described.isPresent()
+                                && described.get().from().contains(from)
                                 && described.get().to() == step.state(),
                 "Переход " + from + " → " + step.state() + " (правило " + step.rule()
                         + ") не описан таблицей states: автомат не вправе менять состояние иначе");

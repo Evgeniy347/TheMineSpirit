@@ -15,11 +15,17 @@ import net.jqwik.api.constraints.IntRange;
 class LocateQueryProperties {
     @Provide
     Arbitrary<String> species() {
-        return Arbitraries.strings().withCharRange('a', 'z').numeric().withChars('_').ofMinLength(1).ofMaxLength(12);
+        return Arbitraries.strings()
+                .withCharRange('a', 'z')
+                .numeric()
+                .withChars('_')
+                .ofMinLength(1)
+                .ofMaxLength(12);
     }
 
     @Property
-    void tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged(@ForAll("species") String species,
+    void tree_AnyValidSpeciesAndRadius_KeepsBothUnchanged(
+            @ForAll("species") String species,
             @ForAll @IntRange(min = ScanRadius.MIN, max = ScanRadius.MAX) int radius) {
         LocateQuery query = LocateQuery.tree(species, new ScanRadius(radius));
 
@@ -33,7 +39,8 @@ class LocateQueryProperties {
         if (species.equals(LocateQuery.ANY_SPECIES)) {
             return;
         }
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> new LocateQuery(LocateType.CONTAINER, IdFilter.matchAll(), species, ScanRadius.DEFAULT),
                 "вид '" + species + "' у поиска контейнера обязан отклоняться: вид применим только к дереву");
     }

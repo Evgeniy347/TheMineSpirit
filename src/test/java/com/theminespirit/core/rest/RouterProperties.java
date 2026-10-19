@@ -25,8 +25,8 @@ class RouterProperties {
 
     @Provide
     Arbitrary<String> pathsFromKnownPieces() {
-        Arbitrary<String> piece = Arbitraries.of("", "v1", "bots", "observe", "capabilities", "..", ".", "%00",
-                "a b", "дух", "abc", "A_b-9");
+        Arbitrary<String> piece = Arbitraries.of(
+                "", "v1", "bots", "observe", "capabilities", "..", ".", "%00", "a b", "дух", "abc", "A_b-9");
         return piece.list().ofMaxSize(6).map(parts -> "/" + String.join("/", parts));
     }
 
@@ -49,15 +49,16 @@ class RouterProperties {
 
     private static void assertValidAnswer(RestResponse response, String method, String path) throws IOException {
         JsonNode body = MAPPER.readTree(response.body());
-        assertTrue(Set.of(200, 404, 405).contains(response.status()),
+        assertTrue(
+                Set.of(200, 404, 405).contains(response.status()),
                 "Маршрутизатор отвечает только 200, 404 или 405: " + method + " " + path + " дал " + response.status());
         if (response.status() == 200) {
             assertTrue(body.has("handled"), "Успешный ответ принадлежит обработчику: " + response.body());
         } else {
-            assertTrue(ERROR_CODES.contains(body.path("error").path("code").asText()),
+            assertTrue(
+                    ERROR_CODES.contains(body.path("error").path("code").asText()),
                     "Ошибка маршрутизации обязана нести код not_found или invalid_request: " + response.body());
-            assertTrue(body.path("error").path("details").isObject(),
-                    "details всегда объект: " + response.body());
+            assertTrue(body.path("error").path("details").isObject(), "details всегда объект: " + response.body());
         }
     }
 }

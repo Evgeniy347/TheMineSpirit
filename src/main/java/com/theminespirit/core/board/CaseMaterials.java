@@ -23,8 +23,7 @@ import java.util.Objects;
 public final class CaseMaterials {
     private static final String MINECRAFT_PREFIX = "minecraft:";
 
-    private CaseMaterials() {
-    }
+    private CaseMaterials() {}
 
     public static Map<String, Integer> need(TaskNode plan, MaterialSource source) {
         Objects.requireNonNull(plan, "План кейса не может быть null: без него неизвестно, что нужно собрать");
@@ -45,8 +44,7 @@ public final class CaseMaterials {
                         queue.add(condition.elseStep());
                     }
                 }
-                default -> {
-                }
+                default -> {}
             }
         }
         return Map.copyOf(need);
@@ -58,8 +56,7 @@ public final class CaseMaterials {
             case "build_schematic" -> addSchematic(need, call, source);
             case "place_block" -> merge(need, normalize(text(call, "block")), 1);
             case "acquire" -> merge(need, normalize(text(call, "item")), integer(call, "count"));
-            default -> {
-            }
+            default -> {}
         }
     }
 
@@ -80,8 +77,7 @@ public final class CaseMaterials {
     }
 
     private static void addSchematic(Map<String, Integer> need, ScriptCall call, MaterialSource source) {
-        source.schematicBlocks(text(call, "file"))
-                .forEach((block, count) -> merge(need, normalize(block), count));
+        source.schematicBlocks(text(call, "file")).forEach((block, count) -> merge(need, normalize(block), count));
     }
 
     private static void merge(Map<String, Integer> need, String item, int count) {

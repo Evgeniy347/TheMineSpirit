@@ -47,9 +47,8 @@ public final class TakeScript implements ScriptInstance {
             return fail("дух исчез по дороге за предметом '" + params.item() + "'");
         }
         if (!started) {
-            Optional<Item> found = BuiltInRegistries.ITEM
-                    .getOptional(ResourceLocation.parse(
-                            params.item().contains(":") ? params.item() : "minecraft:" + params.item()));
+            Optional<Item> found = BuiltInRegistries.ITEM.getOptional(
+                    ResourceLocation.parse(params.item().contains(":") ? params.item() : "minecraft:" + params.item()));
             if (found.isEmpty()) {
                 return fail("предмет '" + params.item() + "' не зарегистрирован: брать нечего");
             }
@@ -61,8 +60,8 @@ public final class TakeScript implements ScriptInstance {
             source = giver.get();
             int available = countIn(source);
             if (available < params.count()) {
-                return fail("не хватает предмета '" + params.item() + "': нужно " + params.count()
-                        + ", у источника " + available);
+                return fail("не хватает предмета '" + params.item() + "': нужно " + params.count() + ", у источника "
+                        + available);
             }
             if (!fitsInSpirit(params.count())) {
                 return fail("нет места в инвентаре духа для " + params.count() + " шт '" + params.item()
@@ -78,10 +77,11 @@ public final class TakeScript implements ScriptInstance {
         return switch (approach.tick()) {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> takeFromSource();
-            case TIMEOUT -> fail("не подошёл к источнику '" + params.from() + "' за " + approach.timeoutTicks()
-                    + " тиков");
-            case STUCK -> fail("застрял по дороге к источнику '" + params.from() + "' в (x=" + spirit.getX()
-                    + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ")");
+            case TIMEOUT ->
+                fail("не подошёл к источнику '" + params.from() + "' за " + approach.timeoutTicks() + " тиков");
+            case STUCK ->
+                fail("застрял по дороге к источнику '" + params.from() + "' в (x=" + spirit.getX() + ", y="
+                        + spirit.getY() + ", z=" + spirit.getZ() + ")");
         };
     }
 
@@ -123,8 +123,8 @@ public final class TakeScript implements ScriptInstance {
     private ScriptStatus takeFromSource() {
         int available = countIn(source);
         if (available < params.count()) {
-            return fail("у источника осталось " + available + " шт '" + params.item() + "', нужно "
-                    + params.count() + ": предмет ушёл по дороге");
+            return fail("у источника осталось " + available + " шт '" + params.item() + "', нужно " + params.count()
+                    + ": предмет ушёл по дороге");
         }
         int removed = removeFromSource(params.count());
         for (ItemStack part : split(new ItemStack(item, removed))) {
@@ -181,8 +181,8 @@ public final class TakeScript implements ScriptInstance {
         if (owner instanceof SpiritEntity other) {
             return other.getInventory();
         }
-        throw new IllegalArgumentException("У сущности " + owner.getType() + " нет инвентаря: "
-                + "take работает только с игроком и духом");
+        throw new IllegalArgumentException(
+                "У сущности " + owner.getType() + " нет инвентаря: " + "take работает только с игроком и духом");
     }
 
     private static List<ItemStack> split(ItemStack stack) {

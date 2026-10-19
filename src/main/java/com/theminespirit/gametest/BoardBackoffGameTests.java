@@ -30,8 +30,7 @@ public final class BoardBackoffGameTests {
     private static final String BATCH = "board_backoff";
     private static final BoardCase CASE = BoardCase.STOCK_CHESTS;
 
-    private BoardBackoffGameTests() {
-    }
+    private BoardBackoffGameTests() {}
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
     public static void backoff_AlwaysFailingCase_NotIssuedBeforePause(GameTestHelper helper) {
@@ -46,28 +45,32 @@ public final class BoardBackoffGameTests {
         for (int attempt = 1; attempt < BoardTuning.caseFailLimit(); attempt++) {
             String failed = "backoff_fail_" + attempt;
             board.submit(ticket(failed, now[0]));
-            helper.assertTrue(board.claim(failed, spirit.getUUID(), now[0]) == BoardOutcome.CLAIMED,
+            helper.assertTrue(
+                    board.claim(failed, spirit.getUUID(), now[0]) == BoardOutcome.CLAIMED,
                     "Попытка " + attempt + ": задание обязано выдаться духу, иначе провал не к чему привязать");
             helper.assertTrue(board.fail(failed), "Попытка " + attempt + ": провал обязан записаться");
 
             long pause = board.casePauseTicks(spirit.getUUID(), CASE);
-            helper.assertTrue(pause > 0,
-                    "После провала у пары дух+кейс есть пауза, фактически " + pause);
-            helper.assertTrue(attempt == 1 || pause > previousPause,
+            helper.assertTrue(pause > 0, "После провала у пары дух+кейс есть пауза, фактически " + pause);
+            helper.assertTrue(
+                    attempt == 1 || pause > previousPause,
                     "Ступень " + attempt + " длиннее прошлой (" + pause + " > " + previousPause
                             + "): иначе откат не растёт и дух долбит задание с той же частотой");
-            helper.assertTrue(pause <= BoardTuning.caseFailPauseCapTicks(),
+            helper.assertTrue(
+                    pause <= BoardTuning.caseFailPauseCapTicks(),
                     "Пауза " + pause + " не выше потолка " + BoardTuning.caseFailPauseCapTicks());
             previousPause = pause;
 
             String next = "backoff_next_" + attempt;
             board.submit(ticket(next, now[0]));
             now[0] += pause - 1;
-            helper.assertTrue(board.claim(next, spirit.getUUID(), now[0]) == BoardOutcome.SPIRIT_PAUSED,
+            helper.assertTrue(
+                    board.claim(next, spirit.getUUID(), now[0]) == BoardOutcome.SPIRIT_PAUSED,
                     "За тик до конца паузы (" + pause + ") тот же дух не получает тот же кейс: "
                             + "иначе цикл задания повторяется каждой пересборкой");
             now[0] += 1;
-            helper.assertTrue(board.claim(next, spirit.getUUID(), now[0]) == BoardOutcome.CLAIMED,
+            helper.assertTrue(
+                    board.claim(next, spirit.getUUID(), now[0]) == BoardOutcome.CLAIMED,
                     "Ровно через паузу кейс снова доступен этому духу: пауза не снимает его навсегда");
             board.cancel(next);
         }
@@ -78,7 +81,15 @@ public final class BoardBackoffGameTests {
     }
 
     private static BoardTicket ticket(String id, long now) {
-        return new BoardTicket(id, CASE, Optional.empty(), BoardRules.priorityOf(CASE), now, 1,
-                BoardTicket.ALWAYS_CAUSE, List.of(), Map.of());
+        return new BoardTicket(
+                id,
+                CASE,
+                Optional.empty(),
+                BoardRules.priorityOf(CASE),
+                now,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
     }
 }

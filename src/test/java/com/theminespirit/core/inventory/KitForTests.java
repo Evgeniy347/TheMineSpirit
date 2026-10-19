@@ -17,49 +17,61 @@ class KitForTests {
 
     @Test
     void activityOfScript_MineVein_ReturnsMining() {
-        assertEquals("mining", KitFor.activityOfScript("mine_vein").orElse(null),
+        assertEquals(
+                "mining",
+                KitFor.activityOfScript("mine_vein").orElse(null),
                 "mine_vein — горная деятельность: набор шахты держит кирки и факелы");
     }
 
     @Test
     void activityOfScript_ChopTree_ReturnsWoodcutting() {
-        assertEquals("woodcutting", KitFor.activityOfScript("chop_tree").orElse(null),
+        assertEquals(
+                "woodcutting",
+                KitFor.activityOfScript("chop_tree").orElse(null),
                 "chop_tree — лесная деятельность: набор рубки держит топор");
     }
 
     @Test
     void activityOfScript_PlantCrop_ReturnsFarming() {
-        assertEquals("farming", KitFor.activityOfScript("plant_crop").orElse(null),
+        assertEquals(
+                "farming",
+                KitFor.activityOfScript("plant_crop").orElse(null),
                 "plant_crop — фермерская деятельность: набор фермы держит мотыгу и семена");
     }
 
     @Test
     void activityOfScript_PlaceBlock_ReturnsBuilding() {
-        assertEquals("building", KitFor.activityOfScript("place_block").orElse(null),
+        assertEquals(
+                "building",
+                KitFor.activityOfScript("place_block").orElse(null),
                 "place_block — строительная деятельность: набор стройки держит блоки и верстак");
     }
 
     @Test
     void activityOfScript_NonWorkingScript_ReturnsEmpty() {
-        assertEquals(Optional.empty(), KitFor.activityOfScript("unload"),
+        assertEquals(
+                Optional.empty(),
+                KitFor.activityOfScript("unload"),
                 "unload не рабочая деятельность: набора инструментов у разгрузки нет");
     }
 
     @Test
     void activityOfPlan_MineVeinThenUnload_ReturnsMining() {
-        SequenceNode plan = new SequenceNode(List.of(
-                new ScriptCall("mine_vein", Map.of("ore", "iron")),
-                new ScriptCall("unload", Map.of())));
-        assertEquals("mining", KitFor.activityOfPlan(plan).orElse(null),
+        SequenceNode plan = new SequenceNode(
+                List.of(new ScriptCall("mine_vein", Map.of("ore", "iron")), new ScriptCall("unload", Map.of())));
+        assertEquals(
+                "mining",
+                KitFor.activityOfPlan(plan).orElse(null),
                 "план шахтёра с разгрузкой в конце остаётся горным: дух в походе обязан хранить кирку");
     }
 
     @Test
     void activityOfPlan_OnlyNonWorkingScripts_ReturnsEmpty() {
-        SequenceNode plan = new SequenceNode(List.of(
-                new ScriptCall("wait", Map.of("ticks", 5)),
-                new ScriptCall("unload", Map.of())));
-        assertEquals(Optional.empty(), KitFor.activityOfPlan(plan),
+        SequenceNode plan = new SequenceNode(
+                List.of(new ScriptCall("wait", Map.of("ticks", 5)), new ScriptCall("unload", Map.of())));
+        assertEquals(
+                Optional.empty(),
+                KitFor.activityOfPlan(plan),
                 "план без рабочих скриптов не имеет деятельности: набор духа — только постоянный");
     }
 
@@ -123,7 +135,9 @@ class KitForTests {
 
         List<Slice> surplus = KIT_FOR.kit("mining", false).surplus(inventory, VALUES);
 
-        assertEquals(List.of(new Slice(1, 1)), surplus,
+        assertEquals(
+                List.of(new Slice(1, 1)),
+                surplus,
                 "набор шахты оставляет две лучшие кирки (алмаз 400 и железо 80), каменная (10) уходит");
     }
 
@@ -157,15 +171,15 @@ class KitForTests {
 
         List<Slice> surplus = KIT_FOR.kit("mining", false).surplus(inventory, VALUES);
 
-        assertEquals(List.of(), surplus,
+        assertEquals(
+                List.of(),
+                surplus,
                 "набор шахты добавляет кирку и расширяет квоту факелов, но не вытесняет постоянную часть");
     }
 
     @Test
     void kitFor_ChildFoodInQuota_GivesNothing() {
-        List<Stack> inventory = List.of(
-                new Stack("bread", 0, 8, 64),
-                new Stack("cooked_beef", 0, 8, 64));
+        List<Stack> inventory = List.of(new Stack("bread", 0, 8, 64), new Stack("cooked_beef", 0, 8, 64));
 
         List<Slice> surplus = KIT_FOR.kit("mining", true).surplus(inventory, VALUES);
 

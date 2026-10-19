@@ -3,8 +3,7 @@ package com.theminespirit.core.tactics;
 public final class WinMargin {
     private static final double LN2 = Math.log(2);
 
-    private WinMargin() {
-    }
+    private WinMargin() {}
 
     public static double of(SelfFacts self, EnemyMetrics enemies, FactorScales scales) {
         if (enemies.count() == 0) {

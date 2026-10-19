@@ -40,11 +40,10 @@ public final class BuildAudit {
         }
     }
 
-    private BuildAudit() {
-    }
+    private BuildAudit() {}
 
-    public static Before snapshot(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation,
-            int margin) {
+    public static Before snapshot(
+            Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation, int margin) {
         Map<BlockCoord, BlockState> states = new HashMap<>();
         BlockCoord min = new BlockCoord(origin.x() - margin, origin.y() - margin, origin.z() - margin);
         BlockCoord max = new BlockCoord(
@@ -64,8 +63,8 @@ public final class BuildAudit {
         return new Before(states);
     }
 
-    public static Result audit(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation,
-            Before before, int skipped) {
+    public static Result audit(
+            Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation, Before before, int skipped) {
         List<String> problems = new ArrayList<>();
         List<Schematic.PlacedEntry> entries = schematic.entries(origin, rotation);
         Set<BlockCoord> expectedCells = new HashSet<>();
@@ -79,15 +78,17 @@ public final class BuildAudit {
             BlockCoord cell = snapshot.getKey();
             BlockState current = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
             if (!current.equals(snapshot.getValue()) && !expectedCells.contains(cell)) {
-                problems.add("лишний блок духа в " + cell + ": был " + snapshot.getValue().getBlock()
-                        + ", стал " + current.getBlock());
+                problems.add("лишний блок духа в " + cell + ": был "
+                        + snapshot.getValue().getBlock() + ", стал " + current.getBlock());
             }
         }
         for (Schematic.PlacedEntry entry : entries) {
             BlockCoord cell = entry.pos();
-            if (BlockItems.hasBlockItem(entry.block()) && !wasAlready(level, entry, before)
-                    && !(level instanceof ServerLevel server && PlacedBlocksData.get(server).isSpiritMarked(
-                            new BlockPos(cell.x(), cell.y(), cell.z())))) {
+            if (BlockItems.hasBlockItem(entry.block())
+                    && !wasAlready(level, entry, before)
+                    && !(level instanceof ServerLevel server
+                            && PlacedBlocksData.get(server)
+                                    .isSpiritMarked(new BlockPos(cell.x(), cell.y(), cell.z())))) {
                 problems.add("клетка " + cell + " не помечена духом: постановка не учтена");
             }
         }
@@ -97,13 +98,14 @@ public final class BuildAudit {
         return new Result(problems);
     }
 
-    private static void auditCell(Level level, Schematic.PlacedEntry entry, BuildRotation rotation,
-            List<String> problems) {
-        BlockPos pos = new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+    private static void auditCell(
+            Level level, Schematic.PlacedEntry entry, BuildRotation rotation, List<String> problems) {
+        BlockPos pos =
+                new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
         BlockState current = level.getBlockState(pos);
         if (!current.is(BlockStates.blockFor(entry.block()))) {
-            problems.add("клетка " + entry.pos() + " не совпадает со схемой: ожидался " + entry.block()
-                    + ", стоит " + current.getBlock());
+            problems.add("клетка " + entry.pos() + " не совпадает со схемой: ожидался " + entry.block() + ", стоит "
+                    + current.getBlock());
             return;
         }
         if (entry.state().isEmpty()) {

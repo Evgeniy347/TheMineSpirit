@@ -43,7 +43,9 @@ class EnchantingPowerTests {
     void shelfCount_RealEnchantRoomV1_CountsFifteenShelves() {
         Schematic schematic = load("enchant_room_v1");
 
-        assertEquals(15, EnchantingPower.shelfCount(schematic, onlyTable(schematic)),
+        assertEquals(
+                15,
+                EnchantingPower.shelfCount(schematic, onlyTable(schematic)),
                 "Чаровальня уровня 1 обязана давать ровно 15 рабочих полок: они стоят на расстоянии 2 от стола "
                         + "с пустой клеткой между");
     }
@@ -52,7 +54,9 @@ class EnchantingPowerTests {
     void level_RealEnchantRoomV1_IsThirty() {
         Schematic schematic = load("enchant_room_v1");
 
-        assertEquals(30, EnchantingPower.level(schematic, onlyTable(schematic)),
+        assertEquals(
+                30,
+                EnchantingPower.level(schematic, onlyTable(schematic)),
                 "15 рабочих полок дают высшую ступень стола — 30: геометрия постройки обязана это подтверждать");
     }
 
@@ -62,7 +66,9 @@ class EnchantingPowerTests {
 
         Schematic blocked = withBlock(schematic, 2, 1, 2, "minecraft:stone_bricks");
 
-        assertEquals(14, EnchantingPower.shelfCount(blocked, onlyTable(blocked)),
+        assertEquals(
+                14,
+                EnchantingPower.shelfCount(blocked, onlyTable(blocked)),
                 "Блок в клетке между столом и полкой лишает её силы: ванильный стол ищет там передатчик, "
                         + "а не сплошной блок");
     }
@@ -73,17 +79,19 @@ class EnchantingPowerTests {
 
         Schematic far = withBlock(schematic, 3, 1, 0, BOOKSHELF);
 
-        assertEquals(15, EnchantingPower.shelfCount(far, onlyTable(far)),
+        assertEquals(
+                15,
+                EnchantingPower.shelfCount(far, onlyTable(far)),
                 "Полка дальше двух блоков от стола силы не даёт: расстояние задаёт само правило, а не число полок");
     }
 
     @Test
     void shelfCount_ShelfOneBlockAbove_Counts() {
-        Schematic schematic = synthetic(5, 5, 5,
-                entry(3, 1, 3, TABLE),
-                entry(1, 2, 3, BOOKSHELF));
+        Schematic schematic = synthetic(5, 5, 5, entry(3, 1, 3, TABLE), entry(1, 2, 3, BOOKSHELF));
 
-        assertEquals(1, EnchantingPower.shelfCount(schematic, new BlockCoord(3, 1, 3)),
+        assertEquals(
+                1,
+                EnchantingPower.shelfCount(schematic, new BlockCoord(3, 1, 3)),
                 "Полка на блок выше стола рабочий ряд: ванильные смещения допускают высоту стола и на блок выше");
     }
 
@@ -100,9 +108,13 @@ class EnchantingPowerTests {
         }
         Schematic full = new Schematic(7, 4, 7, entries);
 
-        assertEquals(16, EnchantingPower.shelfCount(full, new BlockCoord(3, 1, 3)),
+        assertEquals(
+                16,
+                EnchantingPower.shelfCount(full, new BlockCoord(3, 1, 3)),
                 "Полное кольцо 5×5 без прохода — 16 рабочих полок: этот запас нужен, чтобы проверить предел");
-        assertEquals(30, EnchantingPower.level(full, new BlockCoord(3, 1, 3)),
+        assertEquals(
+                30,
+                EnchantingPower.level(full, new BlockCoord(3, 1, 3)),
                 "Больше 15 полок уровень не поднимают: высшая ступень стола — 30");
     }
 
@@ -110,7 +122,9 @@ class EnchantingPowerTests {
     void tables_RealEnchantRoomV2_FindsBothTables() {
         Schematic schematic = load("enchant_room_v2");
 
-        assertEquals(2, EnchantingPower.tables(schematic).size(),
+        assertEquals(
+                2,
+                EnchantingPower.tables(schematic).size(),
                 "Уровень 2 несёт два стола чарования: запас под второй стол должен быть виден правилу");
     }
 
@@ -123,7 +137,8 @@ class EnchantingPowerTests {
             maxLevel = Math.max(maxLevel, EnchantingPower.level(schematic, table));
         }
 
-        assertTrue(maxLevel == 30,
+        assertTrue(
+                maxLevel == 30,
                 "Уровень 2 сохраняет рабочую чаровальню на 30: расширение здания не ломает кольцо полок, "
                         + "лучший стол дал " + maxLevel);
     }

@@ -3,8 +3,7 @@ package com.theminespirit.core.mining;
 import com.theminespirit.core.observation.BlockCoord;
 
 final class DescentDanger {
-    private DescentDanger() {
-    }
+    private DescentDanger() {}
 
     static String label(Cell cell) {
         return switch (cell) {
@@ -28,8 +27,7 @@ final class DescentDanger {
         if (value == Cell.SOLID || value == Cell.FALLING) {
             return null;
         }
-        return "опасность: " + label(value) + " вместо " + role + "а в клетке " + coords(cell)
-                + " шага " + stepIndex;
+        return "опасность: " + label(value) + " вместо " + role + "а в клетке " + coords(cell) + " шага " + stepIndex;
     }
 
     static String fluidPassage(SafetyView view, BlockCoord cell, String role, BlockCoord passageCell) {

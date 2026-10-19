@@ -29,8 +29,8 @@ public final class JournalService {
     private final BoardJournal journal;
 
     public JournalService(Path path) {
-        this.journal = new BoardJournal(Objects.requireNonNull(path,
-                "Путь журнала не может быть null: без него запись некуда класть"));
+        this.journal = new BoardJournal(
+                Objects.requireNonNull(path, "Путь журнала не может быть null: без него запись некуда класть"));
     }
 
     public static JournalService inConfigDirectory() {
@@ -42,9 +42,19 @@ public final class JournalService {
     }
 
     public void record(BoardLog.Event event, BoardTicket ticket, UUID holder, long tick) {
-        journal.enqueue(new BoardLogEntry(event, tick, ticket.id(), ticket.boardCase(), ticket.level(),
-                ticket.cause(), BoardRules.priorityOf(ticket.boardCase()), ticket.priority(),
-                ticket.modifiers(), holder == null ? null : holder.toString(), ConfigStamp.current(), tick));
+        journal.enqueue(new BoardLogEntry(
+                event,
+                tick,
+                ticket.id(),
+                ticket.boardCase(),
+                ticket.level(),
+                ticket.cause(),
+                BoardRules.priorityOf(ticket.boardCase()),
+                ticket.priority(),
+                ticket.modifiers(),
+                holder == null ? null : holder.toString(),
+                ConfigStamp.current(),
+                tick));
     }
 
     public void recordEntry(BoardLogEntry entry) {
@@ -78,8 +88,12 @@ public final class JournalService {
     public int restore(BoardLedger ledger) {
         BoardJournal.LoadResult result = journal.load(ledger);
         if (result.failed()) {
-            LOGGER.error("Журнал заданий '{}' строка {} не разобрана: {}{}", journal.path(),
-                    result.failedLine(), result.error(), result.truncated()
+            LOGGER.error(
+                    "Журнал заданий '{}' строка {} не разобрана: {}{}",
+                    journal.path(),
+                    result.failedLine(),
+                    result.error(),
+                    result.truncated()
                             ? " — оборванный хвост отрезан, доска поднимается без него"
                             : " — загрузка остановлена на этой строке, проверьте файл");
         }

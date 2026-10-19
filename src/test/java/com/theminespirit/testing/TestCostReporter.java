@@ -12,12 +12,10 @@ import java.util.Locale;
 import java.util.Properties;
 
 public final class TestCostReporter {
-    public record CostLine(String className, String testName, String kind, long cpuMs, long wallMs, long gcMs,
-            boolean warmup) {
-    }
+    public record CostLine(
+            String className, String testName, String kind, long cpuMs, long wallMs, long gcMs, boolean warmup) {}
 
-    private TestCostReporter() {
-    }
+    private TestCostReporter() {}
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -54,8 +52,14 @@ public final class TestCostReporter {
                 continue;
             }
             try {
-                lines.add(new CostLine(parts[0], parts[1], parts[2], Long.parseLong(parts[3]),
-                        Long.parseLong(parts[4]), Long.parseLong(parts[5]), Boolean.parseBoolean(parts[6])));
+                lines.add(new CostLine(
+                        parts[0],
+                        parts[1],
+                        parts[2],
+                        Long.parseLong(parts[3]),
+                        Long.parseLong(parts[4]),
+                        Long.parseLong(parts[5]),
+                        Boolean.parseBoolean(parts[6])));
             } catch (NumberFormatException ignored) {
                 // битая строка CSV в отчёт не идёт
             }
@@ -78,8 +82,15 @@ public final class TestCostReporter {
         out.add("=== Топ-10 по CPU потока (warmup исключены) ===");
         int rank = 1;
         for (CostLine line : top) {
-            out.add(String.format(Locale.ROOT, "%d. %s.%s — %d мс CPU, %d мс wall, %s",
-                    rank++, line.className(), line.testName(), line.cpuMs(), line.wallMs(), line.kind()));
+            out.add(String.format(
+                    Locale.ROOT,
+                    "%d. %s.%s — %d мс CPU, %d мс wall, %s",
+                    rank++,
+                    line.className(),
+                    line.testName(),
+                    line.cpuMs(),
+                    line.wallMs(),
+                    line.kind()));
         }
 
         out.add("=== МЕДЛЕННЫЙ (выше порога по CPU) ===");
@@ -88,12 +99,22 @@ public final class TestCostReporter {
             long warn = "jqwik".equals(line.kind()) ? jqwikWarn : junitWarn;
             long slow = "jqwik".equals(line.kind()) ? jqwikSlow : junitSlow;
             if (line.cpuMs() >= slow) {
-                out.add(String.format(Locale.ROOT, "%s.%s — %d мс CPU (ДОЛГИЙ, порог %d мс)",
-                        line.className(), line.testName(), line.cpuMs(), slow));
+                out.add(String.format(
+                        Locale.ROOT,
+                        "%s.%s — %d мс CPU (ДОЛГИЙ, порог %d мс)",
+                        line.className(),
+                        line.testName(),
+                        line.cpuMs(),
+                        slow));
                 any = true;
             } else if (line.cpuMs() >= warn) {
-                out.add(String.format(Locale.ROOT, "%s.%s — %d мс CPU (порог %d мс)",
-                        line.className(), line.testName(), line.cpuMs(), warn));
+                out.add(String.format(
+                        Locale.ROOT,
+                        "%s.%s — %d мс CPU (порог %d мс)",
+                        line.className(),
+                        line.testName(),
+                        line.cpuMs(),
+                        warn));
                 any = true;
             }
         }

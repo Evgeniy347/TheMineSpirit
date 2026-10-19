@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -22,7 +21,9 @@ class BoardCaseV2Tests {
 
     @Test
     void cases_TotalCount_IsFortyFive() {
-        assertEquals(45, BoardCase.values().length,
+        assertEquals(
+                45,
+                BoardCase.values().length,
                 "Кейсов доски — 45: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
                         + "(HARVEST_HIVE, PLACE_BEEHIVE) и BUILD_WAREHOUSE чеклиста 41. "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
@@ -36,7 +37,9 @@ class BoardCaseV2Tests {
         }
         List<String> sorted = names.stream().sorted().toList();
 
-        assertEquals(sorted, names,
+        assertEquals(
+                sorted,
+                names,
                 "Константы BoardCase объявлены по алфавиту: обход values() обязан быть упорядочен "
                         + "(детерминизм набора на любой JVM), новый кейс встаёт на своё место, а не в конец");
     }
@@ -46,7 +49,8 @@ class BoardCaseV2Tests {
         for (BoardCase boardCase : BoardCase.values()) {
             int priority = BoardRules.priorityOf(boardCase);
 
-            assertTrue(priority >= 0 && priority <= BoardTuning.MAX_PRIORITY,
+            assertTrue(
+                    priority >= 0 && priority <= BoardTuning.MAX_PRIORITY,
                     "Кейс " + boardCase + " обязан иметь базовый приоритет в [0, MAX_PRIORITY]: "
                             + "кейс-сирота роняет сортировку выдачи");
         }
@@ -60,11 +64,13 @@ class BoardCaseV2Tests {
             }
             TaskNode plan = TicketPlans.plan(boardCase, target());
 
-            assertTrue(plan != null,
+            assertTrue(
+                    plan != null,
                     "Кейс " + boardCase + " обязан иметь план или быть названным во внешнем списке "
                             + "TicketPlans.EXTERNAL_CASES: выдача задания без плана оставляет духа без задачи");
         }
-        assertTrue(TicketPlans.EXTERNAL_CASES.contains(BoardCase.EAT_TO_FULL),
+        assertTrue(
+                TicketPlans.EXTERNAL_CASES.contains(BoardCase.EAT_TO_FULL),
                 "EAT_TO_FULL — внешний кейс без плана: дух ест сам скриптом eat из личного инвентаря, "
                         + "план доски ему не нужен");
     }
@@ -78,8 +84,8 @@ class BoardCaseV2Tests {
             }
         }
 
-        assertEquals(1, matches,
-                "Каждое имя кейса встречается ровно один раз: дубль имени сломал бы таблицу приоритетов");
+        assertEquals(
+                1, matches, "Каждое имя кейса встречается ровно один раз: дубль имени сломал бы таблицу приоритетов");
     }
 
     @Provide
@@ -94,22 +100,27 @@ class BoardCaseV2Tests {
     @Test
     void cases_Values_AreSortedByName() {
         List<BoardCase> values = List.of(BoardCase.values());
-        List<BoardCase> sorted = values.stream()
-                .sorted(Comparator.comparing(BoardCase::name))
-                .toList();
+        List<BoardCase> sorted =
+                values.stream().sorted(Comparator.comparing(BoardCase::name)).toList();
 
-        assertEquals(sorted, values,
+        assertEquals(
+                sorted,
+                values,
                 "Обход values() упорядочен по имени константы: порядок влияет на детерминизм "
                         + "перебора кейсов источниками доски");
     }
 
     private static TicketTarget target() {
-        return TicketTarget.at(new BlockCoord(10, 60, -5)).withSpecies(Species.SHEEP)
+        return TicketTarget.at(new BlockCoord(10, 60, -5))
+                .withSpecies(Species.SHEEP)
                 .withScheme("pen")
                 .withRelocate(new BlockCoord(10, 60, -5), new BlockCoord(30, 60, 10))
                 .withSupply("bread", 1)
                 .withCraft("minecraft:iron_pickaxe", 1)
-                .withTransfer(UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
-                        UUID.fromString("00000000-0000-0000-0000-0000000000a2"), "bread", 1);
+                .withTransfer(
+                        UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
+                        UUID.fromString("00000000-0000-0000-0000-0000000000a2"),
+                        "bread",
+                        1);
     }
 }

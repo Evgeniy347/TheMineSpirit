@@ -15,15 +15,19 @@ public final class BlockProtection {
     private final int maxUnprotectVolume;
 
     public BlockProtection(IdFilter deny, IdFilter natural, int buildingThreshold, int maxUnprotectVolume) {
-        this.deny = Objects.requireNonNull(deny, "Чёрный список не может быть null: без него защита блоков не работает");
-        this.natural = Objects.requireNonNull(natural, "Список природных блоков не может быть null: по нему отличают постройки");
+        this.deny =
+                Objects.requireNonNull(deny, "Чёрный список не может быть null: без него защита блоков не работает");
+        this.natural = Objects.requireNonNull(
+                natural, "Список природных блоков не может быть null: по нему отличают постройки");
         if (deny.matchesAll() || natural.matchesAll()) {
-            throw new IllegalArgumentException("Список deny или natural совпадает со всеми блоками: пустой или '*' список запретил бы всё "
-                    + "либо признал бы всё природным, перечислите шаблоны блоков явно");
+            throw new IllegalArgumentException(
+                    "Список deny или natural совпадает со всеми блоками: пустой или '*' список запретил бы всё "
+                            + "либо признал бы всё природным, перечислите шаблоны блоков явно");
         }
         if (buildingThreshold < 1 || buildingThreshold > MAX_THRESHOLD) {
-            throw new IllegalArgumentException("buildingThreshold " + buildingThreshold + " вне диапазона 1.." + MAX_THRESHOLD
-                    + ": среди " + NEIGHBOUR_COUNT + " соседей не может быть больше искусственных блоков");
+            throw new IllegalArgumentException(
+                    "buildingThreshold " + buildingThreshold + " вне диапазона 1.." + MAX_THRESHOLD + ": среди "
+                            + NEIGHBOUR_COUNT + " соседей не может быть больше искусственных блоков");
         }
         if (maxUnprotectVolume < 1) {
             throw new IllegalArgumentException("maxUnprotectVolume " + maxUnprotectVolume + " меньше 1: "
@@ -33,11 +37,9 @@ public final class BlockProtection {
         this.maxUnprotectVolume = maxUnprotectVolume;
     }
 
-    public sealed interface Decision {
-    }
+    public sealed interface Decision {}
 
-    public record Allowed() implements Decision {
-    }
+    public record Allowed() implements Decision {}
 
     public record Refused(PolicyId policy, String reason) implements Decision {
         public Refused {
@@ -52,11 +54,15 @@ public final class BlockProtection {
             return new Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
         }
         if (deny.matches(blockId)) {
-            return new Refused(PolicyId.PROTECTED_BLOCKS, "блок '" + blockId + "' в чёрном списке защиты (protection.json → deny): "
-                    + "его не ломают, чтобы не разрушить постройку или механизм");
+            return new Refused(
+                    PolicyId.PROTECTED_BLOCKS,
+                    "блок '" + blockId + "' в чёрном списке защиты (protection.json → deny): "
+                            + "его не ломают, чтобы не разрушить постройку или механизм");
         }
         if (inProtectedZone) {
-            return new Refused(PolicyId.PROTECTED_ZONE, "блок '" + blockId + "' лежит в защищённой зоне (серверный конфиг protectedZones)");
+            return new Refused(
+                    PolicyId.PROTECTED_ZONE,
+                    "блок '" + blockId + "' лежит в защищённой зоне (серверный конфиг protectedZones)");
         }
         return new Allowed();
     }
@@ -91,17 +97,23 @@ public final class BlockProtection {
             return new Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
         }
         if (deny.matches(blockId)) {
-            return new Refused(PolicyId.PROTECTED_BLOCKS, "блок '" + blockId + "' в чёрном списке защиты (protection.json → deny): "
-                    + "его не ломают, чтобы не разрушить постройку или механизм");
+            return new Refused(
+                    PolicyId.PROTECTED_BLOCKS,
+                    "блок '" + blockId + "' в чёрном списке защиты (protection.json → deny): "
+                            + "его не ломают, чтобы не разрушить постройку или механизм");
         }
         if (inProtectedZone) {
-            return new Refused(PolicyId.PROTECTED_ZONE, "блок '" + blockId + "' лежит в защищённой зоне (серверный конфиг protectedZones)");
+            return new Refused(
+                    PolicyId.PROTECTED_ZONE,
+                    "блок '" + blockId + "' лежит в защищённой зоне (серверный конфиг protectedZones)");
         }
         if (unprotectArea) {
             return new Allowed();
         }
         if (playerPlaced) {
-            return new Refused(PolicyId.PLAYER_BUILDINGS, "блок '" + blockId + "' поставил игрок: чужие постройки дух не разбирает");
+            return new Refused(
+                    PolicyId.PLAYER_BUILDINGS,
+                    "блок '" + blockId + "' поставил игрок: чужие постройки дух не разбирает");
         }
         int artificial = 0;
         String example = null;
@@ -112,8 +124,10 @@ public final class BlockProtection {
             }
         }
         if (artificial >= buildingThreshold) {
-            return new Refused(PolicyId.PLAYER_BUILDINGS, "вокруг блока '" + blockId + "' " + artificial + " искусственных блоков из "
-                    + NEIGHBOUR_COUNT + " (порог " + buildingThreshold + ", например '" + example + "'): это постройка игрока");
+            return new Refused(
+                    PolicyId.PLAYER_BUILDINGS,
+                    "вокруг блока '" + blockId + "' " + artificial + " искусственных блоков из " + NEIGHBOUR_COUNT
+                            + " (порог " + buildingThreshold + ", например '" + example + "'): это постройка игрока");
         }
         return new Allowed();
     }
@@ -128,13 +142,15 @@ public final class BlockProtection {
                     + ": 3×3×3 без самого блока; для незагруженной клетки передайте minecraft:air");
         }
         if (inProtectedZone) {
-            return new Refused(PolicyId.PROTECTED_ZONE, "механизм лежит в защищённой зоне (серверный конфиг protectedZones)");
+            return new Refused(
+                    PolicyId.PROTECTED_ZONE, "механизм лежит в защищённой зоне (серверный конфиг protectedZones)");
         }
         if (unprotectArea) {
             return new Allowed();
         }
         if (playerPlaced) {
-            return new Refused(PolicyId.PLAYER_BUILDINGS, "блок поставил игрок: чужие механизмы дух не трогает без разрешения");
+            return new Refused(
+                    PolicyId.PLAYER_BUILDINGS, "блок поставил игрок: чужие механизмы дух не трогает без разрешения");
         }
         int artificial = 0;
         String example = null;
@@ -145,12 +161,13 @@ public final class BlockProtection {
             }
         }
         if (artificial >= buildingThreshold) {
-            return new Refused(PolicyId.PLAYER_BUILDINGS, "вокруг механизма " + artificial + " искусственных блоков из "
-                    + NEIGHBOUR_COUNT + " (порог " + buildingThreshold + ", например '" + example + "'): это постройка игрока");
+            return new Refused(
+                    PolicyId.PLAYER_BUILDINGS,
+                    "вокруг механизма " + artificial + " искусственных блоков из " + NEIGHBOUR_COUNT + " (порог "
+                            + buildingThreshold + ", например '" + example + "'): это постройка игрока");
         }
         return new Allowed();
     }
 
-    public record Placement(boolean playerPlaced, boolean inProtectedZone, boolean unprotectArea) {
-    }
+    public record Placement(boolean playerPlaced, boolean inProtectedZone, boolean unprotectArea) {}
 }

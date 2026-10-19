@@ -64,12 +64,18 @@ public final class CombatActuator {
         if (arrow.isEmpty()) {
             return;
         }
-        AbstractArrow projectile = ProjectileUtil.getMobArrow(spirit, arrow, 1.0F, spirit.gear().bow());
+        AbstractArrow projectile =
+                ProjectileUtil.getMobArrow(spirit, arrow, 1.0F, spirit.gear().bow());
         double dx = target.getX() - spirit.getX();
         double dy = target.getY(0.3333333333333333) - projectile.getY();
         double dz = target.getZ() - spirit.getZ();
         double flat = Math.sqrt(dx * dx + dz * dz);
-        projectile.shoot(dx, dy + flat * 0.2, dz, (float) SHOT_SPEED, 14 - spirit.level().getDifficulty().getId() * 4);
+        projectile.shoot(
+                dx,
+                dy + flat * 0.2,
+                dz,
+                (float) SHOT_SPEED,
+                14 - spirit.level().getDifficulty().getId() * 4);
         spirit.playSound(SoundEvents.SKELETON_SHOOT, 1.0F, 1.0F);
         spirit.level().addFreshEntity(projectile);
         lastShotTick = spirit.tickCount;

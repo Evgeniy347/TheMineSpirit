@@ -1,8 +1,8 @@
 package com.theminespirit.core.mining;
 
-import com.theminespirit.core.reload.DataTables;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.DataTables;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;

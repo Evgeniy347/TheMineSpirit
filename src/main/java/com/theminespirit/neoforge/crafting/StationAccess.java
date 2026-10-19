@@ -108,8 +108,8 @@ final class StationAccess {
             return anchor;
         }
         if (cornerFinder == null) {
-            cornerFinder = new StationFinder(spirit.level(), spirit.blockPosition(), radius,
-                    StationType.CRAFTING_TABLE);
+            cornerFinder =
+                    new StationFinder(spirit.level(), spirit.blockPosition(), radius, StationType.CRAFTING_TABLE);
         }
         if (!cornerFinder.step()) {
             return null;
@@ -137,8 +137,7 @@ final class StationAccess {
             return;
         }
         switch (approach.tick()) {
-            case MOVING -> {
-            }
+            case MOVING -> {}
             case ARRIVED -> state = State.READY;
             case STUCK, TIMEOUT -> fail("не дошёл до станции (" + type.noun() + ") в " + pos.toShortString());
         }

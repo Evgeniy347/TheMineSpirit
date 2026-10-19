@@ -115,8 +115,8 @@ public final class ClimbScript implements ScriptInstance {
                 rungs.add(y);
             }
         }
-        span = ClimbRoute.span(rungs, feet.getY()).orElseThrow(
-                () -> new IllegalStateException("Колонна " + columnX + ", " + columnZ
+        span = ClimbRoute.span(rungs, feet.getY())
+                .orElseThrow(() -> new IllegalStateException("Колонна " + columnX + ", " + columnZ
                         + " нашлась по клетке-ступени, но список ступеней пуст: проверьте сбор высот"));
         targetY = span.targetY(down);
         startY = spirit.getY();

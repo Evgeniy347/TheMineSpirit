@@ -16,7 +16,9 @@ class ScriptRegistryTests {
         ScriptFactory factory = TestScripts.succeeding(1);
         ScriptRegistry registry = ScriptRegistry.of(Map.of("mine", factory));
 
-        assertSame(factory, registry.find("mine").orElseThrow(),
+        assertSame(
+                factory,
+                registry.find("mine").orElseThrow(),
                 "find обязан вернуть именно зарегистрированную фабрику: чужой экземпляр исполнит не тот скрипт");
     }
 
@@ -24,7 +26,8 @@ class ScriptRegistryTests {
     void find_UnknownId_IsEmpty() {
         ScriptRegistry registry = ScriptRegistry.of(Map.of("mine", TestScripts.succeeding(1)));
 
-        assertTrue(registry.find("ghost").isEmpty(),
+        assertTrue(
+                registry.find("ghost").isEmpty(),
                 "неизвестный id обязан давать пустой Optional: движок отличит отсутствие скрипта от его наличия");
     }
 
@@ -44,7 +47,8 @@ class ScriptRegistryTests {
 
         source.clear();
 
-        assertTrue(registry.contains("mine"),
+        assertTrue(
+                registry.contains("mine"),
                 "реестр обязан делать защитную копию: иначе правка исходной карты меняет исполнение на ходу");
     }
 
@@ -53,13 +57,17 @@ class ScriptRegistryTests {
         Map<String, ScriptFactory> source = new HashMap<>();
         source.put("mine", null);
 
-        assertThrows(NullPointerException.class, () -> ScriptRegistry.of(source),
+        assertThrows(
+                NullPointerException.class,
+                () -> ScriptRegistry.of(source),
                 "реестр с null-фабрикой обязан отвергаться при создании: иначе падение случится в серверном тике");
     }
 
     @Test
     void of_NullMap_IsRejected() {
-        assertThrows(NullPointerException.class, () -> ScriptRegistry.of(null),
+        assertThrows(
+                NullPointerException.class,
+                () -> ScriptRegistry.of(null),
                 "реестр без карты обязан отвергаться: пустой реестр задают пустой картой");
     }
 
@@ -67,7 +75,8 @@ class ScriptRegistryTests {
     void of_EmptyMap_FindsNothing() {
         ScriptRegistry registry = ScriptRegistry.of(Map.of());
 
-        assertTrue(registry.find("mine").isEmpty(),
+        assertTrue(
+                registry.find("mine").isEmpty(),
                 "пустой реестр обязан находить ничего: движок тогда провалит неизвестный скрипт, а не упадёт");
         assertEquals(false, registry.contains("mine"), "пустой реестр не содержит ни одного id");
     }

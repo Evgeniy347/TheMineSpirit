@@ -259,8 +259,8 @@ final class BuildSchematicScript implements ScriptInstance {
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World world, boolean outsideOnly) {
         Set<BlockCoord> occupied = new HashSet<>(site.schemeCells());
-        Optional<BlockCoord> stand = ReachPlanner.nextStand(SpiritReach.current(), feet(), cells, world,
-                excludedStands, occupied);
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStand(SpiritReach.current(), feet(), cells, world, excludedStands, occupied);
         if (stand.isEmpty() && !standsRetried && !excludedStands.isEmpty()) {
             standsRetried = true;
             excludedStands.clear();
@@ -268,13 +268,16 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         if (stand.isEmpty()) {
             for (BlockCoord cell : cells) {
-                blocked.putIfAbsent(cell, "ни с одной стоянки не дотянуться"
-                        + (outsideOnly ? " снаружи постройки" : "") + (lastRefusal.isBlank() ? "" : "; " + lastRefusal));
+                blocked.putIfAbsent(
+                        cell,
+                        "ни с одной стоянки не дотянуться" + (outsideOnly ? " снаружи постройки" : "")
+                                + (lastRefusal.isBlank() ? "" : "; " + lastRefusal));
             }
             return ScriptStatus.RUNNING;
         }
         approachStand = stand.get();
-        approach.begin(new Vec3(approachStand.x() + 0.5, approachStand.y(), approachStand.z() + 0.5),
+        approach.begin(
+                new Vec3(approachStand.x() + 0.5, approachStand.y(), approachStand.z() + 0.5),
                 BuildTuning.STAND_ARRIVAL);
         return ScriptStatus.RUNNING;
     }
@@ -327,8 +330,8 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         squadVersion = squad.version();
         Set<BlockCoord> share = new HashSet<>();
-        for (Schematic.PlacedEntry entry : CellPartition.split(site.primaries(), squad.size())
-                .get(squad.slotOf(spirit.getUUID()))) {
+        for (Schematic.PlacedEntry entry :
+                CellPartition.split(site.primaries(), squad.size()).get(squad.slotOf(spirit.getUUID()))) {
             share.add(entry.pos());
         }
         ownShare = Set.copyOf(share);
@@ -347,7 +350,8 @@ final class BuildSchematicScript implements ScriptInstance {
         for (int i = 0; i < blocked.size(); i++) {
             tally.skipped();
         }
-        return fail("не совпало со схемой " + missing.size() + " из " + site.entries().size() + " клеток"
+        return fail("не совпало со схемой " + missing.size() + " из "
+                + site.entries().size() + " клеток"
                 + (clear.isEmpty() ? "" : ", не очищено " + clear.size()) + ": " + sample(missing, clear)
                 + "; дух " + feet() + "; поставлено " + placed + ", очищено " + cleared + "; причины: "
                 + reasons());
@@ -408,7 +412,8 @@ final class BuildSchematicScript implements ScriptInstance {
 
     @Override
     public Optional<ScriptResult> result() {
-        return outcome == ScriptStatus.SUCCEEDED ? Optional.of(new ScriptResult.Data(tally.toData()))
+        return outcome == ScriptStatus.SUCCEEDED
+                ? Optional.of(new ScriptResult.Data(tally.toData()))
                 : Optional.empty();
     }
 

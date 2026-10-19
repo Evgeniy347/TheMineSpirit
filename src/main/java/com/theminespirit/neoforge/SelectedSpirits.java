@@ -9,8 +9,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.world.entity.Entity;
 
 final class SelectedSpirits {
-    private SelectedSpirits() {
-    }
+    private SelectedSpirits() {}
 
     static List<SpiritEntity> selected(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         List<SpiritEntity> spirits = new ArrayList<>();

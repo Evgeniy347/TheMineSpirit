@@ -7,8 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 final class CheapBlocks {
-    private CheapBlocks() {
-    }
+    private CheapBlocks() {}
 
     static Map<String, Integer> counts(SpiritEntity spirit) {
         Map<String, Integer> counts = new LinkedHashMap<>();

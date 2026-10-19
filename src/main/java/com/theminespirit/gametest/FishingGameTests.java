@@ -32,8 +32,7 @@ public final class FishingGameTests {
     private static final int POND_MAX = 6;
     private static final BlockPos STATION_CELL = new BlockPos(3, 1, 1);
 
-    private FishingGameTests() {
-    }
+    private FishingGameTests() {}
 
     // [флак] поклёвка случайна (ванильное ожидание до ~380 тиков), плюс подход к берегу — потолок с запасом
     @GameTest(template = "arena", batch = "fishing_pond", timeoutTicks = 900)
@@ -42,15 +41,17 @@ public final class FishingGameTests {
         pond(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
         spirit.getInventory().setItem(0, lureRod(helper));
-        SpiritRun.launch(helper, spirit, new ScriptCall("fish",
-                Map.of("count", 1, "duration_ticks", 600, "radius", 16)), 1);
+        SpiritRun.launch(
+                helper, spirit, new ScriptCall("fish", Map.of("count", 1, "duration_ticks", 600, "radius", 16)), 1);
 
         helper.succeedWhen(() -> {
             RunStatus status = spirit.taskStatus().orElse(null);
-            helper.assertTrue(status == RunStatus.SUCCEEDED,
-                    "дух с удочкой у пруда обязан поймать рыбу за отведённое время: статус " + status
-                            + ", причина: " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(fishCount(spirit) >= 1,
+            helper.assertTrue(
+                    status == RunStatus.SUCCEEDED,
+                    "дух с удочкой у пруда обязан поймать рыбу за отведённое время: статус " + status + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    fishCount(spirit) >= 1,
                     "после успешной рыбалки в инвентаре обязана быть рыба: иначе ScriptResult врёт");
             spirit.discard();
             TacticsScene.finish(helper, spirit);
@@ -62,15 +63,15 @@ public final class FishingGameTests {
         TacticsScene.prepare(helper);
         pond(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
-        SpiritRun.launch(helper, spirit, new ScriptCall("fish",
-                Map.of("count", 1, "duration_ticks", 600, "radius", 16)), 1);
+        SpiritRun.launch(
+                helper, spirit, new ScriptCall("fish", Map.of("count", 1, "duration_ticks", 600, "radius", 16)), 1);
 
         helper.succeedWhen(() -> {
             RunStatus status = spirit.taskStatus().orElse(null);
-            helper.assertTrue(status == RunStatus.FAILED,
-                    "без удочки рыбалка обязана отказать, статус: " + status);
+            helper.assertTrue(status == RunStatus.FAILED, "без удочки рыбалка обязана отказать, статус: " + status);
             String reason = spirit.taskFailureReason().orElse("");
-            helper.assertTrue(reason.contains("удочк"),
+            helper.assertTrue(
+                    reason.contains("удочк"),
                     "причина отказа обязана называть отсутствие удочки, фактическая: '" + reason + "'");
             spirit.discard();
             TacticsScene.finish(helper, spirit);
@@ -81,15 +82,14 @@ public final class FishingGameTests {
     public static void smelt_CodInSmoker_CookedCod(GameTestHelper helper) {
         CraftTestSupport.field(helper);
         helper.setBlock(STATION_CELL, Blocks.SMOKER);
-        SpiritEntity spirit = CraftTestSupport.prepare(helper, CraftTestSupport.stack(Items.COD, 2),
-                CraftTestSupport.stack(Items.COAL, 1));
+        SpiritEntity spirit = CraftTestSupport.prepare(
+                helper, CraftTestSupport.stack(Items.COD, 2), CraftTestSupport.stack(Items.COAL, 1));
         CraftTestSupport.speedUpFurnaces(helper);
         SpiritRun run = CraftTestSupport.launch(helper, spirit, "smelt", "cooked_cod", 2);
 
         helper.succeedWhen(() -> {
             CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
-            CraftTestSupport.assertCount(helper, spirit, Items.COOKED_COD, 2,
-                    "жареная треска из коптильни");
+            CraftTestSupport.assertCount(helper, spirit, Items.COOKED_COD, 2, "жареная треска из коптильни");
             CraftTestSupport.assertCount(helper, spirit, Items.COD, 0, "сырая треска после копчения");
             CraftTestSupport.cleanup(helper, spirit);
         });
@@ -99,15 +99,15 @@ public final class FishingGameTests {
     public static void smelt_PufferfishRequested_Refused(GameTestHelper helper) {
         CraftTestSupport.field(helper);
         helper.setBlock(STATION_CELL, Blocks.SMOKER);
-        SpiritEntity spirit = CraftTestSupport.prepare(helper, CraftTestSupport.stack(Items.PUFFERFISH, 2),
-                CraftTestSupport.stack(Items.COAL, 1));
+        SpiritEntity spirit = CraftTestSupport.prepare(
+                helper, CraftTestSupport.stack(Items.PUFFERFISH, 2), CraftTestSupport.stack(Items.COAL, 1));
         SpiritRun run = CraftTestSupport.launch(helper, spirit, "smelt", "pufferfish", 2);
 
         helper.succeedWhen(() -> {
             CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.FAILED);
             CraftTestSupport.assertReason(helper, spirit, "нет рецепта");
-            CraftTestSupport.assertCount(helper, spirit, Items.PUFFERFISH, 2,
-                    "иглобрюх не жарится и остаётся сырым на складе");
+            CraftTestSupport.assertCount(
+                    helper, spirit, Items.PUFFERFISH, 2, "иглобрюх не жарится и остаётся сырым на складе");
             CraftTestSupport.cleanup(helper, spirit);
         });
     }
@@ -119,17 +119,19 @@ public final class FishingGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
         spirit.getInventory().setItem(0, new ItemStack(Items.BUCKET));
         helper.spawn(EntityType.COD, new BlockPos(POND_MIN, 1, POND_MIN));
-        SpiritRun.launch(helper, spirit, new ScriptCall("bucket_fish",
-                Map.of("count", 1, "radius", 16)), 1);
+        SpiritRun.launch(helper, spirit, new ScriptCall("bucket_fish", Map.of("count", 1, "radius", 16)), 1);
 
         helper.succeedWhen(() -> {
             RunStatus status = spirit.taskStatus().orElse(null);
-            helper.assertTrue(status == RunStatus.SUCCEEDED,
-                    "дух с пустым ведром у пруда обязан поймать рыбу: статус " + status
-                            + ", причина: " + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(countItem(spirit, Items.COD_BUCKET) >= 1,
+            helper.assertTrue(
+                    status == RunStatus.SUCCEEDED,
+                    "дух с пустым ведром у пруда обязан поймать рыбу: статус " + status + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    countItem(spirit, Items.COD_BUCKET) >= 1,
                     "после ловли ведром в инвентаре обязано быть ведро трески: иначе скрипт соврал");
-            helper.assertTrue(countItem(spirit, Items.BUCKET) == 0,
+            helper.assertTrue(
+                    countItem(spirit, Items.BUCKET) == 0,
                     "пустое ведро обязано уйти на рыбу: остаток " + countItem(spirit, Items.BUCKET));
             spirit.discard();
             TacticsScene.finish(helper, spirit);
@@ -144,22 +146,27 @@ public final class FishingGameTests {
         BlockCoord pondMin = coord(helper, new BlockPos(2, 0, 2));
         BlockCoord pondMax = coord(helper, new BlockPos(POND_MIN + 2, 0, POND_MIN + 2));
 
-        Optional<FishingSpots.Spot> picked = FishingWorkPointPicker.pick(helper.getLevel(),
-                origin, FishingData.loadDefault(), 16, List.of(), 3.0);
+        Optional<FishingSpots.Spot> picked =
+                FishingWorkPointPicker.pick(helper.getLevel(), origin, FishingData.loadDefault(), 16, List.of(), 3.0);
 
-        helper.assertTrue(picked.isPresent(),
-                "У открытой воды рабочая точка обязана найтись: без неё рыбалка не станет занятием "
-                        + "(" + origin + "); пруд: " + describePond(helper));
+        helper.assertTrue(
+                picked.isPresent(),
+                "У открытой воды рабочая точка обязана найтись: без неё рыбалка не станет занятием " + "(" + origin
+                        + "); пруд: " + describePond(helper));
         FishingSpots.Spot spot = picked.orElseThrow();
-        helper.assertTrue(spot.water().x() >= pondMin.x() && spot.water().x() <= pondMax.x()
-                        && spot.water().z() >= pondMin.z() && spot.water().z() <= pondMax.z(),
-                "Цель заброса обязана лежать в пятне воды, а не в постройке: " + spot.water()
-                        + " вне [" + pondMin + ", " + pondMax + "]");
+        helper.assertTrue(
+                spot.water().x() >= pondMin.x()
+                        && spot.water().x() <= pondMax.x()
+                        && spot.water().z() >= pondMin.z()
+                        && spot.water().z() <= pondMax.z(),
+                "Цель заброса обязана лежать в пятне воды, а не в постройке: " + spot.water() + " вне [" + pondMin
+                        + ", " + pondMax + "]");
 
-        Optional<FishingSpots.Spot> nearBuilding = FishingWorkPointPicker.pick(helper.getLevel(),
-                origin, FishingData.loadDefault(), 16, List.of(spot.stand()), 3.0);
+        Optional<FishingSpots.Spot> nearBuilding = FishingWorkPointPicker.pick(
+                helper.getLevel(), origin, FishingData.loadDefault(), 16, List.of(spot.stand()), 3.0);
 
-        helper.assertTrue(nearBuilding.isEmpty(),
+        helper.assertTrue(
+                nearBuilding.isEmpty(),
                 "Рабочая точка не выбирается у постройки: занятая постройкой стоянка " + spot.stand()
                         + " не должна стать местом рыбалки, а выбрана " + nearBuilding.orElse(null));
         helper.succeed();
@@ -187,7 +194,8 @@ public final class FishingGameTests {
         for (int y = 0; y <= 2; y++) {
             report.append("y=").append(y).append(':');
             for (int x = 1; x <= 7; x++) {
-                report.append(' ').append(helper.getBlockState(new BlockPos(x, y, 2)).getBlock());
+                report.append(' ')
+                        .append(helper.getBlockState(new BlockPos(x, y, 2)).getBlock());
             }
             report.append(" | ");
         }
@@ -212,8 +220,12 @@ public final class FishingGameTests {
 
     private static ItemStack lureRod(GameTestHelper helper) {
         ItemStack rod = new ItemStack(Items.FISHING_ROD);
-        rod.enchant(helper.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT)
-                .getHolderOrThrow(Enchantments.LURE), 3);
+        rod.enchant(
+                helper.getLevel()
+                        .registryAccess()
+                        .registryOrThrow(Registries.ENCHANTMENT)
+                        .getHolderOrThrow(Enchantments.LURE),
+                3);
         return rod;
     }
 

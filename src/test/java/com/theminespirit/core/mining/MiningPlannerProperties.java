@@ -29,9 +29,11 @@ class MiningPlannerProperties {
         MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, remaining, world);
 
         if (outcome instanceof MiningPlanner.Next next) {
-            assertTrue(MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
+            assertTrue(
+                    MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
                     "Выбранная цель обязана быть безопасной: иначе дух пробивает блок с жидкостью за гранью");
-            assertTrue(StandSpots.of(next.target(), world, FROM).contains(next.stand()),
+            assertTrue(
+                    StandSpots.of(next.target(), world, FROM).contains(next.stand()),
                     "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное место");
         }
     }
@@ -47,7 +49,9 @@ class MiningPlannerProperties {
         MiningPlanner.Outcome ordered = MiningPlanner.next(FROM, remaining, world);
         MiningPlanner.Outcome reordered = MiningPlanner.next(FROM, shuffled, world);
 
-        assertEquals(ordered, reordered,
+        assertEquals(
+                ordered,
+                reordered,
                 "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
                         + "добыча непредсказуемо выбирает разные блоки");
     }
@@ -68,15 +72,15 @@ class MiningPlannerProperties {
         MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, remaining, world, excluded);
 
         if (outcome instanceof MiningPlanner.Next next) {
-            assertTrue(!excluded.contains(next.stand()),
+            assertTrue(
+                    !excluded.contains(next.stand()),
                     "Возвращённая стоянка обязана быть вне исключённых: иначе исключение глухих стоянок "
                             + "не работает и дух идёт в стену");
         }
     }
 
     @Property
-    void next_DenseWorld_MatchesFullScanWithoutEarlyExit(
-            @ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
+    void next_DenseWorld_MatchesFullScanWithoutEarlyExit(@ForAll @IntRange(min = 0, max = 1_000_000) int seed) {
         Random random = new Random(seed);
         List<BlockCoord> remaining = wideTargets(random);
         CellWorld world = denseWorld(random, remaining);
@@ -85,7 +89,9 @@ class MiningPlannerProperties {
         MiningPlanner.Outcome actual = MiningPlanner.next(from, remaining, world);
         MiningPlanner.Outcome expected = referenceNext(from, remaining, world);
 
-        assertEquals(expected, actual,
+        assertEquals(
+                expected,
+                actual,
                 "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
                         + "со стоянкой на смещении до 3. Цели: " + remaining);
     }
@@ -119,8 +125,7 @@ class MiningPlannerProperties {
         return targets;
     }
 
-    private static MiningPlanner.Outcome referenceNext(BlockCoord from, List<BlockCoord> candidates,
-            CellWorld world) {
+    private static MiningPlanner.Outcome referenceNext(BlockCoord from, List<BlockCoord> candidates, CellWorld world) {
         List<BlockCoord> ordered = new ArrayList<>(candidates);
         ordered.sort(Comparator.comparingLong((BlockCoord target) -> distanceSquared(from, target))
                 .thenComparing(Comparator.naturalOrder()));
@@ -173,7 +178,8 @@ class MiningPlannerProperties {
 
         MiningPlanner.next(FROM, remaining, world);
 
-        assertTrue(world.reads() <= 446 * remaining.size(),
+        assertTrue(
+                world.reads() <= 446 * remaining.size(),
                 "Планирование читает не более " + 446 + " клеток на цель: "
                         + "иначе перебор целей кладёт серверный тик. Чтений: " + world.reads()
                         + ", целей: " + remaining.size());
