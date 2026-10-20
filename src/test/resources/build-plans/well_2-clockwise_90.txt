@@ -1,0 +1,12 @@
+# well_2 clockwise_90, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
+заход 1: stone_bricks×24, stone_brick_stairs×1, stripped_spruce_log×12, cobblestone_wall×8, spruce_planks×80, spruce_stairs×42, spruce_slab×7 | слоты: этап 2, позже 6
+стоянка 8,0,4 на земле: поставлено 6
+стоянка 5,1,4 на stone_bricks (высота 1): поставлено 14
+стоянка 0,0,4 на земле: поставлено 16
+стоянка 2,2,4 на cobblestone_wall (высота 2): поставлено 114
+стоянка 3,2,2 на cobblestone_wall (высота 2): поставлено 16
+стоянка 4,2,3 на cobblestone_wall (высота 2): поставлено 7
+стоянка 3,2,2 на cobblestone_wall (высота 2): поставлено 1
+заход 2: water×1, potted_dandelion×1, water_cauldron×1, potted_poppy×1, lantern×1, chain×1 | слоты: этап 6, позже 0
+стоянка 4,2,4 на cobblestone_wall (высота 2): поставлено 6
+итог: заходов 2, стоянок 8, на крыше 0, отказов отхода 0, не поставлено 0

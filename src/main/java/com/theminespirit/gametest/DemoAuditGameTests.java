@@ -71,8 +71,9 @@ public final class DemoAuditGameTests {
     private static final int ENCHANT_HALL_MAX_PATH_BUILDS = 18;
     private static final int DOUBLE_CHEST_ROWS = 6;
     // Дом семьи 3 (19.10) — два этажа, материалы заходами: замер 72–84 подхода по поворотам (20.10), запас 10 %.
-    // С балконом на ряд глубже перил и шагом к середине клетки перед установкой у края — замер 52–99, предел 110.
-    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 110;
+    // Путь 32 вместо 96 (решение 20.10): каждая стоянка — путь игры ≤ 32 и его обновление; стоянок 70–73 при плане 70
+    // (build-plans/family_house_3-*.txt), построений пути 122–130 (замер 20.10, ≈1,8 на стоянку), запас 10 %.
+    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 145;
     // Заходов за материалами, как в демо (DemoSession.MAX_ROUNDS): больше — значит, стройка не продвигается.
     private static final int SPIRIT_SLOTS = 36;
     // Схемы витрины, заход 2 (20.10), замер по поворотам: усадьба 185–188 (заходы, ~3200 блоков), дом игрока 31–39 и
@@ -802,6 +803,14 @@ public final class DemoAuditGameTests {
     @GameTest(template = "big_arena", batch = "demo_audit_trips", timeoutTicks = 8000)
     public static void demo_StorageHutTwoFreeSlots_BuildsInPortions(GameTestHelper helper) {
         audit(helper, "storage_hut", 0, BuildRotation.NONE, STORAGE_HUT_TRIPS_MAX_PATH_BUILDS, (h, s, o, r) -> {}, 2);
+    }
+
+    // Решение владельца 20.10: инвентарь забит посторонним (мусор, дроп мобов), свободных слотов нет — демо-дом всё
+    // равно достраивается: лишнее освобождает слоты под порцию. Без правила заход не берёт порцию и стройка падает.
+    // [флак] заходы к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
+    @GameTest(template = "big_arena", batch = "demo_audit_clutter", timeoutTicks = 8000)
+    public static void demo_StorageHutInventoryFullOfJunk_StillCompletes(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.NONE, STORAGE_HUT_TRIPS_MAX_PATH_BUILDS, (h, s, o, r) -> {}, 0);
     }
 
     // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет

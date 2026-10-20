@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.RetreatPath;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DoorBlock;
@@ -26,6 +28,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Площадка стройки по схеме в мире: какие клетки ещё не совпадают со схемой, какие надо очистить (обязательный
@@ -33,6 +37,9 @@ import net.minecraft.world.phys.AABB;
  * {@link ReachPlanner}; площадка только читает мир.
  */
 final class SchematicSite {
+    private static final double FLAT_HEIGHT = 0.1;
+    // Ниже — пол первого этажа и крыльцо: поверхность, но не крыша (как BuildPlanner).
+    private static final int ROOF_MIN_HEIGHT = 3;
     private static final Set<String> DERIVED = Set.of("shape");
     private final Level level;
     private final BuildRotation rotation;
@@ -40,6 +47,7 @@ final class SchematicSite {
     private final List<Schematic.PlacedEntry> primaries;
     private final List<BlockCoord> air;
     private final Set<BlockCoord> schemeCells = new HashSet<>();
+    private @Nullable Set<BlockCoord> standBlockers;
     private final Map<Schematic.PlacedEntry, BlockState> wantedStates = new HashMap<>();
     private final Map<BlockCoord, Schematic.PlacedEntry> secondParts = new HashMap<>();
     private final LevelSafetyView safety;
@@ -47,6 +55,8 @@ final class SchematicSite {
     private final int maxX;
     private final int minZ;
     private final int maxZ;
+    private final int minY;
+    private final int maxY;
 
     SchematicSite(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
         this.level = level;
@@ -77,6 +87,8 @@ final class SchematicSite {
         this.minZ = origin.z();
         this.maxX = origin.x() + rotation.rotatedSizeX(schematic.sizeX(), schematic.sizeZ()) - 1;
         this.maxZ = origin.z() + rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ()) - 1;
+        this.minY = origin.y();
+        this.maxY = origin.y() + schematic.sizeY() - 1;
     }
 
     List<Schematic.PlacedEntry> entries() {
@@ -89,6 +101,28 @@ final class SchematicSite {
 
     Set<BlockCoord> schemeCells() {
         return schemeCells;
+    }
+
+    // Клетки схемы, где стоянки нет: блок со столкновением выше ковра. В клетке будущего ковра, порога, двери дух
+    // стоять может, иначе в устланном коврами зале у пола нет ни одной стоянки (усадьба, 20.10).
+    Set<BlockCoord> standBlockers() {
+        Set<BlockCoord> cached = standBlockers;
+        if (cached == null) {
+            Set<BlockCoord> cells = new HashSet<>();
+            for (Schematic.PlacedEntry entry : entries) {
+                BlockState state = wanted(entry);
+                BlockPos pos = toPos(entry.pos());
+                VoxelShape shape = state.getCollisionShape(level, pos);
+                if (!(state.getBlock() instanceof DoorBlock)
+                        && !shape.isEmpty()
+                        && shape.max(Direction.Axis.Y) > FLAT_HEIGHT) {
+                    cells.add(entry.pos());
+                }
+            }
+            cached = Set.copyOf(cells);
+            standBlockers = cached;
+        }
+        return cached;
     }
 
     BlockState wanted(Schematic.PlacedEntry entry) {
@@ -198,6 +232,35 @@ final class SchematicSite {
         return MiningSafety.canStand(feet, safety);
     }
 
+    // Зона стройки для сети тропинок: габарит схемы с кольцом вокруг (стоянки снаружи) и запасом по высоте.
+    BuildBox networkBox(int ring) {
+        return BuildBox.of(minX - ring, minY - 1, minZ - ring, maxX + ring, maxY + 2, maxZ + ring);
+    }
+
+    // Проёмы дверей схемы — начало сети стройки, как будто двери уже стоят (QUESTIONS-3, ответ 2).
+    List<BlockCoord> doorCells() {
+        List<BlockCoord> doors = new ArrayList<>();
+        for (Schematic.PlacedEntry entry : primaries) {
+            if (wanted(entry).getBlock() instanceof DoorBlock) {
+                doors.add(entry.pos());
+            }
+        }
+        return doors;
+    }
+
+    // На крыше — стоянка внутри габарита выше пола первого этажа, над которой по схеме нет твёрдого блока.
+    boolean onRoof(BlockCoord stand) {
+        if (outsideFootprint(stand) || stand.y() < minY + ROOF_MIN_HEIGHT) {
+            return false;
+        }
+        for (int y = stand.y() + 2; y <= maxY; y++) {
+            if (standBlockers().contains(new BlockCoord(stand.x(), y, stand.z()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     boolean outsideFootprint(BlockCoord feet) {
         return feet.x() < minX || feet.x() > maxX || feet.z() < minZ || feet.z() > maxZ;
     }
@@ -220,9 +283,23 @@ final class SchematicSite {
                 placed.add(entry.pos());
             }
         }
-        SafetyView walk = cell ->
+        return RetreatPath.allows(feet, placed, walkView(), this::outsideFootprint);
+    }
+
+    // Клетки, куда дух дойдёт пешком от ног в пределах площадки с запасом; пусто — обход слишком велик.
+    Optional<Set<BlockCoord>> walkable(BlockCoord feet, int margin) {
+        return RetreatPath.walkable(
+                feet,
+                walkView(),
+                cell -> cell.x() >= minX - margin
+                        && cell.x() <= maxX + margin
+                        && cell.z() >= minZ - margin
+                        && cell.z() <= maxZ + margin);
+    }
+
+    private SafetyView walkView() {
+        return cell ->
                 level.getBlockState(toPos(cell)).getBlock() instanceof DoorBlock ? Cell.PASSABLE : safety.cellAt(cell);
-        return RetreatPath.allows(feet, placed, walk, this::outsideFootprint);
     }
 
     // mc: форму ступеньки (shape) игра выводит из соседей; пока соседней ступеньки крыльца нет, угловая — прямая.

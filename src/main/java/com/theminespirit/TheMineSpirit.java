@@ -17,6 +17,7 @@ import com.theminespirit.neoforge.crater.CraterEvents;
 import com.theminespirit.neoforge.demo.DemoLifecycle;
 import com.theminespirit.neoforge.doors.DoorWatchService;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
+import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.rest.RestConfig;
 import com.theminespirit.neoforge.rest.RestLifecycle;
@@ -47,6 +48,7 @@ public final class TheMineSpirit {
         DemoLifecycle.register(NeoForge.EVENT_BUS);
         CraterWatch.register(NeoForge.EVENT_BUS);
         FenceWatch.register(NeoForge.EVENT_BUS);
+        PathNetworkService.register(NeoForge.EVENT_BUS);
         MobTargetEvents.register(NeoForge.EVENT_BUS);
         CraterEvents.register(NeoForge.EVENT_BUS);
         new SpiritExperienceEvents(NeoForge.EVENT_BUS);

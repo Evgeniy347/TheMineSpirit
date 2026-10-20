@@ -338,6 +338,9 @@ tasks.named('test', Test) {
     systemProperty 'theminespirit.modId', project.mod_id
     // Слушатель тестовой стоимости пишет CSV в путь от задачи (docs/TESTING.md → «Время тестов»)
     systemProperty 'theminespirit.testCost.csv', 'TestResults/unit/test-cost.csv'
+    // Снапшоты планов стройки перезаписываются только явным флагом (BuildPlanSnapshotTests)
+    systemProperty 'theminespirit.updateSnapshots',
+            System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
