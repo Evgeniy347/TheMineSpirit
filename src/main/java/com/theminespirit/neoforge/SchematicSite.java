@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.RetreatPath;
@@ -47,6 +48,8 @@ final class SchematicSite {
     private final int maxX;
     private final int minZ;
     private final int maxZ;
+    private final int minY;
+    private final int maxY;
 
     SchematicSite(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
         this.level = level;
@@ -77,6 +80,8 @@ final class SchematicSite {
         this.minZ = origin.z();
         this.maxX = origin.x() + rotation.rotatedSizeX(schematic.sizeX(), schematic.sizeZ()) - 1;
         this.maxZ = origin.z() + rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ()) - 1;
+        this.minY = origin.y();
+        this.maxY = origin.y() + schematic.sizeY() - 1;
     }
 
     List<Schematic.PlacedEntry> entries() {
@@ -196,6 +201,22 @@ final class SchematicSite {
 
     boolean standable(BlockCoord feet) {
         return MiningSafety.canStand(feet, safety);
+    }
+
+    // Зона стройки для сети тропинок: габарит схемы с кольцом вокруг (стоянки снаружи) и запасом по высоте.
+    BuildBox networkBox(int ring) {
+        return BuildBox.of(minX - ring, minY - 1, minZ - ring, maxX + ring, maxY + 2, maxZ + ring);
+    }
+
+    // Проёмы дверей схемы — начало сети стройки, как будто двери уже стоят (QUESTIONS-3, ответ 2).
+    List<BlockCoord> doorCells() {
+        List<BlockCoord> doors = new ArrayList<>();
+        for (Schematic.PlacedEntry entry : primaries) {
+            if (wanted(entry).getBlock() instanceof DoorBlock) {
+                doors.add(entry.pos());
+            }
+        }
+        return doors;
     }
 
     boolean outsideFootprint(BlockCoord feet) {

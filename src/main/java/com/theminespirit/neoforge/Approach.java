@@ -7,13 +7,18 @@ import com.theminespirit.core.movement.StuckWatcher;
 import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.policy.NightLeashGate;
+import java.util.List;
 import java.util.Optional;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public final class Approach {
     public enum State {
@@ -24,6 +29,12 @@ public final class Approach {
     }
 
     private static final double MOVE_SPEED = 1.0;
+    // Конец пути игры дальше 3 блоков от цели — путь не дошёл; ближе — обычный подход к сундуку или верстаку,
+    // к самому блоку путь не ведёт.
+    private static final double NETWORK_GAP = 3.0;
+    private static final int NETWORK_ATTEMPTS = 2;
+    // Ближе 6 блоков путь игры доходит сам; не дошёл — цель за преградой (стоянка в стене), сеть не поможет.
+    private static final double NETWORK_MIN_DISTANCE = 6.0;
 
     private final SpiritEntity spirit;
     private PathRefreshPolicy pathRefresh;
@@ -38,6 +49,8 @@ public final class Approach {
     private boolean active;
     private PathMode mode = PathMode.NORMAL;
     private String refusal;
+    private @Nullable NetworkLegs legs;
+    private int networkAttempts;
 
     public Approach(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -83,9 +96,10 @@ public final class Approach {
             finish();
             return State.STUCK;
         }
+        Vec3 goal = goal(target);
         if (pathRefresh.shouldRefresh(
-                target.x, target.y, target.z, spirit.getNavigation().isDone())) {
-            moveToTarget(target);
+                goal.x, goal.y, goal.z, spirit.getNavigation().isDone())) {
+            moveToTarget(goal);
             spirit.countPathBuild();
             if (mode == PathMode.CAREFUL && spirit.onGround()) {
                 refusal = CarefulPath.refusal(spirit.getNavigation().getPath());
@@ -94,8 +108,9 @@ public final class Approach {
                     return State.STUCK;
                 }
             }
+            followNetwork(target);
         }
-        String deadEnd = deadEndRefusal(target);
+        String deadEnd = legs == null ? deadEndRefusal(target) : null;
         if (deadEnd != null) {
             deadEndTicks++;
             if (deadEndTicks >= GotoTuning.DEAD_END_CONFIRM_TICKS) {
@@ -151,7 +166,76 @@ public final class Approach {
         deadEndTicks = 0;
         teleports = 0;
         refusal = null;
+        legs = null;
+        networkAttempts = 0;
         active = true;
+    }
+
+    private Vec3 goal(Vec3 target) {
+        if (legs == null) {
+            return target;
+        }
+        legs.advance(spirit.position());
+        if (legs.done()) {
+            legs = null;
+            return target;
+        }
+        return legs.current();
+    }
+
+    // Сеть тропинок (решение владельца 20.10): путь игры к цели в пределах 32 не дошёл — по сети отрезками, каждый
+    // в пределах пути игры. Отрезок, который не прошёлся, — к пересчёту, дальше как без сети.
+    private void followNetwork(Vec3 target) {
+        if (mode != PathMode.NORMAL || targetEntity != null || !(spirit.level() instanceof ServerLevel level)) {
+            return;
+        }
+        Path path = spirit.getNavigation().getPath();
+        if (legs != null) {
+            if (unreached(path, legs.current())) {
+                PathNetworkService.legFailed(level, legs.from(), legs.to());
+                legs = null;
+                networkAttempts = NETWORK_ATTEMPTS;
+            }
+            return;
+        }
+        if (networkAttempts >= NETWORK_ATTEMPTS
+                || !spirit.onGround()
+                || spirit.position().distanceTo(target) <= NETWORK_MIN_DISTANCE
+                || !unreached(path, target)) {
+            return;
+        }
+        networkAttempts++;
+        Optional<List<BlockCoord>> route =
+                PathNetworkService.route(level, blockCoord(spirit.position()), blockCoord(target));
+        if (route.isEmpty()) {
+            return;
+        }
+        NetworkLegs walk = new NetworkLegs(route.get());
+        walk.advance(spirit.position());
+        if (walk.done()) {
+            return;
+        }
+        legs = walk;
+        timeoutTicks = Math.max(
+                timeoutTicks,
+                elapsed
+                        + GotoTuning.timeoutTicks(
+                                walk.length() + spirit.position().distanceTo(target)));
+        Vec3 next = walk.current();
+        pathRefresh.shouldRefresh(next.x, next.y, next.z, false);
+        moveToTarget(next);
+        spirit.countPathBuild();
+    }
+
+    private static boolean unreached(@Nullable Path path, Vec3 goal) {
+        if (path == null || path.getNodeCount() == 0) {
+            return true;
+        }
+        if (path.canReach()) {
+            return false;
+        }
+        Node end = path.getEndNode();
+        return end == null || new Vec3(end.x + 0.5, end.y, end.z + 0.5).distanceTo(goal) > NETWORK_GAP;
     }
 
     private Vec3 currentTarget() {

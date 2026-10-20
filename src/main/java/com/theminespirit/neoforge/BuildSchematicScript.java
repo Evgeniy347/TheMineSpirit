@@ -24,6 +24,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -47,6 +49,8 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int MAX_FINISH_WAITS = 200;
     // Шаг к середине клетки (тело шириной 0,6 тогда не выходит за её края): дольше — стоянка не годится.
     private static final int MAX_CENTRING_TICKS = 20;
+    // Кольцо зоны стройки для сети тропинок: стоянки снаружи стен и сундук подвоза у входа.
+    private static final int SITE_NETWORK_RING = 6;
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private final SpiritEntity spirit;
@@ -93,6 +97,9 @@ final class BuildSchematicScript implements ScriptInstance {
         this.reservations = BuildReservationHub.forLevel(level);
         this.buildKey = new BuildKey(params.file(), origin, rotation);
         this.squad = BuildSquadRegistry.join(level, buildKey, spirit.getUUID());
+        if (level instanceof ServerLevel server) {
+            PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());
+        }
     }
 
     @Override
@@ -457,6 +464,9 @@ final class BuildSchematicScript implements ScriptInstance {
         List<BlockCoord> clear = site.toClear();
         if (missing.isEmpty() && clear.isEmpty()) {
             leaveSquad();
+            if (level instanceof ServerLevel server) {
+                PathNetworkService.endSite(server, buildKey);
+            }
             tally.supplies(placed, 0);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;

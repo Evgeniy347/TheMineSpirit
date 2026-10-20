@@ -1,8 +1,8 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.movement.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -20,7 +20,6 @@ import org.jspecify.annotations.Nullable;
  */
 public final class RetreatPath {
     public static final int MAX_NODES = 4096;
-    static final int MAX_DROP = 3;
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     private RetreatPath() {}
@@ -74,28 +73,6 @@ public final class RetreatPath {
     }
 
     private static @Nullable BlockCoord step(BlockCoord from, int dx, int dz, SafetyView view) {
-        int x = from.x() + dx;
-        int z = from.z() + dz;
-        BlockCoord level = new BlockCoord(x, from.y(), z);
-        if (MiningSafety.canStand(level, view)) {
-            return level;
-        }
-        BlockCoord up = new BlockCoord(x, from.y() + 1, z);
-        if (view.cellAt(new BlockCoord(from.x(), from.y() + 2, from.z())) == Cell.PASSABLE
-                && MiningSafety.canStand(up, view)) {
-            return up;
-        }
-        for (int drop = 1; drop <= MAX_DROP; drop++) {
-            BlockCoord through = new BlockCoord(x, from.y() - drop + 1, z);
-            if (view.cellAt(new BlockCoord(x, from.y() + 1, z)) != Cell.PASSABLE
-                    || view.cellAt(through) != Cell.PASSABLE) {
-                return null;
-            }
-            BlockCoord down = new BlockCoord(x, from.y() - drop, z);
-            if (MiningSafety.canStand(down, view)) {
-                return down;
-            }
-        }
-        return null;
+        return BodyStep.step(from, dx, dz, view);
     }
 }
