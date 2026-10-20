@@ -11,8 +11,8 @@ cat <<'H'
 #!stage: 4
 #!level: 4
 #!requires: family_house_3
-#!size: 22x21x20   # Ш×В×Д
-#!entrance: 10,1,1
+#!size: 22x21x21   # Ш×В×Д
+#!entrance: 10,1,2
 #!legend:
 #!  'S': smooth_stone
 #!  'w': bricks
@@ -32,9 +32,11 @@ cat <<'H'
 #!  '8': deepslate_tile_stairs[facing=north,half=top]
 #!  '_': deepslate_tile_slab[type=bottom]
 #!  'G': glass_pane
-#!  'D': dark_oak_door[facing=south,hinge=left]
-#!  'E': dark_oak_door[facing=south,hinge=right]
+#!  'D': dark_oak_door[facing=south,hinge=right]
+#!  'E': dark_oak_door[facing=south,hinge=left]
 #!  'p': stone_brick_stairs[facing=south,half=bottom]
+#!  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+#!  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
 #!  'A': stone_brick_stairs[facing=north,half=bottom]
 #!  'R': spruce_stairs[facing=south,half=bottom]
 #!  'g': spruce_stairs[facing=east,half=bottom]
@@ -76,12 +78,12 @@ cat <<'H'
 #!  'e': dark_oak_trapdoor[facing=south,half=bottom,open=true]
 #!layers:
 H
-echo "size 22 21 20"; echo "shift 0 -2"
+echo "size 22 21 21"; echo "shift 0 -1"
 echo "label 0 цоколь и ступени"; echo "label 1 первый этаж"; echo "label 7 перекрытие и балкон"
 echo "label 8 второй этаж"; echo "label 11 обвязка и крыша"
 # --- цоколь, пол, ступени во всю ширину ---
 echo "box 0 0 1 20 3 20 S"; echo "box 0 0 2 19 4 19 \$"
-echo "box 0 0 1 20 2 2 p"; echo "box 0 0 10 11 21 21 A"
+echo "set 0 9 2 <"; echo "box 0 0 10 11 2 2 p"; echo "set 0 12 2 >"; for x in 2 4 6 15 17 19; do echo "set 0 $x 2 P"; done; echo "box 0 0 10 11 21 21 A"
 # --- первый этаж: стены, каркас ---
 echo "walls 1 6 1 20 3 20 w"
 for x in 1 7 14 20; do echo "col 1 6 $x 3 L"; echo "col 1 6 $x 20 L"; done
@@ -104,7 +106,7 @@ echo "box 1 6 2 6 12 12 w"; echo "box 1 6 15 19 12 12 w"; echo "box 1 6 4 5 12 1
 # парадная лестница шириной 2 (x8..9) к тылу, под ней забутовка
 for i in 1 2 3 4 5 6 7; do z=$((11+i)); echo "box $i $i 8 9 $z $z R"; [ $i -gt 1 ] && echo "box 1 $((i-1)) 8 9 $z $z w"; done
 # гостиная: камин в перегородке, кресла, ковёр, книги, цветы
-echo "box 1 1 2 6 10 11 ~"; echo "set 1 3 10 i"; echo "set 1 5 10 i"; echo "box 1 1 2 6 5 9 ~"; echo "set 1 1 8 f"; echo "col 1 3 2 7 w"; echo "col 1 3 2 9 w"; echo "set 1 6 4 O"; echo "set 2 6 4 O"; echo "set 1 2 4 P"; echo "set 1 6 11 b"; echo "set 2 6 11 0"
+echo "box 1 1 2 6 10 11 ~"; echo "set 1 3 10 i"; echo "set 1 5 10 i"; echo "box 1 1 2 6 5 9 ~"; echo "set 1 2 8 f"; echo "col 1 3 2 7 w"; echo "col 1 3 2 9 w"; echo "set 1 6 4 O"; echo "set 2 6 4 O"; echo "set 1 2 4 P"; echo "set 1 6 11 b"; echo "set 2 6 11 0"
 # столовая: стол на 6, буфет
 echo "box 1 1 2 6 13 19 m"
 echo "box 1 1 3 5 15 16 t"; echo "box 2 2 3 5 15 16 q"; for x in 3 4 5; do echo "set 1 $x 14 i"; echo "set 1 $x 17 R"; done
@@ -124,7 +126,7 @@ for p in "4 7" "4 15" "10 6" "10 13" "17 7" "17 16" "12 18" "3 17" "16 9" "12 6"
 echo "box 7 7 1 20 3 20 Z"; echo "box 7 7 1 20 3 3 X"; echo "box 7 7 1 20 20 20 X"; echo "box 7 7 2 19 4 19 \$"
 for x in 1 20; do for z in 3 20; do echo "set 7 $x $z L"; done; done
 echo "box 7 7 8 9 12 17 ."; echo "box 7 7 8 9 18 18 R"
-echo "box 7 7 8 13 2 2 #"; echo "box 8 8 8 13 2 2 t"; echo "set 9 8 2 N"; echo "set 9 13 2 N"
+echo "box 7 7 8 13 1 2 #"; echo "box 8 8 8 13 1 1 t"; echo "set 8 8 2 t"; echo "set 8 13 2 t"; echo "set 9 8 2 N"; echo "set 9 13 2 N"
 # фонари под балконом
 for x in 9 12; do echo "set 6 $x 2 H"; done
 # --- второй этаж: стены-фахверк, окна, балконная дверь ---

@@ -20,6 +20,8 @@ legend:
   'G': glass_pane
   'D': oak_door[facing=south,hinge=left]
   'p': cobblestone_stairs[facing=south,half=bottom]
+  '<': cobblestone_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': cobblestone_stairs[facing=west,half=bottom,shape=outer_left]
   'F': furnace[facing=south]
   'T': crafting_table
   'b': barrel[facing=up]
@@ -42,7 +44,7 @@ legend:
   'r': oak_trapdoor[facing=east,half=bottom,open=true]
 layers:
   - y0 цоколь и пол: |
-           ppp
+           <p>
        ccccccccccc
        c#########c
        c#########c

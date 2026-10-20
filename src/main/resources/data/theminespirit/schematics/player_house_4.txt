@@ -2,15 +2,15 @@
 # Цоколь из гладкого камня, низ — кальцит, верх — кирпич в каркасе из ободранного тёмного дуба, вальмовая крыша
 # из глубинной плитки со свесом, карнизом и слуховыми окнами. Портал на четыре створки с витражом над дверьми и
 # ступенями во всю ширину, над ним балкон; сзади вход в кухню. Зал на два этажа с галереей на колоннах, середина
-# открыта до крыши, люстры на цепях, камин между двумя парадными лестницами шириной 2. Внизу библиотека,
-# чаровальня, столовая на 12 мест и кухня; наверху спальня игрока, кабинет, гостевая и детская.
+# открыта до крыши, люстры на цепях, две парадные лестницы шириной 2. Внизу библиотека,
+# чаровальня, столовая на 12 мест с камином и кухня; наверху спальня игрока, кабинет, гостевая и детская.
 name: "Дом игрока, уровень 4 (особняк)"
 type: housing
 stage: 4
 level: 4
 requires: player_house_3
-size: 24x22x22   # Ш×В×Д
-entrance: 10,1,1
+size: 24x22x23   # Ш×В×Д
+entrance: 10,1,2
 legend:
   'S': smooth_stone
   'K': calcite
@@ -33,9 +33,11 @@ legend:
   'G': glass_pane
   'y': yellow_stained_glass_pane
   'o': orange_stained_glass_pane
-  'D': dark_oak_door[facing=south,hinge=left]
-  'E': dark_oak_door[facing=south,hinge=right]
-  'p': smooth_stone_slab[type=bottom]
+  'D': dark_oak_door[facing=south,hinge=right]
+  'E': dark_oak_door[facing=south,hinge=left]
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
   'A': stone_brick_stairs[facing=north,half=bottom]
   'f': campfire[lit=true]
   'g': dark_oak_stairs[facing=east,half=bottom]
@@ -75,7 +77,8 @@ legend:
   'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
 layers:
   - y0 цоколь, ступени, цветы и фонари у входов: |
-        P9P9PNppppppppNP9P9P
+      
+        P9P9PN <pppp> NP9P9P
        SSSSSSSSSSSSSSSSSSSSSS
        S######aaaaaaaa######S
       0S######aaaaaaaa######SP
@@ -99,6 +102,7 @@ layers:
         90909  90  09 9 NAAN
   - y1 первый этаж: |
       
+      
        LKKKKKLKLDEDELKLKKKKKL
        KOlnnbKb0c~~cPbKOjjbOK
        KOnnnnKccc~~cccKOjjjOK
@@ -115,12 +119,13 @@ layers:
        KmhtgmK##c~~c##KnttnTK
        KmhtgmK##c~~c##KnttnbK
        KmhtgmK##c~~c##KnnRnnK
-       KmhtgmK##ciic##KnnnnnK
+       KmhtgmK##c~~c##KnnnnnK
        KmmmmmKiic~~ciiKnnnnbK
-       KbbmmbKccM~~MccKWVnnbK
-       LKKKKKLKKMffMKKLKKDEKL
+       KbMfMbKccb~~bccKWVnnbK
+       LKMMMKLKKMMMMKKLKKDEKL
                   .
   - y2: |
+      
         d  d            d  d
        LKGGKKLyLDEDELyLKKGGKL
        KO   PKP      9KO  0OK
@@ -140,10 +145,11 @@ layers:
        G  q  K##    ##K     G
        G  q  Kii    iiK     G
       vK     K        K     Kr
-       KP   9K  M  M  K    PK
-       LKGGKKLGGMMMMGGLKKDEKL
+       KPM M9K  P  9  K    PK
+       LKMMMKLGGMMMMGGLKKDEKL
         s  s s  s  s  s
   - y3: |
+      
         d  d            d  d
        LKGGKKLyLXXXXLyLKKGGKL
        KO    K        K     K
@@ -163,10 +169,11 @@ layers:
        G     Kii    iiK     G
        G     K        K     G
       vK     K        K     Kr
-       K     K  M  M  K     K
-       LKGGKKLGGMMMMGGLKKXXKL
+       K M M K        K     K
+       LKMMMKLGGMMMMGGLKKXXKL
         s  s s  s  s  s
   - y4: |
+      
         d  d            d  d
        LKGGKKLyLoyyoLyLKKGGKL
        KO    K        K     K
@@ -187,9 +194,10 @@ layers:
        G     K        K     G
       vK     K        K     Kr
        K     K        K     K
-       LKGGKKLGGMMMMGGLKKKKKL
+       LKMMMKLGGMMMMGGLKKKKKL
         s  s s  s  s  s
   - y5: |
+      
       
        LKKKKKLyLKKKKLyLKKKKKL
        K     K        K     K
@@ -210,9 +218,10 @@ layers:
        K     K        K     K
        K     K        K     K
        K     K        K     K
-       LKKKKKLKKMMMMKKLKKKKKL
+       LKMMMKLKKMMMMKKLKKKKKL
                   .
   - y6: |
+      
                H    H
        LKKKKKLKLKKKKLKLKKKKKL
        K     K        K     K
@@ -233,9 +242,10 @@ layers:
        K  H  K        K  H  K
        K     K        K     K
        K     K        K     K
-       LKKKKKLKKMMMMKKLKKKKKL
+       LKMMMKLKKMMMMKKLKKKKKL
                   .
   - y7 галерея и перекрытие: |
+              ########
               ########
        LXXXXXXXXXXXXXXXXXXXXL
        Z####################Z
@@ -259,7 +269,8 @@ layers:
        LXXXXXXXXXXXXXXXXXXXXL
                   .
   - y8 второй этаж: |
-        d  d  tttttttt  d  d
+              tttttttt
+        d  d  t      t  d  d
        LwGGwwLowyDEywoLwwGGwL
        wJQ~~b#b~~~~~~b#bnnlOw
       vw~~~~~#~~~~~~~~#nnnnOwr
@@ -282,6 +293,7 @@ layers:
        LwGGwwLGGwwwwGGLwwGGwL
         s  s s  s  s  s s  s
   - y9: |
+      
         d  d  N      N  d  d
        LwGGwwLowyDEywoLwwGGwL
        w    9#P      9#0   Ow
@@ -305,6 +317,7 @@ layers:
        LwGGwwLGGwwwwGGLwwGGwL
         s  s s  s  s  s s  s
   - y10: |
+      
        7777777777777777777777
       5LwwwwwLwwwwwwwwLwwwwwL6
       5w     #        #     w6
@@ -328,6 +341,7 @@ layers:
       5LwwwwwLwwwwwwwwLwwwwwL6
        8888888888888888888888
   - y11 обвязка и крыша: |
+      
       .3333333333333333333333.
       1LXXXXXXXXXXXXXXXXXXXXL2
       1Z                    Z2
@@ -352,6 +366,7 @@ layers:
       .4444444444444444444444.
   - y12: |
       
+      
        1333333333333333333332
        1####################2
        1#                  #2
@@ -374,6 +389,7 @@ layers:
        1444444444444444444442
                   .
   - y13: |
+      
       
                H    H
         1333333#GGGG#3333332
@@ -398,6 +414,7 @@ layers:
                   .
   - y14: |
       
+      
                ######
                ######
          133333333333333332
@@ -420,6 +437,7 @@ layers:
                ######
                   .
   - y15: |
+      
       
       
       
@@ -448,6 +466,7 @@ layers:
       
       
       
+      
            13333333333332
            1############2
            1#          #2
@@ -466,6 +485,7 @@ layers:
       
                   .
   - y17: |
+      
       
       
       
@@ -496,6 +516,7 @@ layers:
       
       
       
+      
              1333333332
              1########2
              1#      #2
@@ -512,6 +533,7 @@ layers:
       
                   .
   - y19: |
+      
       
       
       
@@ -544,6 +566,7 @@ layers:
       
       
       
+      
                133332
                1####2
                1####2
@@ -558,6 +581,7 @@ layers:
       
                   .
   - y21: |
+      
       
       
       

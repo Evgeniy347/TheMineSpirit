@@ -51,9 +51,11 @@ legend:
   'P': potted_poppy
   'O': potted_dandelion
   'p': cobblestone_stairs[facing=south,half=bottom]
+  '<': cobblestone_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': cobblestone_stairs[facing=west,half=bottom,shape=outer_left]
 layers:
 H
-L 0 "цоколь и пол" "    P p O" " ccccccccccc" "11* c\$\$\$\$\$\$\$\$\$c" " ccccccccccc" "      ."
+L 0 "цоколь и пол" "    P<p>O" " ccccccccccc" "11* c\$\$\$\$\$\$\$\$\$c" " ccccccccccc" "      ."
 L 1 "мебель" "      ." \
   " L###=D=###L" \
   " #FkbT...PO#" \

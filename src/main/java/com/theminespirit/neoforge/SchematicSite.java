@@ -2,9 +2,12 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.ReachPlanner;
+import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,10 +20,12 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.phys.AABB;
 
 /**
  * Площадка стройки по схеме в мире: какие клетки ещё не совпадают со схемой, какие надо очистить (обязательный
@@ -28,6 +33,7 @@ import net.minecraft.world.level.block.state.properties.Property;
  * {@link ReachPlanner}; площадка только читает мир.
  */
 final class SchematicSite {
+    private static final Set<String> DERIVED = Set.of("shape");
     private final Level level;
     private final BuildRotation rotation;
     private final List<Schematic.PlacedEntry> entries;
@@ -196,8 +202,36 @@ final class SchematicSite {
         return feet.x() < minX || feet.x() > maxX || feet.z() < minZ || feet.z() > maxZ;
     }
 
+    // Блок со столкновением, чья клетка задевает тело духа: поставленный, он душит духа в стене.
+    boolean overlaps(Schematic.PlacedEntry entry, AABB body) {
+        BlockPos pos = toPos(entry.pos());
+        return body.intersects(new AABB(pos))
+                && !wanted(entry).getCollisionShape(level, pos).isEmpty();
+    }
+
+    // Правило отхода (владелец 20.10): после установки от ног духа остаётся путь наружу. Двери — проход (стройка
+    // ставит их последним шагом снаружи), блоки без столкновения (ковёр, факел) путь не перекрывают.
+    boolean keepsRetreat(BlockCoord feet, List<Schematic.PlacedEntry> entries) {
+        Set<BlockCoord> placed = new HashSet<>();
+        for (Schematic.PlacedEntry entry : entries) {
+            BlockState state = wanted(entry);
+            if (!(state.getBlock() instanceof DoorBlock)
+                    && !state.getCollisionShape(level, toPos(entry.pos())).isEmpty()) {
+                placed.add(entry.pos());
+            }
+        }
+        SafetyView walk = cell ->
+                level.getBlockState(toPos(cell)).getBlock() instanceof DoorBlock ? Cell.PASSABLE : safety.cellAt(cell);
+        return RetreatPath.allows(feet, placed, walk, this::outsideFootprint);
+    }
+
+    // mc: форму ступеньки (shape) игра выводит из соседей; пока соседней ступеньки крыльца нет, угловая — прямая.
+    // Стройка её не чинит (иначе починка и пересчёт игры зацикливаются), итог сверяет аудит, когда соседи стоят.
     private static boolean sameSpecifiedState(BlockState current, BlockState wanted, Map<String, String> specified) {
         for (String name : specified.keySet()) {
+            if (DERIVED.contains(name)) {
+                continue;
+            }
             Property<?> property = current.getBlock().getStateDefinition().getProperty(name);
             if (property == null || !current.getValue(property).equals(wanted.getValue(property))) {
                 return false;

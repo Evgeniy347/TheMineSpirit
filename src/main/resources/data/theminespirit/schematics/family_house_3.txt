@@ -8,8 +8,8 @@ type: housing
 stage: 2
 level: 3
 requires: family_house_2
-size: 16x18x18   # Ш×В×Д
-entrance: 7,1,1
+size: 16x18x19   # Ш×В×Д
+entrance: 7,1,2
 legend:
   'S': stone_bricks
   'c': cobblestone
@@ -20,8 +20,8 @@ legend:
   'X': stripped_dark_oak_log[axis=x]
   'Z': stripped_dark_oak_log[axis=z]
   'G': glass_pane
-  'D': oak_door[facing=south,hinge=left]
-  'E': oak_door[facing=south,hinge=right]
+  'D': oak_door[facing=south,hinge=right]
+  'E': oak_door[facing=south,hinge=left]
   'j': oak_door[facing=south,hinge=left]
   'R': spruce_stairs[facing=south,half=bottom]
   'Q': bricks
@@ -61,9 +61,12 @@ legend:
   'w': dark_oak_stairs[facing=west,half=bottom]
   '_': dark_oak_slab[type=bottom]
   'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
 layers:
   - y0 цоколь и пол: |
-        P P  pp  P P
+      
+        P P <pp> P P
        SSSSSSSSSSSSSS
       AS$$$$$$$$$$$$SO
       OS$$$$$$$$$$$$SA
@@ -83,11 +86,12 @@ layers:
         P P P  P P P
   - y1 первый этаж: |
       
+      
        ScccccDEcccccS
        cP       A   c
        c   ~~~~~~ RRc
        cQ g~~~~~~ ccc
-       f   ~~~~~~ ccc
+       Qf  ~~~~~~ ccc
        cQ g~~~~~~ ccc
        c   ~~~~~~ ccc
        cO       Ybccc
@@ -101,6 +105,7 @@ layers:
        SccjcccccccccS
               .
   - y2: |
+      
         d  d    d  d
        ScGGccDEccGGcS
        c            c
@@ -120,6 +125,7 @@ layers:
        SccjcccccGGccS
               .
   - y3: |
+      
         d  d    d  d
        ScGGccccccGGcS
        c            c
@@ -140,6 +146,7 @@ layers:
               .
   - y4: |
       
+      
        SccccccccccccS
        c            c
        c            c
@@ -158,6 +165,7 @@ layers:
        SccccccccccccS
               .
   - y5: |
+      
             H  H
        SccccccccccccS
        c            c
@@ -178,6 +186,7 @@ layers:
               .
   - y6 перекрытие: |
            ######
+           ######
        LXXXXXXXXXXXXL
        Z$$$$$$$$$$$$Z
        Z$$$$$$$$$$..Z
@@ -196,7 +205,8 @@ layers:
        LXXXXXXXXXXXXL
               .
   - y7 второй этаж: |
-        d  dttttd  d
+           tttttt
+        d  d    d  d
        LhGGLhDEhLGGhL
        hP       O.  h
       vh yyyyyy  .  hr
@@ -215,6 +225,7 @@ layers:
        LhGGLhhhhLGGhL
         n  n    n  n
   - y8: |
+      
         d  d    d  d
        LhGGLhDEhLGGhL
        h        s.  h
@@ -235,6 +246,7 @@ layers:
         n  n    n  n
   - y9: |
       
+      
       ULhhhLhhhhLhhhLI
       Uh         h  hI
       Uh         h  hI
@@ -253,6 +265,7 @@ layers:
       ULhhhLhhhhLhhhLI
               .
   - y10 обвязка: |
+      
       e#            #w
       eLXXXXXXXXXXXXLw
       eZ            Zw
@@ -272,6 +285,7 @@ layers:
       eLXXXXXXXXXXXXLw
       e#            #w
   - y11: |
+      
        e#          #w
        e############w
        e#          #w
@@ -291,6 +305,7 @@ layers:
        e############w
        e#          #w
   - y12: |
+      
         e#        #w
         e####GG####w
         e#        #w
@@ -310,6 +325,7 @@ layers:
         e####GG####w
         e#        #w
   - y13: |
+      
          e#      #w
          e###GG###w
          e#      #w
@@ -329,6 +345,7 @@ layers:
          e###GG###w
          e#      #w
   - y14: |
+      
           e#    #w
           e######w
           e#    #w
@@ -348,6 +365,7 @@ layers:
           e######w
           e#    #w
   - y15: |
+      
            e#  #w
            e####w
            e#  #w
@@ -367,6 +385,7 @@ layers:
            e####w
            e#  #w
   - y16: |
+      
             e##w
             e##w
             e##w
@@ -386,6 +405,7 @@ layers:
             e##w
             e##w
   - y17: |
+      
              ew
              ew
              ew

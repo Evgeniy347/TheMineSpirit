@@ -1,0 +1,53 @@
+# фикстура сторожа схем: door_to_nowhere — внутренняя дверь упирается в стену (как балкон, заставленный перилами)
+type: housing
+size: 6x5x7   # Ш×В×Д
+entrance: 2,1,1
+legend:
+  '#': oak_planks
+  'D': oak_door[facing=south,hinge=right]
+  'E': oak_door[facing=south,hinge=left]
+  'd': oak_door[facing=south,hinge=left]
+  'T': torch
+  'P': glass_pane
+  'p': oak_stairs[facing=south,half=bottom]
+layers:
+  - y0: |
+        pp
+      ######
+      ######
+      ######
+      ######
+      ######
+      ######
+  - y1: |
+        ..
+      ##DE##
+      #T...#
+      #....#
+      ##d###
+      ######
+      ######
+  - y2: |
+        ..
+      ##DE##
+      #....#
+      P....#
+      ##d###
+      ######
+      ######
+  - y3: |
+        ..
+      ######
+      #....#
+      #....#
+      ##.###
+      ######
+      ######
+  - y4: |
+        ..
+      ######
+      ######
+      ######
+      ######
+      ######
+      ######

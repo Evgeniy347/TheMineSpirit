@@ -1,6 +1,33 @@
 {
  "fixtures": [
   {
+   "file": "door_to_nowhere",
+   "expect": [
+    "passage"
+   ]
+  },
+  {
+   "file": "porch_missing",
+   "expect": [
+    "entrance_step"
+   ]
+  },
+  {
+   "file": "valid_double_door"
+  },
+  {
+   "file": "double_door_hinges_inner",
+   "expect": [
+    "double_door"
+   ]
+  },
+  {
+   "file": "fireplace_in_wall",
+   "expect": [
+    "fireplace"
+   ]
+  },
+  {
    "file": "valid_storage"
   },
   {

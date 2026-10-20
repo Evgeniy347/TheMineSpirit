@@ -45,6 +45,8 @@ import org.slf4j.Logger;
  */
 final class BuildSchematicScript implements ScriptInstance {
     private static final int MAX_FINISH_WAITS = 200;
+    // Шаг к середине клетки (тело шириной 0,6 тогда не выходит за её края): дольше — стоянка не годится.
+    private static final int MAX_CENTRING_TICKS = 20;
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private final SpiritEntity spirit;
@@ -77,6 +79,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private String lastRefusal = "";
     private TaskRunner supplyRunner;
     private int trips;
+    private int centring;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -254,15 +257,73 @@ final class BuildSchematicScript implements ScriptInstance {
         List<BlockCoord> cells = List.copyOf(byCell.keySet());
         ReachPlanner.World world = placeWorld(byCell, lastStep);
         boolean mayPlaceHere = !lastStep || site.outsideFootprint(feet());
+        List<Schematic.PlacedEntry> trapping = new ArrayList<>();
+        boolean overlapped = false;
         if (mayPlaceHere) {
             for (BlockCoord cell : ReachPlanner.workableNow(SpiritReach.current(), feet(), cells, world)) {
-                Optional<ScriptStatus> placedNow = placeOne(byCell.get(cell));
+                Schematic.PlacedEntry entry = byCell.get(cell);
+                // Тело духа шире клетки ног, когда он стоит у края: блок в соседней клетке на уровне головы душил
+                // его в стене (дом игрока 3, 20.10). Сперва — на середину своей клетки.
+                if (site.overlaps(entry, spirit.getBoundingBox())) {
+                    overlapped = true;
+                    continue;
+                }
+                // Правило отхода: блок, после которого отсюда не выйти наружу, ставится с другой стоянки.
+                if (!site.keepsRetreat(feet(), List.of(entry))) {
+                    trapping.add(entry);
+                    continue;
+                }
+                Optional<ScriptStatus> placedNow = placeOne(entry);
                 if (placedNow.isPresent()) {
                     return placedNow.get();
                 }
             }
         }
-        return moveTowards(cells, world, lastStep);
+        if (trapping.isEmpty() && overlapped) {
+            if (++centring <= MAX_CENTRING_TICKS) {
+                BlockCoord here = feet();
+                spirit.getNavigation().stop();
+                spirit.getMoveControl().setWantedPosition(here.x() + 0.5, spirit.getY(), here.z() + 0.5, 1.0);
+                return ScriptStatus.RUNNING;
+            }
+            // К середине не встать (мебель, край): эта стоянка не годится, ставить отсюда — задушить себя.
+            centring = 0;
+            excludedStands.add(feet());
+            return moveTowards(cells, world, lastStep);
+        }
+        if (trapping.isEmpty()) {
+            return moveTowards(cells, world, lastStep);
+        }
+        List<BlockCoord> trapped = new ArrayList<>();
+        for (Schematic.PlacedEntry entry : trapping) {
+            trapped.add(entry.pos());
+        }
+        ReachPlanner.World safeWorld = retreatWorld(world, trapping);
+        if (stand(trapped, safeWorld, new HashSet<>(site.schemeCells()), lastStep)
+                .isEmpty()) {
+            // Стоянки с путём наружу нет — так устроена схема (глухая клетка): ставим, как раньше, и пишем в лог.
+            LOGGER.warn(
+                    "Стройка '{}': блок {} запирает духа, а стоянки с путём наружу нет — ставлю с места",
+                    buildKey,
+                    trapped.get(0));
+            return placeOne(trapping.get(0)).orElse(ScriptStatus.RUNNING);
+        }
+        return moveTowards(trapped, safeWorld, lastStep);
+    }
+
+    // Стоянка, с которой блоки, запиравшие духа, ставятся без потери пути наружу.
+    private ReachPlanner.World retreatWorld(ReachPlanner.World world, List<Schematic.PlacedEntry> trapping) {
+        return new ReachPlanner.World() {
+            @Override
+            public boolean ready(BlockCoord cell) {
+                return world.ready(cell);
+            }
+
+            @Override
+            public boolean standable(BlockCoord feet) {
+                return world.standable(feet) && site.keepsRetreat(feet, trapping);
+            }
+        };
     }
 
     private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
@@ -276,6 +337,7 @@ final class BuildSchematicScript implements ScriptInstance {
                     SignTexts.write(level, started.pos(), entry.text());
                 }
                 placed++;
+                centring = 0;
                 tally.placed(entry.block());
                 lastPlaceTick = ticks;
                 refusals.remove(cell);

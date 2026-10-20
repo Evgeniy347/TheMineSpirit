@@ -9,8 +9,8 @@ type: housing
 stage: 3
 level: 3
 requires: player_house_2
-size: 22x21x19   # Ш×В×Д
-entrance: 10,1,1
+size: 22x21x20   # Ш×В×Д
+entrance: 10,1,2
 legend:
   'S': stone_bricks
   'Y': chiseled_stone_bricks
@@ -26,9 +26,11 @@ legend:
   'I': deepslate_brick_stairs[facing=west,half=top]
   '_': deepslate_brick_slab[type=bottom]
   'G': glass_pane
-  'D': dark_oak_door[facing=south,hinge=left]
-  'E': dark_oak_door[facing=south,hinge=right]
+  'D': dark_oak_door[facing=south,hinge=right]
+  'E': dark_oak_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
   'o': stone_brick_stairs[facing=north,half=bottom]
   'M': bricks
   'f': campfire[lit=true]
@@ -68,7 +70,8 @@ legend:
   'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
 layers:
   - y0 цоколь, пол, ступени: |
-        P9P9  pppppp9P9 P
+      
+        P9P9   <pp> 9P9 P
        SSSSSSSSSSSSSSSSSSSS
       0S$$$$$aaaYYaaa$$$$$SP
        S$$$$$aaaYYaaa$$$$$S
@@ -89,6 +92,7 @@ layers:
                       oo
   - y1 первый этаж: |
       
+      
        LSSSSLSSLDELSSLSSSSL
        Sb  lSP b~~b 0SWV bS
        SccccS   ~~   S mm S
@@ -104,10 +108,11 @@ layers:
        SjKjj. Li  iL .mmSSS
        SjjjjS   ~~   SbmSSS
        SbjjjS   ~~   SbmSSS
-       SO  OSb M  M bSmmSSS
-       LSSSSLSSMffMSSLDESSL
+       SO  OSb MffM bSmmSSS
+       LSSSSLSSMMMMSSLDESSL
                  .
   - y2: |
+      
         d  d         d  d
        LSGGSLSSLDELSSLGGSSL
        SP   S        S   PS
@@ -128,6 +133,7 @@ layers:
        LSGGSLGGMMMMGGLDESSL
         n  nn  n  n  n
   - y3: |
+      
         d  d         d  d
        LSGGSLSSLXXLSSLGGSSL
        S    S        S    S
@@ -148,6 +154,7 @@ layers:
        LSGGSLGGMMMMGGLXXSSL
         n  nn  n  n  n
   - y4: |
+      
         d  d         d  d
        LSGGSLSSXXXXSSLGGSSL
        S    S        S    S
@@ -168,6 +175,7 @@ layers:
        LSGGSLGGMMMMGGLSSSSL
         n  nn  n  n  n
   - y5: |
+      
               H    H
        LSSSSLSSSSSSSSLSSSSL
        S    S        S    S
@@ -189,6 +197,7 @@ layers:
                  .
   - y6 перекрытие и балкон: |
              ########
+             ########
        LXXXXXXXXXXXXXXXXXXL
        Z$$$$$$$$$$$$$$$$$$Z
        Z$$$$$$$$$$$$$$$$$$Z
@@ -208,7 +217,8 @@ layers:
        LXXXXXXXXXXXXXXXXXXL
                  .
   - y7 второй этаж: |
-        d  d ttttttttd  d
+             tttttttt
+        d  d t      td  d
        LSGGSLSSGDEGSSLGGSSL
        SJQ~~#b      b#bcclS
       vS~~~~#        #ccccSr
@@ -228,6 +238,7 @@ layers:
        LSGGSLSGSSSSGSLGGSSL
         n  n         n  n
   - y8: |
+      
         d  d N      Nd  d
        LSGGSLSSGDEGSSLGGSSL
        S    #P      0#P   S
@@ -249,6 +260,7 @@ layers:
         n  n         n  n
   - y9: |
       
+      
       ULSSSSLSSSSSSSSLSSSSLI
       US    #        #    SI
       US    #        #    SI
@@ -268,6 +280,7 @@ layers:
       ULSSSSLSSSSSSSSLSSSSLI
                  .
   - y10 обвязка и крыша: |
+      
       e#                  #w
       eLXXXXXXXXXXXXXXXXXXLw
       eZ                  Zw
@@ -288,6 +301,7 @@ layers:
       eLXXXXXXXXXXXXXXXXXXLw
       e#                  #w
   - y11: |
+      
        e#                #w
        e##################w
        e#                #w
@@ -308,6 +322,7 @@ layers:
        e##################w
        e#                #w
   - y12: |
+      
         e#              #w
         e################w
         e#              #w
@@ -328,6 +343,7 @@ layers:
         e################w
         e#              #w
   - y13: |
+      
          e#            #w
          e######GG######w
          e#            #w
@@ -348,6 +364,7 @@ layers:
          e######GG######w
          e#            #w
   - y14: |
+      
           e#          #w
           e#####GG#####w
           e#          #w
@@ -368,6 +385,7 @@ layers:
           e#####GG#####w
           e#          #w
   - y15: |
+      
            e#        #w
            e####GG####w
            e#        #w
@@ -388,6 +406,7 @@ layers:
            e####GG####w
            e#        #w
   - y16: |
+      
             e#      #w
             e########w
             e#      #w
@@ -408,6 +427,7 @@ layers:
             e########w
             e#      #w
   - y17: |
+      
              e#    #w
              e######w
              e#    #w
@@ -428,6 +448,7 @@ layers:
              e######w
              e#    #w
   - y18: |
+      
               e#  #w
               e####w
               e#  #w
@@ -448,6 +469,7 @@ layers:
               e####w
               e#  #w
   - y19: |
+      
                e##w
                e##w
                e##w
@@ -468,6 +490,7 @@ layers:
                e##w
                e##w
   - y20: |
+      
                 ew
                 ew
                 ew

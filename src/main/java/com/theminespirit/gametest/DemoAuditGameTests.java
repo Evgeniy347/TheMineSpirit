@@ -53,13 +53,16 @@ import org.slf4j.Logger;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoAuditGameTests {
+    static final int SUPPLY_RING = 2;
+    static final int SUPPLY_SIDE_OFFSET = 3;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SETTLE_TICKS = 5;
     private static final int MIN_CLEAR_HEIGHT = 8;
     private static final int FLOOR_SIZE = 11;
     private static final int FLOOR_MARGIN = 4;
-    // Решение владельца 18.10 (ветка reach-planner): дом семьи — не больше 15 построений пути на весь дом.
-    private static final int FAMILY_HOUSE_MAX_PATH_BUILDS = 15;
+    // Решение владельца 18.10 (ветка reach-planner): дом семьи — не больше 15 построений пути на весь дом; с крыльцом
+    // из трёх ступенек (решение 20.10) две крайние ступеньки снаружи и последний шаг дверей — замер 11–20, предел 22.
+    private static final int FAMILY_HOUSE_MAX_PATH_BUILDS = 22;
     // Дом семьи уровня 2 (19.10) больше хижины: подходов больше; пределы — замер по поворотам с запасом.
     private static final int FAMILY_HOUSE_LEVEL2_MAX_PATH_BUILDS = 40;
     private static final int DEFAULT_MAX_PATH_BUILDS = 15;
@@ -68,7 +71,8 @@ public final class DemoAuditGameTests {
     private static final int ENCHANT_HALL_MAX_PATH_BUILDS = 18;
     private static final int DOUBLE_CHEST_ROWS = 6;
     // Дом семьи 3 (19.10) — два этажа, материалы заходами: замер 72–84 подхода по поворотам (20.10), запас 10 %.
-    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 93;
+    // С балконом на ряд глубже перил и шагом к середине клетки перед установкой у края — замер 52–99, предел 110.
+    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 110;
     // Заходов за материалами, как в демо (DemoSession.MAX_ROUNDS): больше — значит, стройка не продвигается.
     private static final int SPIRIT_SLOTS = 36;
     // Схемы витрины, заход 2 (20.10), замер по поворотам: усадьба 185–188 (заходы, ~3200 блоков), дом игрока 31–39 и
@@ -87,24 +91,22 @@ public final class DemoAuditGameTests {
     private static final int PLAYER_HOUSE3_MAX_PATH_BUILDS = 158;
     private static final int PLAYER_HOUSE4_MAX_PATH_BUILDS = 545;
     private static final int PLAZA3_MAX_PATH_BUILDS = 70;
-    private static final int SUPPLY_RING = 2;
     // Склад-хижина с двумя свободными слотами: 7 заходов к сундуку, замер 12 подходов (20.10), запас 3.
     private static final int STORAGE_HUT_TRIPS_MAX_PATH_BUILDS = 15;
-    private static final int SUPPLY_SIDE_OFFSET = 3;
 
     private DemoAuditGameTests() {}
 
     // Высокая постройка (дом семьи 1 — 10 слоёв с крышей) оставила бы конёк соседнему тесту: чистим на её высоту.
-    private static int clearHeight(Schematic schematic) {
+    static int clearHeight(Schematic schematic) {
         return Math.max(MIN_CLEAR_HEIGHT, schematic.sizeY() + 2);
     }
 
     // Пол — с запасом в 4 клетки сверх большей стороны постройки: духу нужно место появиться снаружи.
-    private static int floorSize(Schematic schematic) {
+    static int floorSize(Schematic schematic) {
         return Math.max(FLOOR_SIZE, Math.max(schematic.sizeX(), schematic.sizeZ()) + FLOOR_MARGIN);
     }
 
-    private static void clearArea(GameTestHelper helper, int size, int height) {
+    static void clearArea(GameTestHelper helper, int size, int height) {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < height; y++) {
                 for (int z = 0; z < size; z++) {
@@ -114,7 +116,7 @@ public final class DemoAuditGameTests {
         }
     }
 
-    private static void floor(GameTestHelper helper, int size, int height) {
+    static void floor(GameTestHelper helper, int size, int height) {
         clearArea(helper, size, height);
         for (int x = 0; x < size; x++) {
             for (int z = 0; z < size; z++) {
@@ -159,10 +161,10 @@ public final class DemoAuditGameTests {
 
     // Решение владельца 20.10: материалы, не влезающие в инвентарь, — в двойных сундуках у края пола; дух сам
     // ходит за ними порциями (BuildSupplyTrip), как в демо и в обычной стройке.
-    private record SupplyPoint(BlockPos base, Direction partner) {}
+    record SupplyPoint(BlockPos base, Direction partner) {}
 
     // Сундуки — у главного входа, как в демо: за ступенью, в стороне от линии подхода.
-    private static SupplyPoint supplyPoint(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
+    static SupplyPoint supplyPoint(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
         Preset preset = DataTables.INSTANCE.presets().current().byId(scheme).orElseThrow();
         DemoPlacement.Door door = DemoPlacement.Door.of(preset);
         BuildRotation.Cell cell = rotation.rotate(door.x(), door.z(), schematic.sizeX(), schematic.sizeZ());
@@ -317,7 +319,13 @@ public final class DemoAuditGameTests {
                     spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "Постройка '" + scheme + "' (" + rotation + ") обязана завершиться успехом, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
+                            + spirit.taskFailureReason().orElse("нет") + ", дух на "
+                            + spirit.blockPosition()
+                                    .subtract(helper.absolutePos(BlockPos.ZERO))
+                                    .toShortString()
+                            + ", построений пути " + spirit.pathBuilds() + ", тиков духа " + spirit.tickCount
+                            + ", удалён " + spirit.getRemovalReason() + ", задача "
+                            + GameTestFixtures.taskSnapshot(spirit).orElse("нет"));
             Map<String, Object> data = data(helper, spirit);
             int skipped = ((Number) data.get("skipped")).intValue();
             if (!measured.getAndSet(true)) {

@@ -21,9 +21,11 @@ legend:
   'w': dark_oak_stairs[facing=west,half=bottom]
   '_': dark_oak_slab[type=bottom]
   'G': glass_pane
-  'D': spruce_door[facing=south,hinge=left]
-  'E': spruce_door[facing=south,hinge=right]
+  'D': spruce_door[facing=south,hinge=right]
+  'E': spruce_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
   'Q': bricks
   'f': campfire[lit=true]
   'g': spruce_stairs[facing=east,half=bottom]
@@ -52,7 +54,7 @@ legend:
   'r': spruce_trapdoor[facing=east,half=bottom,open=true]
 layers:
   - y0 цоколь и пол: |
-              pp
+             <pp>
        SSSSSSSSSSSSSSSS
        S$$$$$$$$$$$$$$S
        S$$$$$$$$$$$$$$S
@@ -75,7 +77,7 @@ layers:
        cb   b mm b    c
        c ~~~~~mm     Oc
        cQ~g~~~mmtttg Oc
-       f ~~~~~mmtttg Oc
+       cf~~~~~mmtttg Oc
        cQ~g~~~mmtttg Oc
        c ~~~~~mm     Oc
        LFWV   mm  WV TL

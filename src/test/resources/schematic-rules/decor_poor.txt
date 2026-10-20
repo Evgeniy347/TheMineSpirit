@@ -14,9 +14,11 @@ legend:
   'P': potted_poppy
   'L': lantern[hanging=true]
   'p': oak_stairs[facing=south,half=bottom]
+  '<': oak_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': oak_stairs[facing=west,half=bottom,shape=outer_left]
 layers:
   - y0: |
-         p
+        <p>
       #######
       #######
       #######
