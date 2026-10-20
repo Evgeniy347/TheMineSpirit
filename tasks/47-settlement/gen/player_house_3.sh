@@ -97,8 +97,7 @@ done
 echo "box 1 5 6 6 2 16 S"; echo "box 1 5 15 15 2 16 S"
 for x in 6 15; do echo "box 1 5 $x $x 4 5 ."; echo "box 1 5 $x $x 12 13 ."; done
 echo "box 1 5 2 5 9 9 S"; echo "box 1 5 16 19 9 9 S"; echo "box 1 5 18 19 9 9 ."
-# зал: колоннада, ковровая дорожка, камин у задней стены, кресла
-for z in 4 7 10 13; do echo "col 1 5 8 $z L"; echo "col 1 5 13 $z L"; done
+# зал: ковровая дорожка, камин у задней стены, кресла
 echo "box 1 1 10 11 2 12 ~"
 echo "box 1 5 9 12 17 17 M"; echo "set 1 10 16 f"; echo "set 1 11 16 f"; echo "col 1 3 9 16 M"; echo "col 1 3 12 16 M"
 echo "set 1 9 13 i"; echo "set 1 12 13 i"; echo "box 1 1 10 11 14 15 ~"; echo "set 1 7 16 b"; echo "set 2 7 16 P"; echo "set 1 14 16 b"; echo "set 2 14 16 9"

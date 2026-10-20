@@ -171,7 +171,7 @@ public final class SchematicRules {
     private static void checkClosedWalls(
             Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
         Schematic schematic = structure.schematic();
-        Set<BlockCoord> opening = entranceCells(structure);
+        Set<BlockCoord> opening = entranceCells(structure, grid);
         int eave = Math.min(eave(schematic, grid), wallTop(schematic, grid));
         for (int y = 0; y <= eave; y++) {
             for (BlockCoord cell : perimeter(schematic, y)) {
@@ -214,12 +214,30 @@ public final class SchematicRules {
         return -1;
     }
 
-    private static Set<BlockCoord> entranceCells(Structure structure) {
+    private static Set<BlockCoord> entranceCells(Structure structure, Map<BlockCoord, String> grid) {
         BlockCoord entry = structure.entry();
         Set<BlockCoord> cells = new LinkedHashSet<>();
         cells.add(entry);
-        if (entry.y() + 1 < structure.schematic().sizeY()) {
+        boolean upper = entry.y() + 1 < structure.schematic().sizeY();
+        if (upper) {
             cells.add(new BlockCoord(entry.x(), entry.y() + 1, entry.z()));
+        }
+        Optional<SchematicBody.Normal> outward =
+                SchematicBody.of(structure.schematic(), entry).outwardNormal(entry);
+        if (outward.isEmpty()) {
+            return cells;
+        }
+        int alongX = outward.get().dz();
+        int alongZ = outward.get().dx();
+        for (int sign : new int[] {1, -1}) {
+            BlockCoord neighbor = new BlockCoord(entry.x() + alongX * sign, entry.y(), entry.z() + alongZ * sign);
+            if (grid.containsKey(neighbor)) {
+                continue;
+            }
+            cells.add(neighbor);
+            if (upper) {
+                cells.add(new BlockCoord(neighbor.x(), entry.y() + 1, neighbor.z()));
+            }
         }
         return cells;
     }

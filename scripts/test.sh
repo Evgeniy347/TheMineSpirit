@@ -762,9 +762,9 @@ if [ "$MODE" = "unit" ]; then
     [ ${#UNIT_TESTS[@]} -eq 0 ] && UNIT_EXTRA=(staticAnalysis --continue)
 
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun --no-build-cache "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun --no-build-cache "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"

@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +20,10 @@ public final class DoorPairs {
 
     public static Optional<String> problem(Schematic schematic) {
         Map<BlockCoord, Schematic.Entry> doors = doors(schematic);
+        Optional<String> different = differentFacing(doors);
+        if (different.isPresent()) {
+            return different;
+        }
         for (Map.Entry<BlockCoord, Schematic.Entry> door : doors.entrySet()) {
             Optional<Facing> facing = facing(door.getValue());
             if (facing.isEmpty()) {
@@ -32,10 +37,46 @@ public final class DoorPairs {
             for (BlockCoord cell = door.getKey(); sameDoor(doors, cell, facing.get()); cell = step(cell, along, 1)) {
                 run.add(cell);
             }
+            if (run.size() > 1 && run.size() % 2 != 0) {
+                BlockCoord last = run.get(run.size() - 1);
+                return Optional.of("ряд из " + run.size() + " дверей рядом не делится на пары: у створки ["
+                        + last.x() + "," + last.y() + "," + last.z()
+                        + "] нет пары — двери ставят парами, петли по краям каждой пары");
+            }
             for (int i = 0; i + 1 < run.size(); i += 2) {
                 Optional<String> pair = pair(doors, run.get(i), run.get(i + 1), facing.get(), along);
                 if (pair.isPresent()) {
                     return pair;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> differentFacing(Map<BlockCoord, Schematic.Entry> doors) {
+        for (Map.Entry<BlockCoord, Schematic.Entry> door : doors.entrySet()) {
+            Optional<Facing> facing = facing(door.getValue());
+            if (facing.isEmpty()) {
+                continue;
+            }
+            BlockCoord east = new BlockCoord(
+                    door.getKey().x() + 1, door.getKey().y(), door.getKey().z());
+            BlockCoord south = new BlockCoord(
+                    door.getKey().x(), door.getKey().y(), door.getKey().z() + 1);
+            for (BlockCoord neighbor : List.of(east, south)) {
+                Schematic.Entry other = doors.get(neighbor);
+                if (other == null) {
+                    continue;
+                }
+                Optional<Facing> otherFacing = facing(other);
+                if (otherFacing.isPresent() && !otherFacing.get().equals(facing.get())) {
+                    return Optional.of("две двери [" + door.getKey().x() + ","
+                            + door.getKey().y() + ","
+                            + door.getKey().z() + "] и [" + neighbor.x() + "," + neighbor.y() + "," + neighbor.z()
+                            + "] стоят рядом, но смотрят в разные стороны ("
+                            + facing.get().name().toLowerCase(Locale.ROOT)
+                            + " и " + otherFacing.get().name().toLowerCase(Locale.ROOT)
+                            + "): дверная пара смотрит в одну сторону");
                 }
             }
         }
