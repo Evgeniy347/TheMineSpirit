@@ -43,6 +43,8 @@ final class SchematicSite {
     private static final Set<String> DERIVED = Set.of("shape");
     private final Level level;
     private final BuildRotation rotation;
+    private final Schematic schematic;
+    private final BlockCoord origin;
     private final List<Schematic.PlacedEntry> entries;
     private final List<Schematic.PlacedEntry> primaries;
     private final List<BlockCoord> air;
@@ -61,6 +63,8 @@ final class SchematicSite {
     SchematicSite(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
         this.level = level;
         this.rotation = rotation;
+        this.schematic = schematic;
+        this.origin = origin;
         this.entries = schematic.entries(origin, rotation).stream()
                 .filter(entry -> BlockItems.hasBlockItem(entry.block()))
                 .toList();
@@ -89,6 +93,18 @@ final class SchematicSite {
         this.maxZ = origin.z() + rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ()) - 1;
         this.minY = origin.y();
         this.maxY = origin.y() + schematic.sizeY() - 1;
+    }
+
+    Schematic schematic() {
+        return schematic;
+    }
+
+    BlockCoord origin() {
+        return origin;
+    }
+
+    BuildRotation rotation() {
+        return rotation;
     }
 
     List<Schematic.PlacedEntry> entries() {

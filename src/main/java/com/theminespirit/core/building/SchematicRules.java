@@ -482,25 +482,41 @@ public final class SchematicRules {
                         || SchematicBlocks.path(neighbor).endsWith("_pane"));
     }
 
-    private static void checkSupport(Schematic schematic, Map<BlockCoord, String> grid, List<Violation> violations) {
+    // Опора блока в клетке по уже стоящим блокам grid (полный блок крепок со всех граней, висящее — на держателе
+    // сверху, фонарь и горшок — на столбе забора): одно правило для проверки схем и для плана стройки.
+    static boolean supportedIn(Map<BlockCoord, String> grid, BlockCoord cell, String block, Map<String, String> state) {
         BlockSupport.World world = (x, y, z, face) -> {
             if (y < 0) {
                 return true;
             }
-            String block = grid.get(new BlockCoord(x, y, z));
-            return block != null
-                    && (SchematicBlocks.isFullBlock(block)
-                            || (face == BlockSupport.Face.DOWN && SchematicBlocks.holdsHanging(block)));
+            String near = grid.get(new BlockCoord(x, y, z));
+            return near != null
+                    && (SchematicBlocks.isFullBlock(near)
+                            || (face == BlockSupport.Face.DOWN && SchematicBlocks.holdsHanging(near)));
         };
+        return supportedIn(grid, world, cell, block, state);
+    }
+
+    // То же с крепостью граней от вызывающего (план стройки знает грани ступеней и плит).
+    static boolean supportedIn(
+            Map<BlockCoord, String> grid,
+            BlockSupport.World world,
+            BlockCoord cell,
+            String block,
+            Map<String, String> state) {
+        if (cell.y() == 0 || upperHalfOfDoor(grid, cell, block)) {
+            return true;
+        }
+        return SchematicBlocks.isHanging(block, state)
+                ? BlockSupport.hasHangingSupport(world, cell.x(), cell.y(), cell.z())
+                : (BlockSupport.hasSupport(world, cell.x(), cell.y(), cell.z())
+                        || centerOnPost(block, grid.get(new BlockCoord(cell.x(), cell.y() - 1, cell.z()))));
+    }
+
+    private static void checkSupport(Schematic schematic, Map<BlockCoord, String> grid, List<Violation> violations) {
         for (Schematic.Entry block : schematic.blocks()) {
             BlockCoord cell = new BlockCoord(block.dx(), block.dy(), block.dz());
-            if (cell.y() == 0 || upperHalfOfDoor(grid, cell, block.block())) {
-                continue;
-            }
-            boolean supported = SchematicBlocks.isHanging(block.block(), block.state())
-                    ? BlockSupport.hasHangingSupport(world, cell.x(), cell.y(), cell.z())
-                    : (BlockSupport.hasSupport(world, cell.x(), cell.y(), cell.z())
-                            || centerOnPost(block.block(), grid.get(new BlockCoord(cell.x(), cell.y() - 1, cell.z()))));
+            boolean supported = supportedIn(grid, cell, block.block(), block.state());
             if (!supported) {
                 Map.Entry<BlockCoord, String> entry = Map.entry(cell, block.block());
                 violations.add(new Violation(
@@ -534,8 +550,13 @@ public final class SchematicRules {
     }
 
     private static @Nullable BlockCoord mountOf(Schematic.Entry entry, BlockCoord cell) {
-        if (SchematicBlocks.isWallMounted(entry.block())) {
-            return switch (entry.state().getOrDefault("facing", "")) {
+        return mountOf(entry.block(), entry.state(), cell);
+    }
+
+    // Клетка, к которой крепится факел или табличка; null — блок ни к чему не крепится.
+    static @Nullable BlockCoord mountOf(String block, Map<String, String> state, BlockCoord cell) {
+        if (SchematicBlocks.isWallMounted(block)) {
+            return switch (state.getOrDefault("facing", "")) {
                 case "north" -> new BlockCoord(cell.x(), cell.y(), cell.z() + 1);
                 case "south" -> new BlockCoord(cell.x(), cell.y(), cell.z() - 1);
                 case "east" -> new BlockCoord(cell.x() - 1, cell.y(), cell.z());
@@ -543,7 +564,7 @@ public final class SchematicRules {
                 default -> null;
             };
         }
-        if (SchematicBlocks.path(entry.block()).endsWith("torch")) {
+        if (SchematicBlocks.path(block).endsWith("torch")) {
             return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
         }
         return null;

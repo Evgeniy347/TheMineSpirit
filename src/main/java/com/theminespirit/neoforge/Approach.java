@@ -33,8 +33,8 @@ public final class Approach {
     // к самому блоку путь не ведёт.
     private static final double NETWORK_GAP = 3.0;
     private static final int NETWORK_ATTEMPTS = 2;
-    // Ближе 6 блоков путь игры доходит сам; не дошёл — цель за преградой (стоянка в стене), сеть не поможет.
-    private static final double NETWORK_MIN_DISTANCE = 6.0;
+    // Сеть — при любом недошедшем пути, и вблизи: цель за стеной или этажом выше близка по прямой, а пешком — через
+    // дверь или лестницу в другом конце дома, дальше поиска пути игры (дом игрока 3, дом семьи 3, 21.10).
 
     private final SpiritEntity spirit;
     private PathRefreshPolicy pathRefresh;
@@ -51,6 +51,7 @@ public final class Approach {
     private String refusal;
     private @Nullable NetworkLegs legs;
     private int networkAttempts;
+    private int networkRoutes;
 
     public Approach(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -152,6 +153,11 @@ public final class Approach {
         return refusal;
     }
 
+    // Для разбора трудных подходов: сколько раз спрашивали сеть тропинок и сколько маршрутов она дала.
+    public String networkNote() {
+        return "сеть: запросов " + networkAttempts + ", маршрутов " + networkRoutes;
+    }
+
     private void start(Vec3 point, Entity entity, double arrivalDistance) {
         if (active) {
             spirit.getNavigation().stop();
@@ -168,6 +174,7 @@ public final class Approach {
         refusal = null;
         legs = null;
         networkAttempts = 0;
+        networkRoutes = 0;
         active = true;
     }
 
@@ -198,10 +205,7 @@ public final class Approach {
             }
             return;
         }
-        if (networkAttempts >= NETWORK_ATTEMPTS
-                || !spirit.onGround()
-                || spirit.position().distanceTo(target) <= NETWORK_MIN_DISTANCE
-                || !unreached(path, target)) {
+        if (networkAttempts >= NETWORK_ATTEMPTS || !spirit.onGround() || !unreached(path, target)) {
             return;
         }
         networkAttempts++;
@@ -210,6 +214,7 @@ public final class Approach {
         if (route.isEmpty()) {
             return;
         }
+        networkRoutes++;
         NetworkLegs walk = new NetworkLegs(route.get());
         walk.advance(spirit.position());
         if (walk.done()) {

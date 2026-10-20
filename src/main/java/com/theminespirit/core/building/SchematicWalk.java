@@ -126,6 +126,20 @@ final class SchematicWalk {
         return passable(grid.get(new BlockCoord(x, y, z)));
     }
 
+    // На блоке можно стоять: не проходимый и не столб (забор, стена, панель — их высота 1,5, на них не запрыгнуть).
+    static boolean standsOn(@Nullable String block) {
+        if (block == null || passable(block)) {
+            return false;
+        }
+        String path = SchematicBlocks.path(block);
+        for (String suffix : NOT_STANDABLE_SUFFIXES) {
+            if (path.endsWith(suffix)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     boolean standable(int x, int y, int z) {
         if (y < 0) {
             return true;

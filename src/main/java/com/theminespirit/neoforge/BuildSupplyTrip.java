@@ -53,7 +53,38 @@ final class BuildSupplyTrip {
     // phase — клетки текущего этапа стройки: берётся только их материал, иначе инвентарь забивается материалом
     // верхних полос и отделки, а нужного сейчас не во что взять.
     static List<ScriptCall> plan(SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
-        Map<Item, Integer> need = need(spirit, site, phase);
+        return fetch(spirit, site, need(spirit, site, phase));
+    }
+
+    // Заход плана стройки (BuildPlanner): ровно список плана, но не больше недостающего в мире за вычетом своего.
+    static List<ScriptCall> exact(SpiritEntity spirit, SchematicSite site, Map<Item, Integer> wanted) {
+        Map<Item, Integer> missing = need(spirit, site, entry -> true);
+        Map<Item, Integer> need = new LinkedHashMap<>();
+        wanted.forEach((item, count) -> {
+            int left = Math.min(count, missing.getOrDefault(item, 0));
+            if (left > 0) {
+                need.merge(item, left, Integer::sum);
+            }
+        });
+        return fetch(spirit, site, need);
+    }
+
+    // Слоты лишнего, которое заход освободит, когда свободных нет: всё не нужное стройке, кроме набора духа.
+    static int junkSlots(SpiritEntity spirit, SchematicSite site) {
+        Container inventory = spirit.getInventory();
+        List<@Nullable String> slots = new ArrayList<>();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            slots.add(
+                    stack.isEmpty()
+                            ? null
+                            : BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+        }
+        Set<Integer> keep = spirit.isDemo() ? Set.of() : kitSlots(spirit);
+        return BuildClutter.junk(slots, neededItems(site), keep).size();
+    }
+
+    private static List<ScriptCall> fetch(SpiritEntity spirit, SchematicSite site, Map<Item, Integer> need) {
         if (need.isEmpty()) {
             return List.of();
         }
@@ -86,7 +117,7 @@ final class BuildSupplyTrip {
         return List.copyOf(release);
     }
 
-    private static int emptySlots(SpiritEntity spirit) {
+    static int emptySlots(SpiritEntity spirit) {
         int free = 0;
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             if (spirit.getInventory().getItem(slot).isEmpty()) {
@@ -240,7 +271,7 @@ final class BuildSupplyTrip {
     }
 
     // Сундуки у площадки: от середины постройки на полразмера и ещё SEARCH_MARGIN.
-    private static List<BlockPos> containers(SpiritEntity spirit, SchematicSite site) {
+    static List<BlockPos> containers(SpiritEntity spirit, SchematicSite site) {
         int minX = Integer.MAX_VALUE;
         int minZ = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE;
@@ -269,7 +300,7 @@ final class BuildSupplyTrip {
         return found;
     }
 
-    private static BlockPos otherHalf(SpiritEntity spirit, BlockPos pos) {
+    static BlockPos otherHalf(SpiritEntity spirit, BlockPos pos) {
         BlockState state = spirit.level().getBlockState(pos);
         if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
             return pos.relative(ChestBlock.getConnectedDirection(state));
