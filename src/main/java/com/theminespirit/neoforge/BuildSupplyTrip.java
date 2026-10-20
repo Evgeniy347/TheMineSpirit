@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
@@ -49,8 +50,10 @@ final class BuildSupplyTrip {
     private BuildSupplyTrip() {}
 
     // Шаги withdraw следующей порции; пусто — брать нечего (сундуков нет, в них нет нужного или инвентарь полон).
-    static List<ScriptCall> plan(SpiritEntity spirit, SchematicSite site) {
-        Map<Item, Integer> need = need(spirit, site);
+    // phase — клетки текущего этапа стройки: берётся только их материал, иначе инвентарь забивается материалом
+    // верхних полос и отделки, а нужного сейчас не во что взять.
+    static List<ScriptCall> plan(SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
+        Map<Item, Integer> need = need(spirit, site, phase);
         if (need.isEmpty()) {
             return List.of();
         }
@@ -179,10 +182,11 @@ final class BuildSupplyTrip {
     }
 
     // Недостающее в мире минус своё, в порядке клеток схемы: сначала то, что ставится раньше.
-    private static Map<Item, Integer> need(SpiritEntity spirit, SchematicSite site) {
+    private static Map<Item, Integer> need(
+            SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
         Map<Item, Integer> need = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (BlockItems.hasBlockItem(entry.block()) && !site.matches(entry)) {
+            if (BlockItems.hasBlockItem(entry.block()) && !site.matches(entry) && phase.test(entry)) {
                 need.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
             }
         }

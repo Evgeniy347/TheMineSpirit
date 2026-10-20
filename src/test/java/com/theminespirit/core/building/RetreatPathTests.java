@@ -70,4 +70,17 @@ class RetreatPathTests {
                 RetreatPath.allows(NOOK, Set.of(OPENING_LOW), sealed, OUTSIDE),
                 "Выхода нет и до установки: блок ничего не меняет, правило не останавливает стройку");
     }
+
+    @Test
+    void walkable_RoofOrSealedCell_NotOffered() {
+        Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
+        Set<BlockCoord> open = RetreatPath.walkable(NOOK, nook(Set.of()), near).orElseThrow();
+        assertTrue(open.contains(cell(1, 0, -2)), "Из открытой ниши дух доходит наружу: стоянки снаружи доступны");
+        assertFalse(
+                open.contains(cell(0, 2, 1)),
+                "Верх стены (как скат крыши) не стоянка: на него не зайти, подход к нему — срыв");
+        Set<BlockCoord> sealed = RetreatPath.walkable(NOOK, nook(Set.of(OPENING_LOW, OPENING_HIGH)), near)
+                .orElseThrow();
+        assertFalse(sealed.contains(cell(1, 0, -2)), "Из запертой ниши наружу не дойти: внешние стоянки не годятся");
+    }
 }

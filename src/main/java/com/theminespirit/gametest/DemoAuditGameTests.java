@@ -71,8 +71,9 @@ public final class DemoAuditGameTests {
     private static final int ENCHANT_HALL_MAX_PATH_BUILDS = 18;
     private static final int DOUBLE_CHEST_ROWS = 6;
     // Дом семьи 3 (19.10) — два этажа, материалы заходами: замер 72–84 подхода по поворотам (20.10), запас 10 %.
-    // С балконом на ряд глубже перил и шагом к середине клетки перед установкой у края — замер 52–99, предел 110.
-    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 110;
+    // Путь 32 вместо 96 (решение 20.10): каждая стоянка — путь игры ≤ 32 и его обновление; стоянок 70–73 при плане 70
+    // (build-plans/family_house_3-*.txt), построений пути 122–130 (замер 20.10, ≈1,8 на стоянку), запас 10 %.
+    private static final int FAMILY_HOUSE_LEVEL3_MAX_PATH_BUILDS = 145;
     // Заходов за материалами, как в демо (DemoSession.MAX_ROUNDS): больше — значит, стройка не продвигается.
     private static final int SPIRIT_SLOTS = 36;
     // Схемы витрины, заход 2 (20.10), замер по поворотам: усадьба 185–188 (заходы, ~3200 блоков), дом игрока 31–39 и

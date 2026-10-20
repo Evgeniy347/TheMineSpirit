@@ -158,6 +158,14 @@ final class SchematicLevelRules {
 
     static boolean isDecor(BlockCoord cell, String block, Schematic schematic, Map<BlockCoord, String> grid) {
         String path = SchematicBlocks.path(block);
+        if (isDecorBlock(block)) {
+            return true;
+        }
+        return path.endsWith("_stairs") && !onPerimeter(cell, schematic) && coveredAbove(cell, schematic, grid);
+    }
+
+    static boolean isDecorBlock(String block) {
+        String path = SchematicBlocks.path(block);
         if (DECOR.contains(path) || path.startsWith("potted_")) {
             return true;
         }
@@ -166,7 +174,11 @@ final class SchematicLevelRules {
                 return true;
             }
         }
-        return path.endsWith("_stairs") && !onPerimeter(cell, schematic) && coveredAbove(cell, schematic, grid);
+        return false;
+    }
+
+    static boolean isStation(String block) {
+        return STATIONS.contains(SchematicBlocks.path(block));
     }
 
     private static boolean coveredAbove(BlockCoord cell, Schematic schematic, Map<BlockCoord, String> grid) {

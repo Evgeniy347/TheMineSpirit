@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildKey;
+import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildRotation;
@@ -51,6 +52,8 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int MAX_CENTRING_TICKS = 20;
     // Кольцо зоны стройки для сети тропинок: стоянки снаружи стен и сундук подвоза у входа.
     private static final int SITE_NETWORK_RING = 6;
+    // Обход пешком — по площадке и полосе вокруг неё шириной в досягаемость с запасом.
+    private static final int WALK_MARGIN = 6;
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private final SpiritEntity spirit;
@@ -78,12 +81,18 @@ final class BuildSchematicScript implements ScriptInstance {
     private int failed;
     private int finishWaits;
     private boolean standsRetried;
+    private int bottomY = Integer.MAX_VALUE;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private String lastRefusal = "";
     private TaskRunner supplyRunner;
     private int trips;
+    private int standsChosen;
+    private int roofStands;
+    private int retreatRefusals;
     private int centring;
+    private int phaseBand = -1;
+    private int highestBand = -1;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -207,6 +216,9 @@ final class BuildSchematicScript implements ScriptInstance {
             }
             missing.add(entry);
         }
+        Set<Schematic.PlacedEntry> now = phaseNow(missing, unsupplied);
+        missing.retainAll(now);
+        unsupplied.retainAll(now);
         // Решение владельца 20.10: дух ставит всё, на что хватает взятого, и только потом идёт за следующей
         // порцией. Нехватка — отказ «не хватило материала», когда взятым больше нечего ставить.
         if (!unsupplied.isEmpty()) {
@@ -256,6 +268,38 @@ final class BuildSchematicScript implements ScriptInstance {
         return moveTowards(clear, world, false);
     }
 
+    // Решение владельца 20.10: черновые работы полосами по 4 слоя снизу вверх, затем отделка в любом порядке.
+    private Set<Schematic.PlacedEntry> phaseNow(
+            List<Schematic.PlacedEntry> missing, List<Schematic.PlacedEntry> unsupplied) {
+        if (bottomY == Integer.MAX_VALUE) {
+            for (Schematic.PlacedEntry entry : site.primaries()) {
+                bottomY = Math.min(bottomY, entry.pos().y());
+            }
+        }
+        List<Schematic.PlacedEntry> unfinished = new ArrayList<>(missing);
+        unfinished.addAll(unsupplied);
+        // Полосу держат только черновые клетки с опорой: висящая без опоры клетка ждёт отделки, а не останавливает
+        // этажи.
+        List<Schematic.PlacedEntry> now = BuildPhase.current(
+                unfinished,
+                entry -> entry.pos().y() - bottomY,
+                entry -> BuildPhase.rough(entry.block()) && site.supported(entry));
+        int band = now.size() == unfinished.size()
+                ? -1
+                : BuildPhase.band(now.get(0).pos().y() - bottomY);
+        int rank = band < 0 ? Integer.MAX_VALUE : band;
+        if (rank > highestBand) {
+            highestBand = rank;
+            // Полоса выше прежних — заново и отложенные клетки нижних (один раз на полосу): отказ мог быть временным
+            // (дух стоял на клетке, стоянку загораживал сосед), а позже низ уже не достроить — его закроют стены.
+            blocked.clear();
+            refusals.clear();
+            standsRetried = false;
+        }
+        phaseBand = band;
+        return new HashSet<>(now);
+    }
+
     private ScriptStatus placeStep(List<Schematic.PlacedEntry> targets, boolean lastStep) {
         Map<BlockCoord, Schematic.PlacedEntry> byCell = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : targets) {
@@ -278,6 +322,7 @@ final class BuildSchematicScript implements ScriptInstance {
                 // Правило отхода: блок, после которого отсюда не выйти наружу, ставится с другой стоянки.
                 if (!site.keepsRetreat(feet(), List.of(entry))) {
                     trapping.add(entry);
+                    retreatRefusals++;
                     continue;
                 }
                 Optional<ScriptStatus> placedNow = placeOne(entry);
@@ -371,9 +416,19 @@ final class BuildSchematicScript implements ScriptInstance {
         }
     }
 
-    private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World world, boolean outsideOnly) {
+    private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
         Set<BlockCoord> occupied = new HashSet<>(site.schemeCells());
-        Optional<BlockCoord> stand = stand(cells, world, occupied, outsideOnly);
+        Optional<BlockCoord> stand = stand(cells, walkableOnly(base), occupied, outsideOnly);
+        // Обход пешком мог не найти стоянку (ноги на полублоке, крыльцо) — тогда как раньше, по всем стоянкам.
+        ReachPlanner.World world = base;
+        if (stand.isEmpty()) {
+            stand = stand(cells, world, occupied, outsideOnly);
+        }
+        // Вокруг клетки только будущие ковры и пороги (устланный зал) — стоянка и в них.
+        if (stand.isEmpty()) {
+            occupied = new HashSet<>(site.standBlockers());
+            stand = stand(cells, world, occupied, outsideOnly);
+        }
         if (stand.isEmpty() && !standsRetried && !excludedStands.isEmpty()) {
             standsRetried = true;
             excludedStands.clear();
@@ -389,6 +444,10 @@ final class BuildSchematicScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         approachStand = stand.get();
+        standsChosen++;
+        if (site.onRoof(stand.get())) {
+            roofStands++;
+        }
         approach.begin(
                 new Vec3(approachStand.x() + 0.5, approachStand.y(), approachStand.z() + 0.5),
                 BuildTuning.STAND_ARRIVAL);
@@ -396,11 +455,36 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     // Последний шаг снаружи (двери, ставни) — стоянки только на земле, верхние ставни ставятся издалека снизу.
+    // Внутри стройки дальний поиск — только когда ближних стоянок нет: верх крыши ставится со второго этажа, если
+    // на скаты не зайти.
     private Optional<BlockCoord> stand(
             List<BlockCoord> cells, ReachPlanner.World world, Set<BlockCoord> occupied, boolean outsideOnly) {
-        return outsideOnly
-                ? ReachPlanner.nextStandFromAfar(SpiritReach.current(), feet(), cells, world, excludedStands, occupied)
+        Optional<BlockCoord> near = outsideOnly
+                ? Optional.empty()
                 : ReachPlanner.nextStand(SpiritReach.current(), feet(), cells, world, excludedStands, occupied);
+        return near.isPresent()
+                ? near
+                : ReachPlanner.nextStandFromAfar(SpiritReach.current(), feet(), cells, world, excludedStands, occupied);
+    }
+
+    // Стоянки — только те, куда дух дойдёт пешком (скат крыши, верх мебели вне обхода — срыв подхода).
+    private ReachPlanner.World walkableOnly(ReachPlanner.World world) {
+        Optional<Set<BlockCoord>> reachable = site.walkable(feet(), WALK_MARGIN);
+        if (reachable.isEmpty()) {
+            return world;
+        }
+        Set<BlockCoord> cells = reachable.get();
+        return new ReachPlanner.World() {
+            @Override
+            public boolean ready(BlockCoord cell) {
+                return world.ready(cell);
+            }
+
+            @Override
+            public boolean standable(BlockCoord feet) {
+                return cells.contains(feet) && world.standable(feet);
+            }
+        };
     }
 
     private ReachPlanner.World clearWorld() {
@@ -462,6 +546,13 @@ final class BuildSchematicScript implements ScriptInstance {
         reservations.releaseAll(spirit.getUUID());
         List<Schematic.PlacedEntry> missing = site.missing();
         List<BlockCoord> clear = site.toClear();
+        LOGGER.info(
+                "Стройка {}: стоянок выбрано {}, на крыше {}, отказов правила отхода {}, заходов {}",
+                buildKey,
+                standsChosen,
+                roofStands,
+                retreatRefusals,
+                trips);
         if (missing.isEmpty() && clear.isEmpty()) {
             leaveSquad();
             if (level instanceof ServerLevel server) {
@@ -509,7 +600,15 @@ final class BuildSchematicScript implements ScriptInstance {
 
     private ScriptStatus noMaterial(String blockId) {
         if (trips < BuildSupplyTrip.MAX_TRIPS) {
-            List<ScriptCall> steps = BuildSupplyTrip.plan(spirit, site);
+            // Порция — как в плане (BuildPlanner.Portion.FILL): черновые текущей и следующих полос снизу вверх, декор и
+            // отделка — на этапе отделки; только текущая полоса — в 9 раз больше заходов (замер на плане, 20.10).
+            int band = phaseBand;
+            List<ScriptCall> steps = BuildSupplyTrip.plan(
+                    spirit,
+                    site,
+                    entry -> band < 0
+                            || (BuildPhase.rough(entry.block())
+                                    && BuildPhase.band(entry.pos().y() - bottomY) >= band));
             if (!steps.isEmpty()) {
                 trips++;
                 LOGGER.info(
