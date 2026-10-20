@@ -158,4 +158,22 @@ final class SchematicWalk {
                 && walk.open(feet.x(), feet.y() + 1, feet.z())
                 && walk.standable(feet.x(), feet.y() - 1, feet.z());
     }
+
+    // Куда можно шагнуть из клетки ног по тем же правилам, что и обход: ровно, на ступеньку и вниз на 1.
+    static Set<BlockCoord> steps(Map<BlockCoord, String> grid, Schematic schematic, BlockCoord from) {
+        SchematicWalk walk = new SchematicWalk(grid, schematic);
+        Set<BlockCoord> next = new LinkedHashSet<>();
+        for (int[] side : SIDES) {
+            BlockCoord cell = walk.step(from, side[0], side[1], new LinkedHashSet<>());
+            if (cell != null) {
+                next.add(cell);
+            }
+        }
+        return next;
+    }
+
+    // Опирается ли блок так, что на нём можно стоять: пол, ступенька, полублок; забор и стекло — нет.
+    static boolean standableAt(Map<BlockCoord, String> grid, Schematic schematic, BlockCoord cell) {
+        return new SchematicWalk(grid, schematic).standable(cell.x(), cell.y(), cell.z());
+    }
 }

@@ -1,0 +1,10 @@
+# Сторож: панель стоит между полными блоками
+type: storage
+size: 5x1x1
+entrance: 0,0,0
+legend:
+  '#': oak_planks
+  'P': glass_pane
+layers:
+  - y0: |
+      ##P##

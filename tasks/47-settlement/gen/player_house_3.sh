@@ -28,6 +28,7 @@ cat <<'H'
 #!  'I': deepslate_brick_stairs[facing=west,half=top]
 #!  '_': deepslate_brick_slab[type=bottom]
 #!  'G': glass_pane
+#!  '=': glass
 #!  'D': dark_oak_door[facing=south,hinge=right]
 #!  'E': dark_oak_door[facing=south,hinge=left]
 #!  'p': stone_brick_stairs[facing=south,half=bottom]
@@ -95,7 +96,7 @@ done
 # перегородки: крылья слева и справа от зала, проёмы 2×3
 echo "box 1 5 6 6 2 16 S"; echo "box 1 5 15 15 2 16 S"
 for x in 6 15; do echo "box 1 5 $x $x 4 5 ."; echo "box 1 5 $x $x 12 13 ."; done
-echo "box 1 5 2 5 9 9 S"; echo "box 1 5 16 19 9 9 S"
+echo "box 1 5 2 5 9 9 S"; echo "box 1 5 16 19 9 9 S"; echo "box 1 5 18 19 9 9 ."
 # зал: колоннада, ковровая дорожка, камин у задней стены, кресла
 for z in 4 7 10 13; do echo "col 1 5 8 $z L"; echo "col 1 5 13 $z L"; done
 echo "box 1 1 10 11 2 12 ~"
@@ -127,7 +128,7 @@ for x in 8 13; do echo "set 5 $x 0 H"; done
 # --- второй этаж: стены, балконная дверь, окна 2×2 со ставнями ---
 echo "walls 7 9 1 20 1 17 S"
 for x in 1 6 15 20; do echo "col 7 9 $x 1 L"; echo "col 7 9 $x 17 L"; done; echo "col 7 9 1 9 L"; echo "col 7 9 20 9 L"
-echo "set 7 10 1 D"; echo "set 8 10 1 D"; echo "set 7 11 1 E"; echo "set 8 11 1 E"; echo "box 7 8 9 9 1 1 G"; echo "box 7 8 12 12 1 1 G"
+echo "set 7 10 1 D"; echo "set 8 10 1 D"; echo "set 7 11 1 E"; echo "set 8 11 1 E"; echo "box 7 8 9 9 1 1 ="; echo "box 7 8 12 12 1 1 ="
 for y in 7 8; do
   for x in 3 4 16 17; do echo "set $y $x 1 G"; echo "set $y $x 17 G"; done; for x in 8 13; do echo "set $y $x 17 G"; done
   for z in 4 5 12 13; do echo "set $y 1 $z G"; echo "set $y 20 $z G"; done
@@ -143,7 +144,7 @@ echo "box 7 7 2 5 2 6 ~"; echo "set 7 2 2 J"; echo "set 7 3 2 Q";
 # гостевая
 echo "set 7 3 15 C"; echo "set 7 3 16 C"; echo "set 7 2 16 b"; echo "set 8 2 16 0"; echo "set 7 4 16 W"; echo "set 7 5 16 V"; echo "box 7 7 2 5 11 14 m"
 # гостиная с выходом на балкон: кресла у полок, стол, цветы
-echo "box 7 8 7 7 7 10 O"; echo "box 7 8 14 14 7 10 O"; echo "box 7 7 9 12 6 11 ~"; echo "box 7 7 10 11 8 9 t"; echo "box 8 8 10 11 8 9 q"
+echo "box 7 8 7 7 7 10 O"; echo "box 7 8 14 14 7 10 O"; echo "box 7 7 9 12 6 11 ~"; echo "box 7 7 10 11 8 9 t"; echo "box 8 8 10 11 8 9 q"; echo "box 7 7 17 17 11 14 t"
 echo "set 7 9 8 h"; echo "set 7 9 9 h"; echo "set 7 12 8 g"; echo "set 7 12 9 g"; echo "set 7 7 2 b"; echo "set 8 7 2 P"; echo "set 7 14 2 b"; echo "set 8 14 2 0"
 echo "set 7 7 16 b"; echo "set 8 7 16 9"; echo "set 7 14 16 b"; echo "set 8 14 16 P"; echo "box 7 7 9 12 13 15 c"
 # кабинет (правое переднее)

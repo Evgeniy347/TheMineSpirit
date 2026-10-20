@@ -1,0 +1,13 @@
+# Сторож: панель рядом с дверью не прилипает — остаётся дыра
+type: storage
+size: 5x2x1
+entrance: 0,0,0
+legend:
+  '#': oak_planks
+  'D': oak_door[facing=south,hinge=left]
+  'P': glass_pane
+layers:
+  - y0: |
+      #DP##
+  - y1: |
+      #D###
