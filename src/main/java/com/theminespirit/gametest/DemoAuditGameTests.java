@@ -804,6 +804,14 @@ public final class DemoAuditGameTests {
         audit(helper, "storage_hut", 0, BuildRotation.NONE, STORAGE_HUT_TRIPS_MAX_PATH_BUILDS, (h, s, o, r) -> {}, 2);
     }
 
+    // Решение владельца 20.10: инвентарь забит посторонним (мусор, дроп мобов), свободных слотов нет — демо-дом всё
+    // равно достраивается: лишнее освобождает слоты под порцию. Без правила заход не берёт порцию и стройка падает.
+    // [флак] заходы к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
+    @GameTest(template = "big_arena", batch = "demo_audit_clutter", timeoutTicks = 8000)
+    public static void demo_StorageHutInventoryFullOfJunk_StillCompletes(GameTestHelper helper) {
+        audit(helper, "storage_hut", 0, BuildRotation.NONE, STORAGE_HUT_TRIPS_MAX_PATH_BUILDS, (h, s, o, r) -> {}, 0);
+    }
+
     // [флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
     // результат.
     @GameTest(template = "big_arena", batch = "demo_audit_familyhouselevel4", timeoutTicks = 60000)
