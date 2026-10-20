@@ -488,7 +488,7 @@ public final class SchematicRules {
                 continue;
             }
             String holder = grid.get(mount);
-            if (holder == null || !SchematicBlocks.isFullBlock(holder)) {
+            if (holder == null || (!SchematicBlocks.isFullBlock(holder) && !centerOnPost(entry.block(), holder))) {
                 violations.add(new Violation(
                         RuleId.SUPPORT,
                         "блок '" + entry.block() + "' в клетке [" + cell.x() + ","

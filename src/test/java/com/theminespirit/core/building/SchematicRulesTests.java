@@ -79,6 +79,18 @@ class SchematicRulesTests {
     }
 
     @Test
+    void torchOnFence_StandsOnCenterPost_IsNoSupportViolation() {
+        String file = "pen_torch_on_fence";
+        String path = ROOT + file + SchematicTextParser.EXTENSION;
+        SchematicDocument document = SchematicTextParser.parse(JsonResource.readClasspath(path), path);
+        assertEquals(
+                List.of(),
+                SchematicCheck.check(file, document).problems(),
+                "Факел на столбе забора держится: забор даёт центральную опору, как в игре — сторож не должен "
+                        + "называть это нарушением support");
+    }
+
+    @Test
     void ruleIds_AllValues_HaveUniqueNames() {
         List<String> ids = new ArrayList<>();
         for (SchematicRules.RuleId rule : SchematicRules.RuleId.values()) {
