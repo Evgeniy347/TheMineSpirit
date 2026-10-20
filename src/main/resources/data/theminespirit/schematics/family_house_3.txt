@@ -88,7 +88,7 @@ layers:
       
       
        ScccccDEcccccS
-       cP       A   c
+       cP A         c
        c   ~~~~~~ RRc
        cQ g~~~~~~ ccc
        Qf  ~~~~~~ ccc
@@ -208,8 +208,8 @@ layers:
            tttttt
         d  d    d  d
        LhGGLhDEhLGGhL
-       hP       O.  h
-      vh yyyyyy  .  hr
+       hP       Ohtth
+      vh yyyyyy  h  hr
        G yyyyyy  h  G
        G yyyyyy  h  G
       vh         h  hr
@@ -228,8 +228,8 @@ layers:
       
         d  d    d  d
        LhGGLhDEhLGGhL
-       h        s.  h
-      vh         .  hr
+       h        sh  h
+      vh         h  hr
        G        zh  G
        G         h  G
       vhx        h  hr

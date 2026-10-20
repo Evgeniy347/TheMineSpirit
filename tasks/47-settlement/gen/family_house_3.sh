@@ -89,7 +89,7 @@ echo "box 1 5 7 7 10 15 c"; echo "box 1 5 7 7 12 13 ."
 for i in 1 2 3 4 5 6; do z=$((2+i)); echo "box $i $i 12 13 $z $z R"; [ $i -gt 1 ] && echo "box 1 $((i-1)) 12 13 $z $z c"; done
 # гостиная: камин, кресла, ковёр, цветы
 echo "col 1 3 2 4 Q"; echo "col 1 3 2 6 Q"; echo "col 1 5 1 5 Q"; echo "set 1 2 5 f"
-echo "set 1 4 4 g"; echo "set 1 4 6 g"; echo "box 1 1 5 10 3 7 ~"; echo "box 1 1 9 12 10 10 m"; echo "box 1 1 9 12 14 14 m"; echo "set 1 2 2 P"; echo "set 1 2 8 O"; echo "set 1 10 2 A"
+echo "set 1 4 4 g"; echo "set 1 4 6 g"; echo "box 1 1 5 10 3 7 ~"; echo "box 1 1 9 12 10 10 m"; echo "box 1 1 9 12 14 14 m"; echo "set 1 2 2 P"; echo "set 1 2 8 O"; echo "set 1 4 2 A"
 echo "set 1 11 8 b"; echo "set 1 10 8 Y"; echo "set 2 10 8 Y"
 # кухня
 echo "set 1 2 11 F"; echo "set 1 2 12 k"; echo "set 1 2 13 k"; echo "set 1 2 14 u"; echo "set 1 2 15 b"; echo "set 1 3 15 T"; echo "set 1 5 15 b"; echo "set 1 6 15 b"
@@ -113,7 +113,8 @@ echo "set 7 7 1 D"; echo "set 8 7 1 D"; echo "set 7 8 1 E"; echo "set 8 8 1 E"
 for y in 7 8; do for x in 3 4 11 12; do echo "set $y $x 1 G"; echo "set $y $x 16 G"; done; for z in 4 5 12 13; do echo "set $y 1 $z G"; echo "set $y 14 $z G"; done; done
 for y in 7 8; do for x in 2 5 10 13; do echo "set $y $x 0 d"; done; for x in 2 5 10 13; do echo "set $y $x 17 n"; done; for z in 3 6 11 14; do echo "set $y 0 $z v"; echo "set $y 15 $z r"; done; done
 # второй этаж: перегородки
-echo "box 7 9 11 11 2 7 h"; echo "box 7 8 11 11 2 3 ."; echo "box 7 9 2 10 9 9 h"; echo "box 7 8 5 5 9 9 ."; echo "box 7 9 7 7 10 15 h"
+echo "box 7 9 11 11 2 7 h"; echo "box 7 9 2 10 9 9 h"; echo "box 7 8 5 5 9 9 ."; echo "box 7 9 7 7 10 15 h"
+echo "set 7 12 2 t"; echo "set 7 13 2 t"
 # спальня родителей
 echo "set 7 3 7 B"; echo "set 7 3 8 B"; echo "set 7 4 7 B"; echo "set 7 4 8 B"; echo "set 7 7 8 W"; echo "set 7 8 8 V"
 echo "box 7 7 3 8 3 5 y"; echo "set 7 2 2 P"; echo "set 7 10 2 O"; echo "set 7 10 7 b"; echo "set 8 2 6 x"; echo "set 8 10 4 z"

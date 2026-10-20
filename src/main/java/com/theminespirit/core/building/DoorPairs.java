@@ -18,13 +18,7 @@ public final class DoorPairs {
     private DoorPairs() {}
 
     public static Optional<String> problem(Schematic schematic) {
-        Map<BlockCoord, Schematic.Entry> doors = new HashMap<>();
-        for (Schematic.Entry block : schematic.blocks()) {
-            if (SchematicBlocks.isDoor(block.block())
-                    && !"upper".equals(block.state().get("half"))) {
-                doors.put(new BlockCoord(block.dx(), block.dy(), block.dz()), block);
-            }
-        }
+        Map<BlockCoord, Schematic.Entry> doors = doors(schematic);
         for (Map.Entry<BlockCoord, Schematic.Entry> door : doors.entrySet()) {
             Optional<Facing> facing = facing(door.getValue());
             if (facing.isEmpty()) {
@@ -46,6 +40,50 @@ public final class DoorPairs {
             }
         }
         return Optional.empty();
+    }
+
+    // Пара створок двойной двери, в которую входит клетка; пусто — не дверь или пара собрана неверно.
+    public static Optional<List<BlockCoord>> pairAt(Schematic schematic, BlockCoord cell) {
+        Map<BlockCoord, Schematic.Entry> doors = doors(schematic);
+        Schematic.Entry door = doors.get(cell);
+        if (door == null) {
+            return Optional.empty();
+        }
+        Optional<Facing> facing = facing(door);
+        if (facing.isEmpty()) {
+            return Optional.empty();
+        }
+        Facing along = facing.get().clockwise();
+        BlockCoord start = cell;
+        while (sameDoor(doors, step(start, along, -1), facing.get())) {
+            start = step(start, along, -1);
+        }
+        List<BlockCoord> run = new ArrayList<>();
+        for (BlockCoord current = start; sameDoor(doors, current, facing.get()); current = step(current, along, 1)) {
+            run.add(current);
+        }
+        for (int i = 0; i + 1 < run.size(); i += 2) {
+            BlockCoord first = run.get(i);
+            BlockCoord second = run.get(i + 1);
+            if (!first.equals(cell) && !second.equals(cell)) {
+                continue;
+            }
+            return pair(doors, first, second, facing.get(), along).isEmpty()
+                    ? Optional.of(List.of(first, second))
+                    : Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    private static Map<BlockCoord, Schematic.Entry> doors(Schematic schematic) {
+        Map<BlockCoord, Schematic.Entry> doors = new HashMap<>();
+        for (Schematic.Entry block : schematic.blocks()) {
+            if (SchematicBlocks.isDoor(block.block())
+                    && !"upper".equals(block.state().get("half"))) {
+                doors.put(new BlockCoord(block.dx(), block.dy(), block.dz()), block);
+            }
+        }
+        return doors;
     }
 
     private static Optional<String> pair(

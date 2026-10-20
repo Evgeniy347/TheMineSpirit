@@ -107,11 +107,10 @@ for y in 2 3 4 5; do echo "set $y 8 1 y"; echo "set $y 15 1 y"; done
 # перегородки крыльев с проёмами во всю высоту
 echo "box 1 6 7 7 2 19 K"; echo "box 1 6 16 16 2 19 K"; echo "box 1 6 2 6 9 9 K"; echo "box 1 6 17 21 9 9 K"
 for x in 7 16; do echo "box 1 6 $x $x 4 5 ."; echo "box 1 6 $x $x 10 11 ."; done
-# зал: ковры, колонны под галереей, две парадные лестницы шириной 2, кирпичная грудь в задней стене
+# зал: ковры, две парадные лестницы шириной 2, кирпичная грудь в задней стене
 echo "box 1 1 8 15 2 19 c"; echo "box 1 1 11 12 2 16 ~"
-for z in 4 7 10; do echo "col 1 6 10 $z L"; echo "col 1 6 13 $z L"; done
 for i in 1 2 3 4 5 6 7; do z=$((19-i)); for x0 in 8 14; do echo "box $i $i $x0 $((x0+1)) $z $z i"; [ $i -gt 1 ] && echo "box 1 $((i-1)) $x0 $((x0+1)) $z $z #"; done; done
-echo "box 1 6 10 13 20 20 M"; echo "set 1 10 19 b"; echo "set 2 10 19 P"; echo "set 1 13 19 b"; echo "set 2 13 19 9"
+echo "box 1 6 10 13 20 20 M"
 echo "box 1 1 11 12 17 19 ~"
 echo "set 1 8 2 b"; echo "set 2 8 2 P"; echo "set 1 15 2 b"; echo "set 2 15 2 9"; echo "set 1 9 2 0"; echo "set 1 14 2 P"
 echo "set 1 8 11 b"; echo "set 2 8 11 9"; echo "set 1 15 11 b"; echo "set 2 15 11 0"
@@ -138,7 +137,7 @@ for x in 9 14; do echo "set 6 $x 0 H"; done
 echo "box 7 7 1 22 1 20 Z"; echo "box 7 7 1 22 1 1 X"; echo "box 7 7 1 22 20 20 X"; echo "box 7 7 2 21 2 19 #"
 for x in 1 22; do for z in 1 20; do echo "set 7 $x $z L"; done; done
 echo "box 7 7 11 12 5 19 ."; echo "box 7 7 8 10 12 19 ."; echo "box 7 7 13 15 12 19 ."; echo "box 7 7 8 9 12 12 i"; echo "box 7 7 14 15 12 12 i"
-echo "box 8 8 10 10 5 11 t"; echo "box 8 8 13 13 5 11 t"; echo "box 8 8 11 12 4 4 t"
+echo "box 8 8 10 10 4 11 t"; echo "box 8 8 13 13 4 11 t"; echo "box 8 8 11 12 4 4 t"
 echo "box 7 7 8 15 -1 0 #"; echo "box 8 8 8 15 -1 -1 t"; echo "set 8 8 0 t"; echo "set 8 15 0 t"; echo "set 9 8 0 N"; echo "set 9 15 0 N"
 # --- второй этаж: кирпичные стены в каркасе, балконная дверь, окна ---
 echo "walls 8 10 1 22 1 20 w"

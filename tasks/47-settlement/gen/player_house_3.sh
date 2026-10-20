@@ -143,7 +143,7 @@ echo "box 7 7 2 5 2 6 ~"; echo "set 7 2 2 J"; echo "set 7 3 2 Q";
 # гостевая
 echo "set 7 3 15 C"; echo "set 7 3 16 C"; echo "set 7 2 16 b"; echo "set 8 2 16 0"; echo "set 7 4 16 W"; echo "set 7 5 16 V"; echo "box 7 7 2 5 11 14 m"
 # гостиная с выходом на балкон: кресла у полок, стол, цветы
-echo "box 7 8 7 7 7 10 O"; echo "box 7 8 14 14 7 10 O"; echo "box 7 7 9 12 6 11 ~"; echo "box 7 7 10 11 8 9 t"; echo "box 8 8 10 11 8 9 q"
+echo "box 7 8 7 7 7 10 O"; echo "box 7 8 14 14 7 10 O"; echo "box 7 7 9 12 6 11 ~"; echo "box 7 7 10 11 8 9 t"; echo "box 8 8 10 11 8 9 q"; echo "box 7 7 17 17 11 14 t"
 echo "set 7 9 8 h"; echo "set 7 9 9 h"; echo "set 7 12 8 g"; echo "set 7 12 9 g"; echo "set 7 7 2 b"; echo "set 8 7 2 P"; echo "set 7 14 2 b"; echo "set 8 14 2 0"
 echo "set 7 7 16 b"; echo "set 8 7 16 9"; echo "set 7 14 16 b"; echo "set 8 14 16 P"; echo "box 7 7 9 12 13 15 c"
 # кабинет (правое переднее)

@@ -143,7 +143,7 @@ done
 # перегородки второго этажа, перила у проёма лестницы
 echo "box 8 10 7 7 4 19 K"; echo "box 8 10 14 14 4 19 K"; echo "box 8 9 7 7 5 6 ."; echo "box 8 9 7 7 18 19 ."; echo "box 8 9 14 14 5 6 ."; echo "box 8 9 14 14 17 18 ."
 echo "box 8 10 2 6 12 12 K"; echo "box 8 10 15 19 12 12 K"
-echo "box 8 8 10 10 12 17 t"; echo "box 8 8 8 9 11 11 t"; for z in 12 14 16; do echo "set 9 10 $z P"; done; for z in 13 15 17; do echo "set 9 10 $z 9"; done
+echo "box 8 8 10 10 11 17 t"; echo "box 8 8 8 9 11 11 t"; for z in 12 14 16; do echo "set 9 10 $z P"; done; for z in 13 15 17; do echo "set 9 10 $z 9"; done
 echo "box 8 8 8 13 4 10 c"; echo "box 8 8 11 13 12 19 c"
 # спальня родителей
 echo "set 8 3 10 B"; echo "set 8 3 11 B"; echo "set 8 4 10 B"; echo "set 8 4 11 B"; echo "set 8 2 11 b"; echo "set 9 2 11 P"; echo "set 8 5 11 b"; echo "set 9 5 11 9"

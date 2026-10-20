@@ -262,7 +262,7 @@ layers:
        K~~~~~KccccccKccccbK
        L~~~~~KccccccKccccbL
        K BB  KccccccKccccbK
-       KbBBb Ktt    K    bK
+       KbBBb Kttt   K    bK
        KKKKKKK  tcccKKKKKKK
        KbmmmmK  tcccKP~~~OK
       vLmmmmmK  tcccK~~~~OLr

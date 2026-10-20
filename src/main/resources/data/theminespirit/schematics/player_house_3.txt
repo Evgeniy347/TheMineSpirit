@@ -229,10 +229,10 @@ layers:
        SbBBb#O httg O#OOOOS
        L#####O httg O#####L
        S    #O ~~~~ O#JQ  S
-      vSmmmm#  ~~~~  #    Sr
-       Gmmmm.        .    G
-       Gmmmm.  cccc  .    G
-      vSmmmm#  cccc  #    Sr
+      vSmmmm#  ~~~~  # t  Sr
+       Gmmmm.        . t  G
+       Gmmmm.  cccc  . t  G
+      vSmmmm#  cccc  # t  Sr
        S C  #  cccc  #    S
        SbCWV#b      b#    S
        LSGGSLSGSSSSGSLGGSSL
