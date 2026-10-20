@@ -102,7 +102,7 @@ layers:
        SccccS   ~~   S    S
        SccccS L ~~ L S    S
        SOOOOS   ~~   SFkuTS
-       LSSSSS   ~~   SSSSSL
+       LSSSSS   ~~   SSS..L
        SOOOOS L ~~ L Smm  S
        SjjjjS   ~~   SmmRRS
        Sjjjj.   ~~   .mmSSS
@@ -123,7 +123,7 @@ layers:
       vS    S        S    Sr
        S    S L    L S    S
        SOOOOS        S    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        SOOOOS L    L S    S
       vS    S        S    Sr
        G    .        .  RRG
@@ -144,7 +144,7 @@ layers:
       vS    S        S    Sr
        S    S L    L S    S
        SOOOOS        S    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        SOOOOS L    L S    S
       vS    S        S    Sr
        G    .        .    G
@@ -165,7 +165,7 @@ layers:
       vS    S        S    Sr
        S    S L    L S    S
        S    S        S    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        S    S L    L S    S
       vS    S   HH   S    Sr
        G    .        .    G
@@ -186,7 +186,7 @@ layers:
        S    S        S H  S
        S    S L    L S    S
        S    SH      HS    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        S    S L    L S    S
        S    S   AA   S    S
        S    .        .    S

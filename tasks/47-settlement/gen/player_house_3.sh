@@ -96,7 +96,7 @@ done
 # перегородки: крылья слева и справа от зала, проёмы 2×3
 echo "box 1 5 6 6 2 16 S"; echo "box 1 5 15 15 2 16 S"
 for x in 6 15; do echo "box 1 5 $x $x 4 5 ."; echo "box 1 5 $x $x 12 13 ."; done
-echo "box 1 5 2 5 9 9 S"; echo "box 1 5 16 19 9 9 S"
+echo "box 1 5 2 5 9 9 S"; echo "box 1 5 16 19 9 9 S"; echo "box 1 5 18 19 9 9 ."
 # зал: колоннада, ковровая дорожка, камин у задней стены, кресла
 for z in 4 7 10 13; do echo "col 1 5 8 $z L"; echo "col 1 5 13 $z L"; done
 echo "box 1 1 10 11 2 12 ~"

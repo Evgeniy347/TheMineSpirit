@@ -110,7 +110,7 @@ echo "box 1 6 7 7 2 19 K"; echo "box 1 6 16 16 2 19 K"; echo "box 1 6 2 6 9 9 K"
 for x in 7 16; do echo "box 1 6 $x $x 4 5 ."; echo "box 1 6 $x $x 10 11 ."; done
 # зал: ковры, две парадные лестницы шириной 2, кирпичная грудь в задней стене
 echo "box 1 1 8 15 2 19 c"; echo "box 1 1 11 12 2 16 ~"
-for i in 1 2 3 4 5 6 7; do z=$((19-i)); for x0 in 8 14; do echo "box $i $i $x0 $((x0+1)) $z $z i"; [ $i -gt 1 ] && echo "box 1 $((i-1)) $x0 $((x0+1)) $z $z #"; done; done
+for i in 1 2 3 4 5 6 7; do z=$((18-i)); for x0 in 8 14; do echo "box $i $i $x0 $((x0+1)) $z $z i"; [ $i -gt 1 ] && echo "box 1 $((i-1)) $x0 $((x0+1)) $z $z #"; done; done
 echo "box 1 6 10 13 20 20 M"
 echo "box 1 1 11 12 17 19 ~"
 echo "set 1 8 2 b"; echo "set 2 8 2 P"; echo "set 1 15 2 b"; echo "set 2 15 2 9"; echo "set 1 9 2 0"; echo "set 1 14 2 P"
@@ -137,7 +137,7 @@ for x in 9 14; do echo "set 6 $x 0 H"; done
 # --- перекрытие y7: галерея вдоль зала на колоннах, мостик к балкону, балкон ---
 echo "box 7 7 1 22 1 20 Z"; echo "box 7 7 1 22 1 1 X"; echo "box 7 7 1 22 20 20 X"; echo "box 7 7 2 21 2 19 #"
 for x in 1 22; do for z in 1 20; do echo "set 7 $x $z L"; done; done
-echo "box 7 7 11 12 5 19 ."; echo "box 7 7 8 10 12 19 ."; echo "box 7 7 13 15 12 19 ."; echo "box 7 7 8 9 12 12 i"; echo "box 7 7 14 15 12 12 i"
+echo "box 7 7 11 12 5 19 ."; echo "box 7 7 8 10 12 19 ."; echo "box 7 7 13 15 12 19 ."; echo "box 7 7 8 9 11 11 i"; echo "box 7 7 14 15 11 11 i"
 echo "box 8 8 10 10 4 11 t"; echo "box 8 8 13 13 4 11 t"; echo "box 8 8 11 12 4 4 t"
 echo "box 7 7 8 15 -1 0 #"; echo "box 8 8 8 15 -1 -1 t"; echo "set 8 8 0 t"; echo "set 8 15 0 t"; echo "set 9 8 0 N"; echo "set 9 15 0 N"
 # --- второй этаж: кирпичные стены в каркасе, балконная дверь, окна ---
@@ -155,7 +155,7 @@ for y in 8 9; do echo "set $y 8 1 o"; echo "set $y 15 1 o"; done
 echo "box 8 10 7 7 2 19 #"; echo "box 8 10 16 16 2 19 #"; echo "box 8 10 2 6 9 9 #"; echo "box 8 10 17 21 9 9 #"
 for x in 7 16; do echo "box 8 9 $x $x 4 5 ."; echo "box 8 9 $x $x 10 11 ."; done
 # галерея: ковёр, цветы, кресла у перил
-echo "box 8 8 8 9 2 11 ~"; echo "box 8 8 14 15 2 11 ~"; echo "box 8 8 10 13 2 3 ~"; echo "set 8 8 2 b"; echo "set 9 8 2 P"; echo "set 8 15 2 b"; echo "set 9 15 2 9"
+echo "box 8 8 8 9 2 10 ~"; echo "box 8 8 14 15 2 10 ~"; echo "box 8 8 10 13 2 3 ~"; echo "set 8 8 2 b"; echo "set 9 8 2 P"; echo "set 8 15 2 b"; echo "set 9 15 2 9"
 # спальня игрока
 echo "box 8 8 2 6 2 7 ~"; echo "set 8 3 7 B"; echo "set 8 3 8 B"; echo "set 8 4 7 B"; echo "set 8 4 8 B"; echo "set 8 2 8 b"; echo "set 9 2 8 P"; echo "set 8 5 8 b"; echo "set 9 5 8 0"
 echo "set 8 2 2 J"; echo "set 8 3 2 Q"; echo "set 8 6 2 b"; echo "set 9 6 2 9"

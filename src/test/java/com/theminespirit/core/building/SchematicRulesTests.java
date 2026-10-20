@@ -112,6 +112,13 @@ class SchematicRulesTests {
     }
 
     @Test
+    void wideStairs_ShallowLanding_IsRejected() {
+        assertTrue(
+                ruleIds(new Fixture("wide_stairs_shallow", List.of())).contains(SchematicRules.RuleId.STAIR_APPROACH),
+                "Перед двухклеточной лестницей площадка глубиной в одну клетку — нужен stair_approach");
+    }
+
+    @Test
     void wideStairs_SingleDoor_IsRejected() {
         assertTrue(
                 ruleIds(new Fixture("wide_stairs_single_door", List.of()))

@@ -114,14 +114,14 @@ layers:
        KOOOOOKccc~~cccKOOOOOK
        LKKKKKKccc~~cccKKKKKKL
        Kbmmmm.ccc~~ccc.nnnnFK
-       Kmmmmm.bcc~~ccb.nnnnkK
+       Kmmmmm.b#c~~c#b.nnnnkK
        KmhtgmK##c~~c##KnnnnkK
        KmhtgmK##c~~c##KninnuK
        KmhtgmK##c~~c##KnttnTK
        KmhtgmK##c~~c##KnttnbK
        KmhtgmK##c~~c##KnnRnnK
-       KmhtgmK##c~~c##KnnnnnK
-       KmmmmmKiic~~ciiKnnnnbK
+       KmhtgmKiic~~ciiKnnnnnK
+       KmmmmmKccc~~cccKnnnnbK
        KbMfMbKccc~~cccKWVnnbK
        LKMMMKLKKMMMMKKLKKDEKL
                   .
@@ -138,13 +138,13 @@ layers:
        KOOOOOK        KOOOOOK
        LKKKKKK        KKKKKKL
        K0    .        .     K
-      vK     .9      0.     Kr
+      vK     .9#    #0.     Kr
        G  q  K##    ##K     G
        G  q  K##    ##K     G
       vK  q  K##    ##K qq  Kr
       vK  q  K##    ##K qq  Kr
-       G  q  K##    ##K     G
        G  q  Kii    iiK     G
+       G  q  K        K     G
       vK     K        K     Kr
        KPM M9K        K    PK
        LKMMMKLGGMMMMGGLKKDEKL
@@ -162,12 +162,12 @@ layers:
        KOOOOOK        K     K
        LKKKKKK        KKKKKKL
        K     .        .     K
-      vK     .        .     Kr
+      vK     .##    ##.     Kr
        G     K##    ##K     G
        G     K##    ##K     G
       vK     K##    ##K     Kr
-      vK     K##    ##K     Kr
-       G     Kii    iiK     G
+      vK     Kii    iiK     Kr
+       G     K        K     G
        G     K        K     G
       vK     K        K     Kr
        K M M K        K     K
@@ -186,11 +186,11 @@ layers:
        KOOOOOK        K     K
        LKKKKKK        KKKKKKL
        K     .        .     K
-      vK     .        .     Kr
+      vK     .##    ##.     Kr
        G     K##    ##K     G
        G     K##    ##K     G
-      vK     K##    ##K     Kr
       vK     Kii    iiK     Kr
+      vK     K        K     Kr
        G     K        K     G
        G     K        K     G
       vK     K        K     Kr
@@ -210,10 +210,10 @@ layers:
        K     K        K     K
        LKKKKKK        KKKKKKL
        K     .        .     K
-       K     .        .     K
-       K     K##    ##K     K
+       K     .##    ##.     K
        K     K##    ##K     K
        K     Kii    iiK     K
+       K     K        K     K
        K     K        K     K
        K     K        K     K
        K     K        K     K
@@ -234,9 +234,9 @@ layers:
        K     K        K     K
        LKKKKKK        KKKKKKL
        K     . H    H .     K
-       K     .        .     K
-       K     K##    ##K     K
+       K     .##    ##.     K
        K     Kii    iiK     K
+       K     K        K     K
        K  H  K        K  H  K
        K     K        K     K
        K     K        K     K
@@ -258,8 +258,8 @@ layers:
        Z#########..#########Z
        Z#########..#########Z
        Z#########..#########Z
-       Z#########..#########Z
-       Z######ii....ii######Z
+       Z######ii#..#ii######Z
+       Z######........######Z
        Z######........######Z
        Z######........######Z
        Z######........######Z
@@ -282,7 +282,7 @@ layers:
        wbBBb #~~t  t~~#OOOOOw
        L######~~t  t~~######L
        wOmmmm.~~t  t~~.cccJQw
-      vwOmmmm.~~t  t~~.cccccwr
+      vwOmmmm.  t  t  .cccccwr
        Gmmmmm#        #cccccG
        Gmmttm#        #ccccbG
       vwmmRRm#        #cccccwr

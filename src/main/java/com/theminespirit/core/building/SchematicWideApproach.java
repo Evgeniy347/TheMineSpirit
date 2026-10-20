@@ -53,15 +53,16 @@ final class SchematicWideApproach {
             violations.add(new SchematicRules.Violation(
                     SchematicRules.RuleId.STAIR_APPROACH,
                     "к лестнице шириной 2 [" + first.x() + "," + first.y() + "," + first.z() + "]–[" + second.x() + ","
-                            + second.y() + "," + second.z() + "] нет дорожки шириной 2 от двойного входа: на пути "
-                            + "сужение до одной клетки или прыжок — освободите подход на две клетки (владелец 20.10)"));
+                            + second.y() + "," + second.z() + "] нет дорожки шириной 2 от двойного входа или площадка "
+                            + "перед ней уже двух клеток: на пути сужение до одной клетки или прыжок — освободите "
+                            + "подход на две клетки вперёд (владелец 20.10)"));
             return;
         }
     }
 
     private record Bottom(BlockCoord approach, BlockCoord riser, Facing facing, Set<BlockCoord> run) {}
 
-    private record StairPair(BlockCoord first, BlockCoord second, Set<BlockCoord> forbidden) {}
+    private record StairPair(BlockCoord first, BlockCoord second, Facing away, Set<BlockCoord> forbidden) {}
 
     private static List<StairPair> wideBottoms(SchematicRules.Structure structure, Map<BlockCoord, String> grid) {
         Map<BlockCoord, Schematic.Entry> stairs = new HashMap<>();
@@ -127,7 +128,8 @@ final class SchematicWideApproach {
                     }
                     Set<BlockCoord> forbidden = new HashSet<>(first.run());
                     forbidden.addAll(second.run());
-                    pairs.add(new StairPair(first.approach(), second.approach(), forbidden));
+                    pairs.add(new StairPair(
+                            first.approach(), second.approach(), first.facing().opposite(), forbidden));
                 }
             }
         }
@@ -152,6 +154,17 @@ final class SchematicWideApproach {
             List<BlockCoord> doors,
             StairPair target) {
         if (!feet.contains(target.first()) || !feet.contains(target.second())) {
+            return false;
+        }
+        BlockCoord behindFirst = new BlockCoord(
+                target.first().x() + target.away().dx(),
+                target.first().y(),
+                target.first().z() + target.away().dz());
+        BlockCoord behindSecond = new BlockCoord(
+                target.second().x() + target.away().dx(),
+                target.second().y(),
+                target.second().z() + target.away().dz());
+        if (!feet.contains(behindFirst) || !feet.contains(behindSecond)) {
             return false;
         }
         if (doors.size() != REQUIRED_WIDTH || !feet.contains(doors.get(0)) || !feet.contains(doors.get(1))) {
