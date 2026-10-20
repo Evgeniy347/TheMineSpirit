@@ -22,6 +22,8 @@ cat <<'H'
 #!  'G': glass_pane
 #!  'D': oak_door[facing=south,hinge=left]
 #!  'p': cobblestone_stairs[facing=south,half=bottom]
+#!  '<': cobblestone_stairs[facing=east,half=bottom,shape=outer_right]
+#!  '>': cobblestone_stairs[facing=west,half=bottom,shape=outer_left]
 #!  'F': furnace[facing=south]
 #!  'T': crafting_table
 #!  'b': barrel[facing=up]
@@ -46,7 +48,7 @@ cat <<'H'
 H
 echo "size 13 11 15"
 echo "label 0 цоколь и пол"; echo "label 1 комната"; echo "label 4 обвязка и свес"
-echo "box 0 0 1 11 1 13 c"; echo "box 0 0 2 10 2 12 #"; echo "box 0 0 5 7 0 0 p"
+echo "box 0 0 1 11 1 13 c"; echo "box 0 0 2 10 2 12 #"; echo "set 0 5 0 <"; echo "set 0 6 0 p"; echo "set 0 7 0 >"
 echo "walls 1 3 1 11 1 13 c"
 for x in 1 11; do for z in 1 13; do echo "col 1 3 $x $z L"; done; done
 echo "col 1 3 1 7 L"; echo "col 1 3 11 7 L"; echo "col 1 3 6 13 L"; echo "col 1 3 5 1 L"; echo "col 1 3 7 1 L"

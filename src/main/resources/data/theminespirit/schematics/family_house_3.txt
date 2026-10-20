@@ -20,8 +20,8 @@ legend:
   'X': stripped_dark_oak_log[axis=x]
   'Z': stripped_dark_oak_log[axis=z]
   'G': glass_pane
-  'D': oak_door[facing=south,hinge=left]
-  'E': oak_door[facing=south,hinge=right]
+  'D': oak_door[facing=south,hinge=right]
+  'E': oak_door[facing=south,hinge=left]
   'j': oak_door[facing=south,hinge=left]
   'R': spruce_stairs[facing=south,half=bottom]
   'Q': bricks
@@ -61,9 +61,11 @@ legend:
   'w': dark_oak_stairs[facing=west,half=bottom]
   '_': dark_oak_slab[type=bottom]
   'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
 layers:
   - y0 цоколь и пол: |
-        P P  pp  P P
+        P P <pp> P P
        SSSSSSSSSSSSSS
       AS$$$$$$$$$$$$SO
       OS$$$$$$$$$$$$SA
@@ -87,7 +89,7 @@ layers:
        cP       A   c
        c   ~~~~~~ RRc
        cQ g~~~~~~ ccc
-       f   ~~~~~~ ccc
+       Qf  ~~~~~~ ccc
        cQ g~~~~~~ ccc
        c   ~~~~~~ ccc
        cO       Ybccc

@@ -9,6 +9,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.CactusBlock;
+import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.EndPortalBlock;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.MagmaBlock;
@@ -49,7 +50,8 @@ public final class LevelSafetyView implements SafetyView {
                 return Cell.LAVA;
             }
         }
-        if (state.getBlock() instanceof BaseFireBlock) {
+        // mc: горящий костёр поиск пути обходит, как огонь (DANGER_FIRE рядом); стоянка у камина иначе недостижима.
+        if (state.getBlock() instanceof BaseFireBlock || CampfireBlock.isLitCampfire(state)) {
             return Cell.FIRE;
         }
         if (state.getBlock() instanceof MagmaBlock

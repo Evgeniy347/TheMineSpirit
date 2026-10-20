@@ -1,0 +1,48 @@
+# фикстура сторожа схем: double_door_hinges_inner
+type: housing
+size: 6x5x6   # Ш×В×Д
+entrance: 2,1,1
+legend:
+  '#': oak_planks
+  'D': oak_door[facing=south,hinge=left]
+  'E': oak_door[facing=south,hinge=right]
+  'T': torch
+  'P': glass_pane
+  'f': campfire[lit=true]
+  'p': oak_stairs[facing=south,half=bottom]
+layers:
+  - y0: |
+        pp
+      ######
+      ######
+      ######
+      ######
+      ######
+  - y1: |
+        ..
+      ##DE##
+      #T...#
+      #....#
+      #....#
+      ######
+  - y2: |
+        ..
+      ##DE##
+      #....#
+      P....#
+      #....#
+      ######
+  - y3: |
+        ..
+      ######
+      #....#
+      #....#
+      #....#
+      ######
+  - y4: |
+        ..
+      ######
+      ######
+      ######
+      ######
+      ######

@@ -23,9 +23,11 @@ cat <<'H'
 #!  'w': dark_oak_stairs[facing=west,half=bottom]
 #!  '_': dark_oak_slab[type=bottom]
 #!  'G': glass_pane
-#!  'D': spruce_door[facing=south,hinge=left]
-#!  'E': spruce_door[facing=south,hinge=right]
+#!  'D': spruce_door[facing=south,hinge=right]
+#!  'E': spruce_door[facing=south,hinge=left]
 #!  'p': stone_brick_stairs[facing=south,half=bottom]
+#!  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+#!  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
 #!  'Q': bricks
 #!  'f': campfire[lit=true]
 #!  'g': spruce_stairs[facing=east,half=bottom]
@@ -56,7 +58,7 @@ cat <<'H'
 H
 echo "size 18 14 17"
 echo "label 0 цоколь и пол"; echo "label 1 зал и комнаты"; echo "label 5 обвязка и свес"
-echo "box 0 0 1 16 1 15 S"; echo "box 0 0 2 15 2 14 \$"; echo "box 0 0 8 9 0 0 p"
+echo "box 0 0 1 16 1 15 S"; echo "box 0 0 2 15 2 14 \$"; echo "set 0 7 0 <"; echo "box 0 0 8 9 0 0 p"; echo "set 0 10 0 >"
 # стены: низ булыжник, верх доски, каркас
 echo "walls 1 2 1 16 1 15 c"; echo "walls 3 4 1 16 1 15 \$"
 for x in 1 16; do for z in 1 8 15; do echo "col 1 4 $x $z L"; done; done; for x in 7 10; do echo "col 1 4 $x 1 L"; done; echo "col 1 4 8 15 L"; echo "col 1 4 9 15 L"
@@ -73,7 +75,7 @@ echo "box 4 4 7 10 0 0 #"; echo "box 5 5 7 10 0 0 _"; echo "set 3 7 0 H"; echo "
 echo "box 1 4 2 15 9 9 \$"; echo "box 1 4 4 5 9 9 ."; echo "box 1 4 11 12 9 9 ."; echo "box 1 4 8 8 10 14 \$"
 # зал: камин в западной стене, кресла, ковёр, стол, полки, сундуки
 echo "box 1 1 3 7 3 7 ~"
-echo "set 1 1 5 f"; echo "col 1 3 2 4 Q"; echo "col 1 3 2 6 Q"; echo "set 1 4 4 g"; echo "set 1 4 6 g"
+echo "set 1 2 5 f"; echo "col 1 3 2 4 Q"; echo "col 1 3 2 6 Q"; echo "set 1 4 4 g"; echo "set 1 4 6 g"
 echo "box 1 1 10 12 4 6 t"; echo "box 2 2 10 12 4 6 q"; for z in 4 5 6; do echo "set 1 9 $z h"; echo "set 1 13 $z g"; done
 echo "box 1 1 15 15 3 7 O"; echo "box 2 2 15 15 6 7 O"; echo "set 1 2 2 b"; echo "set 2 2 2 P"; echo "set 1 6 2 b"; echo "set 1 11 2 b"; echo "set 2 11 2 9"
 echo "set 1 3 8 W"; echo "set 1 4 8 V"; echo "set 1 12 8 W"; echo "set 1 13 8 V"; echo "set 1 15 8 T"; echo "set 1 2 8 F"

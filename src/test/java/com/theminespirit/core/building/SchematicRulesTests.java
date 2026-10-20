@@ -43,6 +43,26 @@ class SchematicRulesTests {
     }
 
     @Test
+    void doorsFireplacePorch_OwnerAnswers_EachCaughtByOwnRule() {
+        assertEquals(
+                List.of(),
+                ruleIds(new Fixture("valid_double_door", List.of())),
+                "Двойная дверь с петлями по краям и крыльцом из трёх ступенек обязана проходить сторожа");
+        assertEquals(
+                List.of(SchematicRules.RuleId.DOUBLE_DOOR),
+                ruleIds(new Fixture("double_door_hinges_inner", List.of())),
+                "Петли посередине проёма: открытые створки встают в проходе — сторож double_door обязан браковать");
+        assertEquals(
+                List.of(SchematicRules.RuleId.FIREPLACE),
+                ruleIds(new Fixture("fireplace_in_wall", List.of())),
+                "Костёр в наружной стене виден снаружи (владелец 20.10: камин внутри на 1 блок) — сторож fireplace");
+        assertEquals(
+                List.of(SchematicRules.RuleId.ENTRANCE_STEP),
+                ruleIds(new Fixture("porch_missing", List.of())),
+                "Жильё с уровнем без крыльца из трёх ступенек обязано браковаться сторожем entrance_step");
+    }
+
+    @Test
     void chestOpenable_ChestAboveChest_IsAllowedButPlankAboveChestIsNot() {
         Fixture stack = new Fixture("chest_stack", List.of());
         Fixture plank = new Fixture("chest_under_plank", List.of(SchematicRules.RuleId.CHEST_OPENABLE));

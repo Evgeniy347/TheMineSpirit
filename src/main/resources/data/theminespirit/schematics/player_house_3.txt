@@ -26,9 +26,11 @@ legend:
   'I': deepslate_brick_stairs[facing=west,half=top]
   '_': deepslate_brick_slab[type=bottom]
   'G': glass_pane
-  'D': dark_oak_door[facing=south,hinge=left]
-  'E': dark_oak_door[facing=south,hinge=right]
+  'D': dark_oak_door[facing=south,hinge=right]
+  'E': dark_oak_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
   'o': stone_brick_stairs[facing=north,half=bottom]
   'M': bricks
   'f': campfire[lit=true]
@@ -68,7 +70,7 @@ legend:
   'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
 layers:
   - y0 цоколь, пол, ступени: |
-        P9P9  pppppp9P9 P
+        P9P9   <pp> 9P9 P
        SSSSSSSSSSSSSSSSSSSS
       0S$$$$$aaaYYaaa$$$$$SP
        S$$$$$aaaYYaaa$$$$$S
@@ -104,8 +106,8 @@ layers:
        SjKjj. Li  iL .mmSSS
        SjjjjS   ~~   SbmSSS
        SbjjjS   ~~   SbmSSS
-       SO  OSb M  M bSmmSSS
-       LSSSSLSSMffMSSLDESSL
+       SO  OSb MffM bSmmSSS
+       LSSSSLSSMMMMSSLDESSL
                  .
   - y2: |
         d  d         d  d

@@ -30,9 +30,11 @@ legend:
   '8': deepslate_tile_stairs[facing=north,half=top]
   '_': deepslate_tile_slab[type=bottom]
   'G': glass_pane
-  'D': dark_oak_door[facing=south,hinge=left]
-  'E': dark_oak_door[facing=south,hinge=right]
+  'D': dark_oak_door[facing=south,hinge=right]
+  'E': dark_oak_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
   'A': stone_brick_stairs[facing=north,half=bottom]
   'R': spruce_stairs[facing=south,half=bottom]
   'g': spruce_stairs[facing=east,half=bottom]
@@ -74,7 +76,7 @@ legend:
   'e': dark_oak_trapdoor[facing=south,half=bottom,open=true]
 layers:
   - y0 цоколь и ступени: |
-       pppppppppppppppppppp
+        P P P  <pp>  P P P
        SSSSSSSSSSSSSSSSSSSS
        S$$$$$$$$$$$$$$$$$$S
        S$$$$$$$$$$$$$$$$$$S
@@ -101,7 +103,7 @@ layers:
        w~~~~~.cc~~cc.cccc w
        w~~~~~.cc~~cc.cccc w
        ww~~~~wcc~~ccwcccc w
-       f~~~~~wcc~~cgwcccc w
+       wf~~~~wcc~~cgwcccc w
        Lw~~~~wcc~~cgwcccc L
        w~i~i~wcc~~cbwcccc w
        w~~~~bwcc~~ccwOOOOOw

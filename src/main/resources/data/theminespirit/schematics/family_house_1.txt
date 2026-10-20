@@ -38,9 +38,11 @@ legend:
   '_': spruce_slab[type=bottom]
   'P': potted_poppy
   'p': cobblestone_stairs[facing=south,half=bottom]
+  '<': cobblestone_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': cobblestone_stairs[facing=west,half=bottom,shape=outer_left]
 layers:
   - y0 цоколь и пол: |
-         P p P
+        PP<p>PP
        ccccccccc
        c$$$$$$$c
        c$$$$$$$c

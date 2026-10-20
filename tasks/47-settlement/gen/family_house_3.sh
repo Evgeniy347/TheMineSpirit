@@ -22,8 +22,8 @@ cat <<'H'
 #!  'X': stripped_dark_oak_log[axis=x]
 #!  'Z': stripped_dark_oak_log[axis=z]
 #!  'G': glass_pane
-#!  'D': oak_door[facing=south,hinge=left]
-#!  'E': oak_door[facing=south,hinge=right]
+#!  'D': oak_door[facing=south,hinge=right]
+#!  'E': oak_door[facing=south,hinge=left]
 #!  'j': oak_door[facing=south,hinge=left]
 #!  'R': spruce_stairs[facing=south,half=bottom]
 #!  'Q': bricks
@@ -63,13 +63,15 @@ cat <<'H'
 #!  'w': dark_oak_stairs[facing=west,half=bottom]
 #!  '_': dark_oak_slab[type=bottom]
 #!  'p': stone_brick_stairs[facing=south,half=bottom]
+#!  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+#!  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
 #!layers:
 H
 echo "size 16 18 18"
 echo "label 0 цоколь и пол"; echo "label 1 первый этаж"; echo "label 6 перекрытие"; echo "label 7 второй этаж"; echo "label 10 обвязка"
 # пол и цоколь
 echo "box 0 0 1 14 1 16 S"; echo "box 0 0 2 13 2 15 \$"
-echo "set 0 7 0 p"; echo "set 0 8 0 p"
+echo "set 0 6 0 <"; echo "set 0 7 0 p"; echo "set 0 8 0 p"; echo "set 0 9 0 >"
 for x in 2 4 11 13; do echo "set 0 $x 0 P"; done; for z in 3 6 11 14; do echo "set 0 0 $z O"; echo "set 0 15 $z A"; done
 for x in 2 4 6 9 11 13; do echo "set 0 $x 17 P"; done; for z in 2 8 10 15; do echo "set 0 0 $z A"; echo "set 0 15 $z O"; done
 # первый этаж: стены
@@ -86,7 +88,7 @@ echo "box 1 5 7 7 10 15 c"; echo "box 1 5 7 7 12 13 ."
 # лестница шириной 2 (x12..13), подъём к тылу, под ней — забутовка
 for i in 1 2 3 4 5 6; do z=$((2+i)); echo "box $i $i 12 13 $z $z R"; [ $i -gt 1 ] && echo "box 1 $((i-1)) 12 13 $z $z c"; done
 # гостиная: камин, кресла, ковёр, цветы
-echo "col 1 3 2 4 Q"; echo "col 1 3 2 6 Q"; echo "set 1 1 5 f"; echo "col 2 5 1 5 Q"
+echo "col 1 3 2 4 Q"; echo "col 1 3 2 6 Q"; echo "col 1 5 1 5 Q"; echo "set 1 2 5 f"
 echo "set 1 4 4 g"; echo "set 1 4 6 g"; echo "box 1 1 5 10 3 7 ~"; echo "box 1 1 9 12 10 10 m"; echo "box 1 1 9 12 14 14 m"; echo "set 1 2 2 P"; echo "set 1 2 8 O"; echo "set 1 10 2 A"
 echo "set 1 11 8 b"; echo "set 1 10 8 Y"; echo "set 2 10 8 Y"
 # кухня

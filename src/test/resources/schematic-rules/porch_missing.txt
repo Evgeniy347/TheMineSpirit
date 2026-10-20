@@ -1,0 +1,73 @@
+# фикстура сторожа схем: porch_missing (одна ступенька вместо крыльца из трёх)
+type: housing
+level: 2
+size: 7x6x8   # Ш×В×Д
+entrance: 3,1,1
+legend:
+  '#': oak_planks
+  'D': oak_door
+  'G': glass_pane
+  '~': white_carpet
+  'f': oak_fence
+  'q': oak_pressure_plate
+  'h': oak_stairs[facing=north,half=bottom]
+  'P': potted_poppy
+  'L': lantern[hanging=true]
+  'p': oak_stairs[facing=south,half=bottom]
+  '<': oak_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': oak_stairs[facing=west,half=bottom,shape=outer_left]
+layers:
+  - y0: |
+         p
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######
+  - y1: |
+         .
+      ###D###
+      #.~~~P#
+      #.~~~.#
+      #.~~~.#
+      #.~~~f#
+      #P...h#
+      #######
+  - y2: |
+         .
+      ###D###
+      #.....#
+      #.....#
+      G.....G
+      #....q#
+      #.....#
+      #######
+  - y3: |
+         .
+      #######
+      #.....#
+      #.....#
+      G.....G
+      #.....#
+      #.....#
+      #######
+  - y4: |
+         .
+      #######
+      #.....#
+      #.....#
+      #..L..#
+      #.....#
+      #.....#
+      #######
+  - y5: |
+         .
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######
+      #######

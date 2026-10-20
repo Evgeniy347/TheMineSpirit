@@ -35,7 +35,9 @@ public final class SchematicRules {
         WINDOW_SIZE("window_size"),
         DECOR("decor"),
         REACHABLE("reachable"),
-        STAIRS("stairs");
+        STAIRS("stairs"),
+        DOUBLE_DOOR("double_door"),
+        FIREPLACE("fireplace");
 
         private final String id;
 
@@ -119,6 +121,8 @@ public final class SchematicRules {
             checkWindow(walls, grid, violations);
             checkDoor(walls, grid, violations);
             if (level > Preset.LEVEL_NONE) {
+                EntrancePorch.problem(structure.schematic(), body, structure.entry())
+                        .ifPresent(problem -> violations.add(new Violation(RuleId.ENTRANCE_STEP, problem)));
                 checkLevelCeiling(walls, grid, level, violations);
                 SchematicLevelRules.checkWindowSize(walls.schematic(), grid, level, violations);
             }
@@ -137,6 +141,9 @@ public final class SchematicRules {
             checkMounting(structure.schematic(), full, violations);
         }
         checkChests(full, violations);
+        DoorPairs.problem(structure.schematic())
+                .ifPresent(problem -> violations.add(new Violation(RuleId.DOUBLE_DOOR, problem)));
+        checkFireplace(walls, grid, violations);
         ChestPairs.problem(structure.schematic())
                 .ifPresent(problem -> violations.add(new Violation(RuleId.CHEST_PAIR, problem)));
         return List.copyOf(violations);
@@ -263,6 +270,26 @@ public final class SchematicRules {
             return new int[] {1, 0};
         }
         return null;
+    }
+
+    // Владелец 20.10: костёр камина в линии наружной стены виден снаружи — камин ставится внутрь на 1 блок.
+    private static void checkFireplace(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
+        Schematic schematic = structure.schematic();
+        for (Map.Entry<BlockCoord, String> cell : grid.entrySet()) {
+            BlockCoord pos = cell.getKey();
+            boolean perimeter = pos.x() == 0
+                    || pos.z() == 0
+                    || pos.x() == schematic.sizeX() - 1
+                    || pos.z() == schematic.sizeZ() - 1;
+            if (perimeter && SchematicBlocks.path(cell.getValue()).endsWith("campfire")) {
+                violations.add(new Violation(
+                        RuleId.FIREPLACE,
+                        "костёр камина в клетке [" + pos.x() + "," + pos.y() + "," + pos.z()
+                                + "] стоит в наружной стене: огонь виден снаружи дома — камин ставится внутрь на 1 блок, "
+                                + "а стена за ним остаётся целой"));
+                return;
+            }
+        }
     }
 
     private static void checkRoof(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {

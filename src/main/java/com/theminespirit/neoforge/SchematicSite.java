@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.state.properties.Property;
  * {@link ReachPlanner}; площадка только читает мир.
  */
 final class SchematicSite {
+    private static final Set<String> DERIVED = Set.of("shape");
     private final Level level;
     private final BuildRotation rotation;
     private final List<Schematic.PlacedEntry> entries;
@@ -196,8 +197,13 @@ final class SchematicSite {
         return feet.x() < minX || feet.x() > maxX || feet.z() < minZ || feet.z() > maxZ;
     }
 
+    // mc: форму ступеньки (shape) игра выводит из соседей; пока соседней ступеньки крыльца нет, угловая — прямая.
+    // Стройка её не чинит (иначе починка и пересчёт игры зацикливаются), итог сверяет аудит, когда соседи стоят.
     private static boolean sameSpecifiedState(BlockState current, BlockState wanted, Map<String, String> specified) {
         for (String name : specified.keySet()) {
+            if (DERIVED.contains(name)) {
+                continue;
+            }
             Property<?> property = current.getBlock().getStateDefinition().getProperty(name);
             if (property == null || !current.getValue(property).equals(wanted.getValue(property))) {
                 return false;

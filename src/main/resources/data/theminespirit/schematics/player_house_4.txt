@@ -2,8 +2,8 @@
 # Цоколь из гладкого камня, низ — кальцит, верх — кирпич в каркасе из ободранного тёмного дуба, вальмовая крыша
 # из глубинной плитки со свесом, карнизом и слуховыми окнами. Портал на четыре створки с витражом над дверьми и
 # ступенями во всю ширину, над ним балкон; сзади вход в кухню. Зал на два этажа с галереей на колоннах, середина
-# открыта до крыши, люстры на цепях, камин между двумя парадными лестницами шириной 2. Внизу библиотека,
-# чаровальня, столовая на 12 мест и кухня; наверху спальня игрока, кабинет, гостевая и детская.
+# открыта до крыши, люстры на цепях, две парадные лестницы шириной 2. Внизу библиотека,
+# чаровальня, столовая на 12 мест с камином и кухня; наверху спальня игрока, кабинет, гостевая и детская.
 name: "Дом игрока, уровень 4 (особняк)"
 type: housing
 stage: 4
@@ -33,9 +33,11 @@ legend:
   'G': glass_pane
   'y': yellow_stained_glass_pane
   'o': orange_stained_glass_pane
-  'D': dark_oak_door[facing=south,hinge=left]
-  'E': dark_oak_door[facing=south,hinge=right]
-  'p': smooth_stone_slab[type=bottom]
+  'D': dark_oak_door[facing=south,hinge=right]
+  'E': dark_oak_door[facing=south,hinge=left]
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  '<': stone_brick_stairs[facing=east,half=bottom,shape=outer_right]
+  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
   'A': stone_brick_stairs[facing=north,half=bottom]
   'f': campfire[lit=true]
   'g': dark_oak_stairs[facing=east,half=bottom]
@@ -75,7 +77,7 @@ legend:
   'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
 layers:
   - y0 цоколь, ступени, цветы и фонари у входов: |
-        P9P9PNppppppppNP9P9P
+        P9P9PN <pppp> NP9P9P
        SSSSSSSSSSSSSSSSSSSSSS
        S######aaaaaaaa######S
       0S######aaaaaaaa######SP
@@ -115,10 +117,10 @@ layers:
        KmhtgmK##c~~c##KnttnTK
        KmhtgmK##c~~c##KnttnbK
        KmhtgmK##c~~c##KnnRnnK
-       KmhtgmK##ciic##KnnnnnK
+       KmhtgmK##c~~c##KnnnnnK
        KmmmmmKiic~~ciiKnnnnbK
-       KbbmmbKccM~~MccKWVnnbK
-       LKKKKKLKKMffMKKLKKDEKL
+       KbMfMbKccb~~bccKWVnnbK
+       LKMMMKLKKMMMMKKLKKDEKL
                   .
   - y2: |
         d  d            d  d
@@ -140,8 +142,8 @@ layers:
        G  q  K##    ##K     G
        G  q  Kii    iiK     G
       vK     K        K     Kr
-       KP   9K  M  M  K    PK
-       LKGGKKLGGMMMMGGLKKDEKL
+       KPM M9K  P  9  K    PK
+       LKMMMKLGGMMMMGGLKKDEKL
         s  s s  s  s  s
   - y3: |
         d  d            d  d
@@ -163,8 +165,8 @@ layers:
        G     Kii    iiK     G
        G     K        K     G
       vK     K        K     Kr
-       K     K  M  M  K     K
-       LKGGKKLGGMMMMGGLKKXXKL
+       K M M K        K     K
+       LKMMMKLGGMMMMGGLKKXXKL
         s  s s  s  s  s
   - y4: |
         d  d            d  d
@@ -187,7 +189,7 @@ layers:
        G     K        K     G
       vK     K        K     Kr
        K     K        K     K
-       LKGGKKLGGMMMMGGLKKKKKL
+       LKMMMKLGGMMMMGGLKKKKKL
         s  s s  s  s  s
   - y5: |
       
@@ -210,7 +212,7 @@ layers:
        K     K        K     K
        K     K        K     K
        K     K        K     K
-       LKKKKKLKKMMMMKKLKKKKKL
+       LKMMMKLKKMMMMKKLKKKKKL
                   .
   - y6: |
                H    H
@@ -233,7 +235,7 @@ layers:
        K  H  K        K  H  K
        K     K        K     K
        K     K        K     K
-       LKKKKKLKKMMMMKKLKKKKKL
+       LKMMMKLKKMMMMKKLKKKKKL
                   .
   - y7 галерея и перекрытие: |
               ########
