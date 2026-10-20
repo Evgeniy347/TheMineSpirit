@@ -1,0 +1,26 @@
+# Сторож: факел на столбе забора держится — столб даёт центральную опору, как в игре
+type: farm
+size: 5x2x5
+entrance: 2,0,0
+exemptions:
+  - rule: roof
+    reason: "загон открыт сверху по замыслу: животным нужен свет и воздух"
+  - rule: inner_height
+    reason: "загон — периметр забора без пола и потолка: внутренней высоты нет"
+legend:
+  'F': oak_fence
+  'G': oak_fence_gate
+  'T': torch
+layers:
+  - y0: |
+      FFGFF
+      F...F
+      F...F
+      F...F
+      FFFFF
+  - y1: |
+      T   T
+
+
+
+      T   T

@@ -12,17 +12,16 @@ exemptions:
 legend:
   'F': oak_fence
   'G': oak_fence_gate
-  'L': oak_log[axis=y]
   'T': torch
 layers:
-  - y0 забор, столбы по углам: |
-      LFFGFFL
+  - y0 забор: |
+      FFFGFFF
       F.....F
       F.....F
       F.....F
       F.....F
       F.....F
-      LFFFFFL
+      FFFFFFF
   - y1 факелы на угловых столбах: |
       T     T
 
