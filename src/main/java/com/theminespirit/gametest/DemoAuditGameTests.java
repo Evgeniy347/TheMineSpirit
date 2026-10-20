@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
@@ -20,6 +21,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -40,6 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import org.slf4j.Logger;
 
 /**
  * Каждая постройка демо-каталога в четырёх поворотах: BuildAudit обязан не найти ни одного расхождения — ни по
@@ -50,6 +53,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoAuditGameTests {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SETTLE_TICKS = 5;
     private static final int MIN_CLEAR_HEIGHT = 8;
     private static final int FLOOR_SIZE = 11;
@@ -71,7 +75,8 @@ public final class DemoAuditGameTests {
     // 51–82 (уровень 2), площадь 30–40 и 23–25 (уровень 2), колодец 4–9, фонари 1–2.
     // Усадьба держит и запас поиска сундуков BuildSupplyTrip: её сундуки у входа в ~12 от середины стройки, при
     // запасе 6 (20.10) стройка вставала на 22 блоках — «не хватило материала».
-    private static final int FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS = 207;
+    // Заход 3 (20.10): последние ставни второго этажа ставятся с земли (дальние стоянки снаружи) — замер 177–213.
+    private static final int FAMILY_HOUSE_LEVEL4_MAX_PATH_BUILDS = 235;
     private static final int PLAYER_HOUSE_MAX_PATH_BUILDS = 44;
     private static final int PLAZA_MAX_PATH_BUILDS = 45;
     private static final int WELL2_MAX_PATH_BUILDS = 11;
@@ -300,6 +305,7 @@ public final class DemoAuditGameTests {
                         "rotation",
                         rotation.id()));
         SpiritRun run = SpiritRun.launch(helper, spirit, call, SETTLE_TICKS);
+        AtomicBoolean measured = new AtomicBoolean();
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -310,6 +316,10 @@ public final class DemoAuditGameTests {
                             + spirit.taskFailureReason().orElse("нет"));
             Map<String, Object> data = data(helper, spirit);
             int skipped = ((Number) data.get("skipped")).intValue();
+            if (!measured.getAndSet(true)) {
+                // Замер для пределов подходов: число в момент успеха, до повторов succeedWhen.
+                LOGGER.info("Аудит '{}' ({}): построений пути {}", scheme, rotation, spirit.pathBuilds());
+            }
             BuildAudit.Result audit = BuildAudit.audit(helper.getLevel(), schematic, origin, rotation, before, skipped);
             helper.assertTrue(
                     audit.ok(),
