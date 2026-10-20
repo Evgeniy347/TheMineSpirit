@@ -32,6 +32,7 @@ cat <<'H'
 #!  '8': deepslate_tile_stairs[facing=north,half=top]
 #!  '_': deepslate_tile_slab[type=bottom]
 #!  'G': glass_pane
+#!  '=': glass
 #!  'D': dark_oak_door[facing=south,hinge=right]
 #!  'E': dark_oak_door[facing=south,hinge=left]
 #!  'p': stone_brick_stairs[facing=south,half=bottom]
@@ -89,7 +90,7 @@ echo "walls 1 6 1 20 3 20 w"
 for x in 1 7 14 20; do echo "col 1 6 $x 3 L"; echo "col 1 6 $x 20 L"; done
 for z in 9 14; do echo "col 1 6 1 $z L"; echo "col 1 6 20 $z L"; done
 # вход-арка 4: двойная дверь, боковые и верхние стёкла, арка из перевёрнутых ступенек
-echo "box 1 2 9 12 3 3 G"; echo "set 1 10 3 D"; echo "set 2 10 3 D"; echo "set 1 11 3 E"; echo "set 2 11 3 E"; echo "box 3 3 9 12 3 3 X"; echo "box 4 4 10 11 3 3 G"
+echo "box 1 2 9 9 3 3 ="; echo "box 1 2 12 12 3 3 ="; echo "set 1 10 3 D"; echo "set 2 10 3 D"; echo "set 1 11 3 E"; echo "set 2 11 3 E"; echo "box 3 3 9 12 3 3 X"; echo "box 4 4 10 11 3 3 ="
 echo "set 4 9 3 U"; echo "set 4 12 3 I"
 # задняя двойная дверь
 echo "set 1 10 20 D"; echo "set 2 10 20 D"; echo "set 1 11 20 E"; echo "set 2 11 20 E"
@@ -134,7 +135,7 @@ echo "walls 8 10 1 20 3 20 K"
 for x in 1 7 14 20; do echo "col 8 10 $x 3 L"; echo "col 8 10 $x 20 L"; done; for z in 9 14; do echo "col 8 10 1 $z L"; echo "col 8 10 20 $z L"; done
 echo "set 8 10 3 D"; echo "set 9 10 3 D"; echo "set 8 11 3 E"; echo "set 9 11 3 E"
 for y in 8 9; do
-  for x in 3 4 16 17; do echo "set $y $x 3 G"; done; for x in 9 12; do echo "set $y $x 3 G"; done
+  for x in 3 4 16 17; do echo "set $y $x 3 G"; done; for x in 9 12; do echo "set $y $x 3 ="; done
   for x in 4 5 10 11 15 16; do echo "set $y $x 20 G"; done
   for z in 5 6 15 16; do echo "set $y 1 $z G"; echo "set $y 20 $z G"; done
   for x in 3 6 14 17; do echo "set $y $x 21 e"; done; for x in 2 5 15 18; do echo "set $y $x 2 d"; done

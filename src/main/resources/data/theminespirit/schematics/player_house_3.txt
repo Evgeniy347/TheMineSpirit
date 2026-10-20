@@ -26,6 +26,7 @@ legend:
   'I': deepslate_brick_stairs[facing=west,half=top]
   '_': deepslate_brick_slab[type=bottom]
   'G': glass_pane
+  '=': glass
   'D': dark_oak_door[facing=south,hinge=right]
   'E': dark_oak_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
@@ -219,7 +220,7 @@ layers:
   - y7 второй этаж: |
              tttttttt
         d  d t      td  d
-       LSGGSLSSGDEGSSLGGSSL
+       LSGGSLSS=DE=SSLGGSSL
        SJQ~~#b      b#bcclS
       vS~~~~#        #ccccSr
        G~~~~.        .cttcG
@@ -240,7 +241,7 @@ layers:
   - y8: |
       
         d  d N      Nd  d
-       LSGGSLSSGDEGSSLGGSSL
+       LSGGSLSS=DE=SSLGGSSL
        S    #P      0#P   S
       vS    #        #    Sr
        G    .        . qq G

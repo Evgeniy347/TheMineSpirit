@@ -32,6 +32,7 @@ legend:
   '_': deepslate_tile_slab[type=bottom]
   'G': glass_pane
   'y': yellow_stained_glass_pane
+  'Y': yellow_stained_glass
   'o': orange_stained_glass_pane
   'D': dark_oak_door[facing=south,hinge=right]
   'E': dark_oak_door[facing=south,hinge=left]
@@ -271,7 +272,7 @@ layers:
   - y8 второй этаж: |
               tttttttt
         d  d  t      t  d  d
-       LwGGwwLowyDEywoLwwGGwL
+       LwGGwwLowYDEYwoLwwGGwL
        wJQ~~b#b~~~~~~b#bnnlOw
       vw~~~~~#~~~~~~~~#nnnnOwr
        G~~~~~.~~tttt~~.nttnnG
@@ -295,7 +296,7 @@ layers:
   - y9: |
       
         d  d  N      N  d  d
-       LwGGwwLowyDEywoLwwGGwL
+       LwGGwwLowYDEYwoLwwGGwL
        w    9#P      9#0   Ow
       vw     #        #    Owr
        G     .        . qq  G

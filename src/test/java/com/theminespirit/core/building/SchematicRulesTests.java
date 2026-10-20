@@ -182,6 +182,27 @@ class SchematicRulesTests {
     }
 
     @Test
+    void pane_NextToDoor_IsReported() {
+        assertTrue(
+                ruleIds(new Fixture("pane_next_to_door", List.of())).contains(SchematicRules.RuleId.PANE),
+                "Панель рядом с дверью не прилипает и оставляет дыру — нужен pane");
+    }
+
+    @Test
+    void pane_BetweenBlocks_Passes() {
+        assertFalse(
+                ruleIds(new Fixture("pane_between_blocks", List.of())).contains(SchematicRules.RuleId.PANE),
+                "Панель между полными блоками держится — сторож не должен ругаться");
+    }
+
+    @Test
+    void pane_NextToPane_Passes() {
+        assertFalse(
+                ruleIds(new Fixture("pane_next_to_pane", List.of())).contains(SchematicRules.RuleId.PANE),
+                "Две панели стыкуются друг с другом — сторож не должен ругаться");
+    }
+
+    @Test
     void ruleIds_AllValues_HaveUniqueNames() {
         List<String> ids = new ArrayList<>();
         for (SchematicRules.RuleId rule : SchematicRules.RuleId.values()) {

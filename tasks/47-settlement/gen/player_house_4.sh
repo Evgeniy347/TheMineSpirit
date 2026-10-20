@@ -34,6 +34,7 @@ cat <<'H'
 #!  '_': deepslate_tile_slab[type=bottom]
 #!  'G': glass_pane
 #!  'y': yellow_stained_glass_pane
+#!  'Y': yellow_stained_glass
 #!  'o': orange_stained_glass_pane
 #!  'D': dark_oak_door[facing=south,hinge=right]
 #!  'E': dark_oak_door[facing=south,hinge=left]
@@ -142,7 +143,7 @@ echo "box 7 7 8 15 -1 0 #"; echo "box 8 8 8 15 -1 -1 t"; echo "set 8 8 0 t"; ech
 # --- второй этаж: кирпичные стены в каркасе, балконная дверь, окна ---
 echo "walls 8 10 1 22 1 20 w"
 for x in 1 7 16 22; do echo "col 8 10 $x 1 L"; echo "col 8 10 $x 20 L"; done; echo "col 8 10 1 9 L"; echo "col 8 10 22 9 L"
-echo "set 8 11 1 D"; echo "set 9 11 1 D"; echo "set 8 12 1 E"; echo "set 9 12 1 E"; echo "box 8 9 10 10 1 1 y"; echo "box 8 9 13 13 1 1 y"
+echo "set 8 11 1 D"; echo "set 9 11 1 D"; echo "set 8 12 1 E"; echo "set 9 12 1 E"; echo "box 8 9 10 10 1 1 Y"; echo "box 8 9 13 13 1 1 Y"
 for y in 8 9; do
   for x in 3 4 19 20; do echo "set $y $x 1 G"; echo "set $y $x 20 G"; done; for x in 8 9 14 15; do echo "set $y $x 20 G"; done
   for z in 4 5 12 13 16 17; do echo "set $y 1 $z G"; echo "set $y 22 $z G"; done

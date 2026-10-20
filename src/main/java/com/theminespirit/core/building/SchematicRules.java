@@ -38,6 +38,7 @@ public final class SchematicRules {
         STAIRS("stairs"),
         STAIR_APPROACH("stair_approach"),
         RAILING("railing"),
+        PANE("pane"),
         DOUBLE_DOOR("double_door"),
         FIREPLACE("fireplace"),
         PASSAGE("passage");
@@ -132,6 +133,7 @@ public final class SchematicRules {
         }
         checkLight(walls.schematic(), violations);
         Map<BlockCoord, String> full = grid(structure.schematic());
+        checkPanes(full, violations);
         if (level > Preset.LEVEL_NONE
                 && (structure.type() == BuildingType.HOUSING || structure.type() == BuildingType.SOCIAL)) {
             SchematicLevelRules.checkDecor(structure.schematic(), full, level, violations);
@@ -453,6 +455,31 @@ public final class SchematicRules {
                             + first.x() + "," + first.y() + "," + first.z()
                             + "]: там ночью появляются мобы — добавьте факел или фонарь ближе"));
         }
+    }
+
+    private static void checkPanes(Map<BlockCoord, String> grid, List<Violation> violations) {
+        for (Map.Entry<BlockCoord, String> entry : grid.entrySet()) {
+            if (!SchematicBlocks.path(entry.getValue()).endsWith("_pane")) {
+                continue;
+            }
+            BlockCoord cell = entry.getKey();
+            boolean alongX = connects(grid, cell, 1, 0) && connects(grid, cell, -1, 0);
+            boolean alongZ = connects(grid, cell, 0, 1) && connects(grid, cell, 0, -1);
+            if (!alongX && !alongZ) {
+                violations.add(new Violation(
+                        RuleId.PANE,
+                        "стеклянная панель [" + cell.x() + "," + cell.y() + "," + cell.z()
+                                + "] не примыкает с двух сторон к полному блоку или панели: останется дыра — "
+                                + "поставьте сюда полноценный блок стекла"));
+            }
+        }
+    }
+
+    private static boolean connects(Map<BlockCoord, String> grid, BlockCoord cell, int dx, int dz) {
+        String neighbor = grid.get(new BlockCoord(cell.x() + dx, cell.y(), cell.z() + dz));
+        return neighbor != null
+                && (SchematicBlocks.isFullBlock(neighbor)
+                        || SchematicBlocks.path(neighbor).endsWith("_pane"));
     }
 
     private static void checkSupport(Schematic schematic, Map<BlockCoord, String> grid, List<Violation> violations) {

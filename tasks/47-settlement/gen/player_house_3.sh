@@ -28,6 +28,7 @@ cat <<'H'
 #!  'I': deepslate_brick_stairs[facing=west,half=top]
 #!  '_': deepslate_brick_slab[type=bottom]
 #!  'G': glass_pane
+#!  '=': glass
 #!  'D': dark_oak_door[facing=south,hinge=right]
 #!  'E': dark_oak_door[facing=south,hinge=left]
 #!  'p': stone_brick_stairs[facing=south,half=bottom]
@@ -127,7 +128,7 @@ for x in 8 13; do echo "set 5 $x 0 H"; done
 # --- второй этаж: стены, балконная дверь, окна 2×2 со ставнями ---
 echo "walls 7 9 1 20 1 17 S"
 for x in 1 6 15 20; do echo "col 7 9 $x 1 L"; echo "col 7 9 $x 17 L"; done; echo "col 7 9 1 9 L"; echo "col 7 9 20 9 L"
-echo "set 7 10 1 D"; echo "set 8 10 1 D"; echo "set 7 11 1 E"; echo "set 8 11 1 E"; echo "box 7 8 9 9 1 1 G"; echo "box 7 8 12 12 1 1 G"
+echo "set 7 10 1 D"; echo "set 8 10 1 D"; echo "set 7 11 1 E"; echo "set 8 11 1 E"; echo "box 7 8 9 9 1 1 ="; echo "box 7 8 12 12 1 1 ="
 for y in 7 8; do
   for x in 3 4 16 17; do echo "set $y $x 1 G"; echo "set $y $x 17 G"; done; for x in 8 13; do echo "set $y $x 17 G"; done
   for z in 4 5 12 13; do echo "set $y 1 $z G"; echo "set $y 20 $z G"; done

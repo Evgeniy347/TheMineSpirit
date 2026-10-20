@@ -30,6 +30,7 @@ legend:
   '8': deepslate_tile_stairs[facing=north,half=top]
   '_': deepslate_tile_slab[type=bottom]
   'G': glass_pane
+  '=': glass
   'D': dark_oak_door[facing=south,hinge=right]
   'E': dark_oak_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
@@ -100,7 +101,7 @@ layers:
   - y1 первый этаж: |
       
       
-       LwwwwwLwGDEGwLwwwwwL
+       LwwwwwLw=DE=wLwwwwwL
        wP   Ow0c~~cPw9  OOw
        w~~~~~.cc~~cc.cccc w
        w~~~~~.cc~~cc.cccc w
@@ -122,7 +123,7 @@ layers:
   - y2: |
       
         d  d         d  d
-       LwGGwwLwGDEGwLwGGwwL
+       LwGGwwLw=DE=wLwGGwwL
        w    Ow      w   OOwr
        w     .      .     G
        w     .      .     G
@@ -166,7 +167,7 @@ layers:
   - y4: |
       
         d  d         d  d
-       LwGGwwLwUGGIwLwGGwwL
+       LwGGwwLwU==IwLwGGwwL
        w     w      w     wr
        w     .      .     G
        w     .      .     G
@@ -254,7 +255,7 @@ layers:
   - y8 второй этаж: |
               tttttt
         d  d  t    t d  d
-       LKGGKKLKGDEGKLKGGKKL
+       LKGGKKLK=DE=KLKGGKKL
       vK   jQKccccccKjQ jQKr
        G~~~~~.cccccc.     G
        G~~~~~.cccccc.ccccbG
@@ -276,7 +277,7 @@ layers:
   - y9: |
       
         d  d  N    N d  d
-       LKGGKKLKGDEGKLKGGKKL
+       LKGGKKLK=DE=KLKGGKKL
       vK     K      K     Kr
        G     .      .     G
        G     .      .    bG
