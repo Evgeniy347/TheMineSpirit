@@ -835,7 +835,10 @@ public final class DemoAuditGameTests {
         audit(helper, "player_house", 1, BuildRotation.COUNTERCLOCKWISE_90);
     }
 
-    // [флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+    // [флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат. Краснела (21.10) четырьмя
+    // клетками
+    // гравия под стоянками плана: запасные стоянки отмечали их недоступными, и после плана обычная стройка их не
+    // видела.
     @GameTest(template = "big_arena", batch = "demo_audit_plaza", timeoutTicks = 4000)
     public static void demo_PlazaLevel1None_MatchesScheme(GameTestHelper helper) {
         audit(helper, "plaza", 1, BuildRotation.NONE);

@@ -105,7 +105,8 @@ final class BuildPlanStart {
         return new Prepared(supply, start, Map.copyOf(items));
     }
 
-    // Клетка у ближнего сундука, ближайшая к середине площадки, на уровне земли стройки: там дух после захода.
+    // Клетка у ближнего сундука вне габарита стройки, ближайшая к середине площадки, на уровне земли: там дух после
+    // захода.
     private static Optional<BlockCoord> supplyFeet(SchematicSite site, BlockPos chest) {
         BlockCoord origin = site.origin();
         @Nullable BlockCoord best = null;
@@ -115,7 +116,11 @@ final class BuildPlanStart {
         for (Direction side : Direction.Plane.HORIZONTAL) {
             BlockPos cell = chest.relative(side);
             BlockCoord coord = new BlockCoord(cell.getX(), cell.getY(), cell.getZ());
-            if (cell.getY() != origin.y() || !site.standable(coord)) {
+            // Клетка схемы (крыльцо, ступень) потом застроится — после захода дух стоял бы в стене (дом игрока 3 cw90).
+            if (cell.getY() != origin.y()
+                    || !site.standable(coord)
+                    || site.schemeCells().contains(coord)
+                    || !site.outsideFootprint(coord)) {
                 continue;
             }
             double distance = cell.distSqr(centre);

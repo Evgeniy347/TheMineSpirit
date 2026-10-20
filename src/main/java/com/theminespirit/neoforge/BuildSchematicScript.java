@@ -820,7 +820,7 @@ final class BuildSchematicScript implements ScriptInstance {
                         trips,
                         planTrips,
                         planDeviations);
-                plan = null;
+                leavePlan();
                 return Optional.empty();
             }
             case BuildPlanCursor.Fetch fetch -> {
@@ -838,12 +838,21 @@ final class BuildSchematicScript implements ScriptInstance {
                         && innerLeft()) {
                     LOGGER.info(
                             "Стройка {}: до дверей плана остались клетки внутри — дальше обычная стройка", buildKey);
-                    plan = null;
+                    leavePlan();
                     return Optional.empty();
                 }
                 return Optional.of(standStep(cursor, at));
             }
         }
+    }
+
+    // Клетки, которые запасные стоянки отметили недоступными, — заново: иначе обычная стройка их не видит и кончается
+    // «не совпало» (площадь 1, 21.10: гравий под стоянками плана).
+    private void leavePlan() {
+        plan = null;
+        blocked.clear();
+        refusals.clear();
+        standsRetried = false;
     }
 
     private boolean innerLeft() {
