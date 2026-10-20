@@ -1,0 +1,52 @@
+# Сторож: у двухклеточной лестницы вход в одну створку — к ней не подойти вдвоём
+type: housing
+level: 1
+size: 9x4x9
+entrance: 3,1,1
+legend:
+  '#': oak_planks
+  'S': stone_bricks
+  'D': oak_door[facing=south,hinge=right]
+  'E': oak_door[facing=south,hinge=left]
+  'i': dark_oak_stairs[facing=south,half=bottom]
+layers:
+  - y0: |
+      #########
+      #########
+      #########
+      #########
+      #########
+      #########
+      #########
+      #########
+      #########
+  - y1: |
+               
+       SSDSSSS 
+       SS  S S 
+       SS  S S 
+       SSiiS S 
+       SS  S S 
+       SS  S S 
+       SS  S S 
+       SSSSSSS 
+  - y2: |
+               
+       SSDSSSS 
+       SS  S S 
+       SS  S S 
+       SS  S S 
+       SSiiS S 
+       SS  S S 
+       SS  S S 
+       SSSSSSS 
+  - y3: |
+               
+               
+               
+               
+               
+               
+         ii    
+       ####### 
+       ####### 

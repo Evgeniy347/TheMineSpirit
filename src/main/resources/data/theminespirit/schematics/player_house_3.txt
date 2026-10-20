@@ -26,6 +26,7 @@ legend:
   'I': deepslate_brick_stairs[facing=west,half=top]
   '_': deepslate_brick_slab[type=bottom]
   'G': glass_pane
+  '=': glass
   'D': dark_oak_door[facing=south,hinge=right]
   'E': dark_oak_door[facing=south,hinge=left]
   'p': stone_brick_stairs[facing=south,half=bottom]
@@ -101,7 +102,7 @@ layers:
        SccccS   ~~   S    S
        SccccS L ~~ L S    S
        SOOOOS   ~~   SFkuTS
-       LSSSSS   ~~   SSSSSL
+       LSSSSS   ~~   SSS..L
        SOOOOS L ~~ L Smm  S
        SjjjjS   ~~   SmmRRS
        Sjjjj.   ~~   .mmSSS
@@ -122,7 +123,7 @@ layers:
       vS    S        S    Sr
        S    S L    L S    S
        SOOOOS        S    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        SOOOOS L    L S    S
       vS    S        S    Sr
        G    .        .  RRG
@@ -143,7 +144,7 @@ layers:
       vS    S        S    Sr
        S    S L    L S    S
        SOOOOS        S    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        SOOOOS L    L S    S
       vS    S        S    Sr
        G    .        .    G
@@ -164,7 +165,7 @@ layers:
       vS    S        S    Sr
        S    S L    L S    S
        S    S        S    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        S    S L    L S    S
       vS    S   HH   S    Sr
        G    .        .    G
@@ -185,7 +186,7 @@ layers:
        S    S        S H  S
        S    S L    L S    S
        S    SH      HS    S
-       LSSSSS        SSSSSL
+       LSSSSS        SSS..L
        S    S L    L S    S
        S    S   AA   S    S
        S    .        .    S
@@ -219,7 +220,7 @@ layers:
   - y7 второй этаж: |
              tttttttt
         d  d t      td  d
-       LSGGSLSSGDEGSSLGGSSL
+       LSGGSLSS=DE=SSLGGSSL
        SJQ~~#b      b#bcclS
       vS~~~~#        #ccccSr
        G~~~~.        .cttcG
@@ -229,10 +230,10 @@ layers:
        SbBBb#O httg O#OOOOS
        L#####O httg O#####L
        S    #O ~~~~ O#JQ  S
-      vSmmmm#  ~~~~  #    Sr
-       Gmmmm.        .    G
-       Gmmmm.  cccc  .    G
-      vSmmmm#  cccc  #    Sr
+      vSmmmm#  ~~~~  # t  Sr
+       Gmmmm.        . t  G
+       Gmmmm.  cccc  . t  G
+      vSmmmm#  cccc  # t  Sr
        S C  #  cccc  #    S
        SbCWV#b      b#    S
        LSGGSLSGSSSSGSLGGSSL
@@ -240,7 +241,7 @@ layers:
   - y8: |
       
         d  d N      Nd  d
-       LSGGSLSSGDEGSSLGGSSL
+       LSGGSLSS=DE=SSLGGSSL
        S    #P      0#P   S
       vS    #        #    Sr
        G    .        . qq G

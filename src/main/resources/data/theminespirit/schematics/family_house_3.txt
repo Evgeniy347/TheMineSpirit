@@ -88,9 +88,9 @@ layers:
       
       
        ScccccDEcccccS
-       cP       A   c
-       c   ~~~~~~ RRc
-       cQ g~~~~~~ ccc
+       cP A         c
+       c   ~~~~~~   c
+       cQ g~~~~~~ RRc
        Qf  ~~~~~~ ccc
        cQ g~~~~~~ ccc
        c   ~~~~~~ ccc
@@ -110,8 +110,8 @@ layers:
        ScGGccDEccGGcS
        c            c
       vc            cr
-       GQ         RRG
-       Q          ccG
+       GQ           G
+       Q          RRG
       vcQ         cccr
        c          ccc
        c        Y ccc
@@ -131,8 +131,8 @@ layers:
        c            c
       vc            cr
        GQ           G
-       Q          RRG
-      vcQ         cccr
+       Q            G
+      vcQ         RRcr
        c          ccc
        c          ccc
        Sc..cccc..cccS
@@ -152,8 +152,8 @@ layers:
        c            c
        c            c
        Q            c
+       c            c
        c          RRc
-       c          ccc
        c          ccc
        Sc..cccc..cccS
        c     c      c
@@ -173,8 +173,8 @@ layers:
        c   H  H     c
        Q            c
        c        H   c
-       c   H      RRc
-       c          ccc
+       c   H        c
+       c          RRc
        Sc..cccc..cccS
        c     c      c
        c     c      c
@@ -189,6 +189,7 @@ layers:
            ######
        LXXXXXXXXXXXXL
        Z$$$$$$$$$$$$Z
+       Z$$$$$$$$$$$$Z
        Z$$$$$$$$$$..Z
        Z$$$$$$$$$$..Z
        Z$$$$$$$$$$..Z
@@ -201,15 +202,14 @@ layers:
        Z$$$$$$$$$$$$Z
        Z$$$$$$$$$$$$Z
        Z$$$$$$$$$$$$Z
-       Z$$$$$$$$$$$$Z
        LXXXXXXXXXXXXL
               .
   - y7 второй этаж: |
            tttttt
         d  d    d  d
        LhGGLhDEhLGGhL
-       hP       O.  h
-      vh yyyyyy  .  hr
+       hP       Oh  h
+      vh yyyyyy  htthr
        G yyyyyy  h  G
        G yyyyyy  h  G
       vh         h  hr
@@ -228,8 +228,8 @@ layers:
       
         d  d    d  d
        LhGGLhDEhLGGhL
-       h        s.  h
-      vh         .  hr
+       h        sh  h
+      vh         h  hr
        G        zh  G
        G         h  G
       vhx        h  hr

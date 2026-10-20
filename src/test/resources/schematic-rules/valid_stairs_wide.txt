@@ -10,6 +10,7 @@ legend:
   'p': oak_stairs[facing=south,half=bottom]
   'l': ladder[facing=north]
   'S': oak_stairs[facing=south,half=bottom]
+  't': oak_fence
 layers:
   - y0: |
          p
@@ -59,9 +60,9 @@ layers:
   - y5: |
          .
       #######
-      #T....#
-      #.....#
-      #.....#
+      #T.ttt#
+      #..t..#
+      #..t..#
       #.....#
       #.....#
       #######
