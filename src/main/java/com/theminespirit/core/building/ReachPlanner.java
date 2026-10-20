@@ -47,6 +47,29 @@ public final class ReachPlanner {
             World world,
             Set<BlockCoord> excluded,
             Set<BlockCoord> blocked) {
+        return nextStand(reach, feet, targets, world, excluded, blocked, false);
+    }
+
+    // Последний шаг снаружи (двери, ставни второго этажа): стоянки только на земле, на 8–9 блоков ниже верхних
+    // ставен. Внутри стройки дальний поиск оставлял духа на мебели, и заходы к сундукам не удавались (усадьба, 20.10).
+    public static Optional<BlockCoord> nextStandFromAfar(
+            SpiritReach reach,
+            BlockCoord feet,
+            List<BlockCoord> targets,
+            World world,
+            Set<BlockCoord> excluded,
+            Set<BlockCoord> blocked) {
+        return nextStand(reach, feet, targets, world, excluded, blocked, true);
+    }
+
+    private static Optional<BlockCoord> nextStand(
+            SpiritReach reach,
+            BlockCoord feet,
+            List<BlockCoord> targets,
+            World world,
+            Set<BlockCoord> excluded,
+            Set<BlockCoord> blocked,
+            boolean fromAfar) {
         Objects.requireNonNull(reach, "Досягаемость не может быть null: без неё стоянку не выбрать");
         Objects.requireNonNull(feet, "Ноги духа не могут быть null: без них неизвестно, откуда шагать");
         Objects.requireNonNull(targets, "Клетки не могут быть null: без них неизвестно, к чему шагать");
@@ -57,10 +80,25 @@ public final class ReachPlanner {
         if (cover.isEmpty()) {
             return Optional.empty();
         }
+        Optional<BlockCoord> near =
+                bestStand(reach, feet, cover, candidates(reach, cover, world, STAND_SCAN_BELOW), excluded, blocked);
+        if (near.isPresent() || !fromAfar || reach.up() <= STAND_SCAN_BELOW) {
+            return near;
+        }
+        return bestStand(reach, feet, cover, candidates(reach, cover, world, reach.up()), excluded, blocked);
+    }
+
+    private static Optional<BlockCoord> bestStand(
+            SpiritReach reach,
+            BlockCoord feet,
+            List<BlockCoord> cover,
+            List<BlockCoord> candidates,
+            Set<BlockCoord> excluded,
+            Set<BlockCoord> blocked) {
         BlockCoord best = null;
         int bestCount = 0;
         long bestDistance = Long.MAX_VALUE;
-        for (BlockCoord stand : candidates(reach, cover, world)) {
+        for (BlockCoord stand : candidates) {
             if (stand.equals(feet)
                     || excluded.contains(stand)
                     || blocked.contains(stand)
@@ -105,7 +143,7 @@ public final class ReachPlanner {
         return layer;
     }
 
-    private static List<BlockCoord> candidates(SpiritReach reach, List<BlockCoord> cover, World world) {
+    private static List<BlockCoord> candidates(SpiritReach reach, List<BlockCoord> cover, World world, int scanBelow) {
         int minY = Integer.MAX_VALUE;
         int maxY = Integer.MIN_VALUE;
         Set<Long> columns = new LinkedHashSet<>();
@@ -124,7 +162,7 @@ public final class ReachPlanner {
             }
         }
         int top = maxY + reach.down();
-        int bottom = minY - Math.min(reach.up(), STAND_SCAN_BELOW);
+        int bottom = minY - Math.min(reach.up(), scanBelow);
         List<BlockCoord> stands = new ArrayList<>();
         for (int[] column : columnList) {
             for (int y = top; y >= bottom; y--) {

@@ -304,12 +304,11 @@ final class BuildSchematicScript implements ScriptInstance {
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World world, boolean outsideOnly) {
         Set<BlockCoord> occupied = new HashSet<>(site.schemeCells());
-        Optional<BlockCoord> stand =
-                ReachPlanner.nextStand(SpiritReach.current(), feet(), cells, world, excludedStands, occupied);
+        Optional<BlockCoord> stand = stand(cells, world, occupied, outsideOnly);
         if (stand.isEmpty() && !standsRetried && !excludedStands.isEmpty()) {
             standsRetried = true;
             excludedStands.clear();
-            stand = ReachPlanner.nextStand(SpiritReach.current(), feet(), cells, world, excludedStands, occupied);
+            stand = stand(cells, world, occupied, outsideOnly);
         }
         if (stand.isEmpty()) {
             for (BlockCoord cell : cells) {
@@ -325,6 +324,14 @@ final class BuildSchematicScript implements ScriptInstance {
                 new Vec3(approachStand.x() + 0.5, approachStand.y(), approachStand.z() + 0.5),
                 BuildTuning.STAND_ARRIVAL);
         return ScriptStatus.RUNNING;
+    }
+
+    // Последний шаг снаружи (двери, ставни) — стоянки только на земле, верхние ставни ставятся издалека снизу.
+    private Optional<BlockCoord> stand(
+            List<BlockCoord> cells, ReachPlanner.World world, Set<BlockCoord> occupied, boolean outsideOnly) {
+        return outsideOnly
+                ? ReachPlanner.nextStandFromAfar(SpiritReach.current(), feet(), cells, world, excludedStands, occupied)
+                : ReachPlanner.nextStand(SpiritReach.current(), feet(), cells, world, excludedStands, occupied);
     }
 
     private ReachPlanner.World clearWorld() {

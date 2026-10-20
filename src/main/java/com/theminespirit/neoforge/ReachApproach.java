@@ -58,7 +58,8 @@ public final class ReachApproach {
             }
             if (tried.size() >= MAX_STANDS || !nextStand()) {
                 refusal = "ни с одной стоянки не дотянуться до " + target + " ("
-                        + SpiritReach.current().describe() + ")" + (refusal == null ? "" : "; " + refusal);
+                        + SpiritReach.current().describe() + "), испробованы стоянки " + tried
+                        + (refusal == null ? "" : "; " + refusal);
                 finish();
                 return Approach.State.STUCK;
             }

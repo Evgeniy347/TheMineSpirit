@@ -1,0 +1,178 @@
+# plaza_3 — площадь, уровень 3 (catalog-2.md, sketches-wall-plaza.md «уровень 3»): этап 4. Мощение каменным
+# кирпичом с кольцом из шлифованного андезита, фонтан в центре (бортик, вода, столб с фонарём), четыре скамьи
+# лицом к фонтану, клумбы по краям, цветущие азалии по углам, фонарные столбы, колокол и доска заданий;
+# ступени с главной улицы и широкие ступени к дому игрока сзади.
+name: "Площадь, уровень 3"
+type: social
+stage: 4
+level: 3
+requires: plaza_2
+size: 25x5x26   # Ш×В×Д
+entrance: 12,1,1
+exemptions:
+  - rule: closed_walls
+    reason: "площадь открыта: стен нет по замыслу, это мощёный двор с фонтаном"
+  - rule: roof
+    reason: "площадь под открытым небом по замыслу"
+legend:
+  'S': stone_bricks
+  'C': chiseled_stone_bricks
+  'a': polished_andesite
+  'p': stone_brick_stairs[facing=south,half=bottom]
+  'e': stone_brick_stairs[facing=south,half=bottom]
+  'M': grass_block
+  'W': water
+  't': dark_oak_fence
+  'N': lantern[hanging=false]
+  'l': lectern[facing=south]
+  'b': barrel[facing=up]
+  'B': bell[attachment=floor,facing=south]
+  'g': dark_oak_stairs[facing=east,half=bottom]
+  'h': dark_oak_stairs[facing=west,half=bottom]
+  'i': dark_oak_stairs[facing=north,half=bottom]
+  'R': dark_oak_stairs[facing=south,half=bottom]
+  'z': flowering_azalea
+  'o': poppy
+  'A': azure_bluet
+  'J': cornflower
+  'O': oxeye_daisy
+  'U': allium
+  'Y': red_tulip
+  'P': potted_poppy
+  '9': potted_azure_bluet
+layers:
+  - y0 мощение, клумбы, бортик ступеней: |
+                ppppp
+      MMMMMMMMMMSSSSSMMMMMMMMMM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSaaaaaaaaaaaSSSSSSM
+      MSSSSSSaSSSSSSSSSaSSSSSSM
+      MSSSSSSaSSSSSSSSSaSSSSSSM
+      SSSSSSSaSSSSSSSSSaSSSSSSS
+      SSSSSSSaSSSSSSSSSaSSSSSSS
+      SaaaaaaaSSSSSSSSSaaaaaaaS
+      SSSSSSSaSSSSSSSSSaSSSSSSS
+      SSSSSSSaSSSSSSSSSaSSSSSSS
+      MSSSSSSaSSSSSSSSSaSSSSSSM
+      MSSSSSSaSSSSSSSSSaSSSSSSM
+      MSSSSSSaaaaaaaaaaaSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MSSSSSSSSSSSaSSSSSSSSSSSM
+      MMMMMMMMMSSSSSSSMMMMMMMMM
+               eeeeeee
+  - y1 фонтан, скамьи, цветы, столбы: |
+      
+      zJOUYoAJOU     UYoAJOUYoz
+      J       C       C       J
+      O                       O
+      U   b     b l b     b   U
+      Y                       Y
+      o                       o
+      A                       A
+      J      C         C      J
+      OC         iii         CO
+      U                       U
+                aaaaa
+              h aWWWa g
+              h aWSWa g
+              h aWWWa g
+                aaaaa
+      U                       U
+      YC         RRR         CY
+      o      C         C      o
+      A                       A
+      J                       J
+      O   b       C       b   O
+      U                       U
+      Y        C     C        Y
+      zAJOUYoAJ       UYoAJOUYz
+                  .
+  - y2: |
+      
+      
+              t       t
+      
+          P     9   P     P
+      
+      
+      
+             t         t
+       t                     t
+      
+                P   P
+      
+                  S
+      
+                P   P
+      
+       t                     t
+             t         t
+      
+      
+          P       B       P
+      
+               t     t
+      
+                  .
+  - y3: |
+      
+      
+              N       N
+      
+      
+      
+      
+      
+             N         N
+       N                     N
+      
+      
+      
+                  C
+      
+      
+      
+       N                     N
+             N         N
+      
+      
+      
+      
+               N     N
+      
+                  .
+  - y4: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  N
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+                  .

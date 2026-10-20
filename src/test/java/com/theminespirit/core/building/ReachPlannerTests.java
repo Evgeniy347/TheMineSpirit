@@ -130,6 +130,34 @@ class ReachPlannerTests {
                         + "опора; фактически " + stand);
     }
 
+    @Test
+    void nextStandFromAfar_HighCellOnlyGroundBelow_StandsOnGroundWithinReachUp() {
+        List<BlockCoord> shutters = List.of(cell(0, 8, 0), cell(0, 9, 0));
+        ReachPlanner.World world = new SetWorld(Set.copyOf(shutters), standableAround(0, 0));
+
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStandFromAfar(REACH, cell(20, 0, 20), shutters, world, Set.of(), Set.copyOf(shutters));
+
+        assertTrue(
+                stand.isPresent() && REACH.reaches(stand.get(), cell(0, 9, 0)),
+                "Ставня второго этажа в 9 блоках над землёй ставится снаружи с земли, раз досягаемость вверх 15: "
+                        + "иначе последние верхние ставни остаются «ни с одной стоянки»; фактически " + stand);
+    }
+
+    @Test
+    void nextStand_HighCellOnlyGroundBelow_NearSearchOnly() {
+        List<BlockCoord> shutters = List.of(cell(0, 8, 0), cell(0, 9, 0));
+        ReachPlanner.World world = new SetWorld(Set.copyOf(shutters), standableAround(0, 0));
+
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStand(REACH, cell(20, 0, 20), shutters, world, Set.of(), Set.copyOf(shutters));
+
+        assertTrue(
+                stand.isEmpty(),
+                "Обычный поиск стоянки — не ниже 6 под клетками: дальний поиск внутри стройки (усадьба, 20.10) "
+                        + "оставлял духа на мебели, и заходы к сундукам не удавались; фактически " + stand);
+    }
+
     static Set<BlockCoord> standableAround(int y, int z) {
         Set<BlockCoord> cells = new HashSet<>();
         for (int x = -8; x <= 14; x++) {

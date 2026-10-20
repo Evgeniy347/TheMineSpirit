@@ -109,7 +109,7 @@ echo "set 5 6 0 H"; echo "set 5 9 0 H"
 echo "walls 7 9 1 14 1 16 h"; for x in 1 5 10 14; do echo "col 7 9 $x 1 L"; echo "col 7 9 $x 16 L"; done; for z in 9; do echo "col 7 9 1 $z L"; echo "col 7 9 14 $z L"; done
 echo "set 7 7 1 D"; echo "set 8 7 1 D"; echo "set 7 8 1 E"; echo "set 8 8 1 E"
 for y in 7 8; do for x in 3 4 11 12; do echo "set $y $x 1 G"; echo "set $y $x 16 G"; done; for z in 4 5 12 13; do echo "set $y 1 $z G"; echo "set $y 14 $z G"; done; done
-for y in 7 8; do for x in 2 5 10 13; do echo "set $y $x 0 d"; done; for x in 5 10; do echo "set $y $x 17 n"; done; for z in 3 6 11 14; do echo "set $y 0 $z v"; echo "set $y 15 $z r"; done; done
+for y in 7 8; do for x in 2 5 10 13; do echo "set $y $x 0 d"; done; for x in 2 5 10 13; do echo "set $y $x 17 n"; done; for z in 3 6 11 14; do echo "set $y 0 $z v"; echo "set $y 15 $z r"; done; done
 # второй этаж: перегородки
 echo "box 7 9 11 11 2 7 h"; echo "box 7 8 11 11 2 3 ."; echo "box 7 9 2 10 9 9 h"; echo "box 7 8 5 5 9 9 ."; echo "box 7 9 7 7 10 15 h"
 # спальня родителей

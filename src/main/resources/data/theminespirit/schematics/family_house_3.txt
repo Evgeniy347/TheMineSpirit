@@ -213,7 +213,7 @@ layers:
       vh B   hY   ~~hr
        h B WVhYYY  Ph
        LhGGLhhhhLGGhL
-           n    n
+        n  n    n  n
   - y8: |
         d  d    d  d
        LhGGLhDEhLGGhL
@@ -232,7 +232,7 @@ layers:
       vh     hY     hr
        h     hYYY   h
        LhGGLhhhhLGGhL
-           n    n
+        n  n    n  n
   - y9: |
       
       ULhhhLhhhhLhhhLI
