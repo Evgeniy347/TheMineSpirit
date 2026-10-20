@@ -2,9 +2,12 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.ReachPlanner;
+import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,6 +20,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -203,6 +207,22 @@ final class SchematicSite {
         BlockPos pos = toPos(entry.pos());
         return body.intersects(new AABB(pos))
                 && !wanted(entry).getCollisionShape(level, pos).isEmpty();
+    }
+
+    // Правило отхода (владелец 20.10): после установки от ног духа остаётся путь наружу. Двери — проход (стройка
+    // ставит их последним шагом снаружи), блоки без столкновения (ковёр, факел) путь не перекрывают.
+    boolean keepsRetreat(BlockCoord feet, List<Schematic.PlacedEntry> entries) {
+        Set<BlockCoord> placed = new HashSet<>();
+        for (Schematic.PlacedEntry entry : entries) {
+            BlockState state = wanted(entry);
+            if (!(state.getBlock() instanceof DoorBlock)
+                    && !state.getCollisionShape(level, toPos(entry.pos())).isEmpty()) {
+                placed.add(entry.pos());
+            }
+        }
+        SafetyView walk = cell ->
+                level.getBlockState(toPos(cell)).getBlock() instanceof DoorBlock ? Cell.PASSABLE : safety.cellAt(cell);
+        return RetreatPath.allows(feet, placed, walk, this::outsideFootprint);
     }
 
     // mc: форму ступеньки (shape) игра выводит из соседей; пока соседней ступеньки крыльца нет, угловая — прямая.
