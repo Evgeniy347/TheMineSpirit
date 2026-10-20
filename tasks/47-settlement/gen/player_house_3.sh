@@ -11,8 +11,8 @@ cat <<'H'
 #!stage: 3
 #!level: 3
 #!requires: player_house_2
-#!size: 22x21x19   # Ш×В×Д
-#!entrance: 10,1,1
+#!size: 22x21x20   # Ш×В×Д
+#!entrance: 10,1,2
 #!legend:
 #!  'S': stone_bricks
 #!  'Y': chiseled_stone_bricks
@@ -72,7 +72,7 @@ cat <<'H'
 #!  'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
 #!layers:
 H
-echo "size 22 21 19"
+echo "size 22 21 20"; echo "shift 0 1"
 echo "label 0 цоколь, пол, ступени"; echo "label 1 первый этаж"; echo "label 6 перекрытие и балкон"
 echo "label 7 второй этаж"; echo "label 10 обвязка и крыша"
 # --- цоколь, пол, ступени во всю ширину входа ---
@@ -122,7 +122,7 @@ echo "box 1 1 16 17 10 16 m"; echo "set 1 16 14 b"; echo "set 1 16 15 b"; echo "
 echo "box 6 6 1 20 1 17 Z"; echo "box 6 6 1 20 1 1 X"; echo "box 6 6 1 20 17 17 X"; echo "box 6 6 2 19 2 16 \$"
 for x in 1 20; do for z in 1 17; do echo "set 6 $x $z L"; done; done
 echo "box 6 6 18 19 11 15 ."; echo "box 6 6 18 19 16 16 R"
-echo "box 6 6 7 14 0 0 #"; echo "box 7 7 7 14 0 0 t"; echo "set 8 7 0 N"; echo "set 8 14 0 N"
+echo "box 6 6 7 14 -1 0 #"; echo "box 7 7 7 14 -1 -1 t"; echo "set 7 7 0 t"; echo "set 7 14 0 t"; echo "set 8 7 0 N"; echo "set 8 14 0 N"
 for x in 8 13; do echo "set 5 $x 0 H"; done
 # --- второй этаж: стены, балконная дверь, окна 2×2 со ставнями ---
 echo "walls 7 9 1 20 1 17 S"

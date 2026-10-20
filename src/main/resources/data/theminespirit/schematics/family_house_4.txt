@@ -9,8 +9,8 @@ type: housing
 stage: 4
 level: 4
 requires: family_house_3
-size: 22x21x20   # Ш×В×Д
-entrance: 10,1,1
+size: 22x21x21   # Ш×В×Д
+entrance: 10,1,2
 legend:
   'S': smooth_stone
   'w': bricks
@@ -76,6 +76,7 @@ legend:
   'e': dark_oak_trapdoor[facing=south,half=bottom,open=true]
 layers:
   - y0 цоколь и ступени: |
+      
         P P P  <pp>  P P P
        SSSSSSSSSSSSSSSSSSSS
        S$$$$$$$$$$$$$$$$$$S
@@ -98,6 +99,7 @@ layers:
         P9P P9P AA P9P P9P
   - y1 первый этаж: |
       
+      
        LwwwwwLwGDEGwLwwwwwL
        wP   Ow0c~~cPw9  OOw
        w~~~~~.cc~~cc.cccc w
@@ -118,6 +120,7 @@ layers:
        LwwwwwLwwDEwwLwwwwwL
                  .
   - y2: |
+      
         d  d         d  d
        LwGGwwLwGDEGwLwGGwwL
        w    Ow      w   OOwr
@@ -139,6 +142,7 @@ layers:
        LwwGGwLwwDEwwLGGwwwL
          e  e       e  e
   - y3: |
+      
         d  d         d  d
        LwGGwwLwXXXXwLwGGwwL
        w     w      w   OOwr
@@ -160,6 +164,7 @@ layers:
        LwwGGwLwwwwwwLGGwwwL
          e  e       e  e
   - y4: |
+      
         d  d         d  d
        LwGGwwLwUGGIwLwGGwwL
        w     w      w     wr
@@ -182,6 +187,7 @@ layers:
          e  e       e  e
   - y5: |
       
+      
        LwwwwwLwwwwwwLwwwwwL
        w     w      w     w
        w     .      .     w
@@ -202,6 +208,7 @@ layers:
        LwwwwwLwwwwwwLwwwwwL
                  .
   - y6: |
+      
                H  H
        LwwwwwLwwwwwwLwwwwwL
        w     w      w     w
@@ -224,6 +231,7 @@ layers:
                  .
   - y7 перекрытие и балкон: |
               ######
+              ######
        LXXXXXXXXXXXXXXXXXXL
        Z$$$$$$$$$$$$$$$$$$Z
        Z$$$$$$$$$$$$$$$$$$Z
@@ -244,7 +252,8 @@ layers:
        LXXXXXXXXXXXXXXXXXXL
                  .
   - y8 второй этаж: |
-        d  d  tttttt d  d
+              tttttt
+        d  d  t    t d  d
        LKGGKKLKGDEGKLKGGKKL
       vK   jQKccccccKjQ jQKr
        G~~~~~.cccccc.     G
@@ -265,6 +274,7 @@ layers:
        LKKGGKLKKGGKKLGGKKKL
          e  e       e  e
   - y9: |
+      
         d  d  N    N d  d
        LKGGKKLKGDEGKLKGGKKL
       vK     K      K     Kr
@@ -286,6 +296,7 @@ layers:
        LKKGGKLKKGGKKLGGKKKL
          e  e       e  e
   - y10: |
+      
        77777777777777777777
       5LKKKKKLKKKKKKLKKKKKL6
       5K     K      K     K6
@@ -307,6 +318,7 @@ layers:
       5LKKKKKLKKKKKKLKKKKKL6
        88888888888888888888
   - y11 обвязка и крыша: |
+      
       .33333333333333333333.
       1LXXXXXXXXXXXXXXXXXXL2
       1Z                  Z2
@@ -328,6 +340,7 @@ layers:
       1LXXXXXXXXXXXXXXXXXXL2
       .44444444444444444444.
   - y12: |
+      
       
        13333333333333333332
        1##################2
@@ -351,6 +364,7 @@ layers:
   - y13: |
       
       
+      
         1333333#GG#3333332
         1#######..#######2
         1#              #2
@@ -370,6 +384,7 @@ layers:
       
                  .
   - y14: |
+      
       
       
                ####
@@ -395,6 +410,7 @@ layers:
       
       
       
+      
           13333333333332
           1############2
           1#          #2
@@ -412,6 +428,7 @@ layers:
       
                  .
   - y16: |
+      
       
       
       
@@ -439,6 +456,7 @@ layers:
       
       
       
+      
             1333333332
             1########2
             1#      #2
@@ -454,6 +472,7 @@ layers:
       
                  .
   - y18: |
+      
       
       
       
@@ -483,6 +502,7 @@ layers:
       
       
       
+      
               133332
               1####2
               1####2
@@ -496,6 +516,7 @@ layers:
       
                  .
   - y20: |
+      
       
       
       

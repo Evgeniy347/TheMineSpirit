@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.phys.AABB;
 
 /**
  * Площадка стройки по схеме в мире: какие клетки ещё не совпадают со схемой, какие надо очистить (обязательный
@@ -195,6 +196,13 @@ final class SchematicSite {
 
     boolean outsideFootprint(BlockCoord feet) {
         return feet.x() < minX || feet.x() > maxX || feet.z() < minZ || feet.z() > maxZ;
+    }
+
+    // Блок со столкновением, чья клетка задевает тело духа: поставленный, он душит духа в стене.
+    boolean overlaps(Schematic.PlacedEntry entry, AABB body) {
+        BlockPos pos = toPos(entry.pos());
+        return body.intersects(new AABB(pos))
+                && !wanted(entry).getCollisionShape(level, pos).isEmpty();
     }
 
     // mc: форму ступеньки (shape) игра выводит из соседей; пока соседней ступеньки крыльца нет, угловая — прямая.

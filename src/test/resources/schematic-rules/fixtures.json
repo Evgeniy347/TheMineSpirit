@@ -1,6 +1,12 @@
 {
  "fixtures": [
   {
+   "file": "door_to_nowhere",
+   "expect": [
+    "passage"
+   ]
+  },
+  {
    "file": "porch_missing",
    "expect": [
     "entrance_step"

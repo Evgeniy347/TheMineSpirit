@@ -11,8 +11,8 @@ cat <<'H'
 #!stage: 4
 #!level: 4
 #!requires: player_house_3
-#!size: 24x22x22   # Ш×В×Д
-#!entrance: 10,1,1
+#!size: 24x22x23   # Ш×В×Д
+#!entrance: 10,1,2
 #!legend:
 #!  'S': smooth_stone
 #!  'K': calcite
@@ -79,7 +79,7 @@ cat <<'H'
 #!  'r': dark_oak_trapdoor[facing=east,half=bottom,open=true]
 #!layers:
 H
-echo "size 24 22 22"
+echo "size 24 22 23"; echo "shift 0 1"
 echo "label 0 цоколь, ступени, цветы и фонари у входов"; echo "label 1 первый этаж"; echo "label 7 галерея и перекрытие"
 echo "label 8 второй этаж"; echo "label 11 обвязка и крыша"
 # --- цоколь, пол, ступени портала, цветы в горшках вокруг дома (с проходами), фонари у ступеней ---
@@ -139,7 +139,7 @@ echo "box 7 7 1 22 1 20 Z"; echo "box 7 7 1 22 1 1 X"; echo "box 7 7 1 22 20 20 
 for x in 1 22; do for z in 1 20; do echo "set 7 $x $z L"; done; done
 echo "box 7 7 11 12 5 19 ."; echo "box 7 7 8 10 12 19 ."; echo "box 7 7 13 15 12 19 ."; echo "box 7 7 8 9 12 12 i"; echo "box 7 7 14 15 12 12 i"
 echo "box 8 8 10 10 5 11 t"; echo "box 8 8 13 13 5 11 t"; echo "box 8 8 11 12 4 4 t"
-echo "box 7 7 8 15 0 0 #"; echo "box 8 8 8 15 0 0 t"; echo "set 9 8 0 N"; echo "set 9 15 0 N"
+echo "box 7 7 8 15 -1 0 #"; echo "box 8 8 8 15 -1 -1 t"; echo "set 8 8 0 t"; echo "set 8 15 0 t"; echo "set 9 8 0 N"; echo "set 9 15 0 N"
 # --- второй этаж: кирпичные стены в каркасе, балконная дверь, окна ---
 echo "walls 8 10 1 22 1 20 w"
 for x in 1 7 16 22; do echo "col 8 10 $x 1 L"; echo "col 8 10 $x 20 L"; done; echo "col 8 10 1 9 L"; echo "col 8 10 22 9 L"

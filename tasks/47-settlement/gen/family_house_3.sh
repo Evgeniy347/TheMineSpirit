@@ -10,8 +10,8 @@ cat <<'H'
 #!stage: 2
 #!level: 3
 #!requires: family_house_2
-#!size: 16x18x18   # Ш×В×Д
-#!entrance: 7,1,1
+#!size: 16x18x19   # Ш×В×Д
+#!entrance: 7,1,2
 #!legend:
 #!  'S': stone_bricks
 #!  'c': cobblestone
@@ -67,7 +67,7 @@ cat <<'H'
 #!  '>': stone_brick_stairs[facing=west,half=bottom,shape=outer_left]
 #!layers:
 H
-echo "size 16 18 18"
+echo "size 16 18 19"; echo "shift 0 1"
 echo "label 0 цоколь и пол"; echo "label 1 первый этаж"; echo "label 6 перекрытие"; echo "label 7 второй этаж"; echo "label 10 обвязка"
 # пол и цоколь
 echo "box 0 0 1 14 1 16 S"; echo "box 0 0 2 13 2 15 \$"
@@ -104,7 +104,7 @@ echo "box 6 6 1 14 1 16 Z"; echo "box 6 6 1 14 1 1 X"; echo "box 6 6 1 14 16 16 
 echo "box 6 6 2 13 2 15 \$"; echo "box 6 6 12 13 3 7 ."; echo "box 6 6 12 13 8 8 R"
 for x in 1 14; do for z in 1 16; do echo "set 6 $x $z L"; done; done
 # балкон над дверью
-echo "box 6 6 5 10 0 0 #"; echo "box 7 7 5 10 0 0 t"
+echo "box 6 6 5 10 -1 0 #"; echo "box 7 7 5 10 -1 -1 t"; echo "set 7 5 0 t"; echo "set 7 10 0 t"
 # карниз под балконом и свесом: фонари у двери
 echo "set 5 6 0 H"; echo "set 5 9 0 H"
 # второй этаж: стены-фахверк

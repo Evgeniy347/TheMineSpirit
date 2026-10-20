@@ -37,7 +37,8 @@ public final class SchematicRules {
         REACHABLE("reachable"),
         STAIRS("stairs"),
         DOUBLE_DOOR("double_door"),
-        FIREPLACE("fireplace");
+        FIREPLACE("fireplace"),
+        PASSAGE("passage");
 
         private final String id;
 
@@ -136,6 +137,9 @@ public final class SchematicRules {
         SchematicWalk.Result walk = SchematicWalk.walk(grid, walls.schematic(), walls.entry());
         SchematicLevelRules.checkReachable(grid, walk, violations);
         SchematicLevelRules.checkStairs(walls, grid, walk, level, violations);
+        // Балкон и крыльцо лежат вне тела постройки: проход через двери — по обходу всей схемы.
+        DoorPassage.problem(structure.schematic(), SchematicWalk.walk(full, structure.schematic(), structure.entry()))
+                .ifPresent(problem -> violations.add(new Violation(RuleId.PASSAGE, problem)));
         checkSupport(structure.schematic(), full, violations);
         if (violations.stream().noneMatch(violation -> violation.rule() == RuleId.SUPPORT)) {
             checkMounting(structure.schematic(), full, violations);
