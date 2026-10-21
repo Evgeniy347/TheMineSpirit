@@ -32,4 +32,11 @@ public final class ApproachFailureTracker {
     public Set<BlockCoord> excludedStands() {
         return Collections.unmodifiableSet(excludedStands);
     }
+
+    public void excludeStand(BlockCoord stand, BlockCoord target) {
+        Objects.requireNonNull(stand, "Стоянка не может быть null: без неё непонятно, какую клетку исключать");
+        Objects.requireNonNull(target, "Цель не может быть null: без неё непонятно, чей счётчик неудач вести");
+        excludedStands.add(stand);
+        targetFailures.merge(target, 1, Integer::sum);
+    }
 }

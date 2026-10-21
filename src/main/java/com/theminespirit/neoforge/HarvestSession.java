@@ -39,6 +39,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
 public final class HarvestSession {
@@ -58,6 +59,7 @@ public final class HarvestSession {
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
+    private static final double APPROACH_PROGRESS_STEP = 0.05;
     private static final int COLLECT_RADIUS = 4;
 
     private final SpiritEntity spirit;
@@ -81,6 +83,8 @@ public final class HarvestSession {
     private String failureReason;
     private BlockCoord currentTarget;
     private BlockCoord currentStand;
+    private BlockCoord lastUnreachable;
+    private double closestApproach = Double.MAX_VALUE;
     private final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
     private final Set<BlockCoord> reachStandsTried = new HashSet<>();
     private DropCollector collector;
@@ -314,13 +318,42 @@ public final class HarvestSession {
             return;
         }
         MiningPlanner.Next next = (MiningPlanner.Next) result;
+        if (kind == WorkKind.GATHER && !standReachable(next.stand())) {
+            unreachable++;
+            lastUnreachable = next.target();
+            approachFailures.excludeStand(next.stand(), next.target());
+            state = State.PICK;
+            return;
+        }
         if (!acceptTarget(next.target())) {
             return;
         }
         currentStand = next.stand();
-        approach.begin(
-                new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
+        beginApproach(
+                new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5));
         state = State.APPROACH;
+    }
+
+    private boolean standReachable(BlockCoord stand) {
+        Path path = spirit.getNavigation().createPath(new BlockPos(stand.x(), stand.y(), stand.z()), 1);
+        return path != null && path.canReach();
+    }
+
+    private void beginApproach(Vec3 point) {
+        closestApproach = Double.MAX_VALUE;
+        approach.begin(point, APPROACH_ARRIVAL);
+    }
+
+    private void noteApproachProgress() {
+        if (currentStand == null) {
+            return;
+        }
+        double distance = spirit.position()
+                .distanceTo(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5));
+        if (distance + APPROACH_PROGRESS_STEP < closestApproach) {
+            closestApproach = distance;
+            watchdog.progress();
+        }
     }
 
     private boolean acceptTarget(BlockCoord target) {
@@ -373,14 +406,20 @@ public final class HarvestSession {
             return false;
         }
         reachStandsTried.add(stand.get());
+        if (kind == WorkKind.GATHER && !standReachable(stand.get())) {
+            unreachable++;
+            lastUnreachable = candidates.isEmpty() ? null : candidates.get(0);
+            return false;
+        }
         currentTarget = null;
         currentStand = stand.get();
-        approach.begin(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5), APPROACH_ARRIVAL);
+        beginApproach(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5));
         state = State.APPROACH;
         return true;
     }
 
     private void approachTick() {
+        noteApproachProgress();
         switch (approach.tick()) {
             case MOVING -> {}
             case ARRIVED -> {
@@ -614,13 +653,42 @@ public final class HarvestSession {
             return base + "; руда закрыта, нужен проход: блоки руды есть, но нет места для духа — прокопайте "
                     + "проход к руде (dig_descent или dig_area) и повторите mine_vein";
         }
+        if (kind == WorkKind.GATHER && mined == 0 && lastUnreachable != null) {
+            return "нет пути к блоку " + coordText(lastUnreachable) + ": " + base + "; " + pathCause();
+        }
         return base;
     }
 
     private String stallReason() {
-        return "нет прогресса " + watchdog.limitTicks() + " тиков (" + (watchdog.limitTicks() / 20) + " с): "
-                + summary() + "; текущий шаг " + state
-                + " — проверьте доступность блоков и подходящий инструмент";
+        String timing = "нет прогресса " + watchdog.limitTicks() + " тиков (" + (watchdog.limitTicks() / 20) + " с): "
+                + summary();
+        if (mined == 0 && (state == State.FIND || state == State.PICK || state == State.APPROACH)) {
+            return "нет пути к блоку " + coordText(targetForReason()) + " — " + timing + "; " + pathCause();
+        }
+        return timing + "; текущий шаг " + state + " — проверьте доступность блоков и подходящий инструмент";
+    }
+
+    private BlockCoord targetForReason() {
+        if (currentTarget != null) {
+            return currentTarget;
+        }
+        return lastUnreachable;
+    }
+
+    private static String coordText(BlockCoord target) {
+        return target == null
+                ? "(координата неизвестна)"
+                : "(" + target.x() + ", " + target.y() + ", " + target.z() + ")";
+    }
+
+    private String pathCause() {
+        if (noStand > 0) {
+            return "блок есть, но к нему нет места для стоянки духа — преграда вплотную к цели";
+        }
+        if (unreachable > 0) {
+            return "блок есть, но все стоянки у него недостижимы — путь перекрыт";
+        }
+        return "блок есть, но дух не смог к нему подойти: путь перекрыт или цель недостижима";
     }
 
     private String summary() {
