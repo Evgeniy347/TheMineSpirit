@@ -126,7 +126,8 @@ public final class SpiritSupplies implements AcquireSupplies {
                     Map.of(
                             "container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
                             "item", item,
-                            "count", take)));
+                            "count", take,
+                            "radius", radius)));
             left -= take;
         }
         return steps;

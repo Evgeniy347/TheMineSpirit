@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.crafting;
 
+import com.theminespirit.core.crafting.CraftAssembly;
 import com.theminespirit.core.crafting.CraftPlan;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.crafting.RecipeSpec;
@@ -9,6 +10,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CraftParams;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +35,7 @@ public final class CraftScript implements ScriptInstance {
         CRAFT
     }
 
-    private record Step(List<Item> consumed, List<ItemStack> produced, int output) {}
+    private record Step(List<Item> consumed, List<ItemStack> produced, int output, boolean target) {}
 
     private final SpiritEntity spirit;
     private final CraftParams params;
@@ -99,19 +101,16 @@ public final class CraftScript implements ScriptInstance {
             return fail("нет рецепта для '" + name + "' (динамические рецепты не поддерживаются)");
         }
         RecipeSpec spec = found.get();
-        CraftPlan plan = CraftPlan.of(spec, remaining, available);
-        if (!plan.feasible()) {
-            return fail("не хватает: " + shortage(plan));
+        List<CraftAssembly.Order> orders = orders(spec, name, remaining, available, knowledge);
+        if (orders.isEmpty()) {
+            return fail("не хватает: " + shortage(CraftPlan.of(spec, remaining, available)));
         }
-        Optional<CraftingRecipe> recipe = vanillaRecipe(spec.id());
-        if (recipe.isEmpty()) {
-            return fail("рецепт '" + spec.id() + "' исчез из датапаков во время крафта");
-        }
-        Optional<String> refusal = buildSteps(plan, recipe.get());
+        Optional<String> refusal = buildSteps(orders, name);
         if (refusal.isPresent()) {
             return fail(refusal.get());
         }
-        Optional<StationType> needed = Stations.forRecipe(spec).flatMap(StationType::byId);
+        RecipeSpec finalRecipe = orders.get(orders.size() - 1).recipe();
+        Optional<StationType> needed = Stations.forRecipe(finalRecipe).flatMap(StationType::byId);
         if (needed.isEmpty()) {
             phase = Phase.CRAFT;
             return craft();
@@ -121,12 +120,32 @@ public final class CraftScript implements ScriptInstance {
         return ScriptStatus.RUNNING;
     }
 
-    private Optional<String> buildSteps(CraftPlan plan, CraftingRecipe recipe) {
-        List<Step> built = new ArrayList<>(plan.crafts());
+    private static List<CraftAssembly.Order> orders(
+            RecipeSpec spec, String name, int remaining, Map<String, Integer> available, RecipeKnowledge knowledge) {
+        CraftPlan plan = CraftPlan.of(spec, remaining, available);
+        if (plan.feasible()) {
+            List<CraftAssembly.Order> direct = new ArrayList<>(plan.crafts());
+            for (int craft = 0; craft < plan.crafts(); craft++) {
+                direct.add(new CraftAssembly.Order(plan.recipe(), plan.itemsForCraft(craft)));
+            }
+            return direct;
+        }
+        Map<String, Integer> stock = new HashMap<>(available);
+        stock.put(name, 0);
+        return CraftAssembly.plan(name, remaining, stock, knowledge.index()).orElse(List.of());
+    }
+
+    private Optional<String> buildSteps(List<CraftAssembly.Order> orders, String targetName) {
+        List<Step> built = new ArrayList<>(orders.size());
         SimpleContainer simulation = CraftInventory.copyOf(spirit.getInventory());
-        for (int craft = 0; craft < plan.crafts(); craft++) {
+        for (CraftAssembly.Order order : orders) {
+            Optional<CraftingRecipe> found = vanillaRecipe(order.recipe().id());
+            if (found.isEmpty()) {
+                return Optional.of("рецепт '" + order.recipe().id() + "' исчез из датапаков во время крафта");
+            }
+            CraftingRecipe recipe = found.get();
             List<Item> items = new ArrayList<>();
-            for (String id : plan.itemsForCraft(craft)) {
+            for (String id : order.items()) {
                 Optional<Item> item = ItemIds.item(id);
                 if (item.isEmpty()) {
                     return Optional.of("предмет '" + id + "' рецепта отсутствует в реестре");
@@ -135,7 +154,7 @@ public final class CraftScript implements ScriptInstance {
             }
             CraftingInput input = gridFor(recipe, items);
             if (!recipe.matches(input, spirit.level())) {
-                return Optional.of("рецепт '" + plan.recipe().id() + "' не принял выбранные предметы " + items);
+                return Optional.of("рецепт '" + order.recipe().id() + "' не принял выбранные предметы " + items);
             }
             List<ItemStack> produced = new ArrayList<>();
             produced.add(recipe.assemble(input, spirit.level().registryAccess()));
@@ -147,7 +166,11 @@ public final class CraftScript implements ScriptInstance {
             if (!CraftInventory.apply(simulation, items, produced)) {
                 return Optional.of("инвентарь полон: не помещаются результат и остатки крафта '" + params.item() + "'");
             }
-            built.add(new Step(items, produced, produced.get(0).getCount()));
+            built.add(new Step(
+                    items,
+                    produced,
+                    produced.get(0).getCount(),
+                    targetName.equals(order.recipe().outputItem())));
         }
         steps = built;
         return Optional.empty();
@@ -212,7 +235,9 @@ public final class CraftScript implements ScriptInstance {
         CraftInventory.apply(spirit.getInventory(), step.consumed(), step.produced());
         ticksSinceCraft = 0;
         nextStep++;
-        crafted += step.output();
+        if (step.target()) {
+            crafted += step.output();
+        }
         return nextStep >= steps.size() ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
     }
 

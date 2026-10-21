@@ -18,13 +18,15 @@ import java.util.Optional;
 
 public final class FallbackPlanner implements Planner {
     private static final String SPEAKER = "speaker";
+    private static final String COUNT = "count";
+    private static final int CHOP_TREES = 8;
 
     private static final List<Rule> RULES = List.of(
             new Rule(
                     List.of("сруб", "дерев"),
                     List.of(
                             new Step("scan", List.of("radius"), Map.of("filter", List.of("*_log"))),
-                            new Step("chop_tree", List.of("species", "count"), Map.of()))),
+                            new Step("chop_tree", List.of("species", COUNT), Map.of(COUNT, CHOP_TREES)))),
             new Rule(
                     List.of("руд", "шахт"),
                     List.of(
@@ -61,6 +63,7 @@ public final class FallbackPlanner implements Planner {
     }
 
     private static TaskNode build(Rule rule, Goal goal) {
+        Optional<Integer> textCount = firstNumber(goal.text());
         List<TaskNode> steps = new ArrayList<>(rule.steps.size());
         for (Step step : rule.steps) {
             Map<String, Object> params = new LinkedHashMap<>(step.fixed());
@@ -74,9 +77,35 @@ public final class FallbackPlanner implements Planner {
                     params.put(binding.getValue(), goal.params().get(binding.getKey()));
                 }
             }
+            if (step.script().equals("chop_tree") && !goal.params().containsKey(COUNT) && textCount.isPresent()) {
+                params.put(COUNT, textCount.get());
+            }
             steps.add(new ScriptCall(step.script(), params));
         }
         return steps.size() == 1 ? steps.get(0) : new SequenceNode(steps);
+    }
+
+    private static Optional<Integer> firstNumber(String text) {
+        int start = -1;
+        for (int index = 0; index < text.length(); index++) {
+            if (Character.isDigit(text.charAt(index))) {
+                start = index;
+                break;
+            }
+        }
+        if (start < 0) {
+            return Optional.empty();
+        }
+        int end = start;
+        while (end < text.length() && Character.isDigit(text.charAt(end))) {
+            end++;
+        }
+        try {
+            return Optional.of(Integer.parseInt(text.substring(start, end)));
+        } catch (NumberFormatException tooBig) {
+            throw new UnplannableGoalException("Число в цели '" + text
+                    + "' не помещается в int: задача с таким количеством невыполнима, уменьшите число");
+        }
     }
 
     public static boolean requiresPlayerSource(String text) {

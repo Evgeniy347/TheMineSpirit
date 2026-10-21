@@ -64,6 +64,7 @@ import com.theminespirit.core.script.MeetParams;
 import com.theminespirit.core.script.MemoryParams;
 import com.theminespirit.core.script.MilkParams;
 import com.theminespirit.core.script.MineVeinParams;
+import com.theminespirit.core.script.ParamDefaults;
 import com.theminespirit.core.script.PatrolParams;
 import com.theminespirit.core.script.PerceptionParams;
 import com.theminespirit.core.script.PillarUpParams;
@@ -153,6 +154,7 @@ import java.util.function.Function;
 
 public final class SpiritScripts {
     private static final Map<String, Function<SpiritEntity, ScriptFactory>> IMPLEMENTED = implemented();
+    private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog().restrictedTo(IMPLEMENTED.keySet());
 
     private SpiritScripts() {}
 
@@ -297,8 +299,22 @@ public final class SpiritScripts {
 
     public static ScriptRegistry registryFor(SpiritEntity spirit) {
         Map<String, ScriptFactory> factories = new LinkedHashMap<>();
-        IMPLEMENTED.forEach((id, builder) -> factories.put(id, builder.apply(spirit)));
+        IMPLEMENTED.forEach((id, builder) -> factories.put(id, withDefaults(id, builder.apply(spirit))));
         return ScriptRegistry.of(factories);
+    }
+
+    private static ScriptFactory withDefaults(String id, ScriptFactory delegate) {
+        return new ScriptFactory() {
+            @Override
+            public ScriptInstance create(Map<String, Object> params) {
+                return delegate.create(ParamDefaults.fill(CATALOG, id, params));
+            }
+
+            @Override
+            public boolean observesWhileTacticsOwns() {
+                return delegate.observesWhileTacticsOwns();
+            }
+        };
     }
 
     private static ScriptFactory observing(ScriptFactory delegate) {

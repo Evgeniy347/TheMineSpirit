@@ -39,7 +39,6 @@ public final class ChopTreeScript implements ScriptInstance {
     private final ChopTreeParams params;
     private final Set<Block> logBlocks;
     private final IdFilter logFilter;
-    private final BlockLocator.Search search;
     private final LevelTreeView treeView;
     private final TreeChop chop;
     private final TreeCandidates candidates = new TreeCandidates(ChopTuning.SEARCH_MAX_LOGS);
@@ -57,16 +56,31 @@ public final class ChopTreeScript implements ScriptInstance {
     private String failureReason;
     private WorkTarget reserved;
     private Tree crowded;
+    private BlockLocator.Search search;
+    private BlockCoord searchCenter;
+    private int searchRestarts;
 
     public ChopTreeScript(SpiritEntity spirit, ChopTreeParams params) {
         this.spirit = spirit;
         this.params = params;
         this.logBlocks = TreeBlocks.logs(params.species());
         this.logFilter = TreeBlocks.filter(params.species());
-        BlockPos center = spirit.blockPosition();
-        this.search = BlockLocator.search(spirit.level(), center, params.radius(), Set.copyOf(logBlocks));
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
+        this.searchCenter = coords(spirit.blockPosition());
+        this.search = newSearch(searchCenter);
         this.chop = new TreeChop(spirit, logFilter, params.replant(), treeView);
+    }
+
+    private BlockLocator.Search newSearch(BlockCoord center) {
+        return BlockLocator.search(
+                spirit.level(),
+                new BlockPos(center.x(), center.y(), center.z()),
+                params.radius(),
+                Set.copyOf(logBlocks));
+    }
+
+    private static BlockCoord coords(BlockPos pos) {
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
     @Override
@@ -190,6 +204,9 @@ public final class ChopTreeScript implements ScriptInstance {
             if (!search.done()) {
                 return ScriptStatus.RUNNING;
             }
+            if (restartSearch()) {
+                return ScriptStatus.RUNNING;
+            }
             return crowdOrOutOfTrees();
         }
         if (!treeView.isLog(start.get())) {
@@ -201,24 +218,29 @@ public final class ChopTreeScript implements ScriptInstance {
             return reject(notATree);
         }
         Tree found = (Tree) detection;
+        return startChop(found, false);
+    }
+
+    private boolean reserve(Tree found) {
         WorkTarget target = new WorkTarget(WorkKind.TREE, found.base());
-        if (!target.equals(reserved)) {
-            releaseReserved();
-            if (!WorkReserveHub.reserve(spirit, target)) {
-                crowded = found;
-                candidates.markKnown(found.logs());
-                return ScriptStatus.RUNNING;
-            }
-            reserved = target;
+        if (target.equals(reserved)) {
+            return true;
         }
-        return startChop(found);
+        releaseReserved();
+        if (!WorkReserveHub.reserve(spirit, target)) {
+            crowded = found;
+            candidates.markKnown(found.logs());
+            return false;
+        }
+        reserved = target;
+        return true;
     }
 
     private ScriptStatus crowdOrOutOfTrees() {
         if (crowded != null) {
             Tree deferred = crowded;
             crowded = null;
-            return startChop(deferred);
+            return startChop(deferred, true);
         }
         return outOfTrees();
     }
@@ -245,11 +267,46 @@ public final class ChopTreeScript implements ScriptInstance {
         return ScriptStatus.RUNNING;
     }
 
-    private ScriptStatus startChop(Tree found) {
-        tree = found;
+    private ScriptStatus startChop(Tree found, boolean verify) {
+        Optional<Tree> fresh = verify ? refresh(found) : Optional.of(found);
+        if (fresh.isEmpty()) {
+            return ScriptStatus.RUNNING;
+        }
+        if (!reserve(fresh.get())) {
+            return ScriptStatus.RUNNING;
+        }
+        tree = fresh.get();
         chopping = true;
-        chop.begin(found);
+        chop.begin(tree);
         return ScriptStatus.RUNNING;
+    }
+
+    private boolean restartSearch() {
+        BlockCoord center = coords(spirit.blockPosition());
+        if (searchRestarts >= ChopTuning.SEARCH_RESTARTS_MAX || center.equals(searchCenter)) {
+            return false;
+        }
+        searchRestarts++;
+        searchCenter = center;
+        search = newSearch(center);
+        return true;
+    }
+
+    // Цель могла срубить другой дух, пока эта ждала брони: основание уже воздух.
+    // Пересканируем дерево в мире и пропускаем срубленное без исключения (INC-17).
+    private Optional<Tree> refresh(Tree found) {
+        Optional<BlockCoord> surviving =
+                found.logs().stream().filter(treeView::isLog).findFirst();
+        if (surviving.isEmpty()) {
+            candidates.markKnown(found.logs());
+            return Optional.empty();
+        }
+        TreeDetection detection = TreeShape.detect(surviving.get(), treeView);
+        if (detection instanceof Tree tree) {
+            return Optional.of(tree);
+        }
+        candidates.markKnown(found.logs());
+        return Optional.empty();
     }
 
     private ScriptStatus advance(TreeChop.Outcome outcome) {

@@ -278,7 +278,17 @@ public final class TicketPlans {
 
     private static TaskNode luredCapture(Species species, String feed) {
         return sequence(
-                new ScriptCall("withdraw", Map.of(CONTAINER, NEAREST, ITEM, feed, COUNT, 1)),
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                feed,
+                                COUNT,
+                                1,
+                                RADIUS,
+                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
                 new ScriptCall(
                         "capture",
                         Map.of(

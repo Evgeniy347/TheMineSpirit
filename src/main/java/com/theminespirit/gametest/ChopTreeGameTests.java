@@ -1149,6 +1149,45 @@ public final class ChopTreeGameTests {
         });
     }
 
+    @GameTest(template = FIELD, batch = "chop_tree_crowded_vanished", timeoutTicks = 400)
+    public static void chopTree_TwoSpiritsOneTree_LoserFailsWithTreesRanOutNotAir(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
+        prepareField(helper);
+        buildOakTree(helper, 4, 4, 5);
+        SpiritEntity first = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 3));
+        SpiritEntity second = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(5, 1, 5));
+        first.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
+        second.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_AXE));
+
+        SpiritRun firstRun = SpiritRun.launch(helper, first, chopCall("oak", 1), SETTLE_TICKS);
+        SpiritRun secondRun = SpiritRun.launch(helper, second, chopCall("oak", 1), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            firstRun.assertStarted();
+            secondRun.assertStarted();
+            RunStatus firstStatus = first.taskStatus().orElse(null);
+            RunStatus secondStatus = second.taskStatus().orElse(null);
+            helper.assertTrue(
+                    firstStatus != RunStatus.RUNNING && secondStatus != RunStatus.RUNNING,
+                    "одно дерево на двоих обязано завершить обе задачи, а не висеть: статусы " + firstStatus + " и "
+                            + secondStatus);
+            helper.assertTrue(
+                    firstStatus == RunStatus.SUCCEEDED || secondStatus == RunStatus.SUCCEEDED,
+                    "срубить единственное дерево обязан ровно один дух: статусы " + firstStatus + " и " + secondStatus);
+            SpiritEntity loser = firstStatus == RunStatus.SUCCEEDED ? second : first;
+            RunStatus loserStatus = loser.taskStatus().orElse(null);
+            String reason = loser.taskFailureReason().orElse("");
+            helper.assertTrue(
+                    loserStatus == RunStatus.FAILED && reason.contains("закончились"),
+                    "проигравший гонку за бронь обязан отказаться понятной причиной «деревья … закончились», "
+                            + "а не падать на воздухе: статус " + loserStatus + ", причина: " + reason);
+            helper.assertTrue(
+                    !reason.contains("Основание дерева") && !reason.contains("скрипт упал"),
+                    "уже срубленное дерево пропускается пересканированием без исключения: причина " + reason);
+            clearField(helper);
+        });
+    }
+
     // [флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
     @GameTest(template = FIELD, batch = "chop_tree_reach_behind_wall", timeoutTicks = 500)
     public static void chopTree_FarBranchBehindWall_ChoppedFromOneStand(GameTestHelper helper) {
