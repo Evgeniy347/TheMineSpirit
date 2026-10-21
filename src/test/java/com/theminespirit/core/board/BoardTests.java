@@ -124,6 +124,39 @@ class BoardTests {
     }
 
     @Test
+    void fail_RepeatedFailures_BlockTicketAtLimitAndKeepItBlocked() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        String id = "first:clear_grounds";
+        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
+            UUID holder = new UUID(0, attempt);
+            board.submit(ticket(id, BoardCase.CLEAR_GROUNDS, now[0], List.of()));
+            assertEquals(
+                    BoardOutcome.CLAIMED,
+                    board.claim(id, holder, now[0]),
+                    "Попытка " + attempt + ": задание обязано выдаваться, иначе провал не к чему привязать");
+            assertTrue(board.fail(id), "Попытка " + attempt + ": провал скрипта обязан дойти до доски");
+            board.prune(now[0]);
+            now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, BoardCase.CLEAR_GROUNDS));
+        }
+
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(id).orElse(null),
+                "После предела провалов подряд задание блокируется: вечный цикл «открыть → провалить» "
+                        + "не должен повторяться каждую пересборку");
+        assertEquals(
+                BoardOutcome.DUPLICATE,
+                board.submit(ticket(id, BoardCase.CLEAR_GROUNDS, now[0], List.of())),
+                "Заблокированное задание не переиздаётся с теми же условиями: иначе предел провалов "
+                        + "ничего не ограничивает");
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(id).orElse(null),
+                "Статус BLOCKED сохраняется: снимает его только изменение условий задания");
+    }
+
+    @Test
     void submit_OldTicket_Accepted() {
         Board board = boardAt(1_000_000);
         BoardTicket late = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());
