@@ -246,6 +246,48 @@ class DemoPlacementTests {
         assertTrue(
                 chebyshev(chest, front) >= 2,
                 where + ": сундук не встаёт и в соседнюю с входом клетку — дух обходит дом по площадке: " + chest);
+        BlockCoord sign = placement.sign();
+        assertTrue(
+                sign != null && chebyshev(sign, chest) >= 1 && chebyshev(sign, chest) <= 2 && sign.y() == chest.y(),
+                where + ": у сундука обязана стоять табличка с названием рядом, вдоль фасада (владелец 19.10): "
+                        + sign);
+        for (BlockCoord cell : chestGroupCells(placement)) {
+            assertTrue(
+                    placement.platform().contains(cell),
+                    where + ": сундук, вторая половина и табличка обязаны стоять на площадке: " + cell);
+            assertTrue(
+                    !inSchema(placement, schematic, cell),
+                    where + ": сундук, вторая половина и табличка обязаны стоять вне клеток схемы при любом "
+                            + "повороте, иначе дух не очистит клетку ограды (владелец 21.10): " + cell);
+        }
+    }
+
+    // Замечание владельца 21.10: табличка у сундука попадала в клетку ограды загона при повороте. Вся группа
+    // «сундук + половина + табличка» обязана вращаться вместе с постройкой — проверка на всех поворотах явно.
+    @Test
+    void compute_EveryBuildingLookAndExplicitRotation_ChestGroupOutsideSchema() {
+        PresetLibrary library = loadReal();
+        for (DemoBuildings.Building building : DemoBuildings.all()) {
+            for (DemoBuildings.Level level : building.levels()) {
+                Schematic schematic = SchematicResources.load(level.scheme());
+                Preset preset = library.byId(level.scheme()).orElseThrow();
+                DemoPlacement.Door door = DemoPlacement.Door.of(preset);
+                for (int[] look : LOOKS) {
+                    for (BuildRotation rotation : BuildRotation.values()) {
+                        DemoPlacement placement = DemoPlacement.compute(
+                                new DemoPlacement.Anchor(0, 64, 0),
+                                new DemoPlacement.Look(look[0], look[1]),
+                                door,
+                                new DemoPlacement.Size(schematic.sizeX(), schematic.sizeY(), schematic.sizeZ()),
+                                rotation);
+                        String where = building.id() + "/" + level.scheme() + " взгляд " + look[0] + "," + look[1]
+                                + " поворот " + rotation.id();
+                        assertChest(placement, schematic, new BlockCoord(0, 64, 0), where);
+                        assertSpawn(placement, schematic, where);
+                    }
+                }
+            }
+        }
     }
 
     private static void assertSpawn(DemoPlacement placement, Schematic schematic, String where) {
@@ -256,7 +298,23 @@ class DemoPlacementTests {
         assertTrue(
                 !inSchema(placement, schematic, spawn),
                 where + ": дух не появляется в клетке схемы, иначе он задохнётся в блоках: " + spawn);
-        assertNotEquals(placement.chest(), spawn, where + ": дух и сундук не делят одну клетку");
+        for (BlockCoord cell : chestGroupCells(placement)) {
+            assertTrue(
+                    cell.x() != spawn.x() || cell.z() != spawn.z(),
+                    where + ": дух не появляется в клетке сундука или таблички: " + cell);
+        }
+    }
+
+    private static List<BlockCoord> chestGroupCells(DemoPlacement placement) {
+        List<BlockCoord> cells = new ArrayList<>();
+        cells.add(placement.chest());
+        if (placement.chestPartner() != null) {
+            cells.add(placement.chestPartner());
+        }
+        if (placement.sign() != null) {
+            cells.add(placement.sign());
+        }
+        return cells;
     }
 
     private static int chebyshev(BlockCoord a, BlockCoord b) {

@@ -19,6 +19,9 @@ public record DemoPlacement(
         BuildRotation rotation,
         BlockCoord origin,
         BlockCoord chest,
+        @Nullable BlockCoord chestPartner,
+        @Nullable BlockCoord sign,
+        Look chestFacing,
         BlockCoord spawn,
         BuildBox platform,
         BuildBox floorBox,
@@ -29,6 +32,7 @@ public record DemoPlacement(
         Objects.requireNonNull(rotation, "Поворот не может быть null: без него постройка встанет не туда");
         Objects.requireNonNull(origin, "Начало постройки не может быть null: без него нечего строить");
         Objects.requireNonNull(chest, "Сундук не может быть null: без него дух не возьмёт материалы");
+        Objects.requireNonNull(chestFacing, "Взгляд сундука не может быть null: без него не собрать двойной сундук");
         Objects.requireNonNull(spawn, "Место появления духа не может быть null: без него дух встанет в схему");
         Objects.requireNonNull(platform, "Площадка не может быть null: без неё нечего чистить");
         Objects.requireNonNull(floorBox, "Объём пола не может быть null: без него фундамент не выровняется");
@@ -72,12 +76,15 @@ public record DemoPlacement(
                 originX + rotatedX - 1 + pad,
                 anchor.y() - 1,
                 originZ + rotatedZ - 1 + pad);
-        BlockCoord chest = pickChest(anchor, look, frame);
-        BlockCoord spawn = pickSpawn(anchor, frame, chest);
+        ChestGroup group = pickChest(anchor, look, frame);
+        BlockCoord spawn = pickSpawn(anchor, frame, group);
         return new DemoPlacement(
                 rotation,
                 new BlockCoord(originX, anchor.y(), originZ),
-                chest,
+                group.chest(),
+                group.partner(),
+                group.sign(),
+                group.facing(),
                 spawn,
                 platform,
                 floor,
@@ -114,7 +121,10 @@ public record DemoPlacement(
         return BuildRotation.NONE;
     }
 
-    private static BlockCoord pickChest(Anchor anchor, Look look, Frame frame) {
+    // Замечание владельца 21.10: табличка стояла всегда на +x от сундука и при повороте попадала в клетку ограды
+    // загона. Теперь вся группа «сундук + вторая половина + табличка» лежит рядом вдоль фасада (поперёк взгляда),
+    // табличка — справа от сундука для игрока, что смотрит на его крышку; каждая клетка группы вне схемы.
+    private static ChestGroup pickChest(Anchor anchor, Look look, Frame frame) {
         int frontX = anchor.x();
         int frontZ = anchor.z();
         int doorX = anchor.x() + look.dx();
@@ -122,32 +132,52 @@ public record DemoPlacement(
         Entrance entrance = new Entrance(frontX, frontZ, doorX, doorZ, look);
         int perpX = -look.dz() == 0 && look.dx() == 0 ? 1 : -look.dz();
         int perpZ = look.dx();
+        Look facing = new Look(-perpZ, perpX);
         int[][] preferred = {
             {frontX + perpX * 2, frontZ + perpZ * 2},
-            {frontX - perpX * 2, frontZ - perpZ * 2},
+            {frontX - perpX * 4, frontZ - perpZ * 4},
             {doorX + perpX * 3, doorZ + perpZ * 3},
-            {doorX - perpX * 3, doorZ - perpZ * 3},
+            {doorX - perpX * 5, doorZ - perpZ * 5},
         };
-        for (int[] cell : preferred) {
-            if (chestFits(cell[0], cell[1], entrance, frame)) {
-                return new BlockCoord(cell[0], anchor.y(), cell[1]);
+        for (int width = 3; width >= 1; width--) {
+            for (int[] cell : preferred) {
+                if (groupFits(cell[0], cell[1], perpX, perpZ, width, entrance, frame)) {
+                    return group(cell[0], cell[1], anchor.y(), perpX, perpZ, width, facing);
+                }
             }
-        }
-        for (BlockCoord cell : platformByDistance(frame)) {
-            if (chestFits(cell.x(), cell.z(), entrance, frame)) {
-                return new BlockCoord(cell.x(), anchor.y(), cell.z());
+            for (BlockCoord cell : platformByDistance(frame)) {
+                if (groupFits(cell.x(), cell.z(), perpX, perpZ, width, entrance, frame)) {
+                    return group(cell.x(), cell.z(), anchor.y(), perpX, perpZ, width, facing);
+                }
             }
         }
         throw new IllegalArgumentException("На площадке нет места под сундук: вход " + frontX + "," + frontZ
                 + " и подход к нему заняли весь запас вокруг постройки");
     }
 
-    private static BlockCoord pickSpawn(Anchor anchor, Frame frame, BlockCoord chest) {
-        if (spawnFits(anchor.x(), anchor.z(), frame) && (anchor.x() != chest.x() || anchor.z() != chest.z())) {
+    // Ширина 3 — двойной сундук и табличка, 2 — одиночный сундук и табличка, 1 — сундук без таблички.
+    private static boolean groupFits(int x, int z, int perpX, int perpZ, int width, Entrance entrance, Frame frame) {
+        for (int i = 0; i < width; i++) {
+            if (!chestFits(x + perpX * i, z + perpZ * i, entrance, frame)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static ChestGroup group(int x, int z, int y, int perpX, int perpZ, int width, Look facing) {
+        BlockCoord chest = new BlockCoord(x, y, z);
+        BlockCoord partner = width == 3 ? new BlockCoord(x + perpX, y, z + perpZ) : null;
+        BlockCoord sign = width >= 2 ? new BlockCoord(x + perpX * (width - 1), y, z + perpZ * (width - 1)) : null;
+        return new ChestGroup(chest, partner, sign, facing);
+    }
+
+    private static BlockCoord pickSpawn(Anchor anchor, Frame frame, ChestGroup group) {
+        if (spawnFits(anchor.x(), anchor.z(), frame) && !group.covers(anchor.x(), anchor.z())) {
             return new BlockCoord(anchor.x(), anchor.y(), anchor.z());
         }
         for (BlockCoord cell : platformByDistance(frame)) {
-            if (spawnFits(cell.x(), cell.z(), frame) && (cell.x() != chest.x() || cell.z() != chest.z())) {
+            if (spawnFits(cell.x(), cell.z(), frame) && !group.covers(cell.x(), cell.z())) {
                 return new BlockCoord(cell.x(), anchor.y(), cell.z());
             }
         }
@@ -255,6 +285,20 @@ public record DemoPlacement(
     }
 
     private record Frame(int anchorX, int anchorZ, int originX, int originZ, int rotatedX, int rotatedZ, int pad) {}
+
+    private record ChestGroup(
+            BlockCoord chest,
+            @Nullable BlockCoord partner,
+            @Nullable BlockCoord sign,
+            Look facing) {
+        boolean covers(int x, int z) {
+            return same(chest, x, z) || same(partner, x, z) || same(sign, x, z);
+        }
+
+        private static boolean same(@Nullable BlockCoord cell, int x, int z) {
+            return cell != null && cell.x() == x && cell.z() == z;
+        }
+    }
 
     private record Entrance(int frontX, int frontZ, int doorX, int doorZ, Look look) {}
 }
