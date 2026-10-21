@@ -338,6 +338,11 @@ class TicketPlansTests {
                 "minecraft:wheat_seeds",
                 findCall(plan, "withdraw").params().get("item"),
                 "Перед отловом курицы дух берёт её корм со склада: capture ведёт животное приманкой");
+        assertEquals(
+                CatalogLimits.CONTAINER_RADIUS_DEFAULT,
+                findCall(plan, "withdraw").params().get("radius"),
+                "Внутренний withdraw обязан нести radius: доска запускает план мимо валидатора, и без радиуса "
+                        + "скрипт падает «Не задан обязательный параметр 'radius'» (INC-6)");
     }
 
     @Test
