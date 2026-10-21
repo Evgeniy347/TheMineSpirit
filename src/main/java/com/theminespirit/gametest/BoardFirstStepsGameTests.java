@@ -59,6 +59,8 @@ public final class BoardFirstStepsGameTests {
     private static final String TOOLS_BATCH = "board_first_steps_tools";
     private static final String SMITHY_BATCH = "board_first_steps_smithy";
     private static final String SMITHY_IRON_BATCH = "board_first_steps_smithy_iron";
+    private static final String RESTART_BATCH = "board_first_steps_restart";
+    private static final String CLEAN_BATCH = "board_first_steps_clean";
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
     // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
@@ -196,6 +198,74 @@ public final class BoardFirstStepsGameTests {
                     "Цепочка сошлась не раньше шахты: последний шаг " + prevIndex
                             + ": ранний конец означает пропуск шагов, а не выполненную цепочку");
         }
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = CLEAN_BATCH, timeoutTicks = 100)
+    public static void firstSteps_CleanGroundsWithoutTrees_SkipsClearing(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-clean.jsonl");
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), level.getGameTime());
+
+        helper.assertTrue(
+                board.board().statusOf("first:clear_grounds").isEmpty(),
+                "Чистая площадка без деревьев не требует расчистки, статус "
+                        + board.board().statusOf("first:clear_grounds")
+                        + ": ложный шаг отправил бы духа чистить пустую землю");
+        helper.assertTrue(
+                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "Без деревьев цепочка сразу идёт к сундукам, статус "
+                        + board.board().statusOf("first:stock_chests"));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = RESTART_BATCH, timeoutTicks = 100)
+    public static void firstSteps_DoneClearGrounds_NotReopenedAfterRestart(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        ServerLevel level = helper.getLevel();
+        placeLogs(helper, false);
+        Path journalPath = FMLPaths.CONFIGDIR.get().resolve("theminespirit/gametest-first-steps-restart.jsonl");
+        try {
+            Files.deleteIfExists(journalPath);
+        } catch (IOException error) {
+            throw new UncheckedIOException(error);
+        }
+
+        BoardService first = journaledBoard(level, journalPath);
+        FirstStepsRunner.tick(level, first, List.of(spirit), stocked(), level.getGameTime());
+        helper.assertTrue(
+                first.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.PENDING,
+                "Новое поселение начинает с расчистки участка, статус "
+                        + first.board().statusOf("first:clear_grounds"));
+        closeTicket(first, "first:clear_grounds", spirit);
+        first.journal().flushAll();
+
+        BoardService restarted = journaledBoard(level, journalPath);
+        helper.assertTrue(
+                restarted.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1),
+                "Журнал доски обязан вернуть отметку «расчищено» после перезапуска: иначе "
+                        + "выполненный кейс откроется снова");
+        FirstStepsRunner.tick(level, restarted, List.of(spirit), stocked(), level.getGameTime());
+
+        helper.assertTrue(
+                restarted.board().statusOf("first:clear_grounds").isEmpty(),
+                "Выполненный кейс расчистки не переоткрывается после перезапуска, статус "
+                        + restarted.board().statusOf("first:clear_grounds") + ": деревья в мире "
+                        + "не должны перебивать факт done");
+        helper.assertTrue(
+                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "После «расчищено» цепочка идёт дальше — к сундукам, статус "
+                        + restarted.board().statusOf("first:stock_chests"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -421,6 +491,18 @@ public final class BoardFirstStepsGameTests {
             throw new UncheckedIOException(error);
         }
         JournalService journal = new JournalService(journalPath);
+        return new BoardService(
+                board,
+                new HerdCycles(board),
+                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
+                BoardSources.create(),
+                journal);
+    }
+
+    private static BoardService journaledBoard(ServerLevel level, Path journalPath) {
+        JournalService journal = new JournalService(journalPath);
+        Board board = new Board(
+                level::getGameTime, (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
         return new BoardService(
                 board,
                 new HerdCycles(board),

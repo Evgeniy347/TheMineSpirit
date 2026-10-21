@@ -53,7 +53,10 @@ public final class HerdWatch {
             if (wild == null) {
                 continue;
             }
-            capture(service, species, wild, now);
+            if (!penBuilt(service, species)) {
+                continue;
+            }
+            capture(service, species, wild, penTicketId(service, species), now);
         }
         breed(service, home, now);
     }
@@ -71,7 +74,8 @@ public final class HerdWatch {
         return null;
     }
 
-    private static void capture(BoardService service, Species species, Animal animal, long now) {
+    private static void capture(
+            BoardService service, Species species, Animal animal, Optional<String> penId, long now) {
         String id = captureId(species, animal);
         BlockCoord target = new BlockCoord(
                 animal.blockPosition().getX(),
@@ -84,11 +88,11 @@ public final class HerdWatch {
                         id,
                         BoardCase.CAPTURE_ANIMAL,
                         Optional.empty(),
-                        priority(BoardCase.CAPTURE_ANIMAL, service, species, false),
+                        priority(BoardCase.CAPTURE_ANIMAL, service, species, true),
                         now,
                         1,
                         "animal:" + id,
-                        List.of(),
+                        penId.map(List::of).orElse(List.of()),
                         Map.of()),
                 point);
     }
@@ -141,15 +145,19 @@ public final class HerdWatch {
     }
 
     static boolean penBuilt(BoardService service, Species species) {
-        String prefix = species.name().toLowerCase(Locale.ROOT);
+        return penTicketId(service, species).isPresent();
+    }
+
+    private static Optional<String> penTicketId(BoardService service, Species species) {
+        String prefix = species.name().toLowerCase(Locale.ROOT) + "_pen";
         for (BoardTicket ticket : service.board().all()) {
             if (ticket.boardCase() == BoardCase.BUILD_PEN
                     && ticket.id().startsWith(prefix)
                     && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.DONE) {
-                return true;
+                return Optional.of(ticket.id());
             }
         }
-        return false;
+        return Optional.empty();
     }
 
     private static String causeOf(BoardService service, Species species) {

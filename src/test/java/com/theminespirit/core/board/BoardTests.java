@@ -100,6 +100,63 @@ class BoardTests {
     }
 
     @Test
+    void submit_DoneFirstStep_NotReopened() {
+        Board board = boardAt(0);
+        board.submit(ticket("first:clear_grounds", BoardCase.CLEAR_GROUNDS, 0, List.of()));
+        board.claim("first:clear_grounds", SPIRIT_ONE, 0);
+        board.complete("first:clear_grounds");
+
+        BoardOutcome outcome = board.submit(ticket("first:clear_grounds", BoardCase.CLEAR_GROUNDS, 0, List.of()));
+
+        assertEquals(
+                BoardOutcome.DUPLICATE,
+                outcome,
+                "Выполненный шаг первых шагов не переоткрывается: иначе DONE-тень снова становится "
+                        + "PENDING и кейс зацикливается каждую пересборку");
+        assertEquals(
+                BoardStatus.DONE,
+                board.statusOf("first:clear_grounds").orElse(null),
+                "Сданный шаг остаётся DONE: факт «сделано» — условие цепочки, а не рабочая очередь");
+        assertTrue(
+                board.ledger().has(BoardCase.CLEAR_GROUNDS, 1),
+                "Отметка ledger остаётся и после отказа переоткрыть шаг: по ней цепочка видит "
+                        + "выполненный кейс после перезапуска");
+    }
+
+    @Test
+    void fail_RepeatedFailures_BlockTicketAtLimitAndKeepItBlocked() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        String id = "first:clear_grounds";
+        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
+            UUID holder = new UUID(0, attempt);
+            board.submit(ticket(id, BoardCase.CLEAR_GROUNDS, now[0], List.of()));
+            assertEquals(
+                    BoardOutcome.CLAIMED,
+                    board.claim(id, holder, now[0]),
+                    "Попытка " + attempt + ": задание обязано выдаваться, иначе провал не к чему привязать");
+            assertTrue(board.fail(id), "Попытка " + attempt + ": провал скрипта обязан дойти до доски");
+            board.prune(now[0]);
+            now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, BoardCase.CLEAR_GROUNDS));
+        }
+
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(id).orElse(null),
+                "После предела провалов подряд задание блокируется: вечный цикл «открыть → провалить» "
+                        + "не должен повторяться каждую пересборку");
+        assertEquals(
+                BoardOutcome.DUPLICATE,
+                board.submit(ticket(id, BoardCase.CLEAR_GROUNDS, now[0], List.of())),
+                "Заблокированное задание не переиздаётся с теми же условиями: иначе предел провалов "
+                        + "ничего не ограничивает");
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(id).orElse(null),
+                "Статус BLOCKED сохраняется: снимает его только изменение условий задания");
+    }
+
+    @Test
     void submit_OldTicket_Accepted() {
         Board board = boardAt(1_000_000);
         BoardTicket late = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());

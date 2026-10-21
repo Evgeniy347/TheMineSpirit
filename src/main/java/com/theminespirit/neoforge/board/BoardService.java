@@ -644,6 +644,9 @@ public final class BoardService {
     }
 
     private void ensureSupply(List<SpiritEntity> spirits, StockView stock, long now) {
+        if (spirits.isEmpty()) {
+            return;
+        }
         Map<String, Integer> missing = new HashMap<>();
         for (BoardTicket ticket : board.all()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
@@ -660,7 +663,7 @@ public final class BoardService {
             String item = entry.getKey();
             int count = entry.getValue();
             String id = "supply:" + item;
-            if (board.statusOf(id).isPresent() || board.recentlyFailed(id, now)) {
+            if (active(id) || board.recentlyFailed(id, now)) {
                 continue;
             }
             TicketTarget target = targets.values().stream()
@@ -686,12 +689,15 @@ public final class BoardService {
     private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {
         EvergreenRules.supplyThresholds().forEach((item, threshold) -> {
             String shortItem = shortId(item);
+            if (!EvergreenRules.supplyNeeded(item, board)) {
+                return;
+            }
             int have = stock.available().getOrDefault(shortItem, 0);
             if (have >= threshold || hasActiveSupply(shortItem)) {
                 return;
             }
             String id = "supply:" + shortItem;
-            if (board.statusOf(id).isPresent() || board.recentlyFailed(id, now)) {
+            if (active(id) || board.recentlyFailed(id, now)) {
                 return;
             }
             submit(
@@ -704,15 +710,14 @@ public final class BoardService {
                             1,
                             BoardTicket.ALWAYS_CAUSE,
                             List.of(),
-                            Map.of(shortItem, threshold - have)),
+                            Map.of()),
                     TicketTarget.at(homeOf(spirits)).withSupply(shortItem, threshold - have));
         });
     }
 
     private boolean hasActiveSupply(String item) {
         for (BoardTicket ticket : board.all()) {
-            if (ticket.boardCase() != BoardCase.SUPPLY_SITE
-                    || board.statusOf(ticket.id()).isEmpty()) {
+            if (ticket.boardCase() != BoardCase.SUPPLY_SITE || !active(ticket.id())) {
                 continue;
             }
             TicketTarget target = targets.get(ticket.id());
@@ -721,6 +726,13 @@ public final class BoardService {
             }
         }
         return false;
+    }
+
+    private boolean active(String id) {
+        BoardStatus status = board.statusOf(id).orElse(null);
+        return status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED;
     }
 
     private static String shortId(String item) {

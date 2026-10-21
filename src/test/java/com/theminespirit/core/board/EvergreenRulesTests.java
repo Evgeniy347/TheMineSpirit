@@ -41,6 +41,76 @@ class EvergreenRulesTests {
     }
 
     @Test
+    void supplyNeeded_BeforeMine_EnchantItemsNotNeeded() {
+        Board board = new Board(() -> 0);
+
+        assertFalse(
+                EvergreenRules.supplyNeeded("minecraft:book", board),
+                "На старте книга не нужна: чаровальня не начата, вечная заявка на supply:book "
+                        + "висела бы без исполнителя");
+        assertFalse(
+                EvergreenRules.supplyNeeded("minecraft:paper", board),
+                "На старте бумага не нужна: доска не должна просить ресурсы будущего этапа");
+        assertFalse(
+                EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
+                "На старте полки не нужны: их расходует только чаровальня первого уровня");
+    }
+
+    @Test
+    void supplyNeeded_AfterMine_BookAndPaperNeeded() {
+        Board board = new Board(() -> 0);
+        board.ledger().note(BoardCase.BUILD_MINE, 1);
+
+        assertTrue(
+                EvergreenRules.supplyNeeded("minecraft:book", board),
+                "После шахты начинается цепочка чаровальни: книга нужна для её первого уровня");
+        assertTrue(
+                EvergreenRules.supplyNeeded("minecraft:paper", board),
+                "Бумага — часть той же цепочки книги: после шахты запас поддерживается");
+        assertFalse(
+                EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
+                "Полки ждут первого уровня чаровальни, а не одной шахты");
+    }
+
+    @Test
+    void supplyNeeded_AfterEnchantRoom_BookshelfNeeded() {
+        Board board = new Board(() -> 0);
+        board.ledger().note(BoardCase.ENCHANT_ROOM, 1);
+
+        assertTrue(
+                EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
+                "Второй уровень чаровальни расходует полки: запас обязан поддерживаться");
+    }
+
+    @Test
+    void supplyNeeded_LiveTicketDemands_NeededBeforeStage() {
+        Board board = new Board(() -> 0);
+        board.submit(new BoardTicket(
+                "build_1",
+                BoardCase.BUILD_HOUSE,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of("minecraft:book", 1)));
+
+        assertTrue(
+                EvergreenRules.supplyNeeded("minecraft:book", board),
+                "Живое задание требует книгу по полному id — запас нужен сразу, даже до этапа "
+                        + "чаровальни: иначе задание ждало бы ресурс, который никто не принесёт");
+    }
+
+    @Test
+    void supplyNeeded_UnknownItem_AlwaysMaintained() {
+        assertTrue(
+                EvergreenRules.supplyNeeded("minecraft:dirt", new Board(() -> 0)),
+                "Предмет вне этапов доски держится по общему порогу: иначе новый запас в таблице "
+                        + "молча перестал бы пополняться");
+    }
+
+    @Test
     void issuedTo_AssignedApplicableSpirit_Issued() {
         BoardTicket assigned = ticket("eat_a", BoardCase.EAT_TO_FULL, Optional.of(SPIRIT_A));
 

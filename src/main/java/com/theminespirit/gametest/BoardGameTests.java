@@ -57,7 +57,8 @@ public final class BoardGameTests {
         drainForeignTickets(board);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
-        spirit.setHome(home);
+        // Дух без дома: иначе FirstStepsRunner откроет расчистку и займёт единственного духа —
+        // сцена проверяет снабжение стройки, а не первые шаги поселения.
         for (int tree = 0; tree < 2; tree++) {
             for (int height = 1; height <= 4; height++) {
                 helper.setBlock(new BlockPos(6 + tree * 2, height, 6), Blocks.OAK_LOG);
@@ -75,7 +76,7 @@ public final class BoardGameTests {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of("oak_log", GATE_LOGS)),
-                TicketTarget.at(home));
+                TicketTarget.at(home).withSupply("oak_log", GATE_LOGS));
         board.rebuild(helper.getLevel(), helper.getLevel().getGameTime());
         AtomicInteger phase = new AtomicInteger(0);
         AtomicInteger supplyWaited = new AtomicInteger(0);
