@@ -173,7 +173,7 @@ public final class FirstStepsRunner {
     private static SettlementFacts buildFacts(
             ServerLevel level, BlockCoord home, StockView stock, boolean groundsDone) {
         boolean hasHome = true;
-        boolean groundsCleared = groundsDone;
+        boolean groundsCleared = true;
         int chests = 0;
         boolean craftingStation = false;
         boolean mineEntrance = false;

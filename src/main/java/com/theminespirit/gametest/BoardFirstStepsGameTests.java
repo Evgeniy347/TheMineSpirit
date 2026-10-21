@@ -60,6 +60,7 @@ public final class BoardFirstStepsGameTests {
     private static final String SMITHY_BATCH = "board_first_steps_smithy";
     private static final String SMITHY_IRON_BATCH = "board_first_steps_smithy_iron";
     private static final String RESTART_BATCH = "board_first_steps_restart";
+    private static final String CLEAN_BATCH = "board_first_steps_clean";
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
     // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
@@ -197,6 +198,30 @@ public final class BoardFirstStepsGameTests {
                     "Цепочка сошлась не раньше шахты: последний шаг " + prevIndex
                             + ": ранний конец означает пропуск шагов, а не выполненную цепочку");
         }
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = CLEAN_BATCH, timeoutTicks = 100)
+    public static void firstSteps_CleanGroundsWithoutTrees_SkipsClearing(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-clean.jsonl");
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), level.getGameTime());
+
+        helper.assertTrue(
+                board.board().statusOf("first:clear_grounds").isEmpty(),
+                "Чистая площадка без деревьев не требует расчистки, статус "
+                        + board.board().statusOf("first:clear_grounds")
+                        + ": ложный шаг отправил бы духа чистить пустую землю");
+        helper.assertTrue(
+                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "Без деревьев цепочка сразу идёт к сундукам, статус "
+                        + board.board().statusOf("first:stock_chests"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
