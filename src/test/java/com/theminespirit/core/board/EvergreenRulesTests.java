@@ -94,12 +94,12 @@ class EvergreenRulesTests {
                 1,
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
-                Map.of("book", 1)));
+                Map.of("minecraft:book", 1)));
 
         assertTrue(
                 EvergreenRules.supplyNeeded("minecraft:book", board),
-                "Живое задание требует книгу — запас нужен сразу, даже до этапа чаровальни: "
-                        + "иначе задание ждало бы ресурс, который никто не принесёт");
+                "Живое задание требует книгу по полному id — запас нужен сразу, даже до этапа "
+                        + "чаровальни: иначе задание ждало бы ресурс, который никто не принесёт");
     }
 
     @Test

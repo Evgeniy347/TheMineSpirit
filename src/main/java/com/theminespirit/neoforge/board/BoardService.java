@@ -689,7 +689,7 @@ public final class BoardService {
     private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {
         EvergreenRules.supplyThresholds().forEach((item, threshold) -> {
             String shortItem = shortId(item);
-            if (!EvergreenRules.supplyNeeded(shortItem, board)) {
+            if (!EvergreenRules.supplyNeeded(item, board)) {
                 return;
             }
             int have = stock.available().getOrDefault(shortItem, 0);
