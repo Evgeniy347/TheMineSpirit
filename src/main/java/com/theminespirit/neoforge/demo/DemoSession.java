@@ -15,6 +15,7 @@ import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,8 +27,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
@@ -50,6 +53,10 @@ final class DemoSession {
     private static final int DEMO_WAIT_TICKS = 100;
     private static final int WITHDRAW_RADIUS = 8;
     private static final int MAX_ROUNDS = 20;
+    // mc: уровень тикета = 33 - расстояние; сущности тикают при уровне не выше 31.
+    private static final int TICKET_DISTANCE = 2;
+    private static final TicketType<ChunkPos> DEMO_TICKET =
+            TicketType.create("theminespirit_demo", Comparator.comparingLong(ChunkPos::toLong));
     private static final String NO_MATERIAL = "не хватило материала";
     private static final String INVENTORY_FULL = "инвентарь духа полон";
 
@@ -60,6 +67,7 @@ final class DemoSession {
     private int index;
     private int round;
     private List<BlockPos> chests = List.of();
+    private final List<ChunkPos> held = new ArrayList<>();
 
     DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans, UUID owner) {
         this.level = level;
@@ -77,11 +85,13 @@ final class DemoSession {
     }
 
     void abort() {
+        releaseChunks();
         spirit.cancelTask();
         spirit.stripEquipment();
     }
 
     void begin() {
+        holdChunks();
         prepare(plans.get(0));
         spirit.startTask(node(0, withdrawals(plans.get(0))));
     }
@@ -103,6 +113,7 @@ final class DemoSession {
                 spirit.startTask(node(index, withdrawals(plans.get(index))));
                 return true;
             }
+            releaseChunks();
             spirit.discard();
             return false;
         }
@@ -148,6 +159,31 @@ final class DemoSession {
             steps.add(new ScriptCall("wait", params("ticks", DEMO_WAIT_TICKS)));
         }
         return new SequenceNode(steps);
+    }
+
+    // Игра 21.10: на витрине city 5 владелец стоял на другом конце улицы — чанки дальних участков выгружались, дух
+    // уходил в чанк (isRemoved), и сессия кончалась без стройки. Сессия держит чанки своих площадок до конца.
+    private void holdChunks() {
+        for (DemoPlan plan : plans) {
+            var platform = plan.placement().platform();
+            for (int cx = platform.minX() >> 4; cx <= platform.maxX() >> 4; cx++) {
+                for (int cz = platform.minZ() >> 4; cz <= platform.maxZ() >> 4; cz++) {
+                    ChunkPos pos = new ChunkPos(cx, cz);
+                    if (!held.contains(pos)) {
+                        held.add(pos);
+                        level.getChunkSource().addRegionTicket(DEMO_TICKET, pos, TICKET_DISTANCE, pos, true);
+                    }
+                }
+            }
+        }
+        LOGGER.info("Демо-стройка: дух {} держит чанков {} на время сессии", spirit.getStringUUID(), held.size());
+    }
+
+    private void releaseChunks() {
+        for (ChunkPos pos : held) {
+            level.getChunkSource().removeRegionTicket(DEMO_TICKET, pos, TICKET_DISTANCE, pos, true);
+        }
+        held.clear();
     }
 
     private static Map<String, Object> params(String key, Object value) {

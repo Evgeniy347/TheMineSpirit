@@ -172,6 +172,15 @@ public final class SpiritEntity extends PathfinderMob {
         return DropPolicy.MAX_DROP;
     }
 
+    // mc: Mob.checkDespawn убирает существо категории CREATURE дальше 128 блоков от ближнего игрока (и случайно —
+    // дальше
+    // 32 после 30 с без действия), если removeWhenFarAway не false; Animal переопределяет так же. Дух — не дикий моб:
+    // игра 21.10 — духи дальних построек /spirit demo city 5 пропадали, пока владелец стоял на другом конце.
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
+    }
+
     @Override
     public boolean canUsePortal(boolean allowPassengers) {
         return policies.exemptions().has(PolicyId.PORTAL) && super.canUsePortal(allowPassengers);
