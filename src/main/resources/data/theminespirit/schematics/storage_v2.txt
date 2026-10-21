@@ -7,8 +7,8 @@ requires: storage_v1
 size: 12x6x13   # Ш×В×Д
 entrance: 5,1,11
 legend:
-  '#': oak_planks
-  '=': oak_log
+  '#': cobblestone
+  '=': cobblestone
   '1': oak_sign "дерево"
   '+': oak_sign "еда"
   '*': oak_sign "урожай"
@@ -25,7 +25,7 @@ legend:
   'i': chest[facing=west,type=left]
   'j': chest[facing=west,type=right]
   'E': wall_torch[facing=east]
-  'p': oak_stairs[facing=north,half=bottom]
+  'p': cobblestone_stairs[facing=north,half=bottom]
 layers:
   - y0: |
       ############
@@ -40,7 +40,7 @@ layers:
       ############
       ############
       ############
-           p
+           pp
   - y1: |
       ############
       #=gf=gf=gf=#
@@ -53,7 +53,7 @@ layers:
       #c........j#
       #d........i#
       #=........=#
-      #####.######
+      #####..#####
            .
   - y2: |
       ############
@@ -67,7 +67,7 @@ layers:
       #c........j#
       #d........i#
       #=........=#
-      #####.######
+      #####..#####
            .
   - y3: |
       ############
