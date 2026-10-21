@@ -100,6 +100,30 @@ class BoardTests {
     }
 
     @Test
+    void submit_DoneFirstStep_NotReopened() {
+        Board board = boardAt(0);
+        board.submit(ticket("first:clear_grounds", BoardCase.CLEAR_GROUNDS, 0, List.of()));
+        board.claim("first:clear_grounds", SPIRIT_ONE, 0);
+        board.complete("first:clear_grounds");
+
+        BoardOutcome outcome = board.submit(ticket("first:clear_grounds", BoardCase.CLEAR_GROUNDS, 0, List.of()));
+
+        assertEquals(
+                BoardOutcome.DUPLICATE,
+                outcome,
+                "Выполненный шаг первых шагов не переоткрывается: иначе DONE-тень снова становится "
+                        + "PENDING и кейс зацикливается каждую пересборку");
+        assertEquals(
+                BoardStatus.DONE,
+                board.statusOf("first:clear_grounds").orElse(null),
+                "Сданный шаг остаётся DONE: факт «сделано» — условие цепочки, а не рабочая очередь");
+        assertTrue(
+                board.ledger().has(BoardCase.CLEAR_GROUNDS, 1),
+                "Отметка ledger остаётся и после отказа переоткрыть шаг: по ней цепочка видит "
+                        + "выполненный кейс после перезапуска");
+    }
+
+    @Test
     void submit_OldTicket_Accepted() {
         Board board = boardAt(1_000_000);
         BoardTicket late = ticket("build_1", BoardCase.BUILD_HOUSE, 0, List.of());

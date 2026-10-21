@@ -386,21 +386,30 @@ public final class TicketPlans {
     }
 
     private static TaskNode clearGrounds(TicketTarget target) {
+        int radius = GROUNDS_CLEAR_RADIUS;
+        return sequence(
+                clearGroundsChunk(target, -radius, -radius, -1, -1),
+                clearGroundsChunk(target, 0, -radius, radius, -1),
+                clearGroundsChunk(target, -radius, 0, -1, radius),
+                clearGroundsChunk(target, 0, 0, radius, radius));
+    }
+
+    private static ScriptCall clearGroundsChunk(TicketTarget target, int dx1, int dz1, int dx2, int dz2) {
         return new ScriptCall(
                 "clear_area",
                 Map.of(
                         "x1",
-                        target.target().x() - GROUNDS_CLEAR_RADIUS,
+                        target.target().x() + dx1,
                         "y1",
                         target.target().y() - 1,
                         "z1",
-                        target.target().z() - GROUNDS_CLEAR_RADIUS,
+                        target.target().z() + dz1,
                         "x2",
-                        target.target().x() + GROUNDS_CLEAR_RADIUS,
+                        target.target().x() + dx2,
                         "y2",
                         target.target().y() + 2,
                         "z2",
-                        target.target().z() + GROUNDS_CLEAR_RADIUS));
+                        target.target().z() + dz2));
     }
 
     private static TaskNode buildHouse(TicketTarget target) {

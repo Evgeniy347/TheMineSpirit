@@ -1,5 +1,7 @@
 package com.theminespirit.core.rest;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -10,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class RoutePattern {
-    private static final Pattern PARAM_VALUE = Pattern.compile("[A-Za-z0-9_-]{1,64}");
+    private static final Pattern PARAM_VALUE = Pattern.compile("[A-Za-z0-9_:,-]{1,64}");
     private static final Pattern PARAM_SEGMENT = Pattern.compile("[{]([a-z][A-Za-z0-9]*)[}]");
 
     private final List<String> segments;
@@ -59,14 +61,24 @@ final class RoutePattern {
             String actual = pathSegments.get(i);
             Matcher parameter = PARAM_SEGMENT.matcher(expected);
             if (parameter.matches()) {
-                if (!PARAM_VALUE.matcher(actual).matches()) {
+                Optional<String> decoded = decodeParameter(actual);
+                if (decoded.isEmpty()
+                        || !PARAM_VALUE.matcher(decoded.orElseThrow()).matches()) {
                     return Optional.empty();
                 }
-                params.put(parameter.group(1), actual);
+                params.put(parameter.group(1), decoded.orElseThrow());
             } else if (!expected.equals(actual)) {
                 return Optional.empty();
             }
         }
         return Optional.of(new PathParams(params));
+    }
+
+    private static Optional<String> decodeParameter(String raw) {
+        try {
+            return Optional.of(URLDecoder.decode(raw.replace("+", "%2B"), StandardCharsets.UTF_8));
+        } catch (IllegalArgumentException broken) {
+            return Optional.empty();
+        }
     }
 }

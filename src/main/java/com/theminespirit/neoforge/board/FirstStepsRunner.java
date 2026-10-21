@@ -62,7 +62,8 @@ public final class FirstStepsRunner {
             return;
         }
         BlockCoord home = homeOf(spirits);
-        SettlementFacts facts = buildFacts(level, home, stock);
+        boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
+        SettlementFacts facts = buildFacts(level, home, stock, groundsDone);
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         if (next.isEmpty()) {
             return;
@@ -169,9 +170,10 @@ public final class FirstStepsRunner {
                         .orElse(false));
     }
 
-    private static SettlementFacts buildFacts(ServerLevel level, BlockCoord home, StockView stock) {
+    private static SettlementFacts buildFacts(
+            ServerLevel level, BlockCoord home, StockView stock, boolean groundsDone) {
         boolean hasHome = true;
-        boolean groundsCleared = true;
+        boolean groundsCleared = groundsDone;
         int chests = 0;
         boolean craftingStation = false;
         boolean mineEntrance = false;
@@ -193,7 +195,7 @@ public final class FirstStepsRunner {
                         continue;
                     }
                     var state = level.getBlockState(check);
-                    if (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES)) {
+                    if (!groundsDone && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
                         groundsCleared = false;
                     }
                     if (state.is(Blocks.LADDER)) {

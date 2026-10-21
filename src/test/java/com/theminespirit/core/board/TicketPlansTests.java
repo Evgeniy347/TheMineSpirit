@@ -15,15 +15,18 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptSpec;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -237,6 +240,35 @@ class TicketPlansTests {
         assertTrue(
                 collectScripts(plan).contains("clear_area"),
                 "Разбор укрытия — существующий clear_area: второй разборочный скрипт " + "не заводим");
+    }
+
+    @Test
+    void plan_ClearGrounds_EachCallFitsVolumeLimitAndCoversWholeSite() {
+        BlockCoord center = new BlockCoord(10, 60, -5);
+        TaskNode plan = TicketPlans.plan(BoardCase.CLEAR_GROUNDS, TicketTarget.at(center));
+        List<ScriptCall> calls = collectCalls(plan, "clear_area");
+        Set<String> cells = new HashSet<>();
+        for (ScriptCall call : calls) {
+            ClearAreaParams params = ClearAreaParams.from(call.params());
+            for (int x = params.x1(); x <= params.x2(); x++) {
+                for (int y = params.y1(); y <= params.y2(); y++) {
+                    for (int z = params.z1(); z <= params.z2(); z++) {
+                        cells.add(x + ":" + y + ":" + z);
+                    }
+                }
+            }
+        }
+
+        assertTrue(
+                calls.size() > 1,
+                "Расчистка участка 33×33×4 = 4356 больше предела clear_area 4096: одним вызовом "
+                        + "скрипт падает, поэтому план обязан разбить участок на части, а не "
+                        + "оставлять духа в цикле провалов");
+        assertEquals(
+                33 * 33 * 4,
+                cells.size(),
+                "Куски расчистки обязаны покрыть весь участок радиуса 16 без дыр: иначе "
+                        + "факты поселения снова увидят деревья и переоткроют кейс");
     }
 
     @Test
@@ -745,6 +777,33 @@ class TicketPlansTests {
                     "План не обязан ссылаться на скрипты вне каталога: " + script
                             + " — иначе дух получит задание с неизвестным шагом");
         }
+    }
+
+    private static List<ScriptCall> collectCalls(TaskNode root, String script) {
+        List<ScriptCall> calls = new ArrayList<>();
+        Deque<TaskNode> queue = new ArrayDeque<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            TaskNode node = queue.poll();
+            switch (node) {
+                case ScriptCall call -> {
+                    if (call.script().equals(script)) {
+                        calls.add(call);
+                    }
+                }
+                case SequenceNode sequence -> queue.addAll(sequence.steps());
+                case RepeatNode repeat -> queue.add(repeat.step());
+                case FallbackNode fallback -> queue.addAll(fallback.steps());
+                case ParallelNode parallel -> queue.addAll(parallel.steps());
+                case ConditionNode condition -> {
+                    queue.add(condition.thenStep());
+                    if (condition.elseStep() != null) {
+                        queue.add(condition.elseStep());
+                    }
+                }
+            }
+        }
+        return calls;
     }
 
     private static List<String> collectScripts(TaskNode root) {

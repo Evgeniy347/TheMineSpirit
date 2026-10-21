@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
  * Мир из ядра не читает: запасы приходят снимком StockView, тики — поставщиком now.
  */
 public final class Board {
+    private static final String FIRST_STEPS_PREFIX = "first:";
     private static final Comparator<BoardTicket> QUEUE_ORDER = Comparator.<BoardTicket>comparingInt(
                     ticket -> BoardRules.priorityOf(ticket.boardCase()))
             .reversed()
@@ -60,6 +61,11 @@ public final class Board {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, " + "а не пустую заявку");
         if (tickets.containsKey(ticket.id())) {
             BoardStatus current = statuses.get(ticket.id());
+            if (current == BoardStatus.DONE && ticket.id().startsWith(FIRST_STEPS_PREFIX)) {
+                // Шаг первых шагов одноразовый: DONE — это факт «сделано», а не тень для
+                // переиздания. Иначе пересборка возвращала бы выполненный кейс в очередь.
+                return BoardOutcome.DUPLICATE;
+            }
             if (current == BoardStatus.DONE
                     || (current == BoardStatus.BLOCKED && conditionsChanged(tickets.get(ticket.id()), ticket))) {
                 tickets.put(ticket.id(), ticket);

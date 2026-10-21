@@ -315,6 +315,26 @@ class BoardRoutesTests {
     }
 
     @Test
+    void delete_ColonInId_FindsTaskBothRawAndPercentEncoded() {
+        String id = "first:clear_grounds";
+        gateway.with(new BoardTask(
+                id, "CLEAR_GROUNDS", 50, null, "ASSIGNED", Map.of(), Map.of(), List.of(), 7, 1, "always"));
+
+        RestResponse raw = send("DELETE", "/v1/board/tasks/" + id, "");
+        RestResponse encoded = send("DELETE", "/v1/board/tasks/first%3Aclear_grounds", "");
+
+        assertEquals(200, raw.status(), "Отмена задания с двоеточием обязана находить его: " + raw.body());
+        assertEquals(
+                200,
+                encoded.status(),
+                "Тот же id в percent-кодировке (%3A) обязан находить задание: " + encoded.body());
+        assertEquals(
+                List.of(id, id),
+                gateway.cancels(),
+                "Обе формы id дошли до доски: иначе тикет нельзя снять, хотя GET /v1/board его показывает");
+    }
+
+    @Test
     void delete_UnknownTask_ReturnsNotFound() {
         RestResponse response = send("DELETE", "/v1/board/tasks/board-404", "");
 
