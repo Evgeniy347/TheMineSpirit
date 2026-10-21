@@ -10,12 +10,22 @@ import java.util.Set;
 
 /**
  * Работа с места: что дух делает прямо сейчас, не сходя с места, и куда шагнуть, когда с места
- * делать нечего. Стоянка выбирается так, чтобы с неё дотянуться до наибольшего числа готовых клеток: дух не бегает
- * к каждому блоку, а обходит постройку несколькими стоянками. Общее правило досягаемости — {@link SpiritReach}.
+ * делать нечего. Стоянка — ближайшая полезная: с неё дотягиваются хотя бы до половины лучшего охвата готовых клеток,
+ * а среди таких выигрывает охват за вычетом штрафа за дальность: дух не бегает к каждому блоку и не скачет через дом. Общее правило досягаемости — {@link SpiritReach}.
  */
 public final class ReachPlanner {
     public static final int BODY_HEIGHT = 2;
     static final int STAND_SCAN_BELOW = 6;
+    // Решение владельца 21.10 «ближайшая полезная стоянка»: из стоянок, с которых ставится не меньше порога клеток
+    // (доля лучшего покрытия, но не меньше минимума), берётся лучшая по счёту «клетки минус штраф за расстояние» —
+    // дух идёт волной по слою, а не скачет через дом к стоянке с наибольшим покрытием. Замер по всем снапшотам планов
+    // (4 поворота, 21.10): путь между стоянками 33751 → 28346 (−16 %), стоянок 4121 → 4112, заходов и «не поставлено»
+    // без изменений; штраф 2 на блок — «не поставлено» 555. Порог 80 % в GameTest хуже 50 %: дом игрока 3 — 4 красных
+    // поворота против 2, усадьба — 2 запертых духа против 1 (у старого правила тоже 1).
+    static final int USEFUL_MIN = 4;
+    static final int USEFUL_PERCENT = 50;
+    // Штраф в сотых клетки за блок расстояния: 70 — 0,7 клетки.
+    static final int DISTANCE_PENALTY_HUNDREDTHS = 70;
 
     public interface World {
         boolean ready(BlockCoord cell);
@@ -95,9 +105,9 @@ public final class ReachPlanner {
             List<BlockCoord> candidates,
             Set<BlockCoord> excluded,
             Set<BlockCoord> blocked) {
-        BlockCoord best = null;
-        int bestCount = 0;
-        long bestDistance = Long.MAX_VALUE;
+        List<BlockCoord> stands = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+        int most = 0;
         for (BlockCoord stand : candidates) {
             if (stand.equals(feet)
                     || excluded.contains(stand)
@@ -109,13 +119,28 @@ public final class ReachPlanner {
             if (count == 0) {
                 continue;
             }
+            stands.add(stand);
+            counts.add(count);
+            most = Math.max(most, count);
+        }
+        int threshold = Math.min(most, Math.max(USEFUL_MIN, (most * USEFUL_PERCENT + 99) / 100));
+        BlockCoord best = null;
+        long bestScore = Long.MIN_VALUE;
+        long bestDistance = Long.MAX_VALUE;
+        for (int i = 0; i < stands.size(); i++) {
+            int count = counts.get(i);
+            if (count < threshold) {
+                continue;
+            }
+            BlockCoord stand = stands.get(i);
             long distance = distanceSquared(feet, stand);
+            long score = count * 100L - Math.round(DISTANCE_PENALTY_HUNDREDTHS * Math.sqrt((double) distance));
             if (best == null
-                    || count > bestCount
-                    || (count == bestCount && distance < bestDistance)
-                    || (count == bestCount && distance == bestDistance && stand.compareTo(best) < 0)) {
+                    || score > bestScore
+                    || (score == bestScore && distance < bestDistance)
+                    || (score == bestScore && distance == bestDistance && stand.compareTo(best) < 0)) {
                 best = stand;
-                bestCount = count;
+                bestScore = score;
                 bestDistance = distance;
             }
         }

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +80,34 @@ class ReachPlannerTests {
                 stand,
                 "При равном охвате выбирается стоянка ближе к духу: иначе он бежит через всю площадку ради той же "
                         + "стройки");
+    }
+
+    // Решение владельца 21.10 «ближайшая полезная стоянка»: дух идёт волной по слою, а не скачет через дом к стоянке
+    // с наибольшим охватом.
+    @Test
+    void nextStand_NearUsefulAndFarBiggerGroups_PicksNearUseful() {
+        List<BlockCoord> cells = new ArrayList<>();
+        for (int x = 0; x <= 5; x++) {
+            cells.add(cell(x, 1, 0));
+        }
+        for (int x = 20; x <= 26; x++) {
+            cells.add(cell(x, 1, 0));
+        }
+        Set<BlockCoord> standable = new HashSet<>();
+        for (int x = -4; x <= 30; x++) {
+            standable.add(cell(x, 1, 1));
+            standable.add(cell(x, 1, 2));
+            standable.add(cell(x, 1, 3));
+        }
+        ReachPlanner.World world = new SetWorld(Set.copyOf(cells), standable);
+
+        Optional<BlockCoord> stand =
+                ReachPlanner.nextStand(REACH, cell(0, 1, 3), cells, world, Set.of(), Set.copyOf(cells));
+
+        assertTrue(
+                stand.isPresent() && stand.get().x() <= 8,
+                "С ближней стоянки ставится 6 клеток (не меньше половины лучших 7) — она и выбирается, а не дальняя "
+                        + "в 20 блоках ради одной лишней клетки; фактически " + stand);
     }
 
     @Test
