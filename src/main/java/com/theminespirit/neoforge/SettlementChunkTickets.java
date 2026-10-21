@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
+import com.theminespirit.core.chunk.ChunkSquare;
 import com.theminespirit.core.chunk.SettlementChunks;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -38,12 +39,10 @@ public final class SettlementChunkTickets {
     }
 
     static void tick(ServerLevel level, boolean anyPlayerOnline) {
-        Set<ChunkCoord> desired = anyPlayerOnline
-                ? SettlementChunks.around(
-                        SettlementAnchorStore.get(level).anchors(), SettlementChunks.WORK_RADIUS_BLOCKS)
-                : Set.of();
+        Set<ChunkCoord> settlement = SettlementChunks.around(
+                SettlementAnchorStore.get(level).anchors(), SettlementChunks.WORK_RADIUS_BLOCKS);
         Set<ChunkCoord> held = HELD.getOrDefault(level, Set.of());
-        ChunkDiff diff = ChunkDiff.between(held, desired);
+        ChunkDiff diff = SettlementChunks.transition(held, settlement, anyPlayerOnline);
         if (!diff.isEmpty()) {
             for (ChunkCoord chunk : diff.toRemove()) {
                 CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), false, true);
@@ -52,7 +51,7 @@ public final class SettlementChunkTickets {
                 CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), true, true);
             }
         }
-        HELD.put(level, desired);
+        HELD.put(level, ChunkSquare.apply(held, diff));
     }
 
     static void clear() {
