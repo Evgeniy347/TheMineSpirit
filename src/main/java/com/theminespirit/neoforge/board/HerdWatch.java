@@ -6,7 +6,6 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BreedingRules;
-import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.HerdCap;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.TicketTarget;
@@ -146,15 +145,7 @@ public final class HerdWatch {
     }
 
     static boolean penBuilt(BoardService service, Species species) {
-        if (penTicketId(service, species).isPresent()) {
-            return true;
-        }
-        for (int level = 1; level <= BuildingLevels.maxLevel(BoardCase.BUILD_PEN); level++) {
-            if (service.board().ledger().has(BoardCase.BUILD_PEN, level)) {
-                return true;
-            }
-        }
-        return false;
+        return penTicketId(service, species).isPresent();
     }
 
     private static Optional<String> penTicketId(BoardService service, Species species) {
