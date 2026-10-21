@@ -89,8 +89,8 @@ public final class SpiritSuppliesGameTests {
         List<ScriptCall> steps = supplies.withdraw("iron_ingot", 5);
 
         String absolute = absolute(helper, new BlockPos(6, 1, 4));
-        List<ScriptCall> expected =
-                List.of(new ScriptCall("withdraw", Map.of("container", absolute, "item", "iron_ingot", "count", 5)));
+        List<ScriptCall> expected = List.of(new ScriptCall(
+                "withdraw", Map.of("container", absolute, "item", "iron_ingot", "count", 5, "radius", 8)));
         helper.assertTrue(
                 steps.equals(expected),
                 "один сундук обязан дать один шаг с его мировыми координатами и числом не больше нужного, " + "шаги: "
@@ -115,7 +115,15 @@ public final class SpiritSuppliesGameTests {
         List<ScriptCall> expected = List.of(
                 new ScriptCall(
                         "withdraw",
-                        Map.of("container", absolute(helper, new BlockPos(5, 1, 4)), "item", "iron_ingot", "count", 2)),
+                        Map.of(
+                                "container",
+                                absolute(helper, new BlockPos(5, 1, 4)),
+                                "item",
+                                "iron_ingot",
+                                "count",
+                                2,
+                                "radius",
+                                8)),
                 new ScriptCall(
                         "withdraw",
                         Map.of(
@@ -124,7 +132,9 @@ public final class SpiritSuppliesGameTests {
                                 "item",
                                 "iron_ingot",
                                 "count",
-                                3)));
+                                3,
+                                "radius",
+                                8)));
         helper.assertTrue(
                 steps.equals(expected),
                 "ближний сундук обязан идти первым и отдать всё своё, дальний — добирать остаток, шаги: " + steps);

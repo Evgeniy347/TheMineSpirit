@@ -218,7 +218,7 @@ public final class ChopTreeScript implements ScriptInstance {
             return reject(notATree);
         }
         Tree found = (Tree) detection;
-        return startChop(found);
+        return startChop(found, false);
     }
 
     private boolean reserve(Tree found) {
@@ -240,7 +240,7 @@ public final class ChopTreeScript implements ScriptInstance {
         if (crowded != null) {
             Tree deferred = crowded;
             crowded = null;
-            return startChop(deferred);
+            return startChop(deferred, true);
         }
         return outOfTrees();
     }
@@ -267,8 +267,8 @@ public final class ChopTreeScript implements ScriptInstance {
         return ScriptStatus.RUNNING;
     }
 
-    private ScriptStatus startChop(Tree found) {
-        Optional<Tree> fresh = refresh(found);
+    private ScriptStatus startChop(Tree found, boolean verify) {
+        Optional<Tree> fresh = verify ? refresh(found) : Optional.of(found);
         if (fresh.isEmpty()) {
             return ScriptStatus.RUNNING;
         }
