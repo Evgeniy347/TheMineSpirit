@@ -9,12 +9,8 @@ import com.theminespirit.core.tactics.TacticalOutcome;
 public final class ForcedRetreat {
     private ForcedRetreat() {}
 
-    public static TacticalOutcome apply(
-            TacticalOutcome next, CombatDirective directive, RetreatMethod forcedMethod, int enemies) {
+    public static TacticalOutcome apply(TacticalOutcome next, CombatDirective directive, RetreatMethod forcedMethod) {
         if (directive == null || directive.retreat().isEmpty()) {
-            return next;
-        }
-        if (enemies == 0) {
             return next;
         }
         boolean ordered = directive.mode() == CombatMode.PASSIVE;

@@ -58,8 +58,8 @@ class ForcedRetreatTests {
                 tick, SPIRIT_ID, "spirit", outcome, Optional.empty(), ORDER, DecisionFacts.of(situation));
     }
 
-    private static TacticalOutcome forced(TacticalOutcome outcome, CombatDirective directive, int enemies) {
-        return ForcedRetreat.apply(outcome, directive, RetreatMethod.NONE, enemies);
+    private static TacticalOutcome forced(TacticalOutcome outcome, CombatDirective directive) {
+        return ForcedRetreat.apply(outcome, directive, RetreatMethod.NONE);
     }
 
     @Test
@@ -82,7 +82,7 @@ class ForcedRetreatTests {
         for (long tick = 10; tick <= 200; tick += 10) {
             TacticalOutcome next = engine.step(empty, memory, tick);
             memory = next.memory();
-            TacticalOutcome effective = forced(next, GUARD_POST, 0);
+            TacticalOutcome effective = forced(next, GUARD_POST);
             decisions.add(effective.decision());
             journal.offer(observe(effective, empty, tick));
         }
@@ -111,8 +111,7 @@ class ForcedRetreatTests {
                 .step(creeper, TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1), 10);
         assertEquals(TacticalOption.RETREAT, outcome.decision(), "Крипер в 3 блоках обязан отвести духа");
 
-        TacticalOutcome effective = ForcedRetreat.apply(
-                outcome, GUARD_POST, RetreatMethod.HOME, creeper.enemies().size());
+        TacticalOutcome effective = ForcedRetreat.apply(outcome, GUARD_POST, RetreatMethod.HOME);
 
         assertEquals(
                 RetreatMethod.HOME,
@@ -126,8 +125,7 @@ class ForcedRetreatTests {
         Situation outside = situation(List.of(AdapterFixtures.enemy("minecraft:zombie", "z", 20, 0)));
 
         TacticalOutcome outcome = engine.step(outside, TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1), 10);
-        TacticalOutcome effective =
-                forced(outcome, GUARD_POST, outside.enemies().size());
+        TacticalOutcome effective = forced(outcome, GUARD_POST);
 
         assertEquals(
                 List.of(TacticalOption.IGNORE, "outside_leash_ignore", TacticalOption.IGNORE),
@@ -144,8 +142,7 @@ class ForcedRetreatTests {
         assertNotEquals(
                 TacticalOption.RETREAT, outcome.decision(), "Обычный бой не отход: иначе проверка ничего не значит");
 
-        TacticalOutcome effective =
-                forced(outcome, CombatDirective.flee(), zombie.enemies().size());
+        TacticalOutcome effective = forced(outcome, CombatDirective.flee());
 
         assertEquals(
                 List.of(TacticalOption.RETREAT, RetreatMethod.AWAY),
@@ -154,16 +151,16 @@ class ForcedRetreatTests {
     }
 
     @Test
-    void apply_ExplicitFleeWithoutEnemies_KeepsIgnore() {
+    void apply_ExplicitFleeWithoutEnemies_StillForcesRetreat() {
         Situation empty = situation(List.of());
         TacticalOutcome outcome = new TacticsEngine(TacticsConfig.loadDefault())
                 .step(empty, TacticsMemory.initial(CombatMode.PASSIVE, 0, 1), 10);
 
-        TacticalOutcome effective = forced(outcome, CombatDirective.flee(), 0);
+        TacticalOutcome effective = forced(outcome, CombatDirective.flee());
 
         assertEquals(
-                TacticalOption.IGNORE,
+                TacticalOption.RETREAT,
                 effective.decision(),
-                "Бежать не от кого: пустой мир не даёт отхода даже по явному приказу бежать");
+                "Явный приказ бежать исполняется и без врагов: это команда, а не выбор тактики");
     }
 }

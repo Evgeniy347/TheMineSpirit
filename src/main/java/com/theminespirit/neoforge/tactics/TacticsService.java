@@ -388,8 +388,7 @@ public final class TacticsService {
         stepCalls++;
         schedule.evaluated(now, byEvent);
         memory = next.memory();
-        next = ForcedRetreat.apply(
-                next, directive, forcedMethod, situation.enemies().size());
+        next = ForcedRetreat.apply(next, directive, forcedMethod);
         retreat = RetreatCommitment.next(retreat, next, now, settings);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
