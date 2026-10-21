@@ -6,7 +6,9 @@ import static net.minecraft.commands.Commands.literal;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ItemCount;
@@ -21,6 +23,7 @@ import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.commands.CommandSourceStack;
@@ -28,6 +31,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
@@ -35,6 +39,7 @@ import net.minecraft.world.item.ItemStack;
 
 final class SpiritTaskCommands {
     private static final String SPIRITS = "spirits";
+    private static final int UUID_PREFIX_MIN = 8;
 
     private SpiritTaskCommands() {}
 
@@ -51,9 +56,8 @@ final class SpiritTaskCommands {
 
     private static int goal(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, SPIRITS);
+        List<SpiritEntity> spirits = selectedSpirits(ctx);
         String text = StringArgumentType.getString(ctx, "goal");
-        List<SpiritEntity> spirits = filterSpirits(selected);
         if (spirits.isEmpty()) {
             source.sendFailure(
                     Component.literal("Цель '" + text + "' некому поставить: среди выбранных сущностей нет духа"));
@@ -125,8 +129,7 @@ final class SpiritTaskCommands {
 
     private static int status(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, SPIRITS);
-        List<SpiritEntity> spirits = filterSpirits(selected);
+        List<SpiritEntity> spirits = selectedSpirits(ctx);
         if (spirits.isEmpty()) {
             source.sendFailure(Component.literal("Среди выбранных сущностей нет духа: статус смотреть нечего"));
             return 0;
@@ -148,8 +151,7 @@ final class SpiritTaskCommands {
 
     private static int cancel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
-        Collection<? extends Entity> selected = EntityArgument.getEntities(ctx, SPIRITS);
-        List<SpiritEntity> spirits = filterSpirits(selected);
+        List<SpiritEntity> spirits = selectedSpirits(ctx);
         if (spirits.isEmpty()) {
             source.sendFailure(Component.literal("Среди выбранных сущностей нет духа: отменять нечего"));
             return 0;
@@ -189,6 +191,62 @@ final class SpiritTaskCommands {
             }
         }
         return spirits;
+    }
+
+    // Игрок и лог называют духа коротко: «spirit-1» или первые 8 знаков UUID (INC-8). Ванильный
+    // селектор такие строки не находит и команда падала, а оператор затем бил по всем духам сразу.
+    // Находим ровно одного духа по имени или префиксу UUID; неоднозначность — отказ, а не «все».
+    private static List<SpiritEntity> selectedSpirits(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        try {
+            return filterSpirits(EntityArgument.getEntities(ctx, SPIRITS));
+        } catch (CommandSyntaxException missing) {
+            String token = argumentText(ctx);
+            List<SpiritEntity> matched = token == null ? List.of() : spiritsByToken(ctx.getSource(), token);
+            if (matched.isEmpty()) {
+                throw missing;
+            }
+            if (matched.size() > 1) {
+                throw new SimpleCommandExceptionType(Component.literal("По '" + token + "' найдено духов: "
+                                + matched.size() + ": укажите полный UUID или точное имя"))
+                        .create();
+            }
+            return matched;
+        }
+    }
+
+    private static String argumentText(CommandContext<CommandSourceStack> ctx) {
+        String input = ctx.getInput();
+        for (ParsedCommandNode<CommandSourceStack> node : ctx.getNodes()) {
+            if (SPIRITS.equals(node.getNode().getName())) {
+                return node.getRange().get(input).trim();
+            }
+        }
+        return null;
+    }
+
+    private static List<SpiritEntity> spiritsByToken(CommandSourceStack source, String token) {
+        String normalized = normalizeUuid(token);
+        boolean prefix = normalized.length() >= UUID_PREFIX_MIN && normalized.matches("[0-9a-f]+");
+        List<SpiritEntity> matched = new ArrayList<>();
+        for (ServerLevel level : source.getServer().getAllLevels()) {
+            for (Entity entity : level.getAllEntities()) {
+                if (!(entity instanceof SpiritEntity spirit)) {
+                    continue;
+                }
+                String uuid = normalizeUuid(spirit.getStringUUID());
+                if (uuid.equals(normalized)
+                        || (prefix && uuid.startsWith(normalized))
+                        || spirit.displayName().equals(token)) {
+                    matched.add(spirit);
+                }
+            }
+        }
+        return matched;
+    }
+
+    private static String normalizeUuid(String value) {
+        return value.replace("-", "").toLowerCase(Locale.ROOT);
     }
 
     private static String describe(SpiritEntity spirit) {

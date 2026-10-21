@@ -9,6 +9,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -272,6 +273,71 @@ public final class SpiritCommandGameTests {
                 "Отказ без игрока-источника обязан называть причину текстом с целью и подсказкой: молчаливый отказ "
                         + "или чужой текст не объяснит оператору, что команду надо выполнить от имени игрока. "
                         + "Получено: " + failures);
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "spirit_goal", timeoutTicks = 100)
+    public static void commandGoal_ByFullUuid_FiveSpiritsTargetsOnlyThatSpirit(GameTestHelper helper)
+            throws CommandSyntaxException {
+        assertGoalTokenSelectsOne(helper, "uuid_full", spirit -> spirit.getStringUUID(), "полный UUID");
+    }
+
+    @GameTest(template = "empty", batch = "spirit_goal", timeoutTicks = 100)
+    public static void commandGoal_ByUuidPrefix_FiveSpiritsTargetsOnlyThatSpirit(GameTestHelper helper)
+            throws CommandSyntaxException {
+        assertGoalTokenSelectsOne(
+                helper, "uuid_prefix", spirit -> spirit.getStringUUID().substring(0, 8), "8-значный UUID из лога");
+    }
+
+    @GameTest(template = "empty", batch = "spirit_goal", timeoutTicks = 100)
+    public static void commandGoal_ByDisplayName_FiveSpiritsTargetsOnlyThatSpirit(GameTestHelper helper)
+            throws CommandSyntaxException {
+        assertGoalTokenSelectsOne(helper, "name", SpiritEntity::displayName, "имя духа");
+    }
+
+    private static void assertGoalTokenSelectsOne(
+            GameTestHelper helper, String tagPrefix, Function<SpiritEntity, String> token, String what)
+            throws CommandSyntaxException {
+        GameTestFixtures.sweepEntities(helper);
+        buildFloor(helper);
+        String tag = freshTag(tagPrefix);
+        SpiritEntity[] spirits = new SpiritEntity[5];
+        for (int i = 0; i < spirits.length; i++) {
+            spirits[i] = spawnTagged(helper, new BlockPos(1 + i, 1, 1), tag);
+        }
+        SpiritEntity chosen = spirits[0];
+        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 1), "gt_goal_" + tagPrefix);
+        CommandSourceStack source = playerSource(player);
+        CommandDispatcher<CommandSourceStack> dispatcher =
+                helper.getLevel().getServer().getCommands().getDispatcher();
+        try {
+            int accepted;
+            try {
+                accepted = dispatcher.execute("spirit goal " + token.apply(chosen) + " следуй за мной", source);
+            } catch (CommandSyntaxException failure) {
+                helper.fail("spirit goal по " + what + " '" + token.apply(chosen) + "' не выполнилась: "
+                        + failure.getMessage() + ". INC-8: игрок указывает одного духа");
+                return;
+            }
+            helper.assertTrue(
+                    accepted == 1,
+                    "spirit goal по " + what + " одного духа обязана выбрать только его: результат=" + accepted
+                            + ", всего духов=" + spirits.length + ". INC-8");
+            helper.assertTrue(
+                    chosen.taskStatus().filter(s -> s == RunStatus.RUNNING).isPresent(),
+                    "Выбранный дух обязан получить задачу: статус=" + chosen.taskStatus());
+            for (int i = 1; i < spirits.length; i++) {
+                helper.assertTrue(
+                        spirits[i].taskStatus().isEmpty(),
+                        "Дух " + spirits[i].displayName() + " (" + spirits[i].getStringUUID()
+                                + ") не обязан получать цель: статус=" + spirits[i].taskStatus()
+                                + ", ожидаемо пусто. INC-8");
+            }
+        } finally {
+            for (SpiritEntity spirit : spirits) {
+                spirit.discard();
+            }
+        }
         helper.succeed();
     }
 
