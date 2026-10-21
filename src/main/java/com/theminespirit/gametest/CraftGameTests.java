@@ -23,6 +23,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -267,6 +268,50 @@ public final class CraftGameTests {
             assertFinished(helper, spirit, run, RunStatus.FAILED);
             assertReason(helper, spirit, "нет рецепта");
             assertCount(helper, spirit, Items.BOOK, 1, "книга при отказе без рецепта");
+            cleanup(helper, spirit);
+        });
+    }
+
+    @GameTest(template = FIELD, batch = "craft_jungle_logs", timeoutTicks = TIMEOUT)
+    public static void craft_JungleLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
+        craftPickaxeFromLogs(helper, stack(Items.JUNGLE_LOG, 2), Items.JUNGLE_LOG);
+    }
+
+    @GameTest(template = FIELD, batch = "craft_acacia_logs", timeoutTicks = TIMEOUT)
+    public static void craft_AcaciaLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
+        craftPickaxeFromLogs(helper, stack(Items.ACACIA_LOG, 2), Items.ACACIA_LOG);
+    }
+
+    @GameTest(template = FIELD, batch = "craft_dark_oak_logs", timeoutTicks = TIMEOUT)
+    public static void craft_DarkOakLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
+        craftPickaxeFromLogs(helper, stack(Items.DARK_OAK_LOG, 2), Items.DARK_OAK_LOG);
+    }
+
+    @GameTest(template = FIELD, batch = "craft_mangrove_logs", timeoutTicks = TIMEOUT)
+    public static void craft_MangroveLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
+        craftPickaxeFromLogs(helper, stack(Items.MANGROVE_LOG, 2), Items.MANGROVE_LOG);
+    }
+
+    @GameTest(template = FIELD, batch = "craft_cherry_logs", timeoutTicks = TIMEOUT)
+    public static void craft_CherryLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
+        craftPickaxeFromLogs(helper, stack(Items.CHERRY_LOG, 2), Items.CHERRY_LOG);
+    }
+
+    @GameTest(template = FIELD, batch = "craft_bamboo_blocks", timeoutTicks = TIMEOUT)
+    public static void craft_BambooBlocksToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
+        craftPickaxeFromLogs(helper, stack(Items.BAMBOO_BLOCK, 3), Items.BAMBOO_BLOCK);
+    }
+
+    private static void craftPickaxeFromLogs(GameTestHelper helper, ItemStack logs, Item logItem) {
+        field(helper);
+        helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
+        SpiritEntity spirit = prepare(helper, logs);
+        SpiritRun run = launch(helper, spirit, "craft", "wooden_pickaxe", 1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "кирка из брёвен без готовых досок и палок");
+            assertCount(helper, spirit, logItem, 0, "брёвна после цепочки досок и палок");
             cleanup(helper, spirit);
         });
     }
