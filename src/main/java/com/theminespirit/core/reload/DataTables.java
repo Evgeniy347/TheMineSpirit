@@ -228,6 +228,7 @@ public final class DataTables {
                 "storage_v4",
                 "reach_wall",
                 "retreat_nook",
+                "shelter",
                 "state_demo");
     }
 

@@ -1,5 +1,8 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.ShelterMaterials;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,24 +15,27 @@ import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
+/** Выбор дешёвого материала укрытия из инвентаря духа: булыжник и доски (INC-21). */
 public final class ShelterMaterial {
     private ShelterMaterial() {}
 
-    public static Optional<String> placeableBlockId(Container inventory) {
+    public static Optional<ShelterMaterials.Choice> choose(Container inventory, int needed, int slabNeeded) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (placeable(stack)) {
-                return Optional.of(
-                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem blockItem)) {
+                continue;
             }
+            String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
+            if (!placeable(blockItem) && !id.endsWith("_slab")) {
+                continue;
+            }
+            counts.merge(id, stack.getCount(), Integer::sum);
         }
-        return Optional.empty();
+        return ShelterMaterials.choose(counts, needed, slabNeeded);
     }
 
-    private static boolean placeable(ItemStack stack) {
-        if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem blockItem)) {
-            return false;
-        }
+    private static boolean placeable(BlockItem blockItem) {
         BlockState state = blockItem.getBlock().defaultBlockState();
         return state.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)
                 && !(blockItem.getBlock() instanceof EntityBlock)

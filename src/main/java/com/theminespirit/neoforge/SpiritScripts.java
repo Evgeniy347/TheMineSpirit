@@ -16,7 +16,6 @@ import com.theminespirit.core.script.BucketFishParams;
 import com.theminespirit.core.script.BuildFarmParams;
 import com.theminespirit.core.script.BuildFenceParams;
 import com.theminespirit.core.script.BuildSchematicParams;
-import com.theminespirit.core.script.BuildShelterParams;
 import com.theminespirit.core.script.CaptureParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ChopTargetParams;
@@ -275,7 +274,7 @@ public final class SpiritScripts {
                 spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
         table.put("build_farm", spirit -> params -> new BuildFarmScript(spirit, BuildFarmParams.from(params)));
         table.put("build_fence", spirit -> params -> new BuildFenceScript(spirit, BuildFenceParams.from(params)));
-        table.put("build_shelter", spirit -> params -> new BuildShelterScript(spirit, BuildShelterParams.from(params)));
+        table.put("build_shelter", spirit -> params -> new BuildShelterScript(spirit));
         table.put("close_door", spirit -> params -> new CloseDoorScript(spirit, BlockPointParams.from(params)));
         table.put("use_block", spirit -> params -> new UseBlockScript(spirit, BlockPointParams.from(params)));
         table.put("open", spirit -> params -> new OpenScript(spirit, BlockPointParams.from(params)));

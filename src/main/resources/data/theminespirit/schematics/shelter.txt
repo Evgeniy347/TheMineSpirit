@@ -1,0 +1,54 @@
+# Укрытие первого дня (чеклист 48): коробка 6×6 снаружи, внутри 4×4, высота под
+# потолком 3, вход — проём 1×2 во фронте с полублоком-крыльцом, внутри факел.
+# Корпус собран из 'c': build_shelter заменяет его на дешёвый материал духа
+# (булыжник или доски), 'p' — полублок того же материала.
+name: "Укрытие"
+type: infrastructure
+stage: 0
+size: 6x5x7
+entrance: 3,1,1
+legend:
+  'c': cobblestone
+  'p': cobblestone_slab
+  't': torch
+layers:
+  - y0 пол и крыльцо: |
+         p
+      cccccc
+      cccccc
+      cccccc
+      cccccc
+      cccccc
+      cccccc
+  - y1 стены, вход, факел: |
+         .
+      ccc.cc
+      c....c
+      c....c
+      c..t.c
+      c....c
+      cccccc
+  - y2 стены, вход: |
+         
+      ccc.cc
+      c....c
+      c....c
+      c....c
+      c....c
+      cccccc
+  - y3 стены: |
+         
+      cccccc
+      c....c
+      c....c
+      c....c
+      c....c
+      cccccc
+  - y4 потолок: |
+         
+      cccccc
+      cccccc
+      cccccc
+      cccccc
+      cccccc
+      cccccc
