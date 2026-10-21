@@ -383,6 +383,9 @@ public final class BoardV2GameTests {
 
     private static void assertCapturesAndPensParallel(
             GameTestHelper helper, ServerLevel level, BoardService board, SpiritEntity spirit, Cow cowTwo, long now) {
+        BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
+        buildPen(board, "cow_pen", Species.COW, home, spirit, now);
+        buildPen(board, "pig_pen", Species.PIG, home, spirit, now);
         HerdWatch.tick(level, board, List.of(spirit), now);
         String cowCapture = captureId(board, BoardCase.CAPTURE_ANIMAL, "cow");
         String pigCapture = captureId(board, BoardCase.CAPTURE_ANIMAL, "pig");
@@ -725,6 +728,23 @@ public final class BoardV2GameTests {
                 board.board().cancel(ticket.id());
             }
         }
+    }
+
+    private static void buildPen(
+            BoardService board, String id, Species species, BlockCoord home, SpiritEntity spirit, long now) {
+        board.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.BUILD_PEN,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.BUILD_PEN),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(home).withSpecies(species));
+        completeTicket(board, id, spirit, now);
     }
 
     private static void completeTicket(BoardService board, String id, SpiritEntity spirit, long now) {
