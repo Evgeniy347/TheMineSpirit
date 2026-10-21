@@ -779,7 +779,10 @@ public final class BuildPlanner {
         if (!open(feet.x(), feet.y(), feet.z()) || !open(feet.x(), feet.y() + 1, feet.z())) {
             return false;
         }
-        return feet.y() - 1 < 0 || SchematicWalk.standsOn(grid.get(new BlockCoord(feet.x(), feet.y() - 1, feet.z())));
+        if (feet.y() - 1 < 0) {
+            return true;
+        }
+        return SchematicWalk.standsOn(grid.get(new BlockCoord(feet.x(), feet.y() - 1, feet.z())));
     }
 
     private boolean open(int x, int y, int z) {
@@ -794,11 +797,13 @@ public final class BuildPlanner {
         return cell.x() < 0 || cell.x() >= sizeX || cell.z() < 0 || cell.z() >= sizeZ;
     }
 
+    // Обход — по площадке с кольцом и по полосе до сундука (дух у сундука дальше кольца: фонарь на краю арены,
+    // 21.10 — план из одного «не поставлено», потому что дух не мог сойти с места).
     private boolean withinRing(BlockCoord cell) {
-        return cell.x() >= -RING
-                && cell.x() < sizeX + RING
-                && cell.z() >= -RING
-                && cell.z() < sizeZ + RING
+        return cell.x() >= Math.min(-RING, supply.x() - RING)
+                && cell.x() < Math.max(sizeX + RING, supply.x() + RING)
+                && cell.z() >= Math.min(-RING, supply.z() - RING)
+                && cell.z() < Math.max(sizeZ + RING, supply.z() + RING)
                 && cell.y() >= 0
                 && cell.y() <= schematic.sizeY() + 2;
     }

@@ -68,6 +68,8 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int MAX_PLAN_RESCUES = 2;
     // Сорвавшийся заход плана повторяется столько раз, потом клетки без материала — обычной стройке.
     private static final int MAX_PLAN_TRIP_RETRIES = 2;
+    // Дозаходов за материалом, который план считал взятым: больше — план и инвентарь разошлись, дальше обычная стройка.
+    private static final int MAX_PLAN_TOP_UPS = 8;
     // Столько построений пути на одну стоянку — подход трудный, пишется в лог для разбора.
     private static final int HARD_APPROACH_PATH_BUILDS = 4;
 
@@ -122,6 +124,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private BuildPlanCursor.@Nullable Fetch planFetch;
     private BuildPlanCursor.@Nullable Fetch retryFetch;
     private int planFetchRetries;
+    private int planTopUps;
     private @Nullable List<ScriptCall> supplyWalk;
     private int approachPathMark;
     private int planRescues;
@@ -948,9 +951,35 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         centring = 0;
         List<Schematic.PlacedEntry> supplied = new ArrayList<>();
+        Map<Item, Integer> lacking = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : targets) {
             if (BlockItems.countIn(spirit.getInventory(), entry.block()) > 0) {
                 supplied.add(entry);
+            } else {
+                lacking.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
+            }
+        }
+        // Заход плана не уместил всё (стопки в инвентаре дробнее, чем считает план) — дозаход за недостающим шага,
+        // а не сотни клеток обычной стройке (дом игрока 4, 21.10: 816 клеток без материала).
+        if (supplied.isEmpty() && !lacking.isEmpty() && planTopUps < MAX_PLAN_TOP_UPS) {
+            // Берётся весь недостающий в мире остаток этих предметов (сколько влезет), чтобы не ходить за каждым шагом.
+            for (Schematic.PlacedEntry entry : site.primaries()) {
+                Item item = BlockItems.itemFor(entry.block());
+                if (lacking.containsKey(item) && !site.matches(entry)) {
+                    lacking.merge(item, 1, Integer::sum);
+                }
+            }
+            List<ScriptCall> steps = BuildSupplyTrip.exact(spirit, site, lacking);
+            if (!steps.isEmpty()) {
+                planTopUps++;
+                trips++;
+                LOGGER.info(
+                        "Стройка {}: дозаход {} — шагу плана {} не хватило {}",
+                        buildKey,
+                        trips,
+                        cursor.index(),
+                        lacking);
+                return startSupply(steps);
             }
         }
         if (!supplied.isEmpty() && planRescues < MAX_PLAN_RESCUES) {

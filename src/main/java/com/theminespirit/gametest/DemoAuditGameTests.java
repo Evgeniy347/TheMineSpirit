@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
@@ -280,17 +281,23 @@ public final class DemoAuditGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "Постройка '" + scheme + "' (" + rotation + ") обязана завершиться успехом, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет") + ", дух на "
-                            + spirit.blockPosition()
-                                    .subtract(helper.absolutePos(BlockPos.ZERO))
-                                    .toShortString()
-                            + ", построений пути " + spirit.pathBuilds() + ", тиков духа " + spirit.tickCount
-                            + ", удалён " + spirit.getRemovalReason() + ", задача "
-                            + GameTestFixtures.taskSnapshot(spirit).orElse("нет"));
+            RunStatus status = spirit.taskStatus().orElse(null);
+            String outcome = "Постройка '" + scheme + "' (" + rotation + ") обязана завершиться успехом, статус "
+                    + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                    + spirit.taskFailureReason().orElse("нет") + ", дух на "
+                    + spirit.blockPosition()
+                            .subtract(helper.absolutePos(BlockPos.ZERO))
+                            .toShortString()
+                    + ", построений пути " + spirit.pathBuilds() + ", тиков духа " + spirit.tickCount
+                    + ", удалён " + spirit.getRemovalReason() + ", задача "
+                    + GameTestFixtures.taskSnapshot(spirit).orElse("нет");
+            // Провал стройки и итог аудита окончательны: падать сразу, а не ждать предела тиков (полный прогон,
+            // 21.10 — усадьба ждала 50 минут на каждый поворот).
+            if (status == RunStatus.FAILED) {
+                helper.testInfo.fail(new GameTestAssertException(outcome));
+                throw new GameTestAssertException(outcome);
+            }
+            helper.assertTrue(status == RunStatus.SUCCEEDED, outcome);
             Map<String, Object> data = data(helper, spirit);
             int skipped = ((Number) data.get("skipped")).intValue();
             // Блоки без предмета (вода колодца) — после стройки, как в демо (DemoSession): поставленная до бортика
@@ -299,12 +306,17 @@ public final class DemoAuditGameTests {
                 placeWithoutItem(helper, schematic, origin, rotation);
             }
             BuildAudit.Result audit = BuildAudit.audit(helper.getLevel(), schematic, origin, rotation, before, skipped);
-            helper.assertTrue(
-                    audit.ok(),
-                    "Постройка '" + scheme + "' (" + rotation
-                            + ") обязана совпасть со схемой без лишних блоков, расхождения: " + audit.problems());
-            assertFollowedPlan(helper, scheme, rotation, spirit, measured);
-            after.check(helper, schematic, origin, rotation);
+            try {
+                helper.assertTrue(
+                        audit.ok(),
+                        "Постройка '" + scheme + "' (" + rotation
+                                + ") обязана совпасть со схемой без лишних блоков, расхождения: " + audit.problems());
+                assertFollowedPlan(helper, scheme, rotation, spirit, measured);
+                after.check(helper, schematic, origin, rotation);
+            } catch (GameTestAssertException finalFailure) {
+                helper.testInfo.fail(finalFailure);
+                throw finalFailure;
+            }
             emptyChests(helper, chests);
             clearArea(helper, floorSize, clearHeight);
             GameTestFixtures.finish(helper, clearHeight);
