@@ -28,7 +28,7 @@ class FallbackPlannerTests {
         TaskNode plan = plan(new Goal("срубить деревья возле дома", Map.of()));
 
         assertEquals(
-                chopPlan(8, "any", 1),
+                chopPlan(8, "any", 8),
                 plan,
                 "Цель со словом 'сруб' обязана дать scan с фильтром брёвен и chop_tree: иначе дух рубит "
                         + "без предварительного скана и не находит деревья");
@@ -39,7 +39,7 @@ class FallbackPlannerTests {
         TaskNode plan = plan(new Goal("валить деревья", Map.of()));
 
         assertEquals(
-                chopPlan(8, "any", 1),
+                chopPlan(8, "any", 8),
                 plan,
                 "Слово 'дерев' обязано распознаваться как рубка: иначе синоним формулировки уводит в fallback "
                         + "и дух не рубит то, что игрок просил");
@@ -207,7 +207,7 @@ class FallbackPlannerTests {
         TaskNode plan = plan(new Goal("   СРУБИТЬ ДУБ  ", Map.of()));
 
         assertEquals(
-                chopPlan(8, "any", 1),
+                chopPlan(8, "any", 8),
                 plan,
                 "Текст цели обязан нормализоваться (trim и нижний регистр) до поиска ключевых слов: иначе "
                         + "одна и та же цель с лишними пробелами или заглавными буквами исполняется по-разному");
@@ -250,7 +250,7 @@ class FallbackPlannerTests {
         TaskNode plan = plan(new Goal("руби дерево", Map.of()));
 
         assertEquals(
-                chopPlan(8, "any", 1),
+                chopPlan(8, "any", 8),
                 plan,
                 "Слово 'дерево' обязано распознаваться как рубка по началу слова: иначе живая формулировка "
                         + "игрока не превращается в план и дух бездельничает");
@@ -276,6 +276,28 @@ class FallbackPlannerTests {
                 plan,
                 "При нескольких совпадениях побеждает правило, чьё слово раньше в тексте: иначе упоминание "
                         + "дерева уводит боевую команду в рубку и дух не защищает игрока");
+    }
+
+    @Test
+    void plan_ChopGoalWithNumberInText_UsesThatCount() {
+        TaskNode plan = plan(new Goal("сруби 3 дерева у дома", Map.of()));
+
+        assertEquals(
+                chopPlan(8, "any", 3),
+                plan,
+                "Число из текста цели обязано стать chop_tree.count: иначе просьба «сруби 3 дерева» рубит "
+                        + "восемь по умолчанию, а цель с нужным числом брёвен падает «не хватает N из 3»");
+    }
+
+    @Test
+    void plan_ChopGoalWithoutNumber_AsksForBatchOfEight() {
+        TaskNode plan = plan(new Goal("сруби деревья", Map.of()));
+
+        assertEquals(
+                chopPlan(8, "any", 8),
+                plan,
+                "Цель «сруби деревья» без числа обязана рубить партию из 8 деревьев, а не одно: иначе дух "
+                        + "возвращается с одним бревном и цель «запас брёвен» снова требует работы (INC-7)");
     }
 
     @Test
