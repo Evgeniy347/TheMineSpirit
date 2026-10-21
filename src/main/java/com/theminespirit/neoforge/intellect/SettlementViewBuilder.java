@@ -5,6 +5,7 @@ import com.theminespirit.core.intellect.FarmWork;
 import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StockLots;
+import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.InventoryFill;
 import com.theminespirit.core.inventory.InventoryNorm;
@@ -66,6 +67,7 @@ public final class SettlementViewBuilder {
         double nutritionPerSoul = population == 0 ? 0 : lots.foodNutrition() / population;
         double dayFraction = (level.getDayTime() % 24000L) / 24000.0;
         FarmWork farmWork = FarmWorkScanner.read(level, home, members, lots.seeds());
+        WorkStations stations = WorkStationScanner.read(level, home, members);
         return new SettlementView(
                 population,
                 children,
@@ -81,7 +83,8 @@ public final class SettlementViewBuilder {
                 ordered,
                 tick,
                 lots.processing(),
-                inventoryFills(members, level));
+                inventoryFills(members, level),
+                stations);
     }
 
     private static Map<UUID, InventoryFill> inventoryFills(List<SpiritEntity> members, ServerLevel level) {

@@ -131,6 +131,8 @@ public final class ActivityAssigner {
                 && current.get().activity() != ActivityId.DEFEND
                 && demandById.containsKey(current.get().activity())
                 && eligible(current.get().activity(), spirit, view)
+                && taken.getOrDefault(current.get().activity(), 0)
+                        < catalog.byId(current.get().activity()).crew(view)
                 && now - current.get().since() < tuning.minSwitchTicks()
                 && scored(best, demandById, taken)
                         < demandById.get(current.get().activity()) + tuning.hysteresisMargin()) {
@@ -149,7 +151,10 @@ public final class ActivityAssigner {
         ActivityId best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
         for (ActivityDemand demand : demands) {
-            if (demand.id() == excluded || !eligible(demand.id(), spirit, view)) {
+            if (demand.id() == excluded
+                    || !eligible(demand.id(), spirit, view)
+                    || taken.getOrDefault(demand.id(), 0)
+                            >= catalog.byId(demand.id()).crew(view)) {
                 continue;
             }
             double score = demand.demand() - tuning.crowdPenalty() * taken.getOrDefault(demand.id(), 0);

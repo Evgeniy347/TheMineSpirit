@@ -69,6 +69,30 @@ public final class SettlementViews {
                 1.0);
     }
 
+    public static WorkStations stocked() {
+        return new WorkStations(5, 1, 1, 0, 64);
+    }
+
+    public static SettlementView withStations(SettlementView view, WorkStations stations) {
+        return new SettlementView(
+                view.population(),
+                view.children(),
+                view.foodPerSoul(),
+                view.foodNutritionPerSoul(),
+                view.ore(),
+                view.iron(),
+                view.weapons(),
+                view.threats(),
+                view.dayFraction(),
+                view.farmWork(),
+                view.forage(),
+                view.spirits(),
+                view.tick(),
+                view.processing(),
+                view.inventoryFills(),
+                stations);
+    }
+
     public static SettlementView empty() {
         return new SettlementView(0, 0, 0, 0, 0, 0, 0, 0, 0.5, FarmWork.NONE, Forage.NONE, List.of(), 0);
     }
@@ -87,8 +111,22 @@ public final class SettlementViews {
             int threats,
             double dayFraction,
             FarmWork farmWork) {
-        return new SettlementView(
-                3, 0, food, nutrition, ore, iron, weapons, threats, dayFraction, farmWork, Forage.NONE, List.of(), 100);
+        return withStations(
+                new SettlementView(
+                        3,
+                        0,
+                        food,
+                        nutrition,
+                        ore,
+                        iron,
+                        weapons,
+                        threats,
+                        dayFraction,
+                        farmWork,
+                        Forage.NONE,
+                        List.of(),
+                        100),
+                stocked());
     }
 
     public static SettlementView settlementWithForage(
@@ -100,20 +138,39 @@ public final class SettlementViews {
             int threats,
             FarmWork farmWork,
             Forage forage) {
-        return new SettlementView(
-                3, 0, food, nutrition, ore, iron, weapons, threats, 0.2, farmWork, forage, List.of(), 100);
+        return withStations(
+                new SettlementView(
+                        3, 0, food, nutrition, ore, iron, weapons, threats, 0.2, farmWork, forage, List.of(), 100),
+                stocked());
     }
 
     public static SettlementView processing(int population, double nutrition, ProcessingStock processing) {
-        return new SettlementView(
-                population, 0, 0, nutrition, 0, 0, 0, 0, 0.5, FarmWork.NONE, Forage.NONE, List.of(), 100, processing);
+        return withStations(
+                new SettlementView(
+                        population,
+                        0,
+                        0,
+                        nutrition,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0.5,
+                        FarmWork.NONE,
+                        Forage.NONE,
+                        List.of(),
+                        100,
+                        processing),
+                stocked());
     }
 
     public static SettlementView withSpirits(List<SpiritSnapshot> spirits) {
         List<SpiritSnapshot> ordered = new ArrayList<>(spirits);
         ordered.sort(Comparator.comparing(SpiritSnapshot::id));
-        return new SettlementView(
-                ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, new FarmWork(4, 0, 0), Forage.NONE, ordered, 100);
+        return withStations(
+                new SettlementView(
+                        ordered.size(), 0, 2, 2, 64, 32, 2, 0, 0.5, new FarmWork(4, 0, 0), Forage.NONE, ordered, 100),
+                stocked());
     }
 
     public static SettlementView withFills(List<SpiritSnapshot> spirits, Map<UUID, InventoryFill> fills) {
@@ -174,22 +231,24 @@ public final class SettlementViews {
                         unique,
                         Arbitraries.longs().between(0, 100000),
                         Arbitraries.integers().between(0, 6))
-                .as((counted, stocked, farm, spirits, tick, kids) -> {
+                .as((counted, stock, farm, spirits, tick, kids) -> {
                     int population = spirits.size() + counted[0];
-                    return new SettlementView(
-                            population,
-                            Math.min(kids, population),
-                            stocked[0],
-                            stocked[1],
-                            counted[1],
-                            counted[2],
-                            counted[3],
-                            counted[4],
-                            stocked[2],
-                            farm,
-                            Forage.NONE,
-                            spirits,
-                            tick);
+                    return withStations(
+                            new SettlementView(
+                                    population,
+                                    Math.min(kids, population),
+                                    stock[0],
+                                    stock[1],
+                                    counted[1],
+                                    counted[2],
+                                    counted[3],
+                                    counted[4],
+                                    stock[2],
+                                    farm,
+                                    Forage.NONE,
+                                    spirits,
+                                    tick),
+                            stocked());
                 });
     }
 }

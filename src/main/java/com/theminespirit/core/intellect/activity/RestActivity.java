@@ -6,6 +6,7 @@ import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.sleep.SleepRule;
 import java.util.Map;
 import java.util.Optional;
@@ -43,11 +44,28 @@ public final class RestActivity implements Activity {
     }
 
     @Override
+    public int crew(SettlementView view) {
+        if (view == null) {
+            throw new IllegalArgumentException("Отдых без обстановки не делит бригаду: нужен снимок поселения");
+        }
+        if (!SleepRule.isNight(view.dayFraction())) {
+            return Integer.MAX_VALUE;
+        }
+        return view.stations().freeBeds();
+    }
+
+    @Override
     public ActivityIntent order(SpiritSnapshot spirit, SettlementView view) {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение отдыха без духа или обстановки не строится");
         }
-        String script = SleepRule.isNight(view.dayFraction()) ? "sleep" : "wait";
-        return new ActivityIntent(id(), Optional.of(script), Map.of(), Optional.empty());
+        if (!SleepRule.isNight(view.dayFraction())) {
+            return new ActivityIntent(id(), Optional.of("wait"), Map.of(), Optional.empty());
+        }
+        WorkStations stations = view.stations();
+        if (!stations.canSleep()) {
+            return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
+        }
+        return new ActivityIntent(id(), Optional.of("sleep"), Map.of(), Optional.empty());
     }
 }

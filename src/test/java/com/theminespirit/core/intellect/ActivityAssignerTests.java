@@ -55,6 +55,33 @@ class ActivityAssignerTests {
     }
 
     @Test
+    void assign_OneHarvestJob_OnlyOneFarmer() {
+        SettlementView view = SettlementViews.withSpirits(
+                List.of(SettlementViews.spirit(FIRST), SettlementViews.spirit(SECOND), SettlementViews.spirit(THIRD)));
+
+        ActivityPlan plan = ASSIGNER.assign(
+                view,
+                List.of(
+                        new ActivityDemand(ActivityId.FARM, 9),
+                        new ActivityDemand(ActivityId.CHOP, 3),
+                        new ActivityDemand(ActivityId.MINE, 2)),
+                new ActivityLedger(),
+                100);
+
+        assertEquals(
+                1,
+                plan.assignments().stream()
+                        .filter(assignment -> assignment.activity() == ActivityId.FARM)
+                        .count(),
+                "Одна уборка урожая закрывает все зрелые грядки: пять духов на один harvest_crop повторяют "
+                        + "провал «зрелых посевов нет» каждый своей задачей");
+        assertEquals(
+                3,
+                plan.assignments().size(),
+                "Остальные духи берут другое занятие, а не простаивают из-за занятой уборки");
+    }
+
+    @Test
     void assign_ThreatPresent_DefendOnlyThreatened() {
         SettlementView view = new SettlementView(
                 3,

@@ -205,6 +205,10 @@ public final class IntellectScaleGameTests {
             helper.assertFalse(
                     "harvest_crop".equals(spirit.currentTaskScript().orElse("")),
                     "Дух без грядок не запускает harvest_crop: иначе задача падает на пустой ферме");
+            helper.assertTrue(
+                    intellect.decision().orElseThrow().activities().assignments().stream()
+                            .anyMatch(assignment -> assignment.spirit().equals(spirit.getUUID())),
+                    "Дух без грядок берёт другое занятие: иначе гейт фермы оставляет поселение без работы");
             spirit.discard();
             TacticsScene.finish(helper, spirit);
         });

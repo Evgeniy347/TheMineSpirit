@@ -9,6 +9,7 @@ import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.SettlementViews;
+import com.theminespirit.core.intellect.WorkStations;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -145,6 +146,40 @@ class ActivitiesTests {
                 Optional.of("sleep"),
                 new RestActivity().order(SettlementViews.spirit(SPIRIT), night).script(),
                 "Ночью отдых ставит сон в кровати, а не пустое ожидание: иначе духи стоят всю ночь вместо сна");
+    }
+
+    @Test
+    void order_NightWithoutFreeBed_EmptyIntent() {
+        SettlementView night =
+                SettlementViews.withStations(SettlementViews.settlement(2, 2, 64, 32, 2, 0, 0.8), WorkStations.NONE);
+
+        assertEquals(
+                Optional.empty(),
+                new RestActivity().order(SettlementViews.spirit(SPIRIT), night).script(),
+                "Ночью без свободной кровати сон не ставится: иначе дух каждые 5 секунд падает "
+                        + "«кровать не найдена: в поселении нет свободной кровати»");
+    }
+
+    @Test
+    void crew_NightWithoutFreeBed_Zero() {
+        SettlementView night =
+                SettlementViews.withStations(SettlementViews.settlement(2, 2, 64, 32, 2, 0, 0.8), WorkStations.NONE);
+
+        assertEquals(
+                0,
+                new RestActivity().crew(night),
+                "Без свободной кровати ночной отдых не берёт ни один дух: невыполнимую задачу не выдаём");
+    }
+
+    @Test
+    void crew_NightWithOneBed_One() {
+        SettlementView night = SettlementViews.withStations(
+                SettlementViews.settlement(2, 2, 64, 32, 2, 0, 0.8), new WorkStations(1, 1, 1, 0, 0));
+
+        assertEquals(
+                1,
+                new RestActivity().crew(night),
+                "Одна свободная кровать — один спящий: иначе остальные духи падают на занятой кровати");
     }
 
     @Test

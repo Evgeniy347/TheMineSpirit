@@ -25,7 +25,8 @@ public record SettlementView(
         List<SpiritSnapshot> spirits,
         long tick,
         ProcessingStock processing,
-        Map<UUID, InventoryFill> inventoryFills) {
+        Map<UUID, InventoryFill> inventoryFills,
+        WorkStations stations) {
     public SettlementView {
         if (population < 0) {
             throw new IllegalArgumentException(
@@ -95,6 +96,10 @@ public record SettlementView(
                         + "заполнение привязано к конкретному духу");
             }
         }
+        if (stations == null) {
+            throw new IllegalArgumentException(
+                    "Станции поселения не могут быть null: их отсутствие задают WorkStations.NONE");
+        }
         inventoryFills = Map.copyOf(inventoryFills);
         spirits = List.copyOf(spirits);
     }
@@ -128,7 +133,8 @@ public record SettlementView(
                 spirits,
                 tick,
                 ProcessingStock.NONE,
-                Map.of());
+                Map.of(),
+                WorkStations.NONE);
     }
 
     public SettlementView(
@@ -161,7 +167,8 @@ public record SettlementView(
                 spirits,
                 tick,
                 processing,
-                Map.of());
+                Map.of(),
+                WorkStations.NONE);
     }
 
     public SettlementView(
@@ -194,7 +201,43 @@ public record SettlementView(
                 spirits,
                 tick,
                 ProcessingStock.NONE,
-                inventoryFills);
+                inventoryFills,
+                WorkStations.NONE);
+    }
+
+    public SettlementView(
+            int population,
+            int children,
+            double foodPerSoul,
+            double foodNutritionPerSoul,
+            int ore,
+            int iron,
+            int weapons,
+            int threats,
+            double dayFraction,
+            FarmWork farmWork,
+            Forage forage,
+            List<SpiritSnapshot> spirits,
+            long tick,
+            ProcessingStock processing,
+            Map<UUID, InventoryFill> inventoryFills) {
+        this(
+                population,
+                children,
+                foodPerSoul,
+                foodNutritionPerSoul,
+                ore,
+                iron,
+                weapons,
+                threats,
+                dayFraction,
+                farmWork,
+                forage,
+                spirits,
+                tick,
+                processing,
+                inventoryFills,
+                WorkStations.NONE);
     }
 
     public Optional<InventoryFill> inventoryFill(UUID spirit) {

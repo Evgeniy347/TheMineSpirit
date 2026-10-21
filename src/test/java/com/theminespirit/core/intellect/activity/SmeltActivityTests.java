@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.SettlementViews;
+import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.processing.ProcessingStock;
 import java.util.Map;
@@ -103,6 +104,54 @@ class SmeltActivityTests {
                 "cooked_beef",
                 intent.params().get("item"),
                 "Готовят то сырьё, что реально есть: иначе дух зовёт рецепт из отсутствующей говядины");
+    }
+
+    @Test
+    void demand_NoFurnaceAndNoMaterial_Zero() {
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of(), Map.of("minecraft:oak_log", 5));
+        SettlementView view = SettlementViews.withStations(SettlementViews.processing(3, 0, stock), WorkStations.NONE);
+
+        assertEquals(
+                0.0,
+                SMELT.demand(view),
+                "Без печи, печи в инвентаре и булыжника плавка не востребована: иначе дух берёт smelt и падает "
+                        + "«нужна печь: рядом нет, в инвентаре нет» каждые 5 секунд");
+    }
+
+    @Test
+    void order_NoFurnaceAndNoMaterial_EmptyScript() {
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of(), Map.of("minecraft:oak_log", 5));
+        SettlementView view = SettlementViews.withStations(SettlementViews.processing(3, 0, stock), WorkStations.NONE);
+
+        assertTrue(
+                SMELT.order(SettlementViews.spirit(SPIRIT), view).script().isEmpty(),
+                "Гейт плавки не выдаёт задачу при отсутствии печи и материала: пустое намерение вместо провала");
+    }
+
+    @Test
+    void order_MaterialAndCraftingTable_CraftsFurnace() {
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of(), Map.of("minecraft:oak_log", 5));
+        SettlementView view =
+                SettlementViews.withStations(SettlementViews.processing(3, 0, stock), new WorkStations(0, 0, 1, 0, 8));
+
+        ActivityIntent intent = SMELT.order(SettlementViews.spirit(SPIRIT), view);
+
+        assertEquals(
+                "craft",
+                intent.script().orElseThrow(),
+                "При булыжнике и верстаке дух сперва делает печь: иначе материал есть, а плавка всё равно падает");
+        assertEquals("furnace", intent.params().get("item"), "Крафтится именно печь, а не другой предмет");
+    }
+
+    @Test
+    void demand_FurnaceInInventory_NotZero() {
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of(), Map.of("minecraft:oak_log", 5));
+        SettlementView view =
+                SettlementViews.withStations(SettlementViews.processing(3, 0, stock), new WorkStations(0, 0, 1, 1, 0));
+
+        assertTrue(
+                SMELT.demand(view) > 0,
+                "Печь в инвентаре и верстак делают плавку выполнимой: гейт не должен глушить работу зря");
     }
 
     @Test
