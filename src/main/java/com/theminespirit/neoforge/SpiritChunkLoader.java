@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
 import com.theminespirit.core.chunk.ChunkSquare;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 
@@ -10,6 +11,7 @@ final class SpiritChunkLoader {
     private final SpiritEntity spirit;
     private ChunkCoord trackedCenter;
     private int trackedRadius = -1;
+    private boolean trackedOnline;
     private Set<ChunkCoord> trackedChunks;
 
     SpiritChunkLoader(SpiritEntity spirit) {
@@ -24,19 +26,26 @@ final class SpiritChunkLoader {
         if (!(spirit.level() instanceof ServerLevel serverLevel)) {
             return;
         }
-        SpiritRegistry.get(serverLevel).markAlive(spirit.getUUID());
+        SpiritRegistry.get(serverLevel)
+                .markAlive(
+                        spirit.getUUID(), new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
         ChunkCoord center = new ChunkCoord(spirit.chunkPosition().x, spirit.chunkPosition().z);
         int radius = SpiritConfig.radiusFor(serverLevel);
-        if (trackedChunks != null && center.equals(trackedCenter) && radius == trackedRadius) {
+        boolean online = !serverLevel.getServer().getPlayerList().getPlayers().isEmpty();
+        if (trackedChunks != null
+                && center.equals(trackedCenter)
+                && radius == trackedRadius
+                && online == trackedOnline) {
             return;
         }
-        Set<ChunkCoord> desired = ChunkSquare.chunks(center, radius);
+        Set<ChunkCoord> desired = online ? ChunkSquare.chunks(center, radius) : Set.of();
         ChunkDiff diff = trackedChunks == null ? ChunkDiff.initial(desired) : ChunkDiff.between(trackedChunks, desired);
         if (!diff.isEmpty()) {
             SpiritChunkTickets.apply(serverLevel, spirit, diff);
         }
         trackedCenter = center;
         trackedRadius = radius;
+        trackedOnline = online;
         trackedChunks = desired;
     }
 
@@ -52,5 +61,6 @@ final class SpiritChunkLoader {
         trackedChunks = null;
         trackedCenter = null;
         trackedRadius = -1;
+        trackedOnline = false;
     }
 }

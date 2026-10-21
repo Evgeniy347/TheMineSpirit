@@ -29,10 +29,11 @@ public final class ChunkLoadingGameTests {
     private ChunkLoadingGameTests() {}
 
     // thenWaitUntil, а не succeedAfter: дух может быть удалён чужим reset структуры
-    @GameTest(template = "arena", timeoutTicks = 200)
+    @GameTest(template = "arena", batch = "chunk_loading_move", timeoutTicks = 200)
     public static void chunkLoading_SpiritSpawnedMovedAndDiscarded_KeepsTickingSquare(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         int radius = SpiritConfig.radiusFor(level);
+        onlinePlayer(helper);
         SpiritEntity spirit = spawnFloating(helper);
 
         helper.runAfterDelay(3, () -> {
@@ -52,9 +53,9 @@ public final class ChunkLoadingGameTests {
                     .thenWaitUntil(() -> {
                         helper.assertTrue(
                                 !spirit.isRemoved(),
-                                "Дух удалён до сдвига набора: телепорт на +16 уводит его в структуру "
-                                        + "соседнего теста, её reset удаляет духа. Исправление: шаблон arena "
-                                        + "или телепорт в сторону от сетки");
+                                "Дух удалён до сдвига набора (причина: " + spirit.getRemovalReason()
+                                        + "): телепорт на +16 уводит его в структуру соседнего теста, её reset "
+                                        + "удаляет духа. Исправление: шаблон arena или телепорт в сторону от сетки");
                         ChunkPos moved = spirit.chunkPosition();
                         helper.assertTrue(
                                 moved.x == center.x + 1 && moved.z == center.z,
@@ -91,9 +92,10 @@ public final class ChunkLoadingGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 200)
+    @GameTest(template = "empty", batch = "chunk_loading_unload", timeoutTicks = 200)
     public static void chunkLoading_UnloadedToChunk_KeepsTickets(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        onlinePlayer(helper);
         SpiritEntity spirit = spawnFloating(helper);
 
         helper.runAfterDelay(3, () -> {
@@ -116,10 +118,11 @@ public final class ChunkLoadingGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 200)
+    @GameTest(template = "empty", batch = "chunk_loading_dimension", timeoutTicks = 200)
     public static void chunkLoading_ChangedDimension_ReleasesSourceTickets(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         int radius = SpiritConfig.radiusFor(level);
+        onlinePlayer(helper);
         SpiritEntity spirit = spawnFloating(helper);
 
         helper.runAfterDelay(3, () -> {
@@ -145,6 +148,10 @@ public final class ChunkLoadingGameTests {
             }
             helper.succeed();
         });
+    }
+
+    private static void onlinePlayer(GameTestHelper helper) {
+        GameTestFixtures.mockPlayer(helper, new BlockPos(1, 2, 1), "Смотритель чанков");
     }
 
     private static SpiritEntity spawnFloating(GameTestHelper helper) {

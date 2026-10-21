@@ -27,6 +27,7 @@ public final class SpiritTickingGameTests {
     @GameTest(template = "arena", batch = "ticking_beyond", timeoutTicks = 600)
     public static void spirit_GotoBeyondStructureChunks_KeepsTickingAndArrives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
+        GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 1), "Наблюдатель за духом");
         int targetX = EDGE_START.getX() + DISTANCE_BEYOND_STRUCTURE;
         for (int x = 0; x <= targetX + 2; x++) {
             for (int z = EDGE_START.getZ() - PATH_HALF_WIDTH; z <= EDGE_START.getZ() + PATH_HALF_WIDTH; z++) {

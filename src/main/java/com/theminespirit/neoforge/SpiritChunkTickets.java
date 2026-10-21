@@ -4,6 +4,9 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
 import com.theminespirit.core.chunk.SpiritTicketRetention;
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.resources.ResourceLocation;
@@ -35,8 +38,26 @@ public final class SpiritChunkTickets {
         }
     }
 
+    public static void wakeAll(ServerLevel level) {
+        for (Map.Entry<UUID, BlockCoord> entry :
+                SpiritRegistry.get(level).positions().entrySet()) {
+            BlockCoord position = entry.getValue();
+            CONTROLLER.forceChunk(
+                    level,
+                    entry.getKey(),
+                    Math.floorDiv(position.x(), 16),
+                    Math.floorDiv(position.z(), 16),
+                    true,
+                    true);
+        }
+    }
+
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
-        Set<UUID> owners = helper.getEntityTickets().keySet();
+        Set<UUID> owners = new LinkedHashSet<>(helper.getEntityTickets().keySet());
+        if (level.getServer().getPlayerList().getPlayers().isEmpty()) {
+            owners.forEach(helper::removeAllTickets);
+            return;
+        }
         Set<UUID> keep = SpiritTicketRetention.keepAtLoad(
                 owners, SpiritRegistry.find(level).map(SpiritRegistry::alive));
         for (UUID owner : owners) {
