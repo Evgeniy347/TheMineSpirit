@@ -2,9 +2,11 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
@@ -15,6 +17,7 @@ import com.theminespirit.neoforge.board.HerdWatch;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -71,8 +74,16 @@ public final class BoardAnimalGameTests {
         HerdWatch.tick(level, board, List.of(spirit), now);
         long captures = activeCount(board, BoardCase.CAPTURE_ANIMAL);
         helper.assertTrue(
+                captures == 0,
+                "Без загона отлов не ставится: загон нужен до поимки, иначе дух получает "
+                        + "невыполнимое задание и падает через 100 тиков, активных " + captures);
+        BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
+        buildPen(board, spirit, home, now);
+        HerdWatch.tick(level, board, List.of(spirit), now);
+        captures = activeCount(board, BoardCase.CAPTURE_ANIMAL);
+        helper.assertTrue(
                 captures >= 1,
-                "Живое животное рядом с базой обязано поднять CAPTURE_ANIMAL, активных " + captures
+                "Загон стоит — живое животное рядом с базой обязано поднять CAPTURE_ANIMAL, активных " + captures
                         + ": источник «животное найдено» молчит");
         HerdWatch.tick(level, board, List.of(spirit), now);
         helper.assertTrue(
@@ -80,6 +91,10 @@ public final class BoardAnimalGameTests {
                 "Повторный обзор при живом цикле не плодит второй отлов: было " + captures);
         String captureId = firstCaptureId(board);
         helper.assertTrue(captureId != null, "Задание отлова обязано найтись на доске: иначе нечего вести по циклу");
+        BoardTicket captureTicket = findTicket(board, BoardCase.CAPTURE_ANIMAL);
+        helper.assertTrue(
+                captureTicket != null && captureTicket.dependsOn().contains("sheep_pen"),
+                "Отлов зависит от задания загона: без зависимости доска выдала бы поимку раньше места");
         closeTicket(board, captureId, spirit.getUUID(), now);
         board.completeCapture(captureId);
         helper.assertTrue(
@@ -160,6 +175,22 @@ public final class BoardAnimalGameTests {
                 .filter(ticket -> ticket.boardCase() == boardCase)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private static void buildPen(BoardService board, SpiritEntity spirit, BlockCoord home, long now) {
+        board.submit(
+                new BoardTicket(
+                        "sheep_pen",
+                        BoardCase.BUILD_PEN,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.BUILD_PEN),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(home).withSpecies(Species.SHEEP));
+        closeTicket(board, "sheep_pen", spirit.getUUID(), now);
     }
 
     private static void drainLifecycle(BoardService service, UUID holder, long now) {

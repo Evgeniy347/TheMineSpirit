@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BreedingRules;
+import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.HerdCap;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.TicketTarget;
@@ -53,7 +54,10 @@ public final class HerdWatch {
             if (wild == null) {
                 continue;
             }
-            capture(service, species, wild, now);
+            if (!penBuilt(service, species)) {
+                continue;
+            }
+            capture(service, species, wild, penTicketId(service, species), now);
         }
         breed(service, home, now);
     }
@@ -71,7 +75,8 @@ public final class HerdWatch {
         return null;
     }
 
-    private static void capture(BoardService service, Species species, Animal animal, long now) {
+    private static void capture(
+            BoardService service, Species species, Animal animal, Optional<String> penId, long now) {
         String id = captureId(species, animal);
         BlockCoord target = new BlockCoord(
                 animal.blockPosition().getX(),
@@ -84,11 +89,11 @@ public final class HerdWatch {
                         id,
                         BoardCase.CAPTURE_ANIMAL,
                         Optional.empty(),
-                        priority(BoardCase.CAPTURE_ANIMAL, service, species, false),
+                        priority(BoardCase.CAPTURE_ANIMAL, service, species, true),
                         now,
                         1,
                         "animal:" + id,
-                        List.of(),
+                        penId.map(List::of).orElse(List.of()),
                         Map.of()),
                 point);
     }
@@ -141,15 +146,27 @@ public final class HerdWatch {
     }
 
     static boolean penBuilt(BoardService service, Species species) {
-        String prefix = species.name().toLowerCase(Locale.ROOT);
-        for (BoardTicket ticket : service.board().all()) {
-            if (ticket.boardCase() == BoardCase.BUILD_PEN
-                    && ticket.id().startsWith(prefix)
-                    && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.DONE) {
+        if (penTicketId(service, species).isPresent()) {
+            return true;
+        }
+        for (int level = 1; level <= BuildingLevels.maxLevel(BoardCase.BUILD_PEN); level++) {
+            if (service.board().ledger().has(BoardCase.BUILD_PEN, level)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static Optional<String> penTicketId(BoardService service, Species species) {
+        String prefix = species.name().toLowerCase(Locale.ROOT) + "_pen";
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.boardCase() == BoardCase.BUILD_PEN
+                    && ticket.id().startsWith(prefix)
+                    && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.DONE) {
+                return Optional.of(ticket.id());
+            }
+        }
+        return Optional.empty();
     }
 
     private static String causeOf(BoardService service, Species species) {
