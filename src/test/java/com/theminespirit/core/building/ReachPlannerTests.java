@@ -87,7 +87,7 @@ class ReachPlannerTests {
     @Test
     void nextStand_NearUsefulAndFarBiggerGroups_PicksNearUseful() {
         List<BlockCoord> cells = new ArrayList<>();
-        for (int x = 0; x <= 4; x++) {
+        for (int x = 0; x <= 5; x++) {
             cells.add(cell(x, 1, 0));
         }
         for (int x = 20; x <= 26; x++) {
@@ -106,8 +106,8 @@ class ReachPlannerTests {
 
         assertTrue(
                 stand.isPresent() && stand.get().x() <= 8,
-                "С ближней стоянки ставится 5 клеток (не меньше половины лучших 7) — она и выбирается, а не дальняя "
-                        + "в 20 блоках ради двух лишних клеток; фактически " + stand);
+                "С ближней стоянки ставится 6 клеток (не меньше 80 % лучших 7) — она и выбирается, а не дальняя "
+                        + "в 20 блоках ради одной лишней клетки; фактически " + stand);
     }
 
     @Test
