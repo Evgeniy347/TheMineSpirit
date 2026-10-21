@@ -66,7 +66,7 @@ public final class ShelterBuildGameTests {
                 new ItemStack(Items.COBBLESTONE, 4),
                 new ItemStack(Items.COBBLESTONE_SLAB, 1),
                 new ItemStack(Items.TORCH, 1),
-                new ItemStack(Items.STONE_PICKAXE, 1));
+                new ItemStack(Items.STONE_SHOVEL, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("build_shelter", Map.of()), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
