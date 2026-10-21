@@ -28,6 +28,7 @@ import com.theminespirit.core.tactics.adapter.DecisionOrder;
 import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import com.theminespirit.core.tactics.adapter.DecisionText;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
+import com.theminespirit.core.tactics.adapter.ForcedRetreat;
 import com.theminespirit.core.tactics.adapter.HelpCallGate;
 import com.theminespirit.core.tactics.adapter.IntentActionExecutor;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
@@ -387,7 +388,7 @@ public final class TacticsService {
         stepCalls++;
         schedule.evaluated(now, byEvent);
         memory = next.memory();
-        next = withForcedRetreat(next);
+        next = ForcedRetreat.apply(next, directive, forcedMethod);
         retreat = RetreatCommitment.next(retreat, next, now, settings);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
@@ -484,28 +485,6 @@ public final class TacticsService {
             plan = planFor(collected, situation);
             planMethod = retreat.method();
         }
-    }
-
-    private TacticalOutcome withForcedRetreat(TacticalOutcome next) {
-        if (directive == null || directive.retreat().isEmpty()) {
-            return next;
-        }
-        RetreatMethod method = forcedMethod != RetreatMethod.NONE
-                ? forcedMethod
-                : next.retreatMethod() != RetreatMethod.NONE ? next.retreatMethod() : RetreatMethod.AWAY;
-        if (next.decision() == TacticalOption.RETREAT && next.retreatMethod() == method) {
-            return next;
-        }
-        return new TacticalOutcome(
-                TacticalOption.RETREAT,
-                next.action(),
-                method,
-                next.callHelp(),
-                next.state(),
-                next.mode(),
-                next.returnTo(),
-                next.trace(),
-                next.memory());
     }
 
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
