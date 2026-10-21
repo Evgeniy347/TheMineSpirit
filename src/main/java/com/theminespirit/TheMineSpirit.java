@@ -5,6 +5,8 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.neoforge.MobTargetEvents;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SettlementChunkLifecycle;
+import com.theminespirit.neoforge.SettlementChunkTickets;
 import com.theminespirit.neoforge.SpiritChunkTickets;
 import com.theminespirit.neoforge.SpiritCommands;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -36,6 +38,7 @@ public final class TheMineSpirit {
         ModEntities.register(modEventBus);
         modEventBus.addListener(ModEntities::registerAttributes);
         modEventBus.addListener(SpiritChunkTickets::registerControllers);
+        modEventBus.addListener(SettlementChunkTickets::registerControllers);
         modContainer.registerConfig(ModConfig.Type.SERVER, SpiritConfig.spec());
         modContainer.registerConfig(ModConfig.Type.SERVER, RestConfig.spec(), RestConfig.FILE_NAME);
         NeoForge.EVENT_BUS.addListener(SpiritCommands::register);
@@ -46,6 +49,7 @@ public final class TheMineSpirit {
         CoordinatorLifecycle.register(NeoForge.EVENT_BUS);
         BoardLifecycle.register(NeoForge.EVENT_BUS);
         DemoLifecycle.register(NeoForge.EVENT_BUS);
+        SettlementChunkLifecycle.register(NeoForge.EVENT_BUS);
         CraterWatch.register(NeoForge.EVENT_BUS);
         FenceWatch.register(NeoForge.EVENT_BUS);
         PathNetworkService.register(NeoForge.EVENT_BUS);

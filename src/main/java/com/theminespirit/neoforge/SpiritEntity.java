@@ -115,6 +115,7 @@ public final class SpiritEntity extends PathfinderMob {
     @Override
     public void onAddedToLevel() {
         super.onAddedToLevel();
+        recordSettlementAnchor();
         if (hasCustomName() || !(level() instanceof ServerLevel server)) {
             return;
         }
@@ -303,10 +304,12 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void setHome(BlockCoord home) {
         this.home = SpiritHome.at(home);
+        recordSettlementAnchor();
     }
 
     public void clearHome() {
         this.home = SpiritHome.none();
+        recordSettlementAnchor();
     }
 
     public Optional<BlockCoord> bed() {
@@ -339,10 +342,23 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void setCamp(Camp camp) {
         this.camp = camp;
+        recordSettlementAnchor();
     }
 
     public void clearCamp() {
         this.camp = null;
+        recordSettlementAnchor();
+    }
+
+    private void recordSettlementAnchor() {
+        if (!(level() instanceof ServerLevel server)) {
+            return;
+        }
+        Optional<BlockCoord> campPoint = camp().map(camp -> new BlockCoord(
+                (int) Math.floor(camp.center().x()),
+                (int) Math.floor(camp.center().y()),
+                (int) Math.floor(camp.center().z())));
+        SettlementAnchorStore.get(server).record(getUUID(), home(), campPoint);
     }
 
     public Optional<SpiritBrain> brainIfPresent() {
@@ -355,6 +371,9 @@ public final class SpiritEntity extends PathfinderMob {
         Entity.RemovalReason reason = getRemovalReason();
         if (reason != null && (reason.shouldDestroy() || reason == Entity.RemovalReason.CHANGED_DIMENSION)) {
             chunkLoader.release();
+            if (level() instanceof ServerLevel server) {
+                SettlementAnchorStore.get(server).remove(getUUID());
+            }
         }
         super.onRemovedFromLevel();
     }
