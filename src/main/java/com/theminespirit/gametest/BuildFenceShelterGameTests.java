@@ -22,8 +22,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class BuildFenceShelterGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final BlockPos START = new BlockPos(1, 1, 1);
-    private static final int SHELTER_SIDE = 3;
-    private static final int SHELTER_BLOCKS = 25;
     private static final int FEET_Y = 1;
 
     private BuildFenceShelterGameTests() {}
@@ -94,53 +92,6 @@ public final class BuildFenceShelterGameTests {
             helper.assertTrue(
                     GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_FENCE_GATE) == 0,
                     "калитка обязана быть поставлена: в инвентаре не осталось ни одной");
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @GameTest(template = "arena", batch = "build_shelter_script", timeoutTicks = 400)
-    public static void buildShelter_SideThree_RaisesWallsAndRoofAroundSpirit(GameTestHelper helper) {
-        prepare(helper);
-        BlockPos start = new BlockPos(4, FEET_Y, 4);
-        SpiritEntity spirit = spawnWith(helper, start, new ItemStack(Items.STONE, 64));
-        SpiritRun run = SpiritRun.launch(
-                helper, spirit, new ScriptCall("build_shelter", Map.of("side", SHELTER_SIDE)), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            assertSucceeded(helper, spirit, "укрытие 3×3 обязано подняться целиком");
-            int placed = 0;
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    for (int dy = 0; dy <= 1; dy++) {
-                        BlockPos wall = start.offset(dx, dy, dz);
-                        boolean perimeter = dx != 0 || dz != 0;
-                        if (perimeter) {
-                            helper.assertTrue(
-                                    helper.getBlockState(wall).is(Blocks.STONE),
-                                    "стена укрытия в " + wall + " обязана быть из камня, а там "
-                                            + helper.getBlockState(wall).getBlock());
-                            placed++;
-                        }
-                    }
-                    BlockPos roof = start.offset(dx, 2, dz);
-                    helper.assertTrue(
-                            helper.getBlockState(roof).is(Blocks.STONE),
-                            "крыша укрытия в " + roof + " обязана быть из камня, а там "
-                                    + helper.getBlockState(roof).getBlock());
-                    placed++;
-                }
-            }
-            helper.assertTrue(
-                    placed == SHELTER_BLOCKS, "укрытие 3×3 — 25 блоков (16 стен и 9 крыши), посчитано " + placed);
-            helper.assertTrue(
-                    helper.getBlockState(start).isAir()
-                            && helper.getBlockState(start.above()).isAir(),
-                    "клетки духа внутри укрытия обязаны остаться свободными: иначе дух замурован");
-            helper.assertTrue(
-                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE) == 64 - SHELTER_BLOCKS,
-                    "камня обязано израсходоваться ровно 25, осталось "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE));
             GameTestFixtures.finish(helper);
         });
     }

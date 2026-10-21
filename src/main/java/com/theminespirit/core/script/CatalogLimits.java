@@ -74,10 +74,6 @@ public final class CatalogLimits {
     // build_farm: прямоугольная грядка вокруг духа
     public static final int FARM_PLOT_SIDE_MAX = 16;
 
-    // build_shelter: сторона укрытия и предел блоков, как бюджет укрепления
-    public static final int SHELTER_SIDE_MIN = 3;
-    public static final int SHELTER_SIDE_MAX = 4;
-
     // build_fence: точки контура и предел клеток забора
     public static final int FENCE_CORNERS_MIN = 3;
     public static final int FENCE_CORNERS_MAX = 64;

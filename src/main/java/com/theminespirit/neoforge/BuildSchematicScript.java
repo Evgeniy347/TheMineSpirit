@@ -134,16 +134,26 @@ final class BuildSchematicScript implements ScriptInstance {
     private int planDeviations;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
+        this(
+                spirit,
+                SchematicResources.load(params.file()),
+                params.file(),
+                new BlockCoord(params.x(), params.y(), params.z()),
+                params.rotation());
+    }
+
+    // Та же стройка, но со схемой, собранной вызывающим (build_shelter подставляет дешёвый материал вместо
+    // заполнителя схемы): файл остаётся ключом отряда и брони клеток.
+    BuildSchematicScript(
+            SpiritEntity spirit, Schematic schematic, String file, BlockCoord origin, BuildRotation rotation) {
         this.spirit = spirit;
         this.level = spirit.level();
-        BlockCoord origin = new BlockCoord(params.x(), params.y(), params.z());
-        BuildRotation rotation = params.rotation();
-        this.site = new SchematicSite(level, SchematicResources.load(params.file()), origin, rotation);
+        this.site = new SchematicSite(level, schematic, origin, rotation);
         this.placer = new BlockPlacer(spirit);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
-        this.buildKey = new BuildKey(params.file(), origin, rotation);
+        this.buildKey = new BuildKey(file, origin, rotation);
         this.squad = BuildSquadRegistry.join(level, buildKey, spirit.getUUID());
         if (level instanceof ServerLevel server) {
             PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());

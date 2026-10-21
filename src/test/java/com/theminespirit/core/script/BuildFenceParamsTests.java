@@ -79,9 +79,8 @@ class BuildFenceParamsTests {
     }
 
     @Test
-    void catalog_FenceAndShelter_DeclareSafeDefaults() {
+    void catalog_Fence_DeclaresEmptyGateDefault() {
         ScriptSpec fence = CoreScripts.defaultCatalog().find("build_fence").orElseThrow();
-        ScriptSpec shelter = CoreScripts.defaultCatalog().find("build_shelter").orElseThrow();
 
         assertEquals(
                 "",
@@ -91,13 +90,5 @@ class BuildFenceParamsTests {
                         .orElseThrow()
                         .defaultValue(),
                 "Каталог обязан объявлять пустую калитку умолчанием: ИИ и валидатор видят одно значение");
-        assertEquals(
-                CatalogLimits.SHELTER_SIDE_MAX,
-                shelter.params().stream()
-                        .filter(param -> "side".equals(param.name()))
-                        .findFirst()
-                        .orElseThrow()
-                        .defaultValue(),
-                "Каталог обязан объявлять сторону укрытия по умолчанию 4: план без size строит 4×4");
     }
 }

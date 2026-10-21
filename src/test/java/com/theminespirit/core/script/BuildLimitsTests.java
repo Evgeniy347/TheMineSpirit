@@ -54,15 +54,6 @@ class BuildLimitsTests {
     }
 
     @Test
-    void shelterSide_LimitValues_MatchDeclared() {
-        assertEquals(3, CatalogLimits.SHELTER_SIDE_MIN, "Укрытие начинается с 3×3: в меньшем дух не встаёт внутри");
-        assertEquals(
-                4,
-                CatalogLimits.SHELTER_SIDE_MAX,
-                "Укрытие кончается на 4×4: это размер быстрого укрытия build_shelter");
-    }
-
-    @Test
     void fence_LimitValues_MatchDeclared() {
         assertEquals(
                 3,

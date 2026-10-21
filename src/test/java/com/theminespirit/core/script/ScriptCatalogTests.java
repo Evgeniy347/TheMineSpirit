@@ -473,7 +473,7 @@ class ScriptCatalogTests {
                                 "z2",
                                 new long[] {WORLD_MIN, WORLD_MAX})),
                 spec("build_fence", List.of("block", "points"), Map.of()),
-                spec("build_shelter", List.of(), Map.of("side", new long[] {3, 4})),
+                spec("build_shelter", List.of(), Map.of()),
                 spec("fill_crater", List.of("crater"), Map.of()),
                 spec("deliver", List.of("item", "count", "to"), Map.of("count", new long[] {1, 256})),
                 spec("meet", List.of("target"), Map.of()),
