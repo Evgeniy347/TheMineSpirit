@@ -37,6 +37,11 @@ public final class FarmActivity implements Activity {
     }
 
     @Override
+    public int crew(SettlementView view) {
+        return 1;
+    }
+
+    @Override
     public ActivityIntent order(SpiritSnapshot spirit, SettlementView view) {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение фермы без духа или обстановки не строится");

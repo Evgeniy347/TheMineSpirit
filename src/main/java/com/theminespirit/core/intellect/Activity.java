@@ -11,6 +11,10 @@ public interface Activity {
 
     ActivityIntent order(SpiritSnapshot spirit, SettlementView view);
 
+    default int crew(SettlementView view) {
+        return Integer.MAX_VALUE;
+    }
+
     default boolean external() {
         return false;
     }

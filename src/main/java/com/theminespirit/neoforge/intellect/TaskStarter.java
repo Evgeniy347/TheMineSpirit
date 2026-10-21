@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.TaskAdmission;
 import com.theminespirit.core.intellect.TaskBackoff;
 import com.theminespirit.core.plan.TaskNode;
@@ -9,8 +11,11 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
 
 public final class TaskStarter {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private record Issued(String script, long generation) {}
 
     private final TaskBackoff backoff = new TaskBackoff();
@@ -77,6 +82,15 @@ public final class TaskStarter {
                 if (status.isPresent() && status.get() == RunStatus.FAILED && last != null) {
                     backoff.noteFailure(id, last.script(), tick);
                     failures++;
+                    LOGGER.warn(
+                            "[incident] дух {} ({}) провалил задачу '{}': {}; состояние {}; пауза {} тиков, "
+                                    + "тот же скрипт не повторяется",
+                            spirit.getName().getString(),
+                            id,
+                            last.script(),
+                            spirit.taskFailureReason().orElse("причина не записана"),
+                            status.orElseThrow(),
+                            IntellectTuning.loadDefault().failBackoffTicks());
                     if (last.script().equals(script)) {
                         return false;
                     }

@@ -125,7 +125,8 @@ public final class TacticalIntellect {
                         .toList(),
                 view.tick(),
                 view.processing(),
-                view.inventoryFills());
+                view.inventoryFills(),
+                view.stations());
         List<String> refusals = new ArrayList<>();
         List<ActivityDemand> demands = admitOutside(workers, DemandModel.evaluate(view, catalog), refusals);
         ActivityPlan plan = assigner.assign(workers, demands, ledger, now);

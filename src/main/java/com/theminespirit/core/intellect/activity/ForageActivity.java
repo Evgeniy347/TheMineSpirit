@@ -39,6 +39,14 @@ public final class ForageActivity implements Activity {
     }
 
     @Override
+    public int crew(SettlementView view) {
+        if (view == null) {
+            throw new IllegalArgumentException("Добыча еды без обстановки не делит бригаду: нужен снимок поселения");
+        }
+        return view.farmWork().hasHarvest() ? 1 : Integer.MAX_VALUE;
+    }
+
+    @Override
     public ActivityIntent order(SpiritSnapshot spirit, SettlementView view) {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение добычи еды без духа или обстановки не строится");

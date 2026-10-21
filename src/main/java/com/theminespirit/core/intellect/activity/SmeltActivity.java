@@ -8,6 +8,7 @@ import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.processing.CookableFoods;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.processing.ProcessingStock;
@@ -24,6 +25,10 @@ public final class SmeltActivity implements Activity {
     public double demand(SettlementView view) {
         if (view == null) {
             throw new IllegalArgumentException("Спрос плавки без обстановки не считается: зависит от запасов");
+        }
+        WorkStations stations = view.stations();
+        if (!stations.canSmelt()) {
+            return Activity.checkedDemand(id(), 0);
         }
         ProcessingRules rules = ProcessingRules.loadDefault();
         ProcessingStock stock = view.processing();
@@ -43,9 +48,25 @@ public final class SmeltActivity implements Activity {
     }
 
     @Override
+    public int crew(SettlementView view) {
+        if (view == null) {
+            throw new IllegalArgumentException("Плавка без обстановки не делит бригаду: нужен снимок поселения");
+        }
+        WorkStations stations = view.stations();
+        if (!stations.canSmelt()) {
+            return 0;
+        }
+        return Math.max(1, stations.smeltStations());
+    }
+
+    @Override
     public ActivityIntent order(SpiritSnapshot spirit, SettlementView view) {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Намерение плавки без духа или обстановки не строится");
+        }
+        WorkStations stations = view.stations();
+        if (!stations.canSmelt()) {
+            return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
         }
         ProcessingRules rules = ProcessingRules.loadDefault();
         ProcessingStock stock = view.processing();
@@ -53,6 +74,13 @@ public final class SmeltActivity implements Activity {
         double cookDeficit = cookDeficit(view, stock);
         if (charcoalDeficit <= 0 && cookDeficit <= 0) {
             return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
+        }
+        if (stations.mustCraftFurnace()) {
+            return new ActivityIntent(
+                    id(),
+                    Optional.of("craft"),
+                    Map.of("item", "furnace", "count", 1, "radius", rules.stationRadius()),
+                    Optional.empty());
         }
         if (charcoalDeficit >= cookDeficit) {
             return smelt("charcoal", rules.charcoalCount(), rules);
