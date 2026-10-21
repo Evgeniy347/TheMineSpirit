@@ -5,7 +5,10 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 public final class WithdrawScript extends ContainerTask {
     private final TransferParams params;
@@ -23,6 +26,14 @@ public final class WithdrawScript extends ContainerTask {
     @Override
     protected boolean persistsProgress() {
         return true;
+    }
+
+    @Override
+    protected ItemStack shownWhileTransferring() {
+        ResourceLocation id = ResourceLocation.tryParse(params.item());
+        return id == null
+                ? ItemStack.EMPTY
+                : BuiltInRegistries.ITEM.getOptional(id).map(ItemStack::new).orElse(ItemStack.EMPTY);
     }
 
     @Override

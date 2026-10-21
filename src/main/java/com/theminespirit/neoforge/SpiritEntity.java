@@ -49,6 +49,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -67,6 +70,8 @@ public final class SpiritEntity extends PathfinderMob {
     public static final String DEFAULT_NAME = "spirit";
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final EntityDataAccessor<ItemStack> DATA_SHOWN_ITEM =
+            SynchedEntityData.defineId(SpiritEntity.class, EntityDataSerializers.ITEM_STACK);
     private static final int INVENTORY_SIZE = 36;
 
     private final SpiritInventory inventory = new SpiritInventory(INVENTORY_SIZE);
@@ -170,6 +175,47 @@ public final class SpiritEntity extends PathfinderMob {
     @Override
     public int getMaxFallDistance() {
         return DropPolicy.MAX_DROP;
+    }
+
+    // Замечание владельца 21.10: у духов в руках ничего не было. Что дух ставит или чем работает — видно игроку: сервер
+    // кладёт копию в синхронизируемое поле, клиент рисует её в главной руке; настоящая рука и инвентарь не меняются,
+    // счёт материала и выпадение при смерти те же. Пусто — видна настоящая рука (оружие, инструмент).
+    public void showInHand(ItemStack stack) {
+        ItemStack shown = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        if (!ItemStack.isSameItemSameComponents(entityData.get(DATA_SHOWN_ITEM), shown)) {
+            entityData.set(DATA_SHOWN_ITEM, shown);
+        }
+    }
+
+    public ItemStack shownInHand() {
+        return entityData.get(DATA_SHOWN_ITEM);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_SHOWN_ITEM, ItemStack.EMPTY);
+    }
+
+    // mc: ItemInHandLayer рисует getMainHandItem → getItemBySlot(MAINHAND); на клиенте подменяется показанным.
+    @Override
+    public ItemStack getItemBySlot(EquipmentSlot slot) {
+        if (slot == EquipmentSlot.MAINHAND && level().isClientSide()) {
+            ItemStack shown = shownInHand();
+            if (!shown.isEmpty()) {
+                return shown;
+            }
+        }
+        return super.getItemBySlot(slot);
+    }
+
+    // mc: Mob.checkDespawn убирает существо категории CREATURE дальше 128 блоков от ближнего игрока (и случайно —
+    // дальше
+    // 32 после 30 с без действия), если removeWhenFarAway не false; Animal переопределяет так же. Дух — не дикий моб:
+    // игра 21.10 — духи дальних построек /spirit demo city 5 пропадали, пока владелец стоял на другом конце.
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
     }
 
     @Override
@@ -504,6 +550,7 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     public void stripEquipment() {
+        showInHand(ItemStack.EMPTY);
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (!getItemBySlot(slot).isEmpty()) {
                 setItemSlot(slot, ItemStack.EMPTY);

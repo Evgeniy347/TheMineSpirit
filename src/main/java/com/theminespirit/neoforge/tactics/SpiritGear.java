@@ -131,6 +131,7 @@ public final class SpiritGear {
     }
 
     private void hold(ItemStack stack) {
+        spirit.showInHand(ItemStack.EMPTY);
         ItemStack held = spirit.getItemBySlot(EquipmentSlot.MAINHAND);
         if (stack.isEmpty()) {
             if (!held.isEmpty()) {

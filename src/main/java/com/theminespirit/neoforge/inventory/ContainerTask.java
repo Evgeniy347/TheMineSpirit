@@ -9,6 +9,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 abstract class ContainerTask implements ScriptInstance {
 
@@ -51,6 +52,11 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     protected abstract TransferRunner beginTransfer(Container container);
+
+    // У сундука — пустая рука (кладёт), у забора из сундука — то, что берёт.
+    protected ItemStack shownWhileTransferring() {
+        return ItemStack.EMPTY;
+    }
 
     protected abstract ScriptStatus finish(int moved, TransferRunner.Shortage shortage);
 
@@ -213,6 +219,7 @@ abstract class ContainerTask implements ScriptInstance {
         switch (approach.tick()) {
             case MOVING -> {}
             case ARRIVED -> {
+                spirit.showInHand(shownWhileTransferring());
                 runner = isAuto() ? current.runner() : beginTransfer(container);
                 phase = Phase.TRANSFER;
             }

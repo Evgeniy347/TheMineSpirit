@@ -443,6 +443,29 @@ public final class BuildingGameTests {
         helper.succeed();
     }
 
+    // Замечание владельца 21.10: у духов в руках ничего не было. Поставленный блок виден в руке (синхронизируемое поле
+    // для клиента), настоящая рука и инвентарь не трогаются; у сундука рука снова пустая.
+    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 100)
+    public static void placer_PlacedCobblestone_ShownInHandRealHandEmpty(GameTestHelper helper) {
+        prepare(helper);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 3);
+        BlockPlacer.Begin placed = new BlockPlacer(spirit)
+                .begin(helper.absolutePos(new BlockPos(2, 1, 2)), BlockStates.stateFor("cobblestone"), "cobblestone");
+        helper.assertTrue(placed instanceof BlockPlacer.Started, "булыжник рядом обязан встать, ответ " + placed);
+        helper.assertTrue(
+                spirit.shownInHand().is(Items.COBBLESTONE)
+                        && spirit.shownInHand().getCount() == 1,
+                "в руке духа обязан быть виден булыжник, который он ставит, а виден " + spirit.shownInHand());
+        helper.assertTrue(
+                spirit.getMainHandItem().isEmpty() && spirit.getInventory().countItem(Items.COBBLESTONE) == 2,
+                "показ в руке не трогает настоящую руку и инвентарь: рука " + spirit.getMainHandItem() + ", булыжника "
+                        + spirit.getInventory().countItem(Items.COBBLESTONE));
+        spirit.stripEquipment();
+        helper.assertTrue(spirit.shownInHand().isEmpty(), "после снятия снаряжения рука обязана быть пустой");
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
     private static ChestBlockEntity chest(GameTestHelper helper, BlockPos relative) {
         return (ChestBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(relative));
     }

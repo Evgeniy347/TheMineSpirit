@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.demo;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.engine.RunStatus;
@@ -14,6 +15,7 @@ import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,16 +27,20 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -47,7 +53,12 @@ final class DemoSession {
     private static final int DEMO_WAIT_TICKS = 100;
     private static final int WITHDRAW_RADIUS = 8;
     private static final int MAX_ROUNDS = 20;
+    // mc: уровень тикета = 33 - расстояние; сущности тикают при уровне не выше 31.
+    private static final int TICKET_DISTANCE = 2;
+    private static final TicketType<ChunkPos> DEMO_TICKET =
+            TicketType.create("theminespirit_demo", Comparator.comparingLong(ChunkPos::toLong));
     private static final String NO_MATERIAL = "не хватило материала";
+    private static final String INVENTORY_FULL = "инвентарь духа полон";
 
     private final ServerLevel level;
     private final SpiritEntity spirit;
@@ -56,6 +67,7 @@ final class DemoSession {
     private int index;
     private int round;
     private List<BlockPos> chests = List.of();
+    private final List<ChunkPos> held = new ArrayList<>();
 
     DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans, UUID owner) {
         this.level = level;
@@ -73,11 +85,13 @@ final class DemoSession {
     }
 
     void abort() {
+        releaseChunks();
         spirit.cancelTask();
         spirit.stripEquipment();
     }
 
     void begin() {
+        holdChunks();
         prepare(plans.get(0));
         spirit.startTask(node(0, withdrawals(plans.get(0))));
     }
@@ -99,6 +113,7 @@ final class DemoSession {
                 spirit.startTask(node(index, withdrawals(plans.get(index))));
                 return true;
             }
+            releaseChunks();
             spirit.discard();
             return false;
         }
@@ -110,6 +125,18 @@ final class DemoSession {
                 spirit.startTask(node(index, next));
                 return true;
             }
+        }
+        // Заход сессии считает свободные слоты до похода к сундуку; по дороге дух подбирает выпавшее, и последний
+        // слот занят (игра 21.10: «инвентарь духа полон: перенесено 0 из 64»). Это не конец стройки: стройка сама
+        // берёт порции и в демо выбрасывает лишнее (BuildSupplyTrip) — продолжить её без захода сессии.
+        if (reason.contains(INVENTORY_FULL) && round < MAX_ROUNDS) {
+            round++;
+            LOGGER.info(
+                    "Демо-стройка: дух {} — заход сессии упёрся в полный инвентарь ({}), стройка продолжает сама",
+                    spirit.getStringUUID(),
+                    reason);
+            spirit.startTask(node(index, List.of()));
+            return true;
         }
         announce(reason);
         abort();
@@ -132,6 +159,31 @@ final class DemoSession {
             steps.add(new ScriptCall("wait", params("ticks", DEMO_WAIT_TICKS)));
         }
         return new SequenceNode(steps);
+    }
+
+    // Игра 21.10: на витрине city 5 владелец стоял на другом конце улицы — чанки дальних участков выгружались, дух
+    // уходил в чанк (isRemoved), и сессия кончалась без стройки. Сессия держит чанки своих площадок до конца.
+    private void holdChunks() {
+        for (DemoPlan plan : plans) {
+            var platform = plan.placement().platform();
+            for (int cx = platform.minX() >> 4; cx <= platform.maxX() >> 4; cx++) {
+                for (int cz = platform.minZ() >> 4; cz <= platform.maxZ() >> 4; cz++) {
+                    ChunkPos pos = new ChunkPos(cx, cz);
+                    if (!held.contains(pos)) {
+                        held.add(pos);
+                        level.getChunkSource().addRegionTicket(DEMO_TICKET, pos, TICKET_DISTANCE, pos, true);
+                    }
+                }
+            }
+        }
+        LOGGER.info("Демо-стройка: дух {} держит чанков {} на время сессии", spirit.getStringUUID(), held.size());
+    }
+
+    private void releaseChunks() {
+        for (ChunkPos pos : held) {
+            level.getChunkSource().removeRegionTicket(DEMO_TICKET, pos, TICKET_DISTANCE, pos, true);
+        }
+        held.clear();
     }
 
     private static Map<String, Object> params(String key, Object value) {
@@ -200,6 +252,7 @@ final class DemoSession {
     private List<BlockPos> fillChests(DemoPlan plan) {
         BlockCoord base = plan.placement().chest();
         Direction partner = partnerSide(plan);
+        placeSign(plan);
         List<BlockPos> filled = new ArrayList<>();
         ChestBlockEntity chest = null;
         int slot = 0;
@@ -222,29 +275,33 @@ final class DemoSession {
         return List.copyOf(filled);
     }
 
-    // Половины идут парами: нижняя пара — у точки сундука, следующая — над ней.
+    // Половины идут парами: нижняя пара — у точки сундука, следующая — над ней. Крышка смотрит от постройки.
     private ChestBlockEntity nextChest(
             DemoPlan plan, BlockCoord base, @Nullable Direction partner, List<BlockPos> filled) {
         int index = filled.size();
         BlockPos main = new BlockPos(base.x(), base.y() + (partner == null ? index : index / 2), base.z());
+        DemoPlacement.Look look = plan.placement().chestFacing();
+        Direction facing = Direction.fromDelta(look.dx(), 0, look.dz());
+        if (facing == null || facing.getAxis().isVertical()) {
+            facing = Direction.NORTH;
+        }
         if (partner == null) {
             filled.add(main);
-            return placeChest(main, Blocks.CHEST.defaultBlockState(), plan);
+            return placeChest(main, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), plan);
         }
-        Direction facing = partner.getCounterClockWise();
-        BlockState left = Blocks.CHEST
+        ChestType mainType = partner == facing.getClockWise() ? ChestType.LEFT : ChestType.RIGHT;
+        BlockState mainState = Blocks.CHEST
                 .defaultBlockState()
                 .setValue(ChestBlock.FACING, facing)
-                .setValue(ChestBlock.TYPE, ChestType.LEFT);
-        BlockState right = left.setValue(ChestBlock.TYPE, ChestType.RIGHT);
+                .setValue(ChestBlock.TYPE, mainType);
+        BlockState otherState = mainState.setValue(ChestBlock.TYPE, mainType.getOpposite());
+        BlockPos other = main.relative(partner);
         if (index % 2 == 0) {
-            BlockPos other = main.relative(partner);
-            level.setBlock(other, right, Block.UPDATE_ALL);
-            ChestBlockEntity first = placeChest(main, left, plan);
+            level.setBlock(other, otherState, Block.UPDATE_ALL);
+            ChestBlockEntity first = placeChest(main, mainState, plan);
             filled.add(main);
             return first;
         }
-        BlockPos other = main.relative(partner);
         filled.add(other);
         if (!(level.getBlockEntity(other) instanceof ChestBlockEntity second)) {
             throw new IllegalStateException("Вторая половина сундука схемы '" + plan.scheme() + "' не поставлена в "
@@ -253,25 +310,14 @@ final class DemoSession {
         return second;
     }
 
-    // Сторона второй половины: на площадке, вне постройки, не на месте духа и не на месте таблички (+x).
+    // Сторону второй половины выбрала раскладка (DemoPlacement): вдоль фасада, вне схемы, при любом повороте.
     private static @Nullable Direction partnerSide(DemoPlan plan) {
         BlockCoord base = plan.placement().chest();
-        BlockCoord spawn = plan.placement().spawn();
-        BlockCoord origin = plan.placement().origin();
-        for (Direction side : List.of(Direction.WEST, Direction.NORTH, Direction.SOUTH)) {
-            int x = base.x() + side.getStepX();
-            int z = base.z() + side.getStepZ();
-            boolean inBuilding = x >= origin.x()
-                    && x < origin.x() + plan.placement().sizeX()
-                    && z >= origin.z()
-                    && z < origin.z() + plan.placement().sizeZ();
-            boolean onPlatform = plan.placement().platform().contains(new BlockCoord(x, base.y(), z));
-            boolean onSpawn = x == spawn.x() && z == spawn.z();
-            if (!inBuilding && onPlatform && !onSpawn) {
-                return side;
-            }
+        BlockCoord partner = plan.placement().chestPartner();
+        if (partner == null) {
+            return null;
         }
-        return null;
+        return Direction.fromDelta(partner.x() - base.x(), 0, partner.z() - base.z());
     }
 
     private ChestBlockEntity placeChest(BlockPos pos, BlockState state, DemoPlan plan) {
@@ -280,20 +326,28 @@ final class DemoSession {
             throw new IllegalStateException("Сундук материалов схемы '" + plan.scheme() + "' не поставлен в "
                     + pos.toShortString() + ": блок сундука не создал блочную сущность");
         }
-        if (pos.getY() == plan.placement().chest().y()) {
-            placeSign(pos, plan.name());
-        }
         return chest;
     }
 
-    private void placeSign(BlockPos chest, String name) {
-        BlockPos pos = chest.offset(1, 0, 0);
+    // Табличка — справа от сундука вдоль фасада (клетку выбрала раскладка), лицом туда же, куда крышка.
+    private void placeSign(DemoPlan plan) {
+        BlockCoord cell = plan.placement().sign();
+        if (cell == null) {
+            return;
+        }
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
         if (!level.getBlockState(pos).isAir()) {
             return;
         }
-        level.setBlock(pos, Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
+        DemoPlacement.Look look = plan.placement().chestFacing();
+        Direction facing = Direction.fromDelta(look.dx(), 0, look.dz());
+        BlockState state = Blocks.OAK_SIGN.defaultBlockState();
+        if (facing != null && facing.getAxis().isHorizontal()) {
+            state = state.setValue(StandingSignBlock.ROTATION, RotationSegment.convertToSegment(facing));
+        }
+        level.setBlock(pos, state, Block.UPDATE_ALL);
         if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
-            sign.setText(sign.getFrontText().setMessage(0, Component.literal(name)), true);
+            sign.setText(sign.getFrontText().setMessage(0, Component.literal(plan.name())), true);
             sign.setChanged();
         }
     }

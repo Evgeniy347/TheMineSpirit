@@ -135,6 +135,7 @@ public final class BlockPlacer {
 
     private void announcePlaced(Level level, BlockPos target, BlockState state) {
         level.gameEvent(GameEvent.BLOCK_PLACE, target, GameEvent.Context.of(spirit, state));
+        spirit.showInHand(new ItemStack(state.getBlock().asItem()));
         SpiritGesture.workOn(spirit, target);
         SoundType sound = state.getSoundType(level, target, spirit);
         level.playSound(

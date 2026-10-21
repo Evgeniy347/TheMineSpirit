@@ -64,6 +64,7 @@ public final class SwapToolScript implements ScriptInstance {
         }
         spirit.setItemSlot(EquipmentSlot.MAINHAND, picked);
         spirit.setDropChance(EquipmentSlot.MAINHAND, 1.0F);
+        spirit.showInHand(ItemStack.EMPTY);
         return succeed(StackMapper.itemId(picked), choice.slot(), choice.speed());
     }
 

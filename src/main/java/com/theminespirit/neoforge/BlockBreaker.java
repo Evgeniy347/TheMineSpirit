@@ -149,6 +149,7 @@ public final class BlockBreaker {
                 : choice.slot() == ToolChoice.MAIN_HAND
                         ? spirit.getMainHandItem()
                         : spirit.getInventory().getItem(choice.slot());
+        spirit.showInHand(tool);
         requiredTicks = BreakTiming.ticks(hardness, choice.speed(), choice.dropsAllowed());
         elapsed = 0;
         active = true;

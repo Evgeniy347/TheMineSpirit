@@ -73,7 +73,7 @@ public final class DemoLayoutGameTests {
         for (BlockCoord cell : placement.platform().cells()) {
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             boolean isChest = cell.equals(chest);
-            if (cell.equals(new BlockCoord(chest.x() + 1, chest.y(), chest.z()))) {
+            if (cell.equals(placement.sign())) {
                 helper.assertTrue(
                         helper.getLevel().getBlockState(pos).is(Blocks.OAK_SIGN),
                         "Рядом с сундуком обязана стоять табличка с названием постройки (владелец 19.10): " + cell);
@@ -112,7 +112,7 @@ public final class DemoLayoutGameTests {
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             var state = helper.getLevel().getBlockState(pos);
             BlockCoord chest = placement.chest();
-            if (cell.equals(new BlockCoord(chest.x() + 1, chest.y(), chest.z())) && state.is(Blocks.OAK_SIGN)) {
+            if (cell.equals(placement.sign()) && state.is(Blocks.OAK_SIGN)) {
                 continue;
             }
             if (cell.equals(placement.chest())) {
