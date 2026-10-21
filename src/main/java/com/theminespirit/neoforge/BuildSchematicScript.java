@@ -3,6 +3,8 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.BuildPhase;
+import com.theminespirit.core.building.BuildPlanCursor;
+import com.theminespirit.core.building.BuildPlanner;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildRotation;
@@ -31,13 +33,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -54,6 +63,15 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int SITE_NETWORK_RING = 6;
     // Обход пешком — по площадке и полосе вокруг неё шириной в досягаемость с запасом.
     private static final int WALK_MARGIN = 6;
+    // Стоянка плана не дала поставить клетки шага (сосед-блок, тело, путь) — столько запасных стоянок обычной стройки,
+    // потом клетки шага ждут обычной стройки после плана.
+    private static final int MAX_PLAN_RESCUES = 2;
+    // Сорвавшийся заход плана повторяется столько раз, потом клетки без материала — обычной стройке.
+    private static final int MAX_PLAN_TRIP_RETRIES = 2;
+    // Дозаходов за материалом, который план считал взятым: больше — план и инвентарь разошлись, дальше обычная стройка.
+    private static final int MAX_PLAN_TOP_UPS = 8;
+    // Столько построений пути на одну стоянку — подход трудный, пишется в лог для разбора.
+    private static final int HARD_APPROACH_PATH_BUILDS = 4;
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private final SpiritEntity spirit;
@@ -93,6 +111,27 @@ final class BuildSchematicScript implements ScriptInstance {
     private int centring;
     private int phaseBand = -1;
     private int highestBand = -1;
+    // Исполнитель плана (решение владельца 20.10, ночь): стоянки и заходы BuildPlanner; null — план исполнен,
+    // не построен (отряд, план не сошёлся) или ещё не начат.
+    private @Nullable BuildPlanCursor plan;
+    private boolean planChecked;
+    private @Nullable CompletableFuture<BuildPlanner.Plan> planPending;
+    private long planBegan;
+    private BlockCoord planSupply = new BlockCoord(0, 0, 0);
+    private Map<String, Item> planItems = Map.of();
+    private Map<BlockCoord, Schematic.PlacedEntry> primaryAt = Map.of();
+    private boolean planStandVisited;
+    private BuildPlanCursor.@Nullable Fetch planFetch;
+    private BuildPlanCursor.@Nullable Fetch retryFetch;
+    private int planFetchRetries;
+    private int planTopUps;
+    private @Nullable List<ScriptCall> supplyWalk;
+    private int approachPathMark;
+    private int planRescues;
+    private int planPlacedMark;
+    private long planStands;
+    private long planTrips;
+    private int planDeviations;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this.spirit = spirit;
@@ -134,15 +173,30 @@ final class BuildSchematicScript implements ScriptInstance {
                         supply,
                         supplyRunner.failureReason().orElse("причина не названа"),
                         feet());
+                // Заход плана сорвался (путь к сундуку из глубины дома) — повторить его, а не строить без материала.
+                if (planFetch != null && planFetchRetries < MAX_PLAN_TRIP_RETRIES) {
+                    planFetchRetries++;
+                    retryFetch = planFetch;
+                }
             }
             // После захода — заново: клетки, отложенные без опоры или без стоянки, теперь могут стать доступны.
             supplyRunner = null;
+            planFetch = null;
             blocked.clear();
             refusals.clear();
             standsRetried = false;
         }
         if (breaking != null) {
             return breakTick();
+        }
+        List<ScriptCall> walkThenFetch = supplyWalk;
+        if (walkThenFetch != null) {
+            if (approach.isActive() && approach.tick() == Approach.State.MOVING) {
+                return ScriptStatus.RUNNING;
+            }
+            approach.cancel();
+            supplyWalk = null;
+            return startSupply(walkThenFetch);
         }
         if (approach.isActive()) {
             return approachTick();
@@ -157,16 +211,43 @@ final class BuildSchematicScript implements ScriptInstance {
             }
             case ARRIVED -> {
                 excludedStands.add(approachStand);
+                if (spirit.pathBuilds() - approachPathMark >= HARD_APPROACH_PATH_BUILDS) {
+                    noteHardApproach("дошёл");
+                }
             }
             case STUCK, TIMEOUT -> {
                 excludedStands.add(approachStand);
                 lastRefusal = "стоянка " + approachStand + " недостижима: "
                         + (approach.refusal() == null ? "путь не найден" : approach.refusal());
+                noteHardApproach("срыв");
             }
         }
         approach.cancel();
         approachStand = null;
         return planTick();
+    }
+
+    // Трудный подход — срыв или много построений пути на одну стоянку: в лог для разбора движения (факты, а не
+    // догадки: где стоянка, на чём, где дух, сколько путей).
+    private void noteHardApproach(String outcome) {
+        BlockCoord stand = approachStand;
+        if (stand == null) {
+            return;
+        }
+        BlockPos below = SchematicSite.toPos(new BlockCoord(stand.x(), stand.y() - 1, stand.z()));
+        LOGGER.info(
+                "Стройка {}: подход {} к стоянке {} (пол {}), построений пути {}, дух {} в {} от стоянки; {}",
+                buildKey,
+                outcome,
+                stand,
+                level.getBlockState(below).getBlock().getDescriptionId(),
+                spirit.pathBuilds() - approachPathMark,
+                spirit.position(),
+                String.format(
+                        Locale.ROOT,
+                        "%.2f",
+                        spirit.position().distanceTo(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5))),
+                (approach.refusal() == null ? "без отказа" : approach.refusal()) + "; " + approach.networkNote());
     }
 
     private ScriptStatus breakTick() {
@@ -190,6 +271,23 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         if (ticks - lastPlaceTick < BuildPace.intervalTicks(spirit)) {
             return ScriptStatus.RUNNING;
+        }
+        if (!planChecked) {
+            startPlan();
+        }
+        CompletableFuture<BuildPlanner.Plan> pending = planPending;
+        if (pending != null) {
+            if (!pending.isDone()) {
+                return ScriptStatus.RUNNING;
+            }
+            acceptPlan(pending);
+        }
+        BuildPlanCursor cursor = plan;
+        if (cursor != null) {
+            Optional<ScriptStatus> planned = planStep(cursor);
+            if (planned.isPresent()) {
+                return planned.get();
+            }
         }
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
         List<Schematic.PlacedEntry> unsupplied = new ArrayList<>();
@@ -443,15 +541,7 @@ final class BuildSchematicScript implements ScriptInstance {
             }
             return ScriptStatus.RUNNING;
         }
-        approachStand = stand.get();
-        standsChosen++;
-        if (site.onRoof(stand.get())) {
-            roofStands++;
-        }
-        approach.begin(
-                new Vec3(approachStand.x() + 0.5, approachStand.y(), approachStand.z() + 0.5),
-                BuildTuning.STAND_ARRIVAL);
-        return ScriptStatus.RUNNING;
+        return beginApproach(stand.get());
     }
 
     // Последний шаг снаружи (двери, ставни) — стоянки только на земле, верхние ставни ставятся издалека снизу.
@@ -543,16 +633,23 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private ScriptStatus finish() {
+        BuildStats stats = noteStats();
         reservations.releaseAll(spirit.getUUID());
         List<Schematic.PlacedEntry> missing = site.missing();
         List<BlockCoord> clear = site.toClear();
         LOGGER.info(
-                "Стройка {}: стоянок выбрано {}, на крыше {}, отказов правила отхода {}, заходов {}",
+                "Стройка {}: подходов {} (план {}), стоянок выбрано {} (план {}), на крыше {}, отказов правила отхода {}, "
+                        + "заходов {} (план {}), клеток плана на обычную стройку {}",
                 buildKey,
+                stats.approaches(),
+                stats.planApproaches(),
                 standsChosen,
+                planStands,
                 roofStands,
                 retreatRefusals,
-                trips);
+                trips,
+                planTrips,
+                planDeviations);
         if (missing.isEmpty() && clear.isEmpty()) {
             leaveSquad();
             if (level instanceof ServerLevel server) {
@@ -573,6 +670,23 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private String reasons() {
+        List<Schematic.PlacedEntry> missing = site.missing();
+        if (!missing.isEmpty()) {
+            Schematic.PlacedEntry first = missing.get(0);
+            String why = blocked.get(first.pos());
+            String state = "в мире "
+                    + level.getBlockState(SchematicSite.toPos(first.pos()))
+                            .getBlock()
+                            .getDescriptionId()
+                    + ", свободна " + site.freeForPlacing(first) + ", опора " + site.supported(first) + ", материал "
+                    + BlockItems.countIn(spirit.getInventory(), first.block()) + ", основная часть "
+                    + site.primaries().contains(first) + ", занята другим "
+                    + reservations.foreign(first.pos(), spirit.getUUID());
+            if (why != null || blocked.isEmpty()) {
+                return first.pos() + " — " + (why == null ? "не отложена" : why) + " (" + state + ")"
+                        + (lastRefusal.isBlank() ? "" : "; последний отказ: " + lastRefusal);
+            }
+        }
         if (blocked.isEmpty()) {
             return lastRefusal.isBlank() ? "нет" : lastRefusal;
         }
@@ -619,13 +733,7 @@ final class BuildSchematicScript implements ScriptInstance {
                         placed,
                         site.primaries().size(),
                         blockId);
-                approach.cancel();
-                approachStand = null;
-                supplyRunner = TaskRunner.start(
-                        new SequenceNode(new ArrayList<TaskNode>(steps)),
-                        SpiritScripts.registryFor(spirit),
-                        ConditionRegistry.of(Map.of()));
-                return ScriptStatus.RUNNING;
+                return startSupply(steps);
             }
         }
         failed++;
@@ -635,6 +743,319 @@ final class BuildSchematicScript implements ScriptInstance {
         tally.supplies(placed + have, Math.max(needed - have, 0));
         return fail("не хватило материала '" + blockId + "': поставлено " + placed + " из "
                 + site.primaries().size() + "; нужно " + needed + ", есть " + have);
+    }
+
+    private ScriptStatus startSupply(List<ScriptCall> steps) {
+        approach.cancel();
+        approachStand = null;
+        supplyRunner = TaskRunner.start(
+                new SequenceNode(new ArrayList<TaskNode>(steps)),
+                SpiritScripts.registryFor(spirit),
+                ConditionRegistry.of(Map.of()));
+        return ScriptStatus.RUNNING;
+    }
+
+    // План строится один раз от того, что есть в мире; отряду из нескольких духов — обычная стройка долями. Расчёт —
+    // в фоновом потоке (дом игрока 4 — секунды): планировщик читает только снимок начала, мир не трогает.
+    private void startPlan() {
+        planChecked = true;
+        if (squad.size() > 1) {
+            return;
+        }
+        planBegan = System.nanoTime();
+        BuildPlanStart.Prepared prepared = BuildPlanStart.of(spirit, site);
+        Map<BlockCoord, Schematic.PlacedEntry> byCell = new HashMap<>();
+        site.primaries().forEach(entry -> byCell.put(entry.pos(), entry));
+        primaryAt = Map.copyOf(byCell);
+        planItems = prepared.items();
+        planSupply = prepared.supply();
+        Schematic schematic = site.schematic();
+        BuildRotation rotation = site.rotation();
+        SpiritReach reach = SpiritReach.current();
+        planPending = CompletableFuture.supplyAsync(
+                () -> BuildPlanner.plan(
+                        schematic, rotation, prepared.supply(), reach, BuildPlanner.Portion.FILL, prepared.start()),
+                Util.backgroundExecutor());
+    }
+
+    private void acceptPlan(CompletableFuture<BuildPlanner.Plan> pending) {
+        planPending = null;
+        BuildPlanner.Plan built;
+        try {
+            built = pending.join();
+        } catch (CompletionException | CancellationException e) {
+            LOGGER.warn("Стройка {}: план не построен ({}) — обычная стройка", buildKey, e.getMessage());
+            return;
+        }
+        planStands = built.stands();
+        planTrips = built.trips();
+        plan = new BuildPlanCursor(built, site.origin());
+        LOGGER.info(
+                "Стройка {}: план — стоянок {}, заходов {}, не поставлено {}, сундук у {}, расчёт {} мс",
+                buildKey,
+                planStands,
+                planTrips,
+                built.stuck(),
+                planSupply,
+                (System.nanoTime() - planBegan) / 1_000_000);
+    }
+
+    private boolean pendingCell(BlockCoord cell) {
+        Schematic.PlacedEntry entry = primaryAt.get(cell);
+        return entry != null && !blocked.containsKey(cell) && !(site.matches(entry) && site.secondPartMatches(entry));
+    }
+
+    private Optional<ScriptStatus> planStep(BuildPlanCursor cursor) {
+        BuildPlanCursor.Fetch again = retryFetch;
+        if (again != null) {
+            retryFetch = null;
+            return Optional.of(planFetch(again));
+        }
+        BuildPlanCursor.Next next = cursor.next(this::pendingCell);
+        switch (next) {
+            case BuildPlanCursor.Done ignored -> {
+                LOGGER.info(
+                        "Стройка {}: план исполнен — стоянок {} (план {}), заходов {} (план {}), клеток на обычную "
+                                + "стройку {}",
+                        buildKey,
+                        standsChosen,
+                        planStands,
+                        trips,
+                        planTrips,
+                        planDeviations);
+                leavePlan();
+                return Optional.empty();
+            }
+            case BuildPlanCursor.Fetch fetch -> {
+                nextPlanStep(cursor);
+                planFetchRetries = 0;
+                return Optional.of(planFetch(fetch));
+            }
+            case BuildPlanCursor.StandAt at -> {
+                // Двери и ставни — последним шагом снаружи; если до них остались отложенные клетки внутри, их
+                // достраивает обычная стройка (она ставит двери после всего): закрытая дверь заперла бы духа снаружи
+                // (дом игрока 3, 21.10 — 1600 построений пути у закрытой двери).
+                if (at.cells().stream()
+                                .allMatch(cell -> SchematicBlocks.isEntranceBlock(
+                                        primaryAt.get(cell).block()))
+                        && innerLeft()) {
+                    LOGGER.info(
+                            "Стройка {}: до дверей плана остались клетки внутри — дальше обычная стройка", buildKey);
+                    leavePlan();
+                    return Optional.empty();
+                }
+                return Optional.of(standStep(cursor, at));
+            }
+        }
+    }
+
+    // Клетки, которые запасные стоянки отметили недоступными, — заново: иначе обычная стройка их не видит и кончается
+    // «не совпало» (площадь 1, 21.10: гравий под стоянками плана).
+    private void leavePlan() {
+        plan = null;
+        blocked.clear();
+        refusals.clear();
+        standsRetried = false;
+    }
+
+    private boolean innerLeft() {
+        for (Schematic.PlacedEntry entry : site.primaries()) {
+            if (!SchematicBlocks.isEntranceBlock(entry.block())
+                    && !(site.matches(entry) && site.secondPartMatches(entry))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ScriptStatus planFetch(BuildPlanCursor.Fetch fetch) {
+        planFetch = fetch;
+        Map<Item, Integer> wanted = new LinkedHashMap<>();
+        for (BuildPlanner.Taken taken : fetch.taken()) {
+            Item item = planItems.get(taken.item());
+            if (item != null) {
+                wanted.merge(item, taken.count(), Integer::sum);
+            }
+        }
+        List<ScriptCall> steps = BuildSupplyTrip.exact(spirit, site, wanted);
+        if (steps.isEmpty()) {
+            planFetch = null;
+            return ScriptStatus.RUNNING;
+        }
+        trips++;
+        LOGGER.info(
+                "Стройка {}: заход {} по плану (заход плана {}, {} шагов withdraw), поставлено {} из {}",
+                buildKey,
+                trips,
+                fetch.number(),
+                steps.size(),
+                placed,
+                site.primaries().size());
+        // Сперва — к клетке у сундука из плана (путь с сетью тропинок): подход сундука ищет стоянки только у самого
+        // сундука и из глубины дома выбирал их за стеной (дом игрока 3, 21.10: три срыва захода подряд).
+        BlockCoord origin = site.origin();
+        BlockCoord supply =
+                new BlockCoord(origin.x() + planSupply.x(), origin.y() + planSupply.y(), origin.z() + planSupply.z());
+        if (feet().equals(supply)) {
+            return startSupply(steps);
+        }
+        supplyWalk = steps;
+        approach.begin(new Vec3(supply.x() + 0.5, supply.y(), supply.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+        return ScriptStatus.RUNNING;
+    }
+
+    private void nextPlanStep(BuildPlanCursor cursor) {
+        cursor.advance();
+        planStandVisited = false;
+        planRescues = 0;
+        centring = 0;
+    }
+
+    // Стоянка плана: дойти, поставить с неё клетки шага; не вышло — запасные стоянки обычной стройки для этих же
+    // клеток, потом шаг откладывается до обычной стройки после плана.
+    private ScriptStatus standStep(BuildPlanCursor cursor, BuildPlanCursor.StandAt at) {
+        if (!planStandVisited) {
+            planStandVisited = true;
+            planPlacedMark = placed;
+            if (!feet().equals(at.stand())) {
+                return beginApproach(at.stand());
+            }
+        }
+        if (placed != planPlacedMark) {
+            planPlacedMark = placed;
+            planRescues = 0;
+        }
+        List<Schematic.PlacedEntry> targets = new ArrayList<>();
+        Map<BlockCoord, Schematic.PlacedEntry> byCell = new LinkedHashMap<>();
+        for (BlockCoord cell : at.cells()) {
+            Schematic.PlacedEntry entry = primaryAt.get(cell);
+            if (entry == null) {
+                continue;
+            }
+            if (site.rightBlockWrongState(entry)) {
+                site.repairState(entry);
+                return ScriptStatus.RUNNING;
+            }
+            targets.add(entry);
+            byCell.put(cell, entry);
+        }
+        PlanPlacing placing = placeFromPlanStand(at, byCell);
+        if (placing.status().isPresent()) {
+            return placing.status().get();
+        }
+        if (placing.overlapped() && ++centring <= MAX_CENTRING_TICKS) {
+            BlockCoord here = feet();
+            spirit.getNavigation().stop();
+            spirit.getMoveControl().setWantedPosition(here.x() + 0.5, spirit.getY(), here.z() + 0.5, 1.0);
+            return ScriptStatus.RUNNING;
+        }
+        centring = 0;
+        List<Schematic.PlacedEntry> supplied = new ArrayList<>();
+        Map<Item, Integer> lacking = new LinkedHashMap<>();
+        for (Schematic.PlacedEntry entry : targets) {
+            if (BlockItems.countIn(spirit.getInventory(), entry.block()) > 0) {
+                supplied.add(entry);
+            } else {
+                lacking.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
+            }
+        }
+        // Заход плана не уместил всё (стопки в инвентаре дробнее, чем считает план) — дозаход за недостающим шага,
+        // а не сотни клеток обычной стройке (дом игрока 4, 21.10: 816 клеток без материала).
+        if (supplied.isEmpty() && !lacking.isEmpty() && planTopUps < MAX_PLAN_TOP_UPS) {
+            // Берётся весь недостающий в мире остаток этих предметов (сколько влезет), чтобы не ходить за каждым шагом.
+            for (Schematic.PlacedEntry entry : site.primaries()) {
+                Item item = BlockItems.itemFor(entry.block());
+                if (lacking.containsKey(item) && !site.matches(entry)) {
+                    lacking.merge(item, 1, Integer::sum);
+                }
+            }
+            List<ScriptCall> steps = BuildSupplyTrip.exact(spirit, site, lacking);
+            if (!steps.isEmpty()) {
+                planTopUps++;
+                trips++;
+                LOGGER.info(
+                        "Стройка {}: дозаход {} — шагу плана {} не хватило {}",
+                        buildKey,
+                        trips,
+                        cursor.index(),
+                        lacking);
+                return startSupply(steps);
+            }
+        }
+        if (!supplied.isEmpty() && planRescues < MAX_PLAN_RESCUES) {
+            planRescues++;
+            boolean entrances = supplied.stream().allMatch(entry -> SchematicBlocks.isEntranceBlock(entry.block()));
+            return placeStep(ownFirst(supplied), entrances);
+        }
+        deferPlanStep(cursor, at, targets);
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus beginApproach(BlockCoord stand) {
+        approachStand = stand;
+        approachPathMark = spirit.pathBuilds();
+        standsChosen++;
+        if (site.onRoof(stand)) {
+            roofStands++;
+        }
+        approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+        return ScriptStatus.RUNNING;
+    }
+
+    private record PlanPlacing(Optional<ScriptStatus> status, boolean overlapped) {}
+
+    // Всё, что ставится с места из клеток шага; overlapped — клетку задевает тело духа (сперва к середине клетки).
+    private PlanPlacing placeFromPlanStand(BuildPlanCursor.StandAt at, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
+        boolean overlapped = false;
+        ReachPlanner.World world = placeWorld(byCell, false);
+        for (BlockCoord cell : ReachPlanner.workableNow(SpiritReach.current(), feet(), at.cells(), world)) {
+            Schematic.PlacedEntry entry = byCell.get(cell);
+            if (entry == null || (SchematicBlocks.isEntranceBlock(entry.block()) && !site.outsideFootprint(feet()))) {
+                continue;
+            }
+            if (site.overlaps(entry, spirit.getBoundingBox())) {
+                overlapped = true;
+                continue;
+            }
+            if (!site.keepsRetreat(feet(), List.of(entry))) {
+                retreatRefusals++;
+                continue;
+            }
+            // Материала плана нет (стопка меньше 64, заход взял меньше) — клетка ждёт обычной стройки после плана.
+            if (BlockItems.countIn(spirit.getInventory(), entry.block()) == 0) {
+                continue;
+            }
+            Optional<ScriptStatus> placedNow = placeOne(entry);
+            if (placedNow.isPresent()) {
+                return new PlanPlacing(placedNow, overlapped);
+            }
+        }
+        return new PlanPlacing(Optional.empty(), overlapped);
+    }
+
+    // Со стоянки плана и запасных клетки шага не встали — они ждут обычной стройки после плана.
+    private void deferPlanStep(
+            BuildPlanCursor cursor, BuildPlanCursor.StandAt at, List<Schematic.PlacedEntry> targets) {
+        planDeviations += at.cells().size();
+        Schematic.PlacedEntry first = targets.isEmpty() ? null : targets.get(0);
+        LOGGER.info(
+                "Стройка {}: шаг плана {} — со стоянки {} и {} запасных не поставлено {} (например {}: свободна {}, "
+                        + "опора {}, материал {}; последний отказ: {}), дух {}; клетки — обычной стройке",
+                buildKey,
+                cursor.index(),
+                at.stand(),
+                planRescues,
+                at.cells().size(),
+                first == null ? "?" : first.block() + "@" + first.pos(),
+                first != null && site.freeForPlacing(first),
+                first != null && site.supported(first),
+                first == null ? 0 : BlockItems.countIn(spirit.getInventory(), first.block()),
+                lastRefusal.isBlank() ? "нет" : lastRefusal,
+                feet());
+        for (BlockCoord cell : at.cells()) {
+            blocked.putIfAbsent(cell, "план: со стоянки " + at.stand() + " не поставить");
+        }
+        nextPlanStep(cursor);
     }
 
     private int countMissing(String blockId) {
@@ -647,7 +1068,14 @@ final class BuildSchematicScript implements ScriptInstance {
         return Math.max(total, 1);
     }
 
+    private BuildStats noteStats() {
+        BuildStats stats = new BuildStats(planStands, planTrips, standsChosen, trips, planDeviations);
+        spirit.noteBuildStats(stats);
+        return stats;
+    }
+
     private ScriptStatus fail(String reason) {
+        noteStats();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
         cancel();
@@ -680,6 +1108,11 @@ final class BuildSchematicScript implements ScriptInstance {
 
     @Override
     public void cancel() {
+        supplyWalk = null;
+        if (planPending != null) {
+            planPending.cancel(false);
+            planPending = null;
+        }
         stopSupply();
         approach.cancel();
         breaker.cancel();

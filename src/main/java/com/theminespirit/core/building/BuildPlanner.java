@@ -29,12 +29,12 @@ import org.jspecify.annotations.Nullable;
  */
 public final class BuildPlanner {
     public static final int SLOTS = 36;
+    public static final int STACK = 64;
     static final int RING = 6;
     static final int MAX_TRIPS = 32;
     // Ниже — пол первого этажа, площади и крыльцо: поверхность, но не крыша.
     static final int ROOF_MIN_HEIGHT = 3;
     private static final int MAX_ROUNDS = 20_000;
-    private static final int STACK = 64;
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     // Что брать в заход: ALL — недостающее всей постройки по порядку схемы (стройка до 20.10), PHASE — только клетки
@@ -53,8 +53,41 @@ public final class BuildPlanner {
     // slotsNow — слоты с материалом текущего этапа после захода, slotsLater — с материалом будущих этапов.
     public record Trip(int number, List<Taken> taken, int slotsNow, int slotsLater) implements Step {}
 
-    public record Work(BlockCoord stand, String floor, int placed, int retreatRefusals, boolean onRoof)
-            implements Step {}
+    // cells — клетки, поставленные с этой стоянки, в порядке постановки (от угла схемы): по ним идёт исполнитель.
+    public record Work(
+            BlockCoord stand, String floor, int placed, int retreatRefusals, boolean onRoof, List<BlockCoord> cells)
+            implements Step {
+        public Work {
+            cells = List.copyOf(cells);
+        }
+    }
+
+    /**
+     * С чего начинается стройка: клетки схемы, что уже стоят (от угла схемы), материал в инвентаре и в сундуках
+     * (ключи — {@link #item}), слоты под материал (пустые и занятые материалом) и слоты лишнего, которое заход
+     * освобождает, когда свободных нет (решение владельца 20.10, QUESTIONS-3 п. 5 А); stacks — размер стопки
+     * предмета, если не 64 (табличка — 16, кровать — 1); skip — клетки, которые дух не ставит и которых в мире нет
+     * (вода колодца ставится после стройки): для плана их нет совсем.
+     */
+    public record Start(
+            Set<BlockCoord> done,
+            Set<BlockCoord> skip,
+            Map<String, Integer> inventory,
+            Map<String, Integer> chest,
+            int slots,
+            int junk,
+            Map<String, Integer> stacks) {
+        public Start {
+            done = Set.copyOf(done);
+            skip = Set.copyOf(skip);
+            inventory = Map.copyOf(inventory);
+            chest = Map.copyOf(chest);
+            stacks = Map.copyOf(stacks);
+            if (slots < 0 || junk < 0) {
+                throw new IllegalArgumentException("Слоты не бывают отрицательными: slots=" + slots + ", junk=" + junk);
+            }
+        }
+    }
 
     public record Stuck(int cells, BlockCoord sample, String reason) implements Step {}
 
@@ -133,6 +166,7 @@ public final class BuildPlanner {
     private final SpiritReach reach;
     private final Portion portion;
     private final int sizeX;
+    private final int quarterTurns;
     private final int sizeZ;
     private final List<Schematic.PlacedEntry> primaries = new ArrayList<>();
     private final Map<BlockCoord, List<Schematic.PlacedEntry>> secondaries = new HashMap<>();
@@ -146,6 +180,9 @@ public final class BuildPlanner {
     private final Map<String, Integer> chest = new TreeMap<>();
     private final Map<String, Boolean> rough = new HashMap<>();
     private final Set<BlockCoord> touched = new HashSet<>();
+    private final Map<BlockCoord, Schematic.PlacedEntry> primaryAt = new HashMap<>();
+    private final Map<BlockCoord, Map<String, String>> states = new HashMap<>();
+    private final BlockSupport.World sturdy = this::sturdyFace;
     private final Map<String, Boolean> passable = new HashMap<>();
     private final List<Step> steps = new ArrayList<>();
     private final SafetyView view = this::cellAt;
@@ -157,12 +194,21 @@ public final class BuildPlanner {
     private final Set<BlockCoord> excluded = new HashSet<>();
     private @Nullable Work current;
     private int highestBand = -1;
+    private int slotsFree = SLOTS;
+    private int junk;
+    private Map<String, Integer> stacks = Map.of();
 
     private BuildPlanner(
-            Schematic schematic, BuildRotation rotation, BlockCoord supply, SpiritReach reach, Portion portion) {
+            Schematic schematic,
+            BuildRotation rotation,
+            BlockCoord supply,
+            SpiritReach reach,
+            Portion portion,
+            @Nullable Start start) {
         this.schematic = schematic;
         this.reach = reach;
         this.portion = portion;
+        this.quarterTurns = rotation.quarterTurns();
         this.sizeX = rotation.rotatedSizeX(schematic.sizeX(), schematic.sizeZ());
         this.sizeZ = rotation.rotatedSizeZ(schematic.sizeX(), schematic.sizeZ());
         this.supply = supply;
@@ -170,13 +216,19 @@ public final class BuildPlanner {
         Map<BlockCoord, Schematic.PlacedEntry> byCell = new HashMap<>();
         List<Schematic.PlacedEntry> seconds = new ArrayList<>();
         for (Schematic.PlacedEntry entry : schematic.entries(new BlockCoord(0, 0, 0), rotation)) {
+            if (start != null && start.skip().contains(entry.pos())) {
+                continue;
+            }
             schemeCells.add(entry.pos());
             byCell.put(entry.pos(), entry);
             if (SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
                 seconds.add(entry);
             } else {
                 primaries.add(entry);
-                chest.merge(item(entry.block()), 1, Integer::sum);
+                primaryAt.put(entry.pos(), entry);
+                if (start == null) {
+                    chest.merge(item(entry.block()), 1, Integer::sum);
+                }
             }
             if (!SchematicWalk.passable(entry.block())) {
                 coveredColumns.add(column(entry.pos().x(), entry.pos().z()));
@@ -207,14 +259,50 @@ public final class BuildPlanner {
         }
     }
 
+    private void begin(Start start) {
+        chest.putAll(start.chest());
+        inventory.putAll(start.inventory());
+        inventory.values().removeIf(count -> count <= 0);
+        slotsFree = start.slots();
+        junk = start.junk();
+        stacks = start.stacks();
+        for (Schematic.PlacedEntry entry : primaries) {
+            if (start.done().contains(entry.pos())) {
+                placed.add(entry);
+                grid.put(entry.pos(), entry.block());
+                states.put(entry.pos(), entry.state());
+                touch(entry.pos());
+                for (Schematic.PlacedEntry second : secondaries.getOrDefault(entry.pos(), List.of())) {
+                    grid.put(second.pos(), second.block());
+                    states.put(second.pos(), second.state());
+                    touch(second.pos());
+                }
+            }
+        }
+    }
+
     public static Plan plan(
             Schematic schematic, BuildRotation rotation, BlockCoord supply, SpiritReach reach, Portion portion) {
+        return plan(schematic, rotation, supply, reach, portion, null);
+    }
+
+    // start == null — пустая площадка, пустой инвентарь, весь материал схемы в сундуке, 36 слотов.
+    public static Plan plan(
+            Schematic schematic,
+            BuildRotation rotation,
+            BlockCoord supply,
+            SpiritReach reach,
+            Portion portion,
+            @Nullable Start start) {
         Objects.requireNonNull(schematic, "Схема не может быть null: без неё нечего планировать");
         Objects.requireNonNull(rotation, "Поворот не может быть null: от него зависят клетки и стоянки");
         Objects.requireNonNull(supply, "Сундук не может быть null: от него начинаются заходы");
         Objects.requireNonNull(reach, "Досягаемость не может быть null: без неё стоянку не выбрать");
         Objects.requireNonNull(portion, "Правило порции не может быть null: без него неизвестно, что брать");
-        BuildPlanner planner = new BuildPlanner(schematic, rotation, supply, reach, portion);
+        BuildPlanner planner = new BuildPlanner(schematic, rotation, supply, reach, portion, start);
+        if (start != null) {
+            planner.begin(start);
+        }
         planner.run();
         return new Plan(planner.steps);
     }
@@ -289,6 +377,7 @@ public final class BuildPlanner {
     private int placeFromHere(List<Schematic.PlacedEntry> targets, boolean lastStep) {
         int refusals = 0;
         int done = 0;
+        List<BlockCoord> cells = new ArrayList<>();
         if (!lastStep || outside(feet)) {
             Map<BlockCoord, Schematic.PlacedEntry> byCell = new LinkedHashMap<>();
             targets.forEach(entry -> byCell.put(entry.pos(), entry));
@@ -299,11 +388,12 @@ public final class BuildPlanner {
                     continue;
                 }
                 place(entry);
+                cells.add(cell);
                 done++;
             }
         }
         if (done > 0 || refusals > 0) {
-            recordWork(done, refusals);
+            recordWork(done, refusals, cells);
         }
         if (done > 0) {
             excluded.clear();
@@ -311,9 +401,11 @@ public final class BuildPlanner {
         return done;
     }
 
-    private void recordWork(int done, int refusals) {
+    private void recordWork(int done, int refusals, List<BlockCoord> cells) {
         Work last = current;
         if (last != null && last.stand().equals(feet)) {
+            List<BlockCoord> all = new ArrayList<>(last.cells());
+            all.addAll(cells);
             steps.set(
                     steps.size() - 1,
                     new Work(
@@ -321,9 +413,10 @@ public final class BuildPlanner {
                             last.floor(),
                             last.placed() + done,
                             last.retreatRefusals() + refusals,
-                            last.onRoof()));
+                            last.onRoof(),
+                            all));
         } else {
-            steps.add(new Work(feet, floorAt(feet), done, refusals, onRoof(feet)));
+            steps.add(new Work(feet, floorAt(feet), done, refusals, onRoof(feet), cells));
         }
         current = (Work) steps.get(steps.size() - 1);
     }
@@ -345,7 +438,7 @@ public final class BuildPlanner {
         }
         current = null;
         if (stand.isEmpty()) {
-            stuck(targets, "нет стоянки");
+            stuck(targets, targets.stream().anyMatch(entry -> supported(entry.pos())) ? "нет стоянки" : "нет опоры");
             blocked.addAll(targets);
             return;
         }
@@ -378,11 +471,21 @@ public final class BuildPlanner {
         }
         inventory.forEach(
                 (item, have) -> need.computeIfPresent(item, (key, count) -> count > have ? count - have : null));
-        int free = SLOTS - slots(inventory);
+        int free = slotsFree - slots(inventory);
+        if (free <= 0 && junk > 0) {
+            int wanted = 0;
+            for (Map.Entry<String, Integer> item : need.entrySet()) {
+                wanted += stacksOf(item.getKey(), item.getValue());
+            }
+            int released = Math.min(junk, wanted);
+            junk -= released;
+            slotsFree += released;
+            free += released;
+        }
         List<Taken> taken = new ArrayList<>();
         for (Map.Entry<String, Integer> wanted : need.entrySet()) {
             int have = chest.getOrDefault(wanted.getKey(), 0);
-            int fits = free * STACK;
+            int fits = free * stack(wanted.getKey());
             int count = Math.min(Math.min(wanted.getValue(), have), fits);
             if (count <= 0) {
                 continue;
@@ -390,7 +493,7 @@ public final class BuildPlanner {
             taken.add(new Taken(wanted.getKey(), count));
             chest.merge(wanted.getKey(), -count, Integer::sum);
             inventory.merge(wanted.getKey(), count, Integer::sum);
-            free = SLOTS - slots(inventory);
+            free = slotsFree - slots(inventory);
             if (free <= 0) {
                 break;
             }
@@ -404,7 +507,7 @@ public final class BuildPlanner {
         int slotsNow = 0;
         int slotsLater = 0;
         for (Map.Entry<String, Integer> held : inventory.entrySet()) {
-            int stacks = (held.getValue() + STACK - 1) / STACK;
+            int stacks = stacksOf(held.getKey(), held.getValue());
             if (nowItems.contains(held.getKey())) {
                 slotsNow += stacks;
             } else {
@@ -440,9 +543,11 @@ public final class BuildPlanner {
     private void place(Schematic.PlacedEntry entry) {
         placed.add(entry);
         grid.put(entry.pos(), entry.block());
+        states.put(entry.pos(), entry.state());
         touch(entry.pos());
         for (Schematic.PlacedEntry second : secondaries.getOrDefault(entry.pos(), List.of())) {
             grid.put(second.pos(), second.block());
+            states.put(second.pos(), second.state());
             touch(second.pos());
         }
         inventory.computeIfPresent(item(entry.block()), (key, count) -> count > 1 ? count - 1 : null);
@@ -551,7 +656,88 @@ public final class BuildPlanner {
     }
 
     private boolean supported(BlockCoord cell) {
-        return cell.y() == 0 || touched.contains(cell);
+        if (cell.y() == 0) {
+            return true;
+        }
+        if (!touched.contains(cell)) {
+            return false;
+        }
+        // Опора — как в мире (BlockPlacer.hasSupport): снизу или сбоку полный блок, висящее — на держателе сверху;
+        // панель на панели без крепкого соседа в мире не ставится (дом семьи 3: стекло окна ждало перемычку).
+        Schematic.PlacedEntry entry = primaryAt.get(cell);
+        if (entry == null) {
+            return true;
+        }
+        BlockCoord mount = mountOf(entry, cell);
+        if (mount != null && mount.y() >= 0) {
+            String holder = grid.get(mount);
+            if (holder == null
+                    || (!SchematicBlocks.isFullBlock(holder)
+                            && !(SchematicBlocks.isCenterPost(holder)
+                                    && SchematicBlocks.standsOnCenter(entry.block())))) {
+                return false;
+            }
+        }
+        return SchematicRules.supportedIn(grid, sturdy, cell, entry.block(), entry.state());
+    }
+
+    // Крепость грани поставленного блока, как в мире: полный блок — все грани; ступени — низ (или верх у перевёрнутых)
+    // и высокая сторона; плита — своя половина; держатель висящего — низ.
+    private boolean sturdyFace(int x, int y, int z, BlockSupport.Face face) {
+        if (y < 0) {
+            return true;
+        }
+        BlockCoord cell = new BlockCoord(x, y, z);
+        String block = grid.get(cell);
+        if (block == null) {
+            return false;
+        }
+        if (SchematicBlocks.isFullBlock(block)
+                || (face == BlockSupport.Face.DOWN && SchematicBlocks.holdsHanging(block))) {
+            return true;
+        }
+        Map<String, String> state = states.getOrDefault(cell, Map.of());
+        String path = SchematicBlocks.path(block);
+        if (path.endsWith("_slab")) {
+            String type = state.getOrDefault("type", "bottom");
+            return "double".equals(type)
+                    || ("top".equals(type) ? face == BlockSupport.Face.UP : face == BlockSupport.Face.DOWN);
+        }
+        if (path.endsWith("_stairs")) {
+            boolean top = "top".equals(state.get("half"));
+            if (face == BlockSupport.Face.UP || face == BlockSupport.Face.DOWN) {
+                return top == (face == BlockSupport.Face.UP);
+            }
+            BuildRotation.DirectionVector back = facing(state.getOrDefault("facing", "north"));
+            return switch (face) {
+                case NORTH -> back.equalsVector(0, -1);
+                case SOUTH -> back.equalsVector(0, 1);
+                case EAST -> back.equalsVector(1, 0);
+                case WEST -> back.equalsVector(-1, 0);
+                default -> false;
+            };
+        }
+        return false;
+    }
+
+    private BuildRotation.DirectionVector facing(String facing) {
+        int[] local = switch (facing) {
+            case "south" -> new int[] {0, 1};
+            case "east" -> new int[] {1, 0};
+            case "west" -> new int[] {-1, 0};
+            default -> new int[] {0, -1};
+        };
+        return BuildRotation.rotateDirection(local[0], local[1], quarterTurns);
+    }
+
+    // Клетка крепления факела или таблички в повёрнутой схеме: состояние в схеме — без поворота (поворачивает мир).
+    private @Nullable BlockCoord mountOf(Schematic.PlacedEntry entry, BlockCoord cell) {
+        BlockCoord local = SchematicRules.mountOf(entry.block(), entry.state(), new BlockCoord(0, 0, 0));
+        if (local == null) {
+            return null;
+        }
+        BuildRotation.DirectionVector turned = BuildRotation.rotateDirection(local.x(), local.z(), quarterTurns);
+        return new BlockCoord(cell.x() + turned.dx(), cell.y() + local.y(), cell.z() + turned.dz());
     }
 
     private Cell cellAt(BlockCoord cell) {
@@ -587,10 +773,16 @@ public final class BuildPlanner {
         return null;
     }
 
+    // Стоять — как в мире: на заборе, стене и панели не стоят (дом семьи 3, 21.10: стоянка плана на заборе балкона
+    // срывала подход — на столб высотой 1,5 дух не запрыгивает).
     private boolean canStand(BlockCoord feet) {
-        return open(feet.x(), feet.y(), feet.z())
-                && open(feet.x(), feet.y() + 1, feet.z())
-                && !open(feet.x(), feet.y() - 1, feet.z());
+        if (!open(feet.x(), feet.y(), feet.z()) || !open(feet.x(), feet.y() + 1, feet.z())) {
+            return false;
+        }
+        if (feet.y() - 1 < 0) {
+            return true;
+        }
+        return SchematicWalk.standsOn(grid.get(new BlockCoord(feet.x(), feet.y() - 1, feet.z())));
     }
 
     private boolean open(int x, int y, int z) {
@@ -605,11 +797,13 @@ public final class BuildPlanner {
         return cell.x() < 0 || cell.x() >= sizeX || cell.z() < 0 || cell.z() >= sizeZ;
     }
 
+    // Обход — по площадке с кольцом и по полосе до сундука (дух у сундука дальше кольца: фонарь на краю арены,
+    // 21.10 — план из одного «не поставлено», потому что дух не мог сойти с места).
     private boolean withinRing(BlockCoord cell) {
-        return cell.x() >= -RING
-                && cell.x() < sizeX + RING
-                && cell.z() >= -RING
-                && cell.z() < sizeZ + RING
+        return cell.x() >= Math.min(-RING, supply.x() - RING)
+                && cell.x() < Math.max(sizeX + RING, supply.x() + RING)
+                && cell.z() >= Math.min(-RING, supply.z() - RING)
+                && cell.z() < Math.max(sizeZ + RING, supply.z() + RING)
                 && cell.y() >= 0
                 && cell.y() <= schematic.sizeY() + 2;
     }
@@ -640,15 +834,24 @@ public final class BuildPlanner {
         return ((long) x << 32) ^ (z & 0xffffffffL);
     }
 
-    private static int slots(Map<String, Integer> items) {
+    private int slots(Map<String, Integer> items) {
         int slots = 0;
-        for (int count : items.values()) {
-            slots += (count + STACK - 1) / STACK;
+        for (Map.Entry<String, Integer> item : items.entrySet()) {
+            slots += stacksOf(item.getKey(), item.getValue());
         }
         return slots;
     }
 
-    static String item(String block) {
+    private int stack(String item) {
+        return Math.max(1, stacks.getOrDefault(item, STACK));
+    }
+
+    private int stacksOf(String item, int count) {
+        int size = stack(item);
+        return (count + size - 1) / size;
+    }
+
+    public static String item(String block) {
         String path = SchematicBlocks.path(block);
         String namespace = block.contains(":") ? block.substring(0, block.indexOf(':') + 1) : "minecraft:";
         return namespace

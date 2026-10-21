@@ -60,6 +60,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class SpiritEntity extends PathfinderMob {
@@ -87,6 +88,7 @@ public final class SpiritEntity extends PathfinderMob {
     private BlockCoord bed;
     private Camp camp;
     private int pathBuilds;
+    private @Nullable BuildStats buildStats;
     private int teleports;
     private int entityQueries;
     private int snapshotBuilds;
@@ -588,6 +590,15 @@ public final class SpiritEntity extends PathfinderMob {
 
     public int pathBuilds() {
         return pathBuilds;
+    }
+
+    void noteBuildStats(BuildStats stats) {
+        buildStats = stats;
+    }
+
+    // Итог последней стройки по схеме (план против исполненного) — для аудита GameTest.
+    public Optional<BuildStats> buildStats() {
+        return Optional.ofNullable(buildStats);
     }
 
     public void countEntityQuery() {
