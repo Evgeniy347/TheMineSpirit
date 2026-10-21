@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.BlockSets;
 import com.theminespirit.neoforge.HarvestSession;
@@ -475,6 +476,75 @@ public final class MineGameTests {
             helper.assertTrue(
                     helper.getBlockState(new BlockPos(4, 3, 4)).is(Blocks.STONE),
                     "каменный колпак над стоянкой не трогается: ломается только цель");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // [флак] 1200 тиков HARVEST_NO_PROGRESS_TICKS: отказ обязан прийти не позже предела простоя
+    @GameTest(template = "arena", batch = "gather_no_path", timeoutTicks = 1400)
+    public static void gather_StoneBehindGlassWall_FailsWithNoPathReasonWithinTimeout(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.DIRT);
+        for (int x = -2; x <= 10; x++) {
+            for (int z = -2; z <= 10; z++) {
+                for (int y = -3; y <= -1; y++) {
+                    helper.setBlock(x, y, z, Blocks.DIRT);
+                }
+            }
+        }
+        for (int x = 3; x <= 9; x++) {
+            for (int z = 3; z <= 9; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    helper.setBlock(x, y, z, Blocks.GLASS);
+                }
+            }
+        }
+        for (int x = 4; x <= 8; x++) {
+            for (int z = 4; z <= 8; z++) {
+                for (int y = 1; y <= 3; y++) {
+                    helper.setBlock(x, y, z, Blocks.AIR);
+                }
+            }
+        }
+        // Камень в замурованной стеклянной комнате: стоянки внутри есть, пути к ним нет,
+        // а снаружи до камня не дотянуться (4 блока по горизонтали и 4 вниз).
+        helper.setBlock(6, 1, 6, Blocks.STONE);
+        SpiritEntity spirit = spawnWith(helper, new BlockPos(2, 1, 2), Items.IRON_PICKAXE);
+        AtomicReference<HarvestSession> session = new AtomicReference<>();
+        AtomicReference<Integer> startTick = new AtomicReference<>();
+        helper.onEachTick(() -> {
+            if (session.get() == null) {
+                if (spirit.tickCount >= SETTLE_TICKS) {
+                    session.set(HarvestSession.gather(spirit, "stone", 1, 4));
+                    startTick.set(spirit.tickCount);
+                }
+                return;
+            }
+            if (session.get().outcome() == HarvestSession.Outcome.RUNNING) {
+                session.get().tick();
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            HarvestSession run = session.get();
+            helper.assertTrue(run != null, "сессия обязана стартовать после оседания духа");
+            helper.assertTrue(
+                    run.outcome() != HarvestSession.Outcome.RUNNING,
+                    "камень за преградой обязан завершиться отказом, а не висеть RUNNING: " + run.outcome() + ", тиков "
+                            + (spirit.tickCount - startTick.get()));
+            helper.assertTrue(
+                    run.outcome() == HarvestSession.Outcome.FAILED,
+                    "камень за преградой обязан завершиться отказом, а не успехом: " + run.outcome());
+            helper.assertTrue(
+                    spirit.tickCount - startTick.get() <= CatalogLimits.HARVEST_NO_PROGRESS_TICKS,
+                    "отказ обязан прийти не позже предела простоя " + CatalogLimits.HARVEST_NO_PROGRESS_TICKS
+                            + " тиков, заняло " + (spirit.tickCount - startTick.get()));
+            BlockPos target = helper.absolutePos(new BlockPos(6, 1, 6));
+            String expected = "нет пути к блоку (" + target.getX() + ", " + target.getY() + ", " + target.getZ() + ")";
+            String reason = run.failureReason();
+            helper.assertTrue(
+                    reason != null && reason.contains(expected),
+                    "причина отказа обязана назвать блок и «нет пути» (" + expected + "): " + reason);
             GameTestFixtures.finish(helper);
         });
     }

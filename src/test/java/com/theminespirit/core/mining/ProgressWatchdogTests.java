@@ -54,15 +54,32 @@ class ProgressWatchdogTests {
     }
 
     @Test
-    void harvestNoProgressLimit_ProductionConstant_IsFiveMinutes() {
+    void harvestNoProgressLimit_ProductionConstant_IsOneMinute() {
         assertEquals(
-                6000,
+                1200,
                 CatalogLimits.HARVEST_NO_PROGRESS_TICKS,
-                "Предел простоя добычи — 5 минут: он обязан перекрывать самый долгий законный подход "
-                        + "(радиус 32 ≈ 2400 тиков) и при этом ловить зависание до общего тайм-аута задачи");
+                "Предел простоя добычи — 1200 тиков (60 с): законный подход сокращает расстояние и сбрасывает "
+                        + "счётчик, а зависший дух без нового блока обязан упасть с причиной за минуту, не за пять");
         assertEquals(
-                300,
+                60,
                 CatalogLimits.HARVEST_NO_PROGRESS_TICKS / 20,
-                "Предел — 300 секунд: числа задачи заданы в секундах, перевод в тики обязан совпадать");
+                "Предел — 60 секунд: числа задачи заданы в секундах, перевод в тики обязан совпадать");
+    }
+
+    @Test
+    void watchdog_NoProgressLongerThanLimit_ReportsExactlyLimitTicks() {
+        ProgressWatchdog watchdog = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
+
+        for (int tick = 1; tick < CatalogLimits.HARVEST_NO_PROGRESS_TICKS; tick++) {
+            watchdog.tick();
+            assertFalse(watchdog.stalled(), "до предела сторож обязан молчать на тике " + tick);
+        }
+        watchdog.tick();
+
+        assertTrue(watchdog.stalled(), "на пределе сторож обязан объявить застой");
+        assertEquals(
+                CatalogLimits.HARVEST_NO_PROGRESS_TICKS,
+                watchdog.idleTicks(),
+                "простой обязан совпасть с пределом: иначе причина назовёт не то время");
     }
 }
