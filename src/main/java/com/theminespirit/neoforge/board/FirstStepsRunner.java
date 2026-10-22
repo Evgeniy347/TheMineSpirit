@@ -129,7 +129,7 @@ public final class FirstStepsRunner {
                 TicketTarget.at(home).withSupply(item, batch));
     }
 
-    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
+    static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
         try {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             return CaseMaterials.need(plan, source);
@@ -139,7 +139,7 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static MaterialSource materialSource(ServerLevel level) {
+    static MaterialSource materialSource(ServerLevel level) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(level);
         return new MaterialSource() {
             @Override

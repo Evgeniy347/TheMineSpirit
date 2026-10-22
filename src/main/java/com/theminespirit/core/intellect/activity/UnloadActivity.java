@@ -1,6 +1,5 @@
 package com.theminespirit.core.intellect.activity;
 
-import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.Activity;
@@ -10,6 +9,7 @@ import com.theminespirit.core.intellect.FreeInventoryDemand;
 import com.theminespirit.core.intellect.InventoryNormTable;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.TaskRetention;
+import com.theminespirit.core.intellect.WorkRoles;
 import com.theminespirit.core.inventory.InventoryFill;
 import java.util.Map;
 import java.util.Optional;
@@ -40,7 +40,7 @@ public final class UnloadActivity implements Activity {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Разгрузка без духа или обстановки не проверяется");
         }
-        if (spirit.role() != SpiritRole.WORKER && spirit.role() != SpiritRole.IDLE) {
+        if (!WorkRoles.canWork(spirit, view)) {
             return false;
         }
         InventoryNormTable table = InventoryNormTable.loadDefault();

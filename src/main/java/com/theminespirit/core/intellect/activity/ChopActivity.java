@@ -1,12 +1,12 @@
 package com.theminespirit.core.intellect.activity;
 
-import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.intellect.WorkRoles;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,7 +25,7 @@ public final class ChopActivity implements Activity {
     @Override
     public boolean eligible(SpiritSnapshot spirit, SettlementView view) {
         requireSpirit(spirit, view);
-        return spirit.role() == SpiritRole.WORKER || spirit.role() == SpiritRole.IDLE;
+        return WorkRoles.canWork(spirit, view);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.theminespirit.core.intellect.activity;
 
-import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
@@ -8,6 +7,7 @@ import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.intellect.WorkRoles;
 import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.processing.CookableFoods;
 import com.theminespirit.core.processing.ProcessingRules;
@@ -44,7 +44,7 @@ public final class SmeltActivity implements Activity {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Плавка без духа или обстановки не проверяется");
         }
-        return spirit.role() == SpiritRole.WORKER || spirit.role() == SpiritRole.IDLE;
+        return WorkRoles.canWork(spirit, view);
     }
 
     @Override
@@ -83,7 +83,13 @@ public final class SmeltActivity implements Activity {
                     Optional.empty());
         }
         if (charcoalDeficit >= cookDeficit) {
-            return smelt("charcoal", rules.charcoalCount(), rules);
+            // Уголь — через acquire: брёвна и топливо дух берёт из сундука или рубит сам, а не падает «не хватает»
+            // без своих брёвен; count — сколько добавить к своему (как у крафта досок).
+            return new ActivityIntent(
+                    id(),
+                    Optional.of(ActivityIntent.ACQUIRE),
+                    Map.of("item", "charcoal", "count", rules.charcoalCount()),
+                    Optional.empty());
         }
         Optional<String> cooked = CookableFoods.best(stock.rawFoods(), StockCatalog.defaultTable());
         if (cooked.isEmpty()) {

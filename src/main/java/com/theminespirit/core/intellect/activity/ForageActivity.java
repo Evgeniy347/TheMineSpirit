@@ -1,6 +1,5 @@
 package com.theminespirit.core.intellect.activity;
 
-import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.intellect.Activity;
@@ -10,6 +9,7 @@ import com.theminespirit.core.intellect.FoodDemand;
 import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.intellect.WorkRoles;
 import java.util.Map;
 import java.util.Optional;
 
@@ -35,7 +35,7 @@ public final class ForageActivity implements Activity {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Добыча еды без духа или обстановки не проверяется");
         }
-        return spirit.role() == SpiritRole.WORKER || spirit.role() == SpiritRole.IDLE;
+        return WorkRoles.canWork(spirit, view);
     }
 
     @Override

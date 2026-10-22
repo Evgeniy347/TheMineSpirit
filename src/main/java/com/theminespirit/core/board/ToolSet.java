@@ -30,6 +30,8 @@ public final class ToolSet {
     private static final int DEFAULT_PER_SPIRIT = 1;
     private static final int DEFAULT_MIN_SETS = 1;
     private static final String MINECRAFT_PREFIX = "minecraft:";
+    private static final String WOODEN_PREFIX = "wooden_";
+    private static final List<String> TIERS = List.of("wooden", "stone", "iron", "golden", "diamond", "netherite");
 
     private ToolSet() {}
 
@@ -72,6 +74,26 @@ public final class ToolSet {
             }
         }
         return Optional.empty();
+    }
+
+    // Инструмент того же вида любого уровня засчитывается вместо деревянного: дух с каменной киркой деревянную не ждёт.
+    public static Map<BoardCase, Integer> woodenShortages(Map<String, Integer> available, int sets) {
+        Objects.requireNonNull(available, "available не может быть null: пустой запас задают пустой картой");
+        if (sets < 0) {
+            throw new IllegalArgumentException("Комплектов " + sets + ": число не может быть отрицательным");
+        }
+        Map<BoardCase, Integer> shortages = new LinkedHashMap<>();
+        for (BoardCase boardCase : WOODEN) {
+            String kind = stockKey(boardCase).substring(WOODEN_PREFIX.length());
+            int have = 0;
+            for (String tier : TIERS) {
+                have += available.getOrDefault(tier + "_" + kind, 0);
+            }
+            if (have < sets) {
+                shortages.put(boardCase, sets - have);
+            }
+        }
+        return shortages;
     }
 
     public static int count(Map<String, Integer> tools, int spirits) {
