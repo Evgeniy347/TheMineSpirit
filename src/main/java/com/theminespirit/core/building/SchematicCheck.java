@@ -29,11 +29,18 @@ public final class SchematicCheck {
         }
     }
 
+    // Условие repeat до мирового y проверяется вне игры от номинальной поверхности: иначе сторожа схемы
+    // не увидели бы ни одной повторённой ступени.
+    static final int AUDIT_TOP_Y = 64;
+
     private SchematicCheck() {}
 
     public static Report check(String id, SchematicDocument document) {
         Objects.requireNonNull(id, "Id постройки не может быть null: по нему называют нарушителя");
         Objects.requireNonNull(document, "Постройка не может быть null: проверять нечего");
+        boolean descending = document.schematic().repeat() != null
+                && document.schematic().repeat().descends();
+        document = document.expanded(AUDIT_TOP_Y);
         SchematicDocument.Header header = document.header();
         if (header.type().isEmpty()) {
             List<String> stale = new ArrayList<>();
@@ -61,7 +68,10 @@ public final class SchematicCheck {
         }
         Set<SchematicRules.RuleId> used = EnumSet.noneOf(SchematicRules.RuleId.class);
         List<String> unexcused = new ArrayList<>();
-        for (SchematicRules.Violation violation : SchematicRules.check(structure)) {
+        List<SchematicRules.Violation> violations = header.type().orElseThrow() == BuildingType.UNDERGROUND
+                ? SchematicUndergroundRules.check(structure, descending)
+                : SchematicRules.check(structure);
+        for (SchematicRules.Violation violation : violations) {
             if (excused.contains(violation.rule())) {
                 used.add(violation.rule());
             } else {

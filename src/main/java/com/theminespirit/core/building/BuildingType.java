@@ -17,7 +17,8 @@ public enum BuildingType {
     CRAFT("ремесло"),
     INFRASTRUCTURE("инфраструктура"),
     SOCIAL("социальное"),
-    PET("питомцы");
+    PET("питомцы"),
+    UNDERGROUND("подземное");
 
     private final String label;
 

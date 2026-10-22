@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.SchematicBlocks;
 import java.util.Map;
 import java.util.Objects;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,6 +20,7 @@ public final class BlockStates {
         if (blockId.isBlank()) {
             throw new IllegalArgumentException("Id блока пуст: по пустому id блок не найти");
         }
+        blockId = SchematicBlocks.placementBlock(blockId);
         String qualified = blockId.indexOf(':') < 0 ? DEFAULT_NAMESPACE + ":" + blockId : blockId;
         ResourceLocation location = ResourceLocation.tryParse(qualified);
         Block block = location == null

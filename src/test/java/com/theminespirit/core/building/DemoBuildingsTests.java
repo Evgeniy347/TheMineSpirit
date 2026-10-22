@@ -40,7 +40,9 @@ class DemoBuildingsTests {
                         "palisade_section",
                         "pen",
                         "enchant_room",
-                        "mine_entrance"),
+                        "mine_entrance",
+                        "mine_descent",
+                        "mine_tunnel"),
                 DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "
                         + "и не найдёт нужную");
