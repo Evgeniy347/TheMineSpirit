@@ -44,7 +44,8 @@ public final class EquipScript implements ScriptInstance {
         EquipmentSlot slot = spirit.getEquipmentSlotForItem(stack);
         ItemStack worn = spirit.getItemBySlot(slot);
         ItemStack piece = spirit.getInventory().removeItem(source, 1);
-        if (!worn.isEmpty() && !storeBack(worn, source)) {
+        boolean copyInHand = slot == EquipmentSlot.MAINHAND && !spirit.mainHandOwned();
+        if (!worn.isEmpty() && !copyInHand && !storeBack(worn, source)) {
             ItemStack rest = spirit.getInventory().getItem(source);
             if (rest.isEmpty()) {
                 spirit.getInventory().setItem(source, piece);
@@ -54,7 +55,11 @@ public final class EquipScript implements ScriptInstance {
             return fail("нет места для обмена: слот '" + slot.getName() + "' занят, а инвентарь полон, "
                     + "ничего не перемещено");
         }
-        spirit.setItemSlot(slot, piece);
+        if (slot == EquipmentSlot.MAINHAND) {
+            spirit.holdInMainHand(piece);
+        } else {
+            spirit.setItemSlot(slot, piece);
+        }
         spirit.setDropChance(slot, 1.0F);
         return succeed();
     }

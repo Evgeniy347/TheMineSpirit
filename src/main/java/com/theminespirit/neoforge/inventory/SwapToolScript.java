@@ -59,10 +59,10 @@ public final class SwapToolScript implements ScriptInstance {
                         choice.slot(),
                         spirit.getInventory().getItem(choice.slot()).getCount());
         ItemStack hand = spirit.getMainHandItem();
-        if (!hand.isEmpty()) {
+        if (!hand.isEmpty() && spirit.mainHandOwned()) {
             spirit.getInventory().setItem(choice.slot(), hand.copy());
         }
-        spirit.setItemSlot(EquipmentSlot.MAINHAND, picked);
+        spirit.holdInMainHand(picked);
         spirit.setDropChance(EquipmentSlot.MAINHAND, 1.0F);
         spirit.showInHand(ItemStack.EMPTY);
         return succeed(StackMapper.itemId(picked), choice.slot(), choice.speed());
