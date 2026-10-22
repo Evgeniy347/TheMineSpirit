@@ -16,6 +16,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
+import com.theminespirit.neoforge.board.BoardStateStore;
 import com.theminespirit.neoforge.board.FirstStepsRunner;
 import com.theminespirit.neoforge.board.JournalService;
 import com.theminespirit.neoforge.board.StockReader;
@@ -32,6 +33,7 @@ import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
@@ -270,6 +272,51 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "arena", batch = RESTART_BATCH, timeoutTicks = 100)
+    public static void firstSteps_SavedBoardState_SurvivesRestartWithoutReopen(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        ServerLevel level = helper.getLevel();
+        placeLogs(helper, false);
+        BoardStateStore store = new BoardStateStore();
+        Path before = restartJournal("gametest-board-saved-before.jsonl");
+        BoardService first = storedBoard(level, before, store);
+        FirstStepsRunner.tick(level, first, List.of(spirit), stocked(), level.getGameTime());
+        helper.assertTrue(
+                first.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.PENDING,
+                "Новое поселение начинает с расчистки участка, статус "
+                        + first.board().statusOf("first:clear_grounds"));
+        closeTicket(first, "first:clear_grounds", spirit);
+        first.close();
+
+        CompoundTag saved = store.save(new CompoundTag(), level.registryAccess());
+        BoardStateStore loaded = BoardStateStore.load(saved, level.registryAccess());
+        BoardService restarted = storedBoard(level, restartJournal("gametest-board-saved-after.jsonl"), loaded);
+
+        helper.assertTrue(
+                restarted.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.DONE,
+                "Статус DONE обязан пережить сохранение доски в мире, после загрузки "
+                        + restarted.board().statusOf("first:clear_grounds"));
+        helper.assertTrue(
+                restarted.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1),
+                "Отметка «расчищено» обязана пережить сохранение доски в мире: без неё выполненный кейс "
+                        + "откроется снова");
+        FirstStepsRunner.tick(level, restarted, List.of(spirit), stocked(), level.getGameTime());
+
+        helper.assertTrue(
+                restarted.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.DONE,
+                "Выполненный кейс расчистки не переоткрывается после перезапуска, статус "
+                        + restarted.board().statusOf("first:clear_grounds"));
+        helper.assertTrue(
+                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "После «расчищено» цепочка идёт дальше — к сундукам, статус "
+                        + restarted.board().statusOf("first:stock_chests"));
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
     @GameTest(template = "arena", batch = STOCK_BATCH, timeoutTicks = 100)
     public static void firstSteps_EmptyStock_GathersBeforeStations(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -497,6 +544,29 @@ public final class BoardFirstStepsGameTests {
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
                 BoardSources.create(),
                 journal);
+    }
+
+    private static Path restartJournal(String file) {
+        Path path = FMLPaths.CONFIGDIR.get().resolve("theminespirit/" + file);
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException error) {
+            throw new UncheckedIOException(error);
+        }
+        return path;
+    }
+
+    private static BoardService storedBoard(ServerLevel level, Path journalPath, BoardStateStore store) {
+        JournalService journal = new JournalService(journalPath);
+        Board board = new Board(
+                level::getGameTime, (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
+        return new BoardService(
+                board,
+                new HerdCycles(board),
+                new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
+                BoardSources.create(),
+                journal,
+                store);
     }
 
     private static BoardService journaledBoard(ServerLevel level, Path journalPath) {

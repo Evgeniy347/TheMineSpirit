@@ -58,6 +58,17 @@ public final class BoardLedger {
         built.add(key(boardCase, level));
     }
 
+    public void restore(Set<String> keys) {
+        Objects.requireNonNull(keys, "Ключи отметок не могут быть null: пустой набор задают пустым набором");
+        for (String key : keys) {
+            if (!key.startsWith(PREFIX)) {
+                throw new IllegalArgumentException("Ключ отметки '" + key + "' не начинается с '" + PREFIX
+                        + "': в ledger хранятся только отметки построек");
+            }
+            built.add(key);
+        }
+    }
+
     public boolean has(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс проверки не может быть null: без него непонятно, что искать");
         return built.contains(PREFIX + boardCase.name() + ":" + level);

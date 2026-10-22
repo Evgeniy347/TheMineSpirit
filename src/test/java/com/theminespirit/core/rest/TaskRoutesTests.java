@@ -575,6 +575,10 @@ class TaskRoutesTests {
 
         assertEquals(404, response.status(), "Неизвестная задача обязана давать 404: " + response.body());
         assertTrue(response.body().contains("t-404"), "404 обязан называть task_id: " + response.body());
+        assertTrue(
+                response.body().contains("сервер перезапущен")
+                        && response.body().contains("задача утрачена"),
+                "404 после перезапуска обязан объяснять потерю, а не молчать: " + response.body());
     }
 
     @Test
@@ -653,6 +657,10 @@ class TaskRoutesTests {
 
         assertEquals(404, response.status(), "SSE у неизвестной задачи обязан давать 404: " + response.body());
         assertNull(response.stream(), "404 не должен открывать поток кадров");
+        assertTrue(
+                response.body().contains("сервер перезапущен")
+                        && response.body().contains("задача утрачена"),
+                "SSE после перезапуска обязан объяснять потерю, а не молчать: " + response.body());
     }
 
     @Test

@@ -57,6 +57,47 @@ public final class Board {
         return nowTicks.getAsLong();
     }
 
+    public BoardState snapshot() {
+        List<BoardState.Entry> entries = new ArrayList<>();
+        for (BoardTicket ticket : tickets.values()) {
+            entries.add(new BoardState.Entry(
+                    ticket,
+                    Objects.requireNonNull(
+                            statuses.get(ticket.id()),
+                            "У билета '" + ticket.id() + "' нет статуса: доска хранит их вместе"),
+                    claimAssignees.get(ticket.id()),
+                    failTicks.get(ticket.id()),
+                    ticketFailures.getOrDefault(ticket.id(), 0)));
+        }
+        return new BoardState(entries, ledger.keys());
+    }
+
+    public void restore(BoardState state) {
+        Objects.requireNonNull(state, "Снимок доски не может быть null: восстанавливать нечего");
+        tickets.clear();
+        statuses.clear();
+        claimAssignees.clear();
+        failTicks.clear();
+        ticketFailures.clear();
+        blockedMissing.clear();
+        caseFailures.clear();
+        ledger.restore(state.ledger());
+        for (BoardState.Entry entry : state.entries()) {
+            BoardTicket ticket = entry.ticket();
+            tickets.put(ticket.id(), ticket);
+            statuses.put(ticket.id(), entry.status());
+            if (entry.holder() != null) {
+                claimAssignees.put(ticket.id(), entry.holder());
+            }
+            if (entry.failedAt() != null) {
+                failTicks.put(ticket.id(), entry.failedAt());
+            }
+            if (entry.failures() > 0) {
+                ticketFailures.put(ticket.id(), entry.failures());
+            }
+        }
+    }
+
     public BoardOutcome submit(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, " + "а не пустую заявку");
         if (tickets.containsKey(ticket.id())) {
