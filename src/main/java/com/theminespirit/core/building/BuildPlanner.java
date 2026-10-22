@@ -216,7 +216,7 @@ public final class BuildPlanner {
         Map<BlockCoord, Schematic.PlacedEntry> byCell = new HashMap<>();
         List<Schematic.PlacedEntry> seconds = new ArrayList<>();
         for (Schematic.PlacedEntry entry : schematic.entries(new BlockCoord(0, 0, 0), rotation)) {
-            if (start != null && start.skip().contains(entry.pos())) {
+            if (entry.optional() || (start != null && start.skip().contains(entry.pos()))) {
                 continue;
             }
             schemeCells.add(entry.pos());
@@ -659,12 +659,16 @@ public final class BuildPlanner {
         if (cell.y() == 0) {
             return true;
         }
+        Schematic.PlacedEntry entry = primaryAt.get(cell);
+        // Пол шахты лежит в породе: @floor — не висящий блок, даже если соседние ступени ещё не поставлены.
+        if (entry != null && SchematicBlocks.isFloor(entry.block())) {
+            return true;
+        }
         if (!touched.contains(cell)) {
             return false;
         }
         // Опора — как в мире (BlockPlacer.hasSupport): снизу или сбоку полный блок, висящее — на держателе сверху;
         // панель на панели без крепкого соседа в мире не ставится (дом семьи 3: стекло окна ждало перемычку).
-        Schematic.PlacedEntry entry = primaryAt.get(cell);
         if (entry == null) {
             return true;
         }
@@ -852,6 +856,9 @@ public final class BuildPlanner {
     }
 
     public static String item(String block) {
+        if (SchematicBlocks.isFloor(block)) {
+            return "minecraft:cobblestone";
+        }
         String path = SchematicBlocks.path(block);
         String namespace = block.contains(":") ? block.substring(0, block.indexOf(':') + 1) : "minecraft:";
         return namespace

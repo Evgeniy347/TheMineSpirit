@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
@@ -72,7 +73,9 @@ public final class BuildAudit {
             expectedCells.add(entry.pos());
         }
         for (Schematic.PlacedEntry entry : entries) {
-            auditCell(level, entry, rotation, problems);
+            if (!entry.optional()) {
+                auditCell(level, entry, rotation, problems);
+            }
         }
         for (Map.Entry<BlockCoord, BlockState> snapshot : before.states().entrySet()) {
             BlockCoord cell = snapshot.getKey();
@@ -84,7 +87,8 @@ public final class BuildAudit {
         }
         for (Schematic.PlacedEntry entry : entries) {
             BlockCoord cell = entry.pos();
-            if (BlockItems.hasBlockItem(entry.block())
+            if (!entry.optional()
+                    && BlockItems.hasBlockItem(entry.block())
                     && !wasAlready(entry, before)
                     && !(level instanceof ServerLevel server
                             && PlacedBlocksData.get(server)
@@ -103,6 +107,13 @@ public final class BuildAudit {
         BlockPos pos =
                 new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
         BlockState current = level.getBlockState(pos);
+        if (SchematicBlocks.isFloor(entry.block())) {
+            if (!SchematicBlocks.isFloorClass(BlockStates.idOf(current))) {
+                problems.add("клетка " + entry.pos() + " не совпадает со схемой: ожидался пол @floor (любой "
+                        + "дешёвый твёрдый блок), стоит " + current.getBlock());
+            }
+            return;
+        }
         if (!current.is(BlockStates.blockFor(entry.block()))) {
             problems.add("клетка " + entry.pos() + " не совпадает со схемой: ожидался " + entry.block() + ", стоит "
                     + current.getBlock());
@@ -126,6 +137,10 @@ public final class BuildAudit {
     }
 
     private static boolean wasAlready(Schematic.PlacedEntry entry, Before before) {
+        if (SchematicBlocks.isFloor(entry.block())) {
+            BlockState old = before.states().get(entry.pos());
+            return old != null && SchematicBlocks.isFloorClass(BlockStates.idOf(old));
+        }
         BlockState expected = BlockStates.stateFor(entry.block(), entry.state());
         BlockState old = before.states().get(entry.pos());
         return old != null && old.is(expected.getBlock());

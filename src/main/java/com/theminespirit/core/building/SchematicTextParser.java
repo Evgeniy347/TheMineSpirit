@@ -27,8 +27,18 @@ public final class SchematicTextParser {
     public static final char ANY = ' ';
     public static final String EXTENSION = ".txt";
 
-    private static final Set<String> KEYS =
-            Set.of("name", "type", "stage", "level", "requires", "size", "entrance", "legend", "exemptions", "layers");
+    private static final Set<String> KEYS = Set.of(
+            "name",
+            "type",
+            "stage",
+            "level",
+            "requires",
+            "size",
+            "entrance",
+            "legend",
+            "exemptions",
+            "layers",
+            "repeat");
     private static final Pattern KEY_LINE = Pattern.compile("^([a-z]+):(.*)$");
     private static final Pattern LEGEND_LINE = Pattern.compile("^\\s+'(.)':\\s*(.*)$");
     private static final Pattern LAYER_LINE = Pattern.compile("^(\\s*)- y(\\d+)(?:\\s+[^:|]*)?:\\s*\\|\\s*$");
@@ -37,8 +47,10 @@ public final class SchematicTextParser {
     private static final Pattern BLOCK_SPEC =
             Pattern.compile("^([a-z0-9_.\\-]+(?::[a-z0-9_./\\-]+)?)(?:\\[([^\\]]*)])?(?:\\s+\"([^\"]*)\")?$");
     private static final Pattern STATE_PAIR = Pattern.compile("^([a-z0-9_]+)=([a-z0-9_]+)$");
+    private static final Pattern STEP = Pattern.compile("^\\[\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*]$");
+    private static final Pattern TARGET_Y = Pattern.compile("^y\\s*=\\s*(-?\\d+)$");
 
-    record LegendEntry(String block, Map<String, String> state, String text, int line) {}
+    record LegendEntry(String block, Map<String, String> state, String text, int line, boolean optional) {}
 
     record RawLayer(int y, int line, List<String> rows) {}
 
@@ -55,6 +67,7 @@ public final class SchematicTextParser {
     private int sizeLine;
     private @Nullable String entrance;
     private int entranceLine;
+    private Schematic.@Nullable Repeat repeat;
     private final Map<Character, LegendEntry> legend = new LinkedHashMap<>();
     private final List<SchematicDocument.Exemption> exemptions = new ArrayList<>();
     private final List<RawLayer> layers = new ArrayList<>();
@@ -102,6 +115,7 @@ public final class SchematicTextParser {
                 case "legend" -> legend(keyLine, value);
                 case "exemptions" -> exemptions(keyLine, value);
                 case "layers" -> layers(keyLine, value);
+                case "repeat" -> repeat(keyLine, value);
                 default -> scalar(name, value, keyLine);
             }
         }
@@ -170,12 +184,24 @@ public final class SchematicTextParser {
     }
 
     private LegendEntry blockSpec(String spec, int line) {
-        Matcher block = BLOCK_SPEC.matcher(spec);
+        boolean optional = false;
+        String trimmed = spec.trim();
+        if (trimmed.endsWith("~")) {
+            optional = true;
+            trimmed = trimmed.substring(0, trimmed.length() - 1).trim();
+        }
+        if (trimmed.startsWith("@")) {
+            if (!SchematicBlocks.FLOOR.equals(trimmed)) {
+                throw error(line, "неизвестный класс блока '" + trimmed + "': из классов поддерживается только @floor");
+            }
+            return new LegendEntry(SchematicBlocks.FLOOR, Map.of(), "", line, optional);
+        }
+        Matcher block = BLOCK_SPEC.matcher(trimmed);
         if (!block.matches()) {
             throw error(
                     line,
-                    "блок '" + spec + "' не по формату: ожидается id[свойство=значение,…] и, для таблички, "
-                            + "текст в кавычках");
+                    "блок '" + trimmed + "' не по формату: ожидается id[свойство=значение,…] и, для таблички, "
+                            + "текст в кавычках; необязательная клетка помечается суффиксом ~");
         }
         String id = block.group(1).contains(":") ? block.group(1) : "minecraft:" + block.group(1);
         if ("air".equals(SchematicBlocks.path(id))) {
@@ -202,7 +228,132 @@ public final class SchematicTextParser {
         if (SchematicBlocks.isBed(id) && !state.containsKey("facing")) {
             throw error(line, "у кровати обязателен facing: по нему находится изголовье");
         }
-        return new LegendEntry(id, Map.copyOf(state), block.group(3) == null ? "" : block.group(3), line);
+        return new LegendEntry(id, Map.copyOf(state), block.group(3) == null ? "" : block.group(3), line, optional);
+    }
+
+    private void repeat(int keyLine, String value) {
+        if (!value.isEmpty()) {
+            repeat = inlineRepeat(value, keyLine);
+            return;
+        }
+        int @Nullable [] step = null;
+        Schematic.Repeat.Until until = null;
+        int stepLine = -1;
+        while (index < lines.size() && isSectionLine(lines.get(index))) {
+            String line = lines.get(index);
+            if (isBlankOrComment(line)) {
+                index++;
+                continue;
+            }
+            String trimmed = line.trim();
+            if (trimmed.startsWith("step:")) {
+                if (step != null) {
+                    throw error(index, "шаг повтора задан дважды: вторая строка молча перекрыла бы первую");
+                }
+                step = step(stripComment(trimmed.substring("step:".length()).trim()), index);
+                stepLine = index;
+            } else if (trimmed.startsWith("until:")) {
+                if (until != null) {
+                    throw error(index, "условие повтора задано дважды: until и times исключают друг друга");
+                }
+                until = until(stripComment(trimmed.substring("until:".length()).trim()), index);
+            } else if (trimmed.startsWith("times:")) {
+                if (until != null) {
+                    throw error(index, "условие повтора задано дважды: until и times исключают друг друга");
+                }
+                until = new Schematic.Repeat.Times(integer(
+                        stripComment(trimmed.substring("times:".length()).trim()), index, "times"));
+            } else {
+                throw error(index, "в repeat ожидается «step: [dx, dy, dz]» и «until: y=50» или «times: N»");
+            }
+            index++;
+        }
+        if (step == null) {
+            throw error(keyLine, "у repeat нет шага: без него сегмент не повторить");
+        }
+        if (until == null) {
+            throw error(keyLine, "у repeat нет условия: задайте until: y=… или times: N");
+        }
+        if (step[1] == 0 && until instanceof Schematic.Repeat.TargetY) {
+            throw error(stepLine, "повтор до y без шага по y: цель по высоте недостижима");
+        }
+        repeat = new Schematic.Repeat(step[0], step[1], step[2], until);
+    }
+
+    private Schematic.Repeat inlineRepeat(String value, int line) {
+        String body = value.trim();
+        if (!body.startsWith("{") || !body.endsWith("}")) {
+            throw error(line, "repeat не по формату: ожидается {step: [dx, dy, dz], until: y=50} или раздел строками");
+        }
+        body = body.substring(1, body.length() - 1);
+        int @Nullable [] step = null;
+        Schematic.Repeat.Until until = null;
+        for (String part : splitTopLevel(body)) {
+            String pair = part.trim();
+            if (pair.startsWith("step:")) {
+                step = step(pair.substring("step:".length()).trim(), line);
+            } else if (pair.startsWith("until:")) {
+                until = until(pair.substring("until:".length()).trim(), line);
+            } else if (pair.startsWith("times:")) {
+                until = new Schematic.Repeat.Times(
+                        integer(pair.substring("times:".length()).trim(), line, "times"));
+            } else {
+                throw error(line, "в repeat ожидается step, until или times, а не '" + pair + "'");
+            }
+        }
+        if (step == null || until == null) {
+            throw error(line, "в repeat нужны step и until (или times): иначе непонятно, что и до чего повторять");
+        }
+        if (step[1] == 0 && until instanceof Schematic.Repeat.TargetY) {
+            throw error(line, "повтор до y без шага по y: цель по высоте недостижима");
+        }
+        return new Schematic.Repeat(step[0], step[1], step[2], until);
+    }
+
+    private static List<String> splitTopLevel(String body) {
+        List<String> parts = new ArrayList<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < body.length(); i++) {
+            char symbol = body.charAt(i);
+            if (symbol == '[' || symbol == '{') {
+                depth++;
+            } else if (symbol == ']' || symbol == '}') {
+                depth--;
+            } else if (symbol == ',' && depth == 0) {
+                parts.add(body.substring(start, i));
+                start = i + 1;
+            }
+        }
+        parts.add(body.substring(start));
+        return parts;
+    }
+
+    private int[] step(String value, int line) {
+        Matcher matcher = STEP.matcher(value);
+        if (!matcher.matches()) {
+            throw error(line, "шаг повтора '" + value + "' не по формату: ожидается [dx, dy, dz], например [1, -1, 0]");
+        }
+        int[] step = new int[] {
+            Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)), Integer.parseInt(matcher.group(3))
+        };
+        if (step[0] == 0 && step[1] == 0 && step[2] == 0) {
+            throw error(line, "шаг повтора нулевой: сегмент повторялся бы на месте");
+        }
+        return step;
+    }
+
+    private Schematic.Repeat.Until until(String value, int line) {
+        String target = unquote(value, line);
+        Matcher y = TARGET_Y.matcher(target);
+        if (y.matches()) {
+            return new Schematic.Repeat.TargetY(Integer.parseInt(y.group(1)));
+        }
+        try {
+            return new Schematic.Repeat.Times(Integer.parseInt(target));
+        } catch (NumberFormatException notNumber) {
+            throw error(line, "условие повтора '" + target + "' не по формату: ожидается y=50 или число сегментов");
+        }
     }
 
     private void exemptions(int keyLine, String value) {
@@ -320,7 +471,7 @@ public final class SchematicTextParser {
                     "блоков " + cells.blocks().size() + ", а предел " + CatalogLimits.SCHEMATIC_BLOCKS_MAX
                             + ": большая схема строится слишком долго");
         }
-        Schematic schematic = new Schematic(sx, sy, sz, cells.blocks(), cells.air());
+        Schematic schematic = new Schematic(sx, sy, sz, cells.blocks(), cells.air(), repeat);
         SchematicDocument.Header header =
                 new SchematicDocument.Header(name, type, stage, level, requires, entrance(schematic));
         return new SchematicDocument(schematic, header, exemptions);

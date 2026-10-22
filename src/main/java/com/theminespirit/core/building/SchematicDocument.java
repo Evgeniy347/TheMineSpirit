@@ -51,4 +51,14 @@ public record SchematicDocument(Schematic schematic, Header header, List<Exempti
         Objects.requireNonNull(exemptions, "Исключения не могут быть null: без исключений — пустой список");
         exemptions = List.copyOf(exemptions);
     }
+
+    public SchematicDocument expanded(int topY) {
+        Schematic.Expanded expanded = schematic.expand(topY);
+        BlockCoord shift = expanded.offset();
+        Optional<BlockCoord> movedEntry = header.entrance()
+                .map(entry -> new BlockCoord(entry.x() + shift.x(), entry.y() + shift.y(), entry.z() + shift.z()));
+        Header moved =
+                new Header(header.name(), header.type(), header.stage(), header.level(), header.requires(), movedEntry);
+        return new SchematicDocument(expanded.schematic(), moved, exemptions);
+    }
 }

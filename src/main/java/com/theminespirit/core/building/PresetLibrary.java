@@ -243,7 +243,7 @@ public final class PresetLibrary {
         Objects.requireNonNull(schematic, "Схема не может быть null: материалы считают из её блоков");
         Map<String, Integer> counts = new TreeMap<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            if (!SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
+            if (!entry.optional() && !SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
                 counts.merge(SchematicBlocks.itemOf(entry.block()), 1, Integer::sum);
             }
         }
