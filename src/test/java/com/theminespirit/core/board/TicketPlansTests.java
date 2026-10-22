@@ -475,16 +475,21 @@ class TicketPlansTests {
     void plan_EnchantRoom_LevelsUseGrowingSchemes() {
         ScriptCall one = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 1, target()), "build_schematic");
         ScriptCall two = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 2, target()), "build_schematic");
+        ScriptCall three = findCall(TicketPlans.plan(BoardCase.ENCHANT_ROOM, 3, target()), "build_schematic");
 
         assertEquals(
                 "enchant_room_v1",
                 one.params().get("file"),
                 "Уровень 1 чаровальни — пресет enchant_room_v1 (решение владельца 18.10: доска строит настоящие "
-                        + "пресеты, а не заготовку из четырёх столбов): стол и кольцо 15 полок для 30 уровня");
+                        + "пресеты, а не заготовку из четырёх столбов): деревянная изба со столом и пятью полками");
         assertEquals(
                 "enchant_room_v2",
                 two.params().get("file"),
-                "Уровень 2 чаровальни — пресет enchant_room_v2: второй стол и запас полок");
+                "Уровень 2 чаровальни — пресет enchant_room_v2: каменный зал и кольцо на десять полок");
+        assertEquals(
+                "enchant_room_v3",
+                three.params().get("file"),
+                "Уровень 3 чаровальни — пресет enchant_room_v3: большой зал с полным кольцом 15 полок (максимум стола)");
     }
 
     @Test

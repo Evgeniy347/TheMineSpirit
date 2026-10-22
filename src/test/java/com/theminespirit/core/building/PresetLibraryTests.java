@@ -56,10 +56,10 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                30,
+                31,
                 library.size(),
-                "Библиотека обязана прочитать все тридцать пресетов, включая четыре уровня дома семьи и дома игрока, "
-                        + "площадь 1–3, колодец 2, светильники 2–3, два уровня чаровальни, "
+                "Библиотека обязана прочитать все тридцать один пресет, включая четыре уровня дома семьи и дома игрока, "
+                        + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
                         + "четыре уровня склада и загоны трёх уровней: без них стратегу не из чего "
                         + "составлять планировку поселения");
         assertEquals(
@@ -76,6 +76,7 @@ class PresetLibraryTests {
                         "mine_entrance_v1",
                         "enchant_room_v1",
                         "enchant_room_v2",
+                        "enchant_room_v3",
                         "storage_v1",
                         "storage_v2",
                         "storage_v3",
@@ -284,9 +285,10 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                30,
+                31,
                 paths.size(),
-                "Индекс обязан назвать по телу на каждый из тридцати пресетов: пропуск тела оставил бы пресет без схемы");
+                "Индекс обязан назвать по телу на каждый из тридцати одного пресета: пропуск тела оставил бы пресет "
+                        + "без схемы");
         assertEquals(
                 PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt",
                 paths.get(2),
@@ -308,7 +310,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                List.of("enchant_room_v1", "enchant_room_v2"),
+                List.of("enchant_room_v1", "enchant_room_v2", "enchant_room_v3"),
                 library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),
                 "Чаровальня обязана лежать в типе «ремесло»: по типу стратег находит постройку под стол чарования");
     }
@@ -373,26 +375,24 @@ class PresetLibraryTests {
     }
 
     @Test
-    void planned_RealIndex_DescribesFinalLevelWithoutScheme() {
+    void realIndex_EnchantRoomFinalLevel_HasScheme() {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                1,
-                library.planned().size(),
-                "Индекс обязан описать финальный уровень чаровальни метаданными, хотя схемы у него ещё нет");
-        PlannedLevel finalLevel = library.planned().get(0);
-        assertEquals(
-                3,
-                finalLevel.level(),
-                "Финальный описанный уровень несёт номер 3 — следующий после второго построенного");
+                List.of(),
+                library.planned(),
+                "Все уровни чаровальни описаны схемами: запланированный уровень без схемы остаётся запасным "
+                        + "механизмом, а не способом держать финал на бумаге");
+        Preset finalLevel = library.byId("enchant_room_v3").orElseThrow();
+        assertEquals(3, finalLevel.level(), "Финальный уровень чаровальни несёт номер 3");
         assertEquals(
                 Optional.of("enchant_room_v2"),
                 finalLevel.requires(),
                 "Финальный уровень требует второй: его ставят, только когда предыдущий построен");
-        assertTrue(
-                finalLevel.name().contains("40×30"),
-                "Описание финального уровня обязано называть большое здание ~40×30: иначе потеряно, что там "
-                        + "несколько чаровален");
+        assertEquals(
+                BuildingType.CRAFT,
+                finalLevel.type(),
+                "Чаровальня остаётся постройкой ремесла: от типа зависят правила схем");
     }
 
     @Test
