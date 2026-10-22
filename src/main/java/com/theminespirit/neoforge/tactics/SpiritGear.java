@@ -134,15 +134,19 @@ public final class SpiritGear {
         spirit.showInHand(ItemStack.EMPTY);
         ItemStack held = spirit.getItemBySlot(EquipmentSlot.MAINHAND);
         if (stack.isEmpty()) {
-            if (!held.isEmpty()) {
-                spirit.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            if (!held.isEmpty() && !spirit.mainHandOwned()) {
+                spirit.releaseMainHand();
             }
             return;
         }
-        if (!ItemStack.isSameItemSameComponents(held, stack)) {
-            spirit.setItemSlot(EquipmentSlot.MAINHAND, stack.copyWithCount(1));
-            spirit.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
+        if (ItemStack.isSameItemSameComponents(held, stack)) {
+            return;
         }
+        if (!held.isEmpty() && !spirit.releaseMainHand()) {
+            return;
+        }
+        spirit.showCopyInMainHand(stack);
+        spirit.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
 
     private int arrowCount() {

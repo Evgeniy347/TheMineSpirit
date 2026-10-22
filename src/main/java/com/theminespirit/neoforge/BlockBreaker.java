@@ -274,8 +274,8 @@ public final class BlockBreaker {
             return;
         }
         ItemStack spare = spirit.getInventory().getItem(source).copy();
-        spirit.setItemSlot(EquipmentSlot.MAINHAND, spare);
-        spirit.getInventory().setItem(source, hand.copy());
+        spirit.getInventory().setItem(source, spirit.mainHandOwned() ? hand.copy() : ItemStack.EMPTY);
+        spirit.holdInMainHand(spare);
     }
 
     private int bestSpareSlot(BlockState targetState, ToolReserve reserve) {

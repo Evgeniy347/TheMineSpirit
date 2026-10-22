@@ -43,6 +43,7 @@ import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.SpiritTacticsStore;
 import com.theminespirit.neoforge.tactics.TacticsService;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -85,6 +86,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final DropMagnet magnet = new DropMagnet(this);
     private final PersonalSpaceKeeper personalSpace = new PersonalSpaceKeeper(this);
     private SpiritBrain spiritBrain;
+    private boolean mainHandBorrowed;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
     private Finding finding;
@@ -208,6 +210,40 @@ public final class SpiritEntity extends PathfinderMob {
             }
         }
         return super.getItemBySlot(slot);
+    }
+
+    // Рука — место хранения: equip/swap_tool кладут в неё единственный экземпляр из инвентаря, а бой и стройка —
+    // временную копию для показа. Освобождать руку можно только через releaseMainHand: настоящий предмет
+    // возвращается в инвентарь, копия просто исчезает. Иначе тактика (SpiritGear.holdNothing) теряет вещь (INC-12).
+    public void holdInMainHand(ItemStack stack) {
+        setItemSlot(EquipmentSlot.MAINHAND, stack);
+        mainHandBorrowed = false;
+    }
+
+    public void showCopyInMainHand(ItemStack stack) {
+        setItemSlot(EquipmentSlot.MAINHAND, stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1));
+        mainHandBorrowed = !stack.isEmpty();
+    }
+
+    public boolean mainHandOwned() {
+        return !mainHandBorrowed;
+    }
+
+    public boolean releaseMainHand() {
+        ItemStack held = super.getItemBySlot(EquipmentSlot.MAINHAND);
+        if (held.isEmpty()) {
+            mainHandBorrowed = false;
+            return true;
+        }
+        if (!mainHandBorrowed) {
+            if (!inventory.canAddAll(List.of(held))) {
+                return false;
+            }
+            inventory.addItem(held.copy());
+        }
+        setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        mainHandBorrowed = false;
+        return true;
     }
 
     // mc: Mob.checkDespawn убирает существо категории CREATURE дальше 128 блоков от ближнего игрока (и случайно —
@@ -386,6 +422,9 @@ public final class SpiritEntity extends PathfinderMob {
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.put("SpiritInventory", inventory.createTag(registryAccess()));
+        compound.putBoolean(
+                "SpiritMainHandBorrowed",
+                mainHandBorrowed && !super.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty());
         SpiritTaskStore.write(compound, taskJsonForSave());
         SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
@@ -423,6 +462,8 @@ public final class SpiritEntity extends PathfinderMob {
         if (compound.contains("SpiritInventory", Tag.TAG_LIST)) {
             inventory.fromTag(compound.getList("SpiritInventory", Tag.TAG_COMPOUND), registryAccess());
         }
+        mainHandBorrowed = compound.contains("SpiritMainHandBorrowed", Tag.TAG_BYTE)
+                && compound.getBoolean("SpiritMainHandBorrowed");
         memory = SpiritMemoryStore.read(compound).map(this::decodeMemory).orElse(MemoryStore.empty());
         try {
             SpiritWorkZoneStore.read(compound).ifPresent(policies::setWorkZone);
@@ -571,7 +612,9 @@ public final class SpiritEntity extends PathfinderMob {
     public void stripEquipment() {
         showInHand(ItemStack.EMPTY);
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (!getItemBySlot(slot).isEmpty()) {
+            if (slot == EquipmentSlot.MAINHAND) {
+                releaseMainHand();
+            } else if (!getItemBySlot(slot).isEmpty()) {
                 setItemSlot(slot, ItemStack.EMPTY);
             }
         }

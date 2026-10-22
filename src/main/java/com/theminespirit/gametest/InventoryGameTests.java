@@ -875,6 +875,129 @@ public final class InventoryGameTests {
         });
     }
 
+    // INC-12: equip вынимает инструмент из инвентаря в настоящую руку, а тактика (SpiritGear.holdNothing) освобождает
+    // руку как витрину — предмет обязан вернуться в инвентарь, иначе он исчезает из обоих мест. Цепочка из живого
+    // прогона: craft → equip → gather → equip другого.
+    @GameTest(template = "arena", batch = "inv_equip_roundtrip", timeoutTicks = 400)
+    public static void equip_CraftEquipGatherSwap_KeepsEveryTool(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        helper.setBlock(FullCycleScene.TABLE, Blocks.CRAFTING_TABLE);
+        FullCycleScene.placeCobblestoneRow(helper, 3);
+        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
+        spirit.getInventory().addItem(new ItemStack(Items.COBBLESTONE, 3));
+        spirit.getInventory().addItem(new ItemStack(Items.STICK, 2));
+        spirit.getInventory().addItem(new ItemStack(Items.STONE_AXE));
+        EquipRoundtrip roundtrip = new EquipRoundtrip(helper, spirit);
+        helper.succeedWhen(() -> {
+            roundtrip.step();
+        });
+    }
+
+    private static final class EquipRoundtrip {
+        private final GameTestHelper helper;
+        private final SpiritEntity spirit;
+        private SpiritRun current;
+        private int phase;
+
+        private EquipRoundtrip(GameTestHelper helper, SpiritEntity spirit) {
+            this.helper = helper;
+            this.spirit = spirit;
+            current = launch("craft", Map.of("item", "stone_pickaxe", "count", 1, "radius", 8));
+        }
+
+        private SpiritRun launch(String script, Map<String, Object> params) {
+            return SpiritRun.launch(helper, spirit, new ScriptCall(script, params), Math.max(1, spirit.tickCount));
+        }
+
+        private void step() {
+            current.assertStarted();
+            RunStatus status = spirit.taskStatus().orElse(null);
+            helper.assertTrue(status != RunStatus.RUNNING, "шаг цепочки ещё выполняется: " + status);
+            helper.assertTrue(
+                    status == RunStatus.SUCCEEDED,
+                    "шаг " + phase + " цепочки craft → equip → gather → equip другого обязан завершиться успехом, "
+                            + "статус: " + status + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            switch (phase) {
+                case 0 -> afterCraft();
+                case 1 -> afterEquip();
+                case 2 -> afterRelease();
+                case 3 -> afterGather();
+                case 4 -> afterSwap();
+                default -> helper.assertTrue(false, "лишний шаг " + phase + ": цепочка уже закончилась");
+            }
+        }
+
+        private void afterCraft() {
+            helper.assertTrue(
+                    countStored(spirit, Items.STONE_PICKAXE) == 1,
+                    "craft обязан положить каменную кирку в инвентарь, фактически: "
+                            + countStored(spirit, Items.STONE_PICKAXE));
+            current = launch("equip", Map.of("item", "minecraft:stone_pickaxe"));
+            phase = 1;
+            helper.assertTrue(false, "ждём equip: кирка в инвентаре, рука пока пуста");
+        }
+
+        private void afterEquip() {
+            helper.assertTrue(
+                    spirit.getMainHandItem().is(Items.STONE_PICKAXE),
+                    "equip обязан надеть кирку в настоящую руку, в руке: " + spirit.getMainHandItem());
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE) == 0,
+                    "кирка после equip живёт в руке, а не в инвентаре: "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE));
+            spirit.gear().holdNothing();
+            phase = 2;
+            helper.assertTrue(false, "ждём проверки кирки после освобождения руки");
+        }
+
+        private void afterRelease() {
+            helper.assertTrue(
+                    spirit.getMainHandItem().is(Items.STONE_PICKAXE),
+                    "INC-12: тактика освобождает только свою копию, а настоящая кирка после equip обязана "
+                            + "остаться в руке, в руке: " + spirit.getMainHandItem());
+            helper.assertTrue(
+                    countStored(spirit, Items.STONE_PICKAXE) == 1,
+                    "INC-12: кирка, вынутая из инвентаря для equip, не имеет права исчезнуть; в руке "
+                            + spirit.getMainHandItem() + ", всего " + countStored(spirit, Items.STONE_PICKAXE));
+            current = launch("gather", Map.of("block", "cobblestone", "count", 1, "radius", 8));
+            phase = 3;
+            helper.assertTrue(false, "ждём gather: кирка снова у духа");
+        }
+
+        private void afterGather() {
+            helper.assertTrue(
+                    countStored(spirit, Items.STONE_PICKAXE) == 1,
+                    "gather не вправе потерять кирку: в руке " + spirit.getMainHandItem() + ", всего "
+                            + countStored(spirit, Items.STONE_PICKAXE));
+            current = launch("equip", Map.of("item", "minecraft:stone_axe"));
+            phase = 4;
+            helper.assertTrue(false, "ждём equip топора: кирка должна остаться у духа");
+        }
+
+        private void afterSwap() {
+            helper.assertTrue(
+                    spirit.getMainHandItem().is(Items.STONE_AXE),
+                    "equip другого инструмента обязан надеть топор, в руке: " + spirit.getMainHandItem());
+            helper.assertTrue(
+                    countStored(spirit, Items.STONE_PICKAXE) == 1,
+                    "equip другого инструмента обязан вернуть прежнюю кирку в инвентарь, всего "
+                            + countStored(spirit, Items.STONE_PICKAXE));
+            spirit.gear().holdNothing();
+            helper.assertTrue(
+                    countStored(spirit, Items.STONE_AXE) == 1 && countStored(spirit, Items.STONE_PICKAXE) == 1,
+                    "после освобождения руки оба инструмента обязаны остаться у духа: топор "
+                            + countStored(spirit, Items.STONE_AXE) + ", кирка "
+                            + countStored(spirit, Items.STONE_PICKAXE));
+            TacticsScene.finish(helper, spirit);
+        }
+    }
+
+    private static int countStored(SpiritEntity spirit, Item item) {
+        ItemStack hand = spirit.getMainHandItem();
+        return GameTestFixtures.countInInventory(spirit.getInventory(), item) + (hand.is(item) ? hand.getCount() : 0);
+    }
+
     @GameTest(template = "arena", batch = "inv_breaker_hand", timeoutTicks = 400)
     public static void blockBreaker_MainHandPickaxe_BreaksFasterAndWears(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
