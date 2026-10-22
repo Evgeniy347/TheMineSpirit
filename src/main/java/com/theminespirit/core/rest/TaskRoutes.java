@@ -124,11 +124,8 @@ public final class TaskRoutes {
         String taskId = params.get("id");
         long lastEventId = lastEventId(request);
         TaskRegistry.Snapshot snapshot = registry.snapshot(taskId, lastEventId)
-                .orElseThrow(() -> new ApiException(
-                        ErrorCode.NOT_FOUND,
-                        "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при "
-                                + "перезапуске",
-                        Map.of(TASK_ID, taskId)));
+                .orElseThrow(
+                        () -> new ApiException(ErrorCode.NOT_FOUND, lostTaskMessage(taskId), Map.of(TASK_ID, taskId)));
         if (!slots.tryAcquire()) {
             throw new ApiException(
                     ErrorCode.RATE_LIMITED,
@@ -193,10 +190,13 @@ public final class TaskRoutes {
 
     private TaskRecord knownTask(String taskId) {
         return registry.get(taskId)
-                .orElseThrow(() -> new ApiException(
-                        ErrorCode.NOT_FOUND,
-                        "Задача '" + taskId + "' не найдена: реестр живёт в памяти сервера и очищается при перезапуске",
-                        Map.of(TASK_ID, taskId)));
+                .orElseThrow(
+                        () -> new ApiException(ErrorCode.NOT_FOUND, lostTaskMessage(taskId), Map.of(TASK_ID, taskId)));
+    }
+
+    private static String lostTaskMessage(String taskId) {
+        return "Задача '" + taskId + "' не найдена: сервер перезапущен, задача утрачена — "
+                + "реестр REST-задач живёт в памяти и не переживает перезапуск; повторите постановку";
     }
 
     private static String canonicalBotId(String raw) {

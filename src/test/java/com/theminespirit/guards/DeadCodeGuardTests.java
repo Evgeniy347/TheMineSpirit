@@ -114,9 +114,6 @@ class DeadCodeGuardTests {
                     "src/main/java/com/theminespirit/core/board/Board.java|method|Board#pendingFor",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/board/BoardLedger.java|method|BoardLedger#keys",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
                     "src/main/java/com/theminespirit/core/board/BreedingRules.java|method|BreedingRules#breedingAvailable",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(

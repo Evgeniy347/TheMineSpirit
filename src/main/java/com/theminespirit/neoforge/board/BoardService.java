@@ -53,6 +53,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.phys.AABB;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -69,6 +70,7 @@ public final class BoardService {
     private final StockReader stockReader;
     private final BoardSources sources;
     private final JournalService journal;
+    private final @Nullable BoardStateStore store;
     private final CraterProfiles craters = new CraterProfiles(64);
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
@@ -82,6 +84,16 @@ public final class BoardService {
 
     public BoardService(
             Board board, HerdCycles animals, StockReader stockReader, BoardSources sources, JournalService journal) {
+        this(board, animals, stockReader, sources, journal, null);
+    }
+
+    public BoardService(
+            Board board,
+            HerdCycles animals,
+            StockReader stockReader,
+            BoardSources sources,
+            JournalService journal,
+            @Nullable BoardStateStore store) {
         this.board = Objects.requireNonNull(board, "board не может быть null: очередь заданий живёт в ядре");
         this.animals = Objects.requireNonNull(
                 animals, "animals не может быть null: циклы животных по видам — составная часть доски");
@@ -90,6 +102,10 @@ public final class BoardService {
         this.sources = Objects.requireNonNull(sources, "sources не может быть null: источники событий доски");
         this.journal =
                 Objects.requireNonNull(journal, "journal не может быть null: без него переходы не попадут в журнал");
+        this.store = store;
+        if (store != null) {
+            store.restoreInto(board);
+        }
         journal.restore(board.ledger());
     }
 
@@ -102,7 +118,8 @@ public final class BoardService {
                 new HerdCycles(board),
                 new StockReader(BoardTuning.stockReadBudget(), BoardTuning.stockBlockBudget()),
                 BoardSources.create(),
-                journal);
+                journal,
+                BoardStateStore.get(level));
     }
 
     public Board board() {
@@ -166,10 +183,18 @@ public final class BoardService {
         rebuilds++;
         lastRebuild = now;
         journal.flush(JournalService.FLUSH_BUDGET);
+        persist();
     }
 
     public void close() {
         journal.flushAll();
+        persist();
+    }
+
+    private void persist() {
+        if (store != null) {
+            store.update(board.snapshot());
+        }
     }
 
     public JournalService journal() {
@@ -310,6 +335,7 @@ public final class BoardService {
         if (outcome == BoardOutcome.ACCEPTED) {
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
+            persist();
         }
         return outcome;
     }
@@ -318,6 +344,7 @@ public final class BoardService {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
+            persist();
         }
         return outcome;
     }
@@ -336,6 +363,7 @@ public final class BoardService {
                 WorkReserveHub.releaseAll(spirit);
             }
         }
+        persist();
         return true;
     }
 
