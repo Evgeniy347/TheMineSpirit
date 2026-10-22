@@ -94,7 +94,9 @@ class HazardReflexProperties {
                     Cell.PASSABLE,
                     surroundings.cellAt(head),
                     "Над клеткой выхода обязано быть место для головы: " + cell);
-            assertEquals(Cell.SOLID, surroundings.cellAt(floor), "Под клеткой выхода обязан быть твёрдый пол: " + cell);
+            assertTrue(
+                    MiningSafety.canStandOn(surroundings.cellAt(floor)),
+                    "Под клеткой выхода обязан быть годный пол — твёрдый или сыпучий: " + cell);
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     for (BlockCoord ring : new BlockCoord[] {

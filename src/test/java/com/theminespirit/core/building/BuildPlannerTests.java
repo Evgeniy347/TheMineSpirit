@@ -3,13 +3,18 @@ package com.theminespirit.core.building;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 class BuildPlannerTests {
@@ -164,6 +169,66 @@ class BuildPlannerTests {
                 }
             }
         }
+    }
+
+    // План и исполнитель решают «на чём стоять» одной функцией: каждая стоянка плана на полу постройки обязана
+    // проходить правило исполнителя (MiningSafety.canStand). Площадь 1 стоит на гравии: пока исполнитель считал
+    // сыпучий пол запретным, он искал стоянки заново — подходов 47–49 при плане 21.
+    @Test
+    void plan_PlazaStands_PassExecutorStandRule() {
+        for (String scheme : List.of("plaza_1", "plaza_2")) {
+            Preset preset = LIBRARY.byId(scheme).orElseThrow();
+            for (BuildRotation rotation : BuildRotation.values()) {
+                Map<BlockCoord, String> grid = new HashMap<>();
+                for (Schematic.PlacedEntry entry : preset.schematic().entries(new BlockCoord(0, 0, 0), rotation)) {
+                    grid.put(entry.pos(), entry.block());
+                }
+                BuildPlanner.Plan plan = BuildPlanSnapshotTests.plan(preset, rotation, BuildPlanner.Portion.FILL);
+                for (BuildPlanner.Step step : plan.steps()) {
+                    if (!(step instanceof BuildPlanner.Work work)
+                            || work.stand().y() <= 0) {
+                        continue;
+                    }
+                    BlockCoord stand = work.stand();
+                    BlockCoord floor = new BlockCoord(stand.x(), stand.y() - 1, stand.z());
+                    assertTrue(
+                            MiningSafety.canStand(stand, standView(stand, floor, cellOf(grid.get(floor)))),
+                            scheme + " " + rotation.id() + ": стоянка плана " + stand + " на полу '"
+                                    + grid.get(floor) + "' не проходит правило исполнителя — он пойдёт искать "
+                                    + "другую стоянку, и подходов станет больше плана");
+                }
+            }
+        }
+    }
+
+    private static Cell cellOf(@Nullable String block) {
+        if (block == null || SchematicWalk.passable(block)) {
+            return Cell.PASSABLE;
+        }
+        if (SchematicBlocks.isFalling(block)) {
+            return Cell.FALLING;
+        }
+        String path = SchematicBlocks.path(block);
+        if ("water".equals(path)) {
+            return Cell.WATER;
+        }
+        if ("lava".equals(path)) {
+            return Cell.LAVA;
+        }
+        return Cell.SOLID;
+    }
+
+    private static SafetyView standView(BlockCoord stand, BlockCoord floor, Cell floorCell) {
+        BlockCoord head = new BlockCoord(stand.x(), stand.y() + 1, stand.z());
+        return cell -> {
+            if (cell.equals(stand) || cell.equals(head)) {
+                return Cell.PASSABLE;
+            }
+            if (cell.equals(floor)) {
+                return floorCell;
+            }
+            return Cell.SOLID;
+        };
     }
 
     // Курсор пропускает стоянки, чьи клетки уже стоят, и отдаёт координаты мира.
