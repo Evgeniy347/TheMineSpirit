@@ -27,6 +27,10 @@ public final class ContainerAccess {
 
     public record Refused(String reason) implements Open {}
 
+    public static boolean allowed(BlockState state) {
+        return ALLOWED.matches(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+    }
+
     public static Open open(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();

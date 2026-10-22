@@ -18,6 +18,7 @@ import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.BuildStats;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SchematicResources;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
@@ -184,6 +185,8 @@ public final class DemoAuditGameTests {
                     if (halves.size() % 2 == 0) {
                         helper.setBlock(main.relative(partner), rightHalf);
                         helper.setBlock(main, leftHalf);
+                        SettlementChestStore.get(helper.getLevel()).track(helper.absolutePos(main));
+                        SettlementChestStore.get(helper.getLevel()).track(helper.absolutePos(main.relative(partner)));
                     }
                     halves.add(half);
                     chest = (Container) helper.getBlockEntity(half);

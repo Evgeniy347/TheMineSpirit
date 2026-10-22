@@ -124,6 +124,9 @@ public final class BlockPlacer {
                             + " не держится и сразу исчез: настенному блоку нужна стена со стороны крепления");
         }
         announcePlaced(level, target, state);
+        if (level instanceof ServerLevel server) {
+            SettlementChestWatch.placed(server, target, level.getBlockState(target));
+        }
         return new Started(target.immutable());
     }
 

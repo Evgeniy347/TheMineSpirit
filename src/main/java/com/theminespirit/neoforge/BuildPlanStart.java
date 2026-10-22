@@ -33,6 +33,7 @@ final class BuildPlanStart {
         BlockCoord origin = site.origin();
         Map<String, Item> items = new LinkedHashMap<>();
         Map<String, String> blocks = new LinkedHashMap<>();
+        Map<String, Integer> required = new TreeMap<>();
         Set<BlockCoord> done = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
             String key = BuildPlanner.item(entry.block());
@@ -40,6 +41,8 @@ final class BuildPlanStart {
             blocks.putIfAbsent(key, entry.block());
             if (site.matches(entry) && site.secondPartMatches(entry)) {
                 done.add(relative(entry.pos(), origin));
+            } else if (BlockItems.hasBlockItem(entry.block())) {
+                required.merge(key, 1, Integer::sum);
             }
         }
         // Блоки без предмета (вода колодца) дух не ставит: стоят в мире — для плана они готовы, нет — их нет совсем
@@ -68,32 +71,34 @@ final class BuildPlanStart {
                 materialSlots++;
             }
         }
-        List<BlockPos> chests = BuildSupplyTrip.containers(spirit, site);
+        List<BlockPos> chests = BuildSupplyTrip.containers(spirit);
         Map<String, Integer> chest = new TreeMap<>();
         Set<BlockPos> seen = new HashSet<>();
+        // Стоянка захода — у сундука, где действительно есть материал схемы: ближний пустой сундук (чужой склад,
+        // соседняя стройка) не должен уводить духа с материала.
+        BlockPos supplyChest = null;
         for (BlockPos pos : chests) {
             BlockPos other = BuildSupplyTrip.otherHalf(spirit, pos);
             if (!seen.add(pos) || (!other.equals(pos) && seen.contains(other))) {
                 continue;
             }
+            if (!spirit.level().isLoaded(pos)) {
+                continue;
+            }
             if (ContainerAccess.open(spirit.level(), pos) instanceof ContainerAccess.Opened opened) {
                 Container container = opened.container();
-                items.forEach((key, item) -> {
-                    int count = container.countItem(item);
+                for (Map.Entry<String, Item> item : items.entrySet()) {
+                    int count = container.countItem(item.getValue());
                     if (count > 0) {
-                        chest.merge(key, count, Integer::sum);
+                        chest.merge(item.getKey(), count, Integer::sum);
+                        if (supplyChest == null) {
+                            supplyChest = pos;
+                        }
                     }
-                });
+                }
             }
         }
-        BlockCoord feet = relative(
-                new BlockCoord(
-                        spirit.blockPosition().getX(),
-                        spirit.blockPosition().getY(),
-                        spirit.blockPosition().getZ()),
-                origin);
-        BlockCoord supply =
-                chests.isEmpty() ? feet : supplyFeet(site, chests.get(0)).orElse(feet);
+        BlockCoord supply = supplyPoint(spirit, site, origin, chests, supplyChest, inventory, required);
         BuildPlanner.Start start = new BuildPlanner.Start(
                 done,
                 skip,
@@ -103,6 +108,29 @@ final class BuildPlanStart {
                 BuildSupplyTrip.junkSlots(spirit, site),
                 stacks(items));
         return new Prepared(supply, start, Map.copyOf(items));
+    }
+
+    // Откуда план начинает заход: при духе хватает материала — его ноги; иначе клетка у сундука, где материал есть.
+    // Чужой сундук без нужды (соседняя стройка, соседний тест) не должен давать плану лишние подходы к складу.
+    private static BlockCoord supplyPoint(
+            SpiritEntity spirit,
+            SchematicSite site,
+            BlockCoord origin,
+            List<BlockPos> chests,
+            @Nullable BlockPos supplyChest,
+            Map<String, Integer> inventory,
+            Map<String, Integer> required) {
+        BlockCoord feet = relative(
+                new BlockCoord(
+                        spirit.blockPosition().getX(),
+                        spirit.blockPosition().getY(),
+                        spirit.blockPosition().getZ()),
+                origin);
+        boolean fetchNeeded = required.entrySet().stream()
+                .anyMatch(need -> inventory.getOrDefault(need.getKey(), 0) < need.getValue());
+        BlockPos supplyPos =
+                !fetchNeeded ? null : (supplyChest != null ? supplyChest : (chests.isEmpty() ? null : chests.get(0)));
+        return supplyPos == null ? feet : supplyFeet(site, supplyPos).orElse(feet);
     }
 
     // Клетка у ближнего сундука вне габарита стройки, ближайшая к середине площадки, на уровне земли: там дух после
