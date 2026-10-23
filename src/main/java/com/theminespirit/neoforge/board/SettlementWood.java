@@ -18,8 +18,9 @@ import net.minecraft.server.level.ServerLevel;
 public final class SettlementWood {
     private static final int SCAN_RADIUS = 24;
     private static final int SCAN_HEIGHT = 8;
-    // Вес биома в голосовании пород: пара брёвен чужой породы в запасе не перевешивает биом без деревьев рядом.
-    private static final int BIOME_WEIGHT = 4;
+    // Вес биома в голосовании пород — один голос: решает, когда нет ни брёвен в запасе, ни деревьев рядом. Больший
+    // вес перебивал запас брёвен в тесте вдали от дуба (biome тайга, сцена — дубы, выборка через 2 их не видела).
+    private static final int BIOME_WEIGHT = 1;
     private static final Map<BlockCoord, Map<String, Integer>> NEARBY = new ConcurrentHashMap<>();
 
     private SettlementWood() {}
