@@ -343,6 +343,10 @@ public final class BoardService {
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persist();
+        } else if (outcome == BoardOutcome.DUPLICATE) {
+            // Точки исполнения живут в памяти, а задания — в сохранении доски: после рестарта источник
+            // возвращает точку уже стоящему заданию, иначе его план не собрать (INC-29).
+            targets.putIfAbsent(ticket.id(), target);
         }
         return outcome;
     }

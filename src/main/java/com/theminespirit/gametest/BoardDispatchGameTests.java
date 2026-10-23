@@ -279,6 +279,45 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "arena", batch = "board_dispatch_repair_restart", timeoutTicks = 100)
+    public static void repair_RestoredTicketWithoutTarget_TargetRefreshedAndIssued(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        BlockPos homePos = helper.absolutePos(new BlockPos(4, 1, 4));
+        spirit.setHome(new BlockCoord(homePos.getX(), homePos.getY(), homePos.getZ()));
+        ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
+        pickaxe.setDamageValue(pickaxe.getMaxDamage() / 2);
+        spirit.getInventory().setItem(0, pickaxe);
+        spirit.getInventory().setItem(1, new ItemStack(Items.IRON_INGOT, 8));
+        helper.setBlock(new BlockPos(6, 1, 4), Blocks.ANVIL);
+        ServerLevel level = helper.getLevel();
+        String repair = "repair_tool:" + spirit.getUUID();
+        // Рестарт: задание восстановлено из сохранения доски, а точки исполнения (предмет ремонта) живут в памяти.
+        BoardService restarted = isolatedBoard(level, "gametest-dispatch-repair-restart.jsonl");
+        restarted
+                .board()
+                .submit(new BoardTicket(
+                        repair,
+                        BoardCase.REPAIR_TOOL,
+                        Optional.of(spirit.getUUID()),
+                        BoardRules.priorityOf(BoardCase.REPAIR_TOOL),
+                        0,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()));
+        restarted.rebuild(level, level.getGameTime());
+        helper.assertTrue(
+                restarted.board().statusOf(repair).orElse(null) == BoardStatus.ASSIGNED,
+                "Восстановленный ремонт получает точку от источника и выдаётся: без неё план «без предмета» не "
+                        + "собирается, и задание держит духа вечно (INC-29); статус "
+                        + restarted.board().statusOf(repair));
+        spirit.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
     private static TicketTarget at(GameTestHelper helper) {
         BlockPos at = helper.absolutePos(new BlockPos(4, 1, 4));
         return TicketTarget.at(new BlockCoord(at.getX(), at.getY(), at.getZ()));
