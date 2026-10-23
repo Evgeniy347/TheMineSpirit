@@ -773,6 +773,19 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_GatherCobblestone_GathersStoneInWideRadius() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("cobblestone", 8);
+
+        ScriptCall gather = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "gather");
+
+        assertEquals(
+                Map.of("block", "stone", "count", 8, "radius", CatalogLimits.HARVEST_RADIUS_MAX),
+                gather.params(),
+                "Булыжник для печи ищется по камню в радиусе 32, как уголь: acquire искал в 16 от дома и "
+                        + "проваливал «подходящих блоков в радиусе 16 не осталось» (приёмка «джунгли»)");
+    }
+
+    @Test
     void plan_GatherCoal_MinesCoalVein() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply(TorchRules.COAL, 4);
 

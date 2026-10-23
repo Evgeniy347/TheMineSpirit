@@ -111,4 +111,17 @@ class BoardStateTests {
                 board.ledger().has(BoardCase.CLEAR_GROUNDS, 1),
                 "Пустой снимок не оставляет отметок ledger: иначе выдуманный факт откроет первые шаги");
     }
+
+    @Test
+    void restore_EmptyAfterNotedLedger_ClearsLedger() {
+        Board board = boardAt(10);
+        board.ledger().note(BoardCase.CRAFTING_STATION, 1);
+
+        board.restore(BoardState.empty());
+
+        assertFalse(
+                board.ledger().has(BoardCase.CRAFTING_STATION, 1),
+                "Снимок заменяет отметки ledger, а не дописывает: приёмка «джунгли» начинала с отметок журнала "
+                        + "прошлого прогона (верстак «построен», а его нет — «нужен верстак: рядом нет»)");
+    }
 }

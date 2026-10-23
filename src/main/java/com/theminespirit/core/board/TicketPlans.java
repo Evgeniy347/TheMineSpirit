@@ -29,6 +29,7 @@ public final class TicketPlans {
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final String BLOCK = "block";
+    private static final String COBBLESTONE = "cobblestone";
     private static final int MINE_DESCENT_OFFSET = 6;
     private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
@@ -462,6 +463,14 @@ public final class TicketPlans {
                                     batch,
                                     RADIUS,
                                     CatalogLimits.HARVEST_RADIUS_MAX)));
+        }
+        if (COBBLESTONE.equals(item)) {
+            // Камень у дома бывает дальше 16 (выход скалы в стороне): acquire искал в 16 и проваливал
+            // «подходящих блоков не осталось», печь стояла (приёмка «джунгли»). Как уголь — радиус 32.
+            return sequence(
+                    gotoTarget(target),
+                    new ScriptCall(
+                            "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
         return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
     }
