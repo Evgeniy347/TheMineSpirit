@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +46,7 @@ import org.slf4j.Logger;
 public final class TransferWatch {
     private static final String TABLE_ITEM = "minecraft:crafting_table";
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Set<BoardCase> BUILDS = Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
 
     private TransferWatch() {}
 
@@ -56,6 +58,9 @@ public final class TransferWatch {
             BoardTicket craftTicket,
             SpiritEntity crafter,
             long now) {
+        if (BUILDS.contains(craftTicket.boardCase())) {
+            return ensureBuildTransfers(level, service, spirits, craftTicket, crafter);
+        }
         Optional<String> craftItem = TicketPlans.craftItem(craftTicket.boardCase());
         if (craftItem.isEmpty()) {
             return false;
@@ -89,6 +94,54 @@ public final class TransferWatch {
                 InventoryTables.values(),
                 BoardTuning.transferRadiusBlocks(),
                 BoardTuning.transferMaxCount()));
+        return submitOrders(service, spirits, craftTicket, orders, now);
+    }
+
+    // Стройка первых шагов: материалы, собранные другими духами, лежат у них в инвентаре — строитель брал из
+    // сундуков и падал «не хватило материала 'jungle_fence': нужно 25, есть 0» (приёмка «джунгли»). Сундуки
+    // строитель обходит сам (заходы за материалами), поэтому здесь — только передачи от духов.
+    private static boolean ensureBuildTransfers(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            BoardTicket build,
+            SpiritEntity builder) {
+        Map<String, Integer> need;
+        try {
+            need = CaseMaterials.need(
+                    TicketPlans.plan(build.boardCase(), build.level(), service.targetOf(build.id(), spirits)),
+                    FirstStepsRunner.materialSource(level));
+        } catch (RuntimeException failure) {
+            LOGGER.warn("Материалы стройки {} для передачи не посчитаны: {}", build.id(), failure.getMessage());
+            return false;
+        }
+        List<Ingredient> materials = new ArrayList<>();
+        need.forEach((item, count) -> materials.add(new Ingredient(ItemIds.normalize(item), count)));
+        if (materials.isEmpty()) {
+            return false;
+        }
+        StackMapper mapper = new StackMapper();
+        RecipeKnowledge recipes = RecipeKnowledge.of(level);
+        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
+                build.boardCase().name().toLowerCase(Locale.ROOT),
+                builder.getUUID(),
+                at(builder),
+                stacks(builder.getInventory(), mapper),
+                materials,
+                sources(spirits, mapper, recipes, builder.getUUID()),
+                Map.of(),
+                InventoryTables.values(),
+                BoardTuning.transferRadiusBlocks(),
+                BoardTuning.transferMaxCount()));
+        return submitOrders(service, spirits, build, orders, level.getGameTime());
+    }
+
+    private static boolean submitOrders(
+            BoardService service,
+            List<SpiritEntity> spirits,
+            BoardTicket craftTicket,
+            List<TransferOrder> orders,
+            long now) {
         boolean active = hasActiveTransfer(service, craftTicket.id());
         if (orders.isEmpty()) {
             return active;
@@ -172,7 +225,7 @@ public final class TransferWatch {
     public static Set<String> liveCauses(BoardService service) {
         Set<String> live = new HashSet<>();
         for (BoardTicket ticket : service.board().all()) {
-            if (TicketPlans.craftItem(ticket.boardCase()).isEmpty()) {
+            if (TicketPlans.craftItem(ticket.boardCase()).isEmpty() && !BUILDS.contains(ticket.boardCase())) {
                 continue;
             }
             BoardStatus status = service.board().statusOf(ticket.id()).orElse(null);

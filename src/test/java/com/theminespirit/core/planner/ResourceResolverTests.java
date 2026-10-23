@@ -9,6 +9,8 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.ConditionCatalog;
+import com.theminespirit.core.script.CoreScripts;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,6 +91,43 @@ class ResourceResolverTests {
                 plan,
                 "Craftable предмет обязан резолвиться в получение ингредиентов и скрипт craft: без рекурсивного "
                         + "разбора ингредиентов дух попробует скрафтить из ничего");
+    }
+
+    @Test
+    void resolve_IngredientInInventoryAndChest_TakesThemBeforeGathering() {
+        ScriptCall withdraw =
+                new ScriptCall("withdraw", Map.of("container", "1,2,3", "item", "oak_log", "count", 3, "radius", 16));
+
+        AcquireSupplies supplies = new AcquireSupplies() {
+            @Override
+            public int inInventory(String item) {
+                return "oak_log".equals(item) ? 2 : 0;
+            }
+
+            @Override
+            public List<ScriptCall> withdraw(String item, int maxCount) {
+                return "oak_log".equals(item) ? List.of(withdraw) : List.of();
+            }
+
+            @Override
+            public Map<String, Integer> inventory() {
+                return Map.of("minecraft:oak_log", 2);
+            }
+
+            @Override
+            public Set<String> nearbyStations() {
+                return Set.of();
+            }
+        };
+
+        TaskNode plan = ResourceResolver.resolve(
+                "stick", 3, KNOWLEDGE, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), supplies);
+
+        assertEquals(
+                new SequenceNode(List.of(new SequenceNode(List.of(withdraw, gather("oak_log", 1))), craft("stick", 3))),
+                plan,
+                "Ингредиент берётся из инвентаря (2) и сундука (3), добывается лишь остаток (1): acquire забора с "
+                        + "брёвнами на складе рубил деревья в 16 и падал (приёмка «джунгли»)");
     }
 
     @Test
