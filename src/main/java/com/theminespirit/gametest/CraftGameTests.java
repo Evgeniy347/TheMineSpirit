@@ -140,6 +140,29 @@ public final class CraftGameTests {
         });
     }
 
+    // Сундуки склада первых шагов ставятся сразу после крафта (place), не вплотную друг к другу: в инвентаре крафтера
+    // склада не было, сдача добытого не находила сундук (приёмка «джунгли» 24.10: «сундуки []»).
+    @GameTest(template = FIELD, batch = "craft_chest_place", timeoutTicks = TIMEOUT)
+    public static void craft_ChestsWithPlace_TwoSingleChestsOnField(GameTestHelper helper) {
+        field(helper);
+        SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 16));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "craft", Map.of("item", "chest", "count", 2, "radius", CraftTestSupport.RADIUS, "place", true)),
+                1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.CHEST, 0, "сундуки в инвентаре после крафта с place");
+            helper.assertTrue(
+                    blocksOnField(helper, Blocks.CHEST) == 2,
+                    "дух обязан поставить оба скрафченных сундука, на поле " + blocksOnField(helper, Blocks.CHEST));
+            cleanup(helper, spirit);
+        });
+    }
+
     @GameTest(template = FIELD, batch = "craft_no_table", timeoutTicks = TIMEOUT)
     public static void craft_NoTableAnywhere_FailsBeforeSpendingMaterials(GameTestHelper helper) {
         field(helper);

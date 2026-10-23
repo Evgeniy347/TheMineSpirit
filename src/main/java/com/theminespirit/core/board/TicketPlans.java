@@ -116,27 +116,15 @@ public final class TicketPlans {
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
-            case STOCK_CHESTS -> craftInYard("minecraft:chest", 2, target);
+            // Сундуки склада ставятся во дворе сразу (place): в инвентаре крафтера склада не было (приёмка «джунгли»).
+            case STOCK_CHESTS -> placeInYard("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craftInYard("minecraft:crafting_table", 1, target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
             // Печь ставится во дворе станций сразу: в инвентаре крафтера её не находила плавка других духов, а сам
             // крафтер ставил её там, где плавил (24.10: «нужна печь: рядом (16) нет», факелы ограды ждали печь).
-            case CRAFT_FURNACE ->
-                sequence(
-                        gotoPoint(SettlementLayout.workYard(target.target())),
-                        new ScriptCall(
-                                "craft",
-                                Map.of(
-                                        ITEM,
-                                        "minecraft:furnace",
-                                        COUNT,
-                                        1,
-                                        RADIUS,
-                                        CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        "place",
-                                        true)));
+            case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
             // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
             // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
             case CRAFT_TORCHES ->
@@ -367,6 +355,15 @@ public final class TicketPlans {
 
     // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
     // габарита дома, иначе стройка дома упиралась в верстак у якоря (решение 54b п.2).
+    // Скрафтить во дворе станций и сразу поставить там (place): печь и сундуки склада первых шагов.
+    private static TaskNode placeInYard(String item, int count, TicketTarget target) {
+        return sequence(
+                gotoPoint(SettlementLayout.workYard(target.target())),
+                new ScriptCall(
+                        "craft",
+                        Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT, "place", true)));
+    }
+
     private static TaskNode craftInYard(String item, int count, TicketTarget target) {
         return sequence(
                 gotoPoint(SettlementLayout.workYard(target.target())),
@@ -783,17 +780,21 @@ public final class TicketPlans {
             return new ScriptCall(
                     "deliver", Map.of(ITEM, target.supplyItem(), COUNT, count, "to", "spirit:" + target.transferTo()));
         }
-        return new ScriptCall(
-                "withdraw",
-                Map.of(
-                        CONTAINER,
-                        NEAREST,
-                        ITEM,
-                        target.supplyItem(),
-                        COUNT,
-                        count,
-                        RADIUS,
-                        CatalogLimits.CONTAINER_RADIUS_DEFAULT));
+        // Со склада: сначала к месту задания (сундуки у дома), затем withdraw рядом — получатель брал «ближайший»
+        // вокруг себя и падал «рядом нет допустимого контейнера» (приёмка «джунгли» 24.10).
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                target.supplyItem(),
+                                COUNT,
+                                count,
+                                RADIUS,
+                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
     }
 
     private static TaskNode restockFood(TicketTarget target) {
