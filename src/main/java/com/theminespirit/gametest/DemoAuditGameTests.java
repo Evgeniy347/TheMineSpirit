@@ -141,6 +141,34 @@ public final class DemoAuditGameTests {
     // ходит за ними порциями (BuildSupplyTrip), как в демо и в обычной стройке.
     record SupplyPoint(BlockPos base, Direction partner) {}
 
+    // При заходах дух появляется у сундуков перед входом: путь от тыла вокруг большого дома длиннее поиска пути.
+    private static BlockPos spawnFor(
+            boolean doorOnAnySide,
+            String scheme,
+            Schematic schematic,
+            BuildRotation rotation,
+            int ring,
+            SupplyPoint supply,
+            int floorSize) {
+        if (doorOnAnySide) {
+            return entranceSpawn(scheme, schematic, rotation, ring);
+        }
+        return supply == null
+                ? spawnOutside(schematic, rotation, floorSize)
+                : supply.base().relative(supply.partner().getOpposite(), SUPPLY_SIDE_OFFSET - 1);
+    }
+
+    // Дух появляется прямо перед дверью, за крыльцом: оттуда первый подход к стоянке короче, чем с края пола.
+    static BlockPos entranceSpawn(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
+        Preset preset = DataTables.INSTANCE.presets().current().byId(scheme).orElseThrow();
+        DemoPlacement.Door door = DemoPlacement.Door.of(preset);
+        BuildRotation.Cell cell = rotation.rotate(door.x(), door.z(), schematic.sizeX(), schematic.sizeZ());
+        BuildRotation.DirectionVector out =
+                BuildRotation.rotateDirection(door.normalDx(), door.normalDz(), rotation.quarterTurns());
+        return new BlockPos(
+                ring + cell.x() + out.dx() * (door.porch() + 1), 1, ring + cell.z() + out.dz() * (door.porch() + 1));
+    }
+
     // Сундуки — у главного входа, как в демо: за ступенью, в стороне от линии подхода.
     static SupplyPoint supplyPoint(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
         Preset preset = DataTables.INSTANCE.presets().current().byId(scheme).orElseThrow();
@@ -245,7 +273,11 @@ public final class DemoAuditGameTests {
         // Заходы за материалами: дом отступает от края пола на кольцо с обеих сторон, чтобы дух обходил его кругом к
         // сундукам и к дверям и не сходил с пола за край.
         boolean atOnce = freeSlots >= SPIRIT_SLOTS && fitsAtOnce(schematic);
-        int ring = atOnce ? 0 : SUPPLY_RING;
+        // У чаровальни вход с любой стороны после поворота: пол держим с запасом по всем сторонам, иначе за
+        // западной/северной дверью нет земли и дух идёт к ней кругом через весь дом (долгий подход — не свойство
+        // схемы).
+        boolean doorOnAnySide = "enchant_room".equals(building);
+        int ring = atOnce && !doorOnAnySide ? 0 : SUPPLY_RING;
         int floorSize = floorSize(schematic) + 2 * ring;
         floor(helper, floorSize, clearHeight);
         BlockPos anchor = helper.absolutePos(new BlockPos(ring, 1, ring));
@@ -253,10 +285,7 @@ public final class DemoAuditGameTests {
         SupplyPoint supply = atOnce ? null : supplyPoint(scheme, schematic, rotation, ring);
         List<BlockPos> chests = supply == null ? List.of() : supplyChests(helper, schematic, supply);
         BuildAudit.Before before = BuildAudit.snapshot(helper.getLevel(), schematic, origin, rotation, 3);
-        // При заходах дух появляется у сундуков перед входом: путь от тыла вокруг большого дома длиннее поиска пути.
-        BlockPos spawn = supply == null
-                ? spawnOutside(schematic, rotation, floorSize)
-                : supply.base().relative(supply.partner().getOpposite(), SUPPLY_SIDE_OFFSET - 1);
+        BlockPos spawn = spawnFor(doorOnAnySide, scheme, schematic, rotation, ring, supply, floorSize);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), spawn);
         spirit.setDemo(true);
         if (chests.isEmpty()) {
@@ -615,51 +644,75 @@ public final class DemoAuditGameTests {
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel1None_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 1, BuildRotation.NONE);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel1Clockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 1, BuildRotation.CLOCKWISE_90);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel1Clockwise180_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 1, BuildRotation.CLOCKWISE_180);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel1", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel1Counterclockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 1, BuildRotation.COUNTERCLOCKWISE_90);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel2None_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 2, BuildRotation.NONE);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel2Clockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 2, BuildRotation.CLOCKWISE_90);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel2Clockwise180_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 2, BuildRotation.CLOCKWISE_180);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-    @GameTest(template = "mine_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel2", timeoutTicks = 4000)
     public static void demo_EnchantRoomLevel2Counterclockwise90_MatchesScheme(GameTestHelper helper) {
         audit(helper, "enchant_room", 2, BuildRotation.COUNTERCLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel3", timeoutTicks = 6000)
+    public static void demo_EnchantRoomLevel3None_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 3, BuildRotation.NONE);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel3", timeoutTicks = 6000)
+    public static void demo_EnchantRoomLevel3Clockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 3, BuildRotation.CLOCKWISE_90);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel3", timeoutTicks = 6000)
+    public static void demo_EnchantRoomLevel3Clockwise180_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 3, BuildRotation.CLOCKWISE_180);
+    }
+
+    // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+    @GameTest(template = "big_arena", batch = "demo_audit_enchantroomlevel3", timeoutTicks = 6000)
+    public static void demo_EnchantRoomLevel3Counterclockwise90_MatchesScheme(GameTestHelper helper) {
+        audit(helper, "enchant_room", 3, BuildRotation.COUNTERCLOCKWISE_90);
     }
 
     // [флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.

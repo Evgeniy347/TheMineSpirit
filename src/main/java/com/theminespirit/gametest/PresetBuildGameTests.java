@@ -162,10 +162,10 @@ public final class PresetBuildGameTests {
         });
     }
 
-    // [флак] 211 блоков чаровальни дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
+    // [флак] чаровальня уровня 1 дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
     @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 24000)
-    public static void preset_EnchantRoomV1FromLibrary_StandsWithFifteenShelves(GameTestHelper helper) {
+    public static void preset_EnchantRoomV1FromLibrary_StandsWithFiveShelves(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         wideFloor(helper);
         BlockPos anchor = new BlockPos(1, 1, 1);
@@ -174,16 +174,17 @@ public final class PresetBuildGameTests {
                 helper,
                 new BlockPos(0, 1, 0),
                 new ItemStack(Items.COBBLESTONE, 64),
-                new ItemStack(Items.STONE_BRICKS, 64),
-                new ItemStack(Items.STONE_BRICKS, 64),
                 new ItemStack(Items.OAK_PLANKS, 64),
-                new ItemStack(Items.OAK_PLANKS, 8),
-                new ItemStack(Items.BOOKSHELF, 15),
+                new ItemStack(Items.OAK_PLANKS, 64),
+                new ItemStack(Items.OAK_LOG, 16),
+                new ItemStack(Items.SPRUCE_PLANKS, 64),
+                new ItemStack(Items.BOOKSHELF, 5),
                 new ItemStack(Items.ENCHANTING_TABLE, 1),
                 new ItemStack(Items.TORCH, 4),
-                new ItemStack(Items.GLASS_PANE, 6),
+                new ItemStack(Items.GLASS_PANE, 3),
                 new ItemStack(Items.OAK_DOOR, 1),
-                new ItemStack(Items.STONE_BRICK_STAIRS, 1));
+                new ItemStack(Items.COBBLESTONE_STAIRS, 1),
+                new ItemStack(Items.RED_CARPET, 3));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "enchant_room_v1", anchor), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
@@ -201,8 +202,9 @@ public final class PresetBuildGameTests {
                             + mismatchReport(helper, schematic, anchor));
             int shelves = countOf(helper, schematic, anchor, "minecraft:bookshelf");
             helper.assertTrue(
-                    shelves == 15,
-                    "в чаровальне уровня 1 обязано стоять 15 книжных полок под 30 уровень: на месте " + shelves);
+                    shelves == 5,
+                    "в чаровальне уровня 1 обязано стоять 5 книжных полок под 10 ступеней: на месте " + shelves
+                            + " — уровень растёт полками, а не начинает с максимума");
             GameTestFixtures.finish(helper);
         });
     }

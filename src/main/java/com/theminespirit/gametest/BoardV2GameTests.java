@@ -573,7 +573,7 @@ public final class BoardV2GameTests {
         BoardTicket levelTwo = board.board().find("enchant_room_2").orElse(null);
         helper.assertTrue(
                 levelTwo != null && levelTwo.level() == 2,
-                "После уровня 1 ставится уровень 2 (кольцо 15 полок), фактически " + levelTwo);
+                "После уровня 1 ставится уровень 2 (каменный зал, кольцо 10 полок), фактически " + levelTwo);
         helper.assertTrue(
                 board.board().claimable(new StockView(Map.of()), now + 2).stream()
                         .noneMatch(ticket -> "enchant_room_2".equals(ticket.id())),
@@ -588,13 +588,36 @@ public final class BoardV2GameTests {
                 "Повторная проверка не плодит дубли уровня, активных чаровален "
                         + active(board, BoardCase.ENCHANT_ROOM));
         helper.assertTrue(
-                board.board().claimable(new StockView(Map.of("bookshelf", 15)), now + 3).stream()
+                board.board().claimable(new StockView(Map.of("bookshelf", 9)), now + 3).stream()
+                        .noneMatch(ticket -> "enchant_room_2".equals(ticket.id())),
+                "Девяти полок мало для кольца уровня 2: гейт обязан требовать 10");
+        helper.assertTrue(
+                board.board().claimable(new StockView(Map.of("bookshelf", 10)), now + 3).stream()
                         .anyMatch(ticket -> "enchant_room_2".equals(ticket.id())),
-                "С 15 полками уровень 2 выходит из гейта: книг хватает на кольцо");
+                "С 10 полками уровень 2 выходит из гейта: книг хватает на кольцо");
         helper.assertTrue(
                 board.board().claim("enchant_room_2", spirit.getUUID(), now + 3) != BoardOutcome.NOT_FOUND,
                 "Уровень 2 обязан выдаться после появления полок");
-        board.cancel(level, "enchant_room_2");
+        board.board().complete("enchant_room_2");
+
+        EnchantRoomWatch.tick(level, board, spirits, new StockView(Map.of()), now + 4);
+        BoardTicket levelThree = board.board().find("enchant_room_3").orElse(null);
+        helper.assertTrue(
+                levelThree != null && levelThree.level() == 3,
+                "После уровня 2 ставится уровень 3 (большой зал, 15 полок), фактически " + levelThree);
+        EnchantRoomWatch.tick(level, board, spirits, new StockView(Map.of()), now + 5);
+        helper.assertTrue(
+                board.board().claimable(new StockView(Map.of("bookshelf", 14)), now + 5).stream()
+                        .noneMatch(ticket -> "enchant_room_3".equals(ticket.id())),
+                "Четырнадцати полок мало для полного кольца уровня 3: гейт обязан требовать 15");
+        helper.assertTrue(
+                board.board().claimable(new StockView(Map.of("bookshelf", 15)), now + 5).stream()
+                        .anyMatch(ticket -> "enchant_room_3".equals(ticket.id())),
+                "С 15 полками уровень 3 выходит из гейта: это максимум стола");
+        helper.assertTrue(
+                board.board().claim("enchant_room_3", spirit.getUUID(), now + 5) != BoardOutcome.NOT_FOUND,
+                "Уровень 3 обязан выдаться после появления 15 полок");
+        board.cancel(level, "enchant_room_3");
         close(board, log, helper);
         helper.succeed();
     }

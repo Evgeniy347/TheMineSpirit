@@ -1,0 +1,127 @@
+# enchant_room_v3 — богатая чаровальня (уровень 3): большой зал 13×10 с потолком 5, стол чарования и
+# полное кольцо 15 полок (30 ступеней — максимум ванильного стола), вход-портал в 4 створки, окна 2×2,
+# ковры, кафедра, свечи на полках, подвесные фонари и цветы. Уровни 1–2 остаются на месте.
+name: "Чаровальня, уровень 3 (зал, 15 полок, портал)"
+type: craft
+stage: 2
+level: 3
+requires: enchant_room_v2
+size: 15x7x13
+entrance: 5,1,11
+legend:
+  'c': cobblestone
+  'S': stone_bricks
+  '#': oak_planks
+  'B': bricks
+  'G': glass_pane
+  'K': bookshelf
+  'E': enchanting_table
+  'T': torch
+  'C': candle[candles=2,lit=true]
+  'n': lantern[hanging=true]
+  'D': oak_door[facing=north,hinge=left]
+  'H': oak_door[facing=north,hinge=right]
+  'p': stone_brick_stairs[facing=north,half=bottom]
+  '~': red_carpet
+  'm': white_carpet
+  'l': lectern[facing=north]
+  'P': potted_poppy
+layers:
+  - y0 булыжный цоколь и дубовый пол: |
+      ccccccccccccccc
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      c#############c
+      ccccccccccccccc
+           pppp
+  - y1 зал, кольцо 15 полок, ковры, кафедра: |
+      BSSSSSSSSSSSSSB
+      SKKKKK........S
+      SK...K........S
+      SK.E.K........S
+      SK...K........S
+      SKK.KK........S
+      S.~~~.........S
+      S.......l.....S
+      S.mmm.........S
+      S...........P.S
+      S.............S
+      BSSSSDHDHSSSSSB
+           ....
+  - y2 окна 2×2, свечи, подвесные фонари: |
+      BSGGSSSSSSSGGSB
+      STC.CT........S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      BSSSSDHDHSSSSSB
+           ....
+  - y3 окна 2×2: |
+      BSGGSSSSSSSGGSB
+      S.............S
+      S.............S
+      G.............G
+      G.............G
+      S.............S
+      S.............S
+      G.............G
+      G.............G
+      S.............S
+      S.............S
+      BSSSSSSSSSSSSSB
+           ....
+  - y4 верх стен: |
+      BSSSSSSSSSSSSSB
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      BSSSSSSSSSSSSSB
+           ....
+  - y5 верх стен и фонари: |
+      BSSSSSSSSSSSSSB
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S........n....S
+      S.............S
+      S.............S
+      S.............S
+      S...........n.S
+      S.............S
+      BSSSSSSSSSSSSSB
+           ....
+  - y6 каменная крыша: |
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+           ....

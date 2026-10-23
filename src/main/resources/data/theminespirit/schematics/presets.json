@@ -15,6 +15,7 @@
   "mine_tunnel_v1",
   "enchant_room_v1",
   "enchant_room_v2",
+  "enchant_room_v3",
   "storage_v1",
   "storage_v2",
   "storage_v3",
@@ -33,12 +34,5 @@
   "player_house_3",
   "player_house_4",
   "plaza_3"
- ],
- "planned": [
-  {
-   "level": 3,
-   "name": "Чаровальня, уровень 3 (несколько чаровален в большом здании ~40×30)",
-   "requires": "enchant_room_v2"
-  }
  ]
 }
