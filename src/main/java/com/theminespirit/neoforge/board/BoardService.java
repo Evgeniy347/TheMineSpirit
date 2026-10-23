@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
@@ -74,6 +75,7 @@ public final class BoardService {
     private final CraterProfiles craters = new CraterProfiles(64);
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
+    private final Map<UUID, Launched> launched = new HashMap<>();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
@@ -179,6 +181,7 @@ public final class BoardService {
         board.retain(liveCauses, now);
         retains++;
         issue(level, spirits, now);
+        reconcileActivities(spirits, true);
         flushBlockNotes();
         rebuilds++;
         lastRebuild = now;
@@ -383,8 +386,82 @@ public final class BoardService {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
             board.release(ticket.id());
         }
+        board.vacate(spirit.getUUID());
+        launched.remove(spirit.getUUID());
         WorkReserveHub.releaseAll(spirit);
     }
+
+    public void offerActivities(List<ActivityOffer> offers, ActivityOffer.Launcher launcher, long now) {
+        // Дух с заданием доски занятия не получает: задание выше любого занятия, его итог закроет settleOwners.
+        Objects.requireNonNull(offers, "Предложения не могут быть null: пустой набор — пустой список");
+        Objects.requireNonNull(launcher, "Запуск занятий не может быть null: занятие выдаёт доска через него");
+        List<SpiritEntity> offered = new ArrayList<>();
+        for (ActivityOffer offer : offers) {
+            SpiritEntity spirit = offer.spirit();
+            offered.add(spirit);
+            TaskNode task = offer.task();
+            if (spirit.isRemoved()
+                    || task == null
+                    || !board.assignedTo(spirit.getUUID()).isEmpty()) {
+                continue;
+            }
+            if (launcher.start(spirit, offer.script(), task, now)) {
+                launched.put(
+                        spirit.getUUID(),
+                        new Launched(BoardActivities.caseOf(offer.activity()), spirit.taskGeneration()));
+            }
+        }
+        reconcileActivities(offered, false);
+    }
+
+    private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
+        Set<UUID> present = new HashSet<>();
+        for (SpiritEntity spirit : spirits) {
+            present.add(spirit.getUUID());
+            Optional<BoardCase> occupation = occupationOf(spirit);
+            if (occupation.isPresent()) {
+                board.occupy(spirit.getUUID(), occupation.get(), board.now());
+            } else {
+                board.vacate(spirit.getUUID());
+            }
+        }
+        if (!census) {
+            return;
+        }
+        for (BoardTicket ticket : board.all()) {
+            UUID holder = ticket.assignee().orElse(null);
+            if (BoardActivities.isActivity(ticket.boardCase()) && holder != null && !present.contains(holder)) {
+                board.vacate(holder);
+                launched.remove(holder);
+            }
+        }
+    }
+
+    private Optional<BoardCase> occupationOf(SpiritEntity spirit) {
+        UUID id = spirit.getUUID();
+        if (spirit.isRemoved()) {
+            return Optional.empty();
+        }
+        if (spirit.tactics().wantsControl()) {
+            return Optional.of(BoardCase.ACTIVITY_COMBAT);
+        }
+        if (!board.assignedTo(id).isEmpty()) {
+            return Optional.empty();
+        }
+        if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
+            Launched own = launched.get(id);
+            return Optional.of(
+                    own != null && own.generation() == spirit.taskGeneration()
+                            ? own.activity()
+                            : BoardCase.ACTIVITY_EXTERNAL);
+        }
+        if (spirit.isDefenceAssigned()) {
+            return Optional.of(BoardCase.ACTIVITY_DEFEND);
+        }
+        return Optional.empty();
+    }
+
+    private record Launched(BoardCase activity, long generation) {}
 
     public void completeCapture(String captureId) {
         animals.cycle(speciesOfCapture(captureId)).captured(captureId);

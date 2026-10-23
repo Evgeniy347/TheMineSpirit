@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
 import com.theminespirit.core.intellect.Activity;
@@ -29,6 +30,9 @@ import com.theminespirit.core.tactics.EnemyProfiles;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.ActivityOffer;
+import com.theminespirit.neoforge.board.BoardRegistry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +54,7 @@ public final class SettlementIntellect {
     private final TaskStarter starter = new TaskStarter();
     private final ExpeditionController expeditions = new ExpeditionController(starter);
     private final EnemyProfiles profiles = TacticsConfig.loadDefault().enemies();
+    private int stage = 1;
     private SettlementView lastView;
     private TacticalDecision lastDecision;
     private List<String> lastRefusals = List.of();
@@ -61,7 +66,7 @@ public final class SettlementIntellect {
 
     public SettlementIntellect() {
         this.catalog = ActivityCatalog.adultsOnly(List.of(
-                new ChopActivity(),
+                new ChopActivity(() -> SettlementStage.logCap(stage)),
                 new FarmActivity(),
                 new ForageActivity(),
                 new MineActivity(),
@@ -94,6 +99,7 @@ public final class SettlementIntellect {
         }
         lastTick = tick;
         decideCalls++;
+        stage = SettlementStage.of(BoardRegistry.get(level).board().ledger());
         StockReader.Stocks stocks = StockReader.read(level, members, home);
         stockReads += stocks.reads();
         stockContainers += stocks.containers();
@@ -111,7 +117,7 @@ public final class SettlementIntellect {
         lastDecision = decision;
         logRefusals(decision.refusals());
         applyStrengths(members, decision, home, tick);
-        applyActivities(members, snapshots, decision, view, home, tick);
+        applyActivities(level, members, snapshots, decision, view, home, tick);
         expeditions.update(level, decision.expedition(), members, tick);
     }
 
@@ -208,6 +214,7 @@ public final class SettlementIntellect {
     }
 
     private void applyActivities(
+            ServerLevel level,
             List<SpiritEntity> members,
             List<SpiritSnapshot> snapshots,
             TacticalDecision decision,
@@ -240,8 +247,13 @@ public final class SettlementIntellect {
                 spirit.setDefenceAssigned(defenders.contains(spirit.getUUID()));
             }
         }
+        List<ActivityOffer> offers = new ArrayList<>();
         for (var assignment : decision.activities().assignments()) {
             if (assignment.activity() == ActivityId.DEFEND) {
+                SpiritEntity defender = byId.get(assignment.spirit().toString());
+                if (defender != null) {
+                    offers.add(new ActivityOffer(defender, ActivityId.DEFEND, "defend", null));
+                }
                 continue;
             }
             if (team.contains(assignment.spirit())) {
@@ -258,8 +270,9 @@ public final class SettlementIntellect {
             if (task.isEmpty()) {
                 continue;
             }
-            String script = intent.script().get();
-            starter.start(spirit, script, task.get(), tick);
+            offers.add(new ActivityOffer(
+                    spirit, assignment.activity(), intent.script().get(), task.get()));
         }
+        BoardRegistry.get(level).offerActivities(offers, starter::start, tick);
     }
 }

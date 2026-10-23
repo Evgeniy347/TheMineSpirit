@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.RelocatePlan;
 import com.theminespirit.core.observation.BlockCoord;
@@ -154,7 +155,10 @@ public record BoardTaskRequest(
     }
 
     public static List<String> caseNames() {
-        return Arrays.stream(BoardCase.values()).map(BoardCase::name).toList();
+        return Arrays.stream(BoardCase.values())
+                .filter(boardCase -> !BoardActivities.isActivity(boardCase))
+                .map(BoardCase::name)
+                .toList();
     }
 
     public static BoardTaskRequest parse(byte[] body) {
@@ -207,7 +211,11 @@ public record BoardTaskRequest(
                     Map.of(FIELD, CASE, ALLOWED, caseNames()));
         }
         try {
-            return BoardCase.valueOf(node.textValue().toUpperCase(Locale.ROOT));
+            BoardCase parsed = BoardCase.valueOf(node.textValue().toUpperCase(Locale.ROOT));
+            if (BoardActivities.isActivity(parsed)) {
+                throw new IllegalArgumentException("Занятие духа показывает доска сама, заданием его не поставить");
+            }
+            return parsed;
         } catch (IllegalArgumentException unknown) {
             throw new ApiException(
                     ErrorCode.INVALID_PLAN,

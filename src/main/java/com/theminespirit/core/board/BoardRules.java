@@ -35,6 +35,19 @@ public final class BoardRules {
     private static Map<BoardCase, Integer> buildPriorities() {
         Map<BoardCase, Integer> priorities = new EnumMap<>(BoardCase.class);
         priorities.put(BoardCase.REPAIR_FENCE, 100);
+        // Занятия вне очереди (BoardActivities): бой и задачи REST/стратега — поверх всего, фоновые занятия
+        // интеллекта — ниже любого задания доски, задание доски их вытесняет.
+        priorities.put(BoardCase.ACTIVITY_COMBAT, 100);
+        priorities.put(BoardCase.ACTIVITY_EXTERNAL, 95);
+        priorities.put(BoardCase.ACTIVITY_DEFEND, 29);
+        priorities.put(BoardCase.ACTIVITY_UNLOAD, 25);
+        priorities.put(BoardCase.ACTIVITY_CRAFT, 20);
+        priorities.put(BoardCase.ACTIVITY_SMELT, 20);
+        priorities.put(BoardCase.ACTIVITY_FARM, 20);
+        priorities.put(BoardCase.ACTIVITY_FORAGE, 20);
+        priorities.put(BoardCase.ACTIVITY_MINE, 15);
+        priorities.put(BoardCase.ACTIVITY_CHOP, 15);
+        priorities.put(BoardCase.ACTIVITY_REST, 5);
         priorities.put(BoardCase.REPAIR_BUILDING, 90);
         priorities.put(BoardCase.REPAIR_TOOL, 85);
         priorities.put(BoardCase.EAT_TO_FULL, 80);

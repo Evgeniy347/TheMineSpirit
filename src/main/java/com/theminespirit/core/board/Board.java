@@ -60,6 +60,9 @@ public final class Board {
     public BoardState snapshot() {
         List<BoardState.Entry> entries = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
+            if (BoardActivities.isActivity(ticket.boardCase())) {
+                continue;
+            }
             entries.add(new BoardState.Entry(
                     ticket,
                     Objects.requireNonNull(
@@ -143,7 +146,7 @@ public final class Board {
         refreshGateStatuses(stock);
         List<BoardTicket> ready = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
-            if (statuses.get(ticket.id()) != BoardStatus.PENDING) {
+            if (statuses.get(ticket.id()) != BoardStatus.PENDING || BoardActivities.isActivity(ticket.boardCase())) {
                 continue;
             }
             if (!dependenciesDone(ticket)) {
@@ -314,6 +317,37 @@ public final class Board {
         return true;
     }
 
+    public void occupy(UUID spirit, BoardCase activity, long now) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: занятие показывается на конкретного духа");
+        requireNow(now);
+        String id = BoardActivities.idOf(spirit);
+        BoardTicket current = tickets.get(id);
+        if (current != null && current.boardCase() == activity) {
+            return;
+        }
+        BoardTicket ticket = BoardActivities.ticket(spirit, activity, now);
+        tickets.remove(id);
+        tickets.put(id, ticket);
+        statuses.put(id, BoardStatus.ASSIGNED);
+        claimAssignees.put(id, spirit);
+    }
+
+    public boolean vacate(UUID spirit) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: занятие снимается с конкретного духа");
+        String id = BoardActivities.idOf(spirit);
+        if (tickets.remove(id) == null) {
+            return false;
+        }
+        statuses.remove(id);
+        claimAssignees.remove(id);
+        return true;
+    }
+
+    public Optional<BoardCase> occupation(UUID spirit) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: занятие читается у конкретного духа");
+        return Optional.ofNullable(tickets.get(BoardActivities.idOf(spirit))).map(BoardTicket::boardCase);
+    }
+
     public List<String> retain(Set<String> liveCauses, long now) {
         Objects.requireNonNull(
                 liveCauses,
@@ -378,7 +412,9 @@ public final class Board {
         Objects.requireNonNull(spirit, "spirit не может быть null: держатель задания — дух");
         List<BoardTicket> held = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
-            if (statuses.get(ticket.id()) == BoardStatus.ASSIGNED && holds(ticket, spirit)) {
+            if (statuses.get(ticket.id()) == BoardStatus.ASSIGNED
+                    && holds(ticket, spirit)
+                    && !BoardActivities.isActivity(ticket.boardCase())) {
                 held.add(ticket);
             }
         }
@@ -389,7 +425,7 @@ public final class Board {
     public Map<UUID, Integer> assignedCounts() {
         Map<UUID, Integer> counts = new LinkedHashMap<>();
         for (BoardTicket ticket : tickets.values()) {
-            if (statuses.get(ticket.id()) != BoardStatus.ASSIGNED) {
+            if (statuses.get(ticket.id()) != BoardStatus.ASSIGNED || BoardActivities.isActivity(ticket.boardCase())) {
                 continue;
             }
             UUID holder = holder(ticket);

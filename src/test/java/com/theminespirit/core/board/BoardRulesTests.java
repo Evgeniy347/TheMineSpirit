@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -148,6 +149,8 @@ class BoardRulesTests {
 
     @Provide
     Arbitrary<BoardCase> boardCases() {
-        return Arbitraries.of(BoardCase.values());
+        return Arbitraries.of(Arrays.stream(BoardCase.values())
+                .filter(boardCase -> !BoardActivities.isActivity(boardCase))
+                .toList());
     }
 }

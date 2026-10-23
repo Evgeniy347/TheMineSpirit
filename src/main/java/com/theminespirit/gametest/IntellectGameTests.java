@@ -1,6 +1,7 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritRole;
@@ -20,6 +21,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.intellect.SettlementIntellect;
@@ -162,6 +164,14 @@ public final class IntellectGameTests {
                                 .map(plan -> plan instanceof ScriptCall call && "mine_vein".equals(call.script()))
                                 .orElse(false)),
                 "Хотя бы один шахтёр получает задачу mine_vein");
+        helper.assertTrue(
+                List.of(first, second).stream()
+                        .anyMatch(spirit -> BoardRegistry.get(helper.getLevel())
+                                .board()
+                                .occupation(spirit.getUUID())
+                                .filter(BoardCase.ACTIVITY_MINE::equals)
+                                .isPresent()),
+                "Занятие интеллекта выдаёт и показывает доска: шахтёр виден на ней заданием ACTIVITY_MINE");
         first.discard();
         second.discard();
         TacticsScene.finish(helper, first);
