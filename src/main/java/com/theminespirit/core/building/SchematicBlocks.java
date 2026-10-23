@@ -214,6 +214,20 @@ public final class SchematicBlocks {
         return "glass".equals(path) || path.endsWith("_glass") || path.endsWith("_pane");
     }
 
+    // Сыпучий блок без опоры падает: гравий, песок, порошковый бетон, наковальня, яйцо дракона. В плане это
+    // отдельный вид пола; правило стоянки на нём — общее с исполнителем (MiningSafety.canStandOn).
+    public static boolean isFalling(String blockId) {
+        String path = path(blockId);
+        return path.endsWith("_concrete_powder")
+                || "gravel".equals(path)
+                || "sand".equals(path)
+                || "red_sand".equals(path)
+                || "anvil".equals(path)
+                || "chipped_anvil".equals(path)
+                || "damaged_anvil".equals(path)
+                || "dragon_egg".equals(path);
+    }
+
     public static boolean isDoor(String blockId) {
         return path(blockId).endsWith("_door");
     }

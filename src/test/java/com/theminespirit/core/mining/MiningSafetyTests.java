@@ -78,6 +78,16 @@ class MiningSafetyTests {
     }
 
     @Test
+    void canStand_FallingFloor_IsAccepted() {
+        CellWorld world = new CellWorld().set(0, -1, 0, Cell.FALLING);
+
+        assertTrue(
+                MiningSafety.canStand(new BlockCoord(0, 0, 0), world),
+                "Сыпучий пол (гравий, песок) — обычная опора, как в игре: сыпучее опасно только над головой. "
+                        + "Иначе стоянки плана на гравии площади недостижимы и подходов вдвое больше плана");
+    }
+
+    @Test
     void canStand_FloorIsPassable_IsRejected() {
         CellWorld world = new CellWorld();
 

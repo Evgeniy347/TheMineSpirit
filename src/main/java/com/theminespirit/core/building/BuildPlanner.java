@@ -1,6 +1,7 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.movement.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
@@ -749,7 +750,10 @@ public final class BuildPlanner {
             return Cell.SOLID;
         }
         String block = grid.get(cell);
-        return block == null || passable(block) ? Cell.PASSABLE : Cell.SOLID;
+        if (block == null || passable(block)) {
+            return Cell.PASSABLE;
+        }
+        return SchematicBlocks.isFalling(block) ? Cell.FALLING : Cell.SOLID;
     }
 
     // Шаг тела, как BodyStep, но без проверки опасных соседей: в плане стройки опасностей нет, а проверка соседей
@@ -778,7 +782,8 @@ public final class BuildPlanner {
     }
 
     // Стоять — как в мире: на заборе, стене и панели не стоят (дом семьи 3, 21.10: стоянка плана на заборе балкона
-    // срывала подход — на столб высотой 1,5 дух не запрыгивает).
+    // срывала подход — на столб высотой 1,5 дух не запрыгивает), а пол решает общая с исполнителем функция
+    // MiningSafety.canStandOn: твёрдый и сыпучий (гравий площади) — годный пол.
     private boolean canStand(BlockCoord feet) {
         if (!open(feet.x(), feet.y(), feet.z()) || !open(feet.x(), feet.y() + 1, feet.z())) {
             return false;
@@ -786,7 +791,8 @@ public final class BuildPlanner {
         if (feet.y() - 1 < 0) {
             return true;
         }
-        return SchematicWalk.standsOn(grid.get(new BlockCoord(feet.x(), feet.y() - 1, feet.z())));
+        BlockCoord floor = new BlockCoord(feet.x(), feet.y() - 1, feet.z());
+        return SchematicWalk.standsOn(grid.get(floor)) && MiningSafety.canStandOn(cellAt(floor));
     }
 
     private boolean open(int x, int y, int z) {

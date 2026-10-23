@@ -50,10 +50,17 @@ public final class MiningSafety {
             return false;
         }
         BlockCoord floor = offset(cell, 0, -1, 0);
-        if (view.cellAt(floor) != Cell.SOLID) {
+        if (!canStandOn(view.cellAt(floor))) {
             return false;
         }
         return ringSafe(cell, view) && ringSafe(floor, view);
+    }
+
+    // Одна функция для плана стройки и исполнителя: годный пол — твёрдый блок и сыпучий (гравий, песок), как в игре.
+    // Сыпучее опасно только над головой (это ловят StandSpots и шахтные проверки), а не под ногами.
+    public static boolean canStandOn(Cell floor) {
+        Objects.requireNonNull(floor, "Клетка пола не может быть null: без неё неизвестно, на чём стоять");
+        return floor == Cell.SOLID || floor == Cell.FALLING;
     }
 
     private static boolean ringSafe(BlockCoord center, SafetyView view) {
