@@ -76,11 +76,14 @@ public final class JungleSettlementGameTests {
                 }
             }
             helper.assertTrue(
-                    worstIdle[0] <= IDLE_LIMIT,
-                    "Днём дух простаивал " + worstIdle[0] + " тиков подряд (предел " + IDLE_LIMIT + ")");
-            helper.assertTrue(
-                    missing.isEmpty(),
-                    "Этап 1 в джунглях не пройден: нет " + missing + "; доска "
+                    worstIdle[0] <= IDLE_LIMIT && missing.isEmpty(),
+                    "Этап 1 в джунглях: простой " + worstIdle[0] + " тиков подряд (предел " + IDLE_LIMIT
+                            + "), нет " + missing + "; духи "
+                            + spirits.stream()
+                                    .map(spirit -> spirit.displayName() + "="
+                                            + spirit.currentTaskScript().orElse("-"))
+                                    .toList()
+                            + "; доска "
                             + board.board().all().stream()
                                     .map(ticket -> ticket.id() + "="
                                             + board.board()

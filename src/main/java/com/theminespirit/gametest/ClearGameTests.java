@@ -110,6 +110,25 @@ public final class ClearGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    public static void clear_AlreadyEmptyArea_Succeeds(GameTestHelper helper) {
+        prepare(helper);
+        SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, clearCall(helper, new BlockPos(5, 1, 4), new BlockPos(6, 3, 6)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "уже чистый участок — расчистка выполнена, а не провал «не убран ни один блок» (CLEAR_GROUNDS "
+                            + "приёмки «джунгли» падал на чистой четверти); статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     @GameTest(template = "arena", batch = "clear_pocket", timeoutTicks = 400)
     public static void clear_DirtBlockAroundSealedPocket_FailsFastWithUnreachableCount(GameTestHelper helper) {
         prepare(helper);

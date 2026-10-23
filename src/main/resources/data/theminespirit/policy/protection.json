@@ -1,6 +1,7 @@
 {
   "deny": [
-    "beacon", "reinforced_deepslate", "lodestone", "respawn_anchor",
+    "beacon",
+    "crafting_table", "reinforced_deepslate", "lodestone", "respawn_anchor",
     "*_sign", "*_door", "*_trapdoor", "*_fence*", "*_pressure_plate", "lever", "*_button",
     "bell", "lectern", "jukebox", "note_block",
     "redstone_wire", "redstone_torch", "redstone_wall_torch", "redstone_lamp", "redstone_block",

@@ -491,13 +491,13 @@ public final class TicketPlans {
                         "x1",
                         target.target().x() + dx1,
                         "y1",
-                        target.target().y() - 1,
+                        target.target().y(),
                         "z1",
                         target.target().z() + dz1,
                         "x2",
                         target.target().x() + dx2,
                         "y2",
-                        target.target().y() + 2,
+                        target.target().y() + 3,
                         "z2",
                         target.target().z() + dz2));
     }

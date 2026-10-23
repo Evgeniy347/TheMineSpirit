@@ -237,6 +237,12 @@ public class ClearAreaSession {
             fail(refused.message());
             return;
         }
+        if (begin instanceof BlockBreaker.Refused refused && refused.reason() == BlockBreaker.RefuseReason.AIR) {
+            // Блок исчез сам (листва опала, его сломал другой): клетка чиста, это не пропуск.
+            releaseCurrent();
+            state = State.PICK;
+            return;
+        }
         if (begin instanceof BlockBreaker.Refused) {
             unbreakable++;
             tally.skipped();
@@ -288,7 +294,8 @@ public class ClearAreaSession {
         if (outcome != Outcome.RUNNING) {
             return;
         }
-        if (removed == 0) {
+        // Провал — только если ломать было что, но ничего не сломано; чистый участок — выполненная расчистка.
+        if (removed == 0 && skippedTotal() > 0) {
             fail(summary() + "; не убран ни один блок");
             return;
         }

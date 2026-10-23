@@ -211,6 +211,23 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround() {
+        BlockCoord home = new BlockCoord(10, 60, -5);
+
+        List<Integer> bottoms =
+                collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, TicketTarget.at(home)), "clear_area").stream()
+                        .map(call -> ClearAreaParams.from(call.params()).y1())
+                        .distinct()
+                        .toList();
+
+        assertEquals(
+                List.of(home.y()),
+                bottoms,
+                "Дом — клетка ног: слой y−1 — земля участка; расчистка с y−1 обходила 33×33 блоков земли по одному "
+                        + "и не кончалась до конца дня (приёмка «джунгли»)");
+    }
+
+    @Test
     void plan_BuildFence_UsesFenceScheme() {
         TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, target());
 
