@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -12,6 +13,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.crafting.Stations;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
@@ -95,7 +97,11 @@ public final class TransferWatch {
         }
         StackMapper mapper = new StackMapper();
         BlockCoord crafterAt = at(crafter);
-        List<TransferSource> sources = sources(spirits, mapper, recipes, crafter.getUUID());
+        // Добыча сама рубит и крафтит («acquire»): ждать передачу от занятого стройкой духа незачем — свободный
+        // дух простаивал 1845 тиков, пока строитель ограды держал доски и брёвна (приёмка «джунгли» 24.10).
+        List<SpiritEntity> donors =
+                gather ? spirits.stream().filter(spirit -> !busy(spirit)).toList() : spirits;
+        List<TransferSource> sources = sources(donors, mapper, recipes, crafter.getUUID());
         List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
                 craftItem.orElseThrow(),
                 crafter.getUUID(),
@@ -176,7 +182,7 @@ public final class TransferWatch {
                     "item=" + order.item(),
                     "count=" + order.count(),
                     "from=" + order.from().map(UUID::toString).orElse("warehouse"));
-            service.submit(
+            BoardOutcome outcome = service.submit(
                     new BoardTicket(
                             id,
                             BoardCase.TRANSFER_ITEM,
@@ -190,7 +196,9 @@ public final class TransferWatch {
                             modifiers),
                     TicketTarget.at(at(recipient.orElseThrow()))
                             .withTransfer(order.from().orElse(null), order.to(), order.item(), order.count()));
-            submitted = true;
+            // Проваленная передача остаётся FAILED, повторная подача — DUPLICATE: крафт «ждал передачу» без
+            // открытой передачи до конца приёмки (gather:jungle_fence после «stick: нужно 16, в инвентаре 15»).
+            submitted |= outcome == BoardOutcome.ACCEPTED || active(service, id);
         }
         return submitted || active;
     }
@@ -317,8 +325,29 @@ public final class TransferWatch {
         return false;
     }
 
+    private static boolean busy(SpiritEntity spirit) {
+        return spirit.taskStatus().orElse(null) == RunStatus.RUNNING && !spirit.runsBackgroundTask();
+    }
+
+    // Отдающий ждёт свою передачу: в том же цикле доска отдавала ему стройку ограды, передача палок стояла
+    // PENDING, а крафтер факелов простаивал 1630 тиков (приёмка «джунгли» 24.10).
+    static Set<UUID> donors(BoardService service, String craftId) {
+        Set<UUID> donors = new HashSet<>();
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.boardCase() == BoardCase.TRANSFER_ITEM
+                    && cause(craftId).equals(ticket.cause())
+                    && active(service, ticket.id())) {
+                ticket.assignee().ifPresent(donors::add);
+            }
+        }
+        return donors;
+    }
+
     private static boolean active(BoardService service, String ticketId) {
-        BoardStatus status = service.board().statusOf(ticketId).orElse(null);
+        return service.board().statusOf(ticketId).filter(TransferWatch::open).isPresent();
+    }
+
+    static boolean open(BoardStatus status) {
         return status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;

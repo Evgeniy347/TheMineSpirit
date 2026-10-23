@@ -84,6 +84,7 @@ public final class BoardService {
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
+    private final CrafterMemory crafters = new CrafterMemory();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
@@ -701,6 +702,7 @@ public final class BoardService {
     private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);
+        crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
         // Дух ждёт своё задание, только если может его взять сейчас: держатель на паузе по кейсу (провалы)
         // или не годный к своему заданию иначе простаивал бы, не получая и чужих (INC-23).
         Set<UUID> awaited = new HashSet<>();
@@ -721,11 +723,14 @@ public final class BoardService {
             }
             TicketTarget target =
                     gatherOnTop(ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits))), spirit);
+            Optional<TicketTarget> fitted = fitTransfer(ticket, target, spirit);
+            if (fitted.isEmpty()) {
+                dropEmptyTransfer(ticket, target, spirit);
+                continue;
+            }
+            target = fitted.orElseThrow();
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
-                LOGGER.info(
-                        "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
-                        ticket.id(),
-                        spirit.displayName());
+                awaitTransfers(ticket, spirit, awaited);
                 continue;
             }
             TaskNode plan;
@@ -758,6 +763,7 @@ public final class BoardService {
             }
             BoardOutcome outcome = board.claim(ticket.id(), spirit.getUUID(), now);
             if (outcome == BoardOutcome.CLAIMED) {
+                crafters.forget(ticket.id());
                 issuedGenerations.put(ticket.id(), spirit.taskGeneration());
                 claims++;
                 held.merge(spirit.getUUID(), 1, Integer::sum);
@@ -787,6 +793,43 @@ public final class BoardService {
         return held <= 0
                 ? target
                 : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
+    }
+
+    private void awaitTransfers(BoardTicket ticket, SpiritEntity crafter, Set<UUID> awaited) {
+        crafters.remember(ticket.id(), crafter.getUUID());
+        awaited.addAll(TransferWatch.donors(this, ticket.id()));
+        LOGGER.info(
+                "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
+                ticket.id(),
+                crafter.displayName());
+    }
+
+    private void dropEmptyTransfer(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
+        board.cancel(ticket.id());
+        targets.remove(ticket.id());
+        persist();
+        LOGGER.info(
+                "Передача {} снята: у духа {} не осталось {}", ticket.id(), spirit.displayName(), target.supplyItem());
+    }
+
+    // Передача планируется по инвентарю на момент заказа, а исполняется позже: отдающий успевал израсходовать
+    // часть, deliver падал «stick: нужно 16, в инвентаре 15», пауза кейса держала все его передачи, крафтеры
+    // ждали их весь день (приёмка «джунгли» 24.10). Отдаём сколько есть; остаток крафт закажет заново.
+    private static Optional<TicketTarget> fitTransfer(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
+        if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
+                || target.transferFrom() == null
+                || !target.transferFrom().equals(spirit.getUUID())
+                || target.supplyItem() == null) {
+            return Optional.of(target);
+        }
+        int held = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT).inInventory(target.supplyItem());
+        if (held <= 0) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                held >= target.supplyCount()
+                        ? target
+                        : target.withTransfer(target.transferFrom(), target.transferTo(), target.supplyItem(), held));
     }
 
     TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
@@ -834,10 +877,20 @@ public final class BoardService {
             }
             return null;
         }
+        if (crafters.remembered(ticket.id()).filter(awaited::contains).isPresent()) {
+            // Крафтер сейчас отдаёт по своей передаче (секунды): иначе крафт ушёл бы другому и заказал бы
+            // полученное обратно.
+            return null;
+        }
         List<SpiritEntity> unclaimed = spirits.stream()
                 .filter(spirit -> !awaited.contains(spirit.getUUID()))
                 .toList();
-        return nearestFree(unclaimed, targets.get(ticket.id()), held, ticket, now);
+        return crafters.choose(
+                ticket.id(),
+                unclaimed,
+                SpiritEntity::getUUID,
+                spirit -> free(spirit, held, ticket, now),
+                () -> nearestFree(unclaimed, targets.get(ticket.id()), held, ticket, now));
     }
 
     private boolean free(SpiritEntity spirit, Map<UUID, Integer> held, BoardTicket ticket, long now) {
