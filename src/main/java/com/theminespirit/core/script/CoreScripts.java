@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.forestry.TreeSpecies;
@@ -1176,7 +1177,9 @@ public final class CoreScripts {
                                         false,
                                         BuildSchematicParams.SEGMENTS_FROM_FILE,
                                         BuildSchematicParams.SEGMENTS_MAX,
-                                        BuildSchematicParams.SEGMENTS_FROM_FILE)),
+                                        BuildSchematicParams.SEGMENTS_FROM_FILE),
+                                ParamSpec.enumeration(
+                                        BuildSchematicParams.WOOD, false, WoodSpecies.ALL, WoodSpecies.OAK)),
                         List.of("файл схемы существует"),
                         List.of("схема построена")),
                 spec(

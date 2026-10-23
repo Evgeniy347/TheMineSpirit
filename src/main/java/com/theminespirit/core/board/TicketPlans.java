@@ -7,8 +7,10 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -703,17 +705,15 @@ public final class TicketPlans {
     }
 
     private static ScriptCall schematic(String scheme, TicketTarget target) {
-        return new ScriptCall(
-                "build_schematic",
-                Map.of(
-                        "file",
-                        scheme,
-                        "x",
-                        target.target().x(),
-                        "y",
-                        target.target().y(),
-                        "z",
-                        target.target().z()));
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("file", scheme);
+        params.put("x", target.target().x());
+        params.put("y", target.target().y());
+        params.put("z", target.target().z());
+        if (target.wood() != null) {
+            params.put(BuildSchematicParams.WOOD, target.wood());
+        }
+        return new ScriptCall("build_schematic", Map.copyOf(params));
     }
 
     private static TaskNode fillArea(TicketTarget target, String block, int radius) {

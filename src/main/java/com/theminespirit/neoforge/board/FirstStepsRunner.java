@@ -20,6 +20,7 @@ import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
  * встают мелкие задачи добычи, а сам шаг ждёт их выполнения и открывается после.
  */
 public final class FirstStepsRunner {
+    private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
@@ -82,7 +84,7 @@ public final class FirstStepsRunner {
         if (hasActive(service, caseValue)) {
             return;
         }
-        TicketTarget target = targetFor(caseValue, home);
+        TicketTarget target = targetFor(caseValue, home, stock);
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = materials(source, caseValue, target);
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
@@ -115,8 +117,13 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home) {
+    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, StockView stock) {
         TicketTarget target = TicketTarget.at(home);
+        // Дерево — порода, которой у поселения больше всего (джунгли, ель…), а не жёстко дуб (INC-36).
+        String wood = WoodSpecies.of(stock.available());
+        if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
+            target = target.withWood(wood);
+        }
         // По одному инструменту за задание: N штук одному крафтеру не собрать из запаса, разнесённого по духам;
         // остальные до набора на духа ставит постоянный запас (ToolStockWatch).
         return ToolSet.isTool(caseValue) ? target.withToolCount(1) : target;

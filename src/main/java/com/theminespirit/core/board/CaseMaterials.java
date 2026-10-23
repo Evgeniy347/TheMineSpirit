@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ParallelNode;
@@ -8,6 +9,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.script.BuildSchematicParams;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -76,7 +78,10 @@ public final class CaseMaterials {
     }
 
     private static void addSchematic(Map<String, Integer> need, ScriptCall call, MaterialSource source) {
-        source.schematicBlocks(text(call, "file")).forEach((block, count) -> merge(need, normalize(block), count));
+        String wood =
+                call.params().get(BuildSchematicParams.WOOD) instanceof String species ? species : WoodSpecies.OAK;
+        source.schematicBlocks(text(call, "file"))
+                .forEach((block, count) -> merge(need, normalize(WoodSpecies.swap(block, wood)), count));
     }
 
     private static void merge(Map<String, Integer> need, String item, int count) {
