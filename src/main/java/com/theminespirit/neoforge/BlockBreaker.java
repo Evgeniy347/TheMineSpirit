@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -321,6 +322,9 @@ public final class BlockBreaker {
         boolean dropsAllowed = choice.dropsAllowed();
         boolean wearsTool = broken.getDestroySpeed(level, brokenPos) != 0.0F;
         finish();
+        if (level instanceof ServerLevel server) {
+            SettlementChestWatch.broken(server, brokenPos, broken);
+        }
         level.destroyBlock(brokenPos, false, spirit);
         spirit.hunger().onBlockBroken();
         if (dropsAllowed) {

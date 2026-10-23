@@ -13,6 +13,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -326,6 +327,7 @@ final class DemoSession {
             throw new IllegalStateException("Сундук материалов схемы '" + plan.scheme() + "' не поставлен в "
                     + pos.toShortString() + ": блок сундука не создал блочную сущность");
         }
+        SettlementChestStore.get(level).track(pos);
         return chest;
     }
 
