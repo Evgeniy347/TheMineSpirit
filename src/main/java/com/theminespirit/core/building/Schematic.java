@@ -110,7 +110,7 @@ public record Schematic(
             }
             long distance = Math.abs((long) target - start);
             long count = distance / Math.abs((long) dy) + 1;
-            if (count > CatalogLimits.SCHEMATIC_SIZE_MAX * 2L) {
+            if (count > CatalogLimits.UNDERGROUND_REPEAT_SIZE_MAX) {
                 throw new IllegalStateException("Повтор до y=" + target + " требует " + count
                         + " сегментов: это больше предела схемы; стройте с ближе расположенной целью");
             }
@@ -138,7 +138,7 @@ public record Schematic(
         int sizeX = bounds.maxX() - bounds.minX() + 1;
         int sizeY = bounds.maxY() - bounds.minY() + 1;
         int sizeZ = bounds.maxZ() - bounds.minZ() + 1;
-        int limit = CatalogLimits.SCHEMATIC_SIZE_MAX;
+        int limit = CatalogLimits.UNDERGROUND_REPEAT_SIZE_MAX;
         if (sizeX > limit || sizeY > limit || sizeZ > limit) {
             throw new IllegalStateException("Повтор разворачивает схему до " + sizeX + "×" + sizeY + "×" + sizeZ
                     + ", а предел " + limit + ": стройте сегментами или сдвиньте цель");
