@@ -6,7 +6,14 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 public record BuildSchematicParams(
-        String file, int x, int y, int z, @Nullable BuildRotation rotation) {
+        String file, int x, int y, int z, @Nullable BuildRotation rotation, int segments) {
+    public static final int SEGMENTS_FROM_FILE = 0;
+    public static final int SEGMENTS_MAX = 64;
+
+    public BuildSchematicParams(String file, int x, int y, int z, @Nullable BuildRotation rotation) {
+        this(file, x, y, z, rotation, SEGMENTS_FROM_FILE);
+    }
+
     public BuildSchematicParams {
         if (file == null || file.isBlank()) {
             throw new IllegalArgumentException(
@@ -16,6 +23,10 @@ public record BuildSchematicParams(
         BuildingCoords.checkY(y);
         BuildingCoords.checkZ(z);
         rotation = rotation == null ? BuildRotation.NONE : rotation;
+        if (segments < SEGMENTS_FROM_FILE || segments > SEGMENTS_MAX) {
+            throw new IllegalArgumentException("Параметр 'segments' " + segments + " вне " + SEGMENTS_FROM_FILE + ".."
+                    + SEGMENTS_MAX + ": число сегментов подземной схемы, 0 — как в файле");
+        }
     }
 
     public static BuildSchematicParams from(Map<String, Object> params) {
@@ -25,7 +36,8 @@ public record BuildSchematicParams(
                 ScriptArgs.requireInt(params, "x"),
                 ScriptArgs.requireInt(params, "y"),
                 ScriptArgs.requireInt(params, "z"),
-                rotation(params));
+                rotation(params),
+                ScriptArgs.optionalInt(params, "segments").orElse(SEGMENTS_FROM_FILE));
     }
 
     private static BuildRotation rotation(Map<String, Object> params) {

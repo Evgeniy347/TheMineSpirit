@@ -1,10 +1,16 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.BuildingType;
+import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptRegistry;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.AcquireScript;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.AcquireParams;
 import com.theminespirit.core.script.ApproachParams;
 import com.theminespirit.core.script.AttackParams;
@@ -149,6 +155,8 @@ import com.theminespirit.neoforge.social.TakeScript;
 import com.theminespirit.neoforge.social.WaitScript;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 public final class SpiritScripts {
@@ -163,6 +171,23 @@ public final class SpiritScripts {
         putExchangeFarmingAndInventory(table);
         putBuildingMiningAndAcquire(table);
         return table;
+    }
+
+    // Подземная схема (спуск, ход) копается в породе, а не ставится на площадке: свой строитель (MineBuildScript).
+    private static ScriptInstance buildSchematic(SpiritEntity spirit, BuildSchematicParams params) {
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(params.file());
+        BuildRotation rotation = Objects.requireNonNullElse(params.rotation(), BuildRotation.NONE);
+        if (preset.isPresent() && preset.get().type() == BuildingType.UNDERGROUND) {
+            return MineBuildScript.of(
+                    spirit,
+                    preset.get(),
+                    new BlockCoord(params.x(), params.y(), params.z()),
+                    rotation,
+                    new MineLayout.Extent(
+                            null,
+                            params.segments() == BuildSchematicParams.SEGMENTS_FROM_FILE ? null : params.segments()));
+        }
+        return new BuildSchematicScript(spirit, params);
     }
 
     private static void putSensingMovementAndCombat(Map<String, Function<SpiritEntity, ScriptFactory>> table) {
@@ -271,9 +296,7 @@ public final class SpiritScripts {
         table.put(
                 "place_descent_stairs",
                 spirit -> params -> new PlaceDescentStairsScript(spirit, DigDescentParams.from(params)));
-        table.put(
-                "build_schematic",
-                spirit -> params -> new BuildSchematicScript(spirit, BuildSchematicParams.from(params)));
+        table.put("build_schematic", spirit -> params -> buildSchematic(spirit, BuildSchematicParams.from(params)));
         table.put("build_farm", spirit -> params -> new BuildFarmScript(spirit, BuildFarmParams.from(params)));
         table.put("build_fence", spirit -> params -> new BuildFenceScript(spirit, BuildFenceParams.from(params)));
         table.put("build_shelter", spirit -> params -> new BuildShelterScript(spirit));

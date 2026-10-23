@@ -17,10 +17,12 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
+import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -164,7 +166,15 @@ public final class FirstStepsRunner {
 
             @Override
             public Map<String, Integer> schematicBlocks(String file) {
-                return PresetLibrary.countMaterials(SchematicResources.load(file));
+                // Шахта копается в породе: её пол — добытый ею же булыжник, на складе его до шахты нет и быть не
+                // должно.
+                boolean underground = DataTables.INSTANCE
+                        .presets()
+                        .current()
+                        .byId(file)
+                        .map(preset -> preset.type() == BuildingType.UNDERGROUND)
+                        .orElse(false);
+                return underground ? Map.of() : PresetLibrary.countMaterials(SchematicResources.load(file));
             }
         };
     }

@@ -27,6 +27,7 @@ public final class BlockBreaker {
     private static final int NO_STAGE = -1;
     private static final int MAX_STAGE = 9;
     private static final int STAGES = 10;
+    private static final int NO_FORCED_SLOT = Integer.MIN_VALUE;
 
     public enum Progress {
         BREAKING,
@@ -67,6 +68,7 @@ public final class BlockBreaker {
     private boolean active;
     private boolean toolBroke;
     private int lastHitTick = -1;
+    private int forcedSlot = NO_FORCED_SLOT;
     private int hitsThisTick;
     private int maxHitsPerTick;
 
@@ -84,6 +86,16 @@ public final class BlockBreaker {
 
     public Begin begin(BlockPos target, boolean tended, boolean demolish) {
         return begin(target, intent(tended, demolish), true);
+    }
+
+    // Руда на удачу ломается именно киркой с Удачей или Шёлковым касанием, а не самой быстрой (MineOres).
+    public Begin beginWithSlot(BlockPos target, int slot) {
+        forcedSlot = slot;
+        try {
+            return begin(target, Intent.BREAK, true);
+        } finally {
+            forcedSlot = NO_FORCED_SLOT;
+        }
     }
 
     public Begin beginAnyDistance(BlockPos target) {
@@ -239,17 +251,21 @@ public final class BlockBreaker {
         options.add(new ToolOption(
                 ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool, ToolChoice.UNWEARING, ToolChoice.UNWEARING, false));
         ItemStack hand = spirit.getMainHandItem();
-        if (!hand.isEmpty()) {
+        if (!hand.isEmpty() && allowed(ToolChoice.MAIN_HAND)) {
             options.add(optionFor(ToolChoice.MAIN_HAND, hand, targetState, needsTool));
         }
         Container inventory = spirit.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (!stack.isEmpty()) {
+            if (!stack.isEmpty() && allowed(slot)) {
                 options.add(optionFor(slot, stack, targetState, needsTool));
             }
         }
         return options;
+    }
+
+    private boolean allowed(int slot) {
+        return forcedSlot == NO_FORCED_SLOT || forcedSlot == slot;
     }
 
     private static ToolOption optionFor(int slot, ItemStack stack, BlockState targetState, boolean needsTool) {

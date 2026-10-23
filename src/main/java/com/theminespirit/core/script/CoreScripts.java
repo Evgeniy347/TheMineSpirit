@@ -1170,7 +1170,13 @@ public final class CoreScripts {
                                         "rotation",
                                         false,
                                         List.of("none", "clockwise_90", "clockwise_180", "counterclockwise_90"),
-                                        "none")),
+                                        "none"),
+                                ParamSpec.integer(
+                                        "segments",
+                                        false,
+                                        BuildSchematicParams.SEGMENTS_FROM_FILE,
+                                        BuildSchematicParams.SEGMENTS_MAX,
+                                        BuildSchematicParams.SEGMENTS_FROM_FILE)),
                         List.of("файл схемы существует"),
                         List.of("схема построена")),
                 spec(

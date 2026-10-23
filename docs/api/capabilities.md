@@ -130,7 +130,7 @@ tiers = {"any": 1, "coal": 1, "iron": 2, …}, fallback = 1; значение п
   песок) над головой сперва падает, и только потом его выкапывают — под падающий блок дух не заходит.
   Факелы ставятся каждый `torchInterval`-й шаг (по умолчанию из `descent.json`). Итог: reached, y, depth,
   blocks_dug, blocks_filled, torches, reason.
-- `build_schematic` (`file`, `x`, `y`, `z`, `rotation`) — постройка по текстовому файлу слоёв
+- `build_schematic` (`file`, `x`, `y`, `z`, `rotation`, `segments`) — постройка по текстовому файлу слоёв
   `data/theminespirit/schematics/<file>.txt` (формат — ниже, «Файл постройки»), якорь в `x,y,z`, поворот
   `none`/`clockwise_90`/`clockwise_180`/`counterclockwise_90`. Дух сначала очищает клетки `.` и чужие блоки в
   клетках схемы (защищённое не трогает), затем ставит блоки снизу вверх всё, до чего дотягивается со стоянки

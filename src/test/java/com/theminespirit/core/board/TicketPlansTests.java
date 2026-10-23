@@ -43,7 +43,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.CAPTURE_ANIMAL, "capture"),
             Map.entry(BoardCase.BUILD_PEN, "build_schematic"),
             Map.entry(BoardCase.LURE_ANIMAL, "withdraw"),
-            Map.entry(BoardCase.BUILD_MINE, "dig_descent"),
+            Map.entry(BoardCase.BUILD_MINE, "build_schematic"),
             Map.entry(BoardCase.SUPPLY_SITE, "acquire"),
             Map.entry(BoardCase.GATHER_MATERIALS, "acquire"),
             Map.entry(BoardCase.CLEAR_GROUNDS, "clear_area"),
@@ -405,17 +405,19 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_MineLevelOne_DigsDescent() {
+    void plan_MineLevelOne_BuildsDescentBySchematic() {
         TaskNode plan = TicketPlans.plan(BoardCase.BUILD_MINE, target());
 
-        assertTrue(
-                collectScripts(plan).contains("dig_descent"),
-                "Уровень 1 шахты — спуск dig_descent: проход 1×3 вниз, версия 1");
-        ScriptCall descent = findCall(plan, "dig_descent");
+        ScriptCall descent = findCall(plan, "build_schematic");
         assertEquals(
-                "south",
-                descent.params().get("direction"),
-                "Спуск идёт в названную сторону: без направления неизвестно, куда копать тоннель");
+                "mine_descent_v1",
+                descent.params().get("file"),
+                "Уровень 1 шахты — спуск по схеме владельца mine_descent_v1 (ступени 1×3, выход пешком), "
+                        + "а не dig_descent, после которого духи не выходили наверх (INC-14)");
+        assertEquals(
+                "clockwise_90",
+                descent.params().get("rotation"),
+                "Спуск идёт на юг (+z): поворот схемы на 90° по часовой, как прежний dig_descent south");
     }
 
     @Test
