@@ -6,7 +6,11 @@
 1. [x] INC-23: задания PENDING с назначенным духом не выдаются — духи простаивают. Причина: `issue` исключал
    держателя своего PENDING-тикета из выдачи остальных, даже когда тот на паузе кейса после провалов (REPAIR_TOOL) —
    все 4 духа ждали свои невыполнимые тикеты. GameTest `dispatch_OwnTicketPaused_SpiritTakesFreeTicket`.
-2. [ ] INC-24: REPAIR_TOOL без наковальни — вечный цикл FAILED→POSTED; гейт по наличию наковальни/материала.
+2. [x] INC-24: REPAIR_TOOL без наковальни — вечный цикл FAILED→POSTED; гейт по наличию наковальни/материала.
+   Сделано: `RepairWatch` ставит ремонт материалом только при наковальне у дома (точило — без станции); план идёт к
+   дому перед `repair_tool`; `TaskStarter` не приписывает провал задачи доски своему занятию (unload/hunt «нет
+   наковальни» — вытесненное занятие). GameTest `repair_NoAnvilAtHome_TicketOnlyAfterAnvil`,
+   `starter_ForeignTaskFails_NotBlamedOnOwnScript`.
 3. [ ] INC-25: первые шаги застряли на LIGHTING (ждут torch×4), факелы никто не делает — связать с CRAFT_TORCHES/
    углём (чеклист 50 п.4–5).
 4. [ ] INC-26: CRAFT_FURNACE BLOCKED «нужен верстак: рядом (16) нет», хотя верстак есть.

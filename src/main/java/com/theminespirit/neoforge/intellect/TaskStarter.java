@@ -80,7 +80,12 @@ public final class TaskStarter {
                     return false;
                 }
                 Issued last = issued.remove(id);
-                if (status.isPresent() && status.get() == RunStatus.FAILED && last != null) {
+                // Провал засчитывается своему занятию, только если упало именно оно: доска или REST могли
+                // вытеснить его своей задачей, и её причина приписалась бы чужому скрипту (INC-24).
+                if (status.isPresent()
+                        && status.get() == RunStatus.FAILED
+                        && last != null
+                        && last.generation() == generation) {
                     backoff.noteFailure(id, last.script(), tick);
                     failures++;
                     LOGGER.warn(

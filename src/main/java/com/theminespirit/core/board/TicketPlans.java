@@ -483,7 +483,9 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Задание ремонта инструмента без предмета: скрипт repair_tool "
                     + "чинит конкретный изношенный предмет, без имени чинить нечего");
         }
-        return new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem()));
+        // Наковальню скрипт ищет вокруг себя: сначала к дому, где она стоит (гейт RepairWatch), иначе дух в шахте
+        // или в поле проваливает ремонт «нет наковальни поблизости» (INC-24).
+        return sequence(gotoTarget(target), new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem())));
     }
 
     private static TaskNode breedAnimals(TicketTarget target) {

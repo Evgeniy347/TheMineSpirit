@@ -8,13 +8,16 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
 import com.theminespirit.neoforge.board.JournalService;
 import com.theminespirit.neoforge.board.StockReader;
+import com.theminespirit.neoforge.intellect.TaskStarter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -27,13 +30,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
- * Блокеры живого прогона 2: выдача доски при паузе своего задания (INC-23).
+ * Блокеры живого прогона 2: выдача доски при паузе своего задания (INC-23), ремонт без наковальни и
+ * причина провала чужой задачи (INC-24).
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -75,6 +81,66 @@ public final class BoardDispatchGameTests {
         spirit.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "board_dispatch_repair_anvil", timeoutTicks = 100)
+    public static void repair_NoAnvilAtHome_TicketOnlyAfterAnvil(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        BlockPos homePos = helper.absolutePos(new BlockPos(4, 1, 4));
+        spirit.setHome(new BlockCoord(homePos.getX(), homePos.getY(), homePos.getZ()));
+        ItemStack pickaxe = new ItemStack(Items.STONE_PICKAXE);
+        pickaxe.setDamageValue(pickaxe.getMaxDamage() / 2);
+        spirit.getInventory().setItem(0, pickaxe);
+        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 8));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-dispatch-repair.jsonl");
+        String repair = "repair_tool:" + spirit.getUUID();
+
+        board.rebuild(level, level.getGameTime());
+        helper.assertTrue(
+                board.board().find(repair).isEmpty(),
+                "Без наковальни у дома ремонт материалом невыполним — задание не ставится: иначе цикл "
+                        + "FAILED→POSTED каждые 5 с (INC-24); статус "
+                        + board.board().statusOf(repair));
+
+        helper.setBlock(new BlockPos(6, 1, 4), Blocks.ANVIL);
+        board.rebuild(level, level.getGameTime() + BoardTuning.boardIntervalTicks());
+        helper.assertTrue(
+                board.board().find(repair).isPresent(),
+                "Наковальня у дома появилась — ремонт изношенной кирки ставится");
+        spirit.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "board_dispatch_foreign_failure", timeoutTicks = 200)
+    public static void starter_ForeignTaskFails_NotBlamedOnOwnScript(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        TaskStarter starter = new TaskStarter();
+        long tick = helper.getLevel().getGameTime();
+        helper.assertTrue(
+                starter.start(spirit, "wait", new ScriptCall("wait", Map.of("ticks", 400)), tick),
+                "Интеллект выдал своё занятие: без него нечему приписать чужой провал");
+        spirit.startTask(new ScriptCall("eat", Map.of()));
+        helper.succeedWhen(() -> {
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "Чужая задача (доска/REST) ещё не провалилась: " + spirit.taskStatus());
+            long now = helper.getLevel().getGameTime();
+            starter.start(spirit, "wait", new ScriptCall("wait", Map.of("ticks", 1)), now);
+            starter.start(spirit, "wait", new ScriptCall("wait", Map.of("ticks", 1)), now + 1);
+            helper.assertTrue(
+                    starter.failures() == 0,
+                    "Провал чужой задачи (" + spirit.taskFailureReason().orElse("?") + ") не засчитан занятию "
+                            + "интеллекта: иначе «нет наковальни» приписывалось unload/hunt и они вставали на откат "
+                            + "(INC-24); провалов " + starter.failures());
+            spirit.discard();
+            GameTestFixtures.finish(helper);
+        });
     }
 
     private static TicketTarget at(GameTestHelper helper) {
