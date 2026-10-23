@@ -357,16 +357,24 @@ tasks.named('check') {
 // Быстрые JUnit-тесты чистой логики без запуска игры (docs/TESTING.md).
 // Свойства jqwik и тесты на масштаб идут этим же прогоном; тег slow оставлен для будущего
 // тяжёлого теста, который не влезает в бюджет (гоняет задача slowTest отдельно, в check он не входит).
-// Параллельные форки выключены: замер на 4 ядрах показал, что 2 форка дороже старта второй JVM
-// и обгоняют прогон (числа — docs/TESTING.md → «Параллельный прогон и теги»).
+// Форк один (одна база jqwik, одна JVM на исполнителя). Внутри — классы Jupiter параллельно:
+// потоков = ядра − 2, от 1 до 4 (сервер 4 ядра → 2, ПК 6 ядер → 4); THEMINESPIRIT_TEST_THREADS перекрывает.
+// Замеры 23.10 (6327 тестов, ПК 6 ядер): последовательно 148 с, C2 вместо C1-only 80 с, плюс 4 потока 46 с
+// (docs/TESTING.md → «Время»). Класс с общим состоянием — @Isolated.
+def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(4, Runtime.runtime.availableProcessors() - 2))}") as int
 tasks.named('test', Test) {
     useJUnitPlatform {
         excludeTags 'slow'
     }
     maxParallelForks = 1
-    // Быстрый тир — только C1, SerialGC и два потока: замер (docs/research/test-performance.md)
-    // дал −58 % CPU тестовой JVM. C1-only не ставим в slowTest: долгие вычисления выигрывают от C2.
-    jvmArgs '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-XX:ActiveProcessorCount=2'
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
+    systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', "${unitTestThreads}"
+    // C1+C2 (без TieredStopAtLevel=1): тестов 6 тыс., тяжёлые планы стройки идут десятки секунд, и C2 даёт
+    // −45 % wall всего тира (148 → 80 с); C1-only выигрывал на 228 мелких тестах (docs/research/test-performance.md).
+    jvmArgs '-XX:+UseSerialGC', "-XX:ActiveProcessorCount=${Math.max(2, unitTestThreads)}"
     maxHeapSize = '512m'
     systemProperty 'theminespirit.modId', project.mod_id
     // Слушатель тестовой стоимости пишет CSV в путь от задачи (docs/TESTING.md → «Время тестов»)

@@ -14,11 +14,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 // Снапшот плана стройки (решение владельца 20.10): на каждую постройку каталога × 4 поворота — текстовый план заходов и
 // стоянок. Тест краснеет только при изменении плана; обновление — флагом -Dtheminespirit.updateSnapshots=true, дифф
 // снапшотов идёт в коммит и читается при ревью.
+// Постройка — отдельный запуск, запуски идут параллельно: план считается долго, а постройки независимы.
+@Execution(ExecutionMode.CONCURRENT)
 class BuildPlanSnapshotTests {
     static final Path DIR = Path.of("src/test/resources/build-plans");
     private static final String INDEX_PATH = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
@@ -95,29 +100,26 @@ class BuildPlanSnapshotTests {
         return BuildPlanner.plan(buildable.schematic(), rotation, supplyFeet(buildable, rotation), REACH, portion);
     }
 
-    @Test
-    void plans_EveryCatalogBuilding_MatchSnapshot() throws IOException {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("schemes")
+    void plans_EveryCatalogBuilding_MatchSnapshot(String scheme) throws IOException {
         boolean update = Boolean.getBoolean("theminespirit.updateSnapshots");
         PresetLibrary library = library();
         List<String> changed = new ArrayList<>();
-        for (String scheme : schemes()) {
-            Optional<Preset> preset = library.byId(scheme);
-            assertTrue(preset.isPresent(), "постройка каталога '" + scheme + "' без схемы: план не снять");
-            for (BuildRotation rotation : BuildRotation.values()) {
-                Path file = DIR.resolve(scheme + "-" + rotation.id() + ".txt");
-                List<String> lines = new ArrayList<>();
-                lines.add(
-                        "# " + scheme + " " + rotation.id()
-                                + ", порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3");
-                lines.addAll(
-                        plan(preset.get(), rotation, BuildPlanner.Portion.FILL).lines());
-                if (update) {
-                    Files.createDirectories(DIR);
-                    Files.writeString(file, String.join("\n", lines) + "\n", StandardCharsets.UTF_8);
-                } else if (!Files.exists(file)
-                        || !Files.readAllLines(file, StandardCharsets.UTF_8).equals(lines)) {
-                    changed.add(file.getFileName().toString());
-                }
+        Optional<Preset> preset = library.byId(scheme);
+        assertTrue(preset.isPresent(), "постройка каталога '" + scheme + "' без схемы: план не снять");
+        for (BuildRotation rotation : BuildRotation.values()) {
+            Path file = DIR.resolve(scheme + "-" + rotation.id() + ".txt");
+            List<String> lines = new ArrayList<>();
+            lines.add("# " + scheme + " " + rotation.id()
+                    + ", порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3");
+            lines.addAll(plan(preset.get(), rotation, BuildPlanner.Portion.FILL).lines());
+            if (update) {
+                Files.createDirectories(DIR);
+                Files.writeString(file, String.join("\n", lines) + "\n", StandardCharsets.UTF_8);
+            } else if (!Files.exists(file)
+                    || !Files.readAllLines(file, StandardCharsets.UTF_8).equals(lines)) {
+                changed.add(file.getFileName().toString());
             }
         }
         assertEquals(
