@@ -20,7 +20,40 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-version = mod_version
+// Версия — <минор>.<N>: минор задан в gradle.properties вручную, N — число коммитов HEAD.
+// Без git версия не подставляется молча: нужен явный номер (./gradlew build -Pbuild_number=N),
+// иначе сверка сборок клиента и сервера сравнивала бы разные jar под одним номером.
+def resolveBuildNumber = {
+    def explicit = project.findProperty('build_number')
+    if (explicit != null) {
+        def text = explicit.toString().trim()
+        if (!(text ==~ /[1-9][0-9]*/)) {
+            throw new GradleException("build_number должен быть положительным целым числом, получено: '${explicit}'")
+        }
+        return text.toInteger()
+    }
+    try {
+        def git = providers.exec {
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            ignoreExitValue = true
+        }
+        def result = git.result.get()
+        def text = git.standardOutput.asText.get().trim()
+        if (result.exitValue != 0 || !(text ==~ /[1-9][0-9]*/)) {
+            throw new GradleException("Не удалось вычислить номер сборки: 'git rev-list --count HEAD' вернул код "
+                    + "${result.exitValue} и '${text}'. Проверьте, что проект — git-репозиторий с коммитами, "
+                    + "или задайте номер явно: ./gradlew build -Pbuild_number=N")
+        }
+        return text.toInteger()
+    } catch (GradleException error) {
+        throw error
+    } catch (Exception error) {
+        throw new GradleException("Не удалось вычислить номер сборки: git недоступен (${error.message}). "
+                + "Установите git или задайте номер явно: ./gradlew build -Pbuild_number=N", error)
+    }
+}
+def modVersion = "${mod_version_minor}.${resolveBuildNumber()}"
+version = modVersion
 group = mod_group_id
 
 sourceSets.main.resources {
@@ -206,7 +239,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,
-            mod_version            : mod_version,
+            mod_version            : modVersion,
     ]
     inputs.properties replaceProperties
     expand replaceProperties

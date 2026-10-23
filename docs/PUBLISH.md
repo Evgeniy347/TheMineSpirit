@@ -5,14 +5,17 @@
 
 ## Что делает `scripts/publish.sh`
 
-Сборка (`./gradlew build`) → ровно один `build/libs/theminespirit-*.jar` с проверкой размера → снимок мира
-`$SERVER_DIR/scripts/snapshot.sh` → остановка сервера (tmux `minecraft`) → замена jar в `$SERVER_DIR/mods/` →
-запуск, если сервер работал. `SERVER_DIR` по умолчанию `/opt/minecraft/server`.
+Сборка (`./gradlew build`) → самый свежий `build/libs/theminespirit-*.jar` с проверкой размера → снимок мира
+`$SERVER_DIR/scripts/snapshot.sh` → остановка сервера (tmux `minecraft`) → удаление старых
+`$SERVER_DIR/mods/theminespirit-*.jar` и копирование нового → запуск, если сервер работал → тег `v0.1.N`
+в git и отправка тега в remote `backup` (если он настроен). `SERVER_DIR` по умолчанию `/opt/minecraft/server`.
+Версия — `0.1.N`, где N — число коммитов HEAD; минор 0.1 поднимается вручную в `gradle.properties`.
 Ключи: `--dry-run` (только план), `--no-restart`, `-y`.
 
 ## После публикации
 
-- Клиентский пак: скопировать jar в `/opt/minecraft/client/pack/mods/` и запустить `/opt/minecraft/client/publish.sh`
+- Клиентский пак: **удалить старый** `theminespirit-*.jar` из `/opt/minecraft/client/pack/mods/` (версия в имени
+  меняется, два jar рядом — два мода), скопировать новый jar туда же и запустить `/opt/minecraft/client/publish.sh`
   (packwiz-раздача `http://192.168.0.147:8099/`); игроки получат мод при следующем запуске Prism.
 - Сверить `sha1sum` jar сервера и раздачи; в логе сервера — `Done (…)` без `ERROR`.
 

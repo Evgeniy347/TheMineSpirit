@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.net;
 
 import com.theminespirit.TheMineSpirit;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.ModVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -34,11 +35,16 @@ public final class BuildFingerprint {
     }
 
     private static String compute() {
+        return version() + "+" + jarHash().orElse("dev");
+    }
+
+    public static String version() {
         String version = ModList.get()
                 .getModContainerById(ModIdentity.MOD_ID)
                 .map(container -> container.getModInfo().getVersion().toString())
-                .orElse("unknown");
-        return version + "+" + jarHash().orElse("dev");
+                .orElseThrow(() -> new IllegalStateException(
+                        "Мод " + ModIdentity.MOD_ID + " не найден в ModList: версию сборки взять неоткуда"));
+        return ModVersion.parse(version).toString();
     }
 
     private static Optional<String> jarHash() {
