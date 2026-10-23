@@ -11,6 +11,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -41,6 +42,36 @@ public final class TacticsLeashGameTests {
 
     private static boolean dead(Husk husk) {
         return husk.isDeadOrDying() || husk.isRemoved();
+    }
+
+    @GameTest(template = "arena", batch = "tactics_leash_walled", timeoutTicks = 400)
+    public static void leash_PostUnreachableNoEnemies_ReleasesControl(GameTestHelper helper) {
+        TacticsScene.prepare(helper);
+        BlockPos at = new BlockPos(2, 1, 2);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dy = 0; dy <= 2; dy++) {
+                    if (dx != 0 || dz != 0 || dy == 2) {
+                        helper.setBlock(at.offset(dx, dy, dz), Blocks.GLASS);
+                    }
+                }
+            }
+        }
+        SpiritEntity spirit = guard(helper, new BlockPos(7, 1, 7), at);
+        boolean[] returning = {false};
+        PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {});
+        helper.onEachTick(() -> returning[0] |= spirit.tactics().wantsControl());
+
+        helper.succeedWhen(() -> {
+            scene.assertStarted();
+            helper.assertTrue(returning[0], "охранник сначала пытается вернуться к посту: тактика держит духа");
+            helper.assertTrue(
+                    !spirit.tactics().wantsControl(),
+                    "Врагов нет, пост недостижим — возврат снимается, и тактика отпускает духа, а не держит его в "
+                            + "«бою» вечно (INC-35); решение "
+                            + spirit.tactics().explain().orElse("нет"));
+            TacticsScene.finish(helper, spirit);
+        });
     }
 
     @GameTest(template = "arena", batch = "tactics_leash_inside", timeoutTicks = 400)

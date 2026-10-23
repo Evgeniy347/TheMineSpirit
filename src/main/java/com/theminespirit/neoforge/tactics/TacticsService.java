@@ -46,6 +46,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -55,6 +56,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class TacticsService {
@@ -66,6 +68,8 @@ public final class TacticsService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final TacticsEngine ENGINE = new TacticsEngine(TacticsConfig.loadDefault());
     private static final int NEVER = -1_000_000;
+    private static final double RETURN_PROGRESS = 0.5;
+    private static final int RETURN_STALL_TICKS = 200;
 
     private final SpiritEntity spirit;
     private final TacticsAdapterSettings settings = TacticsAdapterSettings.loadDefault();
@@ -92,6 +96,9 @@ public final class TacticsService {
     private Optional<RetreatPlan> plan = Optional.empty();
     private RetreatMethod planMethod = RetreatMethod.NONE;
     private Optional<Point> returnTarget = Optional.empty();
+    private @Nullable Point stallPoint;
+    private double stallBest;
+    private int stallTicks;
     private CombatDirective directive;
     private final DirectiveOwnership ownership = new DirectiveOwnership();
     private Optional<StoredTactics> preDirective = Optional.empty();
@@ -538,7 +545,14 @@ public final class TacticsService {
         retreating.reset();
         spirit.gear().holdNothing();
         Vec3 target = new Vec3(point.x(), point.y(), point.z());
-        if (spirit.position().distanceTo(target) <= RETURN_ARRIVAL) {
+        double distance = spirit.position().distanceTo(target);
+        if (distance <= RETURN_ARRIVAL) {
+            approach.cancel();
+            returned = true;
+            return;
+        }
+        if (stalledReturn(point, distance)) {
+            // Без врагов возврат к якорю, который не приближается, держал бы духа в «бою» вечно (INC-35).
             approach.cancel();
             returned = true;
             return;
@@ -547,6 +561,30 @@ public final class TacticsService {
             approach.begin(target, RETURN_ARRIVAL);
         }
         approach.tick();
+    }
+
+    private boolean stalledReturn(Point point, double distance) {
+        if (!point.equals(stallPoint)) {
+            stallPoint = point;
+            stallBest = distance;
+            stallTicks = 0;
+            return false;
+        }
+        if (distance < stallBest - RETURN_PROGRESS) {
+            stallBest = distance;
+            stallTicks = 0;
+            return false;
+        }
+        stallTicks++;
+        if (stallTicks == RETURN_STALL_TICKS) {
+            LOGGER.warn(
+                    "[incident] дух {} не дошёл до якоря {} за {} тиков (осталось {}): возврат снят, дух свободен",
+                    spirit.displayName(),
+                    point,
+                    RETURN_STALL_TICKS,
+                    String.format(Locale.ROOT, "%.1f", distance));
+        }
+        return stallTicks >= RETURN_STALL_TICKS;
     }
 
     private void release() {
