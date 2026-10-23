@@ -429,6 +429,8 @@ public final class TicketPlans {
         return sequence(
                 gotoTarget(target),
                 new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)),
+                // Добыча уводит духа от места, а сдача ищет сундук рядом с духом (INC-30).
+                gotoTarget(target),
                 new ScriptCall(
                         "deposit",
                         Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)));
