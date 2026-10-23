@@ -900,9 +900,12 @@ class BoardTests {
         BoardTicket blocked = simpleTicket("first:craft_furnace", BoardCase.CRAFT_FURNACE);
         BoardTicket done = simpleTicket("first:crafting_station", BoardCase.CRAFTING_STATION);
         BoardTicket rest = simpleTicket("rest:keep", BoardCase.LIGHTING);
+        BoardTicket assigned = simpleTicket("gather:oak_fence", BoardCase.GATHER_MATERIALS);
         board.submit(gather);
         board.submit(done);
         board.submit(rest);
+        board.submit(assigned);
+        board.claim(assigned.id(), new UUID(7, 7), 0);
         board.claim(done.id(), SPIRIT_ONE, 0);
         board.complete(done.id());
         for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
@@ -921,6 +924,10 @@ class BoardTests {
                 removed.contains("gather:oak_log")
                         && board.find("gather:oak_log").isEmpty(),
                 "Ожидающее задание источника старых правил сброшено: источник поставит его по новым (INC-36)");
+        assertTrue(
+                removed.contains("gather:oak_fence")
+                        && board.find("gather:oak_fence").isEmpty(),
+                "Выданное задание источника старых правил тоже сброшено: иначе живёт после выкладки (INC-39)");
         assertTrue(board.find(done.id()).isPresent(), "Сделанное остаётся: журнал этапов не теряется");
         assertTrue(board.find(rest.id()).isPresent(), "Задание REST/игрока не сбрасывается");
         assertTrue(
