@@ -72,12 +72,6 @@ class DeadCodeGuardTests {
 
     private static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
-                    "src/main/java/com/theminespirit/core/ui/BoardStage.java|method|BoardStage#nameKey",
-                    "Заготовка под открытую задачу: tasks/53-board-single-source.md п.7 — надпись этапа на экране J"),
-            new Exemption(
-                    "src/main/java/com/theminespirit/neoforge/net/BoardViewChannel.java|method|BoardViewChannel#onClientStage",
-                    "Заготовка под открытую задачу: tasks/53-board-single-source.md п.7 — надпись этапа на экране J"),
-            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(

@@ -13,7 +13,8 @@
    Сделано: рычагов не добавлено; REST не ставит кейсы ACTIVITY_* (занятия показывает сама доска).
 7. [x] Этап развития поселения (номер + название ru/en) — в снимке доски для экрана J; надпись вверху экрана —
    исполнитель экрана (ветка task/board-ui2): `BoardViewChannel.onClientStage`, ключ `BoardStage#nameKey`.
-   Сделано: данные и пакет (`Reply.stage`), этап — `SettlementStage` (QUESTIONS-53 в.1).
+   Сделано: данные и пакет (`Reply.stage`), этап — `SettlementStage` (QUESTIONS-53 в.1); строка «Этап» экрана
+   показывает его после слияния с main e09127d7.
 
 ## План (исполнитель opus/board-single)
 

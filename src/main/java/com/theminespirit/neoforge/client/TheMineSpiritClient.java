@@ -30,6 +30,11 @@ public final class TheMineSpiritClient {
     public TheMineSpiritClient(IEventBus modBus) {
         modBus.addListener(TheMineSpiritClient::registerKeys);
         NeoForge.EVENT_BUS.addListener(TheMineSpiritClient::onClientTick);
+        BoardViewChannel.onClientStage(stage -> {
+            if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
+                screen.showStage(stage);
+            }
+        });
         BoardViewChannel.onClientReply(tiles -> {
             if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
                 screen.show(tiles);

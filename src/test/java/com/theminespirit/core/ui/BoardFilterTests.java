@@ -16,7 +16,7 @@ class BoardFilterTests {
             tile("d", BoardTileGroup.DONE, "Яков"));
 
     private static BoardTile tile(String id, BoardTileGroup group, String spirit) {
-        return new BoardTile(id, "FISH", 1, 10, spirit, "PENDING", group, Map.of(), 0);
+        return new BoardTile(id, "FISH", 1, 10, spirit, "PENDING", group, Map.of(), List.of(), 0);
     }
 
     @Test
