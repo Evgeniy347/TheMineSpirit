@@ -11,13 +11,16 @@
    дому перед `repair_tool`; `TaskStarter` не приписывает провал задачи доски своему занятию (unload/hunt «нет
    наковальни» — вытесненное занятие). GameTest `repair_NoAnvilAtHome_TicketOnlyAfterAnvil`,
    `starter_ForeignTaskFails_NotBlamedOnOwnScript`.
-3. [ ] INC-25: первые шаги застряли на LIGHTING (ждут torch×4), факелы никто не делает — связать с CRAFT_TORCHES/
+3. [x] INC-25: первые шаги застряли на LIGHTING (ждут torch×4), факелы никто не делает — связать с CRAFT_TORCHES/
    углём (чеклист 50 п.4–5).
+   Причина: без угля и печи (CRAFT_FURNACE BLOCKED, INC-26) `TorchRules` не ставил ничего. Сделано: угля нет и
+   пережечь нечего, а шахта есть — `torch:gather_materials` «добыть уголь» (`mine_vein coal`, acquire уходил в
+   древесный уголь — журнал 05:49). Тесты `TorchRulesTests`, `plan_GatherCoal_MinesCoalVein`.
 4. [ ] INC-26: CRAFT_FURNACE BLOCKED «нужен верстак: рядом (16) нет», хотя верстак есть.
 5. [ ] INC-27: тактика дёргается DEFENSIVE↔GUARD_AREA при нуле врагов (как INC-3, другой триггер).
 6. [x] INC-28: добыча камня не идёт — «в одиночку не ходят», `supply:stone` падает по кругу. Причина цикла:
    `mine_level_2` (выработка `dig_area`, материала не тратит) гейтился `stone ×32` → `supply:stone`; камень (не
    булыжник) добычей не получить. Уровень 2 — без гейта, уровень 3 — `cobblestone ×49` (пол 7×7 `fill`). GameTest
    `relevance_CraterBury_DetachesAndLevelTwoWithoutStoneGate`. «В одиночку не ходят» — отказ внешней работы MINE
-   интеллекта: набор `mineKit` требует факелы ×8, их не было (INC-25), годных духов 0; см. QUESTIONS-52.
+   интеллекта: в группу идут только духи роли WORKER, их было меньше 2; см. QUESTIONS-52.
 7. [ ] Предложения к REST-серверу из журнала — разобрать, полезное сделать.

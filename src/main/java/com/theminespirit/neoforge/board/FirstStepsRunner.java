@@ -70,8 +70,9 @@ public final class FirstStepsRunner {
         }
         BlockCoord home = homeOf(spirits);
         Scan scan = buildFacts(level, home, stock, service);
-        TorchWatch.tick(service, spirits, home, stock, scan.furnaceBlock(), now);
         SettlementFacts facts = scan.facts();
+        boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+        TorchWatch.tick(service, spirits, home, stock, scan.furnaceBlock(), mine, now);
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         if (next.isEmpty()) {
             return;

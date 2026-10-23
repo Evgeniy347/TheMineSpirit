@@ -34,13 +34,14 @@ public final class TorchWatch {
             BlockCoord home,
             StockView stock,
             boolean furnaceBlock,
+            boolean mine,
             long now) {
         if (active(service)) {
             return;
         }
         Optional<UUID> furnaceHolder = furnaceBlock ? Optional.empty() : furnaceHolder(spirits);
         boolean furnace = furnaceBlock || furnaceHolder.isPresent();
-        Optional<TorchRules.TorchStep> next = TorchRules.next(stock.available(), furnace);
+        Optional<TorchRules.TorchStep> next = TorchRules.next(stock.available(), furnace, mine);
         if (next.isEmpty()) {
             return;
         }
@@ -51,6 +52,10 @@ public final class TorchWatch {
         if (step.boardCase() == BoardCase.CRAFT_TORCHES) {
             target = TicketTarget.at(home).withCount(step.count());
             required = Map.of(step.item(), step.count() / TorchRules.TORCHES_PER_CRAFT);
+            assignee = Optional.empty();
+        } else if (step.boardCase() == BoardCase.GATHER_MATERIALS) {
+            target = TicketTarget.at(home).withSupply(step.item(), step.count());
+            required = Map.of();
             assignee = Optional.empty();
         } else {
             target = TicketTarget.at(home)
@@ -80,7 +85,8 @@ public final class TorchWatch {
     }
 
     private static boolean active(BoardService service) {
-        for (BoardCase boardCase : List.of(BoardCase.CRAFT_TORCHES, BoardCase.SMELT_CHARCOAL)) {
+        for (BoardCase boardCase :
+                List.of(BoardCase.CRAFT_TORCHES, BoardCase.SMELT_CHARCOAL, BoardCase.GATHER_MATERIALS)) {
             BoardStatus status = service.board().statusOf(ticketId(boardCase)).orElse(null);
             if (status == BoardStatus.PENDING
                     || status == BoardStatus.WAITING_RESOURCES

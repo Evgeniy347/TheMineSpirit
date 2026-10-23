@@ -759,6 +759,18 @@ class TicketPlansTests {
                         + "а молча принятый перенос гонял бы духа вхолостую");
     }
 
+    @Test
+    void plan_GatherCoal_MinesCoalVein() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply(TorchRules.COAL, 4);
+
+        ScriptCall vein = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "mine_vein");
+
+        assertEquals(
+                Map.of("ore", "coal", "count", 4),
+                Map.of("ore", vein.params().get("ore"), "count", vein.params().get("count")),
+                "Уголь на факелы добывается из жилы: acquire уходил в древесный уголь и проваливался (журнал 05:49)");
+    }
+
     private static ScriptCall findCall(TaskNode root, String script) {
         Deque<TaskNode> queue = new ArrayDeque<>();
         queue.add(root);
