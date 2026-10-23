@@ -212,6 +212,30 @@ public final class BoardV2GameTests {
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    public static void stage_FirstStageUnfinished_MineLevelTwoLocked(GameTestHelper helper) {
+        GameTestFixtures.holdDayTime(helper, NOON_TIME);
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        ServerLevel level = helper.getLevel();
+        Path log = journalPath(helper, "stage");
+        BoardService board = isolated(level, log);
+        SpiritEntity spirit = spawnAt(helper, new BlockPos(1, 1, 1), new BlockPos(4, 1, 4));
+        long now = level.getGameTime();
+        board.board().ledger().note(BoardCase.BUILD_MINE, 1);
+        board.rebuild(level, now + 1);
+        helper.assertTrue(
+                board.board().find("mine_level_2").isEmpty(),
+                "Шахта 2 — постройка этапа 2: пока этап 1 не достроен (нет забора, дома, склада), она не ставится; "
+                        + "доска: " + board.board().all());
+        StageFixture.reach(board.board().ledger(), 2, BoardCase.BUILD_MINE);
+        board.rebuild(level, now + 2);
+        helper.assertTrue(board.board().find("mine_level_2").isPresent(), "Этап 1 достроен — этап 2 открывает шахту 2");
+        spirit.discard();
+        close(board, log, helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
     public static void relevance_CraterBury_DetachesAndLevelTwoWithoutStoneGate(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
