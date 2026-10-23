@@ -400,7 +400,7 @@ public final class TicketPlans {
                             "x",
                             target.target().x() + offset[0],
                             "y",
-                            target.target().y() + 1,
+                            target.target().y(),
                             "z",
                             target.target().z() + offset[1])));
         }

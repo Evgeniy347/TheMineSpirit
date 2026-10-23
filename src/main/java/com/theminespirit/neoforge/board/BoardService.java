@@ -765,6 +765,10 @@ public final class BoardService {
         }
     }
 
+    TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
+        return targets.getOrDefault(ticketId, TicketTarget.at(homeOf(spirits)));
+    }
+
     BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
         TicketTarget target = targets.get(ticketId);
         return target != null ? target.target() : homeOf(spirits);

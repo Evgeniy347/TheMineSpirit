@@ -53,6 +53,17 @@ class CaseMaterialsTests {
     }
 
     @Test
+    void craftNeed_PlanWithOtherCrafts_CountsOnlyItemTimesCrafts() {
+        TaskNode plan = new SequenceNode(List.of(craft("stick", 4), gotoStep(), craft("chest", 2)));
+
+        assertEquals(
+                Map.of("oak_planks", 16),
+                CaseMaterials.craftNeed(plan, FAKE, "minecraft:chest"),
+                "Передача крафтеру — ингредиенты всех крафтов предмета, без чужих шагов: набор на один крафт "
+                        + "ронял «craft torch ×8: coal 1 из 2»");
+    }
+
+    @Test
     void need_CraftCase_MultipliesIngredientsByCrafts() {
         Map<String, Integer> need = CaseMaterials.need(new SequenceNode(List.of(gotoStep(), craft("chest", 2))), FAKE);
 

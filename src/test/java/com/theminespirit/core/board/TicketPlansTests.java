@@ -195,6 +195,22 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_Lighting_TorchesAtFeetLevelOfHome() {
+        TicketTarget home = target();
+
+        List<Object> heights = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
+                .map(call -> call.params().get("y"))
+                .distinct()
+                .toList();
+
+        assertEquals(
+                List.of(home.target().y()),
+                heights,
+                "Дом — клетка ног духа (над землёй): факел на y+1 висел в воздухе, «нет опоры (ниже air)», "
+                        + "LIGHTING уходил в BLOCKED (приёмка «джунгли»)");
+    }
+
+    @Test
     void plan_BuildFence_UsesFenceScheme() {
         TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, target());
 

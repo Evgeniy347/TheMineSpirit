@@ -15,6 +15,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Материалы кейса по его плану: проход по шагам собирает предметы, которые должны лежать
@@ -28,6 +29,17 @@ public final class CaseMaterials {
     private CaseMaterials() {}
 
     public static Map<String, Integer> need(TaskNode plan, MaterialSource source) {
+        return walk(plan, source, null);
+    }
+
+    // Ингредиенты всех крафтов предмета в плане (ингредиент × число крафтов): передача несла крафтеру набор на
+    // один крафт, и «craft torch ×8» падал «coal 1 из 2» (приёмка «джунгли»).
+    public static Map<String, Integer> craftNeed(TaskNode plan, MaterialSource source, String item) {
+        Objects.requireNonNull(item, "Предмет крафта не может быть null: без него не выбрать шаг плана");
+        return walk(plan, source, normalize(item));
+    }
+
+    private static Map<String, Integer> walk(TaskNode plan, MaterialSource source, @Nullable String craftOnly) {
         Objects.requireNonNull(plan, "План кейса не может быть null: без него неизвестно, что нужно собрать");
         Objects.requireNonNull(source, "Источник материалов не может быть null: без него рецепт не прочитать");
         Map<String, Integer> need = new HashMap<>();
@@ -35,7 +47,13 @@ public final class CaseMaterials {
         queue.add(plan);
         while (!queue.isEmpty()) {
             switch (queue.poll()) {
-                case ScriptCall call -> addCall(need, call, source);
+                case ScriptCall call -> {
+                    if (craftOnly == null) {
+                        addCall(need, call, source);
+                    } else if ("craft".equals(call.script()) && craftOnly.equals(normalize(text(call, "item")))) {
+                        addCraft(need, call, source);
+                    }
+                }
                 case SequenceNode sequence -> queue.addAll(sequence.steps());
                 case RepeatNode repeat -> queue.add(repeat.step());
                 case FallbackNode fallback -> queue.addAll(fallback.steps());
