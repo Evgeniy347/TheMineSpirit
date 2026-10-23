@@ -16,7 +16,10 @@
    Причина: без угля и печи (CRAFT_FURNACE BLOCKED, INC-26) `TorchRules` не ставил ничего. Сделано: угля нет и
    пережечь нечего, а шахта есть — `torch:gather_materials` «добыть уголь» (`mine_vein coal`, acquire уходил в
    древесный уголь — журнал 05:49). Тесты `TorchRulesTests`, `plan_GatherCoal_MinesCoalVein`.
-4. [ ] INC-26: CRAFT_FURNACE BLOCKED «нужен верстак: рядом (16) нет», хотя верстак есть.
+4. [x] INC-26: CRAFT_FURNACE BLOCKED «нужен верстак: рядом (16) нет», хотя верстак есть. Факты: верстак был в
+   инвентаре spirit-2, крафтеры 1/5 его не имели, у места крафта (дом) не стоял. Сделано: нет верстака у места
+   крафта — он ингредиент передачи (`TransferWatch`), его несёт дух-владелец; строка «открыт» — только при реальной
+   постановке шага. GameTest `furnace_TableAtNeighbour_TransferredToCrafter`.
 5. [ ] INC-27: тактика дёргается DEFENSIVE↔GUARD_AREA при нуле врагов (как INC-3, другой триггер).
 6. [x] INC-28: добыча камня не идёт — «в одиночку не ходят», `supply:stone` падает по кругу. Причина цикла:
    `mine_level_2` (выработка `dig_area`, материала не тратит) гейтился `stone ×32` → `supply:stone`; камень (не

@@ -8,12 +8,14 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.social.TransferOrder;
 import com.theminespirit.core.social.TransferPlanner;
 import com.theminespirit.core.social.TransferSource;
@@ -32,8 +34,11 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.level.block.Blocks;
 
 public final class TransferWatch {
+    private static final String TABLE_ITEM = "minecraft:crafting_table";
+
     private TransferWatch() {}
 
     public static boolean ensureTransfers(
@@ -55,6 +60,11 @@ public final class TransferWatch {
         }
         if (ingredients.isEmpty()) {
             return false;
+        }
+        if (needsTable(level, recipes, craftItem.orElseThrow(), service.targetPoint(craftTicket.id(), spirits))) {
+            // Верстак у места крафта не стоит — он сам ингредиент: его несёт дух, у которого он в инвентаре.
+            // Иначе крафтер проваливал «нужен верстак: рядом (16) нет», пока верстак лежал у соседа (INC-26).
+            ingredients.add(new Ingredient(ItemIds.normalize(TABLE_ITEM), 1));
         }
         StackMapper mapper = new StackMapper();
         BlockCoord crafterAt = at(crafter);
@@ -108,6 +118,12 @@ public final class TransferWatch {
             submitted = true;
         }
         return submitted || active;
+    }
+
+    private static boolean needsTable(ServerLevel level, RecipeKnowledge recipes, String item, BlockCoord craftAt) {
+        return recipes.stationFor(item).filter(Stations.CRAFTING_TABLE::equals).isPresent()
+                && !HomeBlocks.near(
+                        level, craftAt, CatalogLimits.STATION_RADIUS_DEFAULT, state -> state.is(Blocks.CRAFTING_TABLE));
     }
 
     public static Set<String> liveCauses(BoardService service) {

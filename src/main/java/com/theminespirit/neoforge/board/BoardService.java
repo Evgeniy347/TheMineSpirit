@@ -602,6 +602,11 @@ public final class BoardService {
         }
     }
 
+    BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
+        TicketTarget target = targets.get(ticketId);
+        return target != null ? target.target() : homeOf(spirits);
+    }
+
     private List<BlockCoord> gateCenters(List<SpiritEntity> spirits) {
         List<BlockCoord> centers = new ArrayList<>();
         for (BoardTicket ticket : board.all()) {

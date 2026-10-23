@@ -39,7 +39,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Блокеры живого прогона 2: выдача доски при паузе своего задания (INC-23), ремонт без наковальни и
- * причина провала чужой задачи (INC-24).
+ * причина провала чужой задачи (INC-24), верстак у соседа для крафта печи (INC-26).
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -141,6 +141,41 @@ public final class BoardDispatchGameTests {
             spirit.discard();
             GameTestFixtures.finish(helper);
         });
+    }
+
+    @GameTest(template = "arena", batch = "board_dispatch_table_transfer", timeoutTicks = 100)
+    public static void furnace_TableAtNeighbour_TransferredToCrafter(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity crafter = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        SpiritEntity holder = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(9, 1, 9));
+        crafter.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 8));
+        holder.getInventory().setItem(0, new ItemStack(Items.CRAFTING_TABLE));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-dispatch-table.jsonl");
+        String furnace = "dispatch:furnace";
+        board.submit(
+                ticket(
+                        furnace,
+                        BoardCase.CRAFT_FURNACE,
+                        Optional.empty(),
+                        board.board().now()),
+                at(helper));
+
+        board.rebuild(level, level.getGameTime());
+
+        boolean tableTransfer = board.board().all().stream()
+                .anyMatch(t -> t.boardCase() == BoardCase.TRANSFER_ITEM
+                        && t.modifiers().stream().anyMatch(m -> m.contains("crafting_table")));
+        helper.assertTrue(
+                tableTransfer,
+                "Верстака у места крафта нет, он у соседа — доска ставит передачу верстака крафтеру печи: иначе "
+                        + "«нужен верстак: рядом (16) нет» и BLOCKED (INC-26); задания "
+                        + board.board().all());
+        crafter.discard();
+        holder.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 
     private static TicketTarget at(GameTestHelper helper) {
