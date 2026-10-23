@@ -20,11 +20,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -39,7 +36,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class JungleSettlementGameTests {
     private static final int CENTER = 64;
     private static final int GROUND_HALF = 40;
-    private static final int CLEAR_HEIGHT = 24;
     private static final int IDLE_LIMIT = 1200;
     private static final long NOON = 6000;
     private static final BlockPos HOME = new BlockPos(CENTER, 1, CENTER);
@@ -112,22 +108,7 @@ public final class JungleSettlementGameTests {
         return steps;
     }
 
-    // Плоский мир с деревнями: сцена вставала на деревню (верстак, сундуки с инструментами, лестницы) и этап 1
-    // считался пройденным наполовину без работы духов — участок сцены чистится до голой земли.
     private static void ground(GameTestHelper helper) {
-        for (int x = CENTER - GROUND_HALF; x <= CENTER + GROUND_HALF; x++) {
-            for (int z = CENTER - GROUND_HALF; z <= CENTER + GROUND_HALF; z++) {
-                for (int y = 1; y <= CLEAR_HEIGHT; y++) {
-                    helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
-                }
-            }
-        }
-        AABB area = new AABB(helper.absolutePos(new BlockPos(CENTER - GROUND_HALF, 0, CENTER - GROUND_HALF)))
-                .minmax(new AABB(
-                        helper.absolutePos(new BlockPos(CENTER + GROUND_HALF, CLEAR_HEIGHT, CENTER + GROUND_HALF))));
-        helper.getLevel()
-                .getEntitiesOfClass(Entity.class, area, entity -> !(entity instanceof Player))
-                .forEach(Entity::discard);
         for (int x = CENTER - GROUND_HALF; x <= CENTER + GROUND_HALF; x++) {
             for (int z = CENTER - GROUND_HALF; z <= CENTER + GROUND_HALF; z++) {
                 helper.setBlock(new BlockPos(x, 0, z), Blocks.GRASS_BLOCK);
