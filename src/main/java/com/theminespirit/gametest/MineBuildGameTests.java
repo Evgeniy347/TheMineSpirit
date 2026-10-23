@@ -232,4 +232,32 @@ public final class MineBuildGameTests {
             GameTestFixtures.finish(helper, 16);
         });
     }
+
+    @GameTest(template = "arena", batch = "mine_build_surface_stone", timeoutTicks = 200)
+    public static void gather_SettledSpiritStoneUnderSky_RefusesSurfaceStone(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        BlockPos home = helper.absolutePos(new BlockPos(4, 1, 4));
+        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("gather", Map.of("block", "minecraft:stone", "count", 1, "radius", 4)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED
+                            && spirit.taskFailureReason().orElse("").contains("только в шахте"),
+                    "дух поселения не копает камень под открытым небом — булыжник только из шахты (владелец 23.10); "
+                            + "статус " + spirit.taskStatus() + ", причина " + spirit.taskFailureReason());
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(4, 0, 4)).is(Blocks.STONE),
+                    "пол площадки цел: яма у дома ради булыжника запрещена");
+            GameTestFixtures.finish(helper);
+        });
+    }
 }
