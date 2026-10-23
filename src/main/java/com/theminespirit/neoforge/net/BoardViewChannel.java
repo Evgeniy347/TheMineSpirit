@@ -5,9 +5,11 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.rest.BoardTask;
 import com.theminespirit.core.rest.BoardTasks;
 import com.theminespirit.core.ui.BoardSnapshot;
+import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -51,6 +54,7 @@ public final class BoardViewChannel {
     private static final int MAX_TILES = 4096;
     private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
     private static volatile Consumer<List<BoardTile>> clientReceiver = tiles -> {};
+    private static volatile Consumer<BoardStage> clientStageReceiver = stage -> {};
 
     private BoardViewChannel() {}
 
@@ -63,12 +67,13 @@ public final class BoardViewChannel {
         }
     }
 
-    public record Reply(List<BoardTile> tiles) implements CustomPacketPayload {
+    public record Reply(List<BoardTile> tiles, BoardStage stage) implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, Reply> STREAM_CODEC =
                 StreamCodec.of(BoardViewChannel::write, BoardViewChannel::read);
 
         public Reply {
             tiles = List.copyOf(tiles);
+            Objects.requireNonNull(stage, "Этап не может быть null: до первого дома — BoardStage.FIRST");
         }
 
         @Override
@@ -83,6 +88,18 @@ public final class BoardViewChannel {
 
     public static void onClientReply(Consumer<List<BoardTile>> receiver) {
         clientReceiver = receiver;
+    }
+
+    public static void onClientStage(Consumer<BoardStage> receiver) {
+        clientStageReceiver = receiver;
+    }
+
+    public static BoardStage stage(ServerLevel level) {
+        return BoardRegistry.peek(level)
+                .or(() -> BoardRegistry.peek(level.getServer().overworld()))
+                .map(service ->
+                        new BoardStage(SettlementStage.of(service.board().ledger())))
+                .orElse(BoardStage.FIRST);
     }
 
     public static List<BoardTile> snapshot(ServerLevel level) {
@@ -109,12 +126,15 @@ public final class BoardViewChannel {
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION).optional();
         registrar.playToServer(REQUEST, Request.STREAM_CODEC, BoardViewChannel::handleRequest);
-        registrar.playToClient(REPLY, Reply.STREAM_CODEC, (reply, context) -> clientReceiver.accept(reply.tiles()));
+        registrar.playToClient(REPLY, Reply.STREAM_CODEC, (reply, context) -> {
+            clientStageReceiver.accept(reply.stage());
+            clientReceiver.accept(reply.tiles());
+        });
     }
 
     private static void handleRequest(Request request, IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
-            context.reply(new Reply(snapshot(player.serverLevel())));
+            context.reply(new Reply(snapshot(player.serverLevel()), stage(player.serverLevel())));
         }
     }
 
@@ -159,6 +179,7 @@ public final class BoardViewChannel {
             }
             buf.writeVarLong(tile.doneAt());
         }
+        buf.writeVarInt(reply.stage().number());
     }
 
     private static Reply read(FriendlyByteBuf buf) {
@@ -189,6 +210,6 @@ public final class BoardViewChannel {
             long doneAt = buf.readVarLong();
             tiles.add(new BoardTile(id, boardCase, level, priority, spirit, status, group, missing, dependsOn, doneAt));
         }
-        return new Reply(tiles);
+        return new Reply(tiles, new BoardStage(buf.readVarInt()));
     }
 }

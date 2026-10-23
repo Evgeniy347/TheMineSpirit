@@ -61,7 +61,18 @@ class BoardConfigTests {
                 Map.entry("CRAFTING_STATION", 40),
                 Map.entry("STOCK_CHESTS", 40),
                 Map.entry("FILL_CRATER", 35),
-                Map.entry("ENCHANT_SHELVES", 30));
+                Map.entry("ENCHANT_SHELVES", 30),
+                Map.entry("ACTIVITY_COMBAT", 100),
+                Map.entry("ACTIVITY_EXTERNAL", 95),
+                Map.entry("ACTIVITY_DEFEND", 29),
+                Map.entry("ACTIVITY_UNLOAD", 25),
+                Map.entry("ACTIVITY_CRAFT", 20),
+                Map.entry("ACTIVITY_SMELT", 20),
+                Map.entry("ACTIVITY_FARM", 20),
+                Map.entry("ACTIVITY_FORAGE", 20),
+                Map.entry("ACTIVITY_MINE", 15),
+                Map.entry("ACTIVITY_CHOP", 15),
+                Map.entry("ACTIVITY_REST", 5));
     }
 
     private static Map<String, Integer> expectedModifiers() {

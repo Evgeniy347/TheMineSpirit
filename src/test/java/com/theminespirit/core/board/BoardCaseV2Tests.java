@@ -20,11 +20,11 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsFortyNine() {
+    void cases_TotalCount_IsSixty() {
         assertEquals(
-                49,
+                60,
                 BoardCase.values().length,
-                "Кейсов доски — 49: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
+                "Кейсов доски — 60: 11 заданий-занятий ACTIVITY_* (BoardActivities) и 49 очереди: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
                         + "(HARVEST_HIVE, PLACE_BEEHIVE), BUILD_WAREHOUSE чеклиста 41 и путь «печь → уголь → факел» "
                         + "(CRAFT_FURNACE, CRAFT_TORCHES, SMELT_CHARCOAL), оставленная руда шахты MINE_LEFT_ORE. "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
@@ -60,7 +60,7 @@ class BoardCaseV2Tests {
     @Test
     void cases_EveryCase_HasPlanOrIsExternal() {
         for (BoardCase boardCase : BoardCase.values()) {
-            if (TicketPlans.EXTERNAL_CASES.contains(boardCase)) {
+            if (TicketPlans.EXTERNAL_CASES.contains(boardCase) || BoardActivities.isActivity(boardCase)) {
                 continue;
             }
             TaskNode plan = TicketPlans.plan(boardCase, target());

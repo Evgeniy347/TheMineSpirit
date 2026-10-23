@@ -24,8 +24,9 @@ import org.jspecify.annotations.Nullable;
  */
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
+    public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
+    public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final String BLOCK = "block";
-    private static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     private static final int MINE_DESCENT_OFFSET = 6;
     private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
@@ -159,9 +160,15 @@ public final class TicketPlans {
 
     // Спуск по схеме владельца (mine_descent_v1) в стороне от дома, вглубь на юг: ступени
     // 1×3 с шагом в блок до y=50 из файла — дух копает булыжник только здесь и выходит наверх пешком.
+    public static BlockCoord mineDescentOrigin(BlockCoord home) {
+        Objects.requireNonNull(home, "Дом не может быть null: спуск в шахту ставится в стороне от дома");
+        return new BlockCoord(home.x() + MINE_DESCENT_OFFSET, home.y() - 1, home.z());
+    }
+
     private static TaskNode mineDescent(TicketTarget target) {
-        int x = target.target().x() + MINE_DESCENT_OFFSET;
-        int z = target.target().z();
+        BlockCoord origin = mineDescentOrigin(target.target());
+        int x = origin.x();
+        int z = origin.z();
         return sequence(
                 gotoPoint(new BlockCoord(x, target.target().y(), z)),
                 new ScriptCall(
@@ -172,11 +179,11 @@ public final class TicketPlans {
                                 "x",
                                 x,
                                 "y",
-                                target.target().y() - 1,
+                                origin.y(),
                                 "z",
                                 z,
                                 "rotation",
-                                "clockwise_90")));
+                                MINE_DESCENT_ROTATION)));
     }
 
     private static TaskNode buildMineLevel(int level, TicketTarget target) {

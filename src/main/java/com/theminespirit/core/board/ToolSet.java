@@ -47,6 +47,13 @@ public final class ToolSet {
         return STONE;
     }
 
+    // Деревянный и каменный инструмент дешевле нового крафта, чем ремонта (владелец 23.10): сломался — крафт нового.
+    public static boolean replacedNotRepaired(String itemId) {
+        Objects.requireNonNull(itemId, "itemId не может быть null: ремонт решается по предмету");
+        String key = itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
+        return key.startsWith(WOODEN_PREFIX) || key.startsWith("stone_");
+    }
+
     public static boolean isTool(@Nullable BoardCase boardCase) {
         return boardCase != null && ITEMS.containsKey(boardCase);
     }

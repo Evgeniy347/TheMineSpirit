@@ -45,6 +45,7 @@ public final class FirstStepsPlan {
     private static List<Step> order() {
         List<Step> steps = new ArrayList<>();
         steps.add(new Step(BoardCase.CRAFTING_STATION, SettlementFacts::craftingStation));
+        steps.add(new Step(BoardCase.STOCK_CHESTS, facts -> facts.chests() >= 2));
         for (BoardCase tool : ToolSet.wooden()) {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
@@ -54,7 +55,6 @@ public final class FirstStepsPlan {
         }
         steps.add(new Step(BoardCase.CRAFT_FURNACE, SettlementFacts::furnace));
         steps.add(new Step(BoardCase.LIGHTING, SettlementFacts::lighting));
-        steps.add(new Step(BoardCase.STOCK_CHESTS, facts -> facts.chests() >= 2));
         steps.add(new Step(BoardCase.CLEAR_GROUNDS, SettlementFacts::groundsCleared));
         steps.add(new Step(BoardCase.BUILD_FENCE, SettlementFacts::fence));
         steps.add(new Step(BoardCase.BUILD_HOUSE, SettlementFacts::houses));

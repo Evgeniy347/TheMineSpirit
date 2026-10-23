@@ -223,9 +223,9 @@ public final class BoardFirstStepsGameTests {
                         + board.board().statusOf("first:crafting_station")
                         + ": ложный шаг отправил бы духа крафтить второй верстак");
         helper.assertTrue(
-                board.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
-                "С верстаком цепочка сразу идёт к деревянной кирке, статус "
-                        + board.board().statusOf("first:craft_wooden_pickaxe"));
+                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "С верстаком цепочка сразу идёт к сундукам, статус "
+                        + board.board().statusOf("first:stock_chests"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -266,9 +266,9 @@ public final class BoardFirstStepsGameTests {
                         + restarted.board().statusOf("first:crafting_station") + ": отсутствие верстака в мире "
                         + "не перебивает факт done");
         helper.assertTrue(
-                restarted.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
-                "После верстака цепочка идёт дальше — к деревянной кирке, статус "
-                        + restarted.board().statusOf("first:craft_wooden_pickaxe"));
+                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "После верстака цепочка идёт дальше — к сундукам, статус "
+                        + restarted.board().statusOf("first:stock_chests"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -310,9 +310,9 @@ public final class BoardFirstStepsGameTests {
                 "Выполненный шаг верстака не переоткрывается после перезапуска, статус "
                         + restarted.board().statusOf("first:crafting_station"));
         helper.assertTrue(
-                restarted.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
-                "После верстака цепочка идёт дальше — к деревянной кирке, статус "
-                        + restarted.board().statusOf("first:craft_wooden_pickaxe"));
+                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                "После верстака цепочка идёт дальше — к сундукам, статус "
+                        + restarted.board().statusOf("first:stock_chests"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -347,9 +347,9 @@ public final class BoardFirstStepsGameTests {
         board.board().complete("first:crafting_station");
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
         helper.assertTrue(
-                board.board().statusOf("first:craft_wooden_pickaxe").isPresent(),
-                "После верстака наступает деревянная кирка: цепочка не перескакивает шаги, статус "
-                        + board.board().statusOf("first:craft_wooden_pickaxe"));
+                board.board().statusOf("first:stock_chests").isPresent(),
+                "После верстака наступают сундуки: цепочка не перескакивает шаги, статус "
+                        + board.board().statusOf("first:stock_chests"));
 
         board.journal().flushAll();
         List<BoardLogEntry> log = board.journal().last(64);
@@ -357,8 +357,8 @@ public final class BoardFirstStepsGameTests {
                 hasPosted(log, "gather:oak_planks"),
                 "Журнал доски обязан содержать постановку добычи: по ней разбирают, кто что получил");
         helper.assertTrue(
-                hasPosted(log, "first:crafting_station") && hasPosted(log, "first:craft_wooden_pickaxe"),
-                "Журнал доски обязан содержать постановки шагов — верстак и деревянная кирка");
+                hasPosted(log, "first:crafting_station") && hasPosted(log, "first:stock_chests"),
+                "Журнал доски обязан содержать постановки шагов — верстак и сундуки");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

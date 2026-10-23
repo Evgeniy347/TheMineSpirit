@@ -59,6 +59,7 @@ public final class BoardSettlementStartGameTests {
     private static final BlockPos HOME = new BlockPos(4, 1, 4);
     private static final List<BoardCase> WOODEN_START = List.of(
             BoardCase.CRAFTING_STATION,
+            BoardCase.STOCK_CHESTS,
             BoardCase.CRAFT_WOODEN_PICKAXE,
             BoardCase.CRAFT_WOODEN_AXE,
             BoardCase.CRAFT_WOODEN_SHOVEL);
@@ -75,7 +76,8 @@ public final class BoardSettlementStartGameTests {
         GameTestFilter.setMobsTargetSpirits(true);
     }
 
-    // [флак] два духа рубят три дерева и крафтят верстак и два деревянных набора через доску; запас ~2× к замеру
+    // [флак] два духа рубят пять деревьев и крафтят верстак, сундуки (16 досок) и деревянные наборы через доску; запас
+    // ~2× к замеру
     @GameTest(template = "arena", batch = LIVE_BATCH, timeoutTicks = 3000)
     public static void settlement_EmptyTwoSpirits_TableThenWoodenToolsThenMine(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -84,6 +86,8 @@ public final class BoardSettlementStartGameTests {
         FullCycleScene.buildOakTree(helper, new BlockPos(1, 1, 7), TREE_HEIGHT);
         FullCycleScene.buildOakTree(helper, new BlockPos(7, 1, 1), TREE_HEIGHT);
         FullCycleScene.buildOakTree(helper, new BlockPos(7, 1, 7), TREE_HEIGHT);
+        FullCycleScene.buildOakTree(helper, new BlockPos(1, 1, 1), TREE_HEIGHT);
+        FullCycleScene.buildOakTree(helper, new BlockPos(7, 1, 4), TREE_HEIGHT);
         ServerLevel level = helper.getLevel();
         List<SpiritEntity> spirits =
                 List.of(spirit(helper, new BlockPos(3, 1, 2)), spirit(helper, new BlockPos(5, 1, 2)));
@@ -110,17 +114,18 @@ public final class BoardSettlementStartGameTests {
             int mine = doneOrder.indexOf(BoardCase.BUILD_MINE);
             helper.assertTrue(
                     doneOrder.get(0) == BoardCase.CRAFTING_STATION
+                            && doneOrder.get(1) == BoardCase.STOCK_CHESTS
                             && (mine < 0 || doneOrder.indexOf(BoardCase.CRAFT_WOODEN_PICKAXE) < mine)
                             && stoneAfterMine(doneOrder, mine),
-                    "Порядок с нуля — верстак → деревянные инструменты → шахта → каменные (решение владельца 21.10); "
+                    "Порядок с нуля — верстак → сундуки → деревянные инструменты → шахта → каменные (владелец 21.10, "
+                            + "сундуки — 23.10); "
                             + "упавший шаг пропускается и делается позже: " + doneOrder);
             helper.assertTrue(
                     board.board().statusOf("first:build_mine").isPresent(),
                     "После деревянного набора на доске — шахта (вход и спуск), а не постройки: " + firstSteps(board));
             helper.assertTrue(
-                    board.board().statusOf("first:clear_grounds").isEmpty()
-                            && board.board().statusOf("first:stock_chests").isEmpty(),
-                    "Расчистка и сундуки не ставятся до инструментов и шахты: " + firstSteps(board));
+                    board.board().statusOf("first:clear_grounds").isEmpty(),
+                    "Расчистка не ставится до инструментов и шахты: " + firstSteps(board));
             for (SpiritEntity spirit : spirits) {
                 spirit.discard();
             }
@@ -164,9 +169,9 @@ public final class BoardSettlementStartGameTests {
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), clock.get());
 
         helper.assertTrue(
-                board.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
                 "Заблокированный шаг не держит цепочку: дух получает следующее задание (правило владельца), статус "
-                        + board.board().statusOf("first:craft_wooden_pickaxe"));
+                        + board.board().statusOf("first:stock_chests"));
         spirit.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();

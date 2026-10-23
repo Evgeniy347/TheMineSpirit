@@ -29,6 +29,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -39,7 +41,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 @SettlementSystems(board = true)
 public final class BoardToolStockGameTests {
-    private static final String PICKAXE = ToolStockWatch.ticketId(BoardCase.CRAFT_WOODEN_PICKAXE);
     private static final Map<String, Integer> WOOD = Map.of("oak_planks", 64, "stick", 64, "oak_log", 16);
 
     private BoardToolStockGameTests() {}
@@ -51,13 +52,14 @@ public final class BoardToolStockGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-tool-stock-broke.jsonl");
         completeFirstStep(board, spirit, BoardCase.CRAFT_WOODEN_PICKAXE);
+        String pickaxe = pickaxeOf(spirit);
 
         ToolStockWatch.tick(level, board, List.of(spirit), new StockView(WOOD), level.getGameTime());
 
         helper.assertTrue(
-                board.board().statusOf(PICKAXE).orElse(null) == BoardStatus.PENDING,
+                board.board().statusOf(pickaxe).orElse(null) == BoardStatus.PENDING,
                 "Кирка сделана первыми шагами и пропала (сломалась): доска ставит её крафт сама, статус "
-                        + board.board().statusOf(PICKAXE)
+                        + board.board().statusOf(pickaxe)
                         + " — иначе first:* не переиздаётся и дух остаётся без кирки");
         GameTestFixtures.finish(helper);
         helper.succeed();
@@ -70,15 +72,15 @@ public final class BoardToolStockGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-tool-stock-stone.jsonl");
         completeFirstStep(board, spirit, BoardCase.CRAFT_WOODEN_PICKAXE);
-        Map<String, Integer> stock = new HashMap<>(WOOD);
-        stock.put("stone_pickaxe", 1);
+        spirit.getInventory().setItem(0, new ItemStack(Items.STONE_PICKAXE));
+        String pickaxe = pickaxeOf(spirit);
 
-        ToolStockWatch.tick(level, board, List.of(spirit), new StockView(stock), level.getGameTime());
+        ToolStockWatch.tick(level, board, List.of(spirit), new StockView(WOOD), level.getGameTime());
 
         helper.assertTrue(
-                board.board().statusOf(PICKAXE).isEmpty(),
-                "Каменная кирка в запасе заменяет деревянную: задание запаса не ставится, статус "
-                        + board.board().statusOf(PICKAXE));
+                board.board().statusOf(pickaxe).isEmpty(),
+                "Каменная кирка у духа заменяет деревянную: задание запаса не ставится, статус "
+                        + board.board().statusOf(pickaxe));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -89,13 +91,14 @@ public final class BoardToolStockGameTests {
         SpiritEntity spirit = settlement(helper);
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-tool-stock-early.jsonl");
+        String pickaxe = pickaxeOf(spirit);
 
         ToolStockWatch.tick(level, board, List.of(spirit), new StockView(WOOD), level.getGameTime());
 
         helper.assertTrue(
-                board.board().statusOf(PICKAXE).isEmpty(),
+                board.board().statusOf(pickaxe).isEmpty(),
                 "До шага первых шагов кирку ставит цепочка, а не запас: иначе два задания на одну кирку, статус "
-                        + board.board().statusOf(PICKAXE));
+                        + board.board().statusOf(pickaxe));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -107,15 +110,52 @@ public final class BoardToolStockGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-tool-stock-nowood.jsonl");
         completeFirstStep(board, spirit, BoardCase.CRAFT_WOODEN_PICKAXE);
+        String pickaxe = pickaxeOf(spirit);
 
         ToolStockWatch.tick(level, board, List.of(spirit), new StockView(Map.of()), level.getGameTime());
 
         helper.assertTrue(
-                board.board().statusOf(PICKAXE).isEmpty(),
+                board.board().statusOf(pickaxe).isEmpty(),
                 "Без досок и палок задание невыполнимо и не ставится (правило владельца): статус "
-                        + board.board().statusOf(PICKAXE));
+                        + board.board().statusOf(pickaxe));
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "board_tool_stock_own", timeoutTicks = 100)
+    public static void toolStock_NeighbourHasPickaxe_OwnSetRecraftedForSpiritWithout(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        SpiritEntity armed = settlement(helper);
+        SpiritEntity bare = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 1, 1));
+        bare.setHome(armed.home().orElseThrow());
+        armed.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-tool-stock-own.jsonl");
+        completeFirstStep(board, armed, BoardCase.CRAFT_WOODEN_PICKAXE);
+        Map<String, Integer> stock = new HashMap<>(WOOD);
+        stock.put("wooden_pickaxe", 1);
+
+        ToolStockWatch.tick(level, board, List.of(armed, bare), new StockView(stock), level.getGameTime());
+
+        helper.assertTrue(
+                board.board().statusOf(pickaxeOf(bare)).orElse(null) == BoardStatus.PENDING
+                        && board.board()
+                                .find(pickaxeOf(bare))
+                                .flatMap(ticket -> ticket.assignee())
+                                .filter(bare.getUUID()::equals)
+                                .isPresent(),
+                "Набор у каждого духа свой (владелец 23.10): кирка соседа не заменяет свою — крафт ставится духу "
+                        + "без кирки, статус " + board.board().statusOf(pickaxeOf(bare)));
+        helper.assertTrue(
+                board.board().statusOf(pickaxeOf(armed)).isEmpty(),
+                "Дух со своей киркой новую не получает: статус " + board.board().statusOf(pickaxeOf(armed)));
+        bare.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    private static String pickaxeOf(SpiritEntity spirit) {
+        return ToolStockWatch.ticketId(BoardCase.CRAFT_WOODEN_PICKAXE, spirit.getUUID());
     }
 
     private static SpiritEntity settlement(GameTestHelper helper) {

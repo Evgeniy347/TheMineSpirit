@@ -136,7 +136,7 @@ class TicketPlansTests {
     @Test
     void plan_EveryCase_HasPlan() {
         for (BoardCase boardCase : BoardCase.values()) {
-            if (TicketPlans.EXTERNAL_CASES.contains(boardCase)) {
+            if (TicketPlans.EXTERNAL_CASES.contains(boardCase) || BoardActivities.isActivity(boardCase)) {
                 continue;
             }
             TaskNode plan = TicketPlans.plan(boardCase, fullTarget());

@@ -77,6 +77,18 @@ class ToolSetTests {
     }
 
     @Test
+    void replacedNotRepaired_WoodenAndStone_ReplacedIronRepaired() {
+        for (String item : List.of("minecraft:wooden_pickaxe", "minecraft:stone_axe", "stone_shovel")) {
+            assertTrue(
+                    ToolSet.replacedNotRepaired(item),
+                    item + " не чинится, а крафтится заново (владелец 23.10): ремонт дороже нового");
+        }
+        for (String item : List.of("minecraft:iron_pickaxe", "minecraft:diamond_sword", "minecraft:shears")) {
+            assertFalse(ToolSet.replacedNotRepaired(item), item + " чинится: новый дороже ремонта");
+        }
+    }
+
+    @Test
     void covered_StonePickaxe_CoversWooden() {
         assertTrue(
                 ToolSet.covered(BoardCase.CRAFT_WOODEN_PICKAXE, Set.of("stone_pickaxe")),

@@ -90,10 +90,10 @@ public final class BoardDispatchGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
         BlockPos homePos = helper.absolutePos(new BlockPos(4, 1, 4));
         spirit.setHome(new BlockCoord(homePos.getX(), homePos.getY(), homePos.getZ()));
-        ItemStack pickaxe = new ItemStack(Items.STONE_PICKAXE);
+        ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
         pickaxe.setDamageValue(pickaxe.getMaxDamage() / 2);
         spirit.getInventory().setItem(0, pickaxe);
-        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 8));
+        spirit.getInventory().setItem(1, new ItemStack(Items.IRON_INGOT, 8));
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-dispatch-repair.jsonl");
         String repair = "repair_tool:" + spirit.getUUID();
@@ -110,6 +110,33 @@ public final class BoardDispatchGameTests {
         helper.assertTrue(
                 board.board().find(repair).isPresent(),
                 "Наковальня у дома появилась — ремонт изношенной кирки ставится");
+        spirit.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "board_dispatch_repair_stone", timeoutTicks = 100)
+    public static void repair_WornStonePickaxeWithAnvil_NotRepaired(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        BlockPos homePos = helper.absolutePos(new BlockPos(4, 1, 4));
+        spirit.setHome(new BlockCoord(homePos.getX(), homePos.getY(), homePos.getZ()));
+        ItemStack pickaxe = new ItemStack(Items.STONE_PICKAXE);
+        pickaxe.setDamageValue(pickaxe.getMaxDamage() / 2);
+        spirit.getInventory().setItem(0, pickaxe);
+        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 8));
+        helper.setBlock(new BlockPos(6, 1, 4), Blocks.ANVIL);
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-dispatch-repair-stone.jsonl");
+        String repair = "repair_tool:" + spirit.getUUID();
+
+        board.rebuild(level, level.getGameTime());
+
+        helper.assertTrue(
+                board.board().find(repair).isEmpty(),
+                "Каменный и деревянный инструмент не чинится — сломался, крафтится новый (владелец 23.10); статус "
+                        + board.board().statusOf(repair));
         spirit.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();

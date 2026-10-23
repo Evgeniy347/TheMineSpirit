@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BuildingLevels;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -47,6 +48,9 @@ class BoardLangTests {
         for (BoardTileGroup group : BoardTileGroup.values()) {
             expected.add(PREFIX + "group." + group.name().toLowerCase(Locale.ROOT));
         }
+        for (int stage = 1; stage <= BuildingLevels.maxLevel(BoardCase.BUILD_HOUSE); stage++) {
+            expected.add(new BoardStage(stage).nameKey());
+        }
         for (BoardWaitReasons.Kind kind : BoardWaitReasons.Kind.values()) {
             expected.add(PREFIX + "wait." + kind.name().toLowerCase(Locale.ROOT));
         }
@@ -56,7 +60,7 @@ class BoardLangTests {
             assertEquals(
                     List.of(),
                     missing,
-                    "Новый кейс, статус, группа или причина ожидания доски без перевода в " + lang
+                    "Новый кейс, статус, группа, этап поселения или причина ожидания доски без перевода в " + lang
                             + ": игрок увидит на экране доски имя константы. Добавьте ключ в "
                             + "src/main/resources/assets/theminespirit/lang/" + lang + ".json");
         }

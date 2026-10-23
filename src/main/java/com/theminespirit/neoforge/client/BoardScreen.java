@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.ui.BoardColumns;
 import com.theminespirit.core.ui.BoardFilter;
 import com.theminespirit.core.ui.BoardLayout;
+import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
 import com.theminespirit.core.ui.BoardWaitReasons;
@@ -59,6 +60,7 @@ public final class BoardScreen extends Screen {
 
     private BoardLayout layout = BoardLayout.of(0, 0);
     private @Nullable List<BoardTile> tiles;
+    private @Nullable BoardStage stage;
     private List<BoardTile> shown = List.of();
     private List<BoardColumns.BoardColumn> columns = List.of();
     private Map<String, BoardTile> tilesById = Map.of();
@@ -71,6 +73,10 @@ public final class BoardScreen extends Screen {
 
     public BoardScreen() {
         super(Component.translatable(KEY + "title"));
+    }
+
+    public void showStage(BoardStage settlementStage) {
+        stage = settlementStage;
     }
 
     public void show(List<BoardTile> snapshot) {
@@ -106,9 +112,13 @@ public final class BoardScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
-        BoardLayout.Rect stage = layout.stage();
+        BoardLayout.Rect stageRect = layout.stage();
         graphics.drawCenteredString(
-                font, Component.translatable(KEY + "stage.none"), stage.x() + stage.width() / 2, stage.y(), TEXT_COLOR);
+                font,
+                Component.translatable(stage == null ? KEY + "stage.none" : stage.nameKey()),
+                stageRect.x() + stageRect.width() / 2,
+                stageRect.y(),
+                TEXT_COLOR);
         BoardLayout.Rect window = layout.window();
         BoardLayout.Rect inner = layout.inner();
         blitPanel(graphics, window);
