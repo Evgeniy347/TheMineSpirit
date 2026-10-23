@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -26,6 +27,7 @@ public final class TicketPlans {
     private static final String BLOCK = "block";
     private static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     private static final int MINE_DESCENT_OFFSET = 6;
+    private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
     private static final String COUNT = "count";
     private static final String CONTAINER = "container";
@@ -146,6 +148,7 @@ public final class TicketPlans {
             case RELOCATE_BUILDING -> relocateBuilding(target);
             case RESTOCK_FOOD -> restockFood(target);
             case TRANSFER_ITEM -> transferItem(target);
+            case MINE_LEFT_ORE -> mineLeftOre(target);
             default ->
                 throw new IllegalArgumentException("Кейс " + boardCase
                         + " не имеет плана на доске: выдача задания без плана оставила бы духа "
@@ -616,6 +619,17 @@ public final class TicketPlans {
             case 3 -> 10;
             default -> 16;
         };
+    }
+
+    // Оставленная руда: дух встаёт там, откуда её видел строитель шахты, и добывает её жилу нужной киркой
+    // (кирку с Удачей или Шёлковым касанием выбирает ломка — MineOres).
+    private static TaskNode mineLeftOre(TicketTarget target) {
+        String ore = target.supplyItem();
+        OreKind found = ore == null ? OreKind.ANY : OreKind.ofBlock(ore).orElse(OreKind.ANY);
+        String kind = found.name().toLowerCase(Locale.ROOT);
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall("mine_vein", Map.of("ore", kind, COUNT, 1, RADIUS, LEFT_ORE_RADIUS)));
     }
 
     private static TaskNode transferItem(TicketTarget target) {

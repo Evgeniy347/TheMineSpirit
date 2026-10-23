@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.mining.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
@@ -15,9 +16,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import org.slf4j.Logger;
 
 /**
@@ -135,6 +141,34 @@ public final class StockReader {
             return;
         }
         available.merge(shortId(StackMapper.itemId(stack)), stack.getCount(), Integer::sum);
+        if (stack.getItem() instanceof PickaxeItem) {
+            for (String key : pickaxeKeys(stack)) {
+                available.merge(key, 1, Integer::sum);
+            }
+        }
+    }
+
+    // Ключи кирок для заданий оставленной руды (LeftOreRules): ступень кирки и Удача/Шёлковое касание железной и
+    // лучше — склад не различает зачарования по id предмета.
+    static List<String> pickaxeKeys(ItemStack stack) {
+        List<String> keys = new ArrayList<>();
+        if (stack.isCorrectToolForDrops(Blocks.COAL_ORE.defaultBlockState())) {
+            keys.add(LeftOreRules.WOOD_TIER);
+        }
+        if (stack.isCorrectToolForDrops(Blocks.IRON_ORE.defaultBlockState())) {
+            keys.add(LeftOreRules.STONE_TIER);
+        }
+        boolean ironTier = stack.isCorrectToolForDrops(Blocks.DIAMOND_ORE.defaultBlockState());
+        if (ironTier) {
+            keys.add(LeftOreRules.IRON_TIER);
+        }
+        ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        boolean lucky = enchantments.keySet().stream()
+                .anyMatch(holder -> holder.is(Enchantments.FORTUNE) || holder.is(Enchantments.SILK_TOUCH));
+        if (ironTier && lucky) {
+            keys.add(LeftOreRules.LUCK_PICKAXE);
+        }
+        return keys;
     }
 
     private static void add(Map<String, Integer> available, Stack stack) {

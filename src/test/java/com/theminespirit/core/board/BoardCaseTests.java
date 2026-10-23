@@ -37,6 +37,7 @@ class BoardCaseTests {
                 "SMELT_CHARCOAL",
                 "BUILD_FENCE",
                 "LIGHTING",
+                "MINE_LEFT_ORE",
                 "BUILD_HOUSE",
                 "BUILD_WAREHOUSE",
                 "REPAIR_FENCE",

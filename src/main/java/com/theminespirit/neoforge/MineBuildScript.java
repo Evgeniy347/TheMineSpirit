@@ -14,7 +14,6 @@ import com.theminespirit.core.mining.MineFloor;
 import com.theminespirit.core.mining.MineFluids;
 import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.mining.MinePlan;
-import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,15 +25,8 @@ import java.util.OptionalInt;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -376,7 +368,9 @@ final class MineBuildScript implements ScriptInstance {
 
     private void remember(BlockCoord cell, BlockState state, String reason) {
         if (leftOres.add(cell) && level instanceof ServerLevel server) {
-            MineOreLedger.get(server).remember(cell, BlockStates.idOf(state));
+            BlockPos feet = spirit.blockPosition();
+            MineOreLedger.get(server)
+                    .remember(cell, BlockStates.idOf(state), new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
             LOGGER.info(
                     "Шахта: дух {} оставил {} в {}: {}", spirit.getStringUUID(), BlockStates.idOf(state), cell, reason);
         }
@@ -519,32 +513,7 @@ final class MineBuildScript implements ScriptInstance {
     }
 
     private List<MineOres.Pick> picks(BlockState state) {
-        Registry<Enchantment> enchantments = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        var fortune = enchantments.getHolderOrThrow(Enchantments.FORTUNE);
-        var silk = enchantments.getHolderOrThrow(Enchantments.SILK_TOUCH);
-        List<MineOres.Pick> picks = new ArrayList<>();
-        addPick(picks, ToolChoice.MAIN_HAND, spirit.getMainHandItem(), state, fortune, silk);
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            addPick(picks, slot, spirit.getInventory().getItem(slot), state, fortune, silk);
-        }
-        return picks;
-    }
-
-    private static void addPick(
-            List<MineOres.Pick> picks,
-            int slot,
-            ItemStack stack,
-            BlockState state,
-            Holder<Enchantment> fortune,
-            Holder<Enchantment> silk) {
-        if (!(stack.getItem() instanceof PickaxeItem)) {
-            return;
-        }
-        picks.add(new MineOres.Pick(
-                slot,
-                stack.isCorrectToolForDrops(state),
-                stack.getEnchantmentLevel(fortune),
-                stack.getEnchantmentLevel(silk) > 0));
+        return PickOptions.of(spirit, state);
     }
 
     private boolean open(BlockCoord cell) {

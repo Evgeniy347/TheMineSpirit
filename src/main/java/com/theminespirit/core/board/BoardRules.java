@@ -61,6 +61,7 @@ public final class BoardRules {
         priorities.put(BoardCase.GATHER_MATERIALS, 45);
         priorities.put(BoardCase.SUPPLY_SITE, 40);
         priorities.put(BoardCase.TRANSFER_ITEM, 45);
+        priorities.put(BoardCase.MINE_LEFT_ORE, 40);
         priorities.put(BoardCase.CRAFT_SHEARS, 40);
         priorities.put(BoardCase.CRAFT_BED, 40);
         priorities.put(BoardCase.WEAVE_WOOL, 40);

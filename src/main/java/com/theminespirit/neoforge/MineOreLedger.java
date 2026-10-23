@@ -28,7 +28,10 @@ public final class MineOreLedger extends SavedData {
     private static final SavedData.Factory<MineOreLedger> FACTORY =
             new SavedData.Factory<>(MineOreLedger::new, MineOreLedger::load);
 
-    private final Map<BlockCoord, String> ores = new LinkedHashMap<>();
+    // Оставленная руда: id блока и стоянка в шахте, откуда её видел строитель.
+    public record Left(String block, BlockCoord stand) {}
+
+    private final Map<BlockCoord, Left> ores = new LinkedHashMap<>();
 
     private MineOreLedger() {}
 
@@ -36,14 +39,15 @@ public final class MineOreLedger extends SavedData {
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
     }
 
-    public void remember(BlockCoord pos, String blockId) {
+    public void remember(BlockCoord pos, String blockId, BlockCoord stand) {
         Objects.requireNonNull(pos, "Позиция руды не может быть null: без неё к руде не вернуться");
         Objects.requireNonNull(blockId, "Id руды не может быть null: без него неизвестно, за чем возвращаться");
-        if (blockId.equals(ores.get(pos))) {
+        Left left = new Left(blockId, stand);
+        if (left.equals(ores.get(pos))) {
             return;
         }
         if (!ores.containsKey(pos) && ores.size() >= MAX_ENTRIES) {
-            Map.Entry<BlockCoord, String> oldest = ores.entrySet().iterator().next();
+            Map.Entry<BlockCoord, Left> oldest = ores.entrySet().iterator().next();
             LOGGER.warn(
                     "Память оставленной руды полна ({}): забыта самая старая {} {}",
                     MAX_ENTRIES,
@@ -51,11 +55,17 @@ public final class MineOreLedger extends SavedData {
                     oldest.getValue());
             ores.remove(oldest.getKey());
         }
-        ores.put(pos, blockId);
+        ores.put(pos, left);
         setDirty();
     }
 
-    public Map<BlockCoord, String> ores() {
+    public void forget(BlockCoord pos) {
+        if (ores.remove(pos) != null) {
+            setDirty();
+        }
+    }
+
+    public Map<BlockCoord, Left> ores() {
         return Map.copyOf(ores);
     }
 
@@ -65,7 +75,10 @@ public final class MineOreLedger extends SavedData {
         for (int i = 0; i < entries.size(); i++) {
             CompoundTag entry = entries.getCompound(i);
             ledger.ores.put(
-                    new BlockCoord(entry.getInt("X"), entry.getInt("Y"), entry.getInt("Z")), entry.getString(BLOCK));
+                    new BlockCoord(entry.getInt("X"), entry.getInt("Y"), entry.getInt("Z")),
+                    new Left(
+                            entry.getString(BLOCK),
+                            new BlockCoord(entry.getInt("SX"), entry.getInt("SY"), entry.getInt("SZ"))));
         }
         return ledger;
     }
@@ -73,12 +86,15 @@ public final class MineOreLedger extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag entries = new ListTag();
-        for (Map.Entry<BlockCoord, String> ore : ores.entrySet()) {
+        for (Map.Entry<BlockCoord, Left> ore : ores.entrySet()) {
             CompoundTag entry = new CompoundTag();
             entry.putInt("X", ore.getKey().x());
             entry.putInt("Y", ore.getKey().y());
             entry.putInt("Z", ore.getKey().z());
-            entry.putString(BLOCK, ore.getValue());
+            entry.putString(BLOCK, ore.getValue().block());
+            entry.putInt("SX", ore.getValue().stand().x());
+            entry.putInt("SY", ore.getValue().stand().y());
+            entry.putInt("SZ", ore.getValue().stand().z());
             entries.add(entry);
         }
         tag.put(ENTRIES, entries);
