@@ -112,10 +112,11 @@ neoForge {
             // Фильтр GameTest по имени пачки/класса/теста (scripts/test.sh gametest <фильтр>):
             // пусто или не задано — идут все тесты.
             systemProperty 'theminespirit.gametest.filter', System.getProperty('theminespirit.gametest.filter', '')
-            // C1, SerialGC и потолок памяти: замер (docs/research/test-performance.md) дал wall 72–124 → 37–48 с,
-            // CPU −60 %. -Xmx1536m — запас над замеренным RSS 0,65 ГБ, чтобы OOM не выглядел падением сервера;
+            // SerialGC и потолок памяти. C1-only (TieredStopAtLevel=1) снят 23.10: он ускорял старт на 15 тестах,
+            // а на 930 тестах тики стройки идут в 2,2 раза дольше: пачки полного прогона 1390–1480 с → 765 с (C1+C2).
+            // -Xmx1536m — запас над замеренным RSS 0,65 ГБ, чтобы OOM не выглядел падением сервера;
             // ExitOnOutOfMemoryError превращает OOM в понятный выход, а не в зависание.
-            jvmArguments.addAll '-XX:TieredStopAtLevel=1', '-XX:+UseSerialGC', '-Xmx1536m', '-XX:+ExitOnOutOfMemoryError'
+            jvmArguments.addAll '-XX:+UseSerialGC', '-Xmx1536m', '-XX:+ExitOnOutOfMemoryError'
         }
 
         data {
