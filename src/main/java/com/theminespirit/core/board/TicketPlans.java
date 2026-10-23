@@ -531,7 +531,8 @@ public final class TicketPlans {
                     new ScriptCall(
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
-        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
+        // fresh: добыть ещё, а не взять из сундука, куда добыча же сдаёт (запас не рос).
+        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch, "fresh", true)));
     }
 
     // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.

@@ -10,6 +10,8 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.AcquireScript;
+import com.theminespirit.core.planner.AcquireSupplies;
+import com.theminespirit.core.planner.FreshSupplies;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.AcquireParams;
 import com.theminespirit.core.script.ApproachParams;
@@ -311,11 +313,17 @@ public final class SpiritScripts {
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
             SpiritSupplies supplies = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
+            int count = parsed.count();
+            AcquireSupplies source = supplies;
+            if (parsed.fresh()) {
+                count = Math.min(supplies.inInventory(parsed.item()) + count, CatalogLimits.COUNT_MAX);
+                source = new FreshSupplies(supplies, parsed.item());
+            }
             return new AcquireScript(
                     parsed.item(),
-                    parsed.count(),
+                    count,
                     acquireKnowledge(spirit, supplies.inventory()),
-                    supplies,
+                    source,
                     catalog(),
                     conditionCatalog(),
                     new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
