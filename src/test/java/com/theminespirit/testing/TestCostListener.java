@@ -70,8 +70,9 @@ public final class TestCostListener implements TestExecutionListener {
         }
     }
 
+    // synchronized: быстрый тир гоняет классы параллельно (build.gradle), строки CSV не должны перемешиваться.
     @Override
-    public void executionFinished(TestIdentifier id, TestExecutionResult result) {
+    public synchronized void executionFinished(TestIdentifier id, TestExecutionResult result) {
         if (!id.isTest() || !startWall.containsKey(id.getUniqueId())) {
             return;
         }

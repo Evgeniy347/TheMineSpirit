@@ -16,7 +16,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
+// Методы независимы и считают долгие планы — идут параллельно.
+@Execution(ExecutionMode.CONCURRENT)
 class BuildPlannerTests {
     private static final PresetLibrary LIBRARY = BuildPlanSnapshotTests.library();
 
