@@ -54,6 +54,16 @@ public final class BlockPlacer {
     }
 
     public Begin begin(BlockPos target, BlockState state, String blockId) {
+        return begin(target, state, blockId, true);
+    }
+
+    // Пол и стенки шахты над пустотой ставятся без опоры (решение владельца 23.10): пещера под
+    // спуском не останавливает проходку.
+    public Begin beginWithoutSupport(BlockPos target, BlockState state, String blockId) {
+        return begin(target, state, blockId, false);
+    }
+
+    private Begin begin(BlockPos target, BlockState state, String blockId, boolean supportRequired) {
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, куда ставить");
         Objects.requireNonNull(state, "Состояние не может быть null: без него неизвестно, что ставить");
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что списывать");
@@ -90,7 +100,7 @@ public final class BlockPlacer {
         if (spirit.protectionGate().checkPlace(target) instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }
-        if (!hasSupport(level, target, state)) {
+        if (supportRequired && !hasSupport(level, target, state)) {
             return new Refused(
                     RefuseReason.NO_SUPPORT,
                     "под клеткой " + target.toShortString() + " нет опоры: блок без опоры обвалится или повиснет");

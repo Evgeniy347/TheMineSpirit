@@ -56,7 +56,7 @@ public final class MineBuildGameTests {
     }
 
     private static ScriptCall descent(GameTestHelper helper) {
-        BlockPos origin = helper.absolutePos(new BlockPos(FIRST_X, TOP, LANE_Z));
+        BlockPos origin = helper.absolutePos(new BlockPos(FIRST_X, TOP, LANE_Z - 1));
         return new ScriptCall(
                 "build_schematic",
                 Map.of(
@@ -162,6 +162,40 @@ public final class MineBuildGameTests {
             helper.assertTrue(
                     helper.getBlockState(below).isAir(),
                     "за рудой спуск продолжается до дна " + below + ": обход соединил ход");
+            GameTestFixtures.finish(helper, 16);
+        });
+    }
+
+    // [флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
+    @GameTest(template = "mine_arena", batch = "mine_build_cave", timeoutTicks = 1600)
+    public static void mineDescent_CaveUnderSteps_PlacesFloorAndWallsInAir(GameTestHelper helper) {
+        rock(helper);
+        for (int x = FIRST_X + 4; x <= FIRST_X + 6; x++) {
+            for (int y = 2; y <= TOP - 3; y++) {
+                for (int z = 2; z <= 8; z++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
+                }
+            }
+        }
+        SpiritEntity spirit = miner(helper);
+        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 64));
+        SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            data(helper, spirit);
+            assertPassageOpen(helper);
+            for (int k = 0; k < STEPS; k++) {
+                for (int dy = 1; dy <= 3; dy++) {
+                    for (int side : new int[] {-1, 1}) {
+                        BlockPos wall = step(k, dy).offset(0, 0, side);
+                        helper.assertTrue(
+                                !helper.getBlockState(wall).isAir(),
+                                "стенка спуска " + wall + " обязана быть твёрдой и над пещерой (решение владельца "
+                                        + "23.10): иначе дух и игрок падают в пропасть, скелеты стреляют в проход");
+                    }
+                }
+            }
             GameTestFixtures.finish(helper, 16);
         });
     }

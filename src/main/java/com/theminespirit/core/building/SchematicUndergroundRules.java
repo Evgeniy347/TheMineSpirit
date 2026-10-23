@@ -25,7 +25,13 @@ public final class SchematicUndergroundRules {
         Map<BlockCoord, String> blocks = new HashMap<>();
         Set<BlockCoord> air = new HashSet<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            blocks.put(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), entry.block());
+            BlockCoord cell = new BlockCoord(entry.dx(), entry.dy(), entry.dz());
+            // Необязательный факел в клетке прохода сквозной: дух проходит сквозь него, строитель копает клетку.
+            if (entry.optional()) {
+                air.add(cell);
+            } else {
+                blocks.put(cell, entry.block());
+            }
         }
         for (Schematic.Cell cell : schematic.air()) {
             air.add(new BlockCoord(cell.dx(), cell.dy(), cell.dz()));
