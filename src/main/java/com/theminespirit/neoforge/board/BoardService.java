@@ -38,6 +38,7 @@ import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.StackMapper;
+import com.theminespirit.neoforge.net.BuildFingerprint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -110,6 +111,21 @@ public final class BoardService {
         this.store = store;
         if (store != null) {
             store.restoreInto(board);
+            String build = BuildFingerprint.current();
+            if (!build.equals(store.build())) {
+                List<String> reset = board.resetForNewRules();
+                if (!reset.isEmpty()) {
+                    LOGGER.warn(
+                            "[incident] сборка мода сменилась ({} → {}): сброшено {} заданий старых правил {}, источники "
+                                    + "поставят их заново",
+                            store.build().isEmpty() ? "?" : store.build(),
+                            build,
+                            reset.size(),
+                            reset);
+                }
+                store.markBuild(build);
+                store.update(board.snapshot());
+            }
         }
         journal.restore(board.ledger());
     }

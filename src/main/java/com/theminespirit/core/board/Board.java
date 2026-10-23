@@ -20,6 +20,7 @@ import org.jspecify.annotations.Nullable;
  */
 public final class Board {
     private static final String FIRST_STEPS_PREFIX = "first:";
+    private static final List<String> SOURCE_PREFIXES = List.of(FIRST_STEPS_PREFIX, "gather:", "supply:");
     private static final Comparator<BoardTicket> QUEUE_ORDER = Comparator.<BoardTicket>comparingInt(
                     ticket -> BoardRules.priorityOf(ticket.boardCase()))
             .reversed()
@@ -32,6 +33,7 @@ public final class Board {
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
     private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
     private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
+    private final Map<String, Long> blockedAt = new LinkedHashMap<>();
     private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
     private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
@@ -375,6 +377,29 @@ public final class Board {
         return List.copyOf(detached);
     }
 
+    public List<String> resetForNewRules() {
+        // Новая сборка мода — новые правила: задания, заблокированные или поставленные источниками по старым
+        // правилам (gather:oak_* в джунглях), сбрасываются, источники ставят их заново; сделанное и выданное
+        // остаётся, паузы и счётчики провалов обнуляются.
+        List<String> removed = new ArrayList<>();
+        for (BoardTicket ticket : List.copyOf(tickets.values())) {
+            BoardStatus status = statuses.get(ticket.id());
+            boolean sourceMade = SOURCE_PREFIXES.stream().anyMatch(ticket.id()::startsWith);
+            boolean waiting = status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES;
+            if (status == BoardStatus.BLOCKED || status == BoardStatus.FAILED || (sourceMade && waiting)) {
+                tickets.remove(ticket.id());
+                statuses.remove(ticket.id());
+                claimAssignees.remove(ticket.id());
+                blockedMissing.remove(ticket.id());
+                removed.add(ticket.id());
+            }
+        }
+        failTicks.clear();
+        ticketFailures.clear();
+        caseFailures.clear();
+        return List.copyOf(removed);
+    }
+
     public int prune(long now) {
         requireNow(now);
         int removed = 0;
@@ -391,6 +416,7 @@ public final class Board {
             removed++;
         }
         failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
+        retryBlocked(now);
         removed += evictOverflow();
         return removed;
     }
@@ -642,6 +668,36 @@ public final class Board {
                     BoardRules.priorityOf(ticket.boardCase()),
                     ticket.priority(),
                     reason(0, missing),
+                    null,
+                    ConfigStamp.current(),
+                    now));
+        }
+    }
+
+    private void retryBlocked(long now) {
+        blockedAt.keySet().removeIf(id -> statuses.get(id) != BoardStatus.BLOCKED);
+        for (BoardTicket ticket : List.copyOf(tickets.values())) {
+            if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {
+                continue;
+            }
+            long since = blockedAt.computeIfAbsent(ticket.id(), id -> now);
+            if (now - since < BoardTuning.blockedRetryTicks()) {
+                continue;
+            }
+            statuses.put(ticket.id(), BoardStatus.PENDING);
+            ticketFailures.remove(ticket.id());
+            blockedMissing.remove(ticket.id());
+            blockedAt.remove(ticket.id());
+            blockNotes.add(new BoardLogEntry(
+                    BoardLog.Event.UNBLOCKED,
+                    now,
+                    ticket.id(),
+                    ticket.boardCase(),
+                    ticket.level(),
+                    ticket.cause(),
+                    BoardRules.priorityOf(ticket.boardCase()),
+                    ticket.priority(),
+                    List.of("retry_after=" + BoardTuning.blockedRetryTicks()),
                     null,
                     ConfigStamp.current(),
                     now));

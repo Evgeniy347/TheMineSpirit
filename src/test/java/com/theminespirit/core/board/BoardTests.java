@@ -891,4 +891,78 @@ class BoardTests {
     Arbitrary<StockView> stockViews() {
         return Arbitraries.of(new StockView(Map.of()), new StockView(Map.of("dirt", 9)));
     }
+
+    @Test
+    void resetForNewRules_BlockedAndSourceWaiting_RemovedDoneKept() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        BoardTicket gather = simpleTicket("gather:oak_log", BoardCase.GATHER_MATERIALS);
+        BoardTicket blocked = simpleTicket("first:craft_furnace", BoardCase.CRAFT_FURNACE);
+        BoardTicket done = simpleTicket("first:crafting_station", BoardCase.CRAFTING_STATION);
+        BoardTicket rest = simpleTicket("rest:keep", BoardCase.LIGHTING);
+        board.submit(gather);
+        board.submit(done);
+        board.submit(rest);
+        board.claim(done.id(), SPIRIT_ONE, 0);
+        board.complete(done.id());
+        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
+            UUID holder = new UUID(0, attempt);
+            board.submit(blocked);
+            board.claim(blocked.id(), holder, now[0]);
+            board.fail(blocked.id());
+            board.prune(now[0]);
+            now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, BoardCase.CRAFT_FURNACE));
+        }
+
+        assertTrue(board.blocked(blocked.id()), "Сцена: шаг первых шагов заблокирован провалами подряд");
+        List<String> removed = board.resetForNewRules();
+
+        assertTrue(
+                removed.contains("gather:oak_log")
+                        && board.find("gather:oak_log").isEmpty(),
+                "Ожидающее задание источника старых правил сброшено: источник поставит его по новым (INC-36)");
+        assertTrue(board.find(done.id()).isPresent(), "Сделанное остаётся: журнал этапов не теряется");
+        assertTrue(board.find(rest.id()).isPresent(), "Задание REST/игрока не сбрасывается");
+        assertTrue(
+                !board.blocked(blocked.id()),
+                "Заблокированное по старым правилам больше не держит цепочку: " + board.statusOf(blocked.id()));
+    }
+
+    @Test
+    void prune_BlockedLongEnough_RetriedNotForever() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        BoardTicket blocked = simpleTicket("first:build_fence", BoardCase.BUILD_FENCE);
+        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
+            UUID holder = new UUID(0, attempt);
+            board.submit(blocked);
+            board.claim(blocked.id(), holder, now[0]);
+            board.fail(blocked.id());
+            board.prune(now[0]);
+            now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, BoardCase.BUILD_FENCE));
+        }
+        assertTrue(board.blocked(blocked.id()), "Сцена: забор заблокирован провалами подряд");
+        board.prune(now[0]);
+        now[0] += BoardTuning.blockedRetryTicks();
+
+        board.prune(now[0]);
+
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf(blocked.id()).orElse(null),
+                "BLOCKED не останавливает цепочку первых шагов навсегда: после паузы — новая попытка");
+    }
+
+    private static BoardTicket simpleTicket(String id, BoardCase boardCase) {
+        return new BoardTicket(
+                id,
+                boardCase,
+                Optional.empty(),
+                BoardRules.priorityOf(boardCase),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+    }
 }
