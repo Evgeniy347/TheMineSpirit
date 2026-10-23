@@ -2,6 +2,7 @@
   "key.theminespirit.board": "Экран поселения",
   "key.categories.theminespirit": "The Mine Spirit",
   "theminespirit.board.title": "Доска задач",
+  "theminespirit.board.stage.none": "Этап: —",
   "theminespirit.board.loading": "Загрузка доски…",
   "theminespirit.board.empty": "Доска пуста: заданий нет",
   "theminespirit.board.filtered": "Нет заданий под фильтр",

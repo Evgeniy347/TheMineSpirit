@@ -2,6 +2,7 @@
   "key.theminespirit.board": "Settlement screen",
   "key.categories.theminespirit": "The Mine Spirit",
   "theminespirit.board.title": "Task board",
+  "theminespirit.board.stage.none": "Stage: —",
   "theminespirit.board.loading": "Loading the board…",
   "theminespirit.board.empty": "The board is empty",
   "theminespirit.board.filtered": "No tasks match the filter",

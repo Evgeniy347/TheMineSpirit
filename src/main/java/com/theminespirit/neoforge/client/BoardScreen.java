@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.client;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.ui.BoardColumns;
 import com.theminespirit.core.ui.BoardFilter;
+import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
 import com.theminespirit.core.ui.BoardWaitReasons;
@@ -38,24 +39,12 @@ public final class BoardScreen extends Screen {
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.withDefaultNamespace("textures/gui/advancements/backgrounds/stone.png");
     private static final int BACKGROUND_TILE = 16;
-    private static final int MARGIN = 8;
     private static final int WINDOW_CONTENT_WIDTH = 252;
     private static final int WINDOW_CONTENT_HEIGHT = 140;
     private static final int WINDOW_TEXTURE = 256;
-    private static final int BORDER_LEFT = 9;
-    private static final int BORDER_TOP = 18;
-    private static final int BORDER_RIGHT = 9;
-    private static final int BORDER_BOTTOM = 9;
-    private static final int GAP = 2;
-    private static final int COLUMN_GAP = 4;
-    private static final int TILE_HEIGHT = 32;
     private static final int TEXT_PAD = 4;
     private static final int STRIPE = 2;
     private static final int SCROLL_STEP = 12;
-    private static final int BUTTON_HEIGHT = 20;
-    private static final int BUTTON_GAP = 4;
-    private static final int BUTTON_MAX_WIDTH = 150;
-    private static final int COLUMN_HEADER = 12;
     private static final int TITLE_COLOR = 0xFF404040;
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int MUTED_COLOR = 0xFFA0A0A0;
@@ -68,6 +57,7 @@ public final class BoardScreen extends Screen {
             BoardTileGroup.AVAILABLE, 0xFF55AAFF,
             BoardTileGroup.UNAVAILABLE, 0xFFAA5555);
 
+    private BoardLayout layout = BoardLayout.of(0, 0);
     private @Nullable List<BoardTile> tiles;
     private List<BoardTile> shown = List.of();
     private List<BoardColumns.BoardColumn> columns = List.of();
@@ -90,20 +80,20 @@ public final class BoardScreen extends Screen {
 
     @Override
     protected void init() {
-        int left = innerLeft() + 2;
-        int top = MARGIN;
-        int width = Math.min(BUTTON_MAX_WIDTH, Math.max(60, (innerWidth() - BUTTON_GAP) / 2));
+        layout = BoardLayout.of(width, height);
+        BoardLayout.Rect status = layout.statusButton();
         statusButton = addRenderableWidget(Button.builder(statusLabel(), button -> {
                     filter = filter.nextGroup();
                     refilter();
                 })
-                .bounds(left, top, width, BUTTON_HEIGHT)
+                .bounds(status.x(), status.y(), status.width(), status.height())
                 .build());
+        BoardLayout.Rect spirit = layout.spiritButton();
         spiritButton = addRenderableWidget(Button.builder(spiritLabel(), button -> {
                     filter = filter.nextSpirit(tiles == null ? List.of() : tiles);
                     refilter();
                 })
-                .bounds(left + width + BUTTON_GAP, top, width, BUTTON_HEIGHT)
+                .bounds(spirit.x(), spirit.y(), spirit.width(), spirit.height())
                 .build());
         if (tiles == null) {
             requestSnapshot();
@@ -116,57 +106,64 @@ public final class BoardScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
-        int innerLeft = innerLeft();
-        int innerTop = innerTop();
-        int innerWidth = innerWidth();
-        int innerHeight = innerHeight();
-        for (int tx = 0; tx < innerWidth; tx += BACKGROUND_TILE) {
-            for (int ty = 0; ty < innerHeight; ty += BACKGROUND_TILE) {
-                int w = Math.min(BACKGROUND_TILE, innerWidth - tx);
-                int h = Math.min(BACKGROUND_TILE, innerHeight - ty);
-                graphics.blit(BACKGROUND, innerLeft + tx, innerTop + ty, 0, 0, w, h, BACKGROUND_TILE, BACKGROUND_TILE);
-            }
-        }
+        BoardLayout.Rect stage = layout.stage();
+        graphics.drawCenteredString(
+                font, Component.translatable(KEY + "stage.none"), stage.x() + stage.width() / 2, stage.y(), TEXT_COLOR);
+        BoardLayout.Rect window = layout.window();
+        BoardLayout.Rect inner = layout.inner();
+        blitPanel(graphics, window);
+        drawBackground(graphics, inner);
         BoardTile hovered = null;
         if (tiles == null || shown.isEmpty()) {
             Component message = Component.translatable(
                     KEY + (offline ? "offline" : tiles == null ? "loading" : tiles.isEmpty() ? "empty" : "filtered"));
             graphics.drawCenteredString(
-                    font, message, innerLeft + innerWidth / 2, innerTop + innerHeight / 2 - 4, MUTED_COLOR);
+                    font, message, inner.x() + inner.width() / 2, inner.y() + inner.height() / 2 - 4, MUTED_COLOR);
         } else {
             hovered = renderColumns(graphics, mouseX, mouseY);
         }
-        blitPanel(graphics, left(), top(), windowWidth(), windowHeight());
-        graphics.drawString(font, title, innerLeft, top() + 6, TITLE_COLOR, false);
+        graphics.drawString(font, title, inner.x(), window.y() + 6, TITLE_COLOR, false);
         if (hovered != null) {
             graphics.renderComponentTooltip(font, tooltip(hovered), mouseX, mouseY);
         }
     }
 
+    private static void drawBackground(GuiGraphics graphics, BoardLayout.Rect inner) {
+        for (int tx = 0; tx < inner.width(); tx += BACKGROUND_TILE) {
+            for (int ty = 0; ty < inner.height(); ty += BACKGROUND_TILE) {
+                int w = Math.min(BACKGROUND_TILE, inner.width() - tx);
+                int h = Math.min(BACKGROUND_TILE, inner.height() - ty);
+                graphics.blit(BACKGROUND, inner.x() + tx, inner.y() + ty, 0, 0, w, h, BACKGROUND_TILE, BACKGROUND_TILE);
+            }
+        }
+    }
+
     private @Nullable BoardTile renderColumns(GuiGraphics graphics, int mouseX, int mouseY) {
         BoardTile hovered = null;
-        int listTop = listTop();
-        int listBottom = innerBottom() - 2;
+        BoardLayout.Rect list = layout.list();
+        List<BoardLayout.Rect> columnRects = layout.columns();
+        List<BoardLayout.Rect> headers = layout.headers();
         for (int i = 0; i < columns.size(); i++) {
             BoardColumns.BoardColumn column = columns.get(i);
-            int x = columnLeft(i);
-            int width = columnWidth();
-            Component header = Component.translatable(
+            BoardLayout.Rect header = headers.get(i);
+            BoardLayout.Rect area = columnRects.get(i);
+            Component headerText = Component.translatable(
                             KEY + "group." + column.group().name().toLowerCase(Locale.ROOT))
                     .append(" " + column.tiles().size());
-            graphics.drawString(font, header, x, columnsTop(), GROUP_COLORS.get(column.group()), false);
-            graphics.enableScissor(x, listTop, x + width, listBottom);
+            graphics.drawString(font, headerText, header.x(), header.y(), GROUP_COLORS.get(column.group()), false);
+            graphics.enableScissor(area.x(), list.y(), area.right(), list.bottom());
             for (int j = 0; j < column.tiles().size(); j++) {
-                int y = listTop + j * (TILE_HEIGHT + GAP) - (int) scroll[i];
-                if (y + TILE_HEIGHT < listTop || y > listBottom) {
+                BoardLayout.Rect rect = layout.tile(i, j);
+                int y = rect.y() - (int) scroll[i];
+                if (y + rect.height() < list.y() || y > list.bottom()) {
                     continue;
                 }
-                boolean over = mouseX >= x
-                        && mouseX < x + width
-                        && mouseY >= Math.max(y, listTop)
-                        && mouseY < Math.min(y + TILE_HEIGHT, listBottom);
+                boolean over = mouseX >= rect.x()
+                        && mouseX < rect.right()
+                        && mouseY >= Math.max(y, list.y())
+                        && mouseY < Math.min(y + rect.height(), list.bottom());
                 BoardTile tile = column.tiles().get(j);
-                renderTile(graphics, tile, x, y, width, over);
+                renderTile(graphics, tile, rect.x(), y, rect.width(), over);
                 if (over) {
                     hovered = tile;
                 }
@@ -178,7 +175,7 @@ public final class BoardScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int column = columnAt(mouseX, mouseY);
+        int column = layout.columnAt(mouseX, mouseY);
         if (column < 0) {
             return false;
         }
@@ -233,25 +230,14 @@ public final class BoardScreen extends Screen {
         if (column < 0 || column >= columns.size()) {
             return 0;
         }
-        int rows = columns.get(column).tiles().size();
-        return Math.max(0, rows * (TILE_HEIGHT + GAP) - listHeight());
-    }
-
-    private int columnAt(double mouseX, double mouseY) {
-        if (columns.isEmpty()
-                || mouseX < innerLeft()
-                || mouseX >= innerRight()
-                || mouseY < columnsTop()
-                || mouseY >= innerBottom() - 2) {
-            return -1;
-        }
-        int column = (int) ((mouseX - innerLeft()) / (columnWidth() + COLUMN_GAP));
-        return Mth.clamp(column, 0, columns.size() - 1);
+        int count = columns.get(column).tiles().size();
+        int content = count * (BoardLayout.TILE_HEIGHT + BoardLayout.TILE_GAP) - BoardLayout.TILE_GAP;
+        return Math.max(0, content - layout.list().height());
     }
 
     private void renderTile(GuiGraphics graphics, BoardTile tile, int x, int y, int width, boolean over) {
-        graphics.fill(x, y, x + width, y + TILE_HEIGHT, over ? TILE_HOVER_COLOR : TILE_COLOR);
-        graphics.fill(x, y, x + STRIPE, y + TILE_HEIGHT, GROUP_COLORS.get(tile.group()));
+        graphics.fill(x, y, x + width, y + BoardLayout.TILE_HEIGHT, over ? TILE_HOVER_COLOR : TILE_COLOR);
+        graphics.fill(x, y, x + STRIPE, y + BoardLayout.TILE_HEIGHT, GROUP_COLORS.get(tile.group()));
         int textWidth = width - 2 * TEXT_PAD;
         String text = font.plainSubstrByWidth(taskText(tile).getString(), textWidth);
         graphics.drawString(font, text, x + TEXT_PAD, y + 3, TEXT_COLOR);
@@ -338,115 +324,67 @@ public final class BoardScreen extends Screen {
         return Component.translatable(KEY + "filter.spirit", value);
     }
 
-    private static void blitPanel(GuiGraphics graphics, int x, int y, int width, int height) {
-        int innerWidth = width - BORDER_LEFT - BORDER_RIGHT;
-        int innerHeight = height - BORDER_TOP - BORDER_BOTTOM;
-        blit(graphics, x, y, 0, 0, BORDER_LEFT, BORDER_TOP);
-        blit(graphics, x + width - BORDER_RIGHT, y, WINDOW_CONTENT_WIDTH - BORDER_RIGHT, 0, BORDER_RIGHT, BORDER_TOP);
-        blit(
-                graphics,
-                x,
-                y + height - BORDER_BOTTOM,
-                0,
-                WINDOW_CONTENT_HEIGHT - BORDER_BOTTOM,
-                BORDER_LEFT,
-                BORDER_BOTTOM);
-        blit(
-                graphics,
-                x + width - BORDER_RIGHT,
-                y + height - BORDER_BOTTOM,
-                WINDOW_CONTENT_WIDTH - BORDER_RIGHT,
-                WINDOW_CONTENT_HEIGHT - BORDER_BOTTOM,
-                BORDER_RIGHT,
-                BORDER_BOTTOM);
-        if (innerWidth > 0) {
-            blit(graphics, x + BORDER_LEFT, y, BORDER_LEFT, 0, innerWidth, BORDER_TOP);
+    private static void blitPanel(GuiGraphics graphics, BoardLayout.Rect window) {
+        int x = window.x();
+        int y = window.y();
+        int width = window.width();
+        int height = window.height();
+        int left = BoardLayout.BORDER_LEFT;
+        int top = BoardLayout.BORDER_TOP;
+        int right = BoardLayout.BORDER_RIGHT;
+        int bottom = BoardLayout.BORDER_BOTTOM;
+        int innerWidth = width - left - right;
+        int innerHeight = height - top - bottom;
+        int sourceInnerWidth = WINDOW_CONTENT_WIDTH - left - right;
+        int sourceInnerHeight = WINDOW_CONTENT_HEIGHT - top - bottom;
+        if (width >= left + right && height >= top + bottom) {
+            blit(graphics, x, y, 0, 0, left, top);
+            blit(graphics, x + width - right, y, WINDOW_CONTENT_WIDTH - right, 0, right, top);
+            blit(graphics, x, y + height - bottom, 0, WINDOW_CONTENT_HEIGHT - bottom, left, bottom);
             blit(
                     graphics,
-                    x + BORDER_LEFT,
-                    y + height - BORDER_BOTTOM,
-                    BORDER_LEFT,
-                    WINDOW_CONTENT_HEIGHT - BORDER_BOTTOM,
-                    innerWidth,
-                    BORDER_BOTTOM);
+                    x + width - right,
+                    y + height - bottom,
+                    WINDOW_CONTENT_WIDTH - right,
+                    WINDOW_CONTENT_HEIGHT - bottom,
+                    right,
+                    bottom);
         }
-        if (innerHeight > 0) {
-            blit(graphics, x, y + BORDER_TOP, 0, BORDER_TOP, BORDER_LEFT, innerHeight);
-            blit(
-                    graphics,
-                    x + width - BORDER_RIGHT,
-                    y + BORDER_TOP,
-                    WINDOW_CONTENT_WIDTH - BORDER_RIGHT,
-                    BORDER_TOP,
-                    BORDER_RIGHT,
-                    innerHeight);
+        if (innerWidth > 0 && height >= top + bottom) {
+            blitTiledX(graphics, x + left, y, left, 0, innerWidth, top);
+            blitTiledX(
+                    graphics, x + left, y + height - bottom, left, WINDOW_CONTENT_HEIGHT - bottom, innerWidth, bottom);
+        }
+        if (innerHeight > 0 && width >= left + right) {
+            blitTiledY(graphics, x, y + top, 0, top, left, innerHeight);
+            blitTiledY(graphics, x + width - right, y + top, WINDOW_CONTENT_WIDTH - right, top, right, innerHeight);
         }
         if (innerWidth > 0 && innerHeight > 0) {
-            blit(graphics, x + BORDER_LEFT, y + BORDER_TOP, BORDER_LEFT, BORDER_TOP, innerWidth, innerHeight);
+            for (int dx = 0; dx < innerWidth; dx += sourceInnerWidth) {
+                int partWidth = Math.min(sourceInnerWidth, innerWidth - dx);
+                for (int dy = 0; dy < innerHeight; dy += sourceInnerHeight) {
+                    int partHeight = Math.min(sourceInnerHeight, innerHeight - dy);
+                    blit(graphics, x + left + dx, y + top + dy, left, top, partWidth, partHeight);
+                }
+            }
+        }
+    }
+
+    private static void blitTiledX(GuiGraphics graphics, int destX, int destY, int u, int v, int width, int height) {
+        int step = WINDOW_CONTENT_WIDTH - BoardLayout.BORDER_LEFT - BoardLayout.BORDER_RIGHT;
+        for (int dx = 0; dx < width; dx += step) {
+            blit(graphics, destX + dx, destY, u, v, Math.min(step, width - dx), height);
+        }
+    }
+
+    private static void blitTiledY(GuiGraphics graphics, int destX, int destY, int u, int v, int width, int height) {
+        int step = WINDOW_CONTENT_HEIGHT - BoardLayout.BORDER_TOP - BoardLayout.BORDER_BOTTOM;
+        for (int dy = 0; dy < height; dy += step) {
+            blit(graphics, destX, destY + dy, u, v, width, Math.min(step, height - dy));
         }
     }
 
     private static void blit(GuiGraphics graphics, int x, int y, int u, int v, int width, int height) {
         graphics.blit(WINDOW, x, y, u, v, width, height, WINDOW_TEXTURE, WINDOW_TEXTURE);
-    }
-
-    private int left() {
-        return MARGIN;
-    }
-
-    private int top() {
-        return MARGIN + BUTTON_HEIGHT + BUTTON_GAP;
-    }
-
-    private int windowWidth() {
-        return width - 2 * MARGIN;
-    }
-
-    private int windowHeight() {
-        return height - top() - MARGIN;
-    }
-
-    private int innerLeft() {
-        return left() + BORDER_LEFT;
-    }
-
-    private int innerTop() {
-        return top() + BORDER_TOP;
-    }
-
-    private int innerRight() {
-        return left() + windowWidth() - BORDER_RIGHT;
-    }
-
-    private int innerBottom() {
-        return top() + windowHeight() - BORDER_BOTTOM;
-    }
-
-    private int innerWidth() {
-        return innerRight() - innerLeft();
-    }
-
-    private int innerHeight() {
-        return innerBottom() - innerTop();
-    }
-
-    private int columnWidth() {
-        return Math.max(24, (innerWidth() - 3 * COLUMN_GAP) / 4);
-    }
-
-    private int columnLeft(int column) {
-        return innerLeft() + column * (columnWidth() + COLUMN_GAP);
-    }
-
-    private int columnsTop() {
-        return innerTop() + 2;
-    }
-
-    private int listTop() {
-        return columnsTop() + COLUMN_HEADER + GAP;
-    }
-
-    private int listHeight() {
-        return Math.max(1, innerBottom() - 2 - listTop());
     }
 }
