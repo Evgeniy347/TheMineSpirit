@@ -24,7 +24,41 @@ public record BoardTask(
         String cause,
         int effectivePriority,
         List<String> modifiers,
-        boolean done) {
+        boolean done,
+        @Nullable String waitReason) {
+
+    public BoardTask(
+            String id,
+            String boardCase,
+            int priority,
+            @Nullable String assignee,
+            String status,
+            Map<String, Integer> requiredItems,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long createdAt,
+            int level,
+            String cause,
+            int effectivePriority,
+            List<String> modifiers,
+            boolean done) {
+        this(
+                id,
+                boardCase,
+                priority,
+                assignee,
+                status,
+                requiredItems,
+                missing,
+                dependsOn,
+                createdAt,
+                level,
+                cause,
+                effectivePriority,
+                modifiers,
+                done,
+                null);
+    }
 
     public BoardTask(
             String id,

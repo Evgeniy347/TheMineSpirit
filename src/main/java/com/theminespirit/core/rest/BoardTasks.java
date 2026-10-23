@@ -3,6 +3,7 @@ package com.theminespirit.core.rest;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardWhy;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
@@ -40,6 +41,7 @@ public final class BoardTasks {
                 ticket.cause(),
                 ticket.priority(),
                 ticket.modifiers(),
-                done);
+                done,
+                BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null));
     }
 }

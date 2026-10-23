@@ -9,7 +9,7 @@
    "assignee":"11111111-2222-3333-4444-555555555555","status":"WAITING_RESOURCES",
    "requiredItems":{"oak_log":16},"missing":{"oak_log":10},"dependsOn":["board-root"],
    "createdAt":1234,"level":1,"cause":"always","effectivePriority":55,
-   "modifiers":["lure_bait_ready"],"done":false}
+   "modifiers":["lure_bait_ready"],"done":false,"waitReason":"не хватает материалов: {oak_log=16}"}
 ]}
 ```
 
@@ -25,6 +25,8 @@
   актуальность, срока жизни у заданий нет;
 - `effectivePriority` — база плюс сработавшие модификаторы (с зажимом в `[0, 100]`), `modifiers` — их ключи;
 - `done` — отметка «постройка стоит»: задание уровня выполнено или уровень подтверждён журналом прошлой сессии.
+- `waitReason` — почему задание сейчас не выдаётся (`BLOCKED`, предшественники, нехватка материалов, откат после
+  провала, пауза кейса у держателя) или `null`, если оно готово и ждёт свободного духа (живой прогон 2, INC-23).
 
 ### POST /v1/board/tasks
 

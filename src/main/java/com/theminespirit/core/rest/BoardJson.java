@@ -47,6 +47,7 @@ public final class BoardJson {
         map.put("effectivePriority", task.effectivePriority());
         map.put("modifiers", task.modifiers());
         map.put("done", task.done());
+        map.put("waitReason", task.waitReason());
         return map;
     }
 }

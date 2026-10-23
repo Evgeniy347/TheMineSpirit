@@ -105,9 +105,6 @@ class DeadCodeGuardTests {
                     "src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#retreatExecutor",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/board/Board.java|method|Board#caseDetached",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
                     "src/main/java/com/theminespirit/core/board/Board.java|method|Board#casePauseTicks",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
             new Exemption(
