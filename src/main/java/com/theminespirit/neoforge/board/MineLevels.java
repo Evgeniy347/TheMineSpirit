@@ -1,12 +1,15 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildingLevels;
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PriorityContext;
+import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -16,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
 
 /**
  * Уровни шахты: следующий выдаётся после выполненного предыдущего и держится гейтом
@@ -23,6 +27,7 @@ import net.minecraft.server.level.ServerLevel;
  * и рельсы, чтобы уровень не прыгал через непостроенный.
  */
 final class MineLevels {
+    private static final Logger LOGGER = LogUtils.getLogger();
     // Уровень 2 — только выработка (dig_area): материал не расходует, булыжник даёт сам. Гейт «stone ×32»
     // ставил supply:stone, а камень (не булыжник) добычей не получить — цикл FAILED→POSTED (INC-28).
     // Уровень 3 кладёт пол из булыжника 7×7 (fill в TicketPlans) — гейт на то, что он тратит.
@@ -47,6 +52,22 @@ final class MineLevels {
             return;
         }
         BlockCoord home = homeOf(spirits);
+        BlockCoord site;
+        try {
+            site = MineDescentBottom.standOf(home).orElse(null);
+        } catch (IllegalStateException | IllegalArgumentException unbuildable) {
+            LOGGER.warn(
+                    "Уровень шахты {} не поставлен: низ спуска не считается от дома {}: {}",
+                    levelValue,
+                    home,
+                    unbuildable.getMessage());
+            return;
+        }
+        if (site == null) {
+            LOGGER.warn(
+                    "Уровень шахты {} не поставлен: нет схемы спуска {}", levelValue, TicketPlans.MINE_DESCENT_SCHEME);
+            return;
+        }
         service.submit(
                 new BoardTicket(
                         id,
@@ -58,7 +79,7 @@ final class MineLevels {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1)),
                         LEVEL_MATERIALS.getOrDefault(levelValue, Map.of())),
-                TicketTarget.at(home));
+                TicketTarget.at(site));
     }
 
     private static boolean active(BoardService service, String id) {
