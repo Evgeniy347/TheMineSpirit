@@ -28,10 +28,24 @@ public final class SettlementWood {
         if (WoodSpecies.hasLogs(stock)) {
             return WoodSpecies.of(stock);
         }
-        return NEARBY.computeIfAbsent(home, at -> nearby(level, at));
+        String cached = NEARBY.get(home);
+        if (cached != null) {
+            return cached;
+        }
+        Map<String, Integer> logs = nearby(level, home);
+        if (!WoodSpecies.hasLogs(logs)) {
+            // Без брёвен рядом порода — по биому дома и не запоминается: деревья могут прогрузиться позже.
+            return WoodSpecies.ofBiome(level.getBiome(new BlockPos(home.x(), home.y(), home.z()))
+                    .unwrapKey()
+                    .map(key -> key.location().toString())
+                    .orElse(WoodSpecies.OAK));
+        }
+        String species = WoodSpecies.of(logs);
+        NEARBY.put(home, species);
+        return species;
     }
 
-    private static String nearby(ServerLevel level, BlockCoord home) {
+    private static Map<String, Integer> nearby(ServerLevel level, BlockCoord home) {
         Map<String, Integer> logs = new HashMap<>();
         for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx += 2) {
             for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz += 2) {
@@ -46,6 +60,6 @@ public final class SettlementWood {
                 }
             }
         }
-        return WoodSpecies.of(logs);
+        return logs;
     }
 }

@@ -19,6 +19,25 @@ class WoodSpeciesTests {
     }
 
     @Test
+    void ofBiome_JungleBiomes_Jungle() {
+        for (String biome : List.of("minecraft:jungle", "minecraft:sparse_jungle", "minecraft:bamboo_jungle")) {
+            assertEquals(
+                    "jungle",
+                    WoodSpecies.ofBiome(biome),
+                    "Без брёвен рядом ограда в джунглях — из jungle, а не из дуба (INC-37): " + biome);
+        }
+    }
+
+    @Test
+    void ofBiome_OtherBiomes_TheirWood() {
+        assertEquals("spruce", WoodSpecies.ofBiome("minecraft:snowy_taiga"), "тайга — ель");
+        assertEquals("cherry", WoodSpecies.ofBiome("minecraft:cherry_grove"), "вишнёвая роща — вишня, не ель");
+        assertEquals("dark_oak", WoodSpecies.ofBiome("minecraft:dark_forest"), "тёмный лес — тёмный дуб");
+        assertEquals("acacia", WoodSpecies.ofBiome("minecraft:savanna_plateau"), "саванна — акация");
+        assertEquals(WoodSpecies.OAK, WoodSpecies.ofBiome("minecraft:plains"), "равнины — дуб");
+    }
+
+    @Test
     void of_NoLogsOrOakEqual_Oak() {
         assertEquals(WoodSpecies.OAK, WoodSpecies.of(Map.of()), "Без брёвен — по схеме, дубом");
         assertEquals(WoodSpecies.OAK, WoodSpecies.of(Map.of("oak_log", 5, "birch_log", 5)), "При равенстве — дуб");
