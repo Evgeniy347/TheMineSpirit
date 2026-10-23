@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.intellect.BackgroundWork;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.TaskAdmission;
 import com.theminespirit.core.intellect.TaskBackoff;
@@ -97,7 +98,11 @@ public final class TaskStarter {
                 }
             }
         }
-        spirit.startTask(task);
+        if (BackgroundWork.preemptible(script)) {
+            spirit.startBackgroundTask(task);
+        } else {
+            spirit.startTask(task);
+        }
         issued.put(id, new Issued(script, spirit.taskGeneration()));
         starts++;
         return true;

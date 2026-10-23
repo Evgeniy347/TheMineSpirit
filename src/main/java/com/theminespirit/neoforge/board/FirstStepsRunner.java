@@ -16,6 +16,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
+import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
@@ -24,6 +25,7 @@ import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -48,6 +50,9 @@ public final class FirstStepsRunner {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
+    private static final String FIRST_PREFIX = "first:";
+    private static final String COBBLESTONE = "cobblestone";
+    private static final String FURNACE_ITEM = "furnace";
 
     private FirstStepsRunner() {}
 
@@ -62,8 +67,9 @@ public final class FirstStepsRunner {
             return;
         }
         BlockCoord home = homeOf(spirits);
-        boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
-        SettlementFacts facts = buildFacts(level, home, stock, groundsDone);
+        Scan scan = buildFacts(level, home, stock, service);
+        TorchWatch.tick(service, spirits, home, stock, scan.furnaceBlock(), now);
+        SettlementFacts facts = scan.facts();
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         if (next.isEmpty()) {
             return;
@@ -72,18 +78,20 @@ public final class FirstStepsRunner {
         if (hasActive(service, caseValue)) {
             return;
         }
-        TicketTarget target = targetFor(caseValue, home, spirits.size());
+        TicketTarget target = targetFor(caseValue, home);
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = materials(source, caseValue, target);
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
             for (Map.Entry<String, Integer> entry : missing.entrySet()) {
-                postGather(service, source, home, entry.getKey(), entry.getValue(), now);
+                if (gatherable(entry.getKey(), facts)) {
+                    postGather(service, source, home, entry.getKey(), entry.getValue(), now);
+                }
             }
             return;
         }
-        String id = "first:" + caseValue.name().toLowerCase(Locale.ROOT);
+        String id = FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
         LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
         service.submit(
                 new BoardTicket(
@@ -99,9 +107,11 @@ public final class FirstStepsRunner {
                 target);
     }
 
-    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, int spirits) {
+    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home) {
         TicketTarget target = TicketTarget.at(home);
-        return ToolSet.isTool(caseValue) ? target.withToolCount(ToolSet.count(spirits)) : target;
+        // По одному инструменту за задание: N штук одному крафтеру не собрать из запаса, разнесённого по духам;
+        // остальные до набора на духа ставит постоянный запас (ToolStockWatch).
+        return ToolSet.isTool(caseValue) ? target.withToolCount(1) : target;
     }
 
     private static void postGather(
@@ -129,7 +139,7 @@ public final class FirstStepsRunner {
                 TicketTarget.at(home).withSupply(item, batch));
     }
 
-    private static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
+    static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
         try {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             return CaseMaterials.need(plan, source);
@@ -139,7 +149,7 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static MaterialSource materialSource(ServerLevel level) {
+    static MaterialSource materialSource(ServerLevel level) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(level);
         return new MaterialSource() {
             @Override
@@ -170,8 +180,18 @@ public final class FirstStepsRunner {
                         .orElse(false));
     }
 
-    private static SettlementFacts buildFacts(
-            ServerLevel level, BlockCoord home, StockView stock, boolean groundsDone) {
+    // Факелы и уголь ставит TorchWatch; булыжник добывается в шахте — до её спуска добыча камня не ставится.
+    private static boolean gatherable(String item, SettlementFacts facts) {
+        if (TorchRules.handles(item)) {
+            return false;
+        }
+        return !COBBLESTONE.equals(item) || facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+    }
+
+    private record Scan(SettlementFacts facts, boolean furnaceBlock) {}
+
+    private static Scan buildFacts(ServerLevel level, BlockCoord home, StockView stock, BoardService service) {
+        boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
         boolean hasHome = true;
         boolean groundsCleared = true;
         int chests = 0;
@@ -182,6 +202,7 @@ public final class FirstStepsRunner {
         boolean houses = false;
         boolean smithingTable = false;
         boolean anvil = false;
+        boolean furnace = false;
         BlockPos start = new BlockPos(home.x(), home.y(), home.z());
         for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
             for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
@@ -207,6 +228,9 @@ public final class FirstStepsRunner {
                     if (state.is(Blocks.CRAFTING_TABLE)) {
                         craftingStation = true;
                     }
+                    if (state.is(Blocks.FURNACE)) {
+                        furnace = true;
+                    }
                     if (state.is(Blocks.TORCH) || state.is(Blocks.WALL_TORCH)) {
                         lighting = true;
                     }
@@ -226,26 +250,46 @@ public final class FirstStepsRunner {
             }
         }
         Set<String> tools = toolStock(stock);
-        return new SettlementFacts(
+        Set<BoardCase> done = journalSteps(service, false);
+        Set<BoardCase> blocked = journalSteps(service, true);
+        boolean furnaceAvailable = furnace || stock.available().getOrDefault(FURNACE_ITEM, 0) > 0;
+        SettlementFacts facts = new SettlementFacts(
                 hasHome,
                 groundsCleared,
                 chests,
                 craftingStation,
                 tools,
                 mineEntrance,
+                furnaceAvailable,
                 fence,
                 lighting,
                 houses,
                 smithingTable,
-                anvil);
+                anvil,
+                done,
+                blocked);
+        return new Scan(facts, furnace);
+    }
+
+    private static Set<BoardCase> journalSteps(BoardService service, boolean blocked) {
+        Set<BoardCase> steps = EnumSet.noneOf(BoardCase.class);
+        for (BoardCase step : FirstStepsPlan.chain()) {
+            String id = FIRST_PREFIX + step.name().toLowerCase(Locale.ROOT);
+            boolean match = blocked
+                    ? service.board().statusOf(id).orElse(null) == BoardStatus.BLOCKED
+                    : service.board().ledger().has(step, 1);
+            if (match) {
+                steps.add(step);
+            }
+        }
+        return steps;
     }
 
     private static Set<String> toolStock(StockView stock) {
         Set<String> tools = new HashSet<>();
-        for (BoardCase toolCase : ToolSet.chain()) {
-            String key = ToolSet.stockKey(toolCase);
-            if (stock.available().containsKey(key)) {
-                tools.add(key);
+        for (Map.Entry<String, Integer> entry : stock.available().entrySet()) {
+            if (entry.getValue() > 0) {
+                tools.add(entry.getKey());
             }
         }
         return tools;

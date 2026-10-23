@@ -254,7 +254,7 @@ public final class SettlementIntellect {
             }
             Activity activity = catalog.byId(assignment.activity());
             ActivityIntent intent = activity.order(snapshot, view);
-            Optional<TaskNode> task = ActivityTaskFactory.taskFor(intent);
+            Optional<TaskNode> task = ActivityTaskFactory.taskFor(intent, spirit);
             if (task.isEmpty()) {
                 continue;
             }

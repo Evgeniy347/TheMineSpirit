@@ -1,11 +1,11 @@
 package com.theminespirit.core.intellect.activity;
 
-import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.SettlementView;
+import com.theminespirit.core.intellect.WorkRoles;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.processing.ProcessingStock;
 import java.util.Map;
@@ -36,7 +36,7 @@ public final class CraftActivity implements Activity {
         if (spirit == null || view == null) {
             throw new IllegalArgumentException("Крафт без духа или обстановки не проверяется");
         }
-        return spirit.role() == SpiritRole.WORKER || spirit.role() == SpiritRole.IDLE;
+        return WorkRoles.canWork(spirit, view);
     }
 
     @Override
@@ -59,11 +59,13 @@ public final class CraftActivity implements Activity {
         return itemId.startsWith("minecraft:") ? itemId.substring("minecraft:".length()) : itemId;
     }
 
+    // Запас считается по поселению, а craft берёт только свой инвентарь: дух без брёвен получал невыполнимый крафт.
+    // acquire сам берёт из сундука, крафтит из своего или рубит дерево.
     private static ActivityIntent craft(String product, ProcessingRules rules) {
         return new ActivityIntent(
                 ActivityId.CRAFT,
-                Optional.of("craft"),
-                Map.of("item", product, "count", rules.craftCount(), "radius", rules.stationRadius()),
+                Optional.of(ActivityIntent.ACQUIRE),
+                Map.of("item", product, "count", rules.craftCount()),
                 Optional.empty());
     }
 

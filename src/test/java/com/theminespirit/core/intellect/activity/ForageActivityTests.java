@@ -177,12 +177,12 @@ class ForageActivityTests {
     }
 
     @Test
-    void eligible_Defender_IsFalse() {
-        SettlementView view = SettlementViews.settlementWithForage(0, 0, 64, 32, 0, 0, FarmWork.NONE, Forage.NONE);
+    void eligible_DefenderWhileThreats_IsFalse() {
+        SettlementView view = SettlementViews.settlementWithForage(0, 0, 64, 32, 0, 1, FarmWork.NONE, Forage.NONE);
 
         assertFalse(
                 FORAGE.eligible(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER), view),
-                "Защитник не уходит за едой: пост он держит, добыча — дело работника");
+                "Защитник при угрозе в поселении не уходит за едой: пост он держит, добыча — дело работника");
         assertTrue(
                 FORAGE.eligible(SettlementViews.spirit(SPIRIT), view),
                 "Работник берёт добычу еды: иначе поселение останется голодным");

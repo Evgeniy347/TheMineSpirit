@@ -58,6 +58,11 @@ public final class StockReader {
             for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
                 add(available, spirit.getInventory().getItem(slot));
             }
+            // Надетый инструмент (equip) лежит в руке, а не в инвентаре: без него запас «теряет» кирку в руке,
+            // и первые шаги и постоянный запас крафтят инструмент заново.
+            if (spirit.mainHandOwned()) {
+                add(available, spirit.getMainHandItem());
+            }
         }
         StockScan.Result found =
                 StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT, blockBudget, blocks(level));

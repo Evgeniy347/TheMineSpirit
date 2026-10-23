@@ -57,19 +57,19 @@ class EvergreenRulesTests {
     }
 
     @Test
-    void supplyNeeded_AfterMine_BookAndPaperNeeded() {
+    void supplyNeeded_AfterHouse_BookAndPaperNeeded() {
         Board board = new Board(() -> 0);
-        board.ledger().note(BoardCase.BUILD_MINE, 1);
+        board.ledger().note(BoardCase.BUILD_HOUSE, 1);
 
         assertTrue(
                 EvergreenRules.supplyNeeded("minecraft:book", board),
-                "После шахты начинается цепочка чаровальни: книга нужна для её первого уровня");
+                "После первого дома начинается цепочка чаровальни (шахта теперь в первых шагах, INC-4): книга нужна для её первого уровня");
         assertTrue(
                 EvergreenRules.supplyNeeded("minecraft:paper", board),
-                "Бумага — часть той же цепочки книги: после шахты запас поддерживается");
+                "Бумага — часть той же цепочки книги: после дома запас поддерживается");
         assertFalse(
                 EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
-                "Полки ждут первого уровня чаровальни, а не одной шахты");
+                "Полки ждут первого уровня чаровальни, а не одного дома");
     }
 
     @Test

@@ -63,6 +63,8 @@ public final class TicketPlans {
             case CRAFT_ANVIL -> Optional.of("minecraft:anvil");
             case CRAFT_SMITHING_TABLE -> Optional.of("minecraft:smithing_table");
             case CRAFT_SMOKER -> Optional.of("minecraft:smoker");
+            case CRAFT_FURNACE -> Optional.of("minecraft:furnace");
+            case CRAFT_TORCHES -> Optional.of("minecraft:torch");
             case STOCK_CHESTS -> Optional.of("minecraft:chest");
             case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
             case PLACE_BEEHIVE -> Optional.of(HiveRules.CRAFTED_BEEHIVE);
@@ -112,6 +114,9 @@ public final class TicketPlans {
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
+            case CRAFT_FURNACE -> craft("minecraft:furnace", 1, target);
+            case CRAFT_TORCHES -> craft("minecraft:torch", torchCount(target), target);
+            case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
                     CRAFT_WOODEN_AXE,
@@ -322,6 +327,23 @@ public final class TicketPlans {
                                 CatalogLimits.FISH_DURATION_DEFAULT,
                                 RADIUS,
                                 CatalogLimits.FISH_RADIUS_DEFAULT)));
+    }
+
+    private static int torchCount(TicketTarget target) {
+        int count = target.count() > 0 ? target.count() : TorchRules.TORCHES_PER_CRAFT;
+        return Math.min(count, CatalogLimits.COUNT_MAX);
+    }
+
+    private static TaskNode smeltCharcoal(TicketTarget target) {
+        String log = target.supplyItem() == null ? "oak_log" : target.supplyItem();
+        int logs = target.supplyCount() > 0 ? target.supplyCount() : TorchRules.CHARCOAL_LOGS;
+        int charcoal = target.count() > 0 ? target.count() : TorchRules.CHARCOAL_BATCH;
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall("acquire", Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
+                new ScriptCall(
+                        "smelt",
+                        Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
