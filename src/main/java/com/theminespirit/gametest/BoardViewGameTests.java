@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
 import com.theminespirit.neoforge.board.BoardRegistry;
@@ -49,8 +50,13 @@ public final class BoardViewGameTests {
                     tile.group() == BoardTileGroup.UNAVAILABLE && tile.spirit() == null,
                     "Задание без ресурсов и исполнителя обязано быть недоступным и без духа, плитка " + tile);
             FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-            BoardViewChannel.Reply.STREAM_CODEC.encode(buf, new BoardViewChannel.Reply(tiles));
+            BoardStage stage = BoardViewChannel.stage(helper.getLevel());
+            BoardViewChannel.Reply.STREAM_CODEC.encode(buf, new BoardViewChannel.Reply(tiles, new BoardStage(3)));
             BoardViewChannel.Reply decoded = BoardViewChannel.Reply.STREAM_CODEC.decode(buf);
+            helper.assertTrue(
+                    stage.number() >= 1 && decoded.stage().equals(new BoardStage(3)),
+                    "Снимок доски несёт этап поселения для надписи вверху экрана J: этап " + stage + ", передан "
+                            + decoded.stage());
             helper.assertTrue(
                     decoded.tiles().equals(tiles) && buf.readableBytes() == 0,
                     "Пакет снимка доски искажается при передаче: клиент увидит не ту доску, что на сервере");
