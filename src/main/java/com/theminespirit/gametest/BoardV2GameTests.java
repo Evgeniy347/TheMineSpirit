@@ -219,6 +219,7 @@ public final class BoardV2GameTests {
         ServerLevel level = helper.getLevel();
         Path log = journalPath(helper, "relevance");
         BoardService board = isolated(level, log);
+        StageFixture.reach(board.board().ledger(), 2, BoardCase.BUILD_MINE);
         long now = level.getGameTime();
         assertBuriedCraterDetaches(helper, level, board, now);
 
@@ -543,6 +544,7 @@ public final class BoardV2GameTests {
         ServerLevel level = helper.getLevel();
         Path log = journalPath(helper, "enchant");
         BoardService board = isolated(level, log);
+        StageFixture.reach(board.board().ledger(), 3);
         SpiritEntity spirit = spawnAt(helper, new BlockPos(1, 1, 1), new BlockPos(4, 1, 4));
         long now = level.getGameTime();
         List<SpiritEntity> spirits = List.of(spirit);

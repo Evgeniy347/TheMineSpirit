@@ -211,6 +211,7 @@ public final class WarehouseGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 1, 2));
         Path log = journalPath(helper);
         BoardService board = isolated(level, log);
+        StageFixture.reach(board.board().ledger(), 2, BoardCase.BUILD_HOUSE, BoardCase.BUILD_WAREHOUSE);
         long now = level.getGameTime();
         complete(board, "house_1", BoardCase.BUILD_HOUSE, 1, spirit, now);
 

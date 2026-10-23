@@ -9,6 +9,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PriorityContext;
+import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
@@ -47,6 +48,10 @@ final class MineLevels {
             return;
         }
         int levelValue = next.getAsInt();
+        if (!SettlementStage.allows(
+                BoardCase.BUILD_MINE, levelValue, service.board().ledger())) {
+            return;
+        }
         String id = "mine_level_" + levelValue;
         if (active(service, id)) {
             return;
