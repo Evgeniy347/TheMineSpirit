@@ -99,6 +99,7 @@ import com.theminespirit.core.script.WalkCarefulParams;
 import com.theminespirit.core.script.WanderParams;
 import com.theminespirit.neoforge.blocks.OpenScript;
 import com.theminespirit.neoforge.blocks.UseBlockScript;
+import com.theminespirit.neoforge.board.SettlementWood;
 import com.theminespirit.neoforge.combat.AttackScript;
 import com.theminespirit.neoforge.combat.DefendScript;
 import com.theminespirit.neoforge.combat.DisengageScript;
@@ -158,6 +159,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import net.minecraft.server.level.ServerLevel;
 
 public final class SpiritScripts {
     private static final Map<String, Function<SpiritEntity, ScriptFactory>> IMPLEMENTED = implemented();
@@ -308,11 +310,12 @@ public final class SpiritScripts {
                 spirit -> params -> new SetCombatModeScript(spirit, SetCombatModeParams.from(params)));
         table.put("acquire", spirit -> params -> {
             AcquireParams parsed = AcquireParams.from(params);
+            SpiritSupplies supplies = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
             return new AcquireScript(
                     parsed.item(),
                     parsed.count(),
-                    RecipeKnowledge.of(spirit.level()),
-                    new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT),
+                    acquireKnowledge(spirit, supplies.inventory()),
+                    supplies,
                     catalog(),
                     conditionCatalog(),
                     new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
@@ -369,5 +372,16 @@ public final class SpiritScripts {
 
     public static ScriptCatalog catalogFor(SpiritEntity spirit) {
         return catalog();
+    }
+
+    // Вариант рецепта — по запасу духа и породе поселения: в джунглях палки брали дубовые доски (приёмка «джунгли»).
+    private static RecipeKnowledge acquireKnowledge(SpiritEntity spirit, Map<String, Integer> inventory) {
+        RecipeKnowledge knowledge = RecipeKnowledge.of(spirit.level());
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return knowledge;
+        }
+        BlockCoord at = spirit.home()
+                .orElseGet(() -> new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
+        return knowledge.preferring(inventory, SettlementWood.of(level, at, inventory));
     }
 }

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class WoodSpeciesTests {
@@ -51,5 +52,26 @@ class WoodSpeciesTests {
     @Test
     void check_UnknownSpecies_Rejected() {
         assertThrows(IllegalArgumentException.class, () -> WoodSpecies.check("crimson"), "Незнакомая порода");
+    }
+
+    @Test
+    void prefer_PlanksInStock_TakesHeldVariant() {
+        List<String> planks = List.of("minecraft:oak_planks", "minecraft:jungle_planks", "minecraft:bamboo_planks");
+
+        assertEquals(
+                Optional.of("minecraft:jungle_planks"),
+                WoodSpecies.prefer(planks, Map.of("jungle_planks", 3, "stick", 9), "oak"),
+                "Доски в запасе важнее общего порядка");
+    }
+
+    @Test
+    void prefer_EmptyStockJungle_TakesSpeciesVariant() {
+        List<String> planks = List.of("minecraft:bamboo_planks", "minecraft:oak_planks", "minecraft:jungle_planks");
+
+        assertEquals(
+                Optional.of("minecraft:jungle_planks"),
+                WoodSpecies.prefer(planks, Map.of(), "jungle"),
+                "Без запаса — доски породы поселения, а не первые в теге");
+        assertEquals(Optional.empty(), WoodSpecies.prefer(planks, Map.of(), "oak"), "Дуб — общий порядок");
     }
 }

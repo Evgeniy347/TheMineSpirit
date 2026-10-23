@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.intellect.FoodNorm;
 import com.theminespirit.core.intellect.NutritionTable;
 import com.theminespirit.core.intellect.StockCatalog;
@@ -37,6 +38,12 @@ public final class StockReader {
     }
 
     public static Stocks read(ServerLevel level, List<SpiritEntity> members, Optional<Point> home) {
+        return read(level, members, home, Map.of());
+    }
+
+    // Запас за вычетом брони доски: фоновые занятия не трогают материалы её заданий.
+    public static Stocks read(
+            ServerLevel level, List<SpiritEntity> members, Optional<Point> home, Map<String, Integer> reserved) {
         if (level == null) {
             throw new IllegalArgumentException("Запасы без уровня не собрать: сундуки стоят в мире");
         }
@@ -78,7 +85,10 @@ public final class StockReader {
         }
         NutritionTable table = StockCatalog.defaultTable();
         return new Stocks(
-                new StockCatalog(table).tally(items), FoodNorm.best(table, containerItems), reads, containers);
+                new StockCatalog(table).tally(BoardReserve.free(items, reserved)),
+                FoodNorm.best(table, containerItems),
+                reads,
+                containers);
     }
 
     private static void tallyContainer(Container container, Map<String, Integer> items) {

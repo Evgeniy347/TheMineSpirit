@@ -53,7 +53,10 @@ public final class TransferWatch {
         if (craftItem.isEmpty()) {
             return false;
         }
-        RecipeKnowledge recipes = RecipeKnowledge.of(level);
+        // Доски — той породы, что есть в запасе поселения, а не первая из рецепта (в джунглях сундук ждал дубовые).
+        BlockCoord place = crafter.home().orElseGet(() -> at(crafter));
+        RecipeKnowledge recipes = RecipeKnowledge.of(level)
+                .preferring(stock.available(), SettlementWood.of(level, place, stock.available()));
         List<Ingredient> ingredients = new ArrayList<>();
         for (Ingredient ingredient : recipes.ingredientsFor(craftItem.orElseThrow())) {
             ingredients.add(new Ingredient(ItemIds.normalize(ingredient.item()), ingredient.count()));
