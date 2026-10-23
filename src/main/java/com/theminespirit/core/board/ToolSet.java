@@ -63,10 +63,11 @@ public final class ToolSet {
         return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
     }
 
-    public static Optional<BoardCase> nextMissing(Set<String> present) {
+    public static Optional<BoardCase> nextMissing(Set<String> present, List<BoardCase> stage) {
         Objects.requireNonNull(
                 present, "present не может быть null: без запасов не понять, " + "какого инструмента не хватает");
-        for (BoardCase boardCase : CHAIN) {
+        Objects.requireNonNull(stage, "stage не может быть null: ступень набора — wooden(), stone() или chain()");
+        for (BoardCase boardCase : stage) {
             if (!present.contains(stockKey(boardCase))) {
                 return Optional.of(boardCase);
             }

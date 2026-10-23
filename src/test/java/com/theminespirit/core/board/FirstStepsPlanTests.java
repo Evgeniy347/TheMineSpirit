@@ -19,14 +19,16 @@ import org.junit.jupiter.api.Test;
 class FirstStepsPlanTests {
 
     private static final int FIRST_TOOL_STEP = 3;
+    private static final int MINE_STEP = 6;
 
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
         chain.add(BoardCase.CLEAR_GROUNDS);
         chain.add(BoardCase.STOCK_CHESTS);
         chain.add(BoardCase.CRAFTING_STATION);
-        chain.addAll(ToolSet.chain());
+        chain.addAll(ToolSet.wooden());
         chain.add(BoardCase.BUILD_MINE);
+        chain.addAll(ToolSet.stone());
         chain.add(BoardCase.BUILD_FENCE);
         chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.BUILD_HOUSE);
@@ -39,7 +41,8 @@ class FirstStepsPlanTests {
         Set<String> tools = new HashSet<>();
         List<BoardCase> toolsChain = ToolSet.chain();
         for (int i = 0; i < toolsChain.size(); i++) {
-            if (step > FIRST_TOOL_STEP + i) {
+            int mineStep = i < ToolSet.wooden().size() ? 0 : 1;
+            if (step > FIRST_TOOL_STEP + i + mineStep) {
                 tools.add(ToolSet.stockKey(toolsChain.get(i)));
             }
         }
@@ -53,7 +56,7 @@ class FirstStepsPlanTests {
                 step > 1 ? 2 : 0,
                 step > 2,
                 toolsDone(step),
-                step > 10,
+                step > MINE_STEP,
                 step > 11,
                 step > 12,
                 step > 13,
@@ -97,6 +100,20 @@ class FirstStepsPlanTests {
                                 + ": каменная ступень открывается по выполнению деревянной");
             }
         }
+    }
+
+    @Test
+    void next_WoodenToolsDoneNoMine_BuildMineBeforeStoneTools() {
+        Set<String> wooden = new HashSet<>();
+        ToolSet.wooden().forEach(boardCase -> wooden.add(ToolSet.stockKey(boardCase)));
+        SettlementFacts facts =
+                new SettlementFacts(true, true, 2, true, wooden, false, false, false, false, false, false);
+
+        assertEquals(
+                Optional.of(BoardCase.BUILD_MINE),
+                FirstStepsPlan.next(facts),
+                "после деревянного набора — шахта, а не каменные инструменты: булыжник для них добывается только "
+                        + "в шахте (решение владельца 21.10), иначе дух роет ямы у дома");
     }
 
     @Test

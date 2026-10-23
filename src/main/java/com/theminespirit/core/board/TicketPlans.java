@@ -2,7 +2,6 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -25,6 +24,8 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     private static final String BLOCK = "block";
+    private static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
+    private static final int MINE_DESCENT_OFFSET = 6;
     private static final String ITEM = "item";
     private static final String COUNT = "count";
     private static final String CONTAINER = "container";
@@ -148,16 +149,31 @@ public final class TicketPlans {
         };
     }
 
+    // Спуск по схеме владельца (mine_descent_v1) в стороне от дома, вглубь на юг: ступени
+    // 1×3 с шагом в блок до y=50 из файла — дух копает булыжник только здесь и выходит наверх пешком.
+    private static TaskNode mineDescent(TicketTarget target) {
+        int x = target.target().x() + MINE_DESCENT_OFFSET;
+        int z = target.target().z();
+        return sequence(
+                gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                new ScriptCall(
+                        "build_schematic",
+                        Map.of(
+                                "file",
+                                MINE_DESCENT_SCHEME,
+                                "x",
+                                x,
+                                "y",
+                                target.target().y() - 1,
+                                "z",
+                                z,
+                                "rotation",
+                                "clockwise_90")));
+    }
+
     private static TaskNode buildMineLevel(int level, TicketTarget target) {
         return switch (level) {
-            case 1 ->
-                new ScriptCall(
-                        "dig_descent",
-                        Map.of(
-                                "direction",
-                                "south",
-                                "y",
-                                DescentData.loadDefault().targetY()));
+            case 1 -> mineDescent(target);
             case 2 ->
                 new ScriptCall(
                         "dig_area",

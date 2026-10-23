@@ -24,12 +24,17 @@ public final class FirstStepsPlan {
         if (!facts.craftingStation()) {
             return Optional.of(BoardCase.CRAFTING_STATION);
         }
-        Optional<BoardCase> tool = ToolSet.nextMissing(facts.tools());
-        if (tool.isPresent()) {
-            return tool;
+        // Булыжник добывается только в шахте (решение владельца 21.10): деревянный набор → шахта → каменный набор.
+        Optional<BoardCase> wooden = ToolSet.nextMissing(facts.tools(), ToolSet.wooden());
+        if (wooden.isPresent()) {
+            return wooden;
         }
         if (!facts.mineEntrance()) {
             return Optional.of(BoardCase.BUILD_MINE);
+        }
+        Optional<BoardCase> stone = ToolSet.nextMissing(facts.tools(), ToolSet.stone());
+        if (stone.isPresent()) {
+            return stone;
         }
         if (!facts.fence()) {
             return Optional.of(BoardCase.BUILD_FENCE);

@@ -408,6 +408,16 @@ public final class BoardFirstStepsGameTests {
 
         tick(level, board, spirit, stock);
         helper.assertTrue(
+                board.board().statusOf("first:build_mine").isPresent()
+                        && board.board().statusOf("gather:cobblestone").isEmpty(),
+                "После деревянного набора — шахта, а не добыча булыжника: булыжник добывается только в шахте "
+                        + "(решение владельца 21.10), статус шахты "
+                        + board.board().statusOf("first:build_mine")
+                        + ", булыжника " + board.board().statusOf("gather:cobblestone"));
+        board.board().ledger().note(BoardCase.BUILD_MINE, 1);
+
+        tick(level, board, spirit, stock);
+        helper.assertTrue(
                 board.board().statusOf("gather:cobblestone").isPresent(),
                 "Каменная ступень ждёт булыжник: при недостаче встаёт добыча булыжника, статус "
                         + board.board().statusOf("gather:cobblestone"));
@@ -647,13 +657,14 @@ public final class BoardFirstStepsGameTests {
     private static int chainIndex(BoardCase boardCase) {
         int tool = ToolSet.chain().indexOf(boardCase);
         if (tool >= 0) {
-            return FIRST_TOOL_INDEX + tool;
+            // Шахта — между деревянным и каменным набором: булыжник добывается только в шахте.
+            return FIRST_TOOL_INDEX + tool + (tool < ToolSet.wooden().size() ? 0 : 1);
         }
         return switch (boardCase) {
             case CLEAR_GROUNDS -> 0;
             case STOCK_CHESTS -> 1;
             case CRAFTING_STATION -> 2;
-            case BUILD_MINE -> 10;
+            case BUILD_MINE -> FIRST_TOOL_INDEX + ToolSet.wooden().size();
             case BUILD_FENCE -> 11;
             case LIGHTING -> 12;
             case BUILD_HOUSE -> 13;

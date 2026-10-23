@@ -81,7 +81,7 @@ class ToolSetTests {
     void nextMissing_Empty_StartsWoodenPickaxe() {
         assertEquals(
                 Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE),
-                ToolSet.nextMissing(Set.of()),
+                ToolSet.nextMissing(Set.of(), ToolSet.chain()),
                 "Пустой запас начинает с деревянной кирки: первый предмет цепочки");
     }
 
@@ -89,7 +89,7 @@ class ToolSetTests {
     void nextMissing_WoodenDone_ReturnsWoodenAxe() {
         assertEquals(
                 Optional.of(BoardCase.CRAFT_WOODEN_AXE),
-                ToolSet.nextMissing(Set.of(ToolSet.stockKey(BoardCase.CRAFT_WOODEN_PICKAXE))),
+                ToolSet.nextMissing(Set.of(ToolSet.stockKey(BoardCase.CRAFT_WOODEN_PICKAXE)), ToolSet.chain()),
                 "После деревянной кирки идёт деревянный топор: каждый предмет — отдельный шаг");
     }
 
@@ -102,7 +102,7 @@ class ToolSetTests {
 
         assertEquals(
                 Optional.empty(),
-                ToolSet.nextMissing(all),
+                ToolSet.nextMissing(all, ToolSet.chain()),
                 "Собранный набор не просит новых предметов: пустой ответ закрывает ступень");
     }
 
@@ -110,7 +110,7 @@ class ToolSetTests {
     void nextMissing_StonePresent_ReturnsWoodenPickaxe() {
         assertEquals(
                 Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE),
-                ToolSet.nextMissing(Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE))),
+                ToolSet.nextMissing(Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE)), ToolSet.chain()),
                 "Каменная кирка без деревянной не продвигает цепочку: деревянная ступень обязана "
                         + "быть закрыта раньше каменной");
     }
