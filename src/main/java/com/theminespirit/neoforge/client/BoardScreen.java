@@ -106,6 +106,9 @@ public final class BoardScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
+        BoardLayout.Rect stage = layout.stage();
+        graphics.drawCenteredString(
+                font, Component.translatable(KEY + "stage.none"), stage.x() + stage.width() / 2, stage.y(), TEXT_COLOR);
         BoardLayout.Rect window = layout.window();
         BoardLayout.Rect inner = layout.inner();
         blitPanel(graphics, window);

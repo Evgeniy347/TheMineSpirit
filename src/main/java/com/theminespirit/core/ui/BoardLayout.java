@@ -6,6 +6,7 @@ import java.util.List;
 /** Раскладка экрана доски задач: окно, кнопки фильтров, четыре равные колонки, заголовки и плитки. */
 public final class BoardLayout {
     public static final int MARGIN = 8;
+    public static final int STAGE_HEIGHT = 12;
     public static final int BUTTON_HEIGHT = 20;
     public static final int BUTTON_GAP = 4;
     public static final int BUTTON_MAX_WIDTH = 150;
@@ -47,7 +48,8 @@ public final class BoardLayout {
 
     public static BoardLayout of(int screenWidth, int screenHeight) {
         int windowX = MARGIN;
-        int windowY = MARGIN + BUTTON_HEIGHT + BUTTON_GAP;
+        int buttonY = MARGIN + STAGE_HEIGHT + BUTTON_GAP;
+        int windowY = buttonY + BUTTON_HEIGHT + BUTTON_GAP;
         int windowWidth = Math.max(0, screenWidth - 2 * MARGIN);
         int windowHeight = Math.max(0, screenHeight - windowY - MARGIN);
         Rect window = new Rect(windowX, windowY, windowWidth, windowHeight);
@@ -70,8 +72,8 @@ public final class BoardLayout {
         }
         int buttonWidth = Math.min(BUTTON_MAX_WIDTH, Math.max(60, (inner.width() - BUTTON_GAP) / 2));
         int buttonX = inner.x() + CONTENT_PAD;
-        Rect statusButton = new Rect(buttonX, MARGIN, buttonWidth, BUTTON_HEIGHT);
-        Rect spiritButton = new Rect(buttonX + buttonWidth + BUTTON_GAP, MARGIN, buttonWidth, BUTTON_HEIGHT);
+        Rect statusButton = new Rect(buttonX, buttonY, buttonWidth, BUTTON_HEIGHT);
+        Rect spiritButton = new Rect(buttonX + buttonWidth + BUTTON_GAP, buttonY, buttonWidth, BUTTON_HEIGHT);
         return new BoardLayout(window, inner, list, columns, headers, statusButton, spiritButton);
     }
 
@@ -93,6 +95,10 @@ public final class BoardLayout {
 
     public List<Rect> headers() {
         return headers;
+    }
+
+    public Rect stage() {
+        return new Rect(window.x(), MARGIN, window.width(), STAGE_HEIGHT);
     }
 
     public Rect statusButton() {

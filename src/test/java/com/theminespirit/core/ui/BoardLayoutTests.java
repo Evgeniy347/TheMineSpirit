@@ -87,4 +87,23 @@ class BoardLayoutTests {
             assertEquals(columns.get(i).width(), header.width(), "Ширина заголовка обязана совпадать с колонкой");
         }
     }
+
+    @ParameterizedTest(name = "{0}x{1}")
+    @CsvSource({"854, 480", "1280, 720", "1920, 1030"})
+    void stage_EveryScreenSize_SitsAboveButtonsAndWindow(int screenWidth, int screenHeight) {
+        BoardLayout layout = BoardLayout.of(screenWidth, screenHeight);
+        BoardLayout.Rect stage = layout.stage();
+        BoardLayout.Rect window = layout.window();
+
+        assertEquals(window.x(), stage.x(), "Надпись этапа обязана стоять по краю окна, а не уезжать вбок");
+        assertEquals(window.width(), stage.width(), "Надпись этапа обязана занимать всю ширину окна");
+        assertTrue(
+                stage.y() >= BoardLayout.MARGIN, "Надпись этапа обязана быть в самом верху экрана, но не под обрезом");
+        assertTrue(
+                stage.bottom() <= layout.statusButton().y(),
+                "Надпись этапа обязана стоять над кнопками фильтров: иначе она наезжает на них");
+        assertTrue(
+                stage.bottom() <= window.y(),
+                "Надпись этапа обязана стоять над окном доски: иначе она попадает на рамку");
+    }
 }
