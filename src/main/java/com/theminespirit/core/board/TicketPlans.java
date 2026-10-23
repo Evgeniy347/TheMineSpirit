@@ -161,7 +161,7 @@ public final class TicketPlans {
     }
 
     // Спуск по схеме владельца (mine_descent_v1) в стороне от дома, вглубь на юг: ступени
-    // 1×3 с шагом в блок на глубину из файла — дух копает булыжник только здесь и выходит наверх пешком.
+    // 1×3 с шагом в блок до y=50 из файла — дух копает булыжник только здесь и выходит наверх пешком.
     public static BlockCoord mineDescentOrigin(BlockCoord home) {
         Objects.requireNonNull(home, "Дом не может быть null: спуск в шахту ставится в стороне от дома");
         return new BlockCoord(home.x() + MINE_DESCENT_OFFSET, home.y() - 1, home.z());
