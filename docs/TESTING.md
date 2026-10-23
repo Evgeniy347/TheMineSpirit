@@ -5,13 +5,18 @@
 | Уровень | Где | Что проверяет | Запуск |
 |---|---|---|---|
 | JUnit 5 + jqwik | `src/test/java` | чистая логика `core`, сторожа правил проекта | `scripts/test.sh unit [--tests …]` |
-| GameTest | `src/main/java/.../gametest` | поведение в настоящем мире | `scripts/test.sh gametest [пачка…]` |
+| GameTest, быстрый набор | `src/main/java/.../gametest` | поведение в настоящем мире без демо-аудитов построек | `scripts/test.sh gametest [пачка…]` |
+| GameTest, полный (ночной) | там же | быстрый набор + демо-аудиты построек (`demo_audit_*`) | `scripts/test.sh gametest --full` |
 
+- Полный GameTest — явный `--full`: он идёт ~10 минут и в ежедневный прогон не входит.
+- GameTest идёт шардами: 3 сервера на ПК, 1 на Linux-сервере (`THEMINESPIRIT_GAMETEST_SHARDS`); пачки делятся
+  между ними целиком, у каждого свой мир (`build/gametest-run/shard-N`), замок машины общий.
 - Только через `scripts/test.sh`: полный лог — `TestResults/logs/`, на экран — итог. Прямой `./gradlew test` /
   `runGameTestServer` запрещён (GameTest-задача без пропуска от скрипта не стартует). Скрипт держит замок «один
-  GameTest-сервер на машину», пределы времени и гашение своих процессов — устройство описано в его шапке,
+  GameTest-прогон на машину», пределы времени и гашение своих процессов — устройство описано в его шапке,
   проверки — `scripts/testing/check-test-runner.sh`, `check-gametest-lock.sh`.
 - Фильтр `gametest <имя…>` (пачка, класс, тест) отбирает тесты до старта; фильтр без совпадений — ошибка.
+  С явным фильтром шардов нет: прогон идёт на одном сервере.
 - Всё, что не требует мира, — JUnit в `core`. GameTest — только то, что без мира не проверить.
 
 ## GameTest: сцены
@@ -68,5 +73,8 @@
   Класс с общим состоянием (счётчик, файл) — `@Isolated`; долгий независимый класс — `@Execution(CONCURRENT)`.
   Свойства jqwik идут последовательно. Форки выключены: одна база jqwik.
 - Пределы времени `scripts/test.sh` — согласованные значения в `TestTimeLimitGuardTests`; поднять — только с согласия
-  владельца, правкой таблицы сторожа с причиной.
+  владельца, правкой таблицы сторожа с причиной. Быстрый набор: unit 90/200 с, GameTest 120/200 с; полный
+  GameTest — свой предел 1200 с.
+- Анализаторы: в хуке pre-commit — компилятор с Error Prone/NullAway, Spotless, Checkstyle (`--fast-analyzers`);
+  SpotBugs и PMD — приёмка перед слиянием (`scripts/test.sh unit` без флага, `check`).
 - Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/`), отчёт, не гейт.

@@ -12,7 +12,8 @@
 |---|---|---|
 | `scripts/test.sh unit` | быстрые JUnit-тесты (включая свойства jqwik, кроме `@Tag("slow")`) | `OK unit: N тестов, T с` |
 | `scripts/test.sh unit --tests "*Guard*"` | только тесты, подходящие под фильтр gradle | `OK unit: N тестов, T с` |
-| `scripts/test.sh gametest` | GameTest под замком (один сервер на машину): все тесты | `OK gametest: N тестов, T с` |
+| `scripts/test.sh gametest` | GameTest под замком шардами: быстрый набор без демо-аудитов | `OK gametest: N тестов, T с` |
+| `scripts/test.sh gametest --full` | полный GameTest, включая демо-аудиты построек (ночной) | `OK gametest: N тестов, T с` |
 | `scripts/test.sh gametest <фильтр>` | GameTest только по имени пачки/класса/теста | `OK gametest: N тестов, T с` |
 | `./gradlew build` | компиляция (`-Werror`), быстрые JUnit-тесты, сборка jar | `build/libs/theminespirit-<версия>.jar`, отчёты в `TestResults/unit/` |
 | `./gradlew slowTest` | только `@Tag("slow")`; отчёты в `TestResults/slow/` |

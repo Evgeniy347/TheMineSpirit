@@ -11,6 +11,9 @@ failed=0
 ok() { echo "OK $1"; }
 fail() { echo "FAIL $1"; failed=1; }
 
+# Проверки ниже исторически про один сервер: шарды проверяются отдельным случаем в конце.
+export THEMINESPIRIT_GAMETEST_SHARDS=1
+
 # ── Фейковые gradlew ─────────────────────────────────────────────────────────
 
 # Успех unit: пишет XML-отчёт и выходит 0
@@ -134,6 +137,12 @@ code=$?
 [ "$code" = 1 ] && echo "$out" | grep -q "FAIL static: 3 тестов зелёные"     && echo "$out" | grep -q "spotlessJavaCheck"     && grep -q "staticAnalysis --continue" "$work/static-args"     && ok "unit-static-fail: полный прогон гоняет staticAnalysis, красный анализатор при зелёных тестах — код=1"     || fail "unit-static-fail: код=$code, аргументы: $(cat "$work/static-args" 2>/dev/null), вывод: $out"
 out=$(bash scripts/test.sh unit --tests 'com.example.*' 2>&1)
 grep -q "staticAnalysis" "$work/static-args"     && fail "unit-static-fail: прогон с --tests не должен гонять staticAnalysis: $(cat "$work/static-args")"     || ok "unit-static-fail: прогон с --tests идёт без анализаторов"
+# Хук pre-commit: быстрые анализаторы, без SpotBugs и PMD (они — приёмка перед слиянием).
+out=$(bash scripts/test.sh unit --fast-analyzers 2>&1)
+grep -q "staticAnalysisFast --continue" "$work/static-args" \
+    && ! grep -qE -- "spotbugs|pmd" "$work/static-args" \
+    && ok "unit-fast-analyzers: хук гоняет staticAnalysisFast без SpotBugs/PMD" \
+    || fail "unit-fast-analyzers: аргументы: $(cat "$work/static-args" 2>/dev/null)"
 unset FAKE_ARGS_FILE
 
 export THEMINESPIRIT_GRADLEW="$work/bin/unit-build-error"
@@ -628,5 +637,44 @@ FAKE
         ok "stop-server: пропущено (не Linux: поиск сервера по /proc/<pid>/cwd недоступен)"
         ;;
 esac
+
+# ── Шарды GameTest: 3 сервера, пачки делятся, у каждого свой мир; быстрый набор без демо-аудитов ──
+# Фейковый gradle пишет аргументы в файл своего шарда (одновременная запись одного файла — гонка).
+cat >"$work/bin/shard-record" <<'FAKE'
+#!/usr/bin/env bash
+shard=0
+for a in "$@"; do
+    case "$a" in
+        -Dtheminespirit.gametest.dir=*shard-*) shard="${a##*shard-}" ;;
+    esac
+done
+printf '%s\n' "$@" >"${ARGS_DIR:?}/args-$shard"
+echo "All 3 required tests passed"
+exit 0
+FAKE
+chmod +x "$work/bin/shard-record"
+argsdir="$work/shard-args"
+rm -rf "$argsdir"; mkdir -p "$argsdir"
+out=$(ARGS_DIR="$argsdir" THEMINESPIRIT_GRADLEW="$work/bin/shard-record" \
+    THEMINESPIRIT_GAMETEST_SHARDS=2 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" = 0 ] && echo "$out" | grep -q "OK gametest: 6 тест" \
+    && [ -s "$argsdir/args-0" ] && [ -s "$argsdir/args-1" ] \
+    && grep -qx "exclude=demo_audit" build/gametest-run/shard-0/theminespirit-gametest.properties \
+    && grep -qx "shard=0/2" build/gametest-run/shard-0/theminespirit-gametest.properties \
+    && grep -qx "shard=1/2" build/gametest-run/shard-1/theminespirit-gametest.properties \
+    && grep -qx -- "-Dtheminespirit.gametest.dir=build/gametest-run/shard-0" "$argsdir/args-0" \
+    && grep -qx -- "-Dtheminespirit.gametest.dir=build/gametest-run/shard-1" "$argsdir/args-1" \
+    && ok "gametest-shards: 2 сервера, сумма итогов, быстрый набор исключает demo_audit, у шардов разные миры" \
+    || fail "gametest-shards: код=$code, args0=$(tr '\n' ' ' <"$argsdir/args-0" 2>/dev/null), вывод: $out"
+out=$(ARGS_DIR="$argsdir" THEMINESPIRIT_GRADLEW="$work/bin/shard-record" \
+    THEMINESPIRIT_GAMETEST_SHARDS=1 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest --full 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx "exclude=" build/gametest-run/theminespirit-gametest.properties \
+    && ok "gametest-full: --full не исключает демо-аудиты" \
+    || fail "gametest-full: код=$code, args=$(tr '\n' ' ' <"$argsdir/args-0" 2>/dev/null), вывод: $out"
+rm -rf "$work/tmp/lock.d" "$argsdir"
 
 exit $failed

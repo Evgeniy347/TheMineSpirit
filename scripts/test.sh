@@ -2,11 +2,12 @@
 # Единый запуск тестов (docs/TESTING.md → «Два уровня»). Исполнители запускают тесты ТОЛЬКО через этот скрипт.
 # Полный лог всегда в TestResults/logs/<дата-время>-<режим>.log; на экран — только итог.
 # Режимы:
-#   scripts/test.sh unit [--tests <фильтр gradle>]…
-#   scripts/test.sh gametest [имя пачки или теста…]
+#   scripts/test.sh unit [--tests <фильтр gradle>]… [--fast-analyzers]
+#   scripts/test.sh gametest [--full] [имя пачки или теста…]
 # Пределы времени (переменные окружения, секунды):
-#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 300), THEMINESPIRIT_UNIT_STOP_SECONDS (900; холодная сборка с анализаторами на 4 ядрах — до ~6 мин)
-#   THEMINESPIRIT_GAMETEST_WARN_SECONDS (300), THEMINESPIRIT_GAMETEST_STOP_SECONDS (1500)
+#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 90), THEMINESPIRIT_UNIT_STOP_SECONDS (200)
+#   THEMINESPIRIT_GAMETEST_WARN_SECONDS (120), THEMINESPIRIT_GAMETEST_STOP_SECONDS (200) — быстрый набор
+#   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS (600), THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS (1200) — ночной --full
 # Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
 # Без -e: коды проверяются явно; под -e пустой grep в разборе падения молча обрывал скрипт без итога.
 set -uo pipefail
@@ -16,16 +17,20 @@ cd "$(dirname "$0")/.."
 # (с символической ссылкой) каталог сервера не нашёлся бы.
 GAMETEST_WORKTREE="$(pwd -P)"
 GAMETEST_RUN_DIR="$GAMETEST_WORKTREE/build/gametest-run"
+# Замер длительности пачек прошлого полного/быстрого прогона: по нему шарды делятся ровно (см. ниже).
+GAMETEST_WEIGHTS_FILE="$GAMETEST_WORKTREE/build/gametest-shard-weights.txt"
 
 GRADLEW="${THEMINESPIRIT_GRADLEW:-./gradlew}"
 LOG_DIR="TestResults/logs"
 mkdir -p "$LOG_DIR"
 
 # Пределы времени (секунды)
-UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-300}"
-UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-900}"
-GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-300}"
-GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-1500}"
+UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-90}"
+UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-200}"
+GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-120}"
+GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-200}"
+GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-600}"
+GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-1200}"
 
 # Замок GameTest (переиспользуем логику из scripts/gametest.sh).
 # Дефолт: на Windows — C:\ProgramData\theminespirit (общий для всех сессий и пользователей машины;
@@ -55,27 +60,34 @@ DIR_LOCK_HELD=0
 usage() {
     cat <<'EOF'
 Использование:
-  scripts/test.sh unit [--tests <фильтр gradle>]…
-  scripts/test.sh gametest [имя пачки или теста…]
+  scripts/test.sh unit [--tests <фильтр gradle>]… [--fast-analyzers]
+  scripts/test.sh gametest [--full] [имя пачки или теста…]
 
 Режимы:
   unit      быстрые JUnit-тесты (без запуска игры)
-  gametest  GameTest под замком (один сервер на машину)
+  gametest  GameTest под замком: быстрый набор без демо-аудитов (по умолчанию) или полный (--full)
+
+Шарды GameTest: на ПК 3 сервера, на Linux 1; THEMINESPIRIT_GAMETEST_SHARDS перекрывает.
 
 Примеры:
   scripts/test.sh unit
   scripts/test.sh unit --tests "*Guard*"
+  scripts/test.sh unit --fast-analyzers
   scripts/test.sh gametest
+  scripts/test.sh gametest --full
   scripts/test.sh gametest CombatGameTests
   scripts/test.sh gametest combat_directive
   scripts/test.sh gametest CombatGameTests.combat_target_spirit
 
 Переменные окружения:
   THEMINESPIRIT_GRADLEW              команда запуска gradle (по умолчанию ./gradlew)
-  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 300)
-  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 900)
-  THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение gametest (по умолчанию 300)
-  THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп gametest (по умолчанию 1500)
+  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 90)
+  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 200)
+  THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение быстрого gametest (по умолчанию 120)
+  THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп быстрого gametest (по умолчанию 200)
+  THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS  предупреждение полного gametest (600)
+  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп полного gametest (1200)
+  THEMINESPIRIT_GAMETEST_SHARDS      число параллельных серверов GameTest (ПК 3, Linux 1)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
   THEMINESPIRIT_GAMETEST_STALE_SECONDS  возраст пульса, после которого mkdir-замок протух (120)
@@ -92,12 +104,24 @@ EOF
 MODE=""
 UNIT_TESTS=()
 GAMETEST_FILTERS=()
+GAMETEST_FULL=0
+UNIT_FAST_ANALYZERS=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         unit|gametest)
             [ -n "$MODE" ] && { echo "Режим уже выбран: $MODE" >&2; usage; }
             MODE="$1"
+            shift
+            ;;
+        --full)
+            [ "$MODE" = "gametest" ] || { echo "--full только для режима gametest" >&2; usage; }
+            GAMETEST_FULL=1
+            shift
+            ;;
+        --fast-analyzers)
+            [ "$MODE" = "unit" ] || { echo "--fast-analyzers только для режима unit" >&2; usage; }
+            UNIT_FAST_ANALYZERS=1
             shift
             ;;
         --tests)
@@ -123,6 +147,20 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$MODE" ] || usage
+
+# Шарды GameTest. ПК (Git Bash) — 3 сервера, Linux-сервер (domovoy, 4 ядра и Minecraft) — 1;
+# THEMINESPIRIT_GAMETEST_SHARDS перекрывает. Явный фильтр всегда один сервер: иначе часть шардов
+# осталась бы без тестов. Шарды делят пачки, а не отдельные тесты (GameTestFilter).
+GAMETEST_SHARDS="${THEMINESPIRIT_GAMETEST_SHARDS:-}"
+if [ -z "$GAMETEST_SHARDS" ]; then
+    case "$OSTYPE" in
+        msys*|cygwin*|win*) GAMETEST_SHARDS=3 ;;
+        *) GAMETEST_SHARDS=1 ;;
+    esac
+fi
+case "$GAMETEST_SHARDS" in ''|*[!0-9]*) GAMETEST_SHARDS=1 ;; esac
+[ "$GAMETEST_SHARDS" -ge 1 ] || GAMETEST_SHARDS=1
+[ ${#GAMETEST_FILTERS[@]} -gt 0 ] && GAMETEST_SHARDS=1
 
 # ── Замок GameTest (flock на Linux, mkdir на Windows Git Bash) ───────────────
 noflock() {
@@ -182,7 +220,9 @@ gametest_server_pids() {
                 esac
                 cwd=$(readlink "$d/cwd" 2>/dev/null) || continue
                 pid="${d#/proc/}"
-                [ "$cwd" = "$dir" ] && pid_is_live "$pid" && printf '%s\n' "$pid"
+                case "$cwd" in
+                    "$dir"|"$dir"/*) pid_is_live "$pid" && printf '%s\n' "$pid" ;;
+                esac
             done
             ;;
     esac
@@ -427,9 +467,11 @@ monitor_loop() {
             echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
             : >"$MONITOR_LOG_FILE.stopped"
             kill_gametest_server
-            gpid=""
-            [ -f "$MONITOR_LOG_FILE.gradlepid" ] && read -r gpid <"$MONITOR_LOG_FILE.gradlepid"
-            [ -n "$gpid" ] && kill_own_tree "$gpid" 10 "$MONITOR_GRADLE_GROUP"
+            if [ -f "$MONITOR_LOG_FILE.gradlepids" ]; then
+                while read -r gpid; do
+                    [ -n "$gpid" ] && kill_own_tree "$gpid" 10 "$MONITOR_GRADLE_GROUP"
+                done <"$MONITOR_LOG_FILE.gradlepids"
+            fi
             trap - TERM
             kill -TERM "$MONITOR_MAIN_PID" 2>/dev/null
             exit 124
@@ -438,13 +480,13 @@ monitor_loop() {
 }
 
 start_monitor() {
-    local mode="$1"
+    local mode="$1" warn="${2:-}" stop="${3:-}"
     if [ "$mode" = "unit" ]; then
         WARN_SECONDS="$UNIT_WARN"
         STOP_SECONDS="$UNIT_STOP"
     else
-        WARN_SECONDS="$GAMETEST_WARN"
-        STOP_SECONDS="$GAMETEST_STOP"
+        WARN_SECONDS="${warn:-$GAMETEST_WARN}"
+        STOP_SECONDS="${stop:-$GAMETEST_STOP}"
     fi
 
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
@@ -484,7 +526,7 @@ start_heartbeat() {
     case "$HEARTBEAT_FILE" in */*) mkdir -p "${HEARTBEAT_FILE%/*}" ;; esac
     : >"$HEARTBEAT_FILE"
     now_s now
-    deadline=$(( now + GAMETEST_WAIT + (UNIT_STOP > GAMETEST_STOP ? UNIT_STOP : GAMETEST_STOP) + 300 ))
+    deadline=$(( now + GAMETEST_WAIT + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
     # stdout/stderr — в /dev/null: иначе фоновый sleep наследует пайп вызывающего
     # (out=$(scripts/test.sh …)) и держит его открытым до конца сна, задерживая проверки.
     (
@@ -518,6 +560,13 @@ stop_monitor() {
     if [ -n "$GRADLE_PID" ]; then
         kill_own_tree "$GRADLE_PID" 10 "${MONITOR_GRADLE_GROUP:-}"
         GRADLE_PID=""
+    fi
+    if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.gradlepids" ]; then
+        local gp
+        while read -r gp; do
+            [ -n "$gp" ] && kill_own_tree "$gp" 10 "${MONITOR_GRADLE_GROUP:-}"
+        done <"$LOG_FILE.gradlepids"
+        rm -f "$LOG_FILE.gradlepids"
     fi
     stop_timer
     stop_heartbeat
@@ -730,7 +779,10 @@ analyze_gametest() {
     local passed_line=$(grep -E "All [0-9]+ required tests passed" "$log" | tail -1)
 
     if [ -n "$passed_line" ]; then
-        local count=$(printf '%s' "$passed_line" | grep -oE "[0-9]+ required tests passed" | grep -oE '[0-9]+' | head -1)
+        # Шарды пишут по строке-итогу каждый; всего пройдено — сумма, а не только последняя.
+        local count
+        count=$(grep -E "All [0-9]+ required tests passed" "$log" \
+            | sed -E 's/.*All ([0-9]+) required tests passed.*/\1/' | awk '{s += $1} END {print s + 0}')
         echo "OK gametest: $count тестов, $ELAPSED с"
         return 0
     fi
@@ -738,6 +790,28 @@ analyze_gametest() {
     echo "FAIL gametest: результат не распознан"
     echo "полный лог: $log"
     return 1
+}
+
+# Длительности пачек из лога сервера — дельта между строками «Running test batch '…'».
+# Формат вывода: «имя_пачки мс». Последняя пачка без следующей отбрасывается (время неполное).
+batch_weights() {
+    sed -nE "s/^\[([0-9]{2}):([0-9]{2}):([0-9]{2})\].*Running test batch '([^':]+).*/\1 \2 \3 \4/p" "$1" \
+        | awk '{ s = $1 * 3600 + $2 * 60 + $3; if (prev != "") print prevname, (s - prev) * 1000; prev = s; prevname = $4 }'
+}
+
+# Запоминает замер для следующего прогона: LPT по реальным длительностям ровняет шарды лучше,
+# чем timeoutTicks (стройка поселения с окном 24000 тиков идёт 20 с, поиск пути на 400 — 12 с).
+record_gametest_weights() {
+    local log tmp="$GAMETEST_WEIGHTS_FILE.tmp"
+    : >"$tmp"
+    for log in "$@"; do
+        [ -s "$log" ] && batch_weights "$log"
+    done | awk '{ if (!($1 in w) || $2 > w[$1]) w[$1] = $2 + 0 } END { for (b in w) print b "=" w[b] }' | sort >"$tmp"
+    if [ -s "$tmp" ]; then
+        mv -f "$tmp" "$GAMETEST_WEIGHTS_FILE"
+    else
+        rm -f "$tmp"
+    fi
 }
 
 # ── Запуск ───────────────────────────────────────────────────────────────────
@@ -756,15 +830,22 @@ if [ "$MODE" = "unit" ]; then
     start_monitor "unit"
     # --rerun: XML стёрты выше, а :test UP-TO-DATE/FROM-CACHE (build cache) их не вернёт — итог был бы total=0.
 
-    # Полный прогон (без --tests, в том числе хук pre-commit) гоняет и строгие анализаторы (tasks/46):
+    # Полный прогон (без --tests, в том числе хук pre-commit) гоняет анализаторы (tasks/46):
+    # в хуке — быстрые (--fast-analyzers: Spotless, Checkstyle), при приёмке — все, включая SpotBugs и PMD.
     # --continue — тесты идут и при красном анализаторе, итог называет обе части.
     UNIT_EXTRA=()
-    [ ${#UNIT_TESTS[@]} -eq 0 ] && UNIT_EXTRA=(staticAnalysis --continue)
+    if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
+        if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
+            UNIT_EXTRA=(staticAnalysisFast --continue)
+        else
+            UNIT_EXTRA=(staticAnalysis --continue)
+        fi
+    fi
 
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test --rerun --no-build-cache "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test --rerun --no-build-cache "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
@@ -796,7 +877,19 @@ else
         FILTER_VALUE=$(IFS=,; echo "${GAMETEST_FILTERS[*]}")
         GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.filter=$FILTER_VALUE")
     fi
-    if noflock; then
+    # Быстрый набор: тяжёлые демо-аудиты построек — только в ночном --full.
+    GAMETEST_EXCLUDE=""
+    if [ ${#GAMETEST_FILTERS[@]} -eq 0 ] && [ "$GAMETEST_FULL" != 1 ]; then
+        GAMETEST_EXCLUDE="demo_audit"
+    fi
+
+    # Шарды живут под одним замком машины: dir-замок умеет держать несколько своих серверов,
+    # flock — нет (второй ждал бы первого).
+    USE_DIR_LOCK=0
+    noflock && USE_DIR_LOCK=1
+    [ "$GAMETEST_SHARDS" -gt 1 ] && USE_DIR_LOCK=1
+
+    if [ "$USE_DIR_LOCK" = 1 ]; then
         GAMETEST_TOKEN="$(date +%s%N)-$$"
         mkdir -p "$(dirname "$GAMETEST_LOCK_DIR")" 2>/dev/null || true
         acquire_dir_lock
@@ -811,37 +904,121 @@ else
     fi
     GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.lock=$GAMETEST_LOCK" "-Dtheminespirit.gametest.token=$GAMETEST_TOKEN")
 
-    start_monitor "gametest"
-
-    if noflock; then
-        if command -v setsid >/dev/null 2>&1; then
-            setsid "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
-        else
-            "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
-        fi
+    if [ "$GAMETEST_FULL" = 1 ]; then
+        START_WARN="$GAMETEST_FULL_WARN"
+        START_STOP="$GAMETEST_FULL_STOP"
     else
-        flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c '
-            echo "$GAMETEST_TOKEN" >"$GAMETEST_LOCK.token"
-            "$@"' bash \
-            "$GRADLEW" "${GAMETEST_GRADLE_ARGS[@]}" runGameTestServer >"$LOG_FILE" 2>&1 &
+        START_WARN="$GAMETEST_WARN"
+        START_STOP="$GAMETEST_STOP"
     fi
-    GRADLE_PID=$!
-    echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
-    wait "$GRADLE_PID"
-    CODE=$?
-    GRADLE_PID=""
+    start_monitor "gametest" "$START_WARN" "$START_STOP"
+
+    GRADLE_PIDS=()
+    SHARD_LOGS=()
+    : >"$LOG_FILE.gradlepids"
+
+    # Шарды читают общие артефакты сборки (build/moddev): createMinecraftArtifacts каждый раз пересоздаёт
+    # jar и при трёх одновременных запусках удаляет его из-под соседа (Language.loadFromJson → NPE).
+    # Поэтому подготовка идёт один раз, а шардам остаётся только runGameTestServer.
+    SHARD_EXCLUDES=()
+    if [ "$GAMETEST_SHARDS" -gt 1 ]; then
+        # Кэш проекта и configuration cache — общие: подготовка в тёплом дереве ~2 с (свой кэш каждый раз
+        # заново конфигурировал build.gradle — 25 с на пустом месте).
+        "$GRADLEW" createMinecraftArtifacts classes \
+            writeGameTestServerLegacyClasspath prepareGameTestServerRun \
+            >"$LOG_FILE.preflight" 2>&1 &
+        PRE_PID=$!
+        echo "$PRE_PID" >>"$LOG_FILE.gradlepids"
+        wait "$PRE_PID"
+        PRE_CODE=$?
+        : >"$LOG_FILE.gradlepids"
+        if [ "$PRE_CODE" -ne 0 ]; then
+            cat "$LOG_FILE.preflight" >"$LOG_FILE"
+            rm -f "$LOG_FILE.preflight"
+            stop_timer
+            echo "FAIL gametest: подготовка сборки упала (код $PRE_CODE)"
+            echo "полный лог: $LOG_FILE"
+            exit 2
+        fi
+        rm -f "$LOG_FILE.preflight"
+        SHARD_EXCLUDES=(-x createMinecraftArtifacts -x compileJava -x generateModMetadata
+            -x processResources -x classes -x downloadAssets
+            -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun)
+    fi
+
+    for ((shard = 0; shard < GAMETEST_SHARDS; shard++)); do
+        shard_log="$LOG_FILE"
+        shard_args=("${GAMETEST_GRADLE_ARGS[@]}")
+        shard_run_dir="$GAMETEST_RUN_DIR"
+        shard_value=""
+        if [ "$GAMETEST_SHARDS" -gt 1 ]; then
+            shard_log="$LOG_FILE.shard-$shard"
+            : >"$shard_log"
+            shard_run_dir="$GAMETEST_RUN_DIR/shard-$shard"
+            shard_value="$shard/$GAMETEST_SHARDS"
+            shard_args+=("-Dtheminespirit.gametest.dir=build/gametest-run/shard-$shard")
+        fi
+        # Параметры прогона — в своём gameDirectory: общий файл аргументов JVM три сервера перезаписывают.
+        mkdir -p "$shard_run_dir"
+        {
+            echo "exclude=$GAMETEST_EXCLUDE"
+            echo "shard=$shard_value"
+        } >"$shard_run_dir/theminespirit-gametest.properties"
+        # Веса пачек из прошлого замера: без них шарды делятся по timeoutTicks и перекашиваются.
+        rm -f "$shard_run_dir/theminespirit-gametest-weights.txt"
+        [ -s "$GAMETEST_WEIGHTS_FILE" ] && cp "$GAMETEST_WEIGHTS_FILE" "$shard_run_dir/theminespirit-gametest-weights.txt"
+        # У каждого шарда свой кэш проекта и configuration cache: три gradle на одном проекте иначе
+        # сериализуются. -D читаются через providers, поэтому смена каталога мира не теряется в кэше.
+        CACHE_ARGS=()
+        [ "$GAMETEST_SHARDS" -gt 1 ] && CACHE_ARGS=(--project-cache-dir "$GAMETEST_WORKTREE/build/.gradle-gametest-shard-$shard")
+        if [ "$USE_DIR_LOCK" = 1 ]; then
+            if command -v setsid >/dev/null 2>&1; then
+                setsid "$GRADLEW" "${CACHE_ARGS[@]}" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
+            else
+                "$GRADLEW" "${CACHE_ARGS[@]}" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
+            fi
+        else
+            flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c '
+                echo "$GAMETEST_TOKEN" >"$GAMETEST_LOCK.token"
+                "$@"' bash \
+                "$GRADLEW" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
+        fi
+        GRADLE_PIDS+=("$!")
+        SHARD_LOGS+=("$shard_log")
+        echo "$!" >>"$LOG_FILE.gradlepids"
+    done
+
+    CODE=0
+    for pid in "${GRADLE_PIDS[@]}"; do
+        wait "$pid"
+        shard_code=$?
+        if [ "$shard_code" -ne 0 ] && [ "$CODE" -eq 0 ]; then
+            CODE=$shard_code
+        fi
+    done
     stop_timer
-    rm -f "$LOG_FILE.gradlepid"
 
     now_s ELAPSED
     ELAPSED=$((ELAPSED - START_TIME))
 
-    if noflock; then
+    if [ "$USE_DIR_LOCK" = 1 ]; then
         release_dir_lock
     fi
 
+    # Замер — только для полного/быстрого набора: фильтр по одной пачке перекосил бы раскладку.
+    if [ ${#GAMETEST_FILTERS[@]} -eq 0 ]; then
+        record_gametest_weights "${SHARD_LOGS[@]}"
+    fi
+
+    # Полный лог — один файл по обещанному пути: склеиваем логи шардов после их смерти.
+    if [ "$GAMETEST_SHARDS" -gt 1 ]; then
+        cat "$LOG_FILE".shard-* >"$LOG_FILE"
+        rm -f "$LOG_FILE".shard-*
+    fi
+    rm -f "$LOG_FILE.gradlepids"
+
     if [ -f "$LOG_FILE.stopped" ]; then
-        echo "стоп по пределу ${GAMETEST_STOP} с"
+        echo "стоп по пределу ${START_STOP} с"
         echo "полный лог: $LOG_FILE"
         exit 124
     fi
