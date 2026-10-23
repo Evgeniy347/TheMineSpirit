@@ -11,12 +11,12 @@ import java.util.UUID;
  * поэтому проверка актуальности их не снимает. Числа порогов — таблица board
  * ({@code supplies}); набор кейсов — код, новый постоянный кейс встаёт сюда явно.
  * Постоянный запас нужен только живому заданию или этапу поселения: книги и бумага ждут
- * шахты, полки — первого уровня чаровальни, иначе доска просит их на старте впустую.
+ * первого дома (шахта теперь — одно из первых дел), полки — первого уровня чаровальни, иначе доска просит их на старте впустую.
  */
 public final class EvergreenRules {
     private static final Map<String, SupplyStage> SUPPLY_STAGES = Map.of(
-            "book", new SupplyStage(BoardCase.BUILD_MINE, 1),
-            "paper", new SupplyStage(BoardCase.BUILD_MINE, 1),
+            "book", new SupplyStage(BoardCase.BUILD_HOUSE, 1),
+            "paper", new SupplyStage(BoardCase.BUILD_HOUSE, 1),
             "bookshelf", new SupplyStage(BoardCase.ENCHANT_ROOM, 1));
 
     private EvergreenRules() {}

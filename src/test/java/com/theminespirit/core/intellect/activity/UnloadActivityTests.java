@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.intellect.FarmWork;
+import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.SettlementViews;
 import com.theminespirit.core.inventory.InventoryFill;
@@ -61,13 +63,26 @@ class UnloadActivityTests {
     }
 
     @Test
-    void eligible_Defender_IsFalse() {
-        SettlementView view = SettlementViews.withFills(
-                List.of(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER)), Map.of(SPIRIT, LOADED));
+    void eligible_DefenderWhileThreats_IsFalse() {
+        SettlementView view = new SettlementView(
+                1,
+                0,
+                2,
+                2,
+                64,
+                32,
+                2,
+                1,
+                0.5,
+                FarmWork.NONE,
+                Forage.NONE,
+                List.of(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER)),
+                100,
+                Map.of(SPIRIT, LOADED));
 
         assertFalse(
                 new UnloadActivity().eligible(SettlementViews.spiritWithRole(SPIRIT, SpiritRole.DEFENDER), view),
-                "Защитник пост не бросает ради разгрузки: на посту он нужнее");
+                "Защитник при угрозе в поселении пост не бросает ради разгрузки: на посту он нужнее");
     }
 
     @Test

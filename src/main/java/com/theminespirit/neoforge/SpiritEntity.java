@@ -87,6 +87,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final PersonalSpaceKeeper personalSpace = new PersonalSpaceKeeper(this);
     private SpiritBrain spiritBrain;
     private boolean mainHandBorrowed;
+    private long backgroundGeneration = SpiritReading.UNKNOWN_GENERATION;
     private WorldObservation perception;
     private PerceptionResult perceptionResult;
     private Finding finding;
@@ -567,6 +568,19 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void startTask(TaskNode plan) {
         brain().start(plan);
+    }
+
+    // Фоновое занятие интеллекта (рубка, крафт досок, отдых днём) уступает заданию доски: доска вытесняет его,
+    // а не ждёт конца; сон ночью не вытесняется.
+    public void startBackgroundTask(TaskNode plan) {
+        startTask(plan);
+        backgroundGeneration = taskGeneration();
+    }
+
+    public boolean runsBackgroundTask() {
+        return backgroundGeneration != SpiritReading.UNKNOWN_GENERATION
+                && backgroundGeneration == taskGeneration()
+                && taskStatus().orElse(null) == RunStatus.RUNNING;
     }
 
     public long taskGeneration() {

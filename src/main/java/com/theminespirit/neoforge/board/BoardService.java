@@ -475,6 +475,15 @@ public final class BoardService {
             }
         } else {
             board.fail(ticket.id(), stock);
+            LOGGER.warn(
+                    "[incident] дух {} ({}) провалил задание доски {} (кейс {}): {}; статус {}; доска выдаёт "
+                            + "следующее задание",
+                    spirit.displayName(),
+                    spirit.getUUID(),
+                    ticket.id(),
+                    ticket.boardCase(),
+                    spirit.taskFailureReason().orElse("причина не записана"),
+                    board.statusOf(ticket.id()).orElse(null));
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
@@ -555,6 +564,13 @@ public final class BoardService {
                         failure.getMessage());
                 continue;
             }
+            if (spirit.runsBackgroundTask()) {
+                LOGGER.info(
+                        "Задание {} вытесняет фоновое занятие {} духа {}",
+                        ticket.id(),
+                        spirit.currentTaskScript().orElse("?"),
+                        spirit.displayName());
+            }
             try {
                 spirit.startTask(plan);
             } catch (RuntimeException failure) {
@@ -625,7 +641,8 @@ public final class BoardService {
 
     private boolean free(SpiritEntity spirit, Map<UUID, Integer> held, BoardTicket ticket, long now) {
         RunStatus status = spirit.taskStatus().orElse(null);
-        if (status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent()) {
+        boolean busy = status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent();
+        if (busy && !(spirit.runsBackgroundTask() && !spirit.tactics().wantsControl())) {
             return false;
         }
         // Занятость — только RUNNING (идиома проекта, SpiritBotGateway): SUCCEEDED/FAILED

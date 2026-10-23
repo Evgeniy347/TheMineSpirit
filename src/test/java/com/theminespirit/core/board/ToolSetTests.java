@@ -1,15 +1,14 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.Ingredient;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -78,41 +77,24 @@ class ToolSetTests {
     }
 
     @Test
-    void nextMissing_Empty_StartsWoodenPickaxe() {
-        assertEquals(
-                Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE),
-                ToolSet.nextMissing(Set.of(), ToolSet.chain()),
-                "Пустой запас начинает с деревянной кирки: первый предмет цепочки");
+    void covered_StonePickaxe_CoversWooden() {
+        assertTrue(
+                ToolSet.covered(BoardCase.CRAFT_WOODEN_PICKAXE, Set.of("stone_pickaxe")),
+                "Каменная кирка закрывает шаг деревянной: дух с лучшим инструментом худший не крафтит");
     }
 
     @Test
-    void nextMissing_WoodenDone_ReturnsWoodenAxe() {
-        assertEquals(
-                Optional.of(BoardCase.CRAFT_WOODEN_AXE),
-                ToolSet.nextMissing(Set.of(ToolSet.stockKey(BoardCase.CRAFT_WOODEN_PICKAXE)), ToolSet.chain()),
-                "После деревянной кирки идёт деревянный топор: каждый предмет — отдельный шаг");
+    void covered_WoodenPickaxe_DoesNotCoverStone() {
+        assertFalse(
+                ToolSet.covered(BoardCase.CRAFT_STONE_PICKAXE, Set.of("wooden_pickaxe")),
+                "Деревянная кирка не закрывает каменную: шаг каменной ступени остаётся");
     }
 
     @Test
-    void nextMissing_AllDone_Empty() {
-        Set<String> all = new HashSet<>();
-        for (BoardCase toolCase : ToolSet.chain()) {
-            all.add(ToolSet.stockKey(toolCase));
-        }
-
-        assertEquals(
-                Optional.empty(),
-                ToolSet.nextMissing(all, ToolSet.chain()),
-                "Собранный набор не просит новых предметов: пустой ответ закрывает ступень");
-    }
-
-    @Test
-    void nextMissing_StonePresent_ReturnsWoodenPickaxe() {
-        assertEquals(
-                Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE),
-                ToolSet.nextMissing(Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE)), ToolSet.chain()),
-                "Каменная кирка без деревянной не продвигает цепочку: деревянная ступень обязана "
-                        + "быть закрыта раньше каменной");
+    void covered_Pickaxe_DoesNotCoverAxe() {
+        assertFalse(
+                ToolSet.covered(BoardCase.CRAFT_WOODEN_AXE, Set.of("wooden_pickaxe", "stone_pickaxe")),
+                "Кирка (pickaxe) не закрывает топор (axe): совпадение суффикса не делает её топором");
     }
 
     @Test
