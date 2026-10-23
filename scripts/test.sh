@@ -766,12 +766,15 @@ analyze_gametest() {
     local log="$1"
 
     # Провал — по строке-итогу сервера «N required tests failed :(», а не по любому «failed»:
-    # имена пачек вроде rest_events_failed содержат «failed» и давали ложный FAIL.
+    # имена пачек вроде rest_events_failed содержат «failed» и давали ложный FAIL. Шардов несколько —
+    # считаем сумму и перечисляем падения всех шардов.
     local failed_line=$(grep -E "[0-9]+ required tests failed" "$log" | tail -1)
     if [ -n "$failed_line" ]; then
-        local failed_count=$(printf '%s' "$failed_line" | grep -oE "[0-9]+ required tests failed" | grep -oE '[0-9]+' | head -1)
+        local failed_count=$(grep -E "[0-9]+ required tests failed" "$log" \
+            | sed -E 's/.* ([0-9]+) required tests failed.*/\1/' | awk '{ s += $1 } END { print s + 0 }')
         echo "FAIL gametest: упало ${failed_count:-неизвестно}"
-        grep -A 20 "required tests failed" "$log" | sed -n '2,11p'
+        grep -E "^\[[0-9:]+\].*GameTestServer\]:    - " "$log" \
+            | sed -E 's/.*\]:    - //' | sort -u | head -20
         echo "полный лог: $log"
         return 1
     fi
