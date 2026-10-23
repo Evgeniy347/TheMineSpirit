@@ -55,6 +55,26 @@ class ActivityAssignerTests {
     }
 
     @Test
+    void assign_NightNoThreats_AtMostTwoGuards() {
+        UUID fourth = UUID.fromString("44444444-4444-4444-4444-444444444444");
+        SettlementView view = SettlementViews.withSpirits(List.of(
+                SettlementViews.spirit(FIRST),
+                SettlementViews.spirit(SECOND),
+                SettlementViews.spirit(THIRD),
+                SettlementViews.spirit(fourth)));
+
+        ActivityPlan plan =
+                ASSIGNER.assign(view, List.of(new ActivityDemand(ActivityId.DEFEND, 0.5)), new ActivityLedger(), 100);
+
+        assertEquals(
+                2,
+                plan.assignments().stream()
+                        .filter(assignment -> assignment.activity() == ActivityId.DEFEND)
+                        .count(),
+                "Без угроз стража — два духа, остальные свободны для заданий доски, а не все в DEFEND (INC-36)");
+    }
+
+    @Test
     void assign_OneHarvestJob_OnlyOneFarmer() {
         SettlementView view = SettlementViews.withSpirits(
                 List.of(SettlementViews.spirit(FIRST), SettlementViews.spirit(SECOND), SettlementViews.spirit(THIRD)));

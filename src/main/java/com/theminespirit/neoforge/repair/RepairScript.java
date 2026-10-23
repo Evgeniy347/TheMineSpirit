@@ -176,13 +176,13 @@ public final class RepairScript implements ScriptInstance {
 
     private int findMostWorn(SpiritInventory inventory, IdFilter filter) {
         int slot = -1;
-        int worst = Integer.MAX_VALUE;
+        int worst = 0;
         for (int index = 0; index < inventory.getContainerSize(); index++) {
             ItemStack stack = inventory.getItem(index);
             if (stack.isEmpty() || stack.getDamageValue() <= 0 || !filter.matches(itemId(stack))) {
                 continue;
             }
-            if (stack.getDamageValue() < worst) {
+            if (stack.getDamageValue() > worst) {
                 worst = stack.getDamageValue();
                 slot = index;
             }

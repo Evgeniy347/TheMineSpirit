@@ -103,7 +103,12 @@ public record Schematic(
             if (dy == 0) {
                 throw new IllegalStateException("Повтор до y=" + target + " без шага по y: цель недостижима");
             }
-            long distance = Math.abs((long) target - (topY + baseMinY));
+            long start = (long) topY + baseMinY;
+            if (dy < 0 ? start <= target : start >= target) {
+                // Вход уже на глубине цели (мир GameTest у дна, y≈−60): копать нечего, уровень достигнут.
+                return 0;
+            }
+            long distance = Math.abs((long) target - start);
             long count = distance / Math.abs((long) dy) + 1;
             if (count > CatalogLimits.SCHEMATIC_SIZE_MAX * 2L) {
                 throw new IllegalStateException("Повтор до y=" + target + " требует " + count
@@ -121,6 +126,10 @@ public record Schematic(
             return new Expanded(this, new BlockCoord(0, 0, 0));
         }
         int copies = repeat.copies(topY, baseMinY());
+        if (copies == 0) {
+            return new Expanded(
+                    new Schematic(sizeX, sizeY, sizeZ, List.of(), List.of(), null), new BlockCoord(0, 0, 0));
+        }
         if (copies == 1) {
             return new Expanded(this, new BlockCoord(0, 0, 0));
         }

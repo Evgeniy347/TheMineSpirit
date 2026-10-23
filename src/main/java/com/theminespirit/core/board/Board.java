@@ -103,6 +103,9 @@ public final class Board {
 
     public BoardOutcome submit(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, " + "а не пустую заявку");
+        if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger)) {
+            return BoardOutcome.STAGE_LOCKED;
+        }
         if (tickets.containsKey(ticket.id())) {
             BoardStatus current = statuses.get(ticket.id());
             if (current == BoardStatus.DONE && ticket.id().startsWith(FIRST_STEPS_PREFIX)) {

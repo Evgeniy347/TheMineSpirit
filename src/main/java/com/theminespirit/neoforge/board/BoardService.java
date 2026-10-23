@@ -22,6 +22,7 @@ import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
@@ -32,6 +33,7 @@ import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -76,6 +78,7 @@ public final class BoardService {
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
+    private final Map<String, Long> issuedGenerations = new HashMap<>();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
@@ -171,6 +174,7 @@ public final class BoardService {
             alive.add(ticket.id());
         }
         targets.keySet().retainAll(alive);
+        issuedGenerations.keySet().retainAll(alive);
         List<SpiritEntity> spirits = census(level);
         settleOwners(spirits);
         refreshStock(level, spirits);
@@ -339,6 +343,10 @@ public final class BoardService {
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persist();
+        } else if (outcome == BoardOutcome.DUPLICATE) {
+            // Точки исполнения живут в памяти, а задания — в сохранении доски: после рестарта источник
+            // возвращает точку уже стоящему заданию, иначе его план не собрать (INC-29).
+            targets.putIfAbsent(ticket.id(), target);
         }
         return outcome;
     }
@@ -384,6 +392,7 @@ public final class BoardService {
 
     public void releaseSpirit(SpiritEntity spirit) {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
+            issuedGenerations.remove(ticket.id());
             board.release(ticket.id());
         }
         board.vacate(spirit.getUUID());
@@ -412,6 +421,28 @@ public final class BoardService {
             }
         }
         reconcileActivities(offered, false);
+    }
+
+    public boolean launch(
+            SpiritEntity spirit,
+            BoardCase activity,
+            String script,
+            TaskNode task,
+            ActivityOffer.Launcher launcher,
+            long now) {
+        // Поход и рефлексы силы идут через доску: дух на них виден занятием, задание доски (если есть) остаётся
+        // за ним и продолжается после (TicketRun).
+        Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
+        if (!BoardActivities.isActivity(activity)) {
+            throw new IllegalArgumentException(
+                    "Кейс " + activity + " — не занятие: через launch идут только ACTIVITY_*");
+        }
+        if (!launcher.start(spirit, script, task, now)) {
+            return false;
+        }
+        launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
+        board.occupy(spirit.getUUID(), activity, board.now());
+        return true;
     }
 
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
@@ -445,15 +476,17 @@ public final class BoardService {
         if (spirit.tactics().wantsControl()) {
             return Optional.of(BoardCase.ACTIVITY_COMBAT);
         }
+        boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
+        Launched own = launched.get(id);
+        boolean ownActivity = own != null && own.generation() == spirit.taskGeneration();
+        if (running && ownActivity) {
+            return Optional.of(own.activity());
+        }
         if (!board.assignedTo(id).isEmpty()) {
             return Optional.empty();
         }
-        if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-            Launched own = launched.get(id);
-            return Optional.of(
-                    own != null && own.generation() == spirit.taskGeneration()
-                            ? own.activity()
-                            : BoardCase.ACTIVITY_EXTERNAL);
+        if (running) {
+            return Optional.of(BoardCase.ACTIVITY_EXTERNAL);
         }
         if (spirit.isDefenceAssigned()) {
             return Optional.of(BoardCase.ACTIVITY_DEFEND);
@@ -527,20 +560,58 @@ public final class BoardService {
                 continue;
             }
             RunStatus status = spirit.taskStatus().orElse(null);
-            if (status != RunStatus.SUCCEEDED && status != RunStatus.FAILED) {
-                continue;
-            }
             List<BoardTicket> held = board.assignedTo(spirit.getUUID());
             if (held.isEmpty()) {
                 continue;
             }
             // Дух исполняет одно задание за раз (MAX_ACTIVE_PER_SPIRIT): закрываем первое
             // по очереди, а остальные — следующими пересборками.
-            settle(spirit, held.get(0), status == RunStatus.SUCCEEDED);
+            BoardTicket ticket = held.get(0);
+            TicketRun run = TicketRun.decide(
+                    issuedGenerations.getOrDefault(ticket.id(), SpiritReading.UNKNOWN_GENERATION),
+                    spirit.taskGeneration(),
+                    status,
+                    spirit.tactics().wantsControl());
+            switch (run) {
+                case SUCCEEDED, FAILED -> settle(spirit, ticket, run == TicketRun.SUCCEEDED);
+                case RESUME -> resume(spirit, ticket, spirits);
+                case RUNNING, DISPLACED -> {}
+            }
         }
     }
 
+    private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
+        TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
+        TaskNode plan;
+        try {
+            plan = planOf(ticket, target);
+            spirit.startTask(plan);
+        } catch (RuntimeException failure) {
+            LOGGER.warn(
+                    "[incident] дух {} не продолжил задание {} после вытеснения: {}; задание возвращено доске",
+                    spirit.displayName(),
+                    ticket.id(),
+                    failure.getMessage());
+            issuedGenerations.remove(ticket.id());
+            board.release(ticket.id());
+            return;
+        }
+        issuedGenerations.put(ticket.id(), spirit.taskGeneration());
+        LOGGER.info(
+                "Дух {} продолжает задание {} (кейс {}): чужая задача его вытеснила, задание осталось за ним",
+                spirit.displayName(),
+                ticket.id(),
+                ticket.boardCase());
+    }
+
+    private static TaskNode planOf(BoardTicket ticket, TicketTarget target) {
+        return TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
+                ? new ScriptCall("eat", Map.of())
+                : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
+    }
+
     private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success) {
+        issuedGenerations.remove(ticket.id());
         if (success) {
             board.complete(ticket.id());
             switch (ticket.boardCase()) {
@@ -635,9 +706,7 @@ public final class BoardService {
             }
             TaskNode plan;
             try {
-                plan = TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
-                        ? new ScriptCall("eat", Map.of())
-                        : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
+                plan = planOf(ticket, target);
             } catch (RuntimeException failure) {
                 LOGGER.error(
                         "Задание {} (кейс {}): план не собран: {}",
@@ -665,6 +734,7 @@ public final class BoardService {
             }
             BoardOutcome outcome = board.claim(ticket.id(), spirit.getUUID(), now);
             if (outcome == BoardOutcome.CLAIMED) {
+                issuedGenerations.put(ticket.id(), spirit.taskGeneration());
                 claims++;
                 held.merge(spirit.getUUID(), 1, Integer::sum);
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));

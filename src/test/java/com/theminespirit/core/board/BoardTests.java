@@ -746,13 +746,14 @@ class BoardTests {
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
                 Map.of());
+        // Уровень 2 шахты заперт этапом (SettlementStage), поэтому зависимое — неуровневое задание у шахты.
         BoardTicket levelTwo = new BoardTicket(
                 "mine_2",
-                BoardCase.BUILD_MINE,
+                BoardCase.LIGHTING,
                 Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_MINE),
+                BoardRules.priorityOf(BoardCase.LIGHTING),
                 1,
-                2,
+                1,
                 BoardTicket.ALWAYS_CAUSE,
                 List.of("building:BUILD_MINE:1"),
                 Map.of());
@@ -780,13 +781,14 @@ class BoardTests {
     @Test
     void claimable_BuildingDependency_LedgerNoteSatisfies() {
         Board board = boardAt(0);
+        // Уровень 2 шахты заперт этапом (SettlementStage), поэтому зависимое — неуровневое задание у шахты.
         BoardTicket levelTwo = new BoardTicket(
                 "mine_2",
-                BoardCase.BUILD_MINE,
+                BoardCase.LIGHTING,
                 Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_MINE),
+                BoardRules.priorityOf(BoardCase.LIGHTING),
                 1,
-                2,
+                1,
                 BoardTicket.ALWAYS_CAUSE,
                 List.of("building:BUILD_MINE:1"),
                 Map.of());

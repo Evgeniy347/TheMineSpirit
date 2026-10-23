@@ -25,4 +25,17 @@ class MineDescentBottomTests {
                 dx * dx + dz * dz > 100,
                 "Низ спуска далеко от дома (" + stand + "): выработка у дома на поверхности сносила верстак");
     }
+
+    @Test
+    void standOf_EntranceBelowTarget_ZeroStepsAtEntrance() {
+        BlockCoord home = new BlockCoord(0, -59, 0);
+
+        BlockCoord stand = MineDescentBottom.standOf(home).orElseThrow();
+
+        assertEquals(
+                -57,
+                stand.y(),
+                "Вход уже ниже цели спуска (мир GameTest у дна): 0 ступеней, низ спуска — вход, а не исключение "
+                        + "«повтор требует 111 сегментов»");
+    }
 }

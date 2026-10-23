@@ -350,6 +350,19 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_SupplySite_ReturnsToSiteBeforeDeposit() {
+        SequenceNode plan = (SequenceNode) TicketPlans.plan(BoardCase.SUPPLY_SITE, target().withSupply("stone", 32));
+        List<String> scripts =
+                plan.steps().stream().map(step -> ((ScriptCall) step).script()).toList();
+
+        assertEquals(
+                List.of("goto", "acquire", "goto", "deposit"),
+                scripts,
+                "Добыча уводит духа от места; сдача ищет сундук рядом с духом — сначала вернуться к месту, иначе "
+                        + "«рядом нет допустимого контейнера» (INC-30)");
+    }
+
+    @Test
     void plan_FillCrater_ClampsHugeEstimate() {
         TaskNode plan = TicketPlans.plan(BoardCase.FILL_CRATER, target().withCraterBlocks(10000));
         ScriptCall acquire = findCall(plan, "acquire");

@@ -2,6 +2,7 @@ package com.theminespirit.core.reload;
 
 import com.theminespirit.core.armor.ArmorTable;
 import com.theminespirit.core.board.BoardConfig;
+import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -86,6 +87,7 @@ public final class DataTables {
     private final TableHolder<MagnetRules> magnet;
     private final TableHolder<FishingWait> fishingWait;
     private final TableHolder<Unstuck> unstuck;
+    private final TableHolder<StageRules> stages;
     private final TableHolder<PersonalSpace> personalSpace;
     private final TableHolder<HungerRules> hunger;
     private final TableHolder<FishingData> fishing;
@@ -147,6 +149,7 @@ public final class DataTables {
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
         this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
+        this.stages = single("stages", StageRules.RESOURCE, StageRules::parse, StageRules::load);
         this.personalSpace =
                 single("personal_space", PersonalSpace.RESOURCE, PersonalSpace::parse, PersonalSpace::load);
         this.doors = single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse, DoorTuning::loadDefault);
@@ -337,6 +340,10 @@ public final class DataTables {
 
     public TableHolder<Unstuck> unstuck() {
         return unstuck;
+    }
+
+    public TableHolder<StageRules> stages() {
+        return stages;
     }
 
     public TableHolder<PersonalSpace> personalSpace() {

@@ -31,7 +31,8 @@ public record TicketTarget(
         @Nullable UUID transferFrom,
         @Nullable UUID transferTo,
         @Nullable String craftItem,
-        int count) {
+        int count,
+        @Nullable String wood) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -41,7 +42,7 @@ public record TicketTarget(
 
     public static TicketTarget at(BlockCoord target) {
         return new TicketTarget(
-                target, null, null, null, null, 0, 0, 0, null, null, null, null, List.of(), null, null, null, 0);
+                target, null, null, null, null, 0, 0, 0, null, null, null, null, List.of(), null, null, null, 0, null);
     }
 
     public TicketTarget withScheme(String scheme) {
@@ -62,7 +63,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withFenceBlock(String fence) {
@@ -83,7 +85,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withLureItem(String lure) {
@@ -104,7 +107,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withSupply(String item, int supply) {
@@ -125,7 +129,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withCraterBlocks(int blocks) {
@@ -146,7 +151,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withToolCount(int tools) {
@@ -167,7 +173,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withSpecies(Species animal) {
@@ -188,7 +195,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withRelocate(BlockCoord source, BlockCoord destination) {
@@ -209,7 +217,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withDrops(List<String> items) {
@@ -230,7 +239,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withTransfer(UUID source, UUID recipient, String item, int amount) {
@@ -251,7 +261,8 @@ public record TicketTarget(
                 source,
                 recipient,
                 craftItem,
-                count);
+                count,
+                wood);
     }
 
     public TicketTarget withCraft(String item, int amount) {
@@ -272,7 +283,8 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 item,
-                amount);
+                amount,
+                wood);
     }
 
     public TicketTarget withCount(int amount) {
@@ -293,6 +305,29 @@ public record TicketTarget(
                 transferFrom,
                 transferTo,
                 craftItem,
-                amount);
+                amount,
+                wood);
+    }
+
+    public TicketTarget withWood(String woodSpecies) {
+        return new TicketTarget(
+                target,
+                schemeFile,
+                fenceBlock,
+                lureItem,
+                supplyItem,
+                supplyCount,
+                craterBlocks,
+                toolCount,
+                species,
+                from,
+                to,
+                knowledge,
+                dropItems,
+                transferFrom,
+                transferTo,
+                craftItem,
+                count,
+                Objects.requireNonNull(woodSpecies, "Порода дерева не может быть null: без неё строят по схеме"));
     }
 }

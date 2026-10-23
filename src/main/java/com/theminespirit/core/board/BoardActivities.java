@@ -11,7 +11,7 @@ import java.util.UUID;
 
 /**
  * Задания-занятия доски: всё, что дух делает не по заданию доски (фоновое занятие интеллекта, бой тактики,
- * задача REST/стратега), видно на доске одним заданием {@code activity:<дух>} в статусе ASSIGNED. Занятие
+ * поход, рефлекс силы «вооружиться», задача REST/стратега), видно на доске одним заданием {@code activity:<дух>} в статусе ASSIGNED. Занятие
  * выдаёт доска (интеллект только предлагает), а снимает — сверка с фактом: дух бросил занятие или его
  * вытеснило задание доски. Занятие не считается в занятости духа для выдачи заданий и не хранится на диске:
  * это живой факт, а не очередь.
@@ -19,10 +19,12 @@ import java.util.UUID;
 public final class BoardActivities {
     public static final String ID_PREFIX = "activity:";
     public static final Set<BoardCase> CASES = EnumSet.of(
+            BoardCase.ACTIVITY_ARM,
             BoardCase.ACTIVITY_CHOP,
             BoardCase.ACTIVITY_COMBAT,
             BoardCase.ACTIVITY_CRAFT,
             BoardCase.ACTIVITY_DEFEND,
+            BoardCase.ACTIVITY_EXPEDITION,
             BoardCase.ACTIVITY_EXTERNAL,
             BoardCase.ACTIVITY_FARM,
             BoardCase.ACTIVITY_FORAGE,

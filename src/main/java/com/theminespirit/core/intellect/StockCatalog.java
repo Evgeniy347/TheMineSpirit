@@ -37,6 +37,7 @@ public final class StockCatalog {
     public static final Set<String> SEED_IDS =
             Set.of("minecraft:wheat_seeds", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot_seeds");
     public static final String CHARCOAL_ID = "minecraft:charcoal";
+    public static final String COAL_ID = "minecraft:coal";
     public static final String STICK_ID = "minecraft:stick";
     public static final String PLANKS_SUFFIX = "_planks";
 
@@ -110,7 +111,8 @@ public final class StockCatalog {
             if (SEED_IDS.contains(id)) {
                 seeds += count;
             }
-            if (CHARCOAL_ID.equals(id)) {
+            // Топливо и факелы берут любой уголь: при обычном угле древесный не пережигают (INC-33).
+            if (CHARCOAL_ID.equals(id) || COAL_ID.equals(id)) {
                 charcoal += count;
             }
             if (id.endsWith(PLANKS_SUFFIX)) {

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.IntellectTuning;
@@ -10,7 +11,9 @@ import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
@@ -144,8 +147,7 @@ public final class ExpeditionController {
         String guideName = guide.getGameProfile().getName();
         boolean launched = false;
         for (SpiritEntity spirit : team(members, expedition)) {
-            launched |= starter.start(
-                    spirit, FOLLOW, new ScriptCall(FOLLOW, Map.of("target", guideName, "radius", 3)), now);
+            launched |= launch(spirit, FOLLOW, new ScriptCall(FOLLOW, Map.of("target", guideName, "radius", 3)), now);
         }
         if (launched) {
             lastDispatch = new Dispatch(FOLLOW, List.copyOf(expedition.team()), now);
@@ -168,14 +170,14 @@ public final class ExpeditionController {
         boolean launched = false;
         for (SpiritEntity spirit : team) {
             if (spirit.getUUID().equals(leader.getUUID())) {
-                launched |= starter.start(
+                launched |= launch(
                         spirit,
                         "mine_vein",
                         new SequenceNode(List.of(
                                 new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of()))),
                         now);
             } else {
-                launched |= starter.start(
+                launched |= launch(
                         spirit,
                         FOLLOW,
                         new ScriptCall(FOLLOW, Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)),
@@ -228,7 +230,7 @@ public final class ExpeditionController {
             if (spirit.currentTaskScript().map(RETURN_HOME::equals).orElse(false)) {
                 continue;
             }
-            allReturning &= starter.start(spirit, RETURN_HOME, new ScriptCall(RETURN_HOME, Map.of()), now);
+            allReturning &= launch(spirit, RETURN_HOME, new ScriptCall(RETURN_HOME, Map.of()), now);
         }
         if (allReturning) {
             missionTeam = List.of();
@@ -270,5 +272,13 @@ public final class ExpeditionController {
         expeditionId = null;
         dispatched = true;
         closedAt = now;
+    }
+
+    private boolean launch(SpiritEntity spirit, String script, TaskNode task, long now) {
+        if (spirit.level() instanceof ServerLevel server) {
+            return BoardRegistry.get(server)
+                    .launch(spirit, BoardCase.ACTIVITY_EXPEDITION, script, task, starter::start, now);
+        }
+        return starter.start(spirit, script, task, now);
     }
 }

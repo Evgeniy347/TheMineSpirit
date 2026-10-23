@@ -15,10 +15,12 @@ class BoardCaseTests {
         Set<String> actual = Arrays.stream(BoardCase.values()).map(Enum::name).collect(Collectors.toSet());
 
         Set<String> expected = Set.of(
+                "ACTIVITY_ARM",
                 "ACTIVITY_CHOP",
                 "ACTIVITY_COMBAT",
                 "ACTIVITY_CRAFT",
                 "ACTIVITY_DEFEND",
+                "ACTIVITY_EXPEDITION",
                 "ACTIVITY_EXTERNAL",
                 "ACTIVITY_FARM",
                 "ACTIVITY_FORAGE",

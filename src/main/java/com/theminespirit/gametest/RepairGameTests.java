@@ -55,6 +55,33 @@ public final class RepairGameTests {
         });
     }
 
+    @GameTest(template = "arena", batch = "repair_most_worn", timeoutTicks = 200)
+    public static void repair_LightlyAndHeavilyWorn_RepairsHeavilyWorn(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        helper.setBlock(new BlockPos(3, 1, 1), Blocks.ANVIL);
+        spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 20));
+        spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 200));
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_INGOT, 1));
+
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "Чинится самый изношенный предмет (50 из 250), а не почти целый (230 из 250, выше порога): иначе "
+                            + "ремонт проваливается «ещё крепок», а изношенный остаётся (INC-29); статус "
+                            + spirit.taskStatus().orElse(null) + ", причина: "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    worstDurability(spirit, Items.IRON_PICKAXE) > 50,
+                    "Изношенная кирка стала крепче: " + worstDurability(spirit, Items.IRON_PICKAXE));
+        });
+    }
+
     @GameTest(template = "arena", batch = "repair_wooden", timeoutTicks = 200)
     public static void repair_TwoDamagedWoodenPickaxes_Combines(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -143,6 +170,17 @@ public final class RepairGameTests {
         ItemStack stack = new ItemStack(item);
         stack.setDamageValue(damage);
         return stack;
+    }
+
+    private static int worstDurability(SpiritEntity spirit, Item item) {
+        int worst = Integer.MAX_VALUE;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (stack.is(item)) {
+                worst = Math.min(worst, stack.getMaxDamage() - stack.getDamageValue());
+            }
+        }
+        return worst;
     }
 
     private static int bestDurability(SpiritEntity spirit, Item item) {

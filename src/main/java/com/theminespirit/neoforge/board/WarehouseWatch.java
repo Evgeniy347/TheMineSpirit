@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.PriorityContext;
+import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.building.Preset;
@@ -39,7 +40,10 @@ public final class WarehouseWatch {
         Set<Integer> standing = doneLevels(service);
         submitRelocations(service, home, standing, now);
         int next = WarehouseRules.nextLevel(standing);
-        if (next == 0 || !WarehouseRules.canBuild(next, standing)) {
+        if (next == 0
+                || !WarehouseRules.canBuild(next, standing)
+                || !SettlementStage.allows(
+                        BoardCase.BUILD_WAREHOUSE, next, service.board().ledger())) {
             return;
         }
         String id = WarehouseRules.buildTicketId(next);

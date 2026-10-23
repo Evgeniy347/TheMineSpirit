@@ -2,11 +2,14 @@ package com.theminespirit.neoforge.intellect;
 
 import com.theminespirit.core.intellect.AcquireOrder;
 import com.theminespirit.core.intellect.ActivityIntent;
+import com.theminespirit.core.intellect.activity.SmeltActivity;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +28,9 @@ public final class ActivityTaskFactory {
             return Optional.empty();
         }
         String script = intent.script().get();
+        if ("smelt".equals(script) && intent.params().get(SmeltActivity.CHARCOAL_LOG) instanceof String log) {
+            return Optional.of(charcoal(intent, log, spirit));
+        }
         Map<String, Object> params = switch (script) {
             case "chop_tree" -> Map.of("species", "any", "count", 4, RADIUS, 16, "replant", true);
             case "harvest_crop" -> Map.of("crop", "any", RADIUS, 8, "replant", true);
@@ -35,6 +41,20 @@ public final class ActivityTaskFactory {
             default -> intent.params();
         };
         return Optional.of(new ScriptCall(script, params));
+    }
+
+    private static TaskNode charcoal(ActivityIntent intent, String log, SpiritEntity spirit) {
+        Map<String, Object> smelt = new HashMap<>(intent.params());
+        smelt.remove(SmeltActivity.CHARCOAL_LOG);
+        Map<String, Object> logs = acquireParams(
+                new ActivityIntent(
+                        intent.id(),
+                        Optional.of(ActivityIntent.ACQUIRE),
+                        Map.of("item", log, "count", smelt.get("count")),
+                        Optional.empty()),
+                spirit);
+        return new SequenceNode(
+                List.of(new ScriptCall(ActivityIntent.ACQUIRE, logs), new ScriptCall("smelt", Map.copyOf(smelt))));
     }
 
     private static Map<String, Object> acquireParams(ActivityIntent intent, SpiritEntity spirit) {

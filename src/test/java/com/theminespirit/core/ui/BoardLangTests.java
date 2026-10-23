@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BuildingLevels;
+import com.theminespirit.core.board.StageRules;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -48,7 +48,7 @@ class BoardLangTests {
         for (BoardTileGroup group : BoardTileGroup.values()) {
             expected.add(PREFIX + "group." + group.name().toLowerCase(Locale.ROOT));
         }
-        for (int stage = 1; stage <= BuildingLevels.maxLevel(BoardCase.BUILD_HOUSE); stage++) {
+        for (int stage = 1; stage <= StageRules.load().stages().size() + 1; stage++) {
             expected.add(new BoardStage(stage).nameKey());
         }
         for (BoardWaitReasons.Kind kind : BoardWaitReasons.Kind.values()) {
