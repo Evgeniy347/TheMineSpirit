@@ -46,7 +46,7 @@ public final class BoardViewChannel {
     public static final CustomPacketPayload.Type<Reply> REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "board_view_reply"));
 
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
     private static final int JOURNAL_LOOKBACK = 1024;
     private static final int MAX_TILES = 4096;
     private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
@@ -153,6 +153,10 @@ public final class BoardViewChannel {
                 buf.writeUtf(item.getKey());
                 buf.writeVarInt(item.getValue());
             }
+            buf.writeVarInt(tile.dependsOn().size());
+            for (String dependency : tile.dependsOn()) {
+                buf.writeUtf(dependency);
+            }
             buf.writeVarLong(tile.doneAt());
         }
     }
@@ -177,8 +181,13 @@ public final class BoardViewChannel {
             for (int j = 0; j < missingCount; j++) {
                 missing.put(buf.readUtf(), buf.readVarInt());
             }
+            int dependsCount = buf.readVarInt();
+            List<String> dependsOn = new ArrayList<>(dependsCount);
+            for (int j = 0; j < dependsCount; j++) {
+                dependsOn.add(buf.readUtf());
+            }
             long doneAt = buf.readVarLong();
-            tiles.add(new BoardTile(id, boardCase, level, priority, spirit, status, group, missing, doneAt));
+            tiles.add(new BoardTile(id, boardCase, level, priority, spirit, status, group, missing, dependsOn, doneAt));
         }
         return new Reply(tiles);
     }

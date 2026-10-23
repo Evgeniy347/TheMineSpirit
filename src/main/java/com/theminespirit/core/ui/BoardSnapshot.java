@@ -54,6 +54,7 @@ public final class BoardSnapshot {
                     task.status(),
                     group,
                     task.missing(),
+                    task.dependsOn(),
                     doneAt);
             ranked.add(new Ranked(tile, task.createdAt()));
         }

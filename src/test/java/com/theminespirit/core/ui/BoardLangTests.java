@@ -47,13 +47,16 @@ class BoardLangTests {
         for (BoardTileGroup group : BoardTileGroup.values()) {
             expected.add(PREFIX + "group." + group.name().toLowerCase(Locale.ROOT));
         }
+        for (BoardWaitReasons.Kind kind : BoardWaitReasons.Kind.values()) {
+            expected.add(PREFIX + "wait." + kind.name().toLowerCase(Locale.ROOT));
+        }
         for (String lang : List.of("ru_ru", "en_us")) {
             List<String> missing = new ArrayList<>(expected);
             missing.removeAll(keys(lang));
             assertEquals(
                     List.of(),
                     missing,
-                    "Новый кейс, статус или группа доски без перевода в " + lang
+                    "Новый кейс, статус, группа или причина ожидания доски без перевода в " + lang
                             + ": игрок увидит на экране доски имя константы. Добавьте ключ в "
                             + "src/main/resources/assets/theminespirit/lang/" + lang + ".json");
         }
