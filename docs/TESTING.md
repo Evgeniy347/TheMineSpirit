@@ -67,4 +67,6 @@
 - Быстрый тир — одна JVM (C1+C2), классы Jupiter параллельно: потоков = ядра − 2, от 1 до 4 (`THEMINESPIRIT_TEST_THREADS`).
   Класс с общим состоянием (счётчик, файл) — `@Isolated`; долгий независимый класс — `@Execution(CONCURRENT)`.
   Свойства jqwik идут последовательно. Форки выключены: одна база jqwik.
+- Пределы времени `scripts/test.sh` — согласованные значения в `TestTimeLimitGuardTests`; поднять — только с согласия
+  владельца, правкой таблицы сторожа с причиной.
 - Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/`), отчёт, не гейт.
