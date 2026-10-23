@@ -1,0 +1,57 @@
+package com.theminespirit.core.board;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.task.SpiritReading;
+import org.junit.jupiter.api.Test;
+
+class TicketRunTests {
+
+    @Test
+    void decide_OwnTaskSucceeded_Succeeded() {
+        assertEquals(TicketRun.SUCCEEDED, TicketRun.decide(5, 5, RunStatus.SUCCEEDED, false), "Своя задача закрыла");
+    }
+
+    @Test
+    void decide_ForeignTaskFailed_ResumeNotFailed() {
+        assertEquals(
+                TicketRun.RESUME,
+                TicketRun.decide(5, 6, RunStatus.FAILED, false),
+                "Провал чужой задачи (фоновой еды, рефлекса) заданию доски не приписывается (INC-31/24)");
+    }
+
+    @Test
+    void decide_ForeignTaskSucceeded_ResumeNotDone() {
+        assertEquals(
+                TicketRun.RESUME,
+                TicketRun.decide(5, 6, RunStatus.SUCCEEDED, false),
+                "Успех чужой задачи не закрывает задание: дух продолжает своё");
+    }
+
+    @Test
+    void decide_ForeignTaskRunning_Displaced() {
+        assertEquals(TicketRun.DISPLACED, TicketRun.decide(5, 6, RunStatus.RUNNING, false), "Чужая задача идёт");
+    }
+
+    @Test
+    void decide_CombatAfterForeignTask_Displaced() {
+        assertEquals(
+                TicketRun.DISPLACED,
+                TicketRun.decide(5, 6, RunStatus.SUCCEEDED, true),
+                "Пока бой держит духа, задание ждёт его, а не перезапускается");
+    }
+
+    @Test
+    void decide_OwnTaskCancelledAfterCombat_Resume() {
+        assertEquals(TicketRun.RESUME, TicketRun.decide(5, 5, RunStatus.CANCELLED, false), "Бой снял — продолжить");
+    }
+
+    @Test
+    void decide_UnknownGeneration_SettlesByStatus() {
+        long unknown = SpiritReading.UNKNOWN_GENERATION;
+
+        assertEquals(TicketRun.FAILED, TicketRun.decide(unknown, 6, RunStatus.FAILED, false), "После рестарта");
+        assertEquals(TicketRun.RUNNING, TicketRun.decide(unknown, 6, RunStatus.CANCELLED, false), "Без поколения");
+    }
+}

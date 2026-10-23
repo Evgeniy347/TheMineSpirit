@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HerdCycles;
@@ -203,6 +204,50 @@ public final class BoardDispatchGameTests {
         holder.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "board_dispatch_displaced", timeoutTicks = 200)
+    public static void displaced_ForeignTaskFinished_TicketStaysWithSpiritAndResumes(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-dispatch-displaced.jsonl");
+        String own = "dispatch:displaced";
+        board.submit(
+                ticket(
+                        own,
+                        BoardCase.STOCK_CHESTS,
+                        Optional.of(spirit.getUUID()),
+                        board.board().now()),
+                at(helper));
+        board.rebuild(level, level.getGameTime());
+        helper.assertTrue(
+                board.board().holderOf(own).filter(spirit.getUUID()::equals).isPresent(),
+                "Доска выдала задание своему духу: без выдачи сцена не проверяет вытеснение; статус "
+                        + board.board().statusOf(own));
+        spirit.startTask(new ScriptCall("wait", Map.of("ticks", 10)));
+        long displaced = spirit.taskGeneration();
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "Чужая задача (рефлекс, дверь) завершилась: статус " + spirit.taskStatus());
+            board.rebuild(level, level.getGameTime() + BoardTuning.boardIntervalTicks());
+            helper.assertTrue(
+                    board.board().statusOf(own).orElse(null) == BoardStatus.ASSIGNED
+                            && board.board()
+                                    .holderOf(own)
+                                    .filter(spirit.getUUID()::equals)
+                                    .isPresent(),
+                    "Итог чужой задачи не закрывает задание доски: оно остаётся за этим духом, статус "
+                            + board.board().statusOf(own));
+            helper.assertTrue(
+                    spirit.taskGeneration() != displaced,
+                    "Дух свободен — доска перезапускает план вытесненного задания, а не держит его вечно");
+            spirit.discard();
+            GameTestFixtures.finish(helper);
+            helper.succeed();
+        });
     }
 
     private static TicketTarget at(GameTestHelper helper) {
