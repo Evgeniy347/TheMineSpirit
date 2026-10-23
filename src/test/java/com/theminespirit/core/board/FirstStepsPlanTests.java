@@ -21,12 +21,12 @@ class FirstStepsPlanTests {
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
         chain.add(BoardCase.CRAFTING_STATION);
+        chain.add(BoardCase.STOCK_CHESTS);
         chain.addAll(ToolSet.wooden());
         chain.add(BoardCase.BUILD_MINE);
         chain.addAll(ToolSet.stone());
         chain.add(BoardCase.CRAFT_FURNACE);
         chain.add(BoardCase.LIGHTING);
-        chain.add(BoardCase.STOCK_CHESTS);
         chain.add(BoardCase.CLEAR_GROUNDS);
         chain.add(BoardCase.BUILD_FENCE);
         chain.add(BoardCase.BUILD_HOUSE);
@@ -105,8 +105,11 @@ class FirstStepsPlanTests {
                     "Каменный " + stone + " — после шахты: булыжник добывается в шахте, а не ямами у дома (INC-16)");
         }
         int light = chain.indexOf(BoardCase.LIGHTING);
-        for (BoardCase building : List.of(
-                BoardCase.STOCK_CHESTS, BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
+        assertEquals(
+                chain.indexOf(BoardCase.CRAFTING_STATION) + 1,
+                chain.indexOf(BoardCase.STOCK_CHESTS),
+                "Сундуки — сразу после верстака (владелец 23.10): добыча с первых шагов складывается в сундук");
+        for (BoardCase building : List.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
             assertTrue(
                     chain.indexOf(building) > light,
                     building + " — после факелов: постройки только после инструментов, шахты и света");
@@ -131,7 +134,7 @@ class FirstStepsPlanTests {
         SettlementFacts facts = facts(Set.of(), Set.of(), Set.of(BoardCase.CRAFTING_STATION));
 
         assertEquals(
-                Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE),
+                Optional.of(BoardCase.STOCK_CHESTS),
                 FirstStepsPlan.next(facts),
                 "Шаг, упавший до BLOCKED, не держит цепочку: дух получает следующее задание, а не стоит "
                         + "(правило владельца — провал → инцидент и новое задание)");
@@ -144,7 +147,7 @@ class FirstStepsPlanTests {
         SettlementFacts facts = new SettlementFacts(
                 true,
                 false,
-                0,
+                2,
                 true,
                 Set.of(ToolSet.stockKey(BoardCase.CRAFT_STONE_PICKAXE)),
                 false,
