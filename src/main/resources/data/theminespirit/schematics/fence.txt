@@ -1,7 +1,8 @@
-# fence — ограда поселения 9×9 с калиткой во фронте (доска BUILD_FENCE); '.' — клетка обязана быть воздухом
+# fence — ограда участка поселения 23×23 (SettlementLayout, решение 54b п.2) с калиткой в середине северной стороны;
+# внутренность схемой не задана: дом, шахта, двор и факелы участка стоят внутри (сторож SettlementLayoutTests).
 type: defense
-size: 9x2x9   # Ш×В×Д   # Ш×В×Д
-entrance: 4,0,0
+size: 23x2x23   # Ш×В×Д
+entrance: 11,0,0
 exemptions:
   - rule: roof
     reason: "ограда поселения открыта сверху по замыслу: это забор, а не здание"
@@ -13,23 +14,51 @@ legend:
   'L': oak_log[axis=y]
   'T': torch
 layers:
-  - y0 забор, столбы по углам и у калитки: |
-      LFFLGLFFL
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      LFFFFFFFL
+  - y0 забор, столбы по углам, у калитки и через 5–6 клеток: |
+      LFFFFFLFFFLGLFFFLFFFFFL
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      L                     L
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      L                     L
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      L                     L
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      LFFFFFLFFFFLFFFFLFFFFFL
   - y1 факелы на столбах: |
-      T  T T  T
+      T     T   T T   T     T
 
 
 
 
 
+      T                     T
 
 
-      T       T
+
+
+      T                     T
+
+
+
+
+      T                     T
+
+
+
+
+
+      T     T    T    T     T

@@ -190,8 +190,7 @@ public final class BoardSettlementStartGameTests {
                 List.of(spirit),
                 home(helper),
                 new StockView(Map.of("coal", 1, "stick", 4)),
-                false,
-                false,
+                new TorchWatch.Site(false, false, 0),
                 level.getGameTime());
 
         String id = TorchWatch.ticketId(BoardCase.CRAFT_TORCHES);

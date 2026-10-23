@@ -38,14 +38,19 @@ public final class TorchRules {
     }
 
     public static Optional<TorchStep> next(Map<String, Integer> stock, boolean furnace, boolean mine) {
+        return next(stock, furnace, mine, TORCH_TARGET);
+    }
+
+    // target — сколько факелов держать: обычный запас или больше, когда их ждёт шаг (ограда с факелами на столбах).
+    public static Optional<TorchStep> next(Map<String, Integer> stock, boolean furnace, boolean mine, int target) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         int torches = stock.getOrDefault(TORCH, 0);
-        if (torches >= TORCH_TARGET) {
+        if (torches >= target) {
             return Optional.empty();
         }
         int coal = stock.getOrDefault(COAL, 0);
         int charcoal = stock.getOrDefault(CHARCOAL, 0);
-        int wanted = (TORCH_TARGET - torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT;
+        int wanted = (target - torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT;
         if (coal + charcoal > 0) {
             String fuel = coal >= charcoal ? COAL : CHARCOAL;
             int crafts = Math.min(wanted, Math.max(coal, charcoal));

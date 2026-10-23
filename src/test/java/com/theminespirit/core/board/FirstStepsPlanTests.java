@@ -26,8 +26,8 @@ class FirstStepsPlanTests {
         chain.add(BoardCase.BUILD_MINE);
         chain.addAll(ToolSet.stone());
         chain.add(BoardCase.CRAFT_FURNACE);
-        chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.CLEAR_GROUNDS);
+        chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.BUILD_FENCE);
         chain.add(BoardCase.BUILD_HOUSE);
         chain.add(BoardCase.CRAFT_SMITHING_TABLE);
@@ -109,11 +109,16 @@ class FirstStepsPlanTests {
                 chain.indexOf(BoardCase.CRAFTING_STATION) + 1,
                 chain.indexOf(BoardCase.STOCK_CHESTS),
                 "Сундуки — сразу после верстака (владелец 23.10): добыча с первых шагов складывается в сундук");
-        for (BoardCase building : List.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
+        for (BoardCase building : List.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
             assertTrue(
                     chain.indexOf(building) > light,
                     building + " — после факелов: постройки только после инструментов, шахты и света");
         }
+        assertTrue(
+                chain.indexOf(BoardCase.CLEAR_GROUNDS) > chain.indexOf(BoardCase.CRAFT_FURNACE)
+                        && chain.indexOf(BoardCase.CLEAR_GROUNDS) < light,
+                "Расчистка — после инструментов и шахты, но до факелов: факелы встают по углам участка, где до"
+                        + " расчистки деревья");
     }
 
     @Test

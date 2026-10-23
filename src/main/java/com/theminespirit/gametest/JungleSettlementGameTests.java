@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -10,6 +11,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.net.BoardViewChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +29,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Приёмка владельца: новое поселение в джунглях без дуба, три духа с пустым инвентарём на общей доске
- * проходят этап 1 сами — верстак, сундуки, инструменты, шахта, печь, факелы, расчистка, забор, дом — и днём ни один
- * дух не простаивает дольше {@link #IDLE_LIMIT} тиков.
+ * проходят этап 1 сами — верстак, сундуки, инструменты, шахта, печь, факелы, расчистка, забор, дом — доска
+ * показывает этап 2, и днём ни один дух не простаивает дольше {@link #IDLE_LIMIT} тиков.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -57,6 +59,7 @@ public final class JungleSettlementGameTests {
                 spirit(helper, HOME.offset(-2, 0, 0)), spirit(helper, HOME.offset(2, 0, 0)), spirit(helper, HOME));
         Map<UUID, Integer> idle = new HashMap<>();
         int[] worstIdle = {0};
+        String[] worstWhen = {"-"};
         helper.onEachTick(() -> {
             for (SpiritEntity spirit : spirits) {
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
@@ -64,7 +67,21 @@ public final class JungleSettlementGameTests {
                         || !board.board().assignedTo(spirit.getUUID()).isEmpty();
                 int ticks = busy ? 0 : idle.getOrDefault(spirit.getUUID(), 0) + 1;
                 idle.put(spirit.getUUID(), ticks);
-                worstIdle[0] = Math.max(worstIdle[0], ticks);
+                if (ticks > worstIdle[0]) {
+                    worstIdle[0] = ticks;
+                    // Кто и когда простаивал дольше всех: без этого красный прогон не говорит, какой шаг держал духа.
+                    worstWhen[0] = spirit.displayName() + " до тика " + helper.getTick() + ", открыто "
+                            + board.board().all().stream()
+                                    .filter(ticket -> board.board()
+                                            .statusOf(ticket.id())
+                                            .map(status -> status != BoardStatus.DONE)
+                                            .orElse(false))
+                                    .map(ticket -> ticket.id() + "="
+                                            + board.board()
+                                                    .statusOf(ticket.id())
+                                                    .orElse(null))
+                                    .toList();
+                }
             }
         });
 
@@ -75,10 +92,13 @@ public final class JungleSettlementGameTests {
                     missing.add(step);
                 }
             }
+            // Переход на этап 2 — надпись этапа в снимке доски, тот же расчёт, что видит игрок.
+            int stage = BoardViewChannel.stage(level).number();
             helper.assertTrue(
-                    worstIdle[0] <= IDLE_LIMIT && missing.isEmpty(),
-                    "Этап 1 в джунглях: простой " + worstIdle[0] + " тиков подряд (предел " + IDLE_LIMIT
-                            + "), нет " + missing + "; духи "
+                    worstIdle[0] <= IDLE_LIMIT && missing.isEmpty() && stage >= 2,
+                    "Этап 1 в джунглях: простой " + worstIdle[0] + " тиков подряд (" + worstWhen[0] + "; предел "
+                            + IDLE_LIMIT
+                            + "), нет " + missing + ", этап на доске " + stage + "; духи "
                             + spirits.stream()
                                     .map(spirit -> spirit.displayName() + "="
                                             + spirit.currentTaskScript().orElse("-"))

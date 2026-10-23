@@ -54,8 +54,10 @@ public final class FirstStepsPlan {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
         steps.add(new Step(BoardCase.CRAFT_FURNACE, SettlementFacts::furnace));
-        steps.add(new Step(BoardCase.LIGHTING, SettlementFacts::lighting));
+        // Расчистка — до факелов: факелы встают по углам участка (SettlementLayout), а до расчистки там деревья
+        // («клетка … занята», приёмка «джунгли» 23.10).
         steps.add(new Step(BoardCase.CLEAR_GROUNDS, SettlementFacts::groundsCleared));
+        steps.add(new Step(BoardCase.LIGHTING, SettlementFacts::lighting));
         steps.add(new Step(BoardCase.BUILD_FENCE, SettlementFacts::fence));
         steps.add(new Step(BoardCase.BUILD_HOUSE, SettlementFacts::houses));
         steps.add(new Step(BoardCase.CRAFT_SMITHING_TABLE, SettlementFacts::smithingTable));

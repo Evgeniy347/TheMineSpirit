@@ -10,8 +10,10 @@ import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
+import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
@@ -44,6 +46,8 @@ import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 
 /**
@@ -59,6 +63,7 @@ public final class FirstStepsRunner {
     private static final String FIRST_PREFIX = "first:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
+    private static final int FEET_SCAN_DEPTH = 48;
 
     private FirstStepsRunner() {}
 
@@ -76,23 +81,31 @@ public final class FirstStepsRunner {
         Scan scan = buildFacts(level, home, stock, service);
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
-        TorchWatch.tick(service, spirits, home, stock, scan.furnaceBlock(), mine, now);
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
-        if (next.isEmpty()) {
+        if (next.isEmpty() || hasActive(service, next.orElseThrow())) {
+            TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0), now);
             return;
         }
         BoardCase caseValue = next.orElseThrow();
-        if (hasActive(service, caseValue)) {
-            return;
-        }
         String wood = woodOf(level, home, stock);
-        TicketTarget target = targetFor(caseValue, home, wood);
+        // Якорь участка — дом на средней высоте участка: от неё выравнивание и все постройки раскладки.
+        BlockCoord anchor = new BlockCoord(
+                home.x(),
+                PlotLeveling.level(home, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, home.y())),
+                home.z());
+        TicketTarget target = targetFor(caseValue, anchor, wood);
+        if (caseValue == BoardCase.CLEAR_GROUNDS) {
+            target = target.withLeveling(leveling(level, anchor, stock));
+        }
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
         // Доски, брёвна и деревянные блоки — породы поселения: в джунглях «oak_planks» не добыть (INC-36).
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
+        // Факелы шага (ограда — 17 на столбах) — сверх обычного запаса факелов: иначе шаг ждал бы их вечно.
+        TorchWatch.Site site = new TorchWatch.Site(scan.furnaceBlock(), mine, need.getOrDefault(TorchRules.TORCH, 0));
+        TorchWatch.tick(service, spirits, home, stock, site, now);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
             for (Map.Entry<String, Integer> entry : missing.entrySet()) {
@@ -121,6 +134,50 @@ public final class FirstStepsRunner {
             // каждые 5 с вводила в заблуждение (INC-26).
             LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
         }
+    }
+
+    // Выравнивание участка (решение 16): срезка и подсыпка по высотам колонок; яма — булыжником, если его хватает в
+    // запасе, иначе землёй.
+    private static PlotLeveling leveling(ServerLevel level, BlockCoord anchor, StockView stock) {
+        PlotLeveling plan = PlotLeveling.plan(anchor, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, anchor.y()));
+        if (plan.fillVolume() > 0 && stock.available().getOrDefault(COBBLESTONE, 0) >= plan.fillVolume()) {
+            plan = plan.withBlock(COBBLESTONE);
+        }
+        if (!plan.cut().isEmpty() || !plan.fill().isEmpty()) {
+            LOGGER.info(
+                    "Выравнивание участка на y={}: срезка {} ящиков, подсыпка {} блоков {}",
+                    anchor.y(),
+                    plan.cut().size(),
+                    plan.fillVolume(),
+                    plan.block());
+        }
+        return plan;
+    }
+
+    // Уровень ног колонки — над верхним блоком земли; постройки, станции, деревья и растения землёй не считаются.
+    private static int feetAt(ServerLevel level, int x, int z, int fallback) {
+        BlockPos.MutableBlockPos pos =
+                new BlockPos.MutableBlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+        for (int step = 0; step < FEET_SCAN_DEPTH; step++) {
+            pos.move(0, -1, 0);
+            if (!level.isLoaded(pos)) {
+                return fallback;
+            }
+            if (isGround(level.getBlockState(pos))) {
+                return pos.getY() + 1;
+            }
+        }
+        return fallback;
+    }
+
+    private static boolean isGround(BlockState state) {
+        return state.is(BlockTags.DIRT)
+                || state.is(BlockTags.BASE_STONE_OVERWORLD)
+                || state.is(BlockTags.SAND)
+                || state.is(Blocks.GRAVEL)
+                || state.is(Blocks.COBBLESTONE)
+                || state.is(Blocks.CLAY)
+                || !state.getFluidState().isEmpty();
     }
 
     private static String woodOf(ServerLevel level, BlockCoord home, StockView stock) {

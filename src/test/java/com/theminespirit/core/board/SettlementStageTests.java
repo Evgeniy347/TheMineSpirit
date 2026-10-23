@@ -5,18 +5,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.SchematicTextParser;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class SettlementStageTests {
-    private static final List<BoardCase> FIRST_STAGE = List.of(
-            BoardCase.CLEAR_GROUNDS,
-            BoardCase.BUILD_MINE,
-            BoardCase.BUILD_FENCE,
-            BoardCase.BUILD_HOUSE,
-            BoardCase.BUILD_WAREHOUSE);
+    private static final List<BoardCase> FIRST_STAGE =
+            List.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
 
     @Test
     void of_NothingBuilt_FirstStage() {
@@ -101,6 +102,36 @@ class SettlementStageTests {
                             "Этап " + stage.stage() + ": " + boardCase + " " + level + " выше уровней board.json — "
                                     + "этап не пройти"));
         }
+    }
+
+    @Test
+    void rules_Classpath_HouseLevelSchemeOfItsStage() throws IOException {
+        StageRules rules = StageRules.load();
+        Path root = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+
+        for (int level = 1; level <= 2; level++) {
+            String scheme = rules.scheme(BoardCase.BUILD_HOUSE, level).orElseThrow();
+            Path file = root.resolve(scheme + ".txt");
+            Optional<Integer> stage = SchematicTextParser.parse(Files.readString(file), file.toString())
+                    .header()
+                    .stage();
+            assertEquals(
+                    Optional.of(level),
+                    stage,
+                    "Дом уровня " + level + " (" + scheme + ") — схема этапа " + level + ": хижина этапа 1 строится из"
+                            + " дерева рядом, каменный дом — следующий этап (решение 54b п.1)");
+        }
+        assertEquals(Optional.of("hut_1"), rules.scheme(BoardCase.BUILD_HOUSE, 1), "Дом этапа 1 — хижина");
+    }
+
+    @Test
+    void parse_SchemeOfUnknownCase_Rejected() {
+        String json = "{\"stages\": [{\"stage\": 1, \"buildings\": {}}], \"schemes\": {\"NO_SUCH\": [\"hut_1\"]}}";
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> StageRules.parse(json, "тест"),
+                "Схема неизвестного кейса — ошибка данных, а не молча пропущенная строка");
     }
 
     @Test

@@ -46,7 +46,9 @@ import org.slf4j.Logger;
 public final class TransferWatch {
     private static final String TABLE_ITEM = "minecraft:crafting_table";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Set<BoardCase> BUILDS = Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+    // Факелы освещения — тоже материал стройки: без передачи дух шёл ставить их пустым («нет материала torch»).
+    private static final Set<BoardCase> BUILDS =
+            Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING);
 
     private TransferWatch() {}
 
