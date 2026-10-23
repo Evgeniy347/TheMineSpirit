@@ -137,7 +137,14 @@ public final class TicketPlans {
                                         CatalogLimits.STATION_RADIUS_DEFAULT,
                                         "place",
                                         true)));
-            case CRAFT_TORCHES -> craft("minecraft:torch", torchCount(target), target);
+            // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
+            // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
+            case CRAFT_TORCHES ->
+                sequence(
+                        craft("minecraft:torch", torchCount(target), target),
+                        store(target, "minecraft:torch"),
+                        store(target, "minecraft:charcoal"),
+                        store(target, "minecraft:coal"));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -402,7 +409,27 @@ public final class TicketPlans {
                 new ScriptCall("acquire", Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
                 new ScriptCall(
                         "smelt",
-                        Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+                        Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)),
+                store(target, "minecraft:charcoal"));
+    }
+
+    // Сдать всё названное в ближайший сундук у места задания; сундука нет или сдавать нечего — шаг не валит план.
+    private static TaskNode store(TicketTarget target, String item) {
+        return sequence(
+                gotoTarget(target),
+                new FallbackNode(List.of(
+                        new ScriptCall(
+                                "deposit",
+                                Map.of(
+                                        CONTAINER,
+                                        NEAREST,
+                                        ITEM,
+                                        item,
+                                        COUNT,
+                                        CatalogLimits.COUNT_MAX,
+                                        RADIUS,
+                                        SUPPLY_CONTAINER_RADIUS)),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
     }
 
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
