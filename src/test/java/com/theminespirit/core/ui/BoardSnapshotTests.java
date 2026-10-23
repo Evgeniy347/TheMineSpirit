@@ -102,6 +102,17 @@ class BoardSnapshotTests {
     }
 
     @Test
+    void build_DependentTask_KeepsDependencyIds() {
+        List<BoardTile> tiles = BoardSnapshot.build(
+                List.of(task("after", 5, "PENDING", Map.of(), List.of("before"), 1)), Map.of(), uuid -> null);
+
+        assertEquals(
+                List.of("before"),
+                tiles.get(0).dependsOn(),
+                "Плитка обязана нести id зависимостей: иначе экран не назовёт задание, которого она ждёт");
+    }
+
+    @Test
     void build_DoneWithoutJournal_UsesCreationTime() {
         List<BoardTile> tiles = BoardSnapshot.build(
                 List.of(task("done", 5, "DONE", Map.of(), List.of(), 42, null, true)), Map.of(), uuid -> null);
