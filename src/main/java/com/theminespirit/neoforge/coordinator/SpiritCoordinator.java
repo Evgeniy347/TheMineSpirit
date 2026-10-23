@@ -12,6 +12,7 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.intellect.defense.DefenseIssuedOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
@@ -47,6 +48,7 @@ public final class SpiritCoordinator {
     private final SettlementIntellect intellect = new SettlementIntellect();
     private final DefenseService defense = new DefenseService();
     private final Map<UUID, CombatDirective> lastDirectives = new HashMap<>();
+    private final Map<UUID, Long> idleSince = new HashMap<>();
     private final Map<UUID, String> lastForced = new HashMap<>();
     private final Set<UUID> lastUrgent = new HashSet<>();
     private long lastSnapshotTick = -1;
@@ -76,6 +78,7 @@ public final class SpiritCoordinator {
             throw new IllegalArgumentException("tick = " + tick + ": тик снимка не может быть отрицательным");
         }
         lastSnapshotTick = tick;
+        trackIdle(members, tick);
         entityQueries += CoordinatorTuning.SNAPSHOT_GROUP_QUERIES;
         planCalls++;
         List<SpiritSnapshot> snapshots = new ArrayList<>();
@@ -223,13 +226,47 @@ public final class SpiritCoordinator {
                 forced.put(entry.getKey(), entry.getValue().forceTargetId().get());
             }
         }
+        boolean calm = defense.lastPlan().orders().isEmpty();
         for (UUID id : new ArrayList<>(directives.keySet())) {
             SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
+            if (calm && holdsCalmPost(id, directives.get(id), urgent, forced)) {
+                continue;
+            }
             if (spirit != null && !spirit.isRemoved()) {
                 applyDirective(spirit, id, directives.get(id), urgent, forced, posts);
             }
         }
         releaseDropped(directives);
+    }
+
+    private void trackIdle(List<SpiritEntity> members, long tick) {
+        Set<UUID> present = new HashSet<>();
+        for (SpiritEntity spirit : members) {
+            UUID id = spirit.getUUID();
+            present.add(id);
+            boolean busy = spirit.currentTaskScript().isPresent()
+                    || spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
+            if (busy) {
+                idleSince.remove(id);
+            } else {
+                idleSince.putIfAbsent(id, tick);
+            }
+        }
+        idleSince.keySet().retainAll(present);
+    }
+
+    // Мирный пост (без врагов, без цели) ещё не выдан и дух свободен меньше порога — не выдаём: иначе каждое
+    // короткое занятие интеллекта снимало пост, а простой ставил снова (INC-27). Выданный пост держится как раньше.
+    private boolean holdsCalmPost(UUID id, CombatDirective d, Set<UUID> urgent, Map<UUID, String> forced) {
+        if (urgent.contains(id)
+                || forced.containsKey(id)
+                || d.mode() != CombatMode.GUARD_AREA
+                || d.target().isPresent()
+                || lastDirectives.containsKey(id)) {
+            return false;
+        }
+        Long since = idleSince.get(id);
+        return since == null || lastSnapshotTick - since < CoordinatorTuning.CALM_POST_IDLE_TICKS;
     }
 
     private void applyDirective(

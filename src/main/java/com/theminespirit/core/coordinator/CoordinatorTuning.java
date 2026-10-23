@@ -9,6 +9,9 @@ public final class CoordinatorTuning {
     public static final long SNAPSHOT_STALE_TICKS = 40;
     public static final int SNAPSHOT_GROUP_QUERIES = 1;
     public static final int SNAPSHOT_SPIRIT_QUERIES = 1;
+    // Гистерезис мирного поста: без врагов пост обороны ставится духу, простоявшему без дела столько тиков. Интеллект
+    // то даёт, то снимает работу, и пост то ставился, то снимался — режим DEFENSIVE↔GUARD_AREA каждым циклом (INC-27).
+    public static final long CALM_POST_IDLE_TICKS = 200;
 
     private CoordinatorTuning() {}
 }

@@ -49,6 +49,33 @@ class TorchRulesTests {
     }
 
     @Test
+    void next_NoCoalNoFurnaceMineDug_MineCoal() {
+        assertEquals(
+                Optional.of(new TorchRules.TorchStep(
+                        BoardCase.GATHER_MATERIALS,
+                        TorchRules.COAL,
+                        TorchRules.TORCH_TARGET / TorchRules.TORCHES_PER_CRAFT)),
+                TorchRules.next(Map.of("stick", 8), false, true),
+                "Угля и печи нет, шахта есть — добыть уголь на запас факелов (INC-25: свет ждал факелы вечно)");
+    }
+
+    @Test
+    void next_NoCoalNoMine_NoCoalMining() {
+        assertEquals(
+                Optional.empty(),
+                TorchRules.next(Map.of("stick", 8), false, false),
+                "Уголь добывается в шахте (порядок владельца 21.10): до шахты задание на уголь не ставится");
+    }
+
+    @Test
+    void next_FurnaceLogsAndMine_CharcoalFirst() {
+        assertEquals(
+                Optional.of(new TorchRules.TorchStep(BoardCase.SMELT_CHARCOAL, "oak_log", TorchRules.CHARCOAL_BATCH)),
+                TorchRules.next(Map.of("oak_log", 8), true, true),
+                "Печь и брёвна есть — сначала древесный уголь (чеклист 50 п.5), шахта — когда пережечь нечего");
+    }
+
+    @Test
     void next_FurnaceTooFewLogs_Nothing() {
         assertEquals(
                 Optional.empty(),

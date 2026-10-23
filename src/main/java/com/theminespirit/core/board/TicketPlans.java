@@ -438,6 +438,20 @@ public final class TicketPlans {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
+        if (TorchRules.COAL.equals(item)) {
+            // Уголь — из жилы (шахта у дома): acquire искал уголь через рецепты и уходил в древесный (журнал 05:49).
+            return sequence(
+                    gotoTarget(target),
+                    new ScriptCall(
+                            "mine_vein",
+                            Map.of(
+                                    "ore",
+                                    OreKind.COAL.name().toLowerCase(Locale.ROOT),
+                                    COUNT,
+                                    batch,
+                                    RADIUS,
+                                    CatalogLimits.HARVEST_RADIUS_MAX)));
+        }
         return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
     }
 
@@ -483,7 +497,9 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Задание ремонта инструмента без предмета: скрипт repair_tool "
                     + "чинит конкретный изношенный предмет, без имени чинить нечего");
         }
-        return new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem()));
+        // Наковальню скрипт ищет вокруг себя: сначала к дому, где она стоит (гейт RepairWatch), иначе дух в шахте
+        // или в поле проваливает ремонт «нет наковальни поблизости» (INC-24).
+        return sequence(gotoTarget(target), new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem())));
     }
 
     private static TaskNode breedAnimals(TicketTarget target) {

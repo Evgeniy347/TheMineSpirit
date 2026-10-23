@@ -459,6 +459,11 @@ public final class Board {
         }
     }
 
+    public boolean dependenciesMet(BoardTicket ticket) {
+        Objects.requireNonNull(ticket, "ticket не может быть null: предшественники считаются у задания");
+        return dependenciesDone(ticket);
+    }
+
     private boolean dependenciesDone(BoardTicket ticket) {
         for (String dependency : ticket.dependsOn()) {
             Optional<BoardLedger.BuildingMark> mark = BoardLedger.parse(dependency);

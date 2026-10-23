@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -70,8 +71,9 @@ public final class FirstStepsRunner {
         }
         BlockCoord home = homeOf(spirits);
         Scan scan = buildFacts(level, home, stock, service);
-        TorchWatch.tick(service, spirits, home, stock, scan.furnaceBlock(), now);
         SettlementFacts facts = scan.facts();
+        boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+        TorchWatch.tick(service, spirits, home, stock, scan.furnaceBlock(), mine, now);
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         if (next.isEmpty()) {
             return;
@@ -94,8 +96,7 @@ public final class FirstStepsRunner {
             return;
         }
         String id = FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
-        LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
-        service.submit(
+        BoardOutcome outcome = service.submit(
                 new BoardTicket(
                         id,
                         caseValue,
@@ -107,6 +108,11 @@ public final class FirstStepsRunner {
                         List.of(),
                         Map.of()),
                 target);
+        if (outcome == BoardOutcome.ACCEPTED) {
+            // Только реально поставленный шаг: BLOCKED/FAILED-тикет доска не переоткрывает, и строка «открыт»
+            // каждые 5 с вводила в заблуждение (INC-26).
+            LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
+        }
     }
 
     private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home) {

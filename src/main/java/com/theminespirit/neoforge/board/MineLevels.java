@@ -23,9 +23,11 @@ import net.minecraft.server.level.ServerLevel;
  * и рельсы, чтобы уровень не прыгал через непостроенный.
  */
 final class MineLevels {
+    // Уровень 2 — только выработка (dig_area): материал не расходует, булыжник даёт сам. Гейт «stone ×32»
+    // ставил supply:stone, а камень (не булыжник) добычей не получить — цикл FAILED→POSTED (INC-28).
+    // Уровень 3 кладёт пол из булыжника 7×7 (fill в TicketPlans) — гейт на то, что он тратит.
     private static final Map<Integer, Map<String, Integer>> LEVEL_MATERIALS = Map.of(
-            2, Map.of("stone", 32),
-            3, Map.of("stone", 64),
+            3, Map.of("cobblestone", 49),
             4, Map.of("iron_ingot", 16));
 
     private MineLevels() {}

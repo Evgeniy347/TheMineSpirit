@@ -212,7 +212,7 @@ public final class BoardV2GameTests {
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
-    public static void relevance_CraterBury_DetachesAndLevelTwoWaitsGate(GameTestHelper helper) {
+    public static void relevance_CraterBury_DetachesAndLevelTwoWithoutStoneGate(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -222,7 +222,7 @@ public final class BoardV2GameTests {
         long now = level.getGameTime();
         assertBuriedCraterDetaches(helper, level, board, now);
 
-        assertMineLevelTwoWaitsGate(helper, level, board, now);
+        assertMineLevelTwoWithoutStoneGate(helper, level, board, now);
         close(board, log, helper);
         helper.succeed();
     }
@@ -277,7 +277,7 @@ public final class BoardV2GameTests {
                         + "исчезновения задания не видна");
     }
 
-    private static void assertMineLevelTwoWaitsGate(
+    private static void assertMineLevelTwoWithoutStoneGate(
             GameTestHelper helper, ServerLevel level, BoardService board, long now) {
         SpiritEntity spirit = spawnAt(helper, new BlockPos(1, 1, 1), new BlockPos(4, 1, 4));
         board.rebuild(level, now + 2);
@@ -305,22 +305,16 @@ public final class BoardV2GameTests {
         helper.assertTrue(
                 levelTwo != null && levelTwo.level() == 2,
                 "После уровня 1 обязан появиться уровень 2 (расширение), фактически " + levelTwo);
-        helper.assertTrue(
-                board.board().statusOf("mine_level_2").orElse(null) == BoardStatus.WAITING_RESOURCES,
-                "Без камня уровень 2 ждёт гейт WAITING_RESOURCES, статус "
-                        + board.board().statusOf("mine_level_2").orElse(null)
-                        + ": расширение, стартовавшее без материалов, ломает гейт");
         TaskNode minePlan =
                 TicketPlans.plan(BoardCase.BUILD_MINE, 2, TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))));
         helper.assertTrue(
                 minePlan instanceof ScriptCall call && "dig_area".equals(call.script()),
                 "План уровня 2 шахты — расширение dig_area, фактически " + minePlan);
-        spirit.getInventory().setItem(0, new ItemStack(Items.STONE, 32));
-        board.rebuild(level, now + 4);
-        BoardStatus afterStone = board.board().statusOf("mine_level_2").orElse(null);
+        BoardStatus levelTwoStatus = board.board().statusOf("mine_level_2").orElse(null);
         helper.assertTrue(
-                afterStone == BoardStatus.ASSIGNED || afterStone == BoardStatus.PENDING,
-                "После добычи 32 камня уровень 2 обязан выйти из гейта, статус " + afterStone);
+                levelTwoStatus == BoardStatus.ASSIGNED || levelTwoStatus == BoardStatus.PENDING,
+                "Уровень 2 — выработка, материала не тратит: без камня в запасе он не ждёт гейт, статус "
+                        + levelTwoStatus + " — гейт «stone ×32» ставил невыполнимый supply:stone по кругу (INC-28)");
         board.cancel(level, "mine_level_2");
     }
 

@@ -585,6 +585,18 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_RepairTool_GoesToTargetFirst() {
+        TaskNode plan = TicketPlans.plan(BoardCase.REPAIR_TOOL, fullTarget());
+
+        assertTrue(
+                plan instanceof SequenceNode sequence
+                        && sequence.steps().get(0) instanceof ScriptCall first
+                        && "goto".equals(first.script()),
+                "Ремонт начинается с подхода к дому: скрипт ищет наковальню вокруг духа, а она стоит у дома "
+                        + "(INC-24); план " + plan);
+    }
+
+    @Test
     void craftItem_SmithyCases_ReturnStationItem() {
         assertEquals(
                 Optional.of("minecraft:anvil"),
@@ -745,6 +757,18 @@ class TicketPlansTests {
                 () -> TicketPlans.plan(BoardCase.RELOCATE_BUILDING, same),
                 "Перенос в ту же точку обязан падать: сносить и строить на одном месте нечего, "
                         + "а молча принятый перенос гонял бы духа вхолостую");
+    }
+
+    @Test
+    void plan_GatherCoal_MinesCoalVein() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply(TorchRules.COAL, 4);
+
+        ScriptCall vein = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "mine_vein");
+
+        assertEquals(
+                Map.of("ore", "coal", "count", 4),
+                Map.of("ore", vein.params().get("ore"), "count", vein.params().get("count")),
+                "Уголь на факелы добывается из жилы: acquire уходил в древесный уголь и проваливался (журнал 05:49)");
     }
 
     private static ScriptCall findCall(TaskNode root, String script) {
