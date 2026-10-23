@@ -323,7 +323,9 @@ public final class IntellectGameTests {
                 Set<Object> jobs = new HashSet<>(
                         first.stream().map(ActivityAssignment::activity).toList());
                 helper.assertTrue(
-                        jobs.size() >= 2, "Занятия разные (двое в поле, третий отдыхает): иначе толпа стоит на одном");
+                        !jobs.contains(ActivityId.REST),
+                        "Голодное поселение без угроз: все трое добывают еду, никто не стоит в отдыхе (свободный дух "
+                                + "без задачи годен для работы): " + jobs);
                 firstSince[0] = first.stream()
                         .filter(assignment -> assignment.spirit().equals(busy))
                         .mapToLong(ActivityAssignment::since)
@@ -426,9 +428,9 @@ public final class IntellectGameTests {
                 helper.assertTrue(
                         spirits.stream()
                                 .allMatch(spirit -> spirit.currentTaskScript()
-                                        .map(script -> "wait".equals(script))
+                                        .map(script -> !script.isBlank())
                                         .orElse(false)),
-                        "Ждём свои задачи ожидания: вердикт ARM нужен духу без оружия, а не пустому");
+                        "Ждём свои задачи интеллекта: вердикт ARM нужен духу без оружия, занятому работой, а не пустому");
                 husk[0] = TacticsScene.watcher(helper, EntityType.HUSK, new BlockPos(5, 1, 5));
                 husk[0].setTarget(spirits.get(2));
                 threatened[0] = true;

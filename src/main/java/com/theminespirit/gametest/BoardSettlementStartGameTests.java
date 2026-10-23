@@ -12,6 +12,7 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
@@ -103,13 +104,16 @@ public final class BoardSettlementStartGameTests {
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
-                    doneOrder.size() >= WOODEN_START.size(),
+                    doneOrder.containsAll(WOODEN_START),
                     "Пустое поселение обязано пройти верстак и деревянный набор через доску; сделано " + doneOrder
                             + ", доска: " + firstSteps(board) + ", духи: " + spiritsState(spirits));
+            int mine = doneOrder.indexOf(BoardCase.BUILD_MINE);
             helper.assertTrue(
-                    doneOrder.subList(0, WOODEN_START.size()).equals(WOODEN_START),
-                    "Порядок с нуля — верстак → деревянные кирка, топор, лопата (решение владельца 21.10): "
-                            + doneOrder);
+                    doneOrder.get(0) == BoardCase.CRAFTING_STATION
+                            && (mine < 0 || doneOrder.indexOf(BoardCase.CRAFT_WOODEN_PICKAXE) < mine)
+                            && stoneAfterMine(doneOrder, mine),
+                    "Порядок с нуля — верстак → деревянные инструменты → шахта → каменные (решение владельца 21.10); "
+                            + "упавший шаг пропускается и делается позже: " + doneOrder);
             helper.assertTrue(
                     board.board().statusOf("first:build_mine").isPresent(),
                     "После деревянного набора на доске — шахта (вход и спуск), а не постройки: " + firstSteps(board));
@@ -224,6 +228,16 @@ public final class BoardSettlementStartGameTests {
         spirit.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    private static boolean stoneAfterMine(List<BoardCase> doneOrder, int mine) {
+        for (BoardCase stone : ToolSet.stone()) {
+            int at = doneOrder.indexOf(stone);
+            if (at >= 0 && (mine < 0 || at < mine)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Map<String, String> firstSteps(BoardService board) {

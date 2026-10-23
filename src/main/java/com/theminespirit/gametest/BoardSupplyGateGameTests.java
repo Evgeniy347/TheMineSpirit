@@ -67,11 +67,11 @@ public final class BoardSupplyGateGameTests {
                 "Повторная пересборка не ставит supply:book, статус "
                         + board.board().statusOf("supply:book"));
 
-        board.board().ledger().note(BoardCase.BUILD_MINE, 1);
+        board.board().ledger().note(BoardCase.BUILD_HOUSE, 1);
         board.rebuild(level, now + BoardTuning.boardIntervalTicks() * 2);
         helper.assertTrue(
                 board.board().statusOf("supply:book").orElse(null) == BoardStatus.PENDING,
-                "После шахты наступает этап чаровальни: книга обязана попасть на доску, статус "
+                "После первого дома наступает этап чаровальни: книга обязана попасть на доску, статус "
                         + board.board().statusOf("supply:book"));
         helper.assertTrue(
                 board.board().statusOf("supply:paper").orElse(null) == BoardStatus.PENDING,
