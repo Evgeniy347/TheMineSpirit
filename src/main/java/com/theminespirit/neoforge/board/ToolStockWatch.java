@@ -14,17 +14,22 @@ import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
 /**
  * Постоянный запас деревянного набора: первые шаги делают инструмент один раз ({@code first:*}
  * после DONE не переиздаётся), а сломанный или отданный инструмент доска восполняет сама — задание
- * {@code stock:<кейс>} на нехватку до набора на духа. Ставится только после шага первых шагов этого инструмента
+ * {@code stock:<кейс>:<дух>} этому духу на нехватку в его собственном наборе. Ставится только после шага
+ * первых шагов этого инструмента
  * (не спорит с цепочкой) и только когда дерева в запасе хватает (иначе невыполнимо — дух не получает его).
  */
 public final class ToolStockWatch {
@@ -38,49 +43,75 @@ public final class ToolStockWatch {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        Optional<BlockCoord> home = spirits.stream()
-                .map(SpiritEntity::home)
-                .flatMap(Optional::stream)
-                .findFirst();
-        if (home.isEmpty()) {
-            return;
-        }
-        Map<BoardCase, Integer> shortages = ToolSet.woodenShortages(stock.available(), ToolSet.count(spirits.size()));
         MaterialSource source = null;
-        for (Map.Entry<BoardCase, Integer> entry : shortages.entrySet()) {
-            BoardCase caseValue = entry.getKey();
-            String id = ticketId(caseValue);
-            if (!service.board().ledger().has(caseValue, 1) || active(service, id)) {
+        for (SpiritEntity spirit : spirits) {
+            Optional<BlockCoord> home = spirit.home();
+            if (home.isEmpty() || spirit.isRemoved()) {
                 continue;
             }
-            TicketTarget target = TicketTarget.at(home.orElseThrow()).withToolCount(1);
-            if (source == null) {
-                source = FirstStepsRunner.materialSource(level);
-            }
-            Map<String, Integer> missing =
-                    ResourceGate.missing(new StockNeed(FirstStepsRunner.materials(source, caseValue, target)), stock);
-            if (!missing.isEmpty()) {
-                LOGGER.debug("Запас инструмента {} ждёт материалов: {}", caseValue, missing);
-                continue;
-            }
-            LOGGER.info("Поставлено: восполнить {} (до набора на духа не хватает {})", caseValue, entry.getValue());
-            service.submit(
-                    new BoardTicket(
-                            id,
+            // Набор у каждого духа свой (владелец 23.10): недостача считается по его инвентарю и руке, а задание
+            // крафта адресовано ему — инструмент в общем сундуке или у соседа его кирку не заменяет.
+            Map<BoardCase, Integer> shortages = ToolSet.woodenShortages(ownTools(spirit), ToolSet.count(1));
+            for (Map.Entry<BoardCase, Integer> entry : shortages.entrySet()) {
+                BoardCase caseValue = entry.getKey();
+                String id = ticketId(caseValue, spirit.getUUID());
+                if (!service.board().ledger().has(caseValue, 1) || active(service, id)) {
+                    continue;
+                }
+                TicketTarget target = TicketTarget.at(home.orElseThrow()).withToolCount(1);
+                if (source == null) {
+                    source = FirstStepsRunner.materialSource(level);
+                }
+                Map<String, Integer> missing = ResourceGate.missing(
+                        new StockNeed(FirstStepsRunner.materials(source, caseValue, target)), stock);
+                if (!missing.isEmpty()) {
+                    LOGGER.debug(
+                            "Запас инструмента {} духа {} ждёт материалов: {}",
                             caseValue,
-                            Optional.empty(),
-                            BoardRules.priorityOf(caseValue),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    target);
+                            spirit.displayName(),
+                            missing);
+                    continue;
+                }
+                LOGGER.info(
+                        "Поставлено: восполнить {} духу {} (до его набора не хватает {})",
+                        caseValue,
+                        spirit.displayName(),
+                        entry.getValue());
+                service.submit(
+                        new BoardTicket(
+                                id,
+                                caseValue,
+                                Optional.of(spirit.getUUID()),
+                                BoardRules.priorityOf(caseValue),
+                                now,
+                                1,
+                                BoardTicket.ALWAYS_CAUSE,
+                                List.of(),
+                                Map.of()),
+                        target);
+            }
         }
     }
 
-    public static String ticketId(BoardCase caseValue) {
-        return PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
+    private static Map<String, Integer> ownTools(SpiritEntity spirit) {
+        Map<String, Integer> own = new HashMap<>();
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            addTool(own, spirit.getInventory().getItem(slot));
+        }
+        if (spirit.mainHandOwned()) {
+            addTool(own, spirit.getMainHandItem());
+        }
+        return own;
+    }
+
+    private static void addTool(Map<String, Integer> own, ItemStack stack) {
+        if (!stack.isEmpty()) {
+            own.merge(BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath(), stack.getCount(), Integer::sum);
+        }
+    }
+
+    public static String ticketId(BoardCase caseValue, UUID spirit) {
+        return PREFIX + caseValue.name().toLowerCase(Locale.ROOT) + ":" + spirit;
     }
 
     private static boolean active(BoardService service, String id) {

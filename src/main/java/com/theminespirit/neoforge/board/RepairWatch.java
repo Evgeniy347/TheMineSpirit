@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairCosts;
@@ -82,6 +83,9 @@ final class RepairWatch {
                 continue;
             }
             String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+            if (ToolSet.replacedNotRepaired(itemId)) {
+                continue;
+            }
             Optional<String> material = RepairMaterials.materialFor(itemId);
             boolean secondAvailable = hasSecondDamaged(inventory, itemId, slot);
             boolean materialAvailable = material.isPresent()
