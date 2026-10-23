@@ -13,6 +13,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.core.policy.PolicyId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,7 @@ public class ClearAreaSession {
     protected int restoredSkipped;
 
     private final BuildResult tally = new BuildResult();
+    private int keptBlocks;
     private final boolean demolish;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
@@ -226,7 +228,10 @@ public class ClearAreaSession {
             return;
         }
         BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget), false, demolish);
-        if (begin instanceof BlockBreaker.Protected) {
+        if (begin instanceof BlockBreaker.Protected kept) {
+            if (kept.policy() == PolicyId.PROTECTED_BLOCKS) {
+                keptBlocks++;
+            }
             protectedSkipped++;
             tally.skipped();
             releaseCurrent();
@@ -295,7 +300,8 @@ public class ClearAreaSession {
             return;
         }
         // Провал — только если ломать было что, но ничего не сломано; чистый участок — выполненная расчистка.
-        if (removed == 0 && skippedTotal() > 0) {
+        // Блоки под защитой (верстак, факелы, чёрный список) участок и должен сохранить — это не провал.
+        if (removed == 0 && skippedTotal() - keptBlocks > 0) {
             fail(summary() + "; не убран ни один блок");
             return;
         }
