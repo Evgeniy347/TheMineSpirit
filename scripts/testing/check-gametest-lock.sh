@@ -12,6 +12,8 @@ mkdir -p "$work/bin" "$work/tmp"
 failed=0
 
 # Запасной путь включаем явно (THEMINESPIRIT_GAMETEST_NOFLOCK=1): так проверка одинакова на Linux с flock и в Git Bash.
+# Проверки про один сервер: шарды проверяются в check-test-runner.sh.
+export THEMINESPIRIT_GAMETEST_SHARDS=1
 
 # Фейковый gradlew: время старта/конца в файл и сон на заданное время.
 cat >"$work/fake-gradlew" <<'FAKE'

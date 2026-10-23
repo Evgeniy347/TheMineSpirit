@@ -21,13 +21,16 @@ class TestTimeLimitGuardTests {
     private static final Pattern DEFAULT = Pattern.compile(
             "^([A-Z_]+_(?:WARN|STOP))=\"\\$\\{THEMINESPIRIT_[A-Z_]+_SECONDS:-(\\d+)}\"", Pattern.MULTILINE);
 
-    // Цель владельца 23.10 — весь прогон (unit + GameTest) не дольше 200 с. Пока цель не достигнута, значения ниже —
-    // фактические на b1f72499 (не согласованы: подняты в 63e70f02 и af88ffb2); предложение — QUESTIONS-speed.md.
+    // Цель владельца 23.10 — весь прогон (unit + GameTest) не дольше 200 с. Демо-аудиты построек — ручные
+    // (в общий набор, включая --full, не входят), поэтому предел --full пересчитан по замеру общего набора;
+    // отдельный, более высокий предел оставлен на запас под чужую нагрузку. Поднять — только с согласия владельца.
     private static final Map<String, Integer> AGREED = Map.of(
-            "UNIT_WARN", 300,
-            "UNIT_STOP", 900,
-            "GAMETEST_WARN", 300,
-            "GAMETEST_STOP", 1500);
+            "UNIT_WARN", 90,
+            "UNIT_STOP", 200,
+            "GAMETEST_WARN", 120,
+            "GAMETEST_STOP", 200,
+            "GAMETEST_FULL_WARN", 180,
+            "GAMETEST_FULL_STOP", 300);
 
     @Test
     void testScript_TimeLimits_EqualAgreedValues() {
@@ -42,12 +45,13 @@ class TestTimeLimitGuardTests {
     @Test
     void limits_ScriptDefaults_AreParsed() {
         assertEquals(
-                new TreeMap<>(Map.of("UNIT_STOP", 901, "GAMETEST_WARN", 5)),
+                new TreeMap<>(Map.of("UNIT_STOP", 901, "GAMETEST_WARN", 5, "GAMETEST_FULL_STOP", 1200)),
                 limits("""
                         UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-901}"
                           NOT_LIMIT="${OTHER:-3}"
                         GAMETEST_STALE="${THEMINESPIRIT_GAMETEST_STALE_SECONDS:-120}"
                         GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-5}"
+                        GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-1200}"
                         """),
                 "Сторож ослеп: строки пределов вида NAME=\"${THEMINESPIRIT_…_SECONDS:-N}\" обязаны разбираться");
     }

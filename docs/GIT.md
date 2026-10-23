@@ -11,7 +11,8 @@
 - Формат: `<тип>: <описание по-русски>`; типы `feat` (поведение), `fix` (ошибка), `test` (только тесты, в том числе
   только GameTest), `refactor`, `docs`, `chore` (сборка, скрипты). `feat:`/`fix:` с production-кодом обязан менять и
   тесты. Формат и правило про тест проверяет хук `commit-msg`.
-- Хук `pre-commit` гоняет `scripts/test.sh unit`, если в коммите есть `src/` или сборка; красный — отказ.
+- Хук `pre-commit` гоняет `scripts/test.sh unit --fast-analyzers`, если в коммите есть `src/` или сборка; красный —
+  отказ. SpotBugs и PMD (сотни секунд) — не в хуке, а при приёмке перед слиянием (`scripts/lead/chkq.sh`).
   Хуки подключает `scripts/install-git-hooks.sh`. `--no-verify` и отключение хуков (`-c core.hooksPath=…`) —
   только по прямому указанию пользователя.
 

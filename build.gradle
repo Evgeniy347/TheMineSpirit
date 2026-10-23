@@ -110,8 +110,11 @@ neoForge {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             // Фильтр GameTest по имени пачки/класса/теста (scripts/test.sh gametest <фильтр>):
-            // пусто или не задано — идут все тесты.
-            systemProperty 'theminespirit.gametest.filter', System.getProperty('theminespirit.gametest.filter', '')
+            // пусто или не задано — идут все тесты. providers.systemProperty — чтобы configuration cache
+            // видел смену -D между прогонами.
+            systemProperty 'theminespirit.gametest.filter', providers.systemProperty('theminespirit.gametest.filter').orElse('').get()
+            // Исключения (быстрый набор) и номер шарда игра читает из theminespirit-gametest.properties
+            // в своём gameDirectory: общий файл аргументов JVM при трёх одновременных серверах перезаписывается.
             // SerialGC и потолок памяти. C1-only (TieredStopAtLevel=1) снят 23.10: он ускорял старт на 15 тестах,
             // а на 930 тестах тики стройки идут в 2,2 раза дольше: пачки полного прогона 1390–1480 с → 765 с (C1+C2).
             // -Xmx1536m — запас над замеренным RSS 0,65 ГБ, чтобы OOM не выглядел падением сервера;
@@ -147,7 +150,8 @@ neoForge {
                 // (docs/TESTING.md), а лог не заваливается DEBUG-шумом
                 // (docs/research/test-performance.md → п.7)
                 logLevel = org.slf4j.event.Level.INFO
-                gameDirectory = project.file('build/gametest-run')
+                // Шарды идут одновременно, у каждого свой каталог мира (scripts/test.sh gametest).
+                gameDirectory = project.file(providers.systemProperty('theminespirit.gametest.dir').orElse('build/gametest-run').get())
             }
         }
     }
@@ -342,11 +346,19 @@ tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
     }
 }
 
+// Быстрые анализаторы — то, что дёшево гонять в каждом коммите (хук pre-commit): формат и стиль.
+// SpotBugs и PMD (сотни секунд) — только приёмка перед слиянием (scripts/lead/chkq.sh) и check.
+tasks.register('staticAnalysisFast') {
+    group = 'verification'
+    description = 'Быстрые анализаторы: формат (Spotless), Checkstyle — без SpotBugs и PMD'
+    dependsOn tasks.named('spotlessCheck')
+    dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
+}
+
 tasks.register('staticAnalysis') {
     group = 'verification'
     description = 'Строгие анализаторы кода: формат (Spotless) и прочие из tasks/46'
-    dependsOn tasks.named('spotlessCheck')
-    dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
+    dependsOn tasks.named('staticAnalysisFast')
     dependsOn tasks.named('pmdMain'), tasks.named('pmdTest')
     dependsOn tasks.named('spotbugsMain'), tasks.named('spotbugsTest')
 }
