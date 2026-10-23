@@ -1,68 +1,72 @@
-# enchant_room_v1 — стол чарования в кольце из 15 полок (через клетку воздуха, по ванили), кольцо у стен;
-# вход с тыла со ступенькой. Уровень 2 пристраивает справа второе кольцо, деля с этим столбец полок.
-name: "Чаровальня, уровень 1 (стол и 15 полок, 30 уровень)"
+# enchant_room_v1 — скромная деревянная чаровальня (уровень 1): дубовый сруб на булыжном цоколе,
+# стол чарования и 5 полок за спиной (10 ступеней), красная дорожка, окна 1×1, факелы на полках и у входа.
+# Вход с тыла со ступенькой; стол и полки — якорь всех следующих уровней.
+name: "Чаровальня, уровень 1 (деревянная изба, 5 полок)"
 type: craft
 stage: 2
 level: 1
-size: 7x5x9   # Ш×В×Д
+size: 7x5x9
 entrance: 3,1,7
 legend:
-  'S': stone_bricks
+  'c': cobblestone
   '#': oak_planks
+  'L': oak_log[axis=y]
+  'r': spruce_planks
   'G': glass_pane
   'K': bookshelf
   'E': enchanting_table
   'T': torch
   'D': oak_door[facing=north,hinge=left]
-  'p': stone_brick_stairs[facing=north,half=bottom]
+  'p': cobblestone_stairs[facing=north,half=bottom]
+  '~': red_carpet
 layers:
-  - y0 пол: |
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
+  - y0 булыжный цоколь и дубовый пол: |
+      ccccccc
+      c#####c
+      c#####c
+      c#####c
+      c#####c
+      c#####c
+      c#####c
+      ccccccc
          p
-  - y1 кольцо полок, стол: |
-      #######
+  - y1 стол, 5 полок, дорожка: |
+      L#####L
       #KKKKK#
-      #K...K#
-      #K.E.K#
-      #K...K#
-      #KK.KK#
       #.....#
-      ###D###
+      #..E..#
+      #.....#
+      #T~~~T#
+      #.....#
+      L##D##L
          .
-  - y2 окна, факелы на полках: |
-      ##G#G##
-      #T...T#
-      G.....G
-      #.....#
-      G.....G
+  - y2 окна 1×1, свет на полках: |
+      L#G###L
       #T...T#
       #.....#
-      ###D###
+      G.....G
+      #.....#
+      #.....#
+      #.....#
+      L##D##L
          .
   - y3 верх стен: |
-      #######
+      L#####L
       #.....#
       #.....#
       #.....#
       #.....#
       #.....#
       #.....#
-      #######
+      L#####L
          .
-  - y4 потолок: |
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
-      SSSSSSS
+  - y4 деревянная крыша: |
+      rrrrrrr
+      rrrrrrr
+      rrrrrrr
+      rrrrrrr
+      rrrrrrr
+      rrrrrrr
+      rrrrrrr
+      rrrrrrr
          .

@@ -63,9 +63,6 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int SITE_NETWORK_RING = 6;
     // Обход пешком — по площадке и полосе вокруг неё шириной в досягаемость с запасом.
     private static final int WALK_MARGIN = 6;
-    // Стоянка плана не дала поставить клетки шага (сосед-блок, тело, путь) — столько запасных стоянок обычной стройки,
-    // потом клетки шага ждут обычной стройки после плана.
-    private static final int MAX_PLAN_RESCUES = 2;
     // Сорвавшийся заход плана повторяется столько раз, потом клетки без материала — обычной стройке.
     private static final int MAX_PLAN_TRIP_RETRIES = 2;
     // Дозаходов за материалом, который план считал взятым: больше — план и инвентарь разошлись, дальше обычная стройка.
@@ -127,7 +124,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private int planTopUps;
     private @Nullable List<ScriptCall> supplyWalk;
     private int approachPathMark;
-    private int planRescues;
+    private final Set<BlockCoord> planCarried = new HashSet<>();
     private int planPlacedMark;
     private long planStands;
     private long planTrips;
@@ -863,6 +860,8 @@ final class BuildSchematicScript implements ScriptInstance {
     // «не совпало» (площадь 1, 21.10: гравий под стоянками плана).
     private void leavePlan() {
         plan = null;
+        planDeviations += planCarried.size();
+        planCarried.clear();
         blocked.clear();
         refusals.clear();
         standsRetried = false;
@@ -917,12 +916,11 @@ final class BuildSchematicScript implements ScriptInstance {
     private void nextPlanStep(BuildPlanCursor cursor) {
         cursor.advance();
         planStandVisited = false;
-        planRescues = 0;
         centring = 0;
     }
 
-    // Стоянка плана: дойти, поставить с неё клетки шага; не вышло — запасные стоянки обычной стройки для этих же
-    // клеток, потом шаг откладывается до обычной стройки после плана.
+    // Стоянка плана: дойти, поставить с неё клетки шага; остаток, который здесь не встал, едет к следующей стоянке
+    // плана (без отдельного подхода назад), не встал нигде — обычная стройка после плана.
     private ScriptStatus standStep(BuildPlanCursor cursor, BuildPlanCursor.StandAt at) {
         if (!planStandVisited) {
             planStandVisited = true;
@@ -933,23 +931,20 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         if (placed != planPlacedMark) {
             planPlacedMark = placed;
-            planRescues = 0;
         }
-        List<Schematic.PlacedEntry> targets = new ArrayList<>();
+        planCarried.removeIf(cell -> !pendingCell(cell));
+        List<BlockCoord> cells = new ArrayList<>(at.cells());
+        for (BlockCoord carried : planCarried) {
+            if (!cells.contains(carried) && pendingCell(carried)) {
+                cells.add(carried);
+            }
+        }
         Map<BlockCoord, Schematic.PlacedEntry> byCell = new LinkedHashMap<>();
-        for (BlockCoord cell : at.cells()) {
-            Schematic.PlacedEntry entry = primaryAt.get(cell);
-            if (entry == null) {
-                continue;
-            }
-            if (site.rightBlockWrongState(entry)) {
-                site.repairState(entry);
-                return ScriptStatus.RUNNING;
-            }
-            targets.add(entry);
-            byCell.put(cell, entry);
+        if (repairStates(cells, byCell)) {
+            return ScriptStatus.RUNNING;
         }
-        PlanPlacing placing = placeFromPlanStand(at, byCell);
+        List<Schematic.PlacedEntry> targets = new ArrayList<>(byCell.values());
+        PlanPlacing placing = placeFromPlanStand(cells, byCell);
         if (placing.status().isPresent()) {
             return placing.status().get();
         }
@@ -992,13 +987,39 @@ final class BuildSchematicScript implements ScriptInstance {
                 return startSupply(steps);
             }
         }
-        if (!supplied.isEmpty() && planRescues < MAX_PLAN_RESCUES) {
-            planRescues++;
-            boolean entrances = supplied.stream().allMatch(entry -> SchematicBlocks.isEntranceBlock(entry.block()));
-            return placeStep(ownFirst(supplied), entrances);
+        if (!supplied.isEmpty()) {
+            carryRest(cursor, supplied);
+            return ScriptStatus.RUNNING;
         }
         deferPlanStep(cursor, at, targets);
         return ScriptStatus.RUNNING;
+    }
+
+    // Клетки шага, которые надо чинить (состояние), и цели постановки в порядке плана; true — ремонт уже сделан.
+    private boolean repairStates(List<BlockCoord> cells, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
+        for (BlockCoord cell : cells) {
+            Schematic.PlacedEntry entry = primaryAt.get(cell);
+            if (entry == null) {
+                continue;
+            }
+            if (site.rightBlockWrongState(entry)) {
+                site.repairState(entry);
+                return true;
+            }
+            byCell.put(cell, entry);
+        }
+        return false;
+    }
+
+    // Остаток шага не встал с этой стоянки — он едет с духом к следующей стоянке плана, а не гонит его отдельным
+    // подходом назад (площадь 2, 22.10: шесть лишних подходов к уже пройденным стоянкам).
+    private void carryRest(BuildPlanCursor cursor, List<Schematic.PlacedEntry> supplied) {
+        for (Schematic.PlacedEntry entry : supplied) {
+            if (!site.matches(entry)) {
+                planCarried.add(entry.pos());
+            }
+        }
+        nextPlanStep(cursor);
     }
 
     private ScriptStatus beginApproach(BlockCoord stand) {
@@ -1015,10 +1036,10 @@ final class BuildSchematicScript implements ScriptInstance {
     private record PlanPlacing(Optional<ScriptStatus> status, boolean overlapped) {}
 
     // Всё, что ставится с места из клеток шага; overlapped — клетку задевает тело духа (сперва к середине клетки).
-    private PlanPlacing placeFromPlanStand(BuildPlanCursor.StandAt at, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
+    private PlanPlacing placeFromPlanStand(List<BlockCoord> cells, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
         boolean overlapped = false;
         ReachPlanner.World world = placeWorld(byCell, false);
-        for (BlockCoord cell : ReachPlanner.workableNow(SpiritReach.current(), feet(), at.cells(), world)) {
+        for (BlockCoord cell : ReachPlanner.workableNow(SpiritReach.current(), feet(), cells, world)) {
             Schematic.PlacedEntry entry = byCell.get(cell);
             if (entry == null || (SchematicBlocks.isEntranceBlock(entry.block()) && !site.outsideFootprint(feet()))) {
                 continue;
@@ -1049,12 +1070,11 @@ final class BuildSchematicScript implements ScriptInstance {
         planDeviations += at.cells().size();
         Schematic.PlacedEntry first = targets.isEmpty() ? null : targets.get(0);
         LOGGER.info(
-                "Стройка {}: шаг плана {} — со стоянки {} и {} запасных не поставлено {} (например {}: свободна {}, "
+                "Стройка {}: шаг плана {} — со стоянки {} не поставлено {} (например {}: свободна {}, "
                         + "опора {}, материал {}; последний отказ: {}), дух {}; клетки — обычной стройке",
                 buildKey,
                 cursor.index(),
                 at.stand(),
-                planRescues,
                 at.cells().size(),
                 first == null ? "?" : first.block() + "@" + first.pos(),
                 first != null && site.freeForPlacing(first),

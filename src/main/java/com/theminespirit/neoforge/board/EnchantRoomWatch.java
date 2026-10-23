@@ -17,14 +17,17 @@ import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Источник доски «чаровальня»: уровень 1 — здание со столом, уровень 2 — кольцо полок.
- * Уровень не прыгает: второй ставится после выполненного первого и ждёт полки гейтом.
+ * Источник доски «чаровальня»: уровень 1 — деревянная изба со столом и пятью полками, уровень 2 — каменный
+ * зал на десять полок, уровень 3 — большой зал на пятнадцать полок (максимум стола).
+ * Уровень не прыгает: следующий ставится после выполненного предыдущего и ждёт свои полки гейтом.
  * Постоянные запасы (полки, книги, бумага) держит {@link BoardService}, а не этот источник.
  */
 public final class EnchantRoomWatch {
     private static final int LEVEL_ONE_LAPIS = 4;
     private static final int LEVEL_ONE_BOOK = 1;
-    private static final int LEVEL_TWO_SHELVES = 15;
+    private static final int LEVEL_TWO_SHELVES = 10;
+    private static final int LEVEL_THREE_SHELVES = 15;
+    private static final int LAST_LEVEL = 3;
 
     private EnchantRoomWatch() {}
 
@@ -33,7 +36,7 @@ public final class EnchantRoomWatch {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty() || active(service)) {
             return;
         }
-        int max = Math.min(2, BuildingLevels.maxLevel(BoardCase.ENCHANT_ROOM));
+        int max = Math.min(LAST_LEVEL, BuildingLevels.maxLevel(BoardCase.ENCHANT_ROOM));
         int next = doneLevel(service) + 1;
         if (next > max) {
             return;
@@ -45,31 +48,28 @@ public final class EnchantRoomWatch {
             if (lapis < LEVEL_ONE_LAPIS || book < LEVEL_ONE_BOOK) {
                 return;
             }
-            service.submit(
-                    new BoardTicket(
-                            "enchant_room_1",
-                            BoardCase.ENCHANT_ROOM,
-                            Optional.empty(),
-                            BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of("lapis_lazuli", LEVEL_ONE_LAPIS, "book", LEVEL_ONE_BOOK)),
-                    TicketTarget.at(home));
-            return;
         }
+        int shelves = switch (next) {
+            case 1 -> 0;
+            case 2 -> LEVEL_TWO_SHELVES;
+            case 3 -> LEVEL_THREE_SHELVES;
+            default ->
+                throw new IllegalStateException("У чаровальни нет уровня " + next + ": доступны 1–" + LAST_LEVEL);
+        };
+        Map<String, Integer> required = next == 1
+                ? Map.of("lapis_lazuli", LEVEL_ONE_LAPIS, "book", LEVEL_ONE_BOOK)
+                : Map.of("bookshelf", shelves);
         service.submit(
                 new BoardTicket(
-                        "enchant_room_2",
+                        "enchant_room_" + next,
                         BoardCase.ENCHANT_ROOM,
                         Optional.empty(),
                         BoardPriorities.effective(BoardCase.ENCHANT_ROOM, PriorityContext.none()),
                         now,
-                        2,
+                        next,
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
-                        Map.of("bookshelf", LEVEL_TWO_SHELVES)),
+                        required),
                 TicketTarget.at(home));
     }
 

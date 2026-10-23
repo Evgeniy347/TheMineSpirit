@@ -180,6 +180,9 @@ final class SchematicSite {
 
     boolean matches(Schematic.PlacedEntry entry) {
         BlockState current = level.getBlockState(toPos(entry.pos()));
+        if (SchematicBlocks.isFloor(entry.block())) {
+            return SchematicBlocks.isFloorClass(BlockStates.idOf(current));
+        }
         BlockState wanted = wanted(entry);
         return current.is(wanted.getBlock()) && sameSpecifiedState(current, wanted, entry.state());
     }
@@ -193,6 +196,9 @@ final class SchematicSite {
     List<Schematic.PlacedEntry> missing() {
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
         for (Schematic.PlacedEntry entry : entries) {
+            if (entry.optional() && level.getBlockState(toPos(entry.pos())).isAir()) {
+                continue;
+            }
             if (!matches(entry)) {
                 missing.add(entry);
             }
@@ -209,10 +215,15 @@ final class SchematicSite {
             }
         }
         for (Schematic.PlacedEntry entry : entries) {
+            if (entry.optional()) {
+                continue;
+            }
             BlockState current = level.getBlockState(toPos(entry.pos()));
             if (current.isAir()
                     || current.canBeReplaced()
-                    || current.is(wanted(entry).getBlock())) {
+                    || current.is(wanted(entry).getBlock())
+                    || (SchematicBlocks.isFloor(entry.block())
+                            && SchematicBlocks.isFloorClass(BlockStates.idOf(current)))) {
                 continue;
             }
             cells.add(entry.pos());

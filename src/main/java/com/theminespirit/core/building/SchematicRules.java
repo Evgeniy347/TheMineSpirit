@@ -41,7 +41,10 @@ public final class SchematicRules {
         PANE("pane"),
         DOUBLE_DOOR("double_door"),
         FIREPLACE("fireplace"),
-        PASSAGE("passage");
+        PASSAGE("passage"),
+        FLOOR("floor"),
+        PASSAGE_HEIGHT("passage_height"),
+        PASSAGE_STEP("passage_step");
 
         private final String id;
 

@@ -1,11 +1,18 @@
 package com.theminespirit.core.building;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class EnchantingPowerTests {
@@ -39,24 +46,24 @@ class EnchantingPowerTests {
     }
 
     @Test
-    void shelfCount_RealEnchantRoomV1_CountsFifteenShelves() {
+    void shelfCount_RealEnchantRoomV1_CountsFiveShelves() {
         Schematic schematic = load("enchant_room_v1");
 
         assertEquals(
-                15,
+                5,
                 EnchantingPower.shelfCount(schematic, onlyTable(schematic)),
-                "Чаровальня уровня 1 обязана давать ровно 15 рабочих полок: они стоят на расстоянии 2 от стола "
-                        + "с пустой клеткой между");
+                "Чаровальня уровня 1 — скромная деревянная изба: пять рабочих полок за столом (10 ступеней), "
+                        + "а не готовый максимум с первого уровня");
     }
 
     @Test
-    void level_RealEnchantRoomV1_IsThirty() {
+    void level_RealEnchantRoomV1_IsTen() {
         Schematic schematic = load("enchant_room_v1");
 
         assertEquals(
-                30,
+                10,
                 EnchantingPower.level(schematic, onlyTable(schematic)),
-                "15 рабочих полок дают высшую ступень стола — 30: геометрия постройки обязана это подтверждать");
+                "5 рабочих полок дают 10 ступеней стола: уровень 1 растёт дальше, а не начинает с потолка");
     }
 
     @Test
@@ -66,7 +73,7 @@ class EnchantingPowerTests {
         Schematic blocked = withBlock(schematic, 2, 1, 2, "minecraft:stone_bricks");
 
         assertEquals(
-                14,
+                4,
                 EnchantingPower.shelfCount(blocked, onlyTable(blocked)),
                 "Блок в клетке между столом и полкой лишает её силы: ванильный стол ищет там передатчик, "
                         + "а не сплошной блок");
@@ -79,7 +86,7 @@ class EnchantingPowerTests {
         Schematic far = withBlock(schematic, 3, 1, 0, BOOKSHELF);
 
         assertEquals(
-                15,
+                5,
                 EnchantingPower.shelfCount(far, onlyTable(far)),
                 "Полка дальше двух блоков от стола силы не даёт: расстояние задаёт само правило, а не число полок");
     }
@@ -118,36 +125,75 @@ class EnchantingPowerTests {
     }
 
     @Test
-    void tables_RealEnchantRoomV2_FindsBothTables() {
-        Schematic schematic = load("enchant_room_v2");
-
-        assertEquals(
-                2,
-                EnchantingPower.tables(schematic).size(),
-                "Уровень 2 несёт два стола чарования: запас под второй стол должен быть виден правилу");
-    }
-
-    @Test
-    void level_RealEnchantRoomV2_EachTableThirty() {
-        Schematic schematic = load("enchant_room_v2");
-
-        List<Integer> levels = new ArrayList<>();
-        for (BlockCoord table : EnchantingPower.tables(schematic)) {
-            levels.add(EnchantingPower.level(schematic, table));
+    void tables_RealEnchantRooms_HaveOneTableEach() {
+        for (String file : List.of("enchant_room_v1", "enchant_room_v2", "enchant_room_v3")) {
+            assertEquals(
+                    1,
+                    EnchantingPower.tables(load(file)).size(),
+                    "У " + file + " обязан быть ровно один стол чарования: уровень растит полки вокруг него, "
+                            + "а лишний стол без своего кольца зачаровывал бы слабее");
         }
-
-        assertEquals(
-                List.of(30, 30),
-                levels,
-                "Уровень 2 — два стола, у каждого 15 полок через клетку воздуха (владелец 19.10): второй стол без "
-                        + "полного кольца зачаровывал бы слабее, и расширение теряло бы смысл");
     }
 
     @Test
-    void upgrade_EnchantRoomV1ToV2_KeepsFirstRingInPlace() {
-        Schematic first = load("enchant_room_v1");
-        Schematic second = load("enchant_room_v2");
+    void growth_RealEnchantRooms_RiseInShelvesPowerCeilingWindowsAndEntrance() {
+        Schematic one = load("enchant_room_v1");
+        Schematic two = load("enchant_room_v2");
+        Schematic three = load("enchant_room_v3");
+        List<Schematic> rooms = List.of(one, two, three);
 
+        assertEquals(
+                List.of(5, 10, 15),
+                rooms.stream()
+                        .map(room -> EnchantingPower.shelfCount(room, onlyTable(room)))
+                        .toList(),
+                "Полки растут по уровню: 5 → 10 → 15 вокруг стола (15 — ванильный максимум зачарования)");
+        assertEquals(
+                List.of(10, 20, 30),
+                rooms.stream().map(EnchantingPowerTests::levelOf).toList(),
+                "Ступени стола растут с полками: 10 → 20 → 30, и только уровень 3 даёт максимум");
+        assertEquals(
+                List.of(3, 4, 5),
+                rooms.stream().map(EnchantingPowerTests::ceilingHeight).toList(),
+                "Чем выше уровень, тем выше потолок: 3 → 4 → 5 (решение владельца 19.10)");
+        assertEquals(
+                List.of(1, 2, 4),
+                rooms.stream().map(EnchantingPowerTests::largestWindow).toList(),
+                "Окна растут с уровнем: 1 → 2 → 4 клетки стекла в самом большом окне");
+        assertEquals(
+                List.of(1, 2, 4),
+                rooms.stream().map(EnchantingPowerTests::lowerDoors).toList(),
+                "Вход растёт с уровнем: одна створка → двойная дверь → портал в четыре створки");
+        assertEquals(
+                List.of(56, 110, 180),
+                rooms.stream().map(EnchantingPowerTests::bodyCells).toList(),
+                "Зал растёт по площади: 7×8 → 11×10 → 15×12 клеток пола, а не та же коробка");
+        List<Integer> decor =
+                rooms.stream().map(EnchantingPowerTests::decorBlocks).toList();
+        assertTrue(
+                decor.get(0) < decor.get(1) && decor.get(1) < decor.get(2),
+                "Декор растёт по уровню: полки, ковры, свечи, кафедра, фонари и цветы — " + decor);
+    }
+
+    @Test
+    void upgrade_EnchantRoomLevels_KeepPreviousWorkInPlace() {
+        assertEquals(
+                List.of(),
+                movedParts(load("enchant_room_v1"), load("enchant_room_v2")),
+                "Апгрейд 1→2 строится на месте: стол и пять полок уровня 1 обязаны остаться там же, "
+                        + "иначе апгрейд ломает рабочий стол");
+        assertEquals(
+                List.of(),
+                movedParts(load("enchant_room_v2"), load("enchant_room_v3")),
+                "Апгрейд 2→3 строится на месте: десять полок и стол уровня 2 обязаны остаться там же, "
+                        + "третье кольцо лишь дополняет их до пятнадцати");
+    }
+
+    private static int levelOf(Schematic schematic) {
+        return EnchantingPower.level(schematic, onlyTable(schematic));
+    }
+
+    private static List<String> movedParts(Schematic first, Schematic second) {
         List<String> moved = new ArrayList<>();
         for (Schematic.Entry entry : first.blocks()) {
             if (!BOOKSHELF.equals(entry.block()) && !TABLE.equals(entry.block())) {
@@ -162,11 +208,79 @@ class EnchantingPowerTests {
                 moved.add(entry.block() + "@" + entry.dx() + "," + entry.dy() + "," + entry.dz());
             }
         }
+        return moved;
+    }
 
-        assertEquals(
-                List.of(),
-                moved,
-                "Апгрейд чаровальни 1→2 строится на месте (входы совпадают): кольцо уровня 1 обязано остаться "
-                        + "там же, второе кольцо пристраивается рядом; иначе апгрейд ломает рабочий стол");
+    private static int ceilingHeight(Schematic schematic) {
+        BlockCoord table = onlyTable(schematic);
+        for (int y = schematic.sizeY() - 1; y > table.y(); y--) {
+            int level = y;
+            boolean covered = schematic.blocks().stream()
+                    .anyMatch(entry -> entry.dx() == table.x() && entry.dy() == level && entry.dz() == table.z());
+            if (covered) {
+                return y - 1;
+            }
+        }
+        return -1;
+    }
+
+    private static int largestWindow(Schematic schematic) {
+        Map<BlockCoord, String> grid = new HashMap<>();
+        for (Schematic.Entry entry : schematic.blocks()) {
+            grid.put(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), entry.block());
+        }
+        Set<BlockCoord> seen = new HashSet<>();
+        int largest = 0;
+        for (Map.Entry<BlockCoord, String> entry : grid.entrySet()) {
+            if (!SchematicBlocks.isWindow(entry.getValue()) || !seen.add(entry.getKey())) {
+                continue;
+            }
+            Deque<BlockCoord> queue = new ArrayDeque<>();
+            queue.add(entry.getKey());
+            int size = 0;
+            while (!queue.isEmpty()) {
+                BlockCoord cell = queue.poll();
+                size++;
+                for (BlockCoord next : List.of(
+                        new BlockCoord(cell.x() + 1, cell.y(), cell.z()),
+                        new BlockCoord(cell.x() - 1, cell.y(), cell.z()),
+                        new BlockCoord(cell.x(), cell.y() + 1, cell.z()),
+                        new BlockCoord(cell.x(), cell.y() - 1, cell.z()),
+                        new BlockCoord(cell.x(), cell.y(), cell.z() + 1),
+                        new BlockCoord(cell.x(), cell.y(), cell.z() - 1))) {
+                    String block = grid.get(next);
+                    if (block != null && SchematicBlocks.isWindow(block) && seen.add(next)) {
+                        queue.add(next);
+                    }
+                }
+            }
+            largest = Math.max(largest, size);
+        }
+        return largest;
+    }
+
+    private static int lowerDoors(Schematic schematic) {
+        return (int) schematic.blocks().stream()
+                .filter(entry -> entry.dy() == 1 && SchematicBlocks.isDoor(entry.block()))
+                .count();
+    }
+
+    private static int bodyCells(Schematic schematic) {
+        return schematic.sizeX() * (schematic.sizeZ() - 1);
+    }
+
+    private static int decorBlocks(Schematic schematic) {
+        Map<BlockCoord, String> grid = new HashMap<>();
+        for (Schematic.Entry entry : schematic.blocks()) {
+            grid.put(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), entry.block());
+        }
+        int decor = 0;
+        for (Schematic.Entry entry : schematic.blocks()) {
+            BlockCoord cell = new BlockCoord(entry.dx(), entry.dy(), entry.dz());
+            if (SchematicLevelRules.isDecor(cell, entry.block(), schematic, grid)) {
+                decor++;
+            }
+        }
+        return decor;
     }
 }

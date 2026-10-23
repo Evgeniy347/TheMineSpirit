@@ -5,6 +5,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.DataReload;
 import com.theminespirit.neoforge.MobTargetEvents;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SettlementChestWatch;
 import com.theminespirit.neoforge.SettlementChunkLifecycle;
 import com.theminespirit.neoforge.SettlementChunkTickets;
 import com.theminespirit.neoforge.SpiritChunkTickets;
@@ -52,6 +53,7 @@ public final class TheMineSpirit {
         BoardLifecycle.register(NeoForge.EVENT_BUS);
         DemoLifecycle.register(NeoForge.EVENT_BUS);
         SettlementChunkLifecycle.register(NeoForge.EVENT_BUS);
+        SettlementChestWatch.register(NeoForge.EVENT_BUS);
         CraterWatch.register(NeoForge.EVENT_BUS);
         FenceWatch.register(NeoForge.EVENT_BUS);
         PathNetworkService.register(NeoForge.EVENT_BUS);

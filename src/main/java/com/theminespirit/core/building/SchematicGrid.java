@@ -44,7 +44,8 @@ final class SchematicGrid {
                     } else if (SchematicBlocks.isBed(entry.block())) {
                         bed(surface, entry, symbol, x, y, z);
                     } else {
-                        blocks.add(new Schematic.Entry(x, y, z, entry.block(), entry.state(), entry.text()));
+                        blocks.add(new Schematic.Entry(
+                                x, y, z, entry.block(), entry.state(), entry.text(), entry.optional()));
                     }
                     done[y][z][x] = true;
                 }
@@ -61,10 +62,17 @@ final class SchematicGrid {
                     + (y + 1) + " над ней (строка " + (z + 1) + ", позиция " + (x + 1) + ")");
         }
         surface.blocks()
-                .add(new Schematic.Entry(x, y, z, entry.block(), with(entry.state(), "half", "lower"), entry.text()));
+                .add(new Schematic.Entry(
+                        x, y, z, entry.block(), with(entry.state(), "half", "lower"), entry.text(), entry.optional()));
         surface.blocks()
                 .add(new Schematic.Entry(
-                        x, y + 1, z, entry.block(), with(entry.state(), "half", "upper"), entry.text()));
+                        x,
+                        y + 1,
+                        z,
+                        entry.block(),
+                        with(entry.state(), "half", "upper"),
+                        entry.text(),
+                        entry.optional()));
         surface.done()[y + 1][z][x] = true;
     }
 
@@ -102,10 +110,22 @@ final class SchematicGrid {
         }
         surface.blocks()
                 .add(new Schematic.Entry(
-                        footX, y, footZ, entry.block(), with(entry.state(), "part", "foot"), entry.text()));
+                        footX,
+                        y,
+                        footZ,
+                        entry.block(),
+                        with(entry.state(), "part", "foot"),
+                        entry.text(),
+                        entry.optional()));
         surface.blocks()
                 .add(new Schematic.Entry(
-                        headX, y, headZ, entry.block(), with(entry.state(), "part", "head"), entry.text()));
+                        headX,
+                        y,
+                        headZ,
+                        entry.block(),
+                        with(entry.state(), "part", "head"),
+                        entry.text(),
+                        entry.optional()));
         done[y][headZ][headX] = true;
         done[y][footZ][footX] = true;
     }

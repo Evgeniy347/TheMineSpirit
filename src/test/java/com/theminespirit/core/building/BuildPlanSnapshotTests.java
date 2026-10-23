@@ -25,6 +25,32 @@ class BuildPlanSnapshotTests {
     private static final int SUPPLY_RING = 2;
     private static final int SUPPLY_SIDE_OFFSET = 3;
     private static final SpiritReach REACH = new SpiritReach(3, 15, 3);
+    // Схема с repeat до мирового y снимается от номинальной поверхности: иначе у плана нет высоты входа.
+    private static final int PLAN_TOP_Y = 64;
+
+    static Preset planned(Preset preset) {
+        Schematic.Expanded expanded = preset.schematic().expand(PLAN_TOP_Y);
+        if (expanded.offset().x() == 0
+                && expanded.offset().y() == 0
+                && expanded.offset().z() == 0) {
+            return preset;
+        }
+        BlockCoord shift = expanded.offset();
+        BlockCoord entry = new BlockCoord(
+                preset.entry().x() + shift.x(),
+                preset.entry().y() + shift.y(),
+                preset.entry().z() + shift.z());
+        return new Preset(
+                preset.id(),
+                preset.name(),
+                preset.stage(),
+                preset.type(),
+                preset.level(),
+                preset.requires(),
+                expanded.schematic(),
+                entry,
+                PresetLibrary.countMaterials(expanded.schematic()));
+    }
 
     static PresetLibrary library() {
         List<LoadedContent> contents = new ArrayList<>();
@@ -51,8 +77,9 @@ class BuildPlanSnapshotTests {
 
     // Сундук — как в аудите стройки: перед дверью за крыльцом и кольцом, сбоку на SUPPLY_SIDE_OFFSET; дух — между.
     static BlockCoord supplyFeet(Preset preset, BuildRotation rotation) {
-        Schematic schematic = preset.schematic();
-        DemoPlacement.Door door = DemoPlacement.Door.of(preset);
+        Preset buildable = planned(preset);
+        Schematic schematic = buildable.schematic();
+        DemoPlacement.Door door = DemoPlacement.Door.of(buildable);
         BuildRotation.Cell cell = rotation.rotate(door.x(), door.z(), schematic.sizeX(), schematic.sizeZ());
         BuildRotation.DirectionVector out =
                 BuildRotation.rotateDirection(door.normalDx(), door.normalDz(), rotation.quarterTurns());
@@ -64,7 +91,8 @@ class BuildPlanSnapshotTests {
     }
 
     static BuildPlanner.Plan plan(Preset preset, BuildRotation rotation, BuildPlanner.Portion portion) {
-        return BuildPlanner.plan(preset.schematic(), rotation, supplyFeet(preset, rotation), REACH, portion);
+        Preset buildable = planned(preset);
+        return BuildPlanner.plan(buildable.schematic(), rotation, supplyFeet(buildable, rotation), REACH, portion);
     }
 
     @Test

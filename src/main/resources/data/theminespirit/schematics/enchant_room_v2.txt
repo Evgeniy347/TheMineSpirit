@@ -1,64 +1,93 @@
-# enchant_room_v2 — зал на два стола: кольцо уровня 1 остаётся на месте, справа пристроено второе кольцо,
-# общий с первым столбец полок; у каждого стола 15 полок через клетку воздуха. Проход вдоль входной стены
-# ведёт к проёмам обоих колец.
-name: "Чаровальня, уровень 2 (два стола по 15 полок)"
+# enchant_room_v2 — каменная чаровальня (уровень 2): тот же стол и 5 полок первого уровня на месте,
+# кольцо доведено до 10 полок (20 ступеней), стены из каменного кирпича, потолок 4, окна 1×2, двойная дверь,
+# ковры, кафедра, свечи и цветы. Кольцо уровня 1 остаётся якорем — апгрейд не ломает рабочий стол.
+name: "Чаровальня, уровень 2 (камень, 10 полок, двойная дверь)"
 type: craft
 stage: 2
 level: 2
 requires: enchant_room_v1
-size: 11x5x9   # Ш×В×Д
-entrance: 3,1,7
+size: 11x6x11
+entrance: 4,1,9
 legend:
+  'c': cobblestone
   'S': stone_bricks
   '#': oak_planks
+  'B': bricks
   'G': glass_pane
   'K': bookshelf
   'E': enchanting_table
   'T': torch
+  'C': candle[candles=2,lit=true]
   'D': oak_door[facing=north,hinge=left]
+  'H': oak_door[facing=north,hinge=right]
   'p': stone_brick_stairs[facing=north,half=bottom]
+  '~': red_carpet
+  'm': white_carpet
+  'l': lectern[facing=north]
+  'P': potted_poppy
+  'O': potted_dandelion
 layers:
-  - y0 пол: |
+  - y0 булыжный цоколь и дубовый пол: |
+      ccccccccccc
+      c#########c
+      c#########c
+      c#########c
+      c#########c
+      c#########c
+      c#########c
+      c#########c
+      c#########c
+      ccccccccccc
+          pp
+  - y1 кольцо 10 полок, ковры, кафедра: |
       SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-      SSSSSSSSSSS
-         p
-  - y1 два кольца полок, столы: |
-      ###########
-      #KKKKKKKKK#
-      #K...K...K#
-      #K.E.K.E.K#
-      #K...K...K#
-      #KK.KKK.KK#
-      #.........#
-      ###D#######
-         .
-  - y2 окна, факелы на полках: |
-      ##G#G#G#G##
-      #T...T...T#
+      SKKKKK....S
+      SK...K....S
+      SK.E.K....S
+      S....K....S
+      S.......T.S
+      S.~~~.....S
+      S......l..S
+      S.mmm.....S
+      SSSSDHSSSSS
+          ..
+  - y2 окна 1×2, свечи, свет: |
+      SSGSSSSSSSS
+      STC.CT....S
+      S.........S
       G.........G
-      #.........#
+      S.........S
+      S.........S
       G.........G
-      #T...T...T#
-      #.........#
-      ###D###G###
-         .
-  - y3 верх стен: |
-      ###########
-      #.........#
-      #.........#
-      #.........#
-      #.........#
-      #.........#
-      #.........#
-      ###########
-         .
-  - y4 потолок: |
+      S.........S
+      S.........S
+      SSSSDHSSSSS
+          ..
+  - y3 окна 1×2: |
+      SSGSSSSSSSS
+      S.........S
+      S.........S
+      G.........G
+      S.........S
+      S.........S
+      G.........G
+      S.........S
+      S.........S
+      SSSSSSSSSSS
+          ..
+  - y4 верх стен: |
+      SSSSSSSSSSS
+      S.........S
+      S.........S
+      S.........S
+      S.........S
+      S.........S
+      S.........S
+      S.........S
+      S.........S
+      SSSSSSSSSSS
+          ..
+  - y5 каменная крыша: |
       SSSSSSSSSSS
       SSSSSSSSSSS
       SSSSSSSSSSS
@@ -67,4 +96,6 @@ layers:
       SSSSSSSSSSS
       SSSSSSSSSSS
       SSSSSSSSSSS
-         .
+      SSSSSSSSSSS
+      SSSSSSSSSSS
+          ..

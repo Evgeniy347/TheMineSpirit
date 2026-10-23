@@ -22,8 +22,13 @@
   {"id": "pen", "name": "Загон", "type": "farm", "levels": [
    {"level": 1, "scheme": "pen_4x5"}, {"level": 2, "scheme": "pen_7x7"}, {"level": 3, "scheme": "pen_9x9"}]},
   {"id": "enchant_room", "name": "Чаровальня", "type": "craft", "levels": [
-   {"level": 1, "scheme": "enchant_room_v1"}, {"level": 2, "scheme": "enchant_room_v2"}]},
+   {"level": 1, "scheme": "enchant_room_v1"}, {"level": 2, "scheme": "enchant_room_v2"},
+   {"level": 3, "scheme": "enchant_room_v3"}]},
   {"id": "mine_entrance", "name": "Вход в шахту", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "mine_entrance_v1"}]}
+   {"level": 1, "scheme": "mine_entrance_v1"}]},
+  {"id": "mine_descent", "name": "Спуск в шахту", "type": "underground", "levels": [
+   {"level": 1, "scheme": "mine_descent_v1"}]},
+  {"id": "mine_tunnel", "name": "Шахтный ход", "type": "underground", "levels": [
+   {"level": 1, "scheme": "mine_tunnel_v1"}]}
  ]
 }

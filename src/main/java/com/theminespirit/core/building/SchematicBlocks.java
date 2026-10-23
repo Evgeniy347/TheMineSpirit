@@ -11,6 +11,30 @@ import java.util.Set;
  * по имени блока, а половина двери и часть кровати — по состоянию.
  */
 public final class SchematicBlocks {
+    public static final String FLOOR = "@floor";
+
+    private static final String FLOOR_BLOCK = "minecraft:cobblestone";
+    private static final Set<String> FLOOR_CLASS = Set.of(
+            "stone",
+            "cobblestone",
+            "mossy_cobblestone",
+            "dirt",
+            "coarse_dirt",
+            "rooted_dirt",
+            "deepslate",
+            "cobbled_deepslate",
+            "tuff",
+            "andesite",
+            "diorite",
+            "granite",
+            "stone_bricks",
+            "mossy_stone_bricks",
+            "calcite",
+            "dripstone_block",
+            "gravel",
+            "sand",
+            "red_sand");
+
     private static final Set<String> NON_FULL = Set.of(
             "air",
             "cave_air",
@@ -158,6 +182,20 @@ public final class SchematicBlocks {
         return colon < 0 ? blockId : blockId.substring(colon + 1);
     }
 
+    public static boolean isFloor(String blockId) {
+        return FLOOR.equals(blockId);
+    }
+
+    // Клетка @floor принимает любой дешёвый твёрдый блок, а не только тот, что записан в легенде.
+    public static boolean isFloorClass(String blockId) {
+        return FLOOR.equals(blockId) || FLOOR_CLASS.contains(path(blockId));
+    }
+
+    // Материал, которым @floor ставится, когда в клетке нет подходящего блока.
+    public static String placementBlock(String blockId) {
+        return FLOOR.equals(blockId) ? FLOOR_BLOCK : blockId;
+    }
+
     public static boolean isFullBlock(String blockId) {
         String path = path(blockId);
         if (NON_FULL.contains(path)) {
@@ -176,6 +214,20 @@ public final class SchematicBlocks {
         return "glass".equals(path) || path.endsWith("_glass") || path.endsWith("_pane");
     }
 
+    // Сыпучий блок без опоры падает: гравий, песок, порошковый бетон, наковальня, яйцо дракона. В плане это
+    // отдельный вид пола; правило стоянки на нём — общее с исполнителем (MiningSafety.canStandOn).
+    public static boolean isFalling(String blockId) {
+        String path = path(blockId);
+        return path.endsWith("_concrete_powder")
+                || "gravel".equals(path)
+                || "sand".equals(path)
+                || "red_sand".equals(path)
+                || "anvil".equals(path)
+                || "chipped_anvil".equals(path)
+                || "damaged_anvil".equals(path)
+                || "dragon_egg".equals(path);
+    }
+
     public static boolean isDoor(String blockId) {
         return path(blockId).endsWith("_door");
     }
@@ -184,7 +236,7 @@ public final class SchematicBlocks {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестен предмет");
         int colon = blockId.indexOf(':');
         String namespace = colon < 0 ? "minecraft:" : blockId.substring(0, colon + 1);
-        String path = path(blockId);
+        String path = path(placementBlock(blockId));
         for (String[] wall : WALL_VARIANTS) {
             if (path.endsWith(wall[0])) {
                 return namespace + path.substring(0, path.length() - wall[0].length()) + wall[1];
