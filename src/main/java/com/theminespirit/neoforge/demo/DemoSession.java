@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.demo;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -10,6 +11,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;
@@ -31,6 +33,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -59,6 +62,7 @@ final class DemoSession {
     private static final TicketType<ChunkPos> DEMO_TICKET =
             TicketType.create("theminespirit_demo", Comparator.comparingLong(ChunkPos::toLong));
     private static final String NO_MATERIAL = "не хватило материала";
+    private static final int MINE_TORCHES = 16;
     private static final String INVENTORY_FULL = "инвентарь духа полон";
 
     private final ServerLevel level;
@@ -207,17 +211,38 @@ final class DemoSession {
         Map<String, Object> params = new HashMap<>();
         params.put("file", plan.scheme());
         params.put("x", plan.placement().origin().x());
-        params.put("y", plan.placement().origin().y());
+        // Подземная схема копается в породе: пол первой ступени — сам грунт под якорем, а не блок поверх него.
+        params.put("y", plan.placement().origin().y() - (underground(plan) ? 1 : 0));
         params.put("z", plan.placement().origin().z());
         params.put("rotation", plan.placement().rotation().id());
         return params;
     }
 
     private void prepare(DemoPlan plan) {
-        clearVolume(plan);
-        flattenFloor(plan);
+        if (underground(plan)) {
+            giveMiningKit();
+        } else {
+            clearVolume(plan);
+            flattenFloor(plan);
+        }
         round = 0;
         chests = fillChests(plan);
+    }
+
+    private static boolean underground(DemoPlan plan) {
+        return DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(plan.scheme())
+                .map(preset -> preset.type() == BuildingType.UNDERGROUND)
+                .orElse(false);
+    }
+
+    // Демо шахты показывает проходку: дух получает железную кирку (обычная руда добывается, руда на удачу
+    // остаётся с обходом) и факелы — их расставит по схеме.
+    private void giveMiningKit() {
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_PICKAXE));
+        spirit.getInventory().addItem(new ItemStack(Items.TORCH, MINE_TORCHES));
     }
 
     private void clearVolume(DemoPlan plan) {

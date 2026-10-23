@@ -128,8 +128,8 @@ class BuildingParamsTests {
 
     @Test
     void buildSchematic_RotationName_ParsesQuarterTurns() {
-        BuildSchematicParams params =
-                BuildSchematicParams.from(Map.of("file", "house", "x", 0, "y", 64, "z", 0, "rotation", "clockwise_90"));
+        BuildSchematicParams params = BuildSchematicParams.from(
+                Map.of("file", "house", "x", 0, "y", 64, "z", 0, "rotation", "clockwise_90", "segments", 0));
 
         assertEquals(
                 BuildRotation.CLOCKWISE_90,
