@@ -90,4 +90,21 @@ class TorchRulesTests {
                 TorchRules.next(Map.of("torch", TorchRules.TORCH_TARGET, "coal", 5), true),
                 "Запас факелов полон — уголь не тратится");
     }
+
+    @Test
+    void next_FurnaceNoFreeLogs_GathersSettlementLogsNotCoal() {
+        assertEquals(
+                Optional.of(
+                        new TorchRules.TorchStep(BoardCase.GATHER_MATERIALS, "jungle_log", TorchRules.CHARCOAL_LOGS)),
+                TorchRules.next(Map.of(), true, true, TorchRules.TORCH_TARGET, "jungle_log"),
+                "При печи уголь — из брёвен поселения: жила угля кончается, провалы добычи запирали духам добычу");
+    }
+
+    @Test
+    void next_NoFurnaceYetWoodKnown_WaitsForFurnace() {
+        assertEquals(
+                Optional.empty(),
+                TorchRules.next(Map.of(), false, true, TorchRules.TORCH_TARGET, "jungle_log"),
+                "До печи уголь из жилы не добывается: печь в цепочке до света, а провал добычи ставит духу паузу");
+    }
 }

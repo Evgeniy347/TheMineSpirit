@@ -494,20 +494,24 @@ public final class BoardFirstStepsGameTests {
     }
 
     // Деревья соседних сцен попадают в обзор 16 блоков: расчистка отмечена сделанной по журналу, как после неё.
+    // Свет, ограда и дом раскладки готовы только по журналу (маркеры в мире их не заменяют) — отмечены так же.
     private static void groundsCleared(BoardService board, SpiritEntity spirit) {
-        String id = "first:clear_grounds";
-        board.board()
-                .submit(new BoardTicket(
-                        id,
-                        BoardCase.CLEAR_GROUNDS,
-                        Optional.empty(),
-                        50,
-                        board.board().now(),
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()));
-        closeTicket(board, id, spirit);
+        for (BoardCase step :
+                List.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
+            String id = "first:" + step.name().toLowerCase(Locale.ROOT);
+            board.board()
+                    .submit(new BoardTicket(
+                            id,
+                            step,
+                            Optional.empty(),
+                            50,
+                            board.board().now(),
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of()));
+            closeTicket(board, id, spirit);
+        }
     }
 
     private static SpiritEntity smithySettlement(GameTestHelper helper) {

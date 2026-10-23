@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Путь «уголь → факел»: есть уголь или древесный уголь — сразу задание «сделать факелы» до запаса; угля нет, а печь
@@ -43,6 +44,13 @@ public final class TorchRules {
 
     // target — сколько факелов держать: обычный запас или больше, когда их ждёт шаг (ограда с факелами на столбах).
     public static Optional<TorchStep> next(Map<String, Integer> stock, boolean furnace, boolean mine, int target) {
+        return next(stock, furnace, mine, target, null);
+    }
+
+    // log — бревно породы поселения: при печи и без свободных брёвен добываются брёвна на уголь, а не уголь из
+    // жилы — жила кончается, и провалы «добыто 0 из 2» запирали духам добычу (простой 6547 тиков, «джунгли»).
+    public static Optional<TorchStep> next(
+            Map<String, Integer> stock, boolean furnace, boolean mine, int target, @Nullable String log) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         int torches = stock.getOrDefault(TORCH, 0);
         if (torches >= target) {
@@ -63,7 +71,15 @@ public final class TorchRules {
                                 .thenComparing(Map.Entry::getKey, Comparator.reverseOrder()))
                         .map(entry -> new TorchStep(BoardCase.SMELT_CHARCOAL, entry.getKey(), CHARCOAL_BATCH))
                 : Optional.empty();
-        if (charcoalStep.isPresent() || !mine) {
+        if (charcoalStep.isPresent()) {
+            return charcoalStep;
+        }
+        if (furnace && mine && log != null) {
+            return Optional.of(new TorchStep(BoardCase.GATHER_MATERIALS, log, CHARCOAL_LOGS));
+        }
+        // Порода известна, а печи ещё нет — ждать печь (она в цепочке до света): уголь из жилы кончается, и провал
+        // «добыто 2 из 4» ставил духу паузу добычи — простой 2622 тика в начале этапа (приёмка «джунгли» 24.10).
+        if (!mine || log != null) {
             return charcoalStep;
         }
         return Optional.of(new TorchStep(BoardCase.GATHER_MATERIALS, COAL, wanted));

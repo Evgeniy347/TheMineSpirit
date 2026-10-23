@@ -28,6 +28,7 @@ final class PlaceBlockScript implements ScriptInstance {
     private final Approach approach;
 
     private boolean approached;
+    private boolean standRequired;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private int placed;
@@ -60,7 +61,7 @@ final class PlaceBlockScript implements ScriptInstance {
         if (!approached) {
             BlockPos pos = toPos(target);
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos));
-            if (distance > BlockBreaker.REACH) {
+            if (distance > BlockBreaker.REACH || standRequired) {
                 List<BlockCoord> stands = StandSpots.of(target, safety, spiritCoord());
                 if (stands.isEmpty()) {
                     return fail("к клетке " + pos.toShortString() + " не подойти: ни одной стоянки; поставлено 0 из 1");
@@ -101,9 +102,17 @@ final class PlaceBlockScript implements ScriptInstance {
             case OCCUPIED ->
                 fail("клетка " + toPos(target).toShortString() + " занята: место занято; поставлено 0 из 1");
             case NO_SUPPORT -> fail(refused.message() + "; поставлено 0 из 1");
-            case OUT_OF_REACH ->
-                fail("клетка " + toPos(target).toShortString()
+            case OUT_OF_REACH -> {
+                // Близко по прямой, но не достать (дух в шахте под клеткой): один раз — подойти к стоянке, а не
+                // провалить свет «стоянка недостижима» (приёмка «джунгли» 24.10).
+                if (!standRequired) {
+                    standRequired = true;
+                    approached = false;
+                    yield ScriptStatus.RUNNING;
+                }
+                yield fail("клетка " + toPos(target).toShortString()
                         + " вне досягаемости: стоянка недостижима; поставлено 0 из 1");
+            }
             case CHUNK_NOT_LOADED ->
                 fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
         };

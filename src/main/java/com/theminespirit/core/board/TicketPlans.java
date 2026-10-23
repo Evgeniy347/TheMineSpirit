@@ -28,6 +28,7 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
+    public static final int CLEAR_QUARTERS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
@@ -394,7 +395,8 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
-        // Углы вокруг хижины (SettlementLayout): внутри ограды клетки не заданы схемой, калитку освещают факелы на её
+        // Перед хижиной и за ней (SettlementLayout): внутри ограды клетки не заданы схемой, калитку освещают факелы на
+        // её
         // столбах. Прежний ряд у дома (±2) попадал внутрь ограды 9×9 и валил её сверку.
         List<BlockCoord> torches = SettlementLayout.lighting(target.target());
         List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
@@ -476,13 +478,20 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
     }
 
+    // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
     private static TaskNode clearGrounds(TicketTarget target) {
         int radius = GROUNDS_CLEAR_RADIUS;
-        List<TaskNode> steps = new ArrayList<>(List.of(
+        List<TaskNode> chunks = List.of(
                 clearGroundsChunk(target, -radius, -radius, -1, -1),
                 clearGroundsChunk(target, 0, -radius, radius, -1),
                 clearGroundsChunk(target, -radius, 0, -1, radius),
-                clearGroundsChunk(target, 0, 0, radius, radius)));
+                clearGroundsChunk(target, 0, 0, radius, radius));
+        int quarter = target.count();
+        boolean single = quarter >= 1 && quarter <= CLEAR_QUARTERS;
+        List<TaskNode> steps = new ArrayList<>(single ? List.of(chunks.get(quarter - 1)) : chunks);
+        if (single && quarter > 1) {
+            return new SequenceNode(steps);
+        }
         // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
         // земля — запас подсыпки), потом подсыпка ям.
         PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.world.item.Items;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -27,7 +28,11 @@ public final class TorchWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     // Что видно у дома: печь стоит, шахта есть, сколько факелов ждёт очередной шаг (ограда — на столбах).
-    public record Site(boolean furnaceBlock, boolean mine, int stepDemand) {}
+    public record Site(
+            boolean furnaceBlock,
+            boolean mine,
+            int stepDemand,
+            @Nullable String log) {}
 
     private TorchWatch() {}
 
@@ -41,8 +46,8 @@ public final class TorchWatch {
         }
         Optional<UUID> furnaceHolder = furnaceBlock ? Optional.empty() : furnaceHolder(spirits);
         boolean furnace = furnaceBlock || furnaceHolder.isPresent();
-        Optional<TorchRules.TorchStep> next =
-                TorchRules.next(stock.available(), furnace, mine, Math.max(TorchRules.TORCH_TARGET, stepDemand));
+        Optional<TorchRules.TorchStep> next = TorchRules.next(
+                stock.available(), furnace, mine, Math.max(TorchRules.TORCH_TARGET, stepDemand), site.log());
         if (next.isEmpty()) {
             return;
         }

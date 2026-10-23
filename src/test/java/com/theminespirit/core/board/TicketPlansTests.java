@@ -958,4 +958,19 @@ class TicketPlansTests {
     Arbitrary<BoardCase> plannedCases() {
         return Arbitraries.of(PLANNED_CASES);
     }
+
+    @Test
+    void plan_ClearGroundsQuarter_OnlyItsChunk() {
+        TaskNode quarter = TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target().withCount(2));
+
+        assertEquals(
+                1,
+                collectCalls(quarter, "clear_area").size(),
+                "Четверть расчистки — одна четверть: четыре духа чистят участок параллельно, а не один всё");
+        assertEquals(
+                TicketPlans.CLEAR_QUARTERS,
+                collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target()), "clear_area")
+                        .size(),
+                "Без номера четверти — вся расчистка одним заданием");
+    }
 }

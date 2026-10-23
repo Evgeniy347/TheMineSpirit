@@ -64,9 +64,11 @@ public final class FirstStepsRunner {
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
     private static final String FIRST_PREFIX = "first:";
+    private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
     private static final int FEET_SCAN_DEPTH = 48;
+    private static final int EXPAND_DEPTH = 4;
 
     private FirstStepsRunner() {}
 
@@ -85,14 +87,15 @@ public final class FirstStepsRunner {
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
+        String wood = woodOf(level, home, stock);
+        String log = WoodSpecies.swap("oak_log", wood);
         if (next.isEmpty() || hasActive(service, next.orElseThrow())) {
-            TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0), now);
+            TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0, log), now);
             next.filter(PREFETCH_DURING::contains)
                     .ifPresent(current -> prefetch(level, service, facts, home, stock, current, now));
             return;
         }
         BoardCase caseValue = next.orElseThrow();
-        String wood = woodOf(level, home, stock);
         // Якорь участка — дом на средней высоте участка: от неё выравнивание и все постройки раскладки.
         BlockCoord anchor = new BlockCoord(
                 home.x(),
@@ -108,8 +111,10 @@ public final class FirstStepsRunner {
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
-        // Факелы шага (ограда — 17 на столбах) — сверх обычного запаса факелов: иначе шаг ждал бы их вечно.
-        TorchWatch.Site site = new TorchWatch.Site(scan.furnaceBlock(), mine, need.getOrDefault(TorchRules.TORCH, 0));
+        // Факелы шага (ограда — на столбах углов и калитки) — сверх обычного запаса факелов: иначе шаг ждал бы их
+        // вечно.
+        TorchWatch.Site site =
+                new TorchWatch.Site(scan.furnaceBlock(), mine, need.getOrDefault(TorchRules.TORCH, 0), log);
         TorchWatch.tick(service, spirits, home, stock, site, now);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
@@ -121,19 +126,28 @@ public final class FirstStepsRunner {
             return;
         }
         String id = FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
-                        id,
-                        caseValue,
-                        Optional.empty(),
-                        BoardRules.priorityOf(caseValue),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        // Материалы шага — бронь доски: фоновые занятия их не трогают (BoardReserve).
-                        Map.copyOf(need)),
-                target);
+        // Расчистка — четвертями на разных духов: одним духом она шла ~4000 тиков, двое простаивали (приёмка
+        // «джунгли» 24.10). Выравнивание и бронь — в первой четверти; остальные — помощники шага, как добыча.
+        int parts = caseValue == BoardCase.CLEAR_GROUNDS ? TicketPlans.CLEAR_QUARTERS : 1;
+        BoardOutcome outcome = BoardOutcome.ACCEPTED;
+        for (int part = 1; part <= parts; part++) {
+            BoardOutcome submitted = service.submit(
+                    new BoardTicket(
+                            part == 1 ? id : CLEAR_PART_PREFIX + part,
+                            caseValue,
+                            Optional.empty(),
+                            BoardRules.priorityOf(caseValue),
+                            now,
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            // Материалы шага — бронь доски: фоновые занятия их не трогают (BoardReserve).
+                            part == 1 ? Map.copyOf(need) : Map.of()),
+                    parts == 1 ? target : target.withCount(part));
+            if (part == 1) {
+                outcome = submitted;
+            }
+        }
         if (outcome == BoardOutcome.ACCEPTED) {
             // Только реально поставленный шаг: BLOCKED/FAILED-тикет доска не переоткрывает, и строка «открыт»
             // каждые 5 с вводила в заблуждение (INC-26).
@@ -204,11 +218,30 @@ public final class FirstStepsRunner {
         Map<String, Integer> need = new HashMap<>();
         materials(source, building.orElseThrow(), targetFor(building.orElseThrow(), home, wood))
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
-        ResourceGate.missing(new StockNeed(need), stock).forEach((item, count) -> {
+        // Впрок — только сырьё (брёвна): добыча крафтового ждала бы передач от занятых духов и сама простаивала.
+        Map<String, Integer> raw = new HashMap<>();
+        ResourceGate.missing(new StockNeed(need), stock).forEach((item, count) -> expand(source, item, count, raw, 0));
+        Map<String, Integer> rawNeed = new HashMap<>();
+        raw.forEach((item, count) -> rawNeed.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        ResourceGate.missing(new StockNeed(rawNeed), stock).forEach((item, count) -> {
             if (gatherable(item, facts)) {
                 postGather(service, source, home, item, count, now);
             }
         });
+    }
+
+    private static void expand(MaterialSource source, String item, int count, Map<String, Integer> raw, int depth) {
+        List<Ingredient> ingredients = depth < EXPAND_DEPTH ? source.ingredientsFor(item) : List.of();
+        int output = source.outputCount(item);
+        if (ingredients.isEmpty() || output <= 0) {
+            raw.merge(
+                    item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item, count, Integer::sum);
+            return;
+        }
+        int crafts = (count + output - 1) / output;
+        for (Ingredient ingredient : ingredients) {
+            expand(source, ingredient.item(), ingredient.count() * crafts, raw, depth + 1);
+        }
     }
 
     private static String woodOf(ServerLevel level, BlockCoord home, StockView stock) {

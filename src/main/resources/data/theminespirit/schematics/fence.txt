@@ -8,6 +8,8 @@ exemptions:
     reason: "ограда поселения открыта сверху по замыслу: это забор, а не здание"
   - rule: inner_height
     reason: "ограда — периметр забора без пола и потолка: внутренней высоты нет"
+  - rule: light
+    reason: "внутренность участка 23×23 освещают факелы шага LIGHTING вокруг хижины (SettlementLayout.lighting) и факелы на столбах углов и калитки; свои факелы по сторонам ограды удваивали свет и съедали уголь этапа 1"
 legend:
   'G': oak_fence_gate[facing=north]
   'F': oak_fence
@@ -38,27 +40,27 @@ layers:
       F                     F
       F                     F
       LFFFFFLFFFFLFFFFLFFFFFL
-  - y1 факелы на столбах: |
-      T     T   T T   T     T
+  - y1 факелы на столбах углов и калитки: |
+      T         T T         T
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
       T                     T
-
-
-
-
-      T                     T
-
-
-
-
-      T                     T
-
-
-
-
-
-      T     T    T    T     T
