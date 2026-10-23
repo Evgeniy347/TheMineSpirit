@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TorchRules;
@@ -34,6 +35,8 @@ public final class TorchWatch {
             int stepDemand,
             @Nullable String log) {}
 
+    private static final long STALL_NOTE_TICKS = 1200;
+
     private TorchWatch() {}
 
     public static void tick(
@@ -49,6 +52,19 @@ public final class TorchWatch {
         Optional<TorchRules.TorchStep> next = TorchRules.next(
                 stock.available(), furnace, mine, Math.max(TorchRules.TORCH_TARGET, stepDemand), site.log());
         if (next.isEmpty()) {
+            int torches = stock.available().getOrDefault(TorchRules.TORCH, 0);
+            // Шаг ждёт факелы, а цепочка угля молчит — причина в журнале раз в минуту (печь пропала, 24.10).
+            if (torches < stepDemand && now % STALL_NOTE_TICKS < BoardTuning.boardIntervalTicks()) {
+                LOGGER.info(
+                        "Факелы шага ждут: нужно {}, есть {}, печь {} (блок {}, в запасе {}), шахта {}, бревно {}",
+                        stepDemand,
+                        torches,
+                        furnace,
+                        furnaceBlock,
+                        stock.available().getOrDefault("furnace", 0),
+                        mine,
+                        site.log());
+            }
             return;
         }
         TorchRules.TorchStep step = next.orElseThrow();
