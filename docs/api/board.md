@@ -62,7 +62,7 @@
 
 Последние записи журнала заданий: `{"entries":[{...}]}` от свежих к старым. `limit` (query, необязателен) —
 сколько записей отдать, по умолчанию 5, границы 1..64; неизвестный параметр — 400 `invalid_request`.
-Запись журнала — та же, что строка JSONL на диске (`config/theminespirit/board-log.jsonl`): `event`
+Запись журнала — та же, что строка JSONL на диске (`<папка мира>/theminespirit/board-log.jsonl`): `event`
 (`SUBMITTED`/`ASSIGNED`/`DONE`/`FAILED`/`BLOCKED`/`UNBLOCKED`/`CANCELLED`/`DETACHED`), `tick`, `ticketId`, `case`, `level`, `cause`,
 `basePriority`, `effectivePriority`, `modifiers`, `spirit`, `configHash`, `worldTime`.
 
