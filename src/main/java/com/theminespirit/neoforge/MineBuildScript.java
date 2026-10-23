@@ -101,6 +101,12 @@ final class MineBuildScript implements ScriptInstance {
         this.walls = new HashSet<>(layout.floors());
         plan.forEach(column -> walls.remove(column.floor()));
         this.rotation = rotation;
+        if (plan.isEmpty()) {
+            LOGGER.info(
+                    "[mine] {}: вход {} уже на глубине цели спуска — 0 ступеней, уровень считается достигнутым",
+                    spirit.displayName(),
+                    layout.entrance());
+        }
     }
 
     static MineBuildScript of(

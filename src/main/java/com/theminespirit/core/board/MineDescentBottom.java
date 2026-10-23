@@ -29,6 +29,9 @@ public final class MineDescentBottom {
                 TicketPlans.mineDescentOrigin(home),
                 BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
                 MineLayout.Extent.NONE);
+        if (layout.air().isEmpty()) {
+            return Optional.of(layout.entrance());
+        }
         return layout.air().stream()
                 .min(Comparator.comparingInt(BlockCoord::y).thenComparing(Comparator.naturalOrder()));
     }
