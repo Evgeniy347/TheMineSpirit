@@ -22,6 +22,7 @@ import com.theminespirit.neoforge.doors.DoorWatchService;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.net.BoardViewChannel;
+import com.theminespirit.neoforge.net.BuildFingerprint;
 import com.theminespirit.neoforge.net.ModProtocolHandshake;
 import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.rest.RestConfig;
@@ -31,6 +32,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import org.slf4j.Logger;
 
 @Mod(ModIdentity.MOD_ID)
@@ -64,5 +66,7 @@ public final class TheMineSpirit {
         new SpiritExperienceEvents(NeoForge.EVENT_BUS);
         new SpiritDropEvents(NeoForge.EVENT_BUS);
         LOGGER.info("The Mine Spirit {} загружен", modContainer.getModInfo().getVersion());
+        NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) ->
+                LOGGER.info("The Mine Spirit {}: сервер запущен", BuildFingerprint.version()));
     }
 }

@@ -9,6 +9,7 @@ import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
 import com.theminespirit.core.ui.BoardWaitReasons;
 import com.theminespirit.neoforge.net.BoardViewChannel;
+import com.theminespirit.neoforge.net.BuildFingerprint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -133,9 +134,20 @@ public final class BoardScreen extends Screen {
             hovered = renderColumns(graphics, mouseX, mouseY);
         }
         graphics.drawString(font, title, inner.x(), window.y() + 6, TITLE_COLOR, false);
+        drawVersion(graphics, inner, window, "v" + BuildFingerprint.version());
         if (hovered != null) {
             graphics.renderComponentTooltip(font, tooltip(hovered), mouseX, mouseY);
         }
+    }
+
+    private void drawVersion(GuiGraphics graphics, BoardLayout.Rect inner, BoardLayout.Rect window, String text) {
+        float scale = 0.5F;
+        float x = inner.x() + inner.width() - font.width(text) * scale - 2;
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, window.y() + 7, 0);
+        graphics.pose().scale(scale, scale, 1.0F);
+        graphics.drawString(font, text, 0, 0, MUTED_COLOR, false);
+        graphics.pose().popPose();
     }
 
     private static void drawBackground(GuiGraphics graphics, BoardLayout.Rect inner) {

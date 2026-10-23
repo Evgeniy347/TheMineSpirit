@@ -63,7 +63,7 @@ fi
 if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet build"
-    echo "  2. поиск build/libs/theminespirit-*.jar (кроме -sources/-javadoc)"
+    echo "  2. поиск build/libs/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
     echo "  3. снимок мира: $SERVER_DIR/scripts/snapshot.sh (если есть)"
     echo "  4. удаление старых $SERVER_DIR/mods/theminespirit-*.jar"
     echo "  5. копирование нового jar в $SERVER_DIR/mods/"
@@ -72,6 +72,7 @@ if $dry_run; then
     else
         echo "  6. перезапуск сервера отключён (--no-restart)"
     fi
+    echo "  7. тег v<версия> в текущем git-репозитории и отправка тега в remote backup (если настроен)"
     echo "Изменения не вносились."
     exit 0
 fi
@@ -81,17 +82,17 @@ cd "$MOD_DIR"
 echo "Сборка мода..."
 ./gradlew --quiet build
 
-# --- Поиск ровно одного jar мода -------------------------------------------
+# --- Поиск jar мода по шаблону ---------------------------------------------
+# Имя содержит версию, поэтому старые jar остаются в build/libs; свежесобранный — самый новый.
 mapfile -t jars < <(find build/libs -maxdepth 1 -name 'theminespirit-*.jar' \
-    ! -name '*-sources.jar' ! -name '*-javadoc.jar')
+    ! -name '*-sources.jar' ! -name '*-javadoc.jar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
 if [ "${#jars[@]}" -eq 0 ]; then
     echo "Сборка не дала theminespirit-*.jar в build/libs/" >&2
     exit 1
 fi
 if [ "${#jars[@]}" -gt 1 ]; then
-    echo "Найдено несколько jar мода, неоднозначно:" >&2
+    echo "В build/libs несколько jar мода, беру самый свежий:" >&2
     printf '  %s\n' "${jars[@]}" >&2
-    exit 1
 fi
 jar="${jars[0]}"
 size="$(stat -c %s "$jar")"
@@ -146,4 +147,25 @@ if $do_restart; then
 elif $was_running; then
     echo "ВНИМАНИЕ: сервер работает; новый jar вступит в силу после ручного перезапуска"
     echo "(выбран --no-restart)."
+fi
+
+# --- Тег версии -------------------------------------------------------------
+version="${jar##*/}"
+version="${version#theminespirit-}"
+version="${version%.jar}"
+tag="v${version}"
+if git -C "$MOD_DIR" rev-parse -q --verify "refs/tags/$tag" >/dev/null 2>&1; then
+    echo "Тег $tag уже существует"
+else
+    git -C "$MOD_DIR" tag "$tag"
+    echo "Поставлен тег $tag"
+fi
+if git -C "$MOD_DIR" remote get-url backup >/dev/null 2>&1; then
+    if git -C "$MOD_DIR" push backup "refs/tags/$tag"; then
+        echo "Тег $tag отправлен в backup"
+    else
+        echo "ВНИМАНИЕ: выкладка удалась, но тег $tag не отправлен в backup" >&2
+    fi
+else
+    echo "Remote backup не настроен: тег $tag остался локальным"
 fi
