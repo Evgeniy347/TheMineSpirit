@@ -37,9 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.AnvilBlock;
@@ -54,9 +52,6 @@ import org.slf4j.Logger;
  * встают мелкие задачи добычи, а сам шаг ждёт их выполнения и открывается после.
  */
 public final class FirstStepsRunner {
-    private static final int WOOD_SCAN_RADIUS = 24;
-    private static final int WOOD_SCAN_HEIGHT = 8;
-    private static final Map<BlockCoord, String> NEARBY_WOOD = new ConcurrentHashMap<>();
     private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
@@ -118,7 +113,8 @@ public final class FirstStepsRunner {
                         1,
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
-                        Map.of()),
+                        // Материалы шага — бронь доски: фоновые занятия их не трогают (BoardReserve).
+                        Map.copyOf(need)),
                 target);
         if (outcome == BoardOutcome.ACCEPTED) {
             // Только реально поставленный шаг: BLOCKED/FAILED-тикет доска не переоткрывает, и строка «открыт»
@@ -127,30 +123,8 @@ public final class FirstStepsRunner {
         }
     }
 
-    // Порода поселения: по запасу брёвен, а пока брёвен нет — по деревьям вокруг дома (одна выборка на дом).
     private static String woodOf(ServerLevel level, BlockCoord home, StockView stock) {
-        if (WoodSpecies.hasLogs(stock.available())) {
-            return WoodSpecies.of(stock.available());
-        }
-        return NEARBY_WOOD.computeIfAbsent(home, at -> nearbyWood(level, at));
-    }
-
-    private static String nearbyWood(ServerLevel level, BlockCoord home) {
-        Map<String, Integer> logs = new HashMap<>();
-        for (int dx = -WOOD_SCAN_RADIUS; dx <= WOOD_SCAN_RADIUS; dx += 2) {
-            for (int dz = -WOOD_SCAN_RADIUS; dz <= WOOD_SCAN_RADIUS; dz += 2) {
-                for (int dy = 0; dy <= WOOD_SCAN_HEIGHT; dy++) {
-                    BlockPos pos = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
-                    String id = BuiltInRegistries.BLOCK
-                            .getKey(level.getBlockState(pos).getBlock())
-                            .getPath();
-                    if (id.endsWith("_log")) {
-                        logs.merge(id, 1, Integer::sum);
-                    }
-                }
-            }
-        }
-        return WoodSpecies.of(logs);
+        return SettlementWood.of(level, home, stock.available());
     }
 
     private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, String wood) {

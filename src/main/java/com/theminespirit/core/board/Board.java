@@ -86,6 +86,7 @@ public final class Board {
         ticketFailures.clear();
         blockedMissing.clear();
         caseFailures.clear();
+        ledger.clear();
         ledger.restore(state.ledger());
         for (BoardState.Entry entry : state.entries()) {
             BoardTicket ticket = entry.ticket();

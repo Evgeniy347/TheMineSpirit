@@ -24,6 +24,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -33,10 +34,12 @@ import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
+import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.net.BuildFingerprint;
 import java.util.ArrayList;
@@ -712,7 +715,8 @@ public final class BoardService {
                         ticket.assignee().isPresent() ? "свой дух занят" : "свободных нет или их ждут свои задания");
                 continue;
             }
-            TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
+            TicketTarget target =
+                    gatherOnTop(ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits))), spirit);
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
                 LOGGER.info(
                         "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
@@ -763,6 +767,26 @@ public final class BoardService {
                 LOGGER.error("Задание {} не выдано духу {}: {}", ticket.id(), spirit.displayName(), outcome);
             }
         }
+    }
+
+    // acquire добывает «до N в инвентаре»: дух, у которого уже лежит N, завершал gather:jungle_planks ×4 сразу, запас
+    // не рос, и STOCK_CHESTS ждал «не хватает jungle_planks=4» весь день (приёмка «джунгли»). Цель — сверх своего.
+    private static TicketTarget gatherOnTop(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
+        String item = target.supplyItem();
+        if (ticket.boardCase() != BoardCase.GATHER_MATERIALS
+                || item == null
+                || TorchRules.COAL.equals(item)
+                || "cobblestone".equals(item)) {
+            return target;
+        }
+        int held = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT).inInventory(item);
+        return held <= 0
+                ? target
+                : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
+    }
+
+    TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
+        return targets.getOrDefault(ticketId, TicketTarget.at(homeOf(spirits)));
     }
 
     BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {

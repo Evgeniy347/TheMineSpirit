@@ -58,6 +58,10 @@ public final class BoardLedger {
         built.add(key(boardCase, level));
     }
 
+    public void clear() {
+        built.clear();
+    }
+
     public void restore(Set<String> keys) {
         Objects.requireNonNull(keys, "Ключи отметок не могут быть null: пустой набор задают пустым набором");
         for (String key : keys) {

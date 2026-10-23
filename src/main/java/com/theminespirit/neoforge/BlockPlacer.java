@@ -103,7 +103,10 @@ public final class BlockPlacer {
         if (supportRequired && !hasSupport(level, target, state)) {
             return new Refused(
                     RefuseReason.NO_SUPPORT,
-                    "под клеткой " + target.toShortString() + " нет опоры: блок без опоры обвалится или повиснет");
+                    "под клеткой " + target.toShortString() + " нет опоры (ниже "
+                            + BuiltInRegistries.BLOCK.getKey(
+                                    level.getBlockState(target.below()).getBlock())
+                            + "): блок без опоры обвалится или повиснет");
         }
         Item wanted = BlockItems.itemFor(blockId);
         if (spirit.getInventory().countItem(wanted) < 1) {

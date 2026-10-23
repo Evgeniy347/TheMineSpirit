@@ -29,6 +29,7 @@ public final class TicketPlans {
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final String BLOCK = "block";
+    private static final String COBBLESTONE = "cobblestone";
     private static final int MINE_DESCENT_OFFSET = 6;
     private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
@@ -380,11 +381,15 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
+        // Ряд z−2 перед калиткой (x±2, x±3; вход шахты — x+6), вне ограды 9×9 (внутренность z+1..+7 — «обязана быть
+        // воздухом»):
+        // факел (2,2) внутри неё
+        // валил BUILD_FENCE «не совпало со схемой … torch в чёрном списке» (приёмка «джунгли»).
         int[][] offsets = {
-            {LIGHTING_OFFSET, LIGHTING_OFFSET},
-            {-LIGHTING_OFFSET, LIGHTING_OFFSET},
             {LIGHTING_OFFSET, -LIGHTING_OFFSET},
-            {-LIGHTING_OFFSET, -LIGHTING_OFFSET}
+            {-LIGHTING_OFFSET, -LIGHTING_OFFSET},
+            {LIGHTING_OFFSET + 1, -LIGHTING_OFFSET},
+            {-LIGHTING_OFFSET - 1, -LIGHTING_OFFSET}
         };
         int torches = Math.min(LIGHTING_TORCHES, offsets.length);
         List<TaskNode> steps = new ArrayList<>(torches + 1);
@@ -399,7 +404,7 @@ public final class TicketPlans {
                             "x",
                             target.target().x() + offset[0],
                             "y",
-                            target.target().y() + 1,
+                            target.target().y(),
                             "z",
                             target.target().z() + offset[1])));
         }
@@ -463,6 +468,14 @@ public final class TicketPlans {
                                     RADIUS,
                                     CatalogLimits.HARVEST_RADIUS_MAX)));
         }
+        if (COBBLESTONE.equals(item)) {
+            // Камень у дома бывает дальше 16 (выход скалы в стороне): acquire искал в 16 и проваливал
+            // «подходящих блоков не осталось», печь стояла (приёмка «джунгли»). Как уголь — радиус 32.
+            return sequence(
+                    gotoTarget(target),
+                    new ScriptCall(
+                            "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
+        }
         return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
     }
 
@@ -482,13 +495,13 @@ public final class TicketPlans {
                         "x1",
                         target.target().x() + dx1,
                         "y1",
-                        target.target().y() - 1,
+                        target.target().y(),
                         "z1",
                         target.target().z() + dz1,
                         "x2",
                         target.target().x() + dx2,
                         "y2",
-                        target.target().y() + 2,
+                        target.target().y() + 3,
                         "z2",
                         target.target().z() + dz2));
     }

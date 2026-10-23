@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.crafting;
 
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.crafting.IngredientSpec;
 import com.theminespirit.core.crafting.RecipeChooser;
 import com.theminespirit.core.crafting.RecipeCurator;
@@ -38,9 +39,20 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     private static volatile Cached cache;
 
     private final RecipeIndex index;
+    private final Map<String, Integer> available;
+    private final String species;
 
-    private RecipeKnowledge(RecipeIndex index) {
+    private RecipeKnowledge(RecipeIndex index, Map<String, Integer> available, String species) {
         this.index = index;
+        this.available = available;
+        this.species = species;
+    }
+
+    // Те же рецепты, но вариант рецепта и слота (порода досок, брёвен) — по запасу духа и породе поселения, а не
+    // первый в общем порядке: в джунглях acquire палок и сундука брал дубовые доски, которых не добыть.
+    public RecipeKnowledge preferring(Map<String, Integer> stock, String woodSpecies) {
+        Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
+        return new RecipeKnowledge(index, Map.copyOf(stock), WoodSpecies.check(woodSpecies));
     }
 
     public static RecipeKnowledge of(Level level) {
@@ -54,7 +66,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
             current = new Cached(manager, buildIndex(manager, registries));
             cache = current;
         }
-        return new RecipeKnowledge(current.index());
+        return new RecipeKnowledge(current.index(), Map.of(), WoodSpecies.OAK);
     }
 
     public static int indexBuilds() {
@@ -135,13 +147,13 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public int outputCount(String item) {
-        return craftRecipe(item, Map.of()).map(RecipeSpec::outputCount).orElse(1);
+        return craftRecipe(item, available).map(RecipeSpec::outputCount).orElse(1);
     }
 
     @Override
     public List<Ingredient> ingredientsFor(String item) {
         Map<String, Integer> totals = new LinkedHashMap<>();
-        craftRecipe(item, Map.of())
+        craftRecipe(item, available)
                 .ifPresent(recipe ->
                         recipe.ingredients().forEach(slot -> totals.merge(representative(slot), 1, Integer::sum)));
         List<Ingredient> ingredients = new ArrayList<>(totals.size());
@@ -165,7 +177,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public Optional<String> stationFor(String item) {
-        Optional<RecipeSpec> craft = craftRecipe(item, Map.of());
+        Optional<RecipeSpec> craft = craftRecipe(item, available);
         if (craft.isPresent()) {
             return Stations.forRecipe(craft.get());
         }
@@ -197,7 +209,19 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private String representative(IngredientSpec slot) {
+        // Вариант из запаса добывать не надо — проверка добываемости только для породы поселения: полный обход
+        // рецептов для каждого предмета запаса (каменные кирпичи…) вешал серверный поток (приёмка «джунгли»).
+        Optional<String> preferred = WoodSpecies.prefer(slot.alternatives(), available, species)
+                .filter(alternative -> held(alternative) || canObtain(alternative, new HashSet<>()));
+        if (preferred.isPresent()) {
+            return preferred.get();
+        }
         return pickRepresentative(slot.alternatives());
+    }
+
+    private boolean held(String item) {
+        String name = ItemIds.normalize(item);
+        return available.getOrDefault(name, 0) > 0 || available.getOrDefault("minecraft:" + name, 0) > 0;
     }
 
     private String pickRepresentative(List<String> alternatives) {

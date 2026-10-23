@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Порода дерева постройки: схемы рисуются дубом, а строят из породы, которая есть у поселения (джунгли, ель…).
@@ -78,6 +79,42 @@ public final class WoodSpecies {
     public static boolean hasLogs(Map<String, Integer> stock) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         return ALL.stream().anyMatch(species -> logs(stock, species) > 0);
+    }
+
+    // Вариант слота рецепта по запасу и породе: сначала тот, которого в запасе больше всего, затем вариант породы
+    // поселения (вместо {@code oak_*}). Пусто — предпочтения нет, выбирает общий порядок (палки и сундук в джунглях
+    // брали дубовые доски, которых не добыть).
+    public static Optional<String> prefer(List<String> alternatives, Map<String, Integer> stock, String species) {
+        Objects.requireNonNull(alternatives, "Варианты не могут быть null: выбирать не из чего");
+        Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
+        check(species);
+        String best = null;
+        int bestCount = 0;
+        for (String alternative : alternatives) {
+            int count = count(stock, alternative);
+            if (count > bestCount) {
+                best = alternative;
+                bestCount = count;
+            }
+        }
+        if (best != null) {
+            return Optional.of(best);
+        }
+        if (OAK.equals(species)) {
+            return Optional.empty();
+        }
+        for (String alternative : alternatives) {
+            String swapped = swap(alternative, species);
+            if (!swapped.equals(alternative) && alternatives.contains(swapped)) {
+                return Optional.of(swapped);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static int count(Map<String, Integer> stock, String item) {
+        String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        return stock.getOrDefault(name, 0) + stock.getOrDefault(NAMESPACE + name, 0);
     }
 
     private static int logs(Map<String, Integer> stock, String species) {

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
@@ -101,8 +102,10 @@ public final class SettlementIntellect {
         }
         lastTick = tick;
         decideCalls++;
-        stage = SettlementStage.of(BoardRegistry.get(level).board().ledger());
-        StockReader.Stocks stocks = StockReader.read(level, members, home);
+        BoardService boardService = BoardRegistry.get(level);
+        stage = SettlementStage.of(boardService.board().ledger());
+        // Материалы заданий доски забронированы: фоновый крафт палок не ест доски сундуков (INC-36, приёмка).
+        StockReader.Stocks stocks = StockReader.read(level, members, home, BoardReserve.items(boardService.board()));
         stockReads += stocks.reads();
         stockContainers += stocks.containers();
         SettlementScanner.Scan scan = SettlementScanner.scan(level, members, snapshots, home, stocks.containerFood());

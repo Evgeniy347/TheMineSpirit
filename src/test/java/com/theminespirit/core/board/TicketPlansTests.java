@@ -195,6 +195,59 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_Lighting_TorchesAtFeetLevelOfHome() {
+        TicketTarget home = target();
+
+        List<Object> heights = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
+                .map(call -> call.params().get("y"))
+                .distinct()
+                .toList();
+
+        assertEquals(
+                List.of(home.target().y()),
+                heights,
+                "Дом — клетка ног духа (над землёй): факел на y+1 висел в воздухе, «нет опоры (ниже air)», "
+                        + "LIGHTING уходил в BLOCKED (приёмка «джунгли»)");
+    }
+
+    @Test
+    void plan_ClearGrounds_StartsAtFeetLevelAndKeepsGround() {
+        BlockCoord home = new BlockCoord(10, 60, -5);
+
+        List<Integer> bottoms =
+                collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, TicketTarget.at(home)), "clear_area").stream()
+                        .map(call -> ClearAreaParams.from(call.params()).y1())
+                        .distinct()
+                        .toList();
+
+        assertEquals(
+                List.of(home.y()),
+                bottoms,
+                "Дом — клетка ног: слой y−1 — земля участка; расчистка с y−1 обходила 33×33 блоков земли по одному "
+                        + "и не кончалась до конца дня (приёмка «джунгли»)");
+    }
+
+    @Test
+    void plan_Lighting_TorchesOutsideFenceFootprint() {
+        TicketTarget home = target();
+
+        List<String> inside = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
+                .filter(call -> {
+                    int dx = (Integer) call.params().get("x") - home.target().x();
+                    int dz = (Integer) call.params().get("z") - home.target().z();
+                    return Math.abs(dx) <= 4 && dz >= 0 && dz <= 8;
+                })
+                .map(call -> call.params().get("x") + "," + call.params().get("z"))
+                .toList();
+
+        assertEquals(
+                List.of(),
+                inside,
+                "Факел освещения внутри ограды 9×9 (x±4, z 0..8 от дома) ломал BUILD_FENCE: внутренность схемы "
+                        + "обязана быть воздухом, а факел под защитой не убрать (приёмка «джунгли»)");
+    }
+
+    @Test
     void plan_BuildFence_UsesFenceScheme() {
         TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, target());
 
@@ -770,6 +823,19 @@ class TicketPlansTests {
                 () -> TicketPlans.plan(BoardCase.RELOCATE_BUILDING, same),
                 "Перенос в ту же точку обязан падать: сносить и строить на одном месте нечего, "
                         + "а молча принятый перенос гонял бы духа вхолостую");
+    }
+
+    @Test
+    void plan_GatherCobblestone_GathersStoneInWideRadius() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("cobblestone", 8);
+
+        ScriptCall gather = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "gather");
+
+        assertEquals(
+                Map.of("block", "stone", "count", 8, "radius", CatalogLimits.HARVEST_RADIUS_MAX),
+                gather.params(),
+                "Булыжник для печи ищется по камню в радиусе 32, как уголь: acquire искал в 16 от дома и "
+                        + "проваливал «подходящих блоков в радиусе 16 не осталось» (приёмка «джунгли»)");
     }
 
     @Test

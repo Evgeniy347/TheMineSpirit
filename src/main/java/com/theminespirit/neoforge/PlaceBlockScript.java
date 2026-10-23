@@ -100,7 +100,7 @@ final class PlaceBlockScript implements ScriptInstance {
             case NO_MATERIAL -> fail("нет материала '" + blockId + "': нужно 1, есть 0; поставлено 0 из 1");
             case OCCUPIED ->
                 fail("клетка " + toPos(target).toShortString() + " занята: место занято; поставлено 0 из 1");
-            case NO_SUPPORT -> fail("под клеткой " + toPos(target).toShortString() + " нет опоры; поставлено 0 из 1");
+            case NO_SUPPORT -> fail(refused.message() + "; поставлено 0 из 1");
             case OUT_OF_REACH ->
                 fail("клетка " + toPos(target).toShortString()
                         + " вне досягаемости: стоянка недостижима; поставлено 0 из 1");

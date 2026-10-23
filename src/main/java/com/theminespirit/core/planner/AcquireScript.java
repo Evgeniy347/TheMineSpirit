@@ -153,8 +153,7 @@ public final class AcquireScript implements ScriptInstance {
         int need = count - startInventory - chestPlanned;
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {
-            nodes.add(ResourceResolver.resolve(
-                    item, need, knowledge, catalog, conditions, supplies.inventory(), supplies.nearbyStations()));
+            nodes.add(ResourceResolver.resolve(item, need, knowledge, catalog, conditions, supplies));
         }
         TaskNode plan = new SequenceNode(nodes);
         plan = PlanValidator.validate(plan, catalog, conditions);

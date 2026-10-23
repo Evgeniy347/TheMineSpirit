@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class ResourceResolver {
     private ResourceResolver() {}
@@ -68,23 +69,57 @@ public final class ResourceResolver {
             ConditionCatalog conditions,
             Map<String, Integer> inventory,
             Set<String> presentStations) {
-        Objects.requireNonNull(item, "item не может быть null: без имени предмета резолвер не найдёт способ добычи");
-        Objects.requireNonNull(
-                knowledge, "knowledge не может быть null: без знаний резолвер не отличит крафт от сбора");
-        Objects.requireNonNull(scripts, "scripts не может быть null");
-        Objects.requireNonNull(conditions, "conditions не может быть null");
         Objects.requireNonNull(
                 inventory, "inventory не может быть null: без инвентаря резолвер не предпочтёт имеющееся топливо");
         Objects.requireNonNull(
                 presentStations,
                 "presentStations не может быть null: без снимка станций резолвер построит печь там, где она уже стоит");
+        return resolve(item, count, knowledge, scripts, conditions, new Holdings(inventory, presentStations, null));
+    }
+
+    // Снабжение acquire: инвентарь, станции и снятие ингредиентов из сундуков рядом — acquire забора с 81 бревном
+    // и 59 досками на складе рубил деревья в радиусе 16 и падал «подходящих блоков не осталось» (приёмка «джунгли»).
+    public static TaskNode resolve(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            ScriptCatalog scripts,
+            ConditionCatalog conditions,
+            AcquireSupplies supplies) {
+        Objects.requireNonNull(supplies, "supplies не может быть null: без снабжения не прочитать инвентарь");
+        return resolve(
+                item,
+                count,
+                knowledge,
+                scripts,
+                conditions,
+                new Holdings(supplies.inventory(), supplies.nearbyStations(), supplies));
+    }
+
+    private static TaskNode resolve(
+            String item,
+            int count,
+            ResourceKnowledge knowledge,
+            ScriptCatalog scripts,
+            ConditionCatalog conditions,
+            Holdings holdings) {
+        Objects.requireNonNull(item, "item не может быть null: без имени предмета резолвер не найдёт способ добычи");
+        Objects.requireNonNull(
+                knowledge, "knowledge не может быть null: без знаний резолвер не отличит крафт от сбора");
+        Objects.requireNonNull(scripts, "scripts не может быть null");
+        Objects.requireNonNull(conditions, "conditions не может быть null");
         if (count <= 0) {
             throw new IllegalArgumentException(
                     "Количество предмета должно быть больше 0, а получено " + count + ": нулевая цель не имеет смысла");
         }
-        TaskNode plan = new Resolution(knowledge, new HashMap<>(inventory), presentStations).resolve(item, count);
+        TaskNode plan = new Resolution(knowledge, holdings).resolve(item, count);
         return PlanValidator.validate(plan, scripts, conditions);
     }
+
+    private record Holdings(
+            Map<String, Integer> inventory,
+            Set<String> stations,
+            @Nullable AcquireSupplies chests) {}
 
     private static final class Resolution {
         private static final List<String> PICKAXES =
@@ -97,10 +132,14 @@ public final class ResourceResolver {
         private final Set<String> plannedStations = new HashSet<>();
         private final Set<String> plannedTools = new HashSet<>();
 
-        private Resolution(ResourceKnowledge knowledge, Map<String, Integer> remaining, Set<String> presentStations) {
+        private final @Nullable AcquireSupplies chests;
+        private final Set<String> withdrawn = new HashSet<>();
+
+        private Resolution(ResourceKnowledge knowledge, Holdings holdings) {
             this.knowledge = knowledge;
-            this.remaining = remaining;
-            this.presentStations = presentStations;
+            this.remaining = new HashMap<>(holdings.inventory());
+            this.presentStations = holdings.stations();
+            this.chests = holdings.chests();
         }
 
         private TaskNode resolve(String item, int count) {
@@ -226,11 +265,45 @@ public final class ResourceResolver {
             long crafts = (count + (long) output - 1) / output;
             List<TaskNode> steps = new ArrayList<>();
             for (Ingredient ingredient : knowledge.ingredientsFor(item)) {
-                steps.add(resolve(ingredient.item(), ingredientCount(ingredient, crafts, item), false));
+                ingredient(ingredient.item(), ingredientCount(ingredient, crafts, item))
+                        .ifPresent(steps::add);
             }
             stationStep(item).ifPresent(steps::add);
             steps.add(batched("craft", item, count, topLevel));
             return new SequenceNode(steps);
+        }
+
+        // Ингредиент — сперва из инвентаря, затем из сундуков рядом (один раз на предмет), остаток — добычей.
+        private Optional<TaskNode> ingredient(String item, int count) {
+            int left = count - takeFromInventory(item, count);
+            List<TaskNode> steps = new ArrayList<>();
+            if (left > 0 && chests != null && withdrawn.add(normalize(item))) {
+                for (ScriptCall call : chests.withdraw(item, left)) {
+                    left -= call.params().get("count") instanceof Integer taken ? taken : 0;
+                    steps.add(call);
+                }
+            }
+            if (left > 0) {
+                steps.add(resolve(item, left, false));
+            }
+            if (steps.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(steps.size() == 1 ? steps.get(0) : new SequenceNode(steps));
+        }
+
+        private int takeFromInventory(String item, int count) {
+            String wanted = normalize(item);
+            int taken = 0;
+            for (Map.Entry<String, Integer> entry : remaining.entrySet()) {
+                if (taken >= count || !normalize(entry.getKey()).equals(wanted) || entry.getValue() <= 0) {
+                    continue;
+                }
+                int take = Math.min(count - taken, entry.getValue());
+                entry.setValue(entry.getValue() - take);
+                taken += take;
+            }
+            return taken;
         }
 
         private TaskNode smeltPlan(String item, int count, boolean topLevel) {
