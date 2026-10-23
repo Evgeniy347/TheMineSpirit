@@ -56,7 +56,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                33,
+                34,
                 library.size(),
                 "Библиотека обязана прочитать все тридцать три пресета, включая четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
@@ -68,6 +68,7 @@ class PresetLibraryTests {
                         "torch_post",
                         "storage_hut",
                         "family_house",
+                        "hut_1",
                         "stone_house",
                         "well",
                         "pen_7x7",
@@ -294,7 +295,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                33,
+                34,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати двух пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(

@@ -8,6 +8,7 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardPriorities;
+import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -135,7 +136,7 @@ public final class BoardService {
 
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
-        JournalService journal = JournalService.inConfigDirectory();
+        JournalService journal = JournalService.inWorld(level.getServer());
         Board board = new Board(now, (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
         return new BoardService(
                 board,
@@ -198,7 +199,10 @@ public final class BoardService {
         settleOwners(spirits);
         refreshStock(level, spirits);
         ensureSupply(spirits, stock, now);
-        Set<String> liveCauses = sources.tick(level, this, spirits, stock, now);
+        // Источники заданий видят запас за вычетом брони открытых заданий (решение 54b п.5): уголь для факелов не
+        // пережигает брёвна, взятые под забор, и новый шаг не открывается на чужих материалах.
+        StockView unreserved = BoardReserve.unreserved(stock, board);
+        Set<String> liveCauses = sources.tick(level, this, spirits, unreserved, now);
         liveCauses.addAll(liveHerdCauses(level));
         liveCauses.addAll(liveDropCauses(level));
         board.retain(liveCauses, now);

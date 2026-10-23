@@ -8,16 +8,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * Этапы развития поселения: этап N — набор обязательных построек «кейс → уровень» по журналу
  * доски. Когда все постройки этапа N стоят, поселение переходит на этап N+1; постройка уровня L ставится только
- * с этапа L. Текущий этап — первый, чей состав не построен; всё построено — этап за последним. Состав — горячая таблица {@code board/stages.json}, а не решение модели (plan.md «Рост по этапам»).
+ * с этапа L. Текущий этап — первый, чей состав не построен; всё построено — этап за последним. Состав — горячая таблица {@code board/stages.json}, а не решение модели (plan.md «Рост по этапам»); там же
+ * схемы уровней построек ({@code schemes}): дом этапа 1 — хижина, дом этапа 2 — каменный (решение 54b п.1).
  */
-public record StageRules(List<Stage> stages) {
+public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> schemes) {
     public static final String RESOURCE = "data/theminespirit/board/stages.json";
-    private static final Set<String> ROOT_FIELDS = Set.of("stages");
+    private static final Set<String> ROOT_FIELDS = Set.of("stages", "schemes");
     private static final Set<String> STAGE_FIELDS = Set.of("stage", "buildings");
 
     public record Stage(int stage, Map<BoardCase, Integer> buildings) {
@@ -33,8 +35,16 @@ public record StageRules(List<Stage> stages) {
         }
     }
 
+    public StageRules(List<Stage> stages) {
+        this(stages, Map.of());
+    }
+
     public StageRules {
         stages = List.copyOf(Objects.requireNonNull(stages, "Этапы не могут быть null"));
+        Map<BoardCase, List<String>> copied = new LinkedHashMap<>();
+        Objects.requireNonNull(schemes, "Схемы уровней не могут быть null: без схем задают пустую карту")
+                .forEach((boardCase, files) -> copied.put(boardCase, List.copyOf(files)));
+        schemes = Map.copyOf(copied);
         if (stages.isEmpty()) {
             throw new IllegalArgumentException("Этапов нет: поселение начинается с этапа 1, его состав обязателен");
         }
@@ -54,6 +64,13 @@ public record StageRules(List<Stage> stages) {
             }
         }
         return stages.size() + 1;
+    }
+
+    // Схема уровня постройки из таблицы (schemes: «кейс → схемы уровней с первого»); нет строки — пусто.
+    public Optional<String> scheme(BoardCase boardCase, int level) {
+        Objects.requireNonNull(boardCase, "Кейс постройки не может быть null: без него неизвестна схема уровня");
+        List<String> files = schemes.getOrDefault(boardCase, List.of());
+        return level >= 1 && level <= files.size() ? Optional.of(files.get(level - 1)) : Optional.empty();
     }
 
     public Map<BoardCase, Integer> missingOf(BoardLedger ledger) {
@@ -81,7 +98,7 @@ public record StageRules(List<Stage> stages) {
                         JsonResource.integer(node.get("stage"), origin, "stage"),
                         buildings(node.get("buildings"), origin)));
             }
-            return new StageRules(stages);
+            return new StageRules(stages, schemes(root.get("schemes"), origin));
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }
@@ -89,6 +106,39 @@ public record StageRules(List<Stage> stages) {
 
     public static StageRules load() {
         return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
+    }
+
+    private static Map<BoardCase, List<String>> schemes(JsonNode node, String origin) {
+        if (node == null) {
+            return Map.of();
+        }
+        if (!node.isObject()) {
+            throw new IllegalStateException("Файл '" + origin + "': поле 'schemes' — не объект «кейс → схемы уровней»");
+        }
+        Map<BoardCase, List<String>> schemes = new LinkedHashMap<>();
+        Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            List<String> files = new ArrayList<>();
+            for (JsonNode file : JsonResource.array(field.getValue(), origin, "схем " + field.getKey())) {
+                if (!file.isTextual() || file.asText().isBlank()) {
+                    throw new IllegalStateException("Файл '" + origin + "': схема уровня " + field.getKey()
+                            + " — не имя файла схемы, а " + file);
+                }
+                files.add(file.asText());
+            }
+            schemes.put(boardCase(field.getKey(), origin), files);
+        }
+        return schemes;
+    }
+
+    private static BoardCase boardCase(String name, String origin) {
+        try {
+            return BoardCase.valueOf(name);
+        } catch (IllegalArgumentException unknown) {
+            throw new IllegalStateException(
+                    "Файл '" + origin + "': неизвестный кейс постройки '" + name + "'", unknown);
+        }
     }
 
     private static Map<BoardCase, Integer> buildings(JsonNode node, String origin) {
@@ -99,14 +149,8 @@ public record StageRules(List<Stage> stages) {
         Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
-            BoardCase boardCase;
-            try {
-                boardCase = BoardCase.valueOf(field.getKey());
-            } catch (IllegalArgumentException unknown) {
-                throw new IllegalStateException(
-                        "Файл '" + origin + "': неизвестный кейс постройки '" + field.getKey() + "'", unknown);
-            }
-            buildings.put(boardCase, JsonResource.integer(field.getValue(), origin, field.getKey()));
+            buildings.put(
+                    boardCase(field.getKey(), origin), JsonResource.integer(field.getValue(), origin, field.getKey()));
         }
         return buildings;
     }

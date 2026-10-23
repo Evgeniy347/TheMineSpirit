@@ -11,7 +11,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Точка и параметры задания для сборки плана: куда идти, какая схема, какая приманка,
  * сколько комплектов инструментов, от кого и кому передать предмет, какой предмет крафтить
- * и сколько голов или предметов обработать. Неизменяемый: план собирается из этих данных,
+ * и сколько голов или предметов обработать, как выровнять участок. Неизменяемый: план собирается из этих данных,
  * подмена после сборки сломала бы выдачу.
  */
 public record TicketTarget(
@@ -32,7 +32,8 @@ public record TicketTarget(
         @Nullable UUID transferTo,
         @Nullable String craftItem,
         int count,
-        @Nullable String wood) {
+        @Nullable String wood,
+        @Nullable PlotLeveling leveling) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -42,7 +43,8 @@ public record TicketTarget(
 
     public static TicketTarget at(BlockCoord target) {
         return new TicketTarget(
-                target, null, null, null, null, 0, 0, 0, null, null, null, null, List.of(), null, null, null, 0, null);
+                target, null, null, null, null, 0, 0, 0, null, null, null, null, List.of(), null, null, null, 0, null,
+                null);
     }
 
     public TicketTarget withScheme(String scheme) {
@@ -64,7 +66,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withFenceBlock(String fence) {
@@ -86,7 +89,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withLureItem(String lure) {
@@ -108,7 +112,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withSupply(String item, int supply) {
@@ -130,7 +135,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withCraterBlocks(int blocks) {
@@ -152,7 +158,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withToolCount(int tools) {
@@ -174,7 +181,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withSpecies(Species animal) {
@@ -196,7 +204,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withRelocate(BlockCoord source, BlockCoord destination) {
@@ -218,7 +227,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withDrops(List<String> items) {
@@ -240,7 +250,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withTransfer(UUID source, UUID recipient, String item, int amount) {
@@ -262,7 +273,8 @@ public record TicketTarget(
                 recipient,
                 craftItem,
                 count,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withCraft(String item, int amount) {
@@ -284,7 +296,8 @@ public record TicketTarget(
                 transferTo,
                 item,
                 amount,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withCount(int amount) {
@@ -306,7 +319,8 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 amount,
-                wood);
+                wood,
+                leveling);
     }
 
     public TicketTarget withWood(String woodSpecies) {
@@ -328,6 +342,31 @@ public record TicketTarget(
                 transferTo,
                 craftItem,
                 count,
-                Objects.requireNonNull(woodSpecies, "Порода дерева не может быть null: без неё строят по схеме"));
+                Objects.requireNonNull(woodSpecies, "Порода дерева не может быть null: без неё строят по схеме"),
+                leveling);
+    }
+
+    public TicketTarget withLeveling(PlotLeveling plan) {
+        return new TicketTarget(
+                target,
+                schemeFile,
+                fenceBlock,
+                lureItem,
+                supplyItem,
+                supplyCount,
+                craterBlocks,
+                toolCount,
+                species,
+                from,
+                to,
+                knowledge,
+                dropItems,
+                transferFrom,
+                transferTo,
+                craftItem,
+                count,
+                wood,
+                Objects.requireNonNull(
+                        plan, "План выравнивания не может быть null: ровный участок задают пустым планом"));
     }
 }

@@ -36,11 +36,13 @@ import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -119,6 +121,19 @@ public final class BoardFirstStepsGameTests {
     @AfterBatch(batch = SMITHY_IRON_BATCH)
     public static void restoreMobTargetingAfterSmithyIron(ServerLevel level) {
         GameTestFilter.setMobsTargetSpirits(true);
+    }
+
+    // Журнал доски — в папке мира (54b п.4): из config/ новый мир на том же сервере наследовал «построено».
+    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 20)
+    public static void journal_BoardJournal_InWorldFolderNotConfig(GameTestHelper helper) {
+        MinecraftServer server = helper.getLevel().getServer();
+        Path journal = JournalService.inWorld(server).path().toAbsolutePath().normalize();
+        Path world = server.getWorldPath(LevelResource.ROOT).toAbsolutePath().normalize();
+        Path config = FMLPaths.CONFIGDIR.get().toAbsolutePath().normalize();
+        helper.assertTrue(
+                journal.startsWith(world) && !journal.startsWith(config),
+                "Журнал доски " + journal + " обязан лежать в папке мира " + world + ", а не в " + config);
+        helper.succeed();
     }
 
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
@@ -479,20 +494,24 @@ public final class BoardFirstStepsGameTests {
     }
 
     // Деревья соседних сцен попадают в обзор 16 блоков: расчистка отмечена сделанной по журналу, как после неё.
+    // Свет, ограда и дом раскладки готовы только по журналу (маркеры в мире их не заменяют) — отмечены так же.
     private static void groundsCleared(BoardService board, SpiritEntity spirit) {
-        String id = "first:clear_grounds";
-        board.board()
-                .submit(new BoardTicket(
-                        id,
-                        BoardCase.CLEAR_GROUNDS,
-                        Optional.empty(),
-                        50,
-                        board.board().now(),
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()));
-        closeTicket(board, id, spirit);
+        for (BoardCase step :
+                List.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
+            String id = "first:" + step.name().toLowerCase(Locale.ROOT);
+            board.board()
+                    .submit(new BoardTicket(
+                            id,
+                            step,
+                            Optional.empty(),
+                            50,
+                            board.board().now(),
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.of()));
+            closeTicket(board, id, spirit);
+        }
     }
 
     private static SpiritEntity smithySettlement(GameTestHelper helper) {

@@ -549,7 +549,19 @@ class ResourceResolverTests {
     }
 
     private static ScriptCall gather(String block, int count) {
-        return new ScriptCall(
-                "gather", Map.of("block", block, "count", count, "radius", CatalogLimits.HARVEST_RADIUS_DEFAULT));
+        // Брёвна ищутся в радиусе 32: расчистка участка вырубает деревья в 16 от дома.
+        int radius = block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
+        return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
+    }
+
+    @Test
+    void resolve_Log_GathersInWideRadius() {
+        TaskNode plan = ResourceResolver.resolve("oak_log", 2, KNOWLEDGE);
+
+        assertEquals(
+                new ScriptCall(
+                        "gather", Map.of("block", "oak_log", "count", 2, "radius", CatalogLimits.HARVEST_RADIUS_MAX)),
+                plan,
+                "Брёвна — в радиусе 32: после расчистки участка деревья в 16 от дома вырублены (приёмка «джунгли»)");
     }
 }

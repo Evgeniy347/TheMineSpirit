@@ -12,11 +12,13 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import net.neoforged.fml.loading.FMLPaths;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
 /**
- * Журнал доски рядом с конфигом сервера: {@code config/theminespirit/board-log.jsonl}.
+ * Журнал доски в папке мира: {@code <мир>/theminespirit/board-log.jsonl}. Не в {@code config/}: новый мир на том же
+ * сервере унаследовал бы «построено» прошлого мира (решение 54b п.4).
  * Запись идёт очередью и сбрасывается бюджетом за тик; при старте {@code DONE}-записи
  * возвращаются в ledger, поэтому «постройка стоит» переживает перезапуск, а «ждёт выдачи» — нет.
  */
@@ -33,8 +35,9 @@ public final class JournalService {
                 Objects.requireNonNull(path, "Путь журнала не может быть null: без него запись некуда класть"));
     }
 
-    public static JournalService inConfigDirectory() {
-        return new JournalService(FMLPaths.CONFIGDIR.get().resolve(LOG_FILE));
+    public static JournalService inWorld(MinecraftServer server) {
+        Objects.requireNonNull(server, "Сервер не может быть null: журнал доски лежит в папке его мира");
+        return new JournalService(server.getWorldPath(LevelResource.ROOT).resolve(LOG_FILE));
     }
 
     public Path path() {

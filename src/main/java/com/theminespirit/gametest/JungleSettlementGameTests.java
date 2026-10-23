@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -10,6 +11,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.net.BoardViewChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +29,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Приёмка владельца: новое поселение в джунглях без дуба, три духа с пустым инвентарём на общей доске
- * проходят этап 1 сами — верстак, сундуки, инструменты, шахта, печь, факелы, расчистка, забор, дом — и днём ни один
- * дух не простаивает дольше {@link #IDLE_LIMIT} тиков.
+ * проходят этап 1 сами — верстак, сундуки, инструменты, шахта, печь, факелы, расчистка, забор, дом — доска
+ * показывает этап 2, и днём ни один дух не простаивает дольше {@link #IDLE_LIMIT} тиков.
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -44,7 +46,9 @@ public final class JungleSettlementGameTests {
 
     // [флак] приёмка этапа 1 с нуля: рубка, крафт, шахта, плавка, расчистка, забор и дом тремя духами — десятки
     // тысяч тиков; предел — потолок прогона пачки, а не замер (замера ещё нет: тест краснеет до доделки этапа 1).
-    @GameTest(template = "settlement_arena", batch = "jungle_settlement", timeoutTicks = 24000)
+    // 24000 кончались на расчистке (тик ~22000, 23.10): ограда 23×23 и хижина после неё не помещались; день держит
+    // holdDayTime, простой меряет IDLE_LIMIT — потолок только даёт этапу дойти до конца.
+    @GameTest(template = "settlement_arena", batch = "jungle_settlement", timeoutTicks = 72000)
     public static void jungle_EmptySettlementThreeSpirits_FirstStageDone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
@@ -57,6 +61,7 @@ public final class JungleSettlementGameTests {
                 spirit(helper, HOME.offset(-2, 0, 0)), spirit(helper, HOME.offset(2, 0, 0)), spirit(helper, HOME));
         Map<UUID, Integer> idle = new HashMap<>();
         int[] worstIdle = {0};
+        String[] worstWhen = {"-"};
         helper.onEachTick(() -> {
             for (SpiritEntity spirit : spirits) {
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
@@ -64,7 +69,21 @@ public final class JungleSettlementGameTests {
                         || !board.board().assignedTo(spirit.getUUID()).isEmpty();
                 int ticks = busy ? 0 : idle.getOrDefault(spirit.getUUID(), 0) + 1;
                 idle.put(spirit.getUUID(), ticks);
-                worstIdle[0] = Math.max(worstIdle[0], ticks);
+                if (ticks > worstIdle[0]) {
+                    worstIdle[0] = ticks;
+                    // Кто и когда простаивал дольше всех: без этого красный прогон не говорит, какой шаг держал духа.
+                    worstWhen[0] = spirit.displayName() + " до тика " + helper.getTick() + ", открыто "
+                            + board.board().all().stream()
+                                    .filter(ticket -> board.board()
+                                            .statusOf(ticket.id())
+                                            .map(status -> status != BoardStatus.DONE)
+                                            .orElse(false))
+                                    .map(ticket -> ticket.id() + "="
+                                            + board.board()
+                                                    .statusOf(ticket.id())
+                                                    .orElse(null))
+                                    .toList();
+                }
             }
         });
 
@@ -75,10 +94,13 @@ public final class JungleSettlementGameTests {
                     missing.add(step);
                 }
             }
+            // Переход на этап 2 — надпись этапа в снимке доски, тот же расчёт, что видит игрок.
+            int stage = BoardViewChannel.stage(level).number();
             helper.assertTrue(
-                    worstIdle[0] <= IDLE_LIMIT && missing.isEmpty(),
-                    "Этап 1 в джунглях: простой " + worstIdle[0] + " тиков подряд (предел " + IDLE_LIMIT
-                            + "), нет " + missing + "; духи "
+                    worstIdle[0] <= IDLE_LIMIT && missing.isEmpty() && stage >= 2,
+                    "Этап 1 в джунглях: простой " + worstIdle[0] + " тиков подряд (" + worstWhen[0] + "; предел "
+                            + IDLE_LIMIT
+                            + "), нет " + missing + ", этап на доске " + stage + "; духи "
                             + spirits.stream()
                                     .map(spirit -> spirit.displayName() + "="
                                             + spirit.currentTaskScript().orElse("-"))
@@ -146,7 +168,22 @@ public final class JungleSettlementGameTests {
             {13, 5},
             {-5, -13},
             {5, 13},
-            {-8, 13}
+            {-8, 13},
+            // Лес за расчисткой (радиус 16): ближние деревья уходят под участок 23×23, ограда и хижина — из дальних.
+            {-20, -12},
+            {-20, 12},
+            {-12, -20},
+            {12, -20},
+            {-12, 20},
+            {12, 20},
+            {20, -12},
+            {20, 12},
+            {0, -22},
+            {0, 22},
+            {-20, -20},
+            {20, -20},
+            {-20, 20},
+            {20, 20}
         };
         for (int[] spot : spots) {
             BlockPos base = new BlockPos(CENTER + spot[0], 1, CENTER + spot[1]);

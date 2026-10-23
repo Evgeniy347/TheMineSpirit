@@ -7,6 +7,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
@@ -27,10 +28,10 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
+    public static final int CLEAR_QUARTERS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
-    private static final int MINE_DESCENT_OFFSET = 6;
     private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
     private static final String COUNT = "count";
@@ -46,8 +47,6 @@ public final class TicketPlans {
     private static final int GROUNDS_CLEAR_RADIUS = 16;
     private static final int CRATER_FILL_RADIUS = 1;
     private static final int DISMANTLE_RADIUS = 4;
-    private static final int LIGHTING_TORCHES = 4;
-    private static final int LIGHTING_OFFSET = 2;
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
     private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
@@ -98,7 +97,7 @@ public final class TicketPlans {
             case BUILD_MINE -> buildMineLevel(level, target);
             case BUILD_PEN -> buildPenLevel(level, target);
             case ENCHANT_ROOM -> enchantRoomLevel(level, target);
-            case BUILD_HOUSE -> buildHouse(target);
+            case BUILD_HOUSE -> buildHouse(level, target);
             case BUILD_WAREHOUSE -> buildWarehouseLevel(level, target);
             default -> legacyPlan(boardCase, target);
         };
@@ -116,12 +115,12 @@ public final class TicketPlans {
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
-            case STOCK_CHESTS -> craft("minecraft:chest", 2, target);
-            case CRAFTING_STATION -> craft("minecraft:crafting_table", 1, target);
+            case STOCK_CHESTS -> craftInYard("minecraft:chest", 2, target);
+            case CRAFTING_STATION -> craftInYard("minecraft:crafting_table", 1, target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
-            case CRAFT_FURNACE -> craft("minecraft:furnace", 1, target);
+            case CRAFT_FURNACE -> craftInYard("minecraft:furnace", 1, target);
             case CRAFT_TORCHES -> craft("minecraft:torch", torchCount(target), target);
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
@@ -143,7 +142,7 @@ public final class TicketPlans {
             case HUNT_WILD_SHEEP -> huntWildSheep(target);
             case HARVEST_HIVE -> harvestHive();
             case PLACE_BEEHIVE -> placeBeehive(target);
-            case BUILD_FENCE -> sequence(gotoTarget(target), schematic(FENCE_SCHEME, target));
+            case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
@@ -165,7 +164,7 @@ public final class TicketPlans {
     // 1×3 с шагом в блок до y=50 из файла — дух копает булыжник только здесь и выходит наверх пешком.
     public static BlockCoord mineDescentOrigin(BlockCoord home) {
         Objects.requireNonNull(home, "Дом не может быть null: спуск в шахту ставится в стороне от дома");
-        return new BlockCoord(home.x() + MINE_DESCENT_OFFSET, home.y() - 1, home.z());
+        return SettlementLayout.mineEntrance(home);
     }
 
     private static TaskNode mineDescent(TicketTarget target) {
@@ -337,6 +336,21 @@ public final class TicketPlans {
                                 CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
+    // Ограда — по периметру участка вокруг дома (SettlementLayout): точка задания — якорь участка.
+    private static TaskNode buildFence(TicketTarget target) {
+        return sequence(
+                gotoTarget(target), schematic(FENCE_SCHEME, SettlementLayout.fenceOrigin(target.target()), target));
+    }
+
+    // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
+    // габарита дома, иначе стройка дома упиралась в верстак у якоря (решение 54b п.2).
+    private static TaskNode craftInYard(String item, int count, TicketTarget target) {
+        return sequence(
+                gotoPoint(SettlementLayout.workYard(target.target())),
+                new ScriptCall(
+                        "craft", Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+    }
+
     private static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(
                 gotoTarget(target),
@@ -381,32 +395,17 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
-        // Ряд z−2 перед калиткой (x±2, x±3; вход шахты — x+6), вне ограды 9×9 (внутренность z+1..+7 — «обязана быть
-        // воздухом»):
-        // факел (2,2) внутри неё
-        // валил BUILD_FENCE «не совпало со схемой … torch в чёрном списке» (приёмка «джунгли»).
-        int[][] offsets = {
-            {LIGHTING_OFFSET, -LIGHTING_OFFSET},
-            {-LIGHTING_OFFSET, -LIGHTING_OFFSET},
-            {LIGHTING_OFFSET + 1, -LIGHTING_OFFSET},
-            {-LIGHTING_OFFSET - 1, -LIGHTING_OFFSET}
-        };
-        int torches = Math.min(LIGHTING_TORCHES, offsets.length);
-        List<TaskNode> steps = new ArrayList<>(torches + 1);
+        // Перед хижиной и за ней (SettlementLayout): внутри ограды клетки не заданы схемой, калитку освещают факелы на
+        // её
+        // столбах. Прежний ряд у дома (±2) попадал внутрь ограды 9×9 и валил её сверку.
+        List<BlockCoord> torches = SettlementLayout.lighting(target.target());
+        List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
         steps.add(gotoTarget(target));
-        for (int index = 0; index < torches; index++) {
-            int[] offset = offsets[index];
+        // Факелы могут лежать в сундуке или у соседа: acquire берёт их до расстановки, иначе «нет материала torch».
+        steps.add(new ScriptCall("acquire", Map.of(ITEM, "minecraft:torch", COUNT, torches.size())));
+        for (BlockCoord torch : torches) {
             steps.add(new ScriptCall(
-                    "place_block",
-                    Map.of(
-                            BLOCK,
-                            "minecraft:torch",
-                            "x",
-                            target.target().x() + offset[0],
-                            "y",
-                            target.target().y(),
-                            "z",
-                            target.target().z() + offset[1])));
+                    "place_block", Map.of(BLOCK, "minecraft:torch", "x", torch.x(), "y", torch.y(), "z", torch.z())));
         }
         return new SequenceNode(steps);
     }
@@ -479,13 +478,41 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
     }
 
+    // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
     private static TaskNode clearGrounds(TicketTarget target) {
         int radius = GROUNDS_CLEAR_RADIUS;
-        return sequence(
+        List<TaskNode> chunks = List.of(
                 clearGroundsChunk(target, -radius, -radius, -1, -1),
                 clearGroundsChunk(target, 0, -radius, radius, -1),
                 clearGroundsChunk(target, -radius, 0, -1, radius),
                 clearGroundsChunk(target, 0, 0, radius, radius));
+        int quarter = target.count();
+        boolean single = quarter >= 1 && quarter <= CLEAR_QUARTERS;
+        List<TaskNode> steps = new ArrayList<>(single ? List.of(chunks.get(quarter - 1)) : chunks);
+        if (single && quarter > 1) {
+            return new SequenceNode(steps);
+        }
+        // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
+        // земля — запас подсыпки), потом подсыпка ям.
+        PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
+        for (PlotLeveling.Box box : leveling.cut()) {
+            steps.add(new ScriptCall("clear_area", boxParams(box, Map.of())));
+        }
+        for (PlotLeveling.Box box : leveling.fill()) {
+            steps.add(new ScriptCall("fill", boxParams(box, Map.of(BLOCK, leveling.block()))));
+        }
+        return new SequenceNode(steps);
+    }
+
+    private static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {
+        Map<String, Object> params = new LinkedHashMap<>(extra);
+        params.put("x1", box.x1());
+        params.put("y1", box.y1());
+        params.put("z1", box.z1());
+        params.put("x2", box.x2());
+        params.put("y2", box.y2());
+        params.put("z2", box.z2());
+        return Map.copyOf(params);
     }
 
     private static ScriptCall clearGroundsChunk(TicketTarget target, int dx1, int dz1, int dx2, int dz2) {
@@ -506,9 +533,20 @@ public final class TicketPlans {
                         target.target().z() + dz2));
     }
 
-    private static TaskNode buildHouse(TicketTarget target) {
-        String scheme = target.schemeFile() == null ? DEFAULT_SCHEME : target.schemeFile();
-        return sequence(gotoTarget(target), schematic(scheme, target));
+    // Схема дома — по уровню из таблицы этапов (board/stages.json «schemes»): уровень 1 — хижина из дерева рядом,
+    // уровень 2 — каменный дом (решение 54b п.1); уровня без строки — каменный дом, как раньше.
+    private static TaskNode buildHouse(int level, TicketTarget target) {
+        if (target.schemeFile() != null) {
+            return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
+        }
+        Optional<String> staged = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_HOUSE, level);
+        if (staged.isEmpty()) {
+            return sequence(gotoTarget(target), schematic(DEFAULT_SCHEME, target));
+        }
+        // Дом из таблицы этапов — в центре участка (SettlementLayout): точка задания — якорь участка.
+        return sequence(
+                gotoTarget(target),
+                schematic(staged.orElseThrow(), SettlementLayout.houseOrigin(target.target()), target));
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {
@@ -718,11 +756,15 @@ public final class TicketPlans {
     }
 
     private static ScriptCall schematic(String scheme, TicketTarget target) {
+        return schematic(scheme, target.target(), target);
+    }
+
+    private static ScriptCall schematic(String scheme, BlockCoord origin, TicketTarget target) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("file", scheme);
-        params.put("x", target.target().x());
-        params.put("y", target.target().y());
-        params.put("z", target.target().z());
+        params.put("x", origin.x());
+        params.put("y", origin.y());
+        params.put("z", origin.z());
         if (target.wood() != null) {
             params.put(BuildSchematicParams.WOOD, target.wood());
         }

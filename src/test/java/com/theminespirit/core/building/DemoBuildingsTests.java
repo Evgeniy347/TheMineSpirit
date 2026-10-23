@@ -32,6 +32,7 @@ class DemoBuildingsTests {
                         "family_house",
                         "player_house",
                         "lamp",
+                        "hut",
                         "stone_house",
                         "storage_hut",
                         "storage",

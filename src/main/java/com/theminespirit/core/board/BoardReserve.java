@@ -31,6 +31,13 @@ public final class BoardReserve {
         return Map.copyOf(reserved);
     }
 
+    // Запас для источников заданий доски (первые шаги, факелы, запасы): за вычетом брони всех открытых заданий —
+    // иначе уголь для факелов пережигал брёвна, взятые под забор (решение 54b п.5).
+    public static StockView unreserved(StockView stock, Board board) {
+        Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустым StockView");
+        return new StockView(free(stock.available(), items(board)));
+    }
+
     // Запас за вычетом брони: id запаса могут быть полными («minecraft:stick»), бронь — короткими.
     public static Map<String, Integer> free(Map<String, Integer> stock, Map<String, Integer> reserved) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");

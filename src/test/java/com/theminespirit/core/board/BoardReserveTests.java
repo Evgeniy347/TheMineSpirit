@@ -44,4 +44,17 @@ class BoardReserveTests {
 
         assertEquals(Map.of("minecraft:stick", 2), free, "Бронь в коротких id вычитается из полных id запаса");
     }
+
+    @Test
+    void unreserved_FenceHoldsLogs_TorchesDoNotBurnThem() {
+        Board board = new Board(() -> 0);
+        board.submit(ticket("fence", BoardCase.BUILD_FENCE, Map.of("jungle_log", 4)));
+
+        StockView stock = BoardReserve.unreserved(new StockView(Map.of("jungle_log", 4)), board);
+
+        assertEquals(
+                Optional.empty(),
+                TorchRules.next(stock.available(), true, false),
+                "Брёвна под забор забронированы: уголь для факелов из них не пережигается (приёмка «джунгли»)");
+    }
 }

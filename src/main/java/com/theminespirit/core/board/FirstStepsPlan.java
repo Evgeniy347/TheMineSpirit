@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -17,6 +18,7 @@ import java.util.function.Predicate;
  * BLOCKED, пропускается — дух получает следующий шаг, а не стоит (правило владельца).
  */
 public final class FirstStepsPlan {
+    private static final Predicate<SettlementFacts> LAYOUT_BUILD = facts -> false;
     private static final List<Step> ORDER = order();
 
     private FirstStepsPlan() {}
@@ -42,6 +44,27 @@ public final class FirstStepsPlan {
         return Optional.empty();
     }
 
+    // Ближайший невыполненный шаг из wanted после current: его материалы добываются, пока current ещё идёт.
+    public static Optional<BoardCase> nextAfter(SettlementFacts facts, BoardCase current, Set<BoardCase> wanted) {
+        Objects.requireNonNull(facts, "Факты поселения не могут быть null: по ним видно, что уже сделано");
+        Objects.requireNonNull(wanted, "Набор шагов не может быть null: пустой задают пустым набором");
+        boolean passed = false;
+        for (Step step : ORDER) {
+            BoardCase boardCase = step.boardCase();
+            if (!passed) {
+                passed = boardCase == current;
+                continue;
+            }
+            boolean pending = !facts.done().contains(boardCase)
+                    && !facts.blocked().contains(boardCase)
+                    && !step.satisfied().test(facts);
+            if (pending && wanted.contains(boardCase)) {
+                return Optional.of(boardCase);
+            }
+        }
+        return Optional.empty();
+    }
+
     private static List<Step> order() {
         List<Step> steps = new ArrayList<>();
         steps.add(new Step(BoardCase.CRAFTING_STATION, SettlementFacts::craftingStation));
@@ -54,10 +77,15 @@ public final class FirstStepsPlan {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
         steps.add(new Step(BoardCase.CRAFT_FURNACE, SettlementFacts::furnace));
-        steps.add(new Step(BoardCase.LIGHTING, SettlementFacts::lighting));
+        // Расчистка — до факелов: факелы встают по углам участка (SettlementLayout), а до расчистки там деревья
+        // («клетка … занята», приёмка «джунгли» 23.10).
         steps.add(new Step(BoardCase.CLEAR_GROUNDS, SettlementFacts::groundsCleared));
-        steps.add(new Step(BoardCase.BUILD_FENCE, SettlementFacts::fence));
-        steps.add(new Step(BoardCase.BUILD_HOUSE, SettlementFacts::houses));
+        // Свет, ограда и дом — постройки раскладки участка (SettlementLayout): готовы, только когда их задание
+        // закрыто в журнале. Любой факел или кусок забора рядом их не заменяет: недостроенная ограда (93 из 105)
+        // считалась готовой, шаг больше не ставился, и этап 1 не закрывался (приёмка «джунгли» 23.10).
+        steps.add(new Step(BoardCase.LIGHTING, LAYOUT_BUILD));
+        steps.add(new Step(BoardCase.BUILD_FENCE, LAYOUT_BUILD));
+        steps.add(new Step(BoardCase.BUILD_HOUSE, LAYOUT_BUILD));
         steps.add(new Step(BoardCase.CRAFT_SMITHING_TABLE, SettlementFacts::smithingTable));
         steps.add(new Step(BoardCase.CRAFT_ANVIL, SettlementFacts::anvil));
         return List.copyOf(steps);

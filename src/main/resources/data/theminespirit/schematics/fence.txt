@@ -1,30 +1,47 @@
-# fence — ограда поселения 9×9 с калиткой во фронте (доска BUILD_FENCE); '.' — клетка обязана быть воздухом
+# fence — ограда участка поселения 23×23 (SettlementLayout, решение 54b п.2) с калиткой в середине северной стороны;
+# внутренность схемой не задана: дом, шахта, двор и факелы участка стоят внутри (сторож SettlementLayoutTests).
 type: defense
-size: 9x2x9   # Ш×В×Д   # Ш×В×Д
-entrance: 4,0,0
+size: 23x2x23   # Ш×В×Д
+entrance: 11,0,0
 exemptions:
   - rule: roof
     reason: "ограда поселения открыта сверху по замыслу: это забор, а не здание"
   - rule: inner_height
     reason: "ограда — периметр забора без пола и потолка: внутренней высоты нет"
+  - rule: light
+    reason: "внутренность участка 23×23 освещают факелы шага LIGHTING вокруг хижины (SettlementLayout.lighting) и факелы на столбах углов и калитки; свои факелы по сторонам ограды удваивали свет и съедали уголь этапа 1"
 legend:
   'G': oak_fence_gate[facing=north]
   'F': oak_fence
   'L': oak_log[axis=y]
   'T': torch
 layers:
-  - y0 забор, столбы по углам и у калитки: |
-      LFFLGLFFL
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      F.......F
-      LFFFFFFFL
-  - y1 факелы на столбах: |
-      T  T T  T
+  - y0 забор, столбы по углам, у калитки и через 5–6 клеток: |
+      LFFFFFLFFFLGLFFFLFFFFFL
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      L                     L
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      L                     L
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      L                     L
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      F                     F
+      LFFFFFLFFFFLFFFFLFFFFFL
+  - y1 факелы на столбах углов и калитки: |
+      T         T T         T
 
 
 
@@ -32,4 +49,18 @@ layers:
 
 
 
-      T       T
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      T                     T

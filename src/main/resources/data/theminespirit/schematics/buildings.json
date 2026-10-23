@@ -8,6 +8,7 @@
    {"level": 3, "scheme": "player_house_3"}, {"level": 4, "scheme": "player_house_4"}]},
   {"id": "lamp", "name": "Светильник", "type": "infrastructure", "levels": [
    {"level": 1, "scheme": "torch_post"}, {"level": 2, "scheme": "lamp_2"}, {"level": 3, "scheme": "lamp_3"}]},
+  {"id": "hut", "name": "Хижина", "type": "housing", "levels": [{"level": 1, "scheme": "hut_1"}]},
   {"id": "stone_house", "name": "Каменный дом", "type": "housing", "levels": [{"level": 0, "scheme": "stone_house"}]},
   {"id": "storage_hut", "name": "Склад-хижина", "type": "storage", "levels": [{"level": 0, "scheme": "storage_hut"}]},
   {"id": "storage", "name": "Склад", "type": "storage", "levels": [

@@ -43,13 +43,16 @@ public final class CaseMaterials {
         Objects.requireNonNull(plan, "План кейса не может быть null: без него неизвестно, что нужно собрать");
         Objects.requireNonNull(source, "Источник материалов не может быть null: без него рецепт не прочитать");
         Map<String, Integer> need = new HashMap<>();
+        // acquire — «иметь столько», а не расход: тот же предмет, поставленный следом (факелы освещения), не
+        // удваивает нужду.
+        Map<String, Integer> acquired = new HashMap<>();
         Deque<TaskNode> queue = new ArrayDeque<>();
         queue.add(plan);
         while (!queue.isEmpty()) {
             switch (queue.poll()) {
                 case ScriptCall call -> {
                     if (craftOnly == null) {
-                        addCall(need, call, source);
+                        addCall(need, acquired, call, source);
                     } else if ("craft".equals(call.script()) && craftOnly.equals(normalize(text(call, "item")))) {
                         addCraft(need, call, source);
                     }
@@ -66,15 +69,17 @@ public final class CaseMaterials {
                 }
             }
         }
+        acquired.forEach((item, count) -> need.merge(item, count, Math::max));
         return Map.copyOf(need);
     }
 
-    private static void addCall(Map<String, Integer> need, ScriptCall call, MaterialSource source) {
+    private static void addCall(
+            Map<String, Integer> need, Map<String, Integer> acquired, ScriptCall call, MaterialSource source) {
         switch (call.script()) {
             case "craft" -> addCraft(need, call, source);
             case "build_schematic" -> addSchematic(need, call, source);
             case "place_block" -> merge(need, normalize(text(call, "block")), 1);
-            case "acquire" -> merge(need, normalize(text(call, "item")), integer(call, "count"));
+            case "acquire" -> merge(acquired, normalize(text(call, "item")), integer(call, "count"));
             default -> {}
         }
     }

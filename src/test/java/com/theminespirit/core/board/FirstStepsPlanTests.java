@@ -18,6 +18,9 @@ import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
 
 class FirstStepsPlanTests {
+    private static final Set<BoardCase> LAYOUT =
+            EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
         chain.add(BoardCase.CRAFTING_STATION);
@@ -26,8 +29,8 @@ class FirstStepsPlanTests {
         chain.add(BoardCase.BUILD_MINE);
         chain.addAll(ToolSet.stone());
         chain.add(BoardCase.CRAFT_FURNACE);
-        chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.CLEAR_GROUNDS);
+        chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.BUILD_FENCE);
         chain.add(BoardCase.BUILD_HOUSE);
         chain.add(BoardCase.CRAFT_SMITHING_TABLE);
@@ -39,7 +42,10 @@ class FirstStepsPlanTests {
         List<BoardCase> chain = chain();
         Set<BoardCase> passed = EnumSet.noneOf(BoardCase.class);
         passed.addAll(chain.subList(0, Math.min(step, chain.size())));
-        return facts(passed, Set.of(), Set.of());
+        // Постройки раскладки (свет, ограда, дом) готовы только по журналу: пройденные — закрыты в нём.
+        Set<BoardCase> done = EnumSet.noneOf(BoardCase.class);
+        passed.stream().filter(LAYOUT::contains).forEach(done::add);
+        return facts(passed, done, Set.of());
     }
 
     private static SettlementFacts facts(Set<BoardCase> world, Set<BoardCase> done, Set<BoardCase> blocked) {
@@ -109,11 +115,16 @@ class FirstStepsPlanTests {
                 chain.indexOf(BoardCase.CRAFTING_STATION) + 1,
                 chain.indexOf(BoardCase.STOCK_CHESTS),
                 "Сундуки — сразу после верстака (владелец 23.10): добыча с первых шагов складывается в сундук");
-        for (BoardCase building : List.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
+        for (BoardCase building : List.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
             assertTrue(
                     chain.indexOf(building) > light,
                     building + " — после факелов: постройки только после инструментов, шахты и света");
         }
+        assertTrue(
+                chain.indexOf(BoardCase.CLEAR_GROUNDS) > chain.indexOf(BoardCase.CRAFT_FURNACE)
+                        && chain.indexOf(BoardCase.CLEAR_GROUNDS) < light,
+                "Расчистка — после инструментов и шахты, но до факелов: факелы встают по углам участка, где до"
+                        + " расчистки деревья");
     }
 
     @Test
@@ -226,5 +237,16 @@ class FirstStepsPlanTests {
     @Provide
     Arbitrary<SettlementFacts> settlementFacts() {
         return Arbitraries.integers().between(0, chain().size()).map(FirstStepsPlanTests::factsAt);
+    }
+
+    @Test
+    void nextAfter_ClearingRuns_FenceMaterialsAhead() {
+        SettlementFacts facts = factsAt(chain().indexOf(BoardCase.CLEAR_GROUNDS));
+
+        assertEquals(
+                Optional.of(BoardCase.BUILD_FENCE),
+                FirstStepsPlan.nextAfter(
+                        facts, BoardCase.CLEAR_GROUNDS, Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)),
+                "Пока идёт расчистка, материалы ограды добываются заранее: духи не простаивают");
     }
 }
