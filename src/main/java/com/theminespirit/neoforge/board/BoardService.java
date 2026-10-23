@@ -530,9 +530,14 @@ public final class BoardService {
     private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);
+        // Дух ждёт своё задание, только если может его взять сейчас: держатель на паузе по кейсу (провалы)
+        // или не годный к своему заданию иначе простаивал бы, не получая и чужих (INC-23).
         Set<UUID> awaited = new HashSet<>();
         for (BoardTicket ticket : claimable) {
-            ticket.assignee().ifPresent(awaited::add);
+            ticket.assignee()
+                    .filter(holder ->
+                            level.getEntity(holder) instanceof SpiritEntity own && free(own, held, ticket, now))
+                    .ifPresent(awaited::add);
         }
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now, awaited);
