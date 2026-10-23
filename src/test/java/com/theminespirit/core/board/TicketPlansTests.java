@@ -228,6 +228,26 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_Lighting_TorchesOutsideFenceFootprint() {
+        TicketTarget home = target();
+
+        List<String> inside = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
+                .filter(call -> {
+                    int dx = (Integer) call.params().get("x") - home.target().x();
+                    int dz = (Integer) call.params().get("z") - home.target().z();
+                    return Math.abs(dx) <= 4 && dz >= 0 && dz <= 8;
+                })
+                .map(call -> call.params().get("x") + "," + call.params().get("z"))
+                .toList();
+
+        assertEquals(
+                List.of(),
+                inside,
+                "Факел освещения внутри ограды 9×9 (x±4, z 0..8 от дома) ломал BUILD_FENCE: внутренность схемы "
+                        + "обязана быть воздухом, а факел под защитой не убрать (приёмка «джунгли»)");
+    }
+
+    @Test
     void plan_BuildFence_UsesFenceScheme() {
         TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, target());
 

@@ -209,12 +209,19 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private String representative(IngredientSpec slot) {
+        // Вариант из запаса добывать не надо — проверка добываемости только для породы поселения: полный обход
+        // рецептов для каждого предмета запаса (каменные кирпичи…) вешал серверный поток (приёмка «джунгли»).
         Optional<String> preferred = WoodSpecies.prefer(slot.alternatives(), available, species)
-                .filter(alternative -> canObtain(alternative, new HashSet<>()));
+                .filter(alternative -> held(alternative) || canObtain(alternative, new HashSet<>()));
         if (preferred.isPresent()) {
             return preferred.get();
         }
         return pickRepresentative(slot.alternatives());
+    }
+
+    private boolean held(String item) {
+        String name = ItemIds.normalize(item);
+        return available.getOrDefault(name, 0) > 0 || available.getOrDefault("minecraft:" + name, 0) > 0;
     }
 
     private String pickRepresentative(List<String> alternatives) {

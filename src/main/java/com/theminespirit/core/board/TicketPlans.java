@@ -381,11 +381,15 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
+        // Ряд z−2 перед калиткой (x±2, x±3; вход шахты — x+6), вне ограды 9×9 (внутренность z+1..+7 — «обязана быть
+        // воздухом»):
+        // факел (2,2) внутри неё
+        // валил BUILD_FENCE «не совпало со схемой … torch в чёрном списке» (приёмка «джунгли»).
         int[][] offsets = {
-            {LIGHTING_OFFSET, LIGHTING_OFFSET},
-            {-LIGHTING_OFFSET, LIGHTING_OFFSET},
             {LIGHTING_OFFSET, -LIGHTING_OFFSET},
-            {-LIGHTING_OFFSET, -LIGHTING_OFFSET}
+            {-LIGHTING_OFFSET, -LIGHTING_OFFSET},
+            {LIGHTING_OFFSET + 1, -LIGHTING_OFFSET},
+            {-LIGHTING_OFFSET - 1, -LIGHTING_OFFSET}
         };
         int torches = Math.min(LIGHTING_TORCHES, offsets.length);
         List<TaskNode> steps = new ArrayList<>(torches + 1);
