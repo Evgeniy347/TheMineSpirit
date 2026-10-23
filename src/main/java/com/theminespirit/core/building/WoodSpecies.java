@@ -76,6 +76,35 @@ public final class WoodSpecies {
         return best;
     }
 
+    // Брёвен рядом нет (вырублены за долгую игру или не попали в выборку) — порода по биому: дуб по умолчанию
+    // ставил ограду из дуба в джунглях, gather:oak_log не добывался (INC-37, живой прогон 24.10).
+    public static String ofBiome(String biome) {
+        Objects.requireNonNull(biome, "Биом не может быть null: по нему выбирается порода");
+        String path = biome.substring(biome.indexOf(':') + 1);
+        if (path.contains("cherry")) {
+            return "cherry";
+        }
+        if (path.contains("jungle")) {
+            return "jungle";
+        }
+        if (path.contains("mangrove")) {
+            return "mangrove";
+        }
+        if (path.contains("dark_forest")) {
+            return "dark_oak";
+        }
+        if (path.contains("birch")) {
+            return "birch";
+        }
+        if (path.contains("savanna")) {
+            return "acacia";
+        }
+        if (path.contains("taiga") || path.contains("grove") || path.contains("snowy")) {
+            return "spruce";
+        }
+        return OAK;
+    }
+
     public static boolean hasLogs(Map<String, Integer> stock) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         return ALL.stream().anyMatch(species -> logs(stock, species) > 0);
