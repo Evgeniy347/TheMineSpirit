@@ -64,6 +64,15 @@ public final class TransferWatch {
             return ensureBuildTransfers(level, service, spirits, craftTicket, crafter);
         }
         Optional<String> craftItem = TicketPlans.craftItem(craftTicket.boardCase());
+        TicketTarget target = service.targetOf(craftTicket.id(), spirits);
+        // Добыча крафтового (забор ×72) — тот же крафт: брёвна после расчистки лежат у расчищавшего, а добытчик
+        // падал «не удалось добыть jungle_fence: в инвентаре 0» (приёмка «джунгли» 23.10).
+        boolean gather = craftItem.isEmpty()
+                && craftTicket.boardCase() == BoardCase.GATHER_MATERIALS
+                && target.supplyItem() != null;
+        if (gather) {
+            craftItem = Optional.of(ItemIds.normalize(target.supplyItem()));
+        }
         if (craftItem.isEmpty()) {
             return false;
         }
@@ -72,8 +81,10 @@ public final class TransferWatch {
         RecipeKnowledge recipes = RecipeKnowledge.of(level)
                 .preferring(stock.available(), SettlementWood.of(level, place, stock.available()));
         List<Ingredient> ingredients = new ArrayList<>();
-        craftNeed(recipes, craftTicket, service.targetOf(craftTicket.id(), spirits), craftItem.orElseThrow())
-                .forEach((item, count) -> ingredients.add(new Ingredient(ItemIds.normalize(item), count)));
+        Map<String, Integer> need = gather
+                ? gatherNeed(recipes, craftItem.orElseThrow(), target.supplyCount())
+                : craftNeed(recipes, craftTicket, target, craftItem.orElseThrow());
+        need.forEach((item, count) -> ingredients.add(new Ingredient(ItemIds.normalize(item), count)));
         if (ingredients.isEmpty()) {
             return false;
         }
@@ -184,6 +195,16 @@ public final class TransferWatch {
         return submitted || active;
     }
 
+    // Ингредиенты на все крафты добычи: ×72 забора — 24 крафта по 3, а не один.
+    private static Map<String, Integer> gatherNeed(RecipeKnowledge recipes, String item, int count) {
+        int output = Math.max(recipes.outputCount(item), 1);
+        int crafts = (Math.max(count, 1) + output - 1) / output;
+        Map<String, Integer> need = new LinkedHashMap<>();
+        recipes.ingredientsFor(item)
+                .forEach(ingredient -> need.merge(ingredient.item(), ingredient.count() * crafts, Integer::sum));
+        return need;
+    }
+
     // Ингредиенты на все крафты задания (torch ×8 — два крафта), а не на один.
     private static Map<String, Integer> craftNeed(
             RecipeKnowledge recipes, BoardTicket craftTicket, TicketTarget target, String item) {
@@ -227,7 +248,9 @@ public final class TransferWatch {
     public static Set<String> liveCauses(BoardService service) {
         Set<String> live = new HashSet<>();
         for (BoardTicket ticket : service.board().all()) {
-            if (TicketPlans.craftItem(ticket.boardCase()).isEmpty() && !BUILDS.contains(ticket.boardCase())) {
+            if (TicketPlans.craftItem(ticket.boardCase()).isEmpty()
+                    && !BUILDS.contains(ticket.boardCase())
+                    && ticket.boardCase() != BoardCase.GATHER_MATERIALS) {
                 continue;
             }
             BoardStatus status = service.board().statusOf(ticket.id()).orElse(null);

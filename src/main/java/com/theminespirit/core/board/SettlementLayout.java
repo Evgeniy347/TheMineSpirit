@@ -9,8 +9,8 @@ import java.util.Objects;
  * участка. Участок — квадрат {@link #PLOT}×{@link #PLOT} (участок дома семьи 23×23 — решение владельца по поселению),
  * по периметру — ограда {@code fence} с калиткой в середине северной стороны; хижина {@code hut_1} — в центре
  * дверью к калитке; вход в шахту — внутри ограды, в стороне от хижины с отступом не меньше 3;
- * рабочий двор (верстак, сундуки, печь) — по другую сторону хижины; факелы освещения — по внутренним углам,
- * у калитки — факелы на её столбах из схемы ограды. Ничто не пересекается — сторож {@code SettlementLayoutTests}.
+ * рабочий двор (верстак, сундуки, печь) — по другую сторону хижины; факелы освещения — по углам вокруг хижины,
+ * у калитки и по углам ограды — факелы на её столбах из схемы ограды. Ничто не пересекается — сторож {@code SettlementLayoutTests}.
  */
 public final class SettlementLayout {
     public static final int PLOT = 23;
@@ -20,6 +20,7 @@ public final class SettlementLayout {
     public static final int HOUSE_DEPTH = 6;
     public static final int MINE_OFFSET = 6;
     public static final int YARD_OFFSET = -6;
+    public static final int LIGHT_OFFSET = 4;
 
     private SettlementLayout() {}
 
@@ -53,10 +54,12 @@ public final class SettlementLayout {
         return new BlockCoord(anchor.x() + YARD_OFFSET, anchor.y(), anchor.z());
     }
 
-    // Факелы освещения на уровне ног — внутренние углы участка (у калитки светят факелы на её столбах).
+    // Факелы освещения на уровне ног — по углам вокруг хижины, с отступом от стен (у калитки и по углам ограды
+    // светят факелы на её столбах). Углы участка не годились: там до расчистки деревья, после — «стоянка
+    // недостижима» (приёмка «джунгли» 23.10).
     public static List<BlockCoord> lighting(BlockCoord anchor) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставятся факелы");
-        int inner = HALF - 1;
+        int inner = LIGHT_OFFSET;
         return List.of(
                 new BlockCoord(anchor.x() - inner, anchor.y(), anchor.z() - inner),
                 new BlockCoord(anchor.x() + inner, anchor.y(), anchor.z() - inner),

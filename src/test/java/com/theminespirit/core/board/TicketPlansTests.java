@@ -228,23 +228,30 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_Lighting_TorchesOutsideFenceFootprint() {
+    void plan_Lighting_TorchesInsideFenceOffHouse() {
         TicketTarget home = target();
+        BlockCoord house = SettlementLayout.houseOrigin(home.target());
 
-        List<String> inside = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
+        List<String> wrong = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
                 .filter(call -> {
-                    int dx = (Integer) call.params().get("x") - home.target().x();
-                    int dz = (Integer) call.params().get("z") - home.target().z();
-                    return Math.abs(dx) <= 4 && dz >= 0 && dz <= 8;
+                    int x = (Integer) call.params().get("x");
+                    int z = (Integer) call.params().get("z");
+                    boolean onFenceOrOut = Math.abs(x - home.target().x()) >= SettlementLayout.HALF
+                            || Math.abs(z - home.target().z()) >= SettlementLayout.HALF;
+                    boolean inHouse = x >= house.x()
+                            && x < house.x() + SettlementLayout.HOUSE_WIDTH
+                            && z >= house.z()
+                            && z < house.z() + SettlementLayout.HOUSE_DEPTH;
+                    return onFenceOrOut || inHouse;
                 })
                 .map(call -> call.params().get("x") + "," + call.params().get("z"))
                 .toList();
 
         assertEquals(
                 List.of(),
-                inside,
-                "Факел освещения внутри ограды 9×9 (x±4, z 0..8 от дома) ломал BUILD_FENCE: внутренность схемы "
-                        + "обязана быть воздухом, а факел под защитой не убрать (приёмка «джунгли»)");
+                wrong,
+                "Факел освещения на линии ограды или в габарите хижины ломал их сверку: факелы — внутри участка, "
+                        + "вне построек (приёмка «джунгли»)");
     }
 
     @Test

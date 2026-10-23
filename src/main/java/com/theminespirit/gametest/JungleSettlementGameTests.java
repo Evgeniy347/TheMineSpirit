@@ -46,7 +46,9 @@ public final class JungleSettlementGameTests {
 
     // [флак] приёмка этапа 1 с нуля: рубка, крафт, шахта, плавка, расчистка, забор и дом тремя духами — десятки
     // тысяч тиков; предел — потолок прогона пачки, а не замер (замера ещё нет: тест краснеет до доделки этапа 1).
-    @GameTest(template = "settlement_arena", batch = "jungle_settlement", timeoutTicks = 24000)
+    // 24000 кончались на расчистке (тик ~22000, 23.10): ограда 23×23 и хижина после неё не помещались; день держит
+    // holdDayTime, простой меряет IDLE_LIMIT — потолок только даёт этапу дойти до конца.
+    @GameTest(template = "settlement_arena", batch = "jungle_settlement", timeoutTicks = 72000)
     public static void jungle_EmptySettlementThreeSpirits_FirstStageDone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
@@ -166,7 +168,22 @@ public final class JungleSettlementGameTests {
             {13, 5},
             {-5, -13},
             {5, 13},
-            {-8, 13}
+            {-8, 13},
+            // Лес за расчисткой (радиус 16): ближние деревья уходят под участок 23×23, ограда и хижина — из дальних.
+            {-20, -12},
+            {-20, 12},
+            {-12, -20},
+            {12, -20},
+            {-12, 20},
+            {12, 20},
+            {20, -12},
+            {20, 12},
+            {0, -22},
+            {0, 22},
+            {-20, -20},
+            {20, -20},
+            {-20, 20},
+            {20, 20}
         };
         for (int[] spot : spots) {
             BlockPos base = new BlockPos(CENTER + spot[0], 1, CENTER + spot[1]);

@@ -394,19 +394,14 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
-        // Внутренние углы участка (SettlementLayout): внутри ограды клетки не заданы схемой, калитку освещают
-        // факелы на её столбах. Прежний ряд у дома (±2) попадал внутрь ограды 9×9 и валил её сверку.
+        // Углы вокруг хижины (SettlementLayout): внутри ограды клетки не заданы схемой, калитку освещают факелы на её
+        // столбах. Прежний ряд у дома (±2) попадал внутрь ограды 9×9 и валил её сверку.
         List<BlockCoord> torches = SettlementLayout.lighting(target.target());
-        List<TaskNode> steps = new ArrayList<>(2 * torches.size() + 1);
+        List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
         steps.add(gotoTarget(target));
+        // Факелы могут лежать в сундуке или у соседа: acquire берёт их до расстановки, иначе «нет материала torch».
+        steps.add(new ScriptCall("acquire", Map.of(ITEM, "minecraft:torch", COUNT, torches.size())));
         for (BlockCoord torch : torches) {
-            // Угол участка до расчистки бывает занят деревом («клетка занята», приёмка «джунгли» 23.10): клетку
-            // факела и над ней сначала освобождают.
-            steps.add(new ScriptCall(
-                    "clear_area",
-                    boxParams(
-                            new PlotLeveling.Box(torch.x(), torch.y(), torch.z(), torch.x(), torch.y() + 1, torch.z()),
-                            Map.of())));
             steps.add(new ScriptCall(
                     "place_block", Map.of(BLOCK, "minecraft:torch", "x", torch.x(), "y", torch.y(), "z", torch.z())));
         }

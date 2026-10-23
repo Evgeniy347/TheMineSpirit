@@ -57,6 +57,9 @@ import org.slf4j.Logger;
  */
 public final class FirstStepsRunner {
     private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+    // Заранее — только с расчистки: раньше добыча забора отнимала доски у первых инструментов (простой 1947 тиков).
+    private static final Set<BoardCase> PREFETCH_DURING =
+            EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
@@ -84,6 +87,8 @@ public final class FirstStepsRunner {
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         if (next.isEmpty() || hasActive(service, next.orElseThrow())) {
             TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0), now);
+            next.filter(PREFETCH_DURING::contains)
+                    .ifPresent(current -> prefetch(level, service, facts, home, stock, current, now));
             return;
         }
         BoardCase caseValue = next.orElseThrow();
@@ -178,6 +183,32 @@ public final class FirstStepsRunner {
                 || state.is(Blocks.COBBLESTONE)
                 || state.is(Blocks.CLAY)
                 || !state.getFluidState().isEmpty();
+    }
+
+    // Пока шаг идёт (расчистку ведёт один дух), материалы ближайшей деревянной стройки добываются заранее: иначе
+    // двое духов простаивали всю расчистку (приёмка «джунгли» 23.10: простой 3844 тика при открытой расчистке).
+    private static void prefetch(
+            ServerLevel level,
+            BoardService service,
+            SettlementFacts facts,
+            BlockCoord home,
+            StockView stock,
+            BoardCase current,
+            long now) {
+        Optional<BoardCase> building = FirstStepsPlan.nextAfter(facts, current, WOODEN_BUILDINGS);
+        if (building.isEmpty() || hasActive(service, building.orElseThrow())) {
+            return;
+        }
+        String wood = woodOf(level, home, stock);
+        MaterialSource source = materialSource(level);
+        Map<String, Integer> need = new HashMap<>();
+        materials(source, building.orElseThrow(), targetFor(building.orElseThrow(), home, wood))
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        ResourceGate.missing(new StockNeed(need), stock).forEach((item, count) -> {
+            if (gatherable(item, facts)) {
+                postGather(service, source, home, item, count, now);
+            }
+        });
     }
 
     private static String woodOf(ServerLevel level, BlockCoord home, StockView stock) {

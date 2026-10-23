@@ -228,18 +228,17 @@ public final class ResourceResolver {
             return new SequenceNode(batches);
         }
 
+        // Брёвна — в радиусе 32: расчистка участка вырубает деревья в 16 от дома, и забор с хижиной ждали
+        // «подходящих блоков в радиусе 16 не осталось» (приёмка «джунгли» 23.10). Как булыжник и уголь.
+        private static ScriptCall gather(String block, int count) {
+            int radius =
+                    block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
+            return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
+        }
+
         private ScriptCall single(String script, String item, int count) {
             return switch (script) {
-                case "gather" ->
-                    new ScriptCall(
-                            "gather",
-                            Map.of(
-                                    "block",
-                                    knowledge.gatherBlockFor(item),
-                                    "count",
-                                    count,
-                                    "radius",
-                                    CatalogLimits.HARVEST_RADIUS_DEFAULT));
+                case "gather" -> gather(knowledge.gatherBlockFor(item), count);
                 case "craft" ->
                     new ScriptCall(
                             "craft",
