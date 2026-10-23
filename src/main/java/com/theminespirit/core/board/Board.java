@@ -335,16 +335,20 @@ public final class Board {
         tickets.put(id, ticket);
         statuses.put(id, BoardStatus.ASSIGNED);
         claimAssignees.put(id, spirit);
+        // Смена занятия видна в журнале доски (INC-35): бой, стража и отдых — тоже работа духа.
+        events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
     }
 
     public boolean vacate(UUID spirit) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие снимается с конкретного духа");
         String id = BoardActivities.idOf(spirit);
-        if (tickets.remove(id) == null) {
+        BoardTicket ticket = tickets.remove(id);
+        if (ticket == null) {
             return false;
         }
         statuses.remove(id);
         claimAssignees.remove(id);
+        events.transition(BoardLog.Event.CANCELLED, ticket, spirit, nowTicks.getAsLong());
         return true;
     }
 

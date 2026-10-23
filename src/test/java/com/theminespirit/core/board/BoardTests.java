@@ -953,6 +953,22 @@ class BoardTests {
                 "BLOCKED не останавливает цепочку первых шагов навсегда: после паузы — новая попытка");
     }
 
+    @Test
+    void occupy_ActivityChangeAndVacate_Journaled() {
+        List<String> events = new ArrayList<>();
+        Board board =
+                new Board(() -> 0L, (event, ticket, holder, tick) -> events.add(event + ":" + ticket.boardCase()));
+
+        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_COMBAT, 0);
+        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_COMBAT, 0);
+        board.vacate(SPIRIT_ONE);
+
+        assertEquals(
+                List.of("ASSIGNED:ACTIVITY_COMBAT", "CANCELLED:ACTIVITY_COMBAT"),
+                events,
+                "Бой и стража видны в журнале доски: постановка и снятие занятия (INC-35), без повторов");
+    }
+
     private static BoardTicket simpleTicket(String id, BoardCase boardCase) {
         return new BoardTicket(
                 id,
