@@ -672,9 +672,18 @@ out=$(ARGS_DIR="$argsdir" THEMINESPIRIT_GRADLEW="$work/bin/shard-record" \
     THEMINESPIRIT_GAMETEST_SHARDS=1 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
     THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest --full 2>&1)
 code=$?
-[ "$code" = 0 ] && grep -qx "exclude=" build/gametest-run/theminespirit-gametest.properties \
-    && ok "gametest-full: --full не исключает демо-аудиты" \
+[ "$code" = 0 ] && grep -qx "exclude=demo_audit" build/gametest-run/theminespirit-gametest.properties \
+    && ok "gametest-full: --full тоже не гоняет ручные демо-аудиты" \
     || fail "gametest-full: код=$code, args=$(tr '\n' ' ' <"$argsdir/args-0" 2>/dev/null), вывод: $out"
+# Явное имя пачки — единственный способ запустить демо-аудит: фильтр доходит до gradle, исключения нет.
+out=$(ARGS_DIR="$argsdir" THEMINESPIRIT_GRADLEW="$work/bin/shard-record" \
+    THEMINESPIRIT_GAMETEST_SHARDS=1 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest demo_audit_familyhouse 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.filter=demo_audit_familyhouse" "$argsdir/args-0" \
+    && grep -qx "exclude=" build/gametest-run/theminespirit-gametest.properties \
+    && ok "gametest-manual-demo: явная пачка демо-аудита идёт без исключения" \
+    || fail "gametest-manual-demo: код=$code, args=$(tr '\n' ' ' <"$argsdir/args-0" 2>/dev/null), вывод: $out"
 rm -rf "$work/tmp/lock.d" "$argsdir"
 
 exit $failed

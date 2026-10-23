@@ -7,7 +7,9 @@
 # Пределы времени (переменные окружения, секунды):
 #   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 90), THEMINESPIRIT_UNIT_STOP_SECONDS (200)
 #   THEMINESPIRIT_GAMETEST_WARN_SECONDS (120), THEMINESPIRIT_GAMETEST_STOP_SECONDS (200) — быстрый набор
-#   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS (600), THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS (1200) — ночной --full
+#   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS (180), THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS (300) — --full
+# Руководство: демо-аудиты построек — ручные тесты, в общих прогонах (в том числе --full) не идут;
+# запускаются только явным фильтром, например scripts/test.sh gametest demo_audit_familyhouse.
 # Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
 # Без -e: коды проверяются явно; под -e пустой grep в разборе падения молча обрывал скрипт без итога.
 set -uo pipefail
@@ -17,8 +19,6 @@ cd "$(dirname "$0")/.."
 # (с символической ссылкой) каталог сервера не нашёлся бы.
 GAMETEST_WORKTREE="$(pwd -P)"
 GAMETEST_RUN_DIR="$GAMETEST_WORKTREE/build/gametest-run"
-# Замер длительности пачек прошлого полного/быстрого прогона: по нему шарды делятся ровно (см. ниже).
-GAMETEST_WEIGHTS_FILE="$GAMETEST_WORKTREE/build/gametest-shard-weights.txt"
 
 GRADLEW="${THEMINESPIRIT_GRADLEW:-./gradlew}"
 LOG_DIR="TestResults/logs"
@@ -29,8 +29,8 @@ UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-90}"
 UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-200}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-120}"
 GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-200}"
-GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-600}"
-GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-1200}"
+GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-180}"
+GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-300}"
 
 # Замок GameTest (переиспользуем логику из scripts/gametest.sh).
 # Дефолт: на Windows — C:\ProgramData\theminespirit (общий для всех сессий и пользователей машины;
@@ -65,7 +65,7 @@ usage() {
 
 Режимы:
   unit      быстрые JUnit-тесты (без запуска игры)
-  gametest  GameTest под замком: быстрый набор без демо-аудитов (по умолчанию) или полный (--full)
+  gametest  GameTest под замком: общий набор без ручных демо-аудитов (--full — он же, с пределом полного)
 
 Шарды GameTest: на ПК 3 сервера, на Linux 1; THEMINESPIRIT_GAMETEST_SHARDS перекрывает.
 
@@ -75,6 +75,7 @@ usage() {
   scripts/test.sh unit --fast-analyzers
   scripts/test.sh gametest
   scripts/test.sh gametest --full
+  scripts/test.sh gametest demo_audit_familyhouse
   scripts/test.sh gametest CombatGameTests
   scripts/test.sh gametest combat_directive
   scripts/test.sh gametest CombatGameTests.combat_target_spirit
@@ -85,8 +86,8 @@ usage() {
   THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 200)
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение быстрого gametest (по умолчанию 120)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп быстрого gametest (по умолчанию 200)
-  THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS  предупреждение полного gametest (600)
-  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп полного gametest (1200)
+  THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS  предупреждение --full (180)
+  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп --full (300)
   THEMINESPIRIT_GAMETEST_SHARDS      число параллельных серверов GameTest (ПК 3, Linux 1)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
@@ -795,28 +796,6 @@ analyze_gametest() {
     return 1
 }
 
-# Длительности пачек из лога сервера — дельта между строками «Running test batch '…'».
-# Формат вывода: «имя_пачки мс». Последняя пачка без следующей отбрасывается (время неполное).
-batch_weights() {
-    sed -nE "s/^\[([0-9]{2}):([0-9]{2}):([0-9]{2})\].*Running test batch '([^':]+).*/\1 \2 \3 \4/p" "$1" \
-        | awk '{ s = $1 * 3600 + $2 * 60 + $3; if (prev != "") print prevname, (s - prev) * 1000; prev = s; prevname = $4 }'
-}
-
-# Запоминает замер для следующего прогона: LPT по реальным длительностям ровняет шарды лучше,
-# чем timeoutTicks (стройка поселения с окном 24000 тиков идёт 20 с, поиск пути на 400 — 12 с).
-record_gametest_weights() {
-    local log tmp="$GAMETEST_WEIGHTS_FILE.tmp"
-    : >"$tmp"
-    for log in "$@"; do
-        [ -s "$log" ] && batch_weights "$log"
-    done | awk '{ if (!($1 in w) || $2 > w[$1]) w[$1] = $2 + 0 } END { for (b in w) print b "=" w[b] }' | sort >"$tmp"
-    if [ -s "$tmp" ]; then
-        mv -f "$tmp" "$GAMETEST_WEIGHTS_FILE"
-    else
-        rm -f "$tmp"
-    fi
-}
-
 # ── Запуск ───────────────────────────────────────────────────────────────────
 STAMP=$(date +%Y%m%d-%H%M%S-%N)
 LOG_FILE="$LOG_DIR/${STAMP}-${MODE}.log"
@@ -880,9 +859,9 @@ else
         FILTER_VALUE=$(IFS=,; echo "${GAMETEST_FILTERS[*]}")
         GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.filter=$FILTER_VALUE")
     fi
-    # Быстрый набор: тяжёлые демо-аудиты построек — только в ночном --full.
+    # Демо-аудиты построек — ручные тесты: в общем наборе (в том числе --full) их нет, только явный фильтр.
     GAMETEST_EXCLUDE=""
-    if [ ${#GAMETEST_FILTERS[@]} -eq 0 ] && [ "$GAMETEST_FULL" != 1 ]; then
+    if [ ${#GAMETEST_FILTERS[@]} -eq 0 ]; then
         GAMETEST_EXCLUDE="demo_audit"
     fi
 
@@ -917,7 +896,6 @@ else
     start_monitor "gametest" "$START_WARN" "$START_STOP"
 
     GRADLE_PIDS=()
-    SHARD_LOGS=()
     : >"$LOG_FILE.gradlepids"
 
     # Шарды читают общие артефакты сборки (build/moddev): createMinecraftArtifacts каждый раз пересоздаёт
@@ -967,9 +945,6 @@ else
             echo "exclude=$GAMETEST_EXCLUDE"
             echo "shard=$shard_value"
         } >"$shard_run_dir/theminespirit-gametest.properties"
-        # Веса пачек из прошлого замера: без них шарды делятся по timeoutTicks и перекашиваются.
-        rm -f "$shard_run_dir/theminespirit-gametest-weights.txt"
-        [ -s "$GAMETEST_WEIGHTS_FILE" ] && cp "$GAMETEST_WEIGHTS_FILE" "$shard_run_dir/theminespirit-gametest-weights.txt"
         # У каждого шарда свой кэш проекта и configuration cache: три gradle на одном проекте иначе
         # сериализуются. -D читаются через providers, поэтому смена каталога мира не теряется в кэше.
         CACHE_ARGS=()
@@ -987,7 +962,6 @@ else
                 "$GRADLEW" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
         fi
         GRADLE_PIDS+=("$!")
-        SHARD_LOGS+=("$shard_log")
         echo "$!" >>"$LOG_FILE.gradlepids"
     done
 
@@ -1006,11 +980,6 @@ else
 
     if [ "$USE_DIR_LOCK" = 1 ]; then
         release_dir_lock
-    fi
-
-    # Замер — только для полного/быстрого набора: фильтр по одной пачке перекосил бы раскладку.
-    if [ ${#GAMETEST_FILTERS[@]} -eq 0 ]; then
-        record_gametest_weights "${SHARD_LOGS[@]}"
     fi
 
     # Полный лог — один файл по обещанному пути: склеиваем логи шардов после их смерти.

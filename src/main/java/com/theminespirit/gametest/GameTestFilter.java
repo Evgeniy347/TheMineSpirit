@@ -42,7 +42,6 @@ public final class GameTestFilter {
     private static final String SHARD_PROPERTY = "theminespirit.gametest.shard";
     // Свой у каждого шарда gameDirectory, поэтому общий файл аргументов JVM здесь не годится.
     private static final String RUN_OPTIONS_FILE = "theminespirit-gametest.properties";
-    private static final String WEIGHTS_FILE = "theminespirit-gametest-weights.txt";
 
     private GameTestFilter() {}
 
@@ -67,7 +66,7 @@ public final class GameTestFilter {
             return;
         }
         try {
-            applyFilter(server, filters, excludes, shard, readWeights());
+            applyFilter(server, filters, excludes, shard);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Не удалось применить фильтр GameTest " + filters, e);
         }
@@ -211,12 +210,7 @@ public final class GameTestFilter {
         return filters;
     }
 
-    private static void applyFilter(
-            GameTestServer server,
-            List<String> filters,
-            List<String> excludes,
-            Shard shard,
-            Map<String, Long> measuredWeights)
+    private static void applyFilter(GameTestServer server, List<String> filters, List<String> excludes, Shard shard)
             throws ReflectiveOperationException {
         Field field = GameTestServer.class.getDeclaredField("testFunctions");
         field.setAccessible(true);
@@ -231,11 +225,11 @@ public final class GameTestFilter {
                         + "классом или тестом — проверьте имя: прогон не состоится");
             }
         } else if (!excludes.isEmpty()) {
-            // Быстрый набор: тяжёлые пачки (демо-аудиты построек) остаются ночному --full.
+            // Демо-аудиты построек ручные: в общий набор (и --full) не входят, только явный фильтр.
             functions.removeIf(function -> excluded(function.batchName(), excludes));
         }
         if (shard != null) {
-            Map<String, Integer> assignment = shardAssignment(functions, shard.count(), measuredWeights);
+            Map<String, Integer> assignment = shardAssignment(functions, shard.count());
             functions.removeIf(function -> assignment.get(function.batchName()) != shard.index());
         }
         int removed = before - functions.size();
@@ -258,19 +252,14 @@ public final class GameTestFilter {
         return excludes.stream().anyMatch(lower::startsWith);
     }
 
-    // Раскладка по шардам — жадный LPT: тяжёлые пачки первыми на самый свободный шард. Вес пачки —
-    // замер прошлого прогона (мс, пишет scripts/test.sh), а без замера — сумма timeoutTicks с потолком 100:
-    // без потолка тест с окном 24000 весил как сотни коротких, хотя идёт 30 с, а поиск пути на 400 — 12 с.
-    // Все серверы считают одинаково, и целая пачка (со своими @BeforeBatch/@AfterBatch) остаётся в одном шарде.
-    private static Map<String, Integer> shardAssignment(
-            List<TestFunction> functions, int shards, Map<String, Long> measuredWeights) {
-        Map<String, Long> fallback = new HashMap<>();
-        for (TestFunction function : functions) {
-            fallback.merge(function.batchName(), (long) Math.max(1, Math.min(100, function.maxTicks())), Long::sum);
-        }
+    // Раскладка по шардам — жадный LPT: тяжёлые пачки первыми на самый свободный шард. Вес пачки — сумма
+    // timeoutTicks с потолком 100: без потолка тест с окном 24000 весил как сотни коротких, хотя идёт 30 с,
+    // а поиск пути на 400 — 12 с. Все серверы считают одинаково; хуки @BeforeBatch и @AfterBatch
+    // держат пачку целиком в одном шарде.
+    private static Map<String, Integer> shardAssignment(List<TestFunction> functions, int shards) {
         Map<String, Long> weights = new HashMap<>();
-        for (Map.Entry<String, Long> entry : fallback.entrySet()) {
-            weights.put(entry.getKey(), Math.max(1, measuredWeights.getOrDefault(entry.getKey(), entry.getValue())));
+        for (TestFunction function : functions) {
+            weights.merge(function.batchName(), (long) Math.max(1, Math.min(100, function.maxTicks())), Long::sum);
         }
         List<String> batches = new ArrayList<>(weights.keySet());
         batches.sort((left, right) -> {
@@ -290,29 +279,6 @@ public final class GameTestFilter {
             loads[lightest] += weights.get(batch);
         }
         return assignment;
-    }
-
-    private static Map<String, Long> readWeights() {
-        Path path = Path.of(WEIGHTS_FILE);
-        if (!Files.isRegularFile(path)) {
-            return Map.of();
-        }
-        Map<String, Long> weights = new HashMap<>();
-        try {
-            for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
-                int equals = line.indexOf('=');
-                if (equals <= 0) {
-                    continue;
-                }
-                weights.put(
-                        line.substring(0, equals).trim(),
-                        Long.parseLong(line.substring(equals + 1).trim()));
-            }
-        } catch (IOException | NumberFormatException e) {
-            throw new IllegalStateException(
-                    "Не прочитан " + path.toAbsolutePath() + ": замер пачек для шардов испорчен", e);
-        }
-        return weights;
     }
 
     private record Shard(int index, int count) {

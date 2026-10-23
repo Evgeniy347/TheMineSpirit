@@ -5,10 +5,12 @@
 | Уровень | Где | Что проверяет | Запуск |
 |---|---|---|---|
 | JUnit 5 + jqwik | `src/test/java` | чистая логика `core`, сторожа правил проекта | `scripts/test.sh unit [--tests …]` |
-| GameTest, быстрый набор | `src/main/java/.../gametest` | поведение в настоящем мире без демо-аудитов построек | `scripts/test.sh gametest [пачка…]` |
-| GameTest, полный (ночной) | там же | быстрый набор + демо-аудиты построек (`demo_audit_*`) | `scripts/test.sh gametest --full` |
+| GameTest, общий набор | `src/main/java/.../gametest` | поведение в настоящем мире без ручных демо-аудитов | `scripts/test.sh gametest [пачка…]`, `--full` |
+| GameTest, демо-аудит постройки | там же | одна постройка в поворотах (`demo_audit_*`) | только явно: `scripts/test.sh gametest demo_audit_familyhouse` |
 
-- Полный GameTest — явный `--full`: он идёт ~10 минут и в ежедневный прогон не входит.
+- Демо-аудиты построек — ручные тесты: их нет ни в `gametest`, ни в `--full`, ни в приёмке `chkq.sh`.
+  Запускай по имени пачки, когда менялась эта постройка или стройка (список — `DemoAuditGameTests`).
+  `--full` — тот же общий набор, но с запасом предела полного прогона.
 - GameTest идёт шардами: 3 сервера на ПК, 1 на Linux-сервере (`THEMINESPIRIT_GAMETEST_SHARDS`); пачки делятся
   между ними целиком, у каждого свой мир (`build/gametest-run/shard-N`), замок машины общий.
 - Только через `scripts/test.sh`: полный лог — `TestResults/logs/`, на экран — итог. Прямой `./gradlew test` /
@@ -73,8 +75,8 @@
   Класс с общим состоянием (счётчик, файл) — `@Isolated`; долгий независимый класс — `@Execution(CONCURRENT)`.
   Свойства jqwik идут последовательно. Форки выключены: одна база jqwik.
 - Пределы времени `scripts/test.sh` — согласованные значения в `TestTimeLimitGuardTests`; поднять — только с согласия
-  владельца, правкой таблицы сторожа с причиной. Быстрый набор: unit 90/200 с, GameTest 120/200 с; полный
-  GameTest — свой предел 1200 с.
+  владельца, правкой таблицы сторожа с причиной. Unit 90/200 с, общий GameTest 120/200 с, `--full` 180/300 с
+  (замер общего набора 23.10 — 182–217 с).
 - Анализаторы: в хуке pre-commit — компилятор с Error Prone/NullAway, Spotless, Checkstyle (`--fast-analyzers`);
   SpotBugs и PMD — приёмка перед слиянием (`scripts/test.sh unit` без флага, `check`).
 - Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/`), отчёт, не гейт.

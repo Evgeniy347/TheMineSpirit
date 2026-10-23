@@ -21,16 +21,16 @@ class TestTimeLimitGuardTests {
     private static final Pattern DEFAULT = Pattern.compile(
             "^([A-Z_]+_(?:WARN|STOP))=\"\\$\\{THEMINESPIRIT_[A-Z_]+_SECONDS:-(\\d+)}\"", Pattern.MULTILINE);
 
-    // Цель владельца 23.10 — весь прогон (unit + быстрый GameTest) не дольше 200 с. Значения согласованы 23.10
-    // вместе с шагами ускорения (QUESTIONS-speed.md → пп. 1–4): быстрый набор идёт без тяжёлых демо-аудитов,
-    // поэтому у полного ночного прогона свой, более высокий предел. Поднять — только с согласия владельца.
+    // Цель владельца 23.10 — весь прогон (unit + GameTest) не дольше 200 с. Демо-аудиты построек — ручные
+    // (в общий набор, включая --full, не входят), поэтому предел --full пересчитан по замеру общего набора;
+    // отдельный, более высокий предел оставлен на запас под чужую нагрузку. Поднять — только с согласия владельца.
     private static final Map<String, Integer> AGREED = Map.of(
             "UNIT_WARN", 90,
             "UNIT_STOP", 200,
             "GAMETEST_WARN", 120,
             "GAMETEST_STOP", 200,
-            "GAMETEST_FULL_WARN", 600,
-            "GAMETEST_FULL_STOP", 1200);
+            "GAMETEST_FULL_WARN", 180,
+            "GAMETEST_FULL_STOP", 300);
 
     @Test
     void testScript_TimeLimits_EqualAgreedValues() {
