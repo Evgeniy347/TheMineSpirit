@@ -53,7 +53,7 @@ public final class ToolStockWatch {
             if (!service.board().ledger().has(caseValue, 1) || active(service, id)) {
                 continue;
             }
-            TicketTarget target = TicketTarget.at(home.orElseThrow()).withToolCount(entry.getValue());
+            TicketTarget target = TicketTarget.at(home.orElseThrow()).withToolCount(1);
             if (source == null) {
                 source = FirstStepsRunner.materialSource(level);
             }
@@ -63,7 +63,7 @@ public final class ToolStockWatch {
                 LOGGER.debug("Запас инструмента {} ждёт материалов: {}", caseValue, missing);
                 continue;
             }
-            LOGGER.info("Поставлено: восполнить {} ×{} (постоянный запас инструментов)", caseValue, entry.getValue());
+            LOGGER.info("Поставлено: восполнить {} (до набора на духа не хватает {})", caseValue, entry.getValue());
             service.submit(
                     new BoardTicket(
                             id,

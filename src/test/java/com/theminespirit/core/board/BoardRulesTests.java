@@ -88,7 +88,7 @@ class BoardRulesTests {
         assertTrue(
                 BoardRules.priorityOf(first) > BoardRules.priorityOf(second),
                 "Порядок приоритетов обязан согласовываться с частичным порядком v2 "
-                        + "«ремонт > еда > животные и пополнение еды > стройки, перенос, "
+                        + "«ремонт > еда > животные, пополнение еды и факелы > стройки, перенос, "
                         + "разведение и контроль > снабжение > воронка > полки»: " + first + " ("
                         + BoardRules.priorityOf(first) + ") ниже или равен " + second + " ("
                         + BoardRules.priorityOf(second)
@@ -119,11 +119,14 @@ class BoardRulesTests {
                 || boardCase == BoardCase.BUILD_PEN
                 || boardCase == BoardCase.LURE_ANIMAL
                 || boardCase == BoardCase.DISMANTLE_SHELTER
-                || boardCase == BoardCase.RESTOCK_FOOD) {
+                || boardCase == BoardCase.RESTOCK_FOOD
+                || boardCase == BoardCase.CRAFT_TORCHES
+                || boardCase == BoardCase.SMELT_CHARCOAL) {
             return 2;
         }
         if (boardCase == BoardCase.SUPPLY_SITE
                 || boardCase == BoardCase.CRAFTING_STATION
+                || boardCase == BoardCase.CRAFT_FURNACE
                 || boardCase == BoardCase.STOCK_CHESTS
                 || boardCase == BoardCase.TRANSFER_ITEM
                 || boardCase == BoardCase.GATHER_MATERIALS

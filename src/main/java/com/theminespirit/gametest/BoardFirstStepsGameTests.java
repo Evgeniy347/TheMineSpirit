@@ -8,6 +8,7 @@ import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.ToolSet;
@@ -28,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.AfterBatch;
 import net.minecraft.gametest.framework.BeforeBatch;
@@ -66,7 +68,6 @@ public final class BoardFirstStepsGameTests {
     // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
     // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
-    private static final int FIRST_TOOL_INDEX = 3;
 
     private BoardFirstStepsGameTests() {}
 
@@ -205,31 +206,32 @@ public final class BoardFirstStepsGameTests {
     }
 
     @GameTest(template = "arena", batch = CLEAN_BATCH, timeoutTicks = 100)
-    public static void firstSteps_CleanGroundsWithoutTrees_SkipsClearing(GameTestHelper helper) {
+    public static void firstSteps_CraftingTablePresent_SkipsStation(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-first-steps-clean.jsonl");
+        helper.setBlock(new BlockPos(2, 1, 6), Blocks.CRAFTING_TABLE);
 
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), level.getGameTime());
 
         helper.assertTrue(
-                board.board().statusOf("first:clear_grounds").isEmpty(),
-                "Чистая площадка без деревьев не требует расчистки, статус "
-                        + board.board().statusOf("first:clear_grounds")
-                        + ": ложный шаг отправил бы духа чистить пустую землю");
+                board.board().statusOf("first:crafting_station").isEmpty(),
+                "Верстак уже стоит у дома — шаг верстака не ставится, статус "
+                        + board.board().statusOf("first:crafting_station")
+                        + ": ложный шаг отправил бы духа крафтить второй верстак");
         helper.assertTrue(
-                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
-                "Без деревьев цепочка сразу идёт к сундукам, статус "
-                        + board.board().statusOf("first:stock_chests"));
+                board.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                "С верстаком цепочка сразу идёт к деревянной кирке, статус "
+                        + board.board().statusOf("first:craft_wooden_pickaxe"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
 
     @GameTest(template = "arena", batch = RESTART_BATCH, timeoutTicks = 100)
-    public static void firstSteps_DoneClearGrounds_NotReopenedAfterRestart(GameTestHelper helper) {
+    public static void firstSteps_DoneStation_NotReopenedAfterRestart(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -246,28 +248,27 @@ public final class BoardFirstStepsGameTests {
         BoardService first = journaledBoard(level, journalPath);
         FirstStepsRunner.tick(level, first, List.of(spirit), stocked(), level.getGameTime());
         helper.assertTrue(
-                first.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.PENDING,
-                "Новое поселение начинает с расчистки участка, статус "
-                        + first.board().statusOf("first:clear_grounds"));
-        closeTicket(first, "first:clear_grounds", spirit);
+                first.board().statusOf("first:crafting_station").orElse(null) == BoardStatus.PENDING,
+                "Новое поселение начинает с верстака, статус " + first.board().statusOf("first:crafting_station"));
+        closeTicket(first, "first:crafting_station", spirit);
         first.journal().flushAll();
 
         BoardService restarted = journaledBoard(level, journalPath);
         helper.assertTrue(
-                restarted.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1),
-                "Журнал доски обязан вернуть отметку «расчищено» после перезапуска: иначе "
+                restarted.board().ledger().has(BoardCase.CRAFTING_STATION, 1),
+                "Журнал доски обязан вернуть отметку «верстак сделан» после перезапуска: иначе "
                         + "выполненный кейс откроется снова");
         FirstStepsRunner.tick(level, restarted, List.of(spirit), stocked(), level.getGameTime());
 
         helper.assertTrue(
-                restarted.board().statusOf("first:clear_grounds").isEmpty(),
-                "Выполненный кейс расчистки не переоткрывается после перезапуска, статус "
-                        + restarted.board().statusOf("first:clear_grounds") + ": деревья в мире "
-                        + "не должны перебивать факт done");
+                restarted.board().statusOf("first:crafting_station").isEmpty(),
+                "Выполненный шаг верстака не переоткрывается после перезапуска, статус "
+                        + restarted.board().statusOf("first:crafting_station") + ": отсутствие верстака в мире "
+                        + "не перебивает факт done");
         helper.assertTrue(
-                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
-                "После «расчищено» цепочка идёт дальше — к сундукам, статус "
-                        + restarted.board().statusOf("first:stock_chests"));
+                restarted.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                "После верстака цепочка идёт дальше — к деревянной кирке, статус "
+                        + restarted.board().statusOf("first:craft_wooden_pickaxe"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -285,10 +286,9 @@ public final class BoardFirstStepsGameTests {
         BoardService first = storedBoard(level, before, store);
         FirstStepsRunner.tick(level, first, List.of(spirit), stocked(), level.getGameTime());
         helper.assertTrue(
-                first.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.PENDING,
-                "Новое поселение начинает с расчистки участка, статус "
-                        + first.board().statusOf("first:clear_grounds"));
-        closeTicket(first, "first:clear_grounds", spirit);
+                first.board().statusOf("first:crafting_station").orElse(null) == BoardStatus.PENDING,
+                "Новое поселение начинает с верстака, статус " + first.board().statusOf("first:crafting_station"));
+        closeTicket(first, "first:crafting_station", spirit);
         first.close();
 
         CompoundTag saved = store.save(new CompoundTag(), level.registryAccess());
@@ -296,23 +296,23 @@ public final class BoardFirstStepsGameTests {
         BoardService restarted = storedBoard(level, restartJournal("gametest-board-saved-after.jsonl"), loaded);
 
         helper.assertTrue(
-                restarted.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.DONE,
+                restarted.board().statusOf("first:crafting_station").orElse(null) == BoardStatus.DONE,
                 "Статус DONE обязан пережить сохранение доски в мире, после загрузки "
-                        + restarted.board().statusOf("first:clear_grounds"));
+                        + restarted.board().statusOf("first:crafting_station"));
         helper.assertTrue(
-                restarted.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1),
-                "Отметка «расчищено» обязана пережить сохранение доски в мире: без неё выполненный кейс "
+                restarted.board().ledger().has(BoardCase.CRAFTING_STATION, 1),
+                "Отметка «верстак сделан» обязана пережить сохранение доски в мире: без неё выполненный кейс "
                         + "откроется снова");
         FirstStepsRunner.tick(level, restarted, List.of(spirit), stocked(), level.getGameTime());
 
         helper.assertTrue(
-                restarted.board().statusOf("first:clear_grounds").orElse(null) == BoardStatus.DONE,
-                "Выполненный кейс расчистки не переоткрывается после перезапуска, статус "
-                        + restarted.board().statusOf("first:clear_grounds"));
+                restarted.board().statusOf("first:crafting_station").orElse(null) == BoardStatus.DONE,
+                "Выполненный шаг верстака не переоткрывается после перезапуска, статус "
+                        + restarted.board().statusOf("first:crafting_station"));
         helper.assertTrue(
-                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
-                "После «расчищено» цепочка идёт дальше — к сундукам, статус "
-                        + restarted.board().statusOf("first:stock_chests"));
+                restarted.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                "После верстака цепочка идёт дальше — к деревянной кирке, статус "
+                        + restarted.board().statusOf("first:craft_wooden_pickaxe"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -329,8 +329,8 @@ public final class BoardFirstStepsGameTests {
 
         FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(Map.of()), now);
         helper.assertTrue(
-                board.board().statusOf("first:stock_chests").isEmpty(),
-                "Без досок шаг сундуков не ставится: он ждёт добычу материала");
+                board.board().statusOf("first:crafting_station").isEmpty(),
+                "Без досок шаг верстака не ставится: он ждёт добычу материала");
         helper.assertTrue(
                 board.board().statusOf("gather:oak_planks").isPresent(),
                 "Пустой склад: на доску встаёт добыча досок (рубка дерева), статус "
@@ -338,19 +338,18 @@ public final class BoardFirstStepsGameTests {
 
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
         helper.assertTrue(
-                board.board().statusOf("first:stock_chests").isPresent(),
-                "После добычи материал на складе — шаг сундуков открывается, статус "
-                        + board.board().statusOf("first:stock_chests"));
+                board.board().statusOf("first:crafting_station").isPresent(),
+                "После добычи материал на складе — шаг верстака открывается, статус "
+                        + board.board().statusOf("first:crafting_station"));
 
-        helper.setBlock(new BlockPos(6, 1, 2), Blocks.CHEST);
-        helper.setBlock(new BlockPos(7, 1, 2), Blocks.CHEST);
-        board.board().claim("first:stock_chests", spirit.getUUID(), now);
-        board.board().complete("first:stock_chests");
+        helper.setBlock(new BlockPos(2, 1, 6), Blocks.CRAFTING_TABLE);
+        board.board().claim("first:crafting_station", spirit.getUUID(), now);
+        board.board().complete("first:crafting_station");
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
         helper.assertTrue(
-                board.board().statusOf("first:crafting_station").isPresent(),
-                "После сундуков наступает верстак: цепочка не перескакивает шаги, статус "
-                        + board.board().statusOf("first:crafting_station"));
+                board.board().statusOf("first:craft_wooden_pickaxe").isPresent(),
+                "После верстака наступает деревянная кирка: цепочка не перескакивает шаги, статус "
+                        + board.board().statusOf("first:craft_wooden_pickaxe"));
 
         board.journal().flushAll();
         List<BoardLogEntry> log = board.journal().last(64);
@@ -358,8 +357,8 @@ public final class BoardFirstStepsGameTests {
                 hasPosted(log, "gather:oak_planks"),
                 "Журнал доски обязан содержать постановку добычи: по ней разбирают, кто что получил");
         helper.assertTrue(
-                hasPosted(log, "first:stock_chests") && hasPosted(log, "first:crafting_station"),
-                "Журнал доски обязан содержать постановки шагов — сундуки и верстак");
+                hasPosted(log, "first:crafting_station") && hasPosted(log, "first:craft_wooden_pickaxe"),
+                "Журнал доски обязан содержать постановки шагов — верстак и деревянная кирка");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -408,6 +407,17 @@ public final class BoardFirstStepsGameTests {
 
         tick(level, board, spirit, stock);
         helper.assertTrue(
+                board.board().statusOf("first:build_mine").orElse(null) == BoardStatus.PENDING,
+                "После деревянного набора — шахта (вход и спуск), а не камень с поверхности, статус "
+                        + board.board().statusOf("first:build_mine"));
+        helper.assertTrue(
+                board.board().statusOf("gather:cobblestone").isEmpty(),
+                "До шахты добыча булыжника не ставится: булыжник добывается в шахте (INC-16)");
+        board.board().claim("first:build_mine", spirit.getUUID(), board.board().now());
+        board.board().complete("first:build_mine");
+
+        tick(level, board, spirit, stock);
+        helper.assertTrue(
                 board.board().statusOf("gather:cobblestone").isPresent(),
                 "Каменная ступень ждёт булыжник: при недостаче встаёт добыча булыжника, статус "
                         + board.board().statusOf("gather:cobblestone"));
@@ -431,6 +441,7 @@ public final class BoardFirstStepsGameTests {
         SpiritEntity spirit = smithySettlement(helper);
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-first-steps-smithy.jsonl");
+        groundsCleared(board, spirit);
 
         FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(true)), level.getGameTime());
 
@@ -448,6 +459,7 @@ public final class BoardFirstStepsGameTests {
         SpiritEntity spirit = smithySettlement(helper);
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-first-steps-smithy-iron.jsonl");
+        groundsCleared(board, spirit);
 
         FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(false)), level.getGameTime());
 
@@ -464,6 +476,23 @@ public final class BoardFirstStepsGameTests {
                         + board.board().statusOf("gather:iron_block"));
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    // Деревья соседних сцен попадают в обзор 16 блоков: расчистка отмечена сделанной по журналу, как после неё.
+    private static void groundsCleared(BoardService board, SpiritEntity spirit) {
+        String id = "first:clear_grounds";
+        board.board()
+                .submit(new BoardTicket(
+                        id,
+                        BoardCase.CLEAR_GROUNDS,
+                        Optional.empty(),
+                        50,
+                        board.board().now(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()));
+        closeTicket(board, id, spirit);
     }
 
     private static SpiritEntity smithySettlement(GameTestHelper helper) {
@@ -484,6 +513,7 @@ public final class BoardFirstStepsGameTests {
         helper.setBlock(new BlockPos(7, 1, 3), Blocks.TORCH);
         helper.setBlock(new BlockPos(4, 1, 7), Blocks.OAK_STAIRS);
         helper.setBlock(new BlockPos(5, 1, 2), Blocks.SMITHING_TABLE);
+        helper.setBlock(new BlockPos(6, 1, 3), Blocks.FURNACE);
         return spirit;
     }
 
@@ -645,22 +675,11 @@ public final class BoardFirstStepsGameTests {
     }
 
     private static int chainIndex(BoardCase boardCase) {
-        int tool = ToolSet.chain().indexOf(boardCase);
-        if (tool >= 0) {
-            return FIRST_TOOL_INDEX + tool;
+        int index = FirstStepsPlan.chain().indexOf(boardCase);
+        if (index < 0) {
+            throw new IllegalArgumentException("Не шаг цепочки: " + boardCase);
         }
-        return switch (boardCase) {
-            case CLEAR_GROUNDS -> 0;
-            case STOCK_CHESTS -> 1;
-            case CRAFTING_STATION -> 2;
-            case BUILD_MINE -> 10;
-            case BUILD_FENCE -> 11;
-            case LIGHTING -> 12;
-            case BUILD_HOUSE -> 13;
-            case CRAFT_SMITHING_TABLE -> 14;
-            case CRAFT_ANVIL -> 15;
-            default -> throw new IllegalArgumentException("Не шаг цепочки: " + boardCase);
-        };
+        return index;
     }
 
     private static void satisfy(GameTestHelper helper, BoardService board, SpiritEntity spirit, BoardCase head) {
@@ -678,6 +697,7 @@ public final class BoardFirstStepsGameTests {
                 helper.setBlock(new BlockPos(7, 1, 2), Blocks.CHEST);
             }
             case CRAFTING_STATION -> helper.setBlock(new BlockPos(2, 1, 6), Blocks.CRAFTING_TABLE);
+            case CRAFT_FURNACE -> helper.setBlock(new BlockPos(6, 1, 3), Blocks.FURNACE);
             case BUILD_MINE -> {
                 helper.setBlock(new BlockPos(6, 1, 6), Blocks.COBBLESTONE);
                 helper.setBlock(new BlockPos(6, 2, 6), Blocks.COBBLESTONE);

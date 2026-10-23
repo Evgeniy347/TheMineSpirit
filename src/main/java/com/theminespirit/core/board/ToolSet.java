@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -31,6 +30,7 @@ public final class ToolSet {
     private static final int DEFAULT_MIN_SETS = 1;
     private static final String MINECRAFT_PREFIX = "minecraft:";
     private static final String WOODEN_PREFIX = "wooden_";
+    private static final List<String> RANKED = List.of("wooden", "stone", "iron", "diamond", "netherite");
     private static final List<String> TIERS = List.of("wooden", "stone", "iron", "golden", "diamond", "netherite");
 
     private ToolSet() {}
@@ -65,17 +65,6 @@ public final class ToolSet {
         return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
     }
 
-    public static Optional<BoardCase> nextMissing(Set<String> present) {
-        Objects.requireNonNull(
-                present, "present не может быть null: без запасов не понять, " + "какого инструмента не хватает");
-        for (BoardCase boardCase : CHAIN) {
-            if (!present.contains(stockKey(boardCase))) {
-                return Optional.of(boardCase);
-            }
-        }
-        return Optional.empty();
-    }
-
     // Инструмент того же вида любого уровня засчитывается вместо деревянного: дух с каменной киркой деревянную не ждёт.
     public static Map<BoardCase, Integer> woodenShortages(Map<String, Integer> available, int sets) {
         Objects.requireNonNull(available, "available не может быть null: пустой запас задают пустой картой");
@@ -94,6 +83,21 @@ public final class ToolSet {
             }
         }
         return shortages;
+    }
+
+    // Инструмент того же вида не хуже по уровню закрывает шаг: с каменной киркой деревянную не крафтят.
+    public static boolean covered(BoardCase boardCase, Set<String> present) {
+        Objects.requireNonNull(present, "present не может быть null: пустой запас задают пустым множеством");
+        String key = stockKey(boardCase);
+        int split = key.indexOf('_');
+        String kind = key.substring(split + 1);
+        int rank = RANKED.indexOf(key.substring(0, split));
+        for (int tier = Math.max(rank, 0); tier < RANKED.size(); tier++) {
+            if (present.contains(RANKED.get(tier) + "_" + kind)) {
+                return true;
+            }
+        }
+        return present.contains(key);
     }
 
     public static int count(Map<String, Integer> tools, int spirits) {

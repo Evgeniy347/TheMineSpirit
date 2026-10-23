@@ -20,12 +20,13 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsFortyFive() {
+    void cases_TotalCount_IsFortyEight() {
         assertEquals(
-                45,
+                48,
                 BoardCase.values().length,
-                "Кейсов доски — 45: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
-                        + "(HARVEST_HIVE, PLACE_BEEHIVE) и BUILD_WAREHOUSE чеклиста 41. "
+                "Кейсов доски — 48: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
+                        + "(HARVEST_HIVE, PLACE_BEEHIVE), BUILD_WAREHOUSE чеклиста 41 и путь «печь → уголь → факел» "
+                        + "(CRAFT_FURNACE, CRAFT_TORCHES, SMELT_CHARCOAL). "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 
