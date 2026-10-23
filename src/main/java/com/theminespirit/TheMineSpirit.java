@@ -21,6 +21,7 @@ import com.theminespirit.neoforge.demo.DemoLifecycle;
 import com.theminespirit.neoforge.doors.DoorWatchService;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
 import com.theminespirit.neoforge.movement.PathNetworkService;
+import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.ModProtocolHandshake;
 import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.rest.RestConfig;
@@ -39,6 +40,7 @@ public final class TheMineSpirit {
     public TheMineSpirit(IEventBus modEventBus, ModContainer modContainer) {
         ModEntities.register(modEventBus);
         ModProtocolHandshake.register(modEventBus);
+        BoardViewChannel.register(modEventBus);
         modEventBus.addListener(ModEntities::registerAttributes);
         modEventBus.addListener(SpiritChunkTickets::registerControllers);
         modEventBus.addListener(SettlementChunkTickets::registerControllers);
