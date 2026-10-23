@@ -27,6 +27,7 @@
   "theminespirit.board.case.build_fence": "Построить ограду",
   "theminespirit.board.case.build_house": "Построить дом",
   "theminespirit.board.case.build_mine": "Заложить шахту",
+  "theminespirit.board.case.mine_left_ore": "Добыть оставленную руду",
   "theminespirit.board.case.build_pen": "Построить загон",
   "theminespirit.board.case.build_warehouse": "Построить склад",
   "theminespirit.board.case.capture_animal": "Поймать животное в загон",

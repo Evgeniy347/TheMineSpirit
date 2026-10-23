@@ -27,6 +27,7 @@
   "theminespirit.board.case.build_fence": "Build a fence",
   "theminespirit.board.case.build_house": "Build a house",
   "theminespirit.board.case.build_mine": "Build a mine",
+  "theminespirit.board.case.mine_left_ore": "Mine the left-behind ore",
   "theminespirit.board.case.build_pen": "Build a pen",
   "theminespirit.board.case.build_warehouse": "Build a warehouse",
   "theminespirit.board.case.capture_animal": "Capture an animal",
