@@ -129,6 +129,7 @@ class BoardRulesTests {
                 || boardCase == BoardCase.CRAFT_FURNACE
                 || boardCase == BoardCase.STOCK_CHESTS
                 || boardCase == BoardCase.TRANSFER_ITEM
+                || boardCase == BoardCase.MINE_LEFT_ORE
                 || boardCase == BoardCase.GATHER_MATERIALS
                 || ToolSet.isTool(boardCase)
                 || boardCase == BoardCase.CRAFT_SHEARS

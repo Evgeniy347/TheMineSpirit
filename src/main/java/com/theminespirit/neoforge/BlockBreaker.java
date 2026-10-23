@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.BreakTiming;
+import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
@@ -152,7 +153,10 @@ public final class BlockBreaker {
         if (targetState.requiresCorrectToolForDrops()) {
             replaceSpentHandTool(targetState, reserve);
         }
+        int requestedSlot = forcedSlot;
+        preferLuckPick(targetState);
         List<ToolOption> options = toolOptions(targetState);
+        forcedSlot = requestedSlot;
         choice = ToolChoice.best(options, reserve);
         if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
             return new Refused(RefuseReason.NEED_TOOL, needToolReason(targetState));
@@ -262,6 +266,19 @@ public final class BlockBreaker {
             }
         }
         return options;
+    }
+
+    // Руда на удачу ломается киркой с Удачей или Шёлковым касанием, если такая есть, — а не самой быстрой:
+    // иначе mine_vein и задание оставленной руды теряют алмазы и лазурит (MineOres).
+    private void preferLuckPick(BlockState targetState) {
+        if (forcedSlot != NO_FORCED_SLOT || MineOres.kindOf(BlockStates.idOf(targetState)) != MineOres.Kind.LUCK) {
+            return;
+        }
+        MineOres.Decision decision =
+                MineOres.decide(BlockStates.idOf(targetState), PickOptions.of(spirit, targetState));
+        if (decision instanceof MineOres.Mine mine && mine.slot().isPresent()) {
+            forcedSlot = mine.slot().getAsInt();
+        }
     }
 
     private boolean allowed(int slot) {

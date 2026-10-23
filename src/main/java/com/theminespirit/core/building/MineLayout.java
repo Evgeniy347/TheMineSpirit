@@ -47,6 +47,7 @@ public record MineLayout(
                 BlockCoord pos = at(segment, origin, rotation, entry.dx() + sx, entry.dy() + sy, entry.dz() + sz);
                 if (entry.optional()) {
                     optional.add(new Schematic.PlacedEntry(pos, entry.block(), entry.state(), entry.text(), true));
+                    air.add(pos);
                 } else if (SchematicBlocks.isFloor(entry.block())) {
                     floors.add(pos);
                 }

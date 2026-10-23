@@ -140,7 +140,12 @@ public final class HarvestSession {
         return new HarvestSession(
                 spirit,
                 new Spec(
-                        new GatherTargets(spirit.level(), spirit.blockPosition(), radius, IdFilter.of(List.of(block))),
+                        new GatherTargets(
+                                spirit.level(),
+                                spirit.blockPosition(),
+                                radius,
+                                IdFilter.of(List.of(block)),
+                                spirit.home().isPresent()),
                         WorkKind.GATHER,
                         block,
                         count,

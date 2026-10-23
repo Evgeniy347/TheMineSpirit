@@ -46,9 +46,9 @@ class SchematicMineFormatTests {
               - y0: |
                   ###
               - y1: |
-                  T.\s
-              - y2: |
                    .\s
+              - y2: |
+                   T\s
               - y3: |
                    .\s
             """;

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.GatherPolicy;
+import com.theminespirit.core.mining.StoneSource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import java.util.ArrayList;
@@ -15,9 +16,12 @@ final class GatherTargets implements HarvestTargets {
     private final BlockLocator.Search search;
     private final String refusal;
     private int slices;
+    private final boolean settled;
+    private int surfaceStone;
 
-    GatherTargets(Level level, BlockPos center, int radius, IdFilter filter) {
+    GatherTargets(Level level, BlockPos center, int radius, IdFilter filter, boolean settled) {
         this.level = level;
+        this.settled = settled;
         this.search = BlockLocator.search(level, center, radius, BlockSets.resolve(filter));
         this.refusal = exactRefusal(filter);
     }
@@ -29,7 +33,12 @@ final class GatherTargets implements HarvestTargets {
             List<BlockPos> found = search.step(1);
             List<BlockCoord> allowed = new ArrayList<>();
             for (BlockPos pos : found) {
-                if (GatherPolicy.check(blockId(pos)) instanceof GatherPolicy.Allowed) {
+                String id = blockId(pos);
+                if (!StoneSource.allowed(id, level.canSeeSky(pos.above()), settled)) {
+                    surfaceStone++;
+                    continue;
+                }
+                if (GatherPolicy.check(id) instanceof GatherPolicy.Allowed) {
                     allowed.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
@@ -57,7 +66,7 @@ final class GatherTargets implements HarvestTargets {
 
     @Override
     public String refusalReason() {
-        return refusal;
+        return refusal == null && surfaceStone > 0 && search.done() ? StoneSource.REFUSAL : refusal;
     }
 
     private String blockId(BlockPos pos) {

@@ -24,6 +24,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class ProtectionGate {
+    private static final String NATURAL_STAND_IN = "minecraft:stone";
     private static final BlockProtection PROTECTION = ProtectionConfig.load();
     private static final String AIR_ID = "minecraft:air";
 
@@ -161,7 +162,12 @@ public final class ProtectionGate {
                 for (int dz = -1; dz <= 1; dz++) {
                     if (dx != 0 || dy != 0 || dz != 0) {
                         neighbourReads++;
-                        ids.add(blockId(level.getBlockState(pos.offset(dx, dy, dz))));
+                        BlockPos near = pos.offset(dx, dy, dz);
+                        // Свой булыжник духа (пол, стенки и пробки шахты) — не постройка игрока: иначе шахта сквозь
+                        // пещеру не копается дальше собственного пола.
+                        boolean spirits = level instanceof ServerLevel server
+                                && PlacedBlocksData.get(server).isSpiritMarked(near);
+                        ids.add(spirits ? NATURAL_STAND_IN : blockId(level.getBlockState(near)));
                     }
                 }
             }

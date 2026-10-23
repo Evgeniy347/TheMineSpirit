@@ -56,7 +56,7 @@ public final class MineBuildGameTests {
     }
 
     private static ScriptCall descent(GameTestHelper helper) {
-        BlockPos origin = helper.absolutePos(new BlockPos(FIRST_X, TOP, LANE_Z));
+        BlockPos origin = helper.absolutePos(new BlockPos(FIRST_X, TOP, LANE_Z - 1));
         return new ScriptCall(
                 "build_schematic",
                 Map.of(
@@ -166,6 +166,40 @@ public final class MineBuildGameTests {
         });
     }
 
+    // [флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
+    @GameTest(template = "mine_arena", batch = "mine_build_cave", timeoutTicks = 1600)
+    public static void mineDescent_CaveUnderSteps_PlacesFloorAndWallsInAir(GameTestHelper helper) {
+        rock(helper);
+        for (int x = FIRST_X + 4; x <= FIRST_X + 6; x++) {
+            for (int y = 2; y <= TOP - 3; y++) {
+                for (int z = 2; z <= 8; z++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.AIR);
+                }
+            }
+        }
+        SpiritEntity spirit = miner(helper);
+        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 64));
+        SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            data(helper, spirit);
+            assertPassageOpen(helper);
+            for (int k = 0; k < STEPS; k++) {
+                for (int dy = 1; dy <= 3; dy++) {
+                    for (int side : new int[] {-1, 1}) {
+                        BlockPos wall = step(k, dy).offset(0, 0, side);
+                        helper.assertTrue(
+                                !helper.getBlockState(wall).isAir(),
+                                "стенка спуска " + wall + " обязана быть твёрдой и над пещерой (решение владельца "
+                                        + "23.10): иначе дух и игрок падают в пропасть, скелеты стреляют в проход");
+                    }
+                }
+            }
+            GameTestFixtures.finish(helper, 16);
+        });
+    }
+
     // [флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
     @GameTest(template = "mine_arena", batch = "mine_build_water", timeoutTicks = 1600)
     public static void mineDescent_WaterBehindWall_PlugsAndSpiritNeverUnderWater(GameTestHelper helper) {
@@ -196,6 +230,34 @@ public final class MineBuildGameTests {
                     !wet.get(),
                     "дух ни разу не оказался в воде: проход не затапливается, копать в воду нельзя; итог " + data);
             GameTestFixtures.finish(helper, 16);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "mine_build_surface_stone", timeoutTicks = 200)
+    public static void gather_SettledSpiritStoneUnderSky_RefusesSurfaceStone(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        BlockPos home = helper.absolutePos(new BlockPos(4, 1, 4));
+        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall("gather", Map.of("block", "minecraft:stone", "count", 1, "radius", 4)),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED
+                            && spirit.taskFailureReason().orElse("").contains("только в шахте"),
+                    "дух поселения не копает камень под открытым небом — булыжник только из шахты (владелец 23.10); "
+                            + "статус " + spirit.taskStatus() + ", причина " + spirit.taskFailureReason());
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(4, 0, 4)).is(Blocks.STONE),
+                    "пол площадки цел: яма у дома ради булыжника запрещена");
+            GameTestFixtures.finish(helper);
         });
     }
 }

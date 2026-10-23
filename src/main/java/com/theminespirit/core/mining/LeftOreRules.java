@@ -1,0 +1,35 @@
+package com.theminespirit.core.mining;
+
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * Оставленная в шахте руда ждёт инструмент (решение владельца 23.10): задание висит на доске, пока на складе или у
+ * духов нет нужной кирки. Нужда пишется ключом склада: кирка с Удачей или Шёлковым касанием для руды на удачу, кирка
+ * нужной ступени — для обычной руды. Ключи добавляет чтение склада по найденным киркам.
+ */
+public final class LeftOreRules {
+    public static final String LUCK_PICKAXE = "pickaxe_luck";
+    public static final String WOOD_TIER = "pickaxe_wood_tier";
+    public static final String STONE_TIER = "pickaxe_stone_tier";
+    public static final String IRON_TIER = "pickaxe_iron_tier";
+
+    private LeftOreRules() {}
+
+    public static String requiredTool(String blockId) {
+        Objects.requireNonNull(blockId, "Id руды не может быть null: по нему выбирается кирка");
+        if (MineOres.kindOf(blockId) == MineOres.Kind.LUCK) {
+            return LUCK_PICKAXE;
+        }
+        Optional<OreKind> kind = OreKind.ofBlock(blockId);
+        if (kind.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Блок '" + blockId + "' не руда: оставленной в шахте бывает только руда");
+        }
+        return switch (kind.get()) {
+            case COAL, QUARTZ -> WOOD_TIER;
+            case COPPER, IRON, LAPIS -> STONE_TIER;
+            default -> IRON_TIER;
+        };
+    }
+}

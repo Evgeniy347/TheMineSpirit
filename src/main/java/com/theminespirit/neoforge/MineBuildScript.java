@@ -14,7 +14,6 @@ import com.theminespirit.core.mining.MineFloor;
 import com.theminespirit.core.mining.MineFluids;
 import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.mining.MinePlan;
-import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,15 +25,8 @@ import java.util.OptionalInt;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -53,6 +45,7 @@ final class MineBuildScript implements ScriptInstance {
     private static final double STAND_ARRIVAL = 0.6;
     private static final double ENTRANCE_ARRIVAL = 1.5;
     private static final int SETTLE_TICKS = 5;
+    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final int MAX_ACTIONS_PER_COLUMN = 64;
     private static final List<String> FLOOR_MATERIALS =
             List.of("minecraft:cobblestone", "minecraft:cobbled_deepslate", "minecraft:stone", "minecraft:dirt");
@@ -80,6 +73,7 @@ final class MineBuildScript implements ScriptInstance {
     private final Map<MineColumn, MineColumn> parents = new HashMap<>();
     private final List<MineColumn> exitPath = new ArrayList<>();
     private final List<Schematic.PlacedEntry> torches;
+    private final Set<BlockCoord> walls;
     private final BuildRotation rotation;
 
     private Phase phase = Phase.PICK;
@@ -104,6 +98,8 @@ final class MineBuildScript implements ScriptInstance {
         this.approach = new Approach(spirit);
         this.plan = new ArrayList<>(MinePlan.order(MinePlan.columns(layout.floors(), layout.air()), layout.entrance()));
         this.torches = new ArrayList<>(layout.optional());
+        this.walls = new HashSet<>(layout.floors());
+        plan.forEach(column -> walls.remove(column.floor()));
         this.rotation = rotation;
     }
 
@@ -225,8 +221,13 @@ final class MineBuildScript implements ScriptInstance {
                     + " действий: сверху сыплется гравий или песок, проход не держится");
             return;
         }
-        if (!floorReady(column)) {
+        if (!solidReady(column.floor(), "пол")) {
             return;
+        }
+        for (BlockCoord wall : wallsOf(column)) {
+            if (!solidReady(wall, "стенка")) {
+                return;
+            }
         }
         for (BlockCoord cell : column.cells()) {
             if (!cellReady(column, cell)) {
@@ -254,8 +255,7 @@ final class MineBuildScript implements ScriptInstance {
     }
 
     // Пол до шага вперёд: дух не ступает в пустоту, воду или на гравий над пустотой.
-    private boolean floorReady(MineColumn column) {
-        BlockCoord floor = column.floor();
+    private boolean solidReady(BlockCoord floor, String what) {
         if (leftOres.contains(floor)) {
             return true;
         }
@@ -271,7 +271,7 @@ final class MineBuildScript implements ScriptInstance {
         return switch (action) {
             case KEEP -> true;
             case PLACE -> {
-                if (place(floor, "пол")) {
+                if (place(floor, what)) {
                     floors++;
                 }
                 yield false;
@@ -282,6 +282,21 @@ final class MineBuildScript implements ScriptInstance {
             }
             case ORE -> oreInFloor(floor, state);
         };
+    }
+
+    // Стенки слева и справа от прохода (решение владельца 23.10): дух и игрок не падают в пропасть сбоку, скелеты
+    // из пещеры не стреляют в проход. Стенка — та же клетка @floor, что и пол, но сбоку от воздуха колонки.
+    private List<BlockCoord> wallsOf(MineColumn column) {
+        List<BlockCoord> found = new ArrayList<>();
+        for (BlockCoord cell : column.cells()) {
+            for (int[] side : SIDES) {
+                BlockCoord wall = new BlockCoord(cell.x() + side[0], cell.y(), cell.z() + side[1]);
+                if (walls.contains(wall)) {
+                    found.add(wall);
+                }
+            }
+        }
+        return found;
     }
 
     private boolean oreInFloor(BlockCoord floor, BlockState state) {
@@ -332,6 +347,8 @@ final class MineBuildScript implements ScriptInstance {
         }
         int at = plan.indexOf(column) + 1;
         for (MineColumn side : detour.get()) {
+            // Обход проходит сквозь стенку оставленной колонки: эти клетки больше не стенка, иначе их заложат снова.
+            side.cells().forEach(walls::remove);
             if (!plan.contains(side)) {
                 plan.add(at++, side);
             }
@@ -351,7 +368,9 @@ final class MineBuildScript implements ScriptInstance {
 
     private void remember(BlockCoord cell, BlockState state, String reason) {
         if (leftOres.add(cell) && level instanceof ServerLevel server) {
-            MineOreLedger.get(server).remember(cell, BlockStates.idOf(state));
+            BlockPos feet = spirit.blockPosition();
+            MineOreLedger.get(server)
+                    .remember(cell, BlockStates.idOf(state), new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
             LOGGER.info(
                     "Шахта: дух {} оставил {} в {}: {}", spirit.getStringUUID(), BlockStates.idOf(state), cell, reason);
         }
@@ -366,7 +385,7 @@ final class MineBuildScript implements ScriptInstance {
             fail("нет булыжника на " + what + " в " + cell + ": проход без него затопит или дух провалится");
             return false;
         }
-        BlockPlacer.Begin begin = placer.begin(toPos(cell), BlockStates.stateFor(material), material);
+        BlockPlacer.Begin begin = placer.beginWithoutSupport(toPos(cell), BlockStates.stateFor(material), material);
         if (begin instanceof BlockPlacer.Started) {
             return true;
         }
@@ -494,32 +513,7 @@ final class MineBuildScript implements ScriptInstance {
     }
 
     private List<MineOres.Pick> picks(BlockState state) {
-        Registry<Enchantment> enchantments = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-        var fortune = enchantments.getHolderOrThrow(Enchantments.FORTUNE);
-        var silk = enchantments.getHolderOrThrow(Enchantments.SILK_TOUCH);
-        List<MineOres.Pick> picks = new ArrayList<>();
-        addPick(picks, ToolChoice.MAIN_HAND, spirit.getMainHandItem(), state, fortune, silk);
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            addPick(picks, slot, spirit.getInventory().getItem(slot), state, fortune, silk);
-        }
-        return picks;
-    }
-
-    private static void addPick(
-            List<MineOres.Pick> picks,
-            int slot,
-            ItemStack stack,
-            BlockState state,
-            Holder<Enchantment> fortune,
-            Holder<Enchantment> silk) {
-        if (!(stack.getItem() instanceof PickaxeItem)) {
-            return;
-        }
-        picks.add(new MineOres.Pick(
-                slot,
-                stack.isCorrectToolForDrops(state),
-                stack.getEnchantmentLevel(fortune),
-                stack.getEnchantmentLevel(silk) > 0));
+        return PickOptions.of(spirit, state);
     }
 
     private boolean open(BlockCoord cell) {

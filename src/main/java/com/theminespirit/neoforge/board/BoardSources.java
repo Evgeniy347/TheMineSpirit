@@ -66,6 +66,7 @@ public final class BoardSources {
         }
         live.addAll(CraterWatch.liveCauses(level, service));
         live.addAll(FenceWatch.liveCauses(level, service));
+        live.addAll(LeftOreWatch.tick(level, service, spirits, now));
         return live;
     }
 }
