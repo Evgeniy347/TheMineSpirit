@@ -9,15 +9,15 @@ import org.junit.jupiter.api.Test;
 class MineDescentBottomTests {
 
     @Test
-    void standOf_SurfaceHome_BottomStepAtDiamondDepthAwayFromHome() {
+    void standOf_SurfaceHome_BottomStepAtYMinus58AwayFromHome() {
         BlockCoord home = new BlockCoord(0, 64, 0);
 
         BlockCoord stand = MineDescentBottom.standOf(home).orElseThrow();
 
         assertEquals(
-                51,
+                -57,
                 stand.y(),
-                "Низ спуска — над полом нижней ступени y=50 (схема mine_descent_v1): уровни шахты 2–3 "
+                "Низ спуска — над полом нижней ступени y=−58, где больше всего алмазов (схема mine_descent_v1): уровни шахты 2–3 "
                         + "расширяются оттуда, а не у дома");
         int dx = stand.x() - home.x();
         int dz = stand.z() - home.z();

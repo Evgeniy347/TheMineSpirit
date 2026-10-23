@@ -33,6 +33,7 @@ public final class BoardStateStore extends SavedData {
     private static final int VERSION = 1;
     private static final String ENTRIES_KEY = "Entries";
     private static final String LEDGER_KEY = "Ledger";
+    private static final String BUILD_KEY = "Build";
     private static final String ID_KEY = "Id";
     private static final String CASE_KEY = "Case";
     private static final String PRIORITY_KEY = "Priority";
@@ -49,6 +50,7 @@ public final class BoardStateStore extends SavedData {
     private static final String FAILURES_KEY = "Failures";
 
     private BoardState state = BoardState.empty();
+    private String build = "";
 
     public BoardStateStore() {}
 
@@ -78,6 +80,7 @@ public final class BoardStateStore extends SavedData {
             ledger.add(marks.getString(index));
         }
         store.state = new BoardState(restored, ledger);
+        store.build = tag.getString(BUILD_KEY);
         return store;
     }
 
@@ -94,7 +97,17 @@ public final class BoardStateStore extends SavedData {
             marks.add(StringTag.valueOf(key));
         }
         tag.put(LEDGER_KEY, marks);
+        tag.putString(BUILD_KEY, build);
         return tag;
+    }
+
+    public String build() {
+        return build;
+    }
+
+    public void markBuild(String current) {
+        build = Objects.requireNonNull(current, "Сборка не может быть null: по ней сбрасывают старые правила");
+        setDirty();
     }
 
     public BoardState state() {

@@ -75,6 +75,11 @@ public final class WoodSpecies {
         return best;
     }
 
+    public static boolean hasLogs(Map<String, Integer> stock) {
+        Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
+        return ALL.stream().anyMatch(species -> logs(stock, species) > 0);
+    }
+
     private static int logs(Map<String, Integer> stock, String species) {
         String log = species + LOG_SUFFIX;
         return stock.getOrDefault(log, 0) + stock.getOrDefault(NAMESPACE + log, 0);

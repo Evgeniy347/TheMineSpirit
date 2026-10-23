@@ -30,13 +30,16 @@ import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.AnvilBlock;
@@ -51,6 +54,9 @@ import org.slf4j.Logger;
  * встают мелкие задачи добычи, а сам шаг ждёт их выполнения и открывается после.
  */
 public final class FirstStepsRunner {
+    private static final int WOOD_SCAN_RADIUS = 24;
+    private static final int WOOD_SCAN_HEIGHT = 8;
+    private static final Map<BlockCoord, String> NEARBY_WOOD = new ConcurrentHashMap<>();
     private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
@@ -84,9 +90,13 @@ public final class FirstStepsRunner {
         if (hasActive(service, caseValue)) {
             return;
         }
-        TicketTarget target = targetFor(caseValue, home, stock);
+        String wood = woodOf(level, home, stock);
+        TicketTarget target = targetFor(caseValue, home, wood);
         MaterialSource source = materialSource(level);
-        Map<String, Integer> need = materials(source, caseValue, target);
+        Map<String, Integer> need = new HashMap<>();
+        // Доски, брёвна и деревянные блоки — породы поселения: в джунглях «oak_planks» не добыть (INC-36).
+        materials(source, caseValue, target)
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
@@ -117,10 +127,34 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, StockView stock) {
+    // Порода поселения: по запасу брёвен, а пока брёвен нет — по деревьям вокруг дома (одна выборка на дом).
+    private static String woodOf(ServerLevel level, BlockCoord home, StockView stock) {
+        if (WoodSpecies.hasLogs(stock.available())) {
+            return WoodSpecies.of(stock.available());
+        }
+        return NEARBY_WOOD.computeIfAbsent(home, at -> nearbyWood(level, at));
+    }
+
+    private static String nearbyWood(ServerLevel level, BlockCoord home) {
+        Map<String, Integer> logs = new HashMap<>();
+        for (int dx = -WOOD_SCAN_RADIUS; dx <= WOOD_SCAN_RADIUS; dx += 2) {
+            for (int dz = -WOOD_SCAN_RADIUS; dz <= WOOD_SCAN_RADIUS; dz += 2) {
+                for (int dy = 0; dy <= WOOD_SCAN_HEIGHT; dy++) {
+                    BlockPos pos = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
+                    String id = BuiltInRegistries.BLOCK
+                            .getKey(level.getBlockState(pos).getBlock())
+                            .getPath();
+                    if (id.endsWith("_log")) {
+                        logs.merge(id, 1, Integer::sum);
+                    }
+                }
+            }
+        }
+        return WoodSpecies.of(logs);
+    }
+
+    private static TicketTarget targetFor(BoardCase caseValue, BlockCoord home, String wood) {
         TicketTarget target = TicketTarget.at(home);
-        // Дерево — порода, которой у поселения больше всего (джунгли, ель…), а не жёстко дуб (INC-36).
-        String wood = WoodSpecies.of(stock.available());
         if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
         }

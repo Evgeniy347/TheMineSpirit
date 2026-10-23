@@ -28,6 +28,9 @@ public final class BoardTuning {
     public static final int STOCK_BLOCK_BUDGET = 4096;
 
     public static final long FAIL_BACKOFF_TICKS = 200;
+    // Заблокированное задание не стоит вечно: через 5 минут — новая попытка (материал и способ к этому времени
+    // могли смениться), провал снова блокирует.
+    public static final long BLOCKED_RETRY_TICKS = 6000;
 
     public static final long CASE_FAIL_PAUSE_TICKS = 1200;
 
@@ -56,6 +59,7 @@ public final class BoardTuning {
             "stockReadBudget",
             "stockBlockBudget",
             "failBackoffTicks",
+            "blockedRetryTicks",
             "caseFailPauseTicks",
             "caseFailMultiplier",
             "caseFailPauseCapTicks",
@@ -95,6 +99,10 @@ public final class BoardTuning {
 
     public static int stockBlockBudget() {
         return (int) interval("stockBlockBudget", STOCK_BLOCK_BUDGET);
+    }
+
+    public static long blockedRetryTicks() {
+        return interval("blockedRetryTicks", BLOCKED_RETRY_TICKS);
     }
 
     public static long failBackoffTicks() {
