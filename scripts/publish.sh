@@ -72,7 +72,8 @@ if $dry_run; then
     else
         echo "  6. перезапуск сервера отключён (--no-restart)"
     fi
-    echo "  7. тег v<версия> в текущем git-репозитории и отправка тега в remote backup (если настроен)"
+    echo "  7. запись версии и даты установки в mod.json страницы «Сервер» gateway и коммит в gateway"
+    echo "  8. тег v<версия> в текущем git-репозитории и отправка тега в remote backup (если настроен)"
     echo "Изменения не вносились."
     exit 0
 fi
@@ -147,6 +148,17 @@ if $do_restart; then
 elif $was_running; then
     echo "ВНИМАНИЕ: сервер работает; новый jar вступит в силу после ручного перезапуска"
     echo "(выбран --no-restart)."
+fi
+
+# --- Страница «Сервер» на gateway ------------------------------------------
+# Дата берётся из mtime установленного jar: cp в mods/ ставит его в момент установки.
+installed="$SERVER_DIR/mods/${jar##*/}"
+status_args=("$installed")
+if $was_running && ! $do_restart; then
+    status_args+=(--pending)
+fi
+if ! bash "$MOD_DIR/scripts/publish-status.sh" "${status_args[@]}"; then
+    echo "ВНИМАНИЕ: публикация состоялась, но страница «Сервер» не обновлена" >&2
 fi
 
 # --- Тег версии -------------------------------------------------------------

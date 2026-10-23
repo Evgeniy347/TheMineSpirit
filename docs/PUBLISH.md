@@ -7,16 +7,24 @@
 
 Сборка (`./gradlew build`) → самый свежий `build/libs/theminespirit-*.jar` с проверкой размера → снимок мира
 `$SERVER_DIR/scripts/snapshot.sh` → остановка сервера (tmux `minecraft`) → удаление старых
-`$SERVER_DIR/mods/theminespirit-*.jar` и копирование нового → запуск, если сервер работал → тег `v0.1.N`
-в git и отправка тега в remote `backup` (если он настроен). `SERVER_DIR` по умолчанию `/opt/minecraft/server`.
+`$SERVER_DIR/mods/theminespirit-*.jar` и копирование нового → запуск, если сервер работал → запись версии
+и даты установки в `mod.json` страницы «Сервер» gateway → тег `v0.1.N` в git и отправка тега в remote
+`backup` (если он настроен). `SERVER_DIR` по умолчанию `/opt/minecraft/server`.
 Версия — `0.1.N`, где N — число коммитов HEAD; минор 0.1 поднимается вручную в `gradle.properties`.
 Ключи: `--dry-run` (только план), `--no-restart`, `-y`.
+
+## Страница «Сервер»
+
+`/u/admin/the-mine-spirit/server/` показывает версию мода на сервере и дату установки. Данные — `mod.json`
+рядом со страницей; его пишет `scripts/publish-status.sh`, который зовёт `publish.sh`, и коммитит файл
+в `/opt/gateway` (`GATEWAY_DIR` меняет корень). При `--no-restart` на работающем сервере страница
+помечает версию как ожидающую перезапуска.
 
 ## После публикации
 
 - Клиентский пак: **удалить старый** `theminespirit-*.jar` из `/opt/minecraft/client/pack/mods/` (версия в имени
   меняется, два jar рядом — два мода), скопировать новый jar туда же и запустить `/opt/minecraft/client/publish.sh`
-  (packwiz-раздача `http://192.168.0.147:8099/`); игроки получат мод при следующем запуске Prism.
+  (packwiz-раздача на странице `/u/admin/the-mine-spirit/client/`); игроки получат мод при следующем запуске Prism.
 - Сверить `sha1sum` jar сервера и раздачи; в логе сервера — `Done (…)` без `ERROR`.
 
 ## Сбой
