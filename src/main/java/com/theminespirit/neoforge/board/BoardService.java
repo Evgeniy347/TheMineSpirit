@@ -419,6 +419,28 @@ public final class BoardService {
         reconcileActivities(offered, false);
     }
 
+    public boolean launch(
+            SpiritEntity spirit,
+            BoardCase activity,
+            String script,
+            TaskNode task,
+            ActivityOffer.Launcher launcher,
+            long now) {
+        // Поход и рефлексы силы идут через доску: дух на них виден занятием, задание доски (если есть) остаётся
+        // за ним и продолжается после (TicketRun).
+        Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
+        if (!BoardActivities.isActivity(activity)) {
+            throw new IllegalArgumentException(
+                    "Кейс " + activity + " — не занятие: через launch идут только ACTIVITY_*");
+        }
+        if (!launcher.start(spirit, script, task, now)) {
+            return false;
+        }
+        launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
+        board.occupy(spirit.getUUID(), activity, board.now());
+        return true;
+    }
+
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
         Set<UUID> present = new HashSet<>();
         for (SpiritEntity spirit : spirits) {
@@ -450,15 +472,17 @@ public final class BoardService {
         if (spirit.tactics().wantsControl()) {
             return Optional.of(BoardCase.ACTIVITY_COMBAT);
         }
+        boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
+        Launched own = launched.get(id);
+        boolean ownActivity = own != null && own.generation() == spirit.taskGeneration();
+        if (running && ownActivity) {
+            return Optional.of(own.activity());
+        }
         if (!board.assignedTo(id).isEmpty()) {
             return Optional.empty();
         }
-        if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-            Launched own = launched.get(id);
-            return Optional.of(
-                    own != null && own.generation() == spirit.taskGeneration()
-                            ? own.activity()
-                            : BoardCase.ACTIVITY_EXTERNAL);
+        if (running) {
+            return Optional.of(BoardCase.ACTIVITY_EXTERNAL);
         }
         if (spirit.isDefenceAssigned()) {
             return Optional.of(BoardCase.ACTIVITY_DEFEND);

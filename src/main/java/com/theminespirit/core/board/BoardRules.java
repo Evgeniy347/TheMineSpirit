@@ -38,7 +38,9 @@ public final class BoardRules {
         // Занятия вне очереди (BoardActivities): бой и задачи REST/стратега — поверх всего, фоновые занятия
         // интеллекта — ниже любого задания доски, задание доски их вытесняет.
         priorities.put(BoardCase.ACTIVITY_COMBAT, 100);
+        priorities.put(BoardCase.ACTIVITY_ARM, 100);
         priorities.put(BoardCase.ACTIVITY_EXTERNAL, 95);
+        priorities.put(BoardCase.ACTIVITY_EXPEDITION, 95);
         priorities.put(BoardCase.ACTIVITY_DEFEND, 29);
         priorities.put(BoardCase.ACTIVITY_UNLOAD, 25);
         priorities.put(BoardCase.ACTIVITY_CRAFT, 20);

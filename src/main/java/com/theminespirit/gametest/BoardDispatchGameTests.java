@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
@@ -10,6 +11,8 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.intellect.StrengthAction;
+import com.theminespirit.core.intellect.StrengthVerdict;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
@@ -18,6 +21,7 @@ import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
 import com.theminespirit.neoforge.board.JournalService;
 import com.theminespirit.neoforge.board.StockReader;
+import com.theminespirit.neoforge.intellect.StrengthDirector;
 import com.theminespirit.neoforge.intellect.TaskStarter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -248,6 +252,31 @@ public final class BoardDispatchGameTests {
             GameTestFixtures.finish(helper);
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "arena", batch = "board_dispatch_reflex", timeoutTicks = 100)
+    public static void reflex_ArmVerdict_VisibleOnBoard(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-dispatch-reflex.jsonl");
+        TaskStarter starter = new TaskStarter();
+        StrengthDirector.apply(
+                spirit,
+                new StrengthVerdict(spirit.getUUID(), StrengthAction.ARM, 0.0, Optional.empty()),
+                (armed, script, task, at) ->
+                        board.launch(armed, BoardCase.ACTIVITY_ARM, script, task, starter::start, at),
+                level.getGameTime(),
+                true);
+        BoardTicket activity =
+                board.board().find(BoardActivities.idOf(spirit.getUUID())).orElse(null);
+        helper.assertTrue(
+                activity != null && activity.boardCase() == BoardCase.ACTIVITY_ARM,
+                "Рефлекс силы «вооружиться» идёт через доску и виден на ней занятием, а не мимо: " + activity);
+        spirit.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 
     private static TicketTarget at(GameTestHelper helper) {

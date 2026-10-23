@@ -7,10 +7,12 @@ package com.theminespirit.core.board;
  * по имени константы (детерминизм набора на любой JVM).
  */
 public enum BoardCase {
+    ACTIVITY_ARM,
     ACTIVITY_CHOP,
     ACTIVITY_COMBAT,
     ACTIVITY_CRAFT,
     ACTIVITY_DEFEND,
+    ACTIVITY_EXPEDITION,
     ACTIVITY_EXTERNAL,
     ACTIVITY_FARM,
     ACTIVITY_FORAGE,

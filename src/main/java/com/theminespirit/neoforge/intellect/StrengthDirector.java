@@ -6,6 +6,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.ActivityOffer;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ public final class StrengthDirector {
     private StrengthDirector() {}
 
     public static void apply(
-            SpiritEntity spirit, StrengthVerdict verdict, TaskStarter starter, long tick, boolean homed) {
+            SpiritEntity spirit, StrengthVerdict verdict, ActivityOffer.Launcher starter, long tick, boolean homed) {
         if (spirit == null || verdict == null) {
             throw new IllegalArgumentException("Вердикт без духа не применить: бой ведут конкретные духи");
         }

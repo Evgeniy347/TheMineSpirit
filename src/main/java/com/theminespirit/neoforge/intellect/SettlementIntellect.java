@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
@@ -32,6 +33,7 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.ActivityOffer;
 import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.BoardService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -116,7 +118,7 @@ public final class SettlementIntellect {
         TacticalDecision decision = intellect.decide(view, ledger, reservations, queue, tick);
         lastDecision = decision;
         logRefusals(decision.refusals());
-        applyStrengths(members, decision, home, tick);
+        applyStrengths(BoardRegistry.get(level), members, decision, home, tick);
         applyActivities(level, members, snapshots, decision, view, home, tick);
         expeditions.update(level, decision.expedition(), members, tick);
     }
@@ -197,7 +199,11 @@ public final class SettlementIntellect {
     }
 
     private void applyStrengths(
-            List<SpiritEntity> members, TacticalDecision decision, Optional<Point> home, long tick) {
+            BoardService board,
+            List<SpiritEntity> members,
+            TacticalDecision decision,
+            Optional<Point> home,
+            long tick) {
         Map<String, SpiritEntity> byId = new HashMap<>();
         for (SpiritEntity spirit : members) {
             if (!spirit.isRemoved()) {
@@ -207,7 +213,13 @@ public final class SettlementIntellect {
         for (StrengthVerdict verdict : decision.strengths()) {
             SpiritEntity spirit = byId.get(verdict.spirit().toString());
             if (spirit != null) {
-                StrengthDirector.apply(spirit, verdict, starter, tick, home.isPresent());
+                StrengthDirector.apply(
+                        spirit,
+                        verdict,
+                        (armed, script, task, at) ->
+                                board.launch(armed, BoardCase.ACTIVITY_ARM, script, task, starter::start, at),
+                        tick,
+                        home.isPresent());
                 ledger.clear(spirit.getUUID());
             }
         }
