@@ -4,6 +4,7 @@ import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -120,7 +121,22 @@ public final class TicketPlans {
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
-            case CRAFT_FURNACE -> craftInYard("minecraft:furnace", 1, target);
+            // Печь ставится во дворе станций сразу: в инвентаре крафтера её не находила плавка других духов, а сам
+            // крафтер ставил её там, где плавил (24.10: «нужна печь: рядом (16) нет», факелы ограды ждали печь).
+            case CRAFT_FURNACE ->
+                sequence(
+                        gotoPoint(SettlementLayout.workYard(target.target())),
+                        new ScriptCall(
+                                "craft",
+                                Map.of(
+                                        ITEM,
+                                        "minecraft:furnace",
+                                        COUNT,
+                                        1,
+                                        RADIUS,
+                                        CatalogLimits.STATION_RADIUS_DEFAULT,
+                                        "place",
+                                        true)));
             case CRAFT_TORCHES -> craft("minecraft:torch", torchCount(target), target);
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
@@ -449,7 +465,23 @@ public final class TicketPlans {
         return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
     }
 
+    // Добытое — в сундук поселения рядом с домом (решение главного агента 24.10): крафт и стройка берут из сундука,
+    // а не ждут передачу от занятого духа-«копилки». Сундука нет — добытое остаётся у духа (передачи дух→дух).
     private static TaskNode gatherMaterials(TicketTarget target) {
+        String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
+        int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
+        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
+        return sequence(
+                gatherOnly(target),
+                gotoTarget(target),
+                new FallbackNode(List.of(
+                        new ScriptCall(
+                                "deposit",
+                                Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+    }
+
+    private static TaskNode gatherOnly(TicketTarget target) {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);

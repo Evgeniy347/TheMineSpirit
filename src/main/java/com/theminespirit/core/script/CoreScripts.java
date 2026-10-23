@@ -922,7 +922,8 @@ public final class CoreScripts {
                         List.of(
                                 ParamSpec.text(ITEM, true),
                                 ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
-                                stationRadius()),
+                                stationRadius(),
+                                ParamSpec.bool("place", false, false)),
                         List.of("есть материалы и рецепт"),
                         List.of("предмет скрафчен")),
                 spec(
