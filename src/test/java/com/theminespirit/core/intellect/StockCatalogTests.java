@@ -77,6 +77,16 @@ class StockCatalogTests {
     }
 
     @Test
+    void tally_CoalAndCharcoal_BothFuel() {
+        StockLots lots = new StockCatalog(TABLE).tally(Map.of("minecraft:coal", 7, "minecraft:charcoal", 2));
+
+        assertEquals(
+                9,
+                lots.processing().charcoal(),
+                "Обычный уголь — то же топливо: при 7 угле древесный не пережигают ради факелов (INC-33)");
+    }
+
+    @Test
     void tally_ProcessingItems_CountedSeparately() {
         StockLots lots = new StockCatalog(TABLE)
                 .tally(Map.of(

@@ -12,10 +12,13 @@ import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.processing.CookableFoods;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.processing.ProcessingStock;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public final class SmeltActivity implements Activity {
+    public static final String CHARCOAL_LOG = "log";
+
     @Override
     public ActivityId id() {
         return ActivityId.SMELT;
@@ -83,15 +86,23 @@ public final class SmeltActivity implements Activity {
                     Optional.empty());
         }
         if (charcoalDeficit >= cookDeficit) {
-            // Уголь — через acquire: брёвна и топливо дух берёт из сундука или рубит сам, а не падает «не хватает»
-            // без своих брёвен; count — сколько добавить к своему (как у крафта досок).
+            // Древесный уголь блоком не добыть (INC-34): брёвна дух берёт из сундука или рубит (acquire), затем
+            // пережигает их в печи — фабрика задач собирает это парой шагов по полю log.
             return new ActivityIntent(
                     id(),
-                    Optional.of(ActivityIntent.ACQUIRE),
-                    Map.of("item", "charcoal", "count", rules.charcoalCount()),
+                    Optional.of("smelt"),
+                    Map.of(
+                            "item",
+                            "charcoal",
+                            "count",
+                            rules.charcoalCount(),
+                            "radius",
+                            rules.stationRadius(),
+                            CHARCOAL_LOG,
+                            shortName(stock.bestLogItem().orElseThrow())),
                     Optional.empty());
         }
-        Optional<String> cooked = CookableFoods.best(stock.rawFoods(), StockCatalog.defaultTable());
+        Optional<String> cooked = CookableFoods.best(enoughRaw(stock, rules), StockCatalog.defaultTable());
         if (cooked.isEmpty()) {
             return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
         }
@@ -114,8 +125,20 @@ public final class SmeltActivity implements Activity {
         return stock.hasLogs() ? deficit(stock.charcoal(), rules.charcoalTarget()) : 0;
     }
 
+    // Готовка — только когда сырья хватает на партию: иначе плавка падает «не хватает 3 из 4» (INC-31).
+    private static Map<String, Integer> enoughRaw(ProcessingStock stock, ProcessingRules rules) {
+        Map<String, Integer> enough = new HashMap<>();
+        stock.rawFoods().forEach((item, count) -> {
+            if (count >= rules.cookCount()) {
+                enough.put(item, count);
+            }
+        });
+        return enough;
+    }
+
     private static double cookDeficit(SettlementView view, ProcessingStock stock) {
-        if (!stock.hasRawFood()) {
+        if (!stock.hasRawFood()
+                || enoughRaw(stock, ProcessingRules.loadDefault()).isEmpty()) {
             return 0;
         }
         IntellectTuning tuning = IntellectTuning.loadDefault();

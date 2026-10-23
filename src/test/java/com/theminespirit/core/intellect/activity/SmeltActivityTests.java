@@ -10,6 +10,7 @@ import com.theminespirit.core.intellect.WorkStations;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.processing.ProcessingStock;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -54,7 +55,7 @@ class SmeltActivityTests {
 
     @Test
     void demand_RawFoodWithoutLogs_CookOnly() {
-        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of("minecraft:beef", 1), Map.of());
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of("minecraft:beef", 4), Map.of());
         SettlementView view = SettlementViews.processing(3, 0, stock);
 
         assertEquals(
@@ -95,7 +96,7 @@ class SmeltActivityTests {
     @Test
     void order_OnlyRawFood_PicksCookableProduct() {
         ProcessingStock stock =
-                new ProcessingStock(RULES.charcoalTarget(), 0, 0, 0, Map.of("minecraft:beef", 1), Map.of());
+                new ProcessingStock(RULES.charcoalTarget(), 0, 0, 0, Map.of("minecraft:beef", 4), Map.of());
         SettlementView view = SettlementViews.processing(3, 0, stock);
 
         ActivityIntent intent = SMELT.order(SettlementViews.spirit(SPIRIT), view);
@@ -104,6 +105,32 @@ class SmeltActivityTests {
                 "cooked_beef",
                 intent.params().get("item"),
                 "Готовят то сырьё, что реально есть: иначе дух зовёт рецепт из отсутствующей говядины");
+    }
+
+    @Test
+    void order_RawFoodBelowBatch_NoCooking() {
+        ProcessingStock stock =
+                new ProcessingStock(RULES.charcoalTarget(), 0, 0, 0, Map.of("minecraft:porkchop", 3), Map.of());
+        SettlementView view = SettlementViews.processing(3, 0, stock);
+
+        ActivityIntent intent = SMELT.order(SettlementViews.spirit(SPIRIT), view);
+
+        assertEquals(
+                Optional.empty(),
+                intent.script(),
+                "3 котлеты при партии 4 — плавку не ставят: иначе «не хватает porkchop 3 из 4» (INC-31)");
+    }
+
+    @Test
+    void order_CharcoalNeeded_LogsThenSmeltNotAcquire() {
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of(), Map.of("minecraft:jungle_log", 5));
+        SettlementView view = SettlementViews.processing(3, 0, stock);
+
+        ActivityIntent intent = SMELT.order(SettlementViews.spirit(SPIRIT), view);
+
+        assertEquals(
+                Optional.of("smelt"), intent.script(), "Древесный уголь не добыть блоком (INC-34): его пережигают");
+        assertEquals("jungle_log", intent.params().get(SmeltActivity.CHARCOAL_LOG), "Брёвна — порода поселения");
     }
 
     @Test
