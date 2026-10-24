@@ -635,6 +635,10 @@ public final class SpiritEntity extends PathfinderMob {
         }
     }
 
+    public Optional<String> taskSuspendReason() {
+        return spiritBrain == null ? Optional.empty() : spiritBrain.suspendReason();
+    }
+
     public Optional<String> currentTaskScript() {
         return spiritBrain == null ? Optional.empty() : spiritBrain.currentScript();
     }
