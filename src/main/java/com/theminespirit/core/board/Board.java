@@ -44,6 +44,7 @@ public final class Board {
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
     private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
     private final Map<String, String> lastFailReasons = new LinkedHashMap<>();
+    private final Map<String, String> waitNotes = new LinkedHashMap<>();
     private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
     private final Map<String, Long> blockedAt = new LinkedHashMap<>();
     private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
@@ -183,6 +184,22 @@ public final class Board {
         return List.copyOf(ready);
     }
 
+    // Причина ожидания, которую видит только адаптер (гейт по инструменту: «нет духа с киркой», INC-67): доска
+    // показывает её в waitReason, пока задание не выдано.
+    public void noteWait(String ticketId, @Nullable String reason) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания пишется на задание");
+        if (reason == null) {
+            waitNotes.remove(ticketId);
+        } else {
+            waitNotes.put(ticketId, reason);
+        }
+    }
+
+    public Optional<String> waitNote(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания читается по заданию");
+        return Optional.ofNullable(waitNotes.get(ticketId));
+    }
+
     public BoardOutcome claim(String ticketId, UUID spirit, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: выдача идёт по id задания");
         Objects.requireNonNull(spirit, "spirit не может быть null: выдача идёт конкретному духу");
@@ -215,6 +232,7 @@ public final class Board {
         }
         statuses.put(ticketId, BoardStatus.ASSIGNED);
         claimAssignees.put(ticketId, spirit);
+        waitNotes.remove(ticketId);
         events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
         return BoardOutcome.CLAIMED;
     }

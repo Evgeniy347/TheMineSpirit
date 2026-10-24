@@ -45,6 +45,6 @@ public final class BoardWhy {
                             : "держатель на паузе кейса " + ticket.boardCase() + " после "
                                     + board.consecutiveFailures(spirit, ticket.boardCase()) + " провалов подряд");
         }
-        return Optional.empty();
+        return board.waitNote(ticket.id());
     }
 }
