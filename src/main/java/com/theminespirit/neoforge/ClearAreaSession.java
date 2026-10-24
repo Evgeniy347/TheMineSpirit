@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
@@ -20,6 +21,7 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 public class ClearAreaSession {
     public enum Outcome {
@@ -36,6 +38,12 @@ public class ClearAreaSession {
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
+    // Стоянка не ниже низа ящика больше чем на это: расчистка участка снизу из старой пещеры под ним водила духа
+    // по пещере 10 минут (INC-67). Ниже — клетка «недостижима».
+    private static final int STAND_BELOW_BOX = 2;
+    // Строка прогресса — через столько срезанных блоков (INC-67: расчистка шла без единой строки).
+    private static final int PROGRESS_EVERY = 16;
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final int COLLECT_RADIUS = 4;
 
     protected final SpiritEntity spirit;
@@ -187,6 +195,16 @@ public class ClearAreaSession {
         }
         MiningPlanner.Next next = (MiningPlanner.Next) result;
         remaining.remove(next.target());
+        if (next.stand().y() < box.minY() - STAND_BELOW_BOX) {
+            unreachable++;
+            tally.skipped();
+            LOGGER.info(
+                    "[clear] {}: клетка {} — стоянка {} ниже ящика (пещера под участком), пропуск",
+                    spirit.getName().getString(),
+                    next.target(),
+                    next.stand());
+            return;
+        }
         if (reservations.foreign(next.target(), spirit.getUUID())) {
             foreignSkipped++;
             tally.skipped();
@@ -264,6 +282,16 @@ public class ClearAreaSession {
             case BROKEN -> {
                 removed++;
                 tally.removed();
+                if (removed % PROGRESS_EVERY == 1) {
+                    LOGGER.info(
+                            "[clear] {}: ящик {}..{}, срезано {}, осталось {}, стоянка {}",
+                            spirit.getName().getString(),
+                            new BlockCoord(box.minX(), box.minY(), box.minZ()),
+                            new BlockCoord(box.maxX(), box.maxY(), box.maxZ()),
+                            removed,
+                            remaining.size(),
+                            currentStand);
+                }
                 collector = new DropCollector(
                         spirit,
                         IdFilter.matchAll(),

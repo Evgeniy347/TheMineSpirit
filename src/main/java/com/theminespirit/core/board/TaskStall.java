@@ -14,9 +14,27 @@ import org.jspecify.annotations.Nullable;
  */
 public final class TaskStall {
     public static final long STALL_TICKS = 1200;
+    // Дух двигается, но прогресс задачи (шаг, скрипт, сделано) не меняется — бродит без дела (INC-67: 10 минут по
+    // пещере под участком). Дольше любого честного перехода к месту работы.
+    public static final long NO_PROGRESS_TICKS = 3600;
     private static final String GOTO = "goto";
 
     private final Map<UUID, Seen> seen = new HashMap<>();
+    private final Map<UUID, Progress> progress = new HashMap<>();
+
+    private record Progress(String key, long since) {}
+
+    // true — ключ прогресса задачи (шаг, скрипт, сделано) не менялся NO_PROGRESS_TICKS.
+    public boolean noProgress(UUID spirit, String key, long now) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: прогресс считается на конкретного духа");
+        Objects.requireNonNull(key, "Ключ прогресса не может быть null: без него не видно, сдвинулась ли задача");
+        Progress last = progress.get(spirit);
+        if (last == null || !last.key().equals(key)) {
+            progress.put(spirit, new Progress(key, now));
+            return false;
+        }
+        return now - last.since() >= NO_PROGRESS_TICKS;
+    }
 
     private record Seen(@Nullable String script, BlockCoord pos, long since) {}
 
@@ -39,6 +57,7 @@ public final class TaskStall {
 
     public void forget(UUID spirit) {
         seen.remove(spirit);
+        progress.remove(spirit);
     }
 
     private static boolean near(BlockCoord first, BlockCoord second) {

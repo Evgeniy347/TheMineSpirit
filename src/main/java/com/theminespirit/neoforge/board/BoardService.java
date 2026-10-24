@@ -572,7 +572,9 @@ public final class BoardService {
                 && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
             return Optional.of(BoardCase.ACTIVITY_ESCAPE);
         }
-        if (spirit.tactics().wantsControl()) {
+        // Дух с заданием доски занятием не подписывается: «Бой» при script=clear_area путал (INC-67); задание видно
+        // само. Бой — только у духа без задания доски.
+        if (spirit.tactics().wantsControl() && board.assignedTo(id).isEmpty()) {
             return Optional.of(BoardCase.ACTIVITY_COMBAT);
         }
         boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
@@ -725,12 +727,20 @@ public final class BoardService {
     private void checkStall(SpiritEntity spirit, BoardTicket ticket) {
         BlockPos feet = spirit.blockPosition();
         String script = spirit.currentTaskScript().orElse(null);
-        if (!stall.stalled(
-                spirit.getUUID(), script, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), board.now())) {
+        boolean standing = stall.stalled(
+                spirit.getUUID(), script, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), board.now());
+        String key = spirit.taskProgress()
+                .map(p -> p.step() + "/" + p.currentScript() + "/" + p.done())
+                .orElse("-");
+        boolean idle = stall.noProgress(spirit.getUUID(), key, board.now());
+        if (!standing && !idle) {
             return;
         }
-        String reason = "задание стоит " + TaskStall.STALL_TICKS + " тиков: "
-                + (script == null ? "скрипт не стартовал" : "подход не двигается") + " в " + feet.toShortString()
+        String reason = (standing
+                        ? "задание стоит " + TaskStall.STALL_TICKS + " тиков: "
+                                + (script == null ? "скрипт не стартовал" : "подход не двигается")
+                        : "нет прогресса " + TaskStall.NO_PROGRESS_TICKS + " тиков (" + script + ", " + key + ")")
+                + " в " + feet.toShortString()
                 + (spirit.tactics().wantsControl() ? ", тактика держит духа" : "")
                 + spirit.taskSuspendReason().map(why -> ", пауза: " + why).orElse("");
         LOGGER.warn("[incident] дух {}: {} {}; задание провалено", spirit.displayName(), ticket.id(), reason);

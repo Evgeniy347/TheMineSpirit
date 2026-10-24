@@ -41,4 +41,16 @@ class TaskStallTests {
                 stall.stalled(SPIRIT, "smelt", BOTTOM, 10 * TaskStall.STALL_TICKS),
                 "Плавка на месте — работа со своим скриптом, не простой");
     }
+
+    @Test
+    void noProgress_WalkingSameProgress_AfterLimit() {
+        TaskStall stall = new TaskStall();
+        stall.noProgress(SPIRIT, "1/clear_area/0", 0);
+
+        assertFalse(stall.noProgress(SPIRIT, "1/clear_area/0", TaskStall.NO_PROGRESS_TICKS - 1), "До предела — нет");
+        assertTrue(
+                stall.noProgress(SPIRIT, "1/clear_area/0", TaskStall.NO_PROGRESS_TICKS),
+                "Дух ходит, но прогресс задачи не меняется — простой: 10 минут по пещере без срезки (INC-67)");
+        assertFalse(stall.noProgress(SPIRIT, "1/clear_area/1", TaskStall.NO_PROGRESS_TICKS + 1), "Сдвиг — сброс");
+    }
 }

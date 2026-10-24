@@ -39,6 +39,26 @@ class PlotLevelingTests {
     }
 
     @Test
+    void voids_CaveUnderPlot_OnlyWithinDepth() {
+        // Колонка (0,0): поверхность 64, пещера 58..62 под ней — засыпается только 60..62 (4 под уровнем), глубже нет.
+        List<PlotLeveling.Box> voids = PlotLeveling.voids(ANCHOR, 0, (x, z) -> 64, (x, y, z) -> y >= 58 && y <= 62);
+
+        assertEquals(
+                List.of(new PlotLeveling.Box(0, 60, 0, 0, 62, 0)),
+                voids,
+                "Пустота под участком на глубину до 4 засыпается, глубже — не цель (INC-67): дух 10 минут бродил по "
+                        + "старой пещере на 7 ниже участка");
+    }
+
+    @Test
+    void voids_MineColumn_Skipped() {
+        assertEquals(
+                List.of(),
+                PlotLeveling.voids(ANCHOR, 0, (x, z) -> Integer.MIN_VALUE, (x, y, z) -> true),
+                "Спуск в шахту — не пустота: его колонку выравнивание не засыпает");
+    }
+
+    @Test
     void plan_FlatPlot_NothingToDo() {
         PlotLeveling plan = PlotLeveling.plan(ANCHOR, 2, (x, z) -> 64);
 

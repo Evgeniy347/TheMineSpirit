@@ -17,12 +17,24 @@ import org.jspecify.annotations.Nullable;
  * @param cut  ящики срезки (всё твёрдое выше уровня ног участка) — для {@code clear_area}
  * @param fill ящики подсыпки (воздух ниже уровня ног) — для {@code fill} материалом {@code block}
  */
-public record PlotLeveling(List<Box> cut, List<Box> fill, String block) {
+public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box> voids) {
     public static final int MAX_SHIFT = 10;
     public static final String DEFAULT_BLOCK = "dirt";
     // Допуск ровного участка: колонка на блок выше или ниже уровня — ровно, ступенька в блок проходима (INC-50).
     public static final int TOLERANCE = 1;
+    // Пустоты под участком (пещеры, старые ходы) засыпаются на эту глубину под уровнем; глубже — не цель (INC-67).
+    public static final int VOID_DEPTH = 4;
     public static final PlotLeveling FLAT = new PlotLeveling(List.of(), List.of(), DEFAULT_BLOCK);
+
+    /** Воздух клетки мира: по нему находятся пустоты под участком. */
+    @FunctionalInterface
+    public interface AirProbe {
+        boolean air(int x, int y, int z);
+    }
+
+    public PlotLeveling(List<Box> cut, List<Box> fill, String block) {
+        this(cut, fill, block, List.of());
+    }
 
     public record Box(int x1, int y1, int z1, int x2, int y2, int z2) {
         public int volume() {
@@ -34,6 +46,37 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block) {
         cut = List.copyOf(Objects.requireNonNull(cut, "Срезка не может быть null: ровный участок — пустой список"));
         fill = List.copyOf(Objects.requireNonNull(fill, "Подсыпка не может быть null: ровный участок — пустой список"));
         Objects.requireNonNull(block, "Материал подсыпки не может быть null: яму засыпают землёй или булыжником");
+        voids = List.copyOf(Objects.requireNonNull(voids, "Пустоты не могут быть null: нет пустот — пустой список"));
+    }
+
+    public PlotLeveling withVoids(List<Box> found) {
+        return new PlotLeveling(cut, fill, block, found);
+    }
+
+    // Пустоты под землёй участка на VOID_DEPTH под уровнем anchor.y(): воздух ниже поверхности колонки (feet).
+    // Колонку, которую выравнивание не трогает (спуск в шахту), feet отдаёт Integer.MIN_VALUE.
+    public static List<Box> voids(BlockCoord anchor, int half, IntBinaryOperator feet, AirProbe probe) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: пустоты ищутся под ним");
+        Objects.requireNonNull(feet, "Высоты колонок не могут быть null: пустота — воздух под поверхностью");
+        Objects.requireNonNull(probe, "Проба воздуха не может быть null: без неё пустот не найти");
+        List<Box> found = new ArrayList<>();
+        int bottom = anchor.y() - VOID_DEPTH;
+        for (int x = anchor.x() - half; x <= anchor.x() + half; x++) {
+            for (int z = anchor.z() - half; z <= anchor.z() + half; z++) {
+                int surface = Math.min(feet.applyAsInt(x, z), anchor.y());
+                Integer start = null;
+                for (int y = bottom; y <= surface; y++) {
+                    boolean hole = y < surface && probe.air(x, y, z);
+                    if (hole && start == null) {
+                        start = y;
+                    } else if (!hole && start != null) {
+                        found.add(new Box(x, start, z, x, y - 1, z));
+                        start = null;
+                    }
+                }
+            }
+        }
+        return List.copyOf(found);
     }
 
     public int fillVolume() {
@@ -41,7 +84,7 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block) {
     }
 
     public PlotLeveling withBlock(String material) {
-        return new PlotLeveling(cut, fill, material);
+        return new PlotLeveling(cut, fill, material, voids);
     }
 
     // Средняя высота участка {@code half} вокруг якоря — медиана уровней ног колонок.

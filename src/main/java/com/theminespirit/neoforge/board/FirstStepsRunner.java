@@ -389,16 +389,24 @@ public final class FirstStepsRunner {
     // запасе, иначе землёй.
     private static PlotLeveling leveling(ServerLevel level, BlockCoord anchor, StockView stock) {
         PlotLeveling plan = PlotLeveling.plan(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
+        IntBinaryOperator feet = (x, z) ->
+                SettlementLayout.mineColumn(anchor, x, z) ? Integer.MIN_VALUE : feetAt(level, x, z, anchor.y());
+        plan = plan.withVoids(PlotLeveling.voids(
+                anchor,
+                SettlementLayout.HALF,
+                feet,
+                (x, y, z) -> level.getBlockState(new BlockPos(x, y, z)).isAir()));
         if (plan.fillVolume() > 0 && stock.available().getOrDefault(COBBLESTONE, 0) >= plan.fillVolume()) {
             plan = plan.withBlock(COBBLESTONE);
         }
         if (!plan.cut().isEmpty() || !plan.fill().isEmpty()) {
             LOGGER.info(
-                    "Выравнивание участка на y={}: срезка {} ящиков, подсыпка {} блоков {}",
+                    "Выравнивание участка на y={}: срезка {} ящиков, подсыпка {} блоков {}, пустот под участком {}",
                     anchor.y(),
                     plan.cut().size(),
                     plan.fillVolume(),
-                    plan.block());
+                    plan.block(),
+                    plan.voids().size());
         }
         return plan;
     }
