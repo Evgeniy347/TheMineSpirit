@@ -25,6 +25,7 @@ import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
 import com.theminespirit.neoforge.net.ModProtocolHandshake;
 import com.theminespirit.neoforge.policy.PolicyEvents;
+import com.theminespirit.neoforge.respawn.SpiritRespawnService;
 import com.theminespirit.neoforge.rest.RestConfig;
 import com.theminespirit.neoforge.rest.RestLifecycle;
 import net.neoforged.bus.api.IEventBus;
@@ -65,6 +66,7 @@ public final class TheMineSpirit {
         CraterEvents.register(NeoForge.EVENT_BUS);
         new SpiritExperienceEvents(NeoForge.EVENT_BUS);
         new SpiritDropEvents(NeoForge.EVENT_BUS);
+        SpiritRespawnService.register(NeoForge.EVENT_BUS);
         LOGGER.info("The Mine Spirit {} загружен", modContainer.getModInfo().getVersion());
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) ->
                 LOGGER.info("The Mine Spirit {}: сервер запущен", BuildFingerprint.version()));

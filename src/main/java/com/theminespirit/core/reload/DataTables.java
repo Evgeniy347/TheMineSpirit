@@ -1,6 +1,7 @@
 package com.theminespirit.core.reload;
 
 import com.theminespirit.core.armor.ArmorTable;
+import com.theminespirit.core.base.RespawnRules;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.building.BuildData;
@@ -90,6 +91,7 @@ public final class DataTables {
     private final TableHolder<StageRules> stages;
     private final TableHolder<PersonalSpace> personalSpace;
     private final TableHolder<HungerRules> hunger;
+    private final TableHolder<RespawnRules> respawn;
     private final TableHolder<FishingData> fishing;
     private final TableHolder<ReplantData> replant;
     private final TableHolder<DescentData> descent;
@@ -154,6 +156,7 @@ public final class DataTables {
                 single("personal_space", PersonalSpace.RESOURCE, PersonalSpace::parse, PersonalSpace::load);
         this.doors = single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse, DoorTuning::loadDefault);
         this.hunger = single("hunger", HungerRules.RESOURCE, HungerRules::parse, HungerRules::load);
+        this.respawn = single("respawn", RespawnRules.RESOURCE, RespawnRules::parse, RespawnRules::load);
         this.fishing = single("fishing", FishingData.RESOURCE, FishingData::parse, FishingData::load);
         this.replant = single("replant", ReplantData.RESOURCE, ReplantData::parse, ReplantData::load);
         this.descent = single("descent", DescentData.RESOURCE, DescentData::parse, DescentData::load);
@@ -356,6 +359,10 @@ public final class DataTables {
 
     public TableHolder<HungerRules> hunger() {
         return hunger;
+    }
+
+    public TableHolder<RespawnRules> respawn() {
+        return respawn;
     }
 
     public TableHolder<FishingData> fishing() {
