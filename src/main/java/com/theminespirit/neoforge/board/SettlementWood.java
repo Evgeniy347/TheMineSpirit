@@ -28,6 +28,9 @@ public final class SettlementWood {
     // перевешивают средний запас чужой породы (INC-41: дуб из прошлых прогонов в сундуках ставил gather:oak_fence в
     // джунглях), а большой свой запас (64) по-прежнему решает.
     private static final int NEARBY_WEIGHT = 3;
+    private static final int STOCK_MIN = 16;
+    private static final int WIDE_SCAN_RADIUS = 48;
+    private static final int WIDE_SCAN_STEP = 4;
     private static final Logger LOGGER = LoggerFactory.getLogger(SettlementWood.class);
     private static final Map<BlockCoord, Map<String, Integer>> NEARBY = new ConcurrentHashMap<>();
     private static final Map<BlockCoord, String> CHOSEN = new ConcurrentHashMap<>();
@@ -40,7 +43,11 @@ public final class SettlementWood {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         Map<String, Integer> nearby = NEARBY.get(home);
         if (nearby == null) {
-            nearby = nearby(level, home);
+            nearby = nearby(level, home, SCAN_RADIUS, 2);
+            if (!WoodSpecies.hasLogs(nearby)) {
+                // Деревья у дома вырублены расчисткой участка — выборка дальше, реже (INC-42: «деревья {}»).
+                nearby = nearby(level, home, WIDE_SCAN_RADIUS, WIDE_SCAN_STEP);
+            }
             if (WoodSpecies.hasLogs(nearby)) {
                 // Без брёвен рядом выборка не запоминается: деревья могут прогрузиться позже.
                 NEARBY.put(home, Map.copyOf(nearby));
@@ -80,15 +87,25 @@ public final class SettlementWood {
     static String vote(Map<String, Integer> stock, Map<String, Integer> nearby, String biome) {
         Map<String, Integer> votes = new HashMap<>();
         nearby.forEach((item, count) -> votes.merge(item, count * NEARBY_WEIGHT, Integer::sum));
-        stock.forEach((item, count) -> votes.merge(item, count, Integer::sum));
+        Map<String, Integer> stockLogs = new HashMap<>();
+        stock.forEach((item, count) -> WoodSpecies.speciesOf(item)
+                .filter(species -> item.endsWith("_log"))
+                .ifPresent(species -> stockLogs.merge(species + "_log", count, Integer::sum)));
+        // Малый запас (меньше STOCK_MIN брёвен породы) не голосует: 2 дубовых бревна без деревьев рядом перебивали
+        // биом jungle, и ограда шла из дуба (INC-42, живой 24.10).
+        stockLogs.forEach((item, count) -> {
+            if (count >= STOCK_MIN) {
+                votes.merge(item, count, Integer::sum);
+            }
+        });
         votes.merge(biome + "_log", BIOME_WEIGHT, Integer::sum);
         return WoodSpecies.of(votes);
     }
 
-    private static Map<String, Integer> nearby(ServerLevel level, BlockCoord home) {
+    private static Map<String, Integer> nearby(ServerLevel level, BlockCoord home, int radius, int step) {
         Map<String, Integer> logs = new HashMap<>();
-        for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx += 2) {
-            for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz += 2) {
+        for (int dx = -radius; dx <= radius; dx += step) {
+            for (int dz = -radius; dz <= radius; dz += step) {
                 for (int dy = 0; dy <= SCAN_HEIGHT; dy++) {
                     BlockPos pos = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     String id = BuiltInRegistries.BLOCK
