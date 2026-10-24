@@ -12,6 +12,18 @@ class PlotLevelingTests {
     private static final BlockCoord ANCHOR = new BlockCoord(0, 64, 0);
 
     @Test
+    void cutTopDown_HillWithRuinOnTop_HighestBoxFirst() {
+        PlotLeveling plan = PlotLeveling.plan(ANCHOR, 2, (x, z) -> x == 1 && z == 1 ? 69 : z == 1 ? 68 : 64);
+        List<Integer> tops =
+                plan.cutTopDown().stream().map(PlotLeveling.Box::y2).toList();
+        assertEquals(
+                List.of(68, 67, 67),
+                tops,
+                "Срезка с вершин: ряд со стенкой на холме (ноги 69) — раньше рядов холма, иначе стенка остаётся "
+                        + "висеть без стоянки (сцена 56)");
+    }
+
+    @Test
     void isLevel_StepOfOneBlock_Level() {
         assertTrue(
                 PlotLeveling.isLevel(ANCHOR, 11, (x, z) -> x > 0 ? 65 : 64),

@@ -32,7 +32,10 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
-    public static final int CLEAR_QUARTERS = 4;
+    // Расчистка и выравнивание — 9 частей 3×3 на свободных духов: четверти на трёх духах оставляли одну на одного, и
+    // остальные стояли до её конца (сцена 56: холм целиком в одной четверти).
+    public static final int CLEAR_GRID = 3;
+    public static final int CLEAR_PARTS = CLEAR_GRID * CLEAR_GRID;
     // Ограда кусками периметра на разных духов: одним духом она шла ~2900 тиков, двое простаивали (приёмка «джунгли»).
     public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
@@ -642,28 +645,47 @@ public final class TicketPlans {
     // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
     private static TaskNode clearGrounds(TicketTarget target) {
         int radius = GROUNDS_CLEAR_RADIUS;
-        List<TaskNode> chunks = List.of(
-                clearGroundsChunk(target, -radius, -radius, -1, -1),
-                clearGroundsChunk(target, 0, -radius, radius, -1),
-                clearGroundsChunk(target, -radius, 0, -1, radius),
-                clearGroundsChunk(target, 0, 0, radius, radius));
-        int quarter = target.count();
-        boolean single = quarter >= 1 && quarter <= CLEAR_QUARTERS;
-        List<TaskNode> steps = new ArrayList<>(single ? List.of(chunks.get(quarter - 1)) : chunks);
-        // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
-        // земля — запас подсыпки), потом подсыпка ям. Выравнивание делится по четвертям, как расчистка: всё оно шло
-        // в первой четверти одним духом, двое стояли (INC-64).
-        PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
-        BlockCoord center = target.target();
-        for (PlotLeveling.Box box : leveling.cut()) {
-            if (!single || quarterOf(box, center) == quarter) {
-                steps.add(new ScriptCall("clear_area", boxParams(box, Map.of())));
+        List<TaskNode> chunks = new ArrayList<>();
+        int band = (2 * radius + 1) / CLEAR_GRID;
+        for (int row = 0; row < CLEAR_GRID; row++) {
+            for (int col = 0; col < CLEAR_GRID; col++) {
+                int dx = -radius + col * band;
+                int dz = -radius + row * band;
+                int lastX = col == CLEAR_GRID - 1 ? radius : dx + band - 1;
+                int lastZ = row == CLEAR_GRID - 1 ? radius : dz + band - 1;
+                chunks.add(clearGroundsChunk(target, dx, dz, lastX, lastZ));
             }
         }
+        int quarter = target.count();
+        boolean single = quarter >= 1 && quarter <= CLEAR_PARTS;
+        List<TaskNode> steps = new ArrayList<>();
+        // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
+        // земля — запас подсыпки), потом подсыпка ям. Выравнивание делится по четвертям, как расчистка: всё оно шло
+        // в первой четверти одним духом, двое стояли (INC-64). Срезка — до расчистки ящика на 3 над участком:
+        // расчистка срывала холм под старой стенкой на его вершине, и стенка висела без стоянки (сцена 56).
+        PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
+        BlockCoord center = target.target();
+        // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
+        // его берёт следующий обмер, когда соседние ряды срезаны.
+        for (PlotLeveling.Box box : leveling.cutTopDown()) {
+            if (!single || partOf(box, center) == quarter) {
+                steps.add(new FallbackNode(List.of(
+                        new ScriptCall("clear_area", boxParams(box, Map.of())),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+            }
+        }
+        steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         List<PlotLeveling.Box> fills = leveling.fill().stream()
-                .filter(box -> !single || quarterOf(box, center) == quarter)
+                .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
         int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
+        if (volume > 0 && !PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
+            // Булыжник на подсыпку — из запаса поселения (сундуки, свой инвентарь): духу четверти его никто не нёс, и
+            // подсыпка падала «не хватило cobblestone: нужно 2, есть 0» (сцена 56).
+            steps.add(new ScriptCall(
+                    "acquire",
+                    Map.of(ITEM, "minecraft:" + leveling.block(), COUNT, Math.min(volume, CatalogLimits.COUNT_MAX))));
+        }
         if (volume > 0 && PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
             // Земля на подсыпку (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
             // добычей за оградой, а не из земли участка; сундука до выравнивания нет.
@@ -682,7 +704,7 @@ public final class TicketPlans {
         // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
         // карман духу не достать, это не повод валить выравнивание (INC-67).
         List<PlotLeveling.Box> voids = leveling.voids().stream()
-                .filter(box -> !single || quarterOf(box, center) == quarter)
+                .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
         for (PlotLeveling.Box layer : layers(voids)) {
             steps.add(new FallbackNode(List.of(
@@ -725,18 +747,21 @@ public final class TicketPlans {
     }
 
     // Место добычи земли для подсыпки четверти — за оградой с её стороны, чтобы не копать участок.
-    static BlockCoord dirtSource(BlockCoord center, int quarter) {
+    static BlockCoord dirtSource(BlockCoord center, int part) {
         int reach = SettlementLayout.LEVEL_HALF + DIRT_SOURCE_GAP;
-        int dx = quarter == 2 || quarter == 4 ? reach : -reach;
-        int dz = quarter >= 3 ? reach : -reach;
-        return new BlockCoord(center.x() + dx, center.y(), center.z() + dz);
+        int dx = ((part - 1) % CLEAR_GRID - 1) * reach;
+        int dz = ((part - 1) / CLEAR_GRID - 1) * reach;
+        return new BlockCoord(center.x() + dx, center.y(), center.z() + (dx == 0 && dz == 0 ? -reach : dz));
     }
 
-    // Четверть ящика выравнивания по его началу — те же четверти, что у расчистки (1 — запад-север … 4 — восток-юг).
-    static int quarterOf(PlotLeveling.Box box, BlockCoord center) {
-        boolean east = box.x1() >= center.x();
-        boolean south = box.z1() >= center.z();
-        return 1 + (east ? 1 : 0) + (south ? 2 : 0);
+    // Часть ящика выравнивания по его началу — те же части 3×3, что у расчистки (1 — северо-запад … 9 — юго-восток).
+    static int partOf(PlotLeveling.Box box, BlockCoord center) {
+        return 1 + band(box.x1() - center.x()) + CLEAR_GRID * band(box.z1() - center.z());
+    }
+
+    private static int band(int offset) {
+        int width = (2 * GROUNDS_CLEAR_RADIUS + 1) / CLEAR_GRID;
+        return Math.max(0, Math.min(CLEAR_GRID - 1, (offset + GROUNDS_CLEAR_RADIUS) / width));
     }
 
     private static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {

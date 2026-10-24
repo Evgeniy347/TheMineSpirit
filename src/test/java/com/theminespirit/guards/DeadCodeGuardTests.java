@@ -72,6 +72,9 @@ class DeadCodeGuardTests {
 
     private static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
+                    "src/main/java/com/theminespirit/core/scene/SceneGenerator.java|method|SceneGenerator#generate",
+                    "Генератор сцены по сиду — чистая функция core, вход только из GameTest first_stage"),
+            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(

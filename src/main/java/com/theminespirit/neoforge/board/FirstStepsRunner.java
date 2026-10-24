@@ -157,6 +157,24 @@ public final class FirstStepsRunner {
         // Доски, брёвна и деревянные блоки — породы поселения: в джунглях «oak_planks» не добыть (INC-36).
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        if (caseValue == BoardCase.CLEAR_GROUNDS) {
+            // Землю на подсыпку расчистка берёт сама — со срезки и добычей за оградой (INC-68): ждать её в запасе
+            // до открытия шага — вечное ожидание, земля под травой участка доской не добывается (сцена 56, сид
+            // 519074267563303498: dirt=96 ждала 6000 тиков).
+            need.remove(PlotLeveling.DEFAULT_BLOCK);
+        }
+        if (caseValue == BoardCase.BUILD_MINE) {
+            // Пол и стенки спуска над землёй и в пустотах кладутся из запаса: строитель шахты не нёс ни булыжника, ни
+            // земли — их сдала в сундук расчистка — и падал «нет булыжника на стенку» (сцена 56).
+            int floors = mineFloorsToPlace(level, anchor);
+            String block = stock.available().getOrDefault(COBBLESTONE, 0) >= floors
+                            || stock.available().getOrDefault(PlotLeveling.DEFAULT_BLOCK, 0) < floors
+                    ? COBBLESTONE
+                    : PlotLeveling.DEFAULT_BLOCK;
+            if (floors > 0) {
+                need.merge(block, floors, Integer::sum);
+            }
+        }
         if (WOODEN_BUILDINGS.contains(caseValue)) {
             // Повтор проваленной стройки просит только непоставленное: после провала ограды на 91/94 доска снова
             // заказывала забор ×72 на всю схему — 1800 тиков лишней добычи (приёмка «джунгли» 24.10).
@@ -314,7 +332,7 @@ public final class FirstStepsRunner {
 
     private static int partsOf(BoardCase caseValue) {
         return switch (caseValue) {
-            case CLEAR_GROUNDS -> TicketPlans.CLEAR_QUARTERS;
+            case CLEAR_GROUNDS -> TicketPlans.CLEAR_PARTS;
             case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
             default -> 1;
         };
@@ -831,33 +849,51 @@ public final class FirstStepsRunner {
         return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(step, anchor, wood)), wood);
     }
 
-    // Спуск по схеме: клетки прохода свободны (факел и лестница не мешают), пол — твёрдый блок класса пола.
-    private static Placed mineAudit(ServerLevel level, BlockCoord anchor) {
-        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
-        if (preset.isEmpty()) {
+    private static int mineFloorsToPlace(ServerLevel level, BlockCoord anchor) {
+        Placed floors = mineFloors(level, anchor);
+        return floors.total() - floors.done();
+    }
+
+    private static Placed mineFloors(ServerLevel level, BlockCoord anchor) {
+        Optional<MineLayout> layout = mineLayout(anchor);
+        if (layout.isEmpty()) {
             return new Placed(0, 0);
         }
-        MineLayout layout = MineLayout.place(
-                preset.get().schematic(),
-                preset.get().entry(),
-                TicketPlans.mineDescentOrigin(anchor),
-                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
-                MineLayout.Extent.NONE);
         int done = 0;
-        for (BlockCoord cell : layout.air()) {
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
-                done++;
-            }
-        }
-        for (BlockCoord cell : layout.floors()) {
+        for (BlockCoord cell : layout.get().floors()) {
             BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
             if (SchematicBlocks.isFloorClass(
                     BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())) {
                 done++;
             }
         }
-        return new Placed(done, layout.air().size() + layout.floors().size());
+        return new Placed(done, layout.get().floors().size());
+    }
+
+    private static Optional<MineLayout> mineLayout(BlockCoord anchor) {
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
+        return preset.map(found -> MineLayout.place(
+                found.schematic(),
+                found.entry(),
+                TicketPlans.mineDescentOrigin(anchor),
+                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
+                MineLayout.Extent.NONE));
+    }
+
+    // Спуск по схеме: клетки прохода свободны (факел и лестница не мешают), пол — твёрдый блок класса пола.
+    private static Placed mineAudit(ServerLevel level, BlockCoord anchor) {
+        Optional<MineLayout> layout = mineLayout(anchor);
+        if (layout.isEmpty()) {
+            return new Placed(0, 0);
+        }
+        int done = 0;
+        for (BlockCoord cell : layout.get().air()) {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                done++;
+            }
+        }
+        return new Placed(done, layout.get().air().size()).plus(mineFloors(level, anchor));
     }
 
     private record Placed(int done, int total) {
@@ -932,6 +968,16 @@ public final class FirstStepsRunner {
     // Шаг кусками (ограда) сделан, когда сделаны все куски: отметку в журнале ставит первый сделанный кусок.
     // Мир до кусков (first:build_fence DONE, кусков на доске нет) — ограда целиком, она сделана.
     private static boolean partsDone(BoardService service, BoardCase step) {
+        if (step == BoardCase.CLEAR_GROUNDS) {
+            // Расчистка сделана, когда ни одна её часть не идёт: шахта, открытая по первой части, строилась в ящике
+            // ещё идущей расчистки, и та срывала её стенки (сцена 56). Ровность после частей сверяет мир.
+            for (int part = 2; part <= TicketPlans.CLEAR_PARTS; part++) {
+                if (active(service, partId(step, part))) {
+                    return false;
+                }
+            }
+            return true;
+        }
         if (step != BoardCase.BUILD_FENCE) {
             return true;
         }

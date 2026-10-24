@@ -9,6 +9,7 @@ import com.theminespirit.core.building.CaveStand;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -43,6 +45,7 @@ public class ClearAreaSession {
     private static final int PROGRESS_EVERY = 16;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int COLLECT_RADIUS = 4;
+    private static final int LEFTOVER_SHOWN = 4;
 
     protected final SpiritEntity spirit;
     protected final Level level;
@@ -73,6 +76,7 @@ public class ClearAreaSession {
     private final BuildResult tally = new BuildResult();
     private int keptBlocks;
     private final boolean demolish;
+    private List<String> leftover = List.of();
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this(spirit, box, false);
@@ -181,12 +185,22 @@ public class ClearAreaSession {
         }
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        MiningPlanner.Outcome result = MiningPlanner.next(from, remaining, safety, approachFailures.excludedStands());
+        List<BlockCoord> top = ClearOrder.topmost(
+                remaining, cell -> !level.getBlockState(toPos(cell)).isAir());
+        MiningPlanner.Outcome result = MiningPlanner.next(from, top, safety, approachFailures.excludedStands());
+        if (result instanceof MiningPlanner.Exhausted) {
+            result = MiningPlanner.next(from, remaining, safety, approachFailures.excludedStands());
+        }
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             unsafe += exhausted.unsafe();
             noStand += exhausted.noStand();
             unreachable += exhausted.unreachable();
             noteSkipped(exhausted.unsafe() + exhausted.noStand() + exhausted.unreachable());
+            leftover = remaining.stream()
+                    .filter(cell -> !level.getBlockState(toPos(cell)).isAir())
+                    .limit(LEFTOVER_SHOWN)
+                    .map(cell -> cell + " " + blockAt(cell))
+                    .toList();
             remaining.clear();
             finish();
             return;
@@ -336,6 +350,12 @@ public class ClearAreaSession {
     }
 
     protected Outcome fail(String reason) {
+        LOGGER.info(
+                "[clear] {}: ящик {}..{} не расчищен: {}",
+                spirit.getName().getString(),
+                new BlockCoord(box.minX(), box.minY(), box.minZ()),
+                new BlockCoord(box.maxX(), box.maxY(), box.maxZ()),
+                reason);
         failureReason = reason;
         outcome = Outcome.FAILED;
         tally.failed();
@@ -350,6 +370,9 @@ public class ClearAreaSession {
                 + ", занято другим духом: " + foreignSkipped + ")";
         if (unreachable > 0) {
             counts += "; недостижимо: " + unreachable;
+        }
+        if (!leftover.isEmpty()) {
+            counts += "; не взяты " + leftover;
         }
         return counts;
     }
@@ -366,6 +389,12 @@ public class ClearAreaSession {
         for (int i = 0; i < count; i++) {
             tally.skipped();
         }
+    }
+
+    private String blockAt(BlockCoord cell) {
+        return BuiltInRegistries.BLOCK
+                .getKey(level.getBlockState(toPos(cell)).getBlock())
+                .getPath();
     }
 
     private static BlockPos toPos(BlockCoord coord) {

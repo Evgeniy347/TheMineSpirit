@@ -40,6 +40,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.DigOutScript;
+import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -748,11 +749,24 @@ public final class BoardService {
                 + " в " + feet.toShortString()
                 + (spirit.tactics().wantsControl() ? ", тактика держит духа" : "")
                 + spirit.taskSuspendReason().map(why -> ", пауза: " + why).orElse("");
-        LOGGER.warn("[incident] дух {}: {} {}; задание провалено", spirit.displayName(), ticket.id(), reason);
+        LOGGER.warn(
+                "[incident] дух {}: {} {}; задание провалено; {}",
+                spirit.displayName(),
+                ticket.id(),
+                reason,
+                incident(spirit, ticket, reason));
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
         board.fail(ticket.id(), stock, reason);
+    }
+
+    // Всё для повтора провала в тесте: дух, задание с целью, позиция, инвентарь и снимок окрестности в папке мира.
+    private String incident(SpiritEntity spirit, BoardTicket ticket, String reason) {
+        TicketTarget target = targets.get(ticket.id());
+        String aim = target == null ? "-" : target.target() + " часть " + target.count();
+        String what = ticket.id() + " (" + ticket.boardCase() + ", цель " + aim + "): " + reason;
+        return spirit.level() instanceof ServerLevel level ? IncidentSnapshots.record(level, spirit, what) : what;
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
@@ -800,13 +814,14 @@ public final class BoardService {
             board.fail(ticket.id(), stock, spirit.taskFailureReason().orElse(null));
             LOGGER.warn(
                     "[incident] дух {} ({}) провалил задание доски {} (кейс {}): {}; статус {}; доска выдаёт "
-                            + "следующее задание",
+                            + "следующее задание; {}",
                     spirit.displayName(),
                     spirit.getUUID(),
                     ticket.id(),
                     ticket.boardCase(),
                     spirit.taskFailureReason().orElse("причина не записана"),
-                    board.statusOf(ticket.id()).orElse(null));
+                    board.statusOf(ticket.id()).orElse(null),
+                    incident(spirit, ticket, spirit.taskFailureReason().orElse("причина не записана")));
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }

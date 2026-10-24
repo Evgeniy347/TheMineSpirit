@@ -3,7 +3,7 @@
 # Полный лог всегда в TestResults/logs/<дата-время>-<режим>.log; на экран — только итог.
 # Режимы:
 #   scripts/test.sh unit [--tests <фильтр gradle>]… [--fast-analyzers]
-#   scripts/test.sh gametest [--full] [имя пачки или теста…]
+#   scripts/test.sh gametest [--full] [--seed N] [имя пачки или теста…]
 # Пределы времени (переменные окружения, секунды):
 #   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 90), THEMINESPIRIT_UNIT_STOP_SECONDS (200)
 #   THEMINESPIRIT_GAMETEST_WARN_SECONDS (120), THEMINESPIRIT_GAMETEST_STOP_SECONDS (200) — быстрый набор
@@ -61,11 +61,14 @@ usage() {
     cat <<'EOF'
 Использование:
   scripts/test.sh unit [--tests <фильтр gradle>]… [--fast-analyzers]
-  scripts/test.sh gametest [--full] [имя пачки или теста…]
+  scripts/test.sh gametest [--full] [--seed N] [имя пачки или теста…]
 
 Режимы:
   unit      быстрые JUnit-тесты (без запуска игры)
   gametest  GameTest под замком: общий набор без ручных демо-аудитов (--full — он же, с пределом полного)
+
+Сид генерируемой сцены: --seed N повторяет ту же сцену (сид пишется в лог теста строкой [scene]);
+без --seed каждая сцена берёт новый случайный сид.
 
 Шарды GameTest: на ПК 3 сервера, на Linux 1; THEMINESPIRIT_GAMETEST_SHARDS перекрывает.
 
@@ -78,6 +81,7 @@ usage() {
   scripts/test.sh gametest demo_audit_familyhouse
   scripts/test.sh gametest CombatGameTests
   scripts/test.sh gametest combat_directive
+  scripts/test.sh gametest --seed 42 first_stage
   scripts/test.sh gametest CombatGameTests.combat_target_spirit
 
 Переменные окружения:
@@ -106,6 +110,7 @@ MODE=""
 UNIT_TESTS=()
 GAMETEST_FILTERS=()
 GAMETEST_FULL=0
+GAMETEST_SEED=""
 UNIT_FAST_ANALYZERS=0
 
 while [ $# -gt 0 ]; do
@@ -118,6 +123,15 @@ while [ $# -gt 0 ]; do
         --full)
             [ "$MODE" = "gametest" ] || { echo "--full только для режима gametest" >&2; usage; }
             GAMETEST_FULL=1
+            shift
+            ;;
+        --seed)
+            [ "$MODE" = "gametest" ] || { echo "--seed только для режима gametest" >&2; usage; }
+            shift
+            case "${1:-}" in
+                ''|*[!0-9-]*|?*-*) echo "--seed требует целое число" >&2; usage ;;
+            esac
+            GAMETEST_SEED="$1"
             shift
             ;;
         --fast-analyzers)
@@ -858,6 +872,9 @@ else
     if [ ${#GAMETEST_FILTERS[@]} -gt 0 ]; then
         FILTER_VALUE=$(IFS=,; echo "${GAMETEST_FILTERS[*]}")
         GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.filter=$FILTER_VALUE")
+    fi
+    if [ -n "$GAMETEST_SEED" ]; then
+        GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.seed=$GAMETEST_SEED")
     fi
     # Демо-аудиты построек — ручные тесты: в общем наборе (в том числе --full) их нет, только явный фильтр.
     GAMETEST_EXCLUDE=""

@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.IntBinaryOperator;
@@ -115,6 +116,14 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
             }
         }
         return true;
+    }
+
+    // Срезка с вершин: ящики выше — раньше. Срезанный ряд холма лишал стоянки старую стенку на вершине соседнего
+    // ряда, и она висела на 4 выше ног (сцена 56).
+    public List<Box> cutTopDown() {
+        List<Box> ordered = new ArrayList<>(cut);
+        ordered.sort(Comparator.comparingInt(Box::y2).reversed());
+        return List.copyOf(ordered);
     }
 
     // План для участка {@code half} вокруг якоря; уровень ног участка — {@code anchor.y()}.
