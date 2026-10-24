@@ -23,7 +23,10 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
+import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildingType;
+import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -110,7 +113,7 @@ public final class FirstStepsRunner {
         String wood = woodOf(level, home, stock);
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service);
         SettlementFacts facts = scan.facts();
-        boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+        boolean mine = facts.mineEntrance();
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, wood);
@@ -171,7 +174,9 @@ public final class FirstStepsRunner {
         // Расчистка — четвертями, ограда — кусками периметра на разных духов: одним духом расчистка шла ~4000 тиков,
         // ограда ~2900, двое простаивали (приёмка «джунгли» 24.10). Первая часть — first:, остальные — помощники.
         int parts = partsOf(caseValue);
-        if (LAYOUT_STEPS.contains(caseValue) || caseValue == BoardCase.CLEAR_GROUNDS) {
+        if (LAYOUT_STEPS.contains(caseValue)
+                || caseValue == BoardCase.CLEAR_GROUNDS
+                || caseValue == BoardCase.BUILD_MINE) {
             reopenDone(level, service, step, parts, now);
         }
         BoardOutcome outcome = BoardOutcome.ACCEPTED;
@@ -214,7 +219,7 @@ public final class FirstStepsRunner {
         if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE) {
             return;
         }
-        Placed placed = placedBlocks(level, TicketPlans.plan(caseValue, 1, step.target()), step.wood());
+        Placed placed = audit(level, caseValue, step.target().target(), step.wood());
         int missing = placed.total() - placed.done();
         LOGGER.info(
                 "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: шаг снова в очереди",
@@ -566,7 +571,8 @@ public final class FirstStepsRunner {
         if (TorchRules.handles(item)) {
             return false;
         }
-        return !COBBLESTONE.equals(item) || facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+        // Камень — только из шахты плана: старая яма с лестницей шахтой не считается (INC-59).
+        return !COBBLESTONE.equals(item) || facts.mineEntrance();
     }
 
     // Блоки схем плана, уже стоящие в мире, вычитаются из нужды шага (схема без поворота, порода — поселения).
@@ -613,7 +619,6 @@ public final class FirstStepsRunner {
         boolean groundsCleared = true;
         int chests = 0;
         boolean craftingStation = false;
-        boolean mineEntrance = false;
         boolean smithingTable = false;
         boolean anvil = false;
         boolean furnace = false;
@@ -632,9 +637,6 @@ public final class FirstStepsRunner {
                     var state = level.getBlockState(check);
                     if (!groundsDone && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
                         groundsCleared = false;
-                    }
-                    if (state.is(Blocks.LADDER)) {
-                        mineEntrance = true;
                     }
                     if (state.is(Blocks.CHEST)) {
                         chests++;
@@ -663,6 +665,9 @@ public final class FirstStepsRunner {
         // на ровном (INC-53).
         boolean plotLevel = PlotLeveling.isLevel(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
         // Постройки раскладки сверяются с миром только сделанные по журналу: несделанные и так в очереди.
+        // Шахта — постройка плана: спуск mine_descent_v1 на своём месте сверяется по схеме, а не «лестница рядом»
+        // (INC-59: старая яма засчитывалась шахтой).
+        boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, anchor, site);
         boolean lighting = built(level, done, BoardCase.LIGHTING, anchor, site);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, anchor, site);
         boolean houses = built(level, done, BoardCase.BUILD_HOUSE, anchor, site);
@@ -691,11 +696,47 @@ public final class FirstStepsRunner {
         if (!done.contains(step)) {
             return false;
         }
-        TaskNode plan = TicketPlans.plan(step, 1, targetFor(step, anchor, site.wood()));
-        Placed placed = placedBlocks(level, plan, site.wood());
+        Placed placed = audit(level, step, anchor, site.wood());
         // Допуск — 2% клеток (трава, лиана на месте блока схемы не возвращают стройку по кругу); 4 факела — без
         // допуска, ограда 93 из 105 — не готова.
         return (placed.total() - placed.done()) * LAYOUT_SLACK_DIVISOR <= placed.total();
+    }
+
+    // Сверка постройки плана с миром: шахта — по развёртке спуска, остальное — по блокам своего плана.
+    private static Placed audit(ServerLevel level, BoardCase step, BlockCoord anchor, String wood) {
+        if (step == BoardCase.BUILD_MINE) {
+            return mineAudit(level, anchor);
+        }
+        return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(step, anchor, wood)), wood);
+    }
+
+    // Спуск по схеме: клетки прохода свободны (факел и лестница не мешают), пол — твёрдый блок класса пола.
+    private static Placed mineAudit(ServerLevel level, BlockCoord anchor) {
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
+        if (preset.isEmpty()) {
+            return new Placed(0, 0);
+        }
+        MineLayout layout = MineLayout.place(
+                preset.get().schematic(),
+                preset.get().entry(),
+                TicketPlans.mineDescentOrigin(anchor),
+                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
+                MineLayout.Extent.NONE);
+        int done = 0;
+        for (BlockCoord cell : layout.air()) {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                done++;
+            }
+        }
+        for (BlockCoord cell : layout.floors()) {
+            BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
+            if (SchematicBlocks.isFloorClass(
+                    BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())) {
+                done++;
+            }
+        }
+        return new Placed(done, layout.air().size() + layout.floors().size());
     }
 
     private record Placed(int done, int total) {

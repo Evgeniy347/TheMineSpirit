@@ -67,7 +67,8 @@ public final class FirstStepsPlan {
         for (BoardCase tool : ToolSet.wooden()) {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
-        steps.add(new Step(BoardCase.BUILD_MINE, SettlementFacts::mineEntrance));
+        // Шахта — постройка плана поселения (INC-59): сделана, только если спуск по схеме стоит на своём месте.
+        steps.add(Step.layout(BoardCase.BUILD_MINE, SettlementFacts::mineEntrance));
         for (BoardCase tool : ToolSet.stone()) {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
