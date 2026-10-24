@@ -229,6 +229,27 @@ public final class FurnaceSession {
         }
     }
 
+    // Печь поселения общая (INC-51): готовое прошлой плавки дух забирает себе (сдаст в сундук), остаток топлива
+    // сгорит в новой плавке. Занята она, только если в загрузке идёт плавка другого сырья. true — печь свободна.
+    public static boolean shareSettlementFurnace(SpiritEntity spirit, BlockPos pos, Item input) {
+        if (!(spirit.level().getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity furnace)) {
+            return true;
+        }
+        ItemStack loaded = furnace.getItem(SLOT_INPUT);
+        if (!loaded.isEmpty() && !loaded.is(input)) {
+            return false;
+        }
+        ItemStack result = furnace.getItem(SLOT_RESULT);
+        if (!result.isEmpty()) {
+            ItemStack remainder = spirit.getInventory().addItem(result.copy());
+            furnace.setItem(SLOT_RESULT, remainder);
+            if (!remainder.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static Optional<Contents> contentsAt(Level level, BlockPos pos) {
         BlockEntity entity = level.getBlockEntity(pos);
         if (entity instanceof AbstractFurnaceBlockEntity furnace

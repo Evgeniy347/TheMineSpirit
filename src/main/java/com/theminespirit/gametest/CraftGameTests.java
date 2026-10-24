@@ -13,12 +13,14 @@ import static com.theminespirit.gametest.CraftTestSupport.reload;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -207,6 +209,38 @@ public final class CraftGameTests {
                     doubleChestHalves(helper) == 2,
                     "два сундука рядом обязаны слиться в двойной (left/right), а не стоять single; половин двойного "
                             + doubleChestHalves(helper));
+            cleanup(helper, spirit);
+        });
+    }
+
+    // Станции поселения общие (INC-51): верстак на участке дальше радиуса поиска — дух идёт к нему, а свой из
+    // инвентаря не ставит (вторая печь и второй верстак на живом сервере).
+    @GameTest(template = FIELD, batch = "craft_settlement_table", timeoutTicks = TIMEOUT)
+    public static void craft_TableOnPlotBeyondRadius_UsesItNoNewTable(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(new BlockPos(8, 1, 8), Blocks.CRAFTING_TABLE);
+        SpiritEntity spirit =
+                prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 3), stack(Items.STICK, 2));
+        BlockPos center = helper.absolutePos(new BlockPos(8, 1, 7));
+        SettlementPlotStore.get(helper.getLevel())
+                .fix(new SettlementPlot(
+                        new BlockCoord(center.getX(), center.getY(), center.getZ()),
+                        center.getY(),
+                        center.getY(),
+                        1,
+                        "oak"));
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("craft", Map.of("item", "wooden_pickaxe", "count", 1, "radius", 2)), 1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "кирка скрафчена у верстака поселения");
+            assertCount(helper, spirit, Items.CRAFTING_TABLE, 1, "свой верстак остался в инвентаре");
+            helper.assertTrue(
+                    blocksOnField(helper, Blocks.CRAFTING_TABLE) == 1,
+                    "второй верстак не ставится, пока на участке есть свой: на поле "
+                            + blocksOnField(helper, Blocks.CRAFTING_TABLE));
+            SettlementPlotStore.get(helper.getLevel()).clear();
             cleanup(helper, spirit);
         });
     }
