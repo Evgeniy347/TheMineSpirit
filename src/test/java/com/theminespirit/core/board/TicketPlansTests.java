@@ -907,6 +907,27 @@ class TicketPlansTests {
                         + "край, и соседний ряд оставался траншеей без стоянки (INC-66)");
     }
 
+    @Test
+    void plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill() {
+        BlockCoord anchor = new BlockCoord(0, 64, 0);
+        PlotLeveling leveling = new PlotLeveling(List.of(), List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)), "dirt");
+        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(4);
+
+        List<String> scripts = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
+                .map(ScriptCall::script)
+                .filter(script -> List.of("acquire", "fill").contains(script))
+                .toList();
+
+        assertEquals(
+                "acquire",
+                scripts.get(0),
+                "Земля на подсыпку добывается до засыпки (своя со срезки или за оградой): иначе «не хватило dirt: нужно 4, "
+                        + "есть 0» (INC-68)");
+        assertTrue(
+                Math.abs(TicketPlans.dirtSource(anchor, 4).x()) > SettlementLayout.LEVEL_HALF,
+                "Землю добывают за оградой, а не из земли участка");
+    }
+
     private static List<ScriptCall> calls(TaskNode root) {
         List<ScriptCall> found = new ArrayList<>();
         Deque<TaskNode> queue = new ArrayDeque<>(List.of(root));

@@ -38,6 +38,7 @@ public final class TicketPlans {
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     // Брёвен с малого дерева (дуб 4–6): число деревьев под добычу брёвен — с запасом (INC-64).
     private static final int LOGS_PER_TREE = 4;
+    private static final int DIRT_SOURCE_GAP = 4;
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
     private static final int LEFT_ORE_RADIUS = 4;
@@ -662,6 +663,19 @@ public final class TicketPlans {
         List<PlotLeveling.Box> fills = leveling.fill().stream()
                 .filter(box -> !single || quarterOf(box, center) == quarter)
                 .toList();
+        int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
+        if (volume > 0 && PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
+            // Земля на подсыпку (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
+            // добычей за оградой, а не из земли участка; сундука до выравнивания нет.
+            steps.add(gotoPoint(dirtSource(center, single ? quarter : 1)));
+            steps.add(new ScriptCall(
+                    "acquire",
+                    Map.of(
+                            ITEM,
+                            "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
+                            COUNT,
+                            Math.min(volume, CatalogLimits.COUNT_MAX))));
+        }
         for (PlotLeveling.Box layer : layers(fills)) {
             steps.add(new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))));
         }
@@ -708,6 +722,14 @@ public final class TicketPlans {
             }
         }
         return out;
+    }
+
+    // Место добычи земли для подсыпки четверти — за оградой с её стороны, чтобы не копать участок.
+    static BlockCoord dirtSource(BlockCoord center, int quarter) {
+        int reach = SettlementLayout.LEVEL_HALF + DIRT_SOURCE_GAP;
+        int dx = quarter == 2 || quarter == 4 ? reach : -reach;
+        int dz = quarter >= 3 ? reach : -reach;
+        return new BlockCoord(center.x() + dx, center.y(), center.z() + dz);
     }
 
     // Четверть ящика выравнивания по его началу — те же четверти, что у расчистки (1 — запад-север … 4 — восток-юг).
