@@ -62,11 +62,13 @@ public final class TransferWatch {
     public static boolean ensureTransfers(
             ServerLevel level,
             BoardService service,
-            List<SpiritEntity> spirits,
+            List<SpiritEntity> all,
             StockView stock,
             BoardTicket craftTicket,
             SpiritEntity crafter,
             long now) {
+        dropStuckGivers(level, service, craftTicket.id(), now);
+        List<SpiritEntity> spirits = givers(service, all, crafter, now);
         if (BUILDS.contains(craftTicket.boardCase())) {
             return ensureBuildTransfers(level, service, spirits, craftTicket, crafter);
         }
@@ -403,6 +405,36 @@ public final class TransferWatch {
         }
         containers.entrySet().removeIf(entry -> entry.getValue() <= 0);
         return Map.copyOf(containers);
+    }
+
+    // Отдающий снят с передач после серии провалов или на паузе по ним (застрял в шахте) — не источник: его передачи
+    // висели PENDING «держатель снят с кейса TRANSFER_ITEM», а крафт и добыча ждали их вечно (INC-43, живой 24.10).
+    private static List<SpiritEntity> givers(
+            BoardService service, List<SpiritEntity> spirits, SpiritEntity crafter, long now) {
+        return spirits.stream()
+                .filter(spirit -> spirit.getUUID().equals(crafter.getUUID())
+                        || service.board().availableTo(spirit.getUUID(), BoardCase.TRANSFER_ITEM, now))
+                .toList();
+    }
+
+    // Открытые передачи этого крафта от такого духа снимаются: планировщик переназначит их складу или другому духу.
+    private static void dropStuckGivers(ServerLevel level, BoardService service, String craftId, long now) {
+        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+            String from = modifier(ticket, "from=");
+            if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
+                    || !cause(craftId).equals(ticket.cause())
+                    || !active(service, ticket.id())
+                    || from == null
+                    || "warehouse".equals(from)) {
+                continue;
+            }
+            boolean stuck = ticket.assignee()
+                    .filter(giver -> !service.board().availableTo(giver, BoardCase.TRANSFER_ITEM, now))
+                    .isPresent();
+            if (stuck && service.cancel(level, ticket.id())) {
+                LOGGER.info("Передача {} снята: отдающий {} снят с передач или на паузе", ticket.id(), from);
+            }
+        }
     }
 
     private static String modifier(BoardTicket ticket, String prefix) {

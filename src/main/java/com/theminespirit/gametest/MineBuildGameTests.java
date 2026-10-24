@@ -5,9 +5,12 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.MineOreLedger;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,6 +37,7 @@ public final class MineBuildGameTests {
     private static final int FIRST_X = 1;
     private static final int STEPS = TOP - BOTTOM + 1;
     private static final double TELEPORT_JUMP = 2.0;
+    private static final double RETURN_ARRIVAL = 1.5;
 
     private MineBuildGameTests() {}
 
@@ -126,6 +130,77 @@ public final class MineBuildGameTests {
                     !teleported.get(),
                     "выход наверх — пешком по ступеням: скачок позиции больше " + TELEPORT_JUMP
                             + " блока значит телепорт, а не проходимый спуск");
+            GameTestFixtures.finish(helper, 16);
+        });
+    }
+
+    // [флак] спуск 9 ступеней, добыча камня поселением ×12 и возврат домой наверх; запас 2× к ~900 тиков
+    @GameTest(template = "mine_arena", batch = "mine_gather_exit", timeoutTicks = 2400)
+    public static void mineGather_SettledStone_SpiritWalksBackHome(GameTestHelper helper) {
+        rock(helper);
+        SpiritEntity spirit = miner(helper);
+        BlockPos home = helper.absolutePos(step(0, 1));
+        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new SequenceNode(List.of(
+                        descent(helper),
+                        new ScriptCall("gather", Map.of("block", "stone", "count", 12, "radius", 32)),
+                        new ScriptCall("return_home", Map.of()))),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "спуск, добыча камня и возврат обязаны пройти, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет") + ", дух в " + spirit.blockPosition());
+            helper.assertTrue(
+                    spirit.blockPosition().distManhattan(home) <= 2,
+                    "после добычи камня в шахте дух обязан выйти домой " + home + " (INC-43: духи оставались под "
+                            + "землёй), стоит в " + spirit.blockPosition());
+            GameTestFixtures.finish(helper, 16);
+        });
+    }
+
+    // [флак] спуск 9 ступеней, затем возврат тактики (Approach) со дна к якорю наверху; запас 2× к ~900 тиков
+    @GameTest(template = "mine_arena", batch = "mine_approach_exit", timeoutTicks = 2000)
+    public static void mineApproach_FromBottom_ReachesAnchorOnTop(GameTestHelper helper) {
+        rock(helper);
+        SpiritEntity spirit = miner(helper);
+        SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
+        BlockPos top = helper.absolutePos(step(0, 1));
+        BlockPos bottom = helper.absolutePos(step(STEPS - 1, 1));
+        Approach approach = new Approach(spirit);
+        AtomicReference<String> state = new AtomicReference<>("-");
+        helper.onEachTick(() -> {
+            if (spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED || "ARRIVED".equals(state.get())) {
+                return;
+            }
+            if ("-".equals(state.get())) {
+                // Дух у дна спуска, как живые духи в шахте (INC-43): оттуда — к якорю наверху.
+                spirit.teleportTo(bottom.getX() + 0.5, bottom.getY(), bottom.getZ() + 0.5);
+                approach.begin(new Vec3(top.getX() + 0.5, top.getY(), top.getZ() + 0.5), RETURN_ARRIVAL);
+                state.set("MOVING");
+                return;
+            }
+            Approach.State now = approach.tick();
+            if (now != Approach.State.MOVING) {
+                state.set(now.name() + (approach.refusal() == null ? "" : ": " + approach.refusal()));
+                if (now != Approach.State.ARRIVED) {
+                    approach.begin(new Vec3(top.getX() + 0.5, top.getY(), top.getZ() + 0.5), RETURN_ARRIVAL);
+                }
+            }
+        });
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    state.get().startsWith("ARRIVED"),
+                    "со дна спуска дух обязан дойти до якоря " + top + " подходом тактики (INC-43), итог подхода "
+                            + state.get() + ", стоит в " + spirit.blockPosition());
             GameTestFixtures.finish(helper, 16);
         });
     }
