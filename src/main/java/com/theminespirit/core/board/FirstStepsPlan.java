@@ -76,7 +76,7 @@ public final class FirstStepsPlan {
         // («клетка … занята», приёмка «джунгли» 23.10).
         // Выравнивание — свой факт мира, а не «нет деревьев»: на голом неровном участке расчистка с выравниванием
         // пропускалась навсегда (INC-50).
-        steps.add(new Step(BoardCase.CLEAR_GROUNDS, facts -> facts.groundsCleared() && facts.plotLevel()));
+        steps.add(new Step(BoardCase.CLEAR_GROUNDS, SettlementFacts::groundsCleared, SettlementFacts::plotLevel));
         // Свет, ограда и дом — постройки раскладки участка (SettlementLayout): готовы, только когда задание закрыто
         // в журнале И постройка стоит в мире по своим клеткам. Любой факел рядом её не заменяет (ограда 93 из 105
         // считалась готовой, приёмка 23.10), а DONE старой сборки при пустом мире не вечен (INC-50).
@@ -88,19 +88,19 @@ public final class FirstStepsPlan {
         return List.copyOf(steps);
     }
 
-    private record Step(BoardCase boardCase, Predicate<SettlementFacts> satisfied, boolean layout) {
+    // satisfied — факт мира, заменяющий журнал; world — факт мира, без которого шаг не сделан и по журналу.
+    private record Step(BoardCase boardCase, Predicate<SettlementFacts> satisfied, Predicate<SettlementFacts> world) {
         Step(BoardCase boardCase, Predicate<SettlementFacts> satisfied) {
-            this(boardCase, satisfied, false);
+            this(boardCase, satisfied, facts -> true);
         }
 
+        // Постройка раскладки: журнал её не заменяет, а мир обязателен.
         static Step layout(BoardCase boardCase, Predicate<SettlementFacts> built) {
-            return new Step(boardCase, built, true);
+            return new Step(boardCase, facts -> false, built);
         }
 
-        // Обычный шаг сделан по журналу или по факту мира; постройка раскладки — только по обоим сразу.
         boolean finished(SettlementFacts facts) {
-            boolean journal = facts.done().contains(boardCase);
-            return layout ? journal && satisfied.test(facts) : journal || satisfied.test(facts);
+            return (facts.done().contains(boardCase) || satisfied.test(facts)) && world.test(facts);
         }
     }
 }

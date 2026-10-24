@@ -183,6 +183,34 @@ class FirstStepsPlanTests {
     }
 
     @Test
+    void next_ClearDoneInJournalButPlotUneven_ClearBeforeFence() {
+        int clear = chain().indexOf(BoardCase.CLEAR_GROUNDS);
+        SettlementFacts level = factsAt(clear);
+        SettlementFacts facts = new SettlementFacts(
+                true,
+                true,
+                false,
+                level.chests(),
+                level.craftingStation(),
+                level.tools(),
+                level.mineEntrance(),
+                level.furnace(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                Set.of(BoardCase.CLEAR_GROUNDS),
+                level.blocked());
+
+        assertEquals(
+                Optional.of(BoardCase.CLEAR_GROUNDS),
+                FirstStepsPlan.next(facts),
+                "Расчистка закрыта в журнале, но участок с полосой за оградой не ровный: ограда не ставится, пока "
+                        + "уступ у забора даёт перелезть — сначала снова выравнивание (INC-53)");
+    }
+
+    @Test
     void next_BlockedStep_NextStepGiven() {
         SettlementFacts facts = facts(Set.of(), Set.of(), Set.of(BoardCase.CRAFTING_STATION));
 

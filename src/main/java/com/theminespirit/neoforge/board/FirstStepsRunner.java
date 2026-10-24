@@ -171,7 +171,7 @@ public final class FirstStepsRunner {
         // Расчистка — четвертями, ограда — кусками периметра на разных духов: одним духом расчистка шла ~4000 тиков,
         // ограда ~2900, двое простаивали (приёмка «джунгли» 24.10). Первая часть — first:, остальные — помощники.
         int parts = partsOf(caseValue);
-        if (LAYOUT_STEPS.contains(caseValue)) {
+        if (LAYOUT_STEPS.contains(caseValue) || caseValue == BoardCase.CLEAR_GROUNDS) {
             reopenDone(level, service, step, parts, now);
         }
         BoardOutcome outcome = BoardOutcome.ACCEPTED;
@@ -330,7 +330,7 @@ public final class FirstStepsRunner {
     // Выравнивание участка (решение 16): срезка и подсыпка по высотам колонок; яма — булыжником, если его хватает в
     // запасе, иначе землёй.
     private static PlotLeveling leveling(ServerLevel level, BlockCoord anchor, StockView stock) {
-        PlotLeveling plan = PlotLeveling.plan(anchor, SettlementLayout.HALF, plotFeet(level, anchor));
+        PlotLeveling plan = PlotLeveling.plan(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
         if (plan.fillVolume() > 0 && stock.available().getOrDefault(COBBLESTONE, 0) >= plan.fillVolume()) {
             plan = plan.withBlock(COBBLESTONE);
         }
@@ -659,7 +659,9 @@ public final class FirstStepsRunner {
         Set<BoardCase> blocked = journalSteps(service, true);
         boolean furnaceAvailable = furnace || stock.available().getOrDefault(FURNACE_ITEM, 0) > 0;
         // Ровность — свой факт мира (INC-50): голый неровный участок без деревьев тоже выравнивается.
-        boolean plotLevel = groundsDone || PlotLeveling.isLevel(anchor, SettlementLayout.HALF, plotFeet(level, anchor));
+        // Сделанная по журналу расчистка без ровного участка (с полосой за оградой) снова в очереди: ограда — только
+        // на ровном (INC-53).
+        boolean plotLevel = PlotLeveling.isLevel(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
         // Постройки раскладки сверяются с миром только сделанные по журналу: несделанные и так в очереди.
         boolean lighting = built(level, done, BoardCase.LIGHTING, anchor, site);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, anchor, site);
