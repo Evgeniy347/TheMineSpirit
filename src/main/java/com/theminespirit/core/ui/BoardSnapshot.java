@@ -14,14 +14,16 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Снимок доски для экрана игрока: задания доски превращаются в плитки, разложенные по группам в порядке
- * показа. Завершённые идут по времени завершения (раньше — выше), остальные — по приоритету (выше —
- * раньше), при равенстве — по времени постановки и id. Время завершения берётся из журнала доски (нет записи —
- * время постановки); дух, не найденный по UUID, называется началом UUID.
+ * показа. Успешно завершённые идут по времени завершения (раньше — выше), затем не удавшиеся завершить
+ * (в той же колонке), остальные — по приоритету (выше — раньше), при равенстве — по времени постановки и id.
+ * Время завершения берётся из журнала доски (нет записи — время постановки); дух, не найденный по UUID,
+ * называется началом UUID.
  */
 public final class BoardSnapshot {
     private static final int SHORT_UUID = 8;
     private static final Comparator<Ranked> ORDER = Comparator.<Ranked, BoardTileGroup>comparing(
                     entry -> entry.tile().group())
+            .thenComparing(entry -> entry.tile().unfinished())
             .thenComparingLong(entry -> entry.tile().doneAt())
             .thenComparing(Comparator.<Ranked>comparingInt(entry -> entry.tile().priority())
                     .reversed())
@@ -44,7 +46,9 @@ public final class BoardSnapshot {
         List<Ranked> ranked = new ArrayList<>(tasks.size());
         for (BoardTask task : tasks) {
             BoardTileGroup group = groupOf(task, unfinished);
-            long doneAt = group == BoardTileGroup.DONE ? doneTicks.getOrDefault(task.id(), task.createdAt()) : 0L;
+            long doneAt = group == BoardTileGroup.DONE && task.done()
+                    ? doneTicks.getOrDefault(task.id(), task.createdAt())
+                    : 0L;
             BoardTile tile = new BoardTile(
                     task.id(),
                     task.boardCase(),
@@ -77,11 +81,11 @@ public final class BoardSnapshot {
             return BoardTileGroup.ACTIVE;
         }
         if (!BoardStatus.PENDING.name().equals(status) || !task.missing().isEmpty()) {
-            return BoardTileGroup.UNAVAILABLE;
+            return BoardTileGroup.DONE;
         }
         for (String dependency : task.dependsOn()) {
             if (unfinishedIds.contains(dependency)) {
-                return BoardTileGroup.UNAVAILABLE;
+                return BoardTileGroup.DONE;
             }
         }
         return BoardTileGroup.AVAILABLE;

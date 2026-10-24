@@ -45,7 +45,7 @@ class BoardWaitReasonsTests {
     @Test
     void of_WaitingResource_ReportsItemAndCount() {
         BoardTile waiting =
-                tile("lack", "WAITING_RESOURCES", null, BoardTileGroup.UNAVAILABLE, Map.of("oak_log", 3), List.of());
+                tile("lack", "WAITING_RESOURCES", null, BoardTileGroup.DONE, Map.of("oak_log", 3), List.of());
 
         List<BoardWaitReasons.Wait> reasons = BoardWaitReasons.of(waiting, List.of(waiting));
 
@@ -59,8 +59,8 @@ class BoardWaitReasonsTests {
 
     @Test
     void of_MissingTool_ReportsToolKind() {
-        BoardTile waiting = tile(
-                "tool", "WAITING_RESOURCES", null, BoardTileGroup.UNAVAILABLE, Map.of("stone_pickaxe", 1), List.of());
+        BoardTile waiting =
+                tile("tool", "WAITING_RESOURCES", null, BoardTileGroup.DONE, Map.of("stone_pickaxe", 1), List.of());
 
         List<BoardWaitReasons.Wait> reasons = BoardWaitReasons.of(waiting, List.of(waiting));
 
@@ -73,7 +73,7 @@ class BoardWaitReasonsTests {
     @Test
     void of_UnfinishedDependency_ReportsDependencyId() {
         BoardTile before = tile("before", "ASSIGNED", "Тихон", BoardTileGroup.ACTIVE, Map.of(), List.of());
-        BoardTile after = tile("after", "PENDING", null, BoardTileGroup.UNAVAILABLE, Map.of(), List.of("before"));
+        BoardTile after = tile("after", "PENDING", null, BoardTileGroup.DONE, Map.of(), List.of("before"));
 
         List<BoardWaitReasons.Wait> reasons = BoardWaitReasons.of(after, List.of(before, after));
 
@@ -82,6 +82,19 @@ class BoardWaitReasonsTests {
                 reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
                 "Незавершённая зависимость — причина ожидания, а не свободный дух");
         assertEquals("before", reasons.get(0).subject(), "Причина обязана называть задание-зависимость");
+    }
+
+    @Test
+    void of_FailedDependency_ReportsDependencyId() {
+        BoardTile before = tile("before", "FAILED", null, BoardTileGroup.DONE, Map.of(), List.of());
+        BoardTile after = tile("after", "PENDING", null, BoardTileGroup.DONE, Map.of(), List.of("before"));
+
+        List<BoardWaitReasons.Wait> reasons = BoardWaitReasons.of(after, List.of(before, after));
+
+        assertEquals(
+                List.of(BoardWaitReasons.Kind.DEPENDENCY),
+                reasons.stream().map(BoardWaitReasons.Wait::kind).toList(),
+                "Проваленная зависимость не считается выполненной: задание обязано её ждать");
     }
 
     @Test
@@ -99,7 +112,7 @@ class BoardWaitReasonsTests {
 
     @Test
     void of_Blocked_ReportsBlocked() {
-        BoardTile blocked = tile("blocked", "BLOCKED", null, BoardTileGroup.UNAVAILABLE, Map.of(), List.of());
+        BoardTile blocked = tile("blocked", "BLOCKED", null, BoardTileGroup.DONE, Map.of(), List.of());
 
         List<BoardWaitReasons.Wait> reasons = BoardWaitReasons.of(blocked, List.of(blocked));
 

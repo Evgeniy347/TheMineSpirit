@@ -1,5 +1,6 @@
 package com.theminespirit.core.ui;
 
+import com.theminespirit.core.board.BoardStatus;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,7 +10,8 @@ import org.jspecify.annotations.Nullable;
  * Плитка экрана доски: что передаёт сервер клиенту про одно задание. {@code boardCase} — имя кейса
  * доски (клиент переводит его ключом языка), {@code spirit} — имя духа-исполнителя или null, когда
  * задание ещё никому не выдано; {@code dependsOn} — id заданий, без завершения которых задание не
- * начнётся; {@code doneAt} — тик завершения (0, если задание не завершено).
+ * начнётся; {@code doneAt} — тик завершения (0, если задание не завершено). Плитка колонки завершённых
+ * либо успешно завершена ({@link #completed()}), либо не удалась ({@link #unfinished()}).
  */
 public record BoardTile(
         String id,
@@ -39,5 +41,13 @@ public record BoardTile(
         if (doneAt < 0) {
             throw new IllegalArgumentException("doneAt равен " + doneAt + ": тик завершения не бывает отрицательным");
         }
+    }
+
+    public boolean completed() {
+        return group == BoardTileGroup.DONE && BoardStatus.DONE.name().equals(status);
+    }
+
+    public boolean unfinished() {
+        return group == BoardTileGroup.DONE && !completed();
     }
 }

@@ -27,7 +27,7 @@ public final class BoardViewGameTests {
     private BoardViewGameTests() {}
 
     @GameTest(template = "empty")
-    public static void snapshot_TicketWithoutResources_ReachesClientAsUnavailableTile(GameTestHelper helper) {
+    public static void snapshot_TicketWithoutResources_ReachesClientAsUnfinishedTile(GameTestHelper helper) {
         BoardService service = BoardRegistry.get(helper.getLevel());
         service.submit(new BoardTicket(
                 TICKET_ID,
@@ -47,8 +47,9 @@ public final class BoardViewGameTests {
                     .orElse(null);
             helper.assertTrue(tile != null, "Снимок доски не содержит поставленное задание: экран J его не покажет");
             helper.assertTrue(
-                    tile.group() == BoardTileGroup.UNAVAILABLE && tile.spirit() == null,
-                    "Задание без ресурсов и исполнителя обязано быть недоступным и без духа, плитка " + tile);
+                    tile.group() == BoardTileGroup.DONE && tile.unfinished() && tile.spirit() == null,
+                    "Задание без ресурсов и исполнителя обязано лежать в завершённых как не удавшееся и без духа,"
+                            + " плитка " + tile);
             FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
             BoardStage stage = BoardViewChannel.stage(helper.getLevel());
             BoardViewChannel.Reply.STREAM_CODEC.encode(buf, new BoardViewChannel.Reply(tiles, new BoardStage(3)));

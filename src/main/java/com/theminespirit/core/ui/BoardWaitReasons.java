@@ -82,7 +82,7 @@ public final class BoardWaitReasons {
         }
         for (String dependency : tile.dependsOn()) {
             BoardTile dependencyTile = byId.get(dependency);
-            if (dependencyTile == null || dependencyTile.group() != BoardTileGroup.DONE) {
+            if (dependencyTile == null || !dependencyTile.completed()) {
                 reasons.add(new Wait(Kind.DEPENDENCY, dependency, 0));
             }
         }
