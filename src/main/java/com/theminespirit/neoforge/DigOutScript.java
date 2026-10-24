@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
  * Самовыход замурованного духа (требование владельца, INC-45): лестница вверх в сторону точки — ступень 1, проход 2 высоты.
@@ -61,7 +62,7 @@ public final class DigOutScript implements ScriptInstance {
         seen.add(feet);
         while (!queue.isEmpty()) {
             BlockPos cell = queue.poll();
-            if (level.canSeeSky(cell)) {
+            if (open(level, cell)) {
                 return false;
             }
             if (seen.size() > SEALED_SCAN) {
@@ -75,6 +76,12 @@ public final class DigOutScript implements ScriptInstance {
             }
         }
         return true;
+    }
+
+    // Под открытым небом — над клеткой нет твёрдых блоков (карта высот). Не canSeeSky: тот смотрит на небесный свет,
+    // а он в засыпанной яме бывает устаревшим — живой карман INC-59 не считался замурованным.
+    public static boolean open(Level level, BlockPos cell) {
+        return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
     }
 
     // Дверь, калитка и люк — проход: закрытая хижина с духами внутри считалась замурованной, и дух рыл стену
@@ -110,7 +117,7 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         BlockPos feet = spirit.blockPosition();
-        if (level.canSeeSky(feet) || feet.getY() >= target.y()) {
+        if (open(level, feet) || feet.getY() >= target.y()) {
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }

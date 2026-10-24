@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
@@ -33,6 +34,20 @@ public final class DigOutGameTests {
     // [флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
     @GameTest(template = "mine_arena", batch = "dig_out_pocket", timeoutTicks = 2400)
     public static void digOut_SealedPocketSevenDeep_ReachesSurface(GameTestHelper helper) {
+        pocket(helper, List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)));
+    }
+
+    // Форма живого кармана INC-59: клетка духа, над ней воздух и проём сбоку на уровне головы — (x,y), (x,y+1),
+    // (x-1,y+1); выше — сплошной камень.
+    // [флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
+    @GameTest(template = "mine_arena", batch = "dig_out_side_gap", timeoutTicks = 2400)
+    public static void digOut_PocketWithSideGap_ReachesSurface(GameTestHelper helper) {
+        pocket(
+                helper,
+                List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5), new BlockPos(1, POCKET + 1, 5)));
+    }
+
+    private static void pocket(GameTestHelper helper, List<BlockPos> air) {
         GameTestFixtures.reset(helper, 16);
         BoardRegistry.get(helper.getLevel()).board().restore(new BoardState(List.of(), Set.of()));
         for (int x = 0; x <= 10; x++) {
@@ -42,8 +57,7 @@ public final class DigOutGameTests {
                 }
             }
         }
-        helper.setBlock(new BlockPos(2, POCKET, 5), Blocks.AIR);
-        helper.setBlock(new BlockPos(2, POCKET + 1, 5), Blocks.AIR);
+        air.forEach(cell -> helper.setBlock(cell, Blocks.AIR));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, POCKET, 5));
         spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
         spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 48));
@@ -53,7 +67,7 @@ public final class DigOutGameTests {
         helper.succeedWhen(() -> {
             BlockPos feet = spirit.blockPosition();
             helper.assertTrue(
-                    helper.getLevel().canSeeSky(feet) || feet.getY() >= home.getY(),
+                    DigOutScript.open(helper.getLevel(), feet) || feet.getY() >= home.getY(),
                     "замурованный дух обязан сам выбраться наверх (INC-45): стоит в " + feet + ", задача "
                             + spirit.currentTaskScript().orElse("-") + " "
                             + spirit.taskStatus().orElse(null)
