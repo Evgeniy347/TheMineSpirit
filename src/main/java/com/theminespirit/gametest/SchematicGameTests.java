@@ -108,6 +108,28 @@ public final class SchematicGameTests {
         });
     }
 
+    // Свободный дух стоит в клетке схемы: строитель отводит его за габарит и ставит блок (хижина вставала 100 из 101
+    // «клетку занимает живое существо», приёмка «джунгли» 24.10).
+    @GameTest(template = "arena", batch = "build_schematic_make_way", timeoutTicks = 400)
+    public static void schematic_IdleSpiritInCell_MovedAsideAndHouseDone(GameTestHelper helper) {
+        prepare(helper);
+        SpiritEntity builder = spawnWith(helper, new BlockPos(1, 1, 1), 17);
+        SpiritEntity idle = spawnWith(helper, ANCHOR.offset(1, 0, 1), 0);
+        SpiritRun run = SpiritRun.launch(helper, builder, schematicCall(helper, ANCHOR), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    finished(builder) && countHouse(helper, ANCHOR) == 17,
+                    "стройка обязана завершиться, отведя свободного духа из клетки: статус "
+                            + builder.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + builder.taskFailureReason().orElse("нет") + ", блоков " + countHouse(helper, ANCHOR)
+                            + ", свободный дух в " + idle.blockPosition());
+            idle.discard();
+            GameTestFixtures.finish(helper);
+        });
+    }
+
     private static boolean finished(SpiritEntity spirit) {
         return spirit.taskStatus().isPresent() && spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED;
     }
