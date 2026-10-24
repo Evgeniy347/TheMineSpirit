@@ -72,6 +72,7 @@ public class ClearAreaSession {
 
     private final BuildResult tally = new BuildResult();
     private int keptBlocks;
+    private int keptPlan;
     private final boolean demolish;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
@@ -237,6 +238,15 @@ public class ClearAreaSession {
     }
 
     private void prepareBreak() {
+        if (PlanCells.keep(level, toPos(currentTarget))) {
+            // Постройка плана поселения (ограда, хижина, двор, факелы, шахта) — не цель расчистки (запрет по плану).
+            protectedSkipped++;
+            keptPlan++;
+            tally.skipped();
+            releaseCurrent();
+            state = State.PICK;
+            return;
+        }
         if (!(MiningSafety.canBreak(currentTarget, safety) instanceof BreakSafety.Safe)) {
             unsafe++;
             tally.skipped();
@@ -328,7 +338,7 @@ public class ClearAreaSession {
         }
         // Провал — только если ломать было что, но ничего не сломано; чистый участок — выполненная расчистка.
         // Блоки под защитой (верстак, факелы, чёрный список) участок и должен сохранить — это не провал.
-        if (removed == 0 && skippedTotal() - keptBlocks > 0) {
+        if (removed == 0 && skippedTotal() - keptBlocks - keptPlan > 0) {
             fail(summary() + "; не убран ни один блок");
             return;
         }

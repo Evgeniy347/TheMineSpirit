@@ -66,6 +66,26 @@ class SettlementLayoutTests {
     }
 
     @Test
+    void planCell_FenceHutYardTorchMine_KeptFieldNot() {
+        int y = ANCHOR.y();
+        BlockCoord hut = SettlementLayout.houseOrigin(ANCHOR);
+        BlockCoord yard = SettlementLayout.workYard(ANCHOR);
+        BlockCoord torch = SettlementLayout.lighting(ANCHOR).get(0);
+        BlockCoord mine = SettlementLayout.mineEntrance(ANCHOR);
+
+        assertTrue(
+                SettlementLayout.planCell(ANCHOR, ANCHOR.x() + SettlementLayout.HALF, y, ANCHOR.z()),
+                "Линия ограды — клетка плана: переоткрытая расчистка её не сносит");
+        assertTrue(SettlementLayout.planCell(ANCHOR, hut.x(), y + 2, hut.z()), "Хижина — клетка плана");
+        assertTrue(SettlementLayout.planCell(ANCHOR, yard.x() + 1, y, yard.z()), "Двор станций — клетка плана");
+        assertTrue(SettlementLayout.planCell(ANCHOR, torch.x(), y, torch.z()), "Факел света — клетка плана");
+        assertTrue(SettlementLayout.planCell(ANCHOR, mine.x(), y - 6, mine.z() + 4), "Спуск в шахту — клетка плана");
+        assertFalse(
+                SettlementLayout.planCell(ANCHOR, ANCHOR.x() + 9, y + 1, ANCHOR.z() + 9),
+                "Пустое поле участка — не клетка плана: его расчистка и выравнивание обрабатывают");
+    }
+
+    @Test
     void layout_EveryPart_InsideFenceAndDisjoint() {
         Map<String, List<Cell>> parts = new HashMap<>();
         parts.put(

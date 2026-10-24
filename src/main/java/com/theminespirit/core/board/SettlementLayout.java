@@ -20,6 +20,9 @@ public final class SettlementLayout {
     public static final int LEVEL_HALF = HALF + LEVEL_MARGIN;
     // Глубже — пещера под поселением, не место добычи (INC-69).
     public static final int CAVE_DEPTH = 3;
+    // Клетки построек плана: двор станций вокруг его точки, высота построек над уровнем участка.
+    public static final int YARD_RADIUS = 2;
+    public static final int BUILDING_HEIGHT = 7;
     // Хижина 5×5 и ряд крыльца перед дверью (схема hut_1: 5 в ширину, 6 в глубину с крыльцом).
     public static final int HOUSE_WIDTH = 5;
     public static final int HOUSE_DEPTH = 6;
@@ -78,6 +81,30 @@ public final class SettlementLayout {
             return true;
         }
         return depthBelowSurface > CAVE_DEPTH && dx <= 2 * PLOT && dz <= 2 * PLOT;
+    }
+
+    // Клетка постройки плана (ограда, хижина, двор, факелы, шахта): расчистка и выравнивание её не трогают, если там
+    // стоит поставленное поселением — запрет по плану, а не по порядку шагов (переоткрытая расчистка сносила бы
+    // ограду).
+
+    public static boolean planCell(BlockCoord anchor, int x, int y, int z) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: клетки плана считаются от него");
+        if (mineColumn(anchor, x, z)) {
+            return true;
+        }
+        if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
+            return false;
+        }
+        int dx = x - anchor.x();
+        int dz = z - anchor.z();
+        boolean fence =
+                (Math.abs(dx) == HALF && Math.abs(dz) <= HALF) || (Math.abs(dz) == HALF && Math.abs(dx) <= HALF);
+        BlockCoord house = houseOrigin(anchor);
+        boolean hut = x >= house.x() && x < house.x() + HOUSE_WIDTH && z >= house.z() && z < house.z() + HOUSE_DEPTH;
+        BlockCoord yard = workYard(anchor);
+        boolean yardCell = Math.abs(x - yard.x()) <= YARD_RADIUS && Math.abs(z - yard.z()) <= YARD_RADIUS;
+        boolean torch = lighting(anchor).stream().anyMatch(cell -> cell.x() == x && cell.z() == z);
+        return fence || hut || yardCell || torch;
     }
 
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.
