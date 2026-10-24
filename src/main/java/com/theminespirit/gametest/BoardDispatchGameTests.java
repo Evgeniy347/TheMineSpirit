@@ -210,6 +210,40 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
+    @GameTest(template = "arena", batch = "board_dispatch_stuck_giver", timeoutTicks = 100)
+    public static void furnace_TableAtPausedGiver_NoTransferFromIt(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity crafter = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        SpiritEntity holder = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(9, 1, 9));
+        crafter.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 8));
+        holder.getInventory().setItem(0, new ItemStack(Items.CRAFTING_TABLE));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-dispatch-stuck-giver.jsonl");
+        long now = board.board().now();
+        // Держатель верстака провалил передачу (застрял в шахте, INC-43): пауза кейса TRANSFER_ITEM.
+        String failed = "dispatch:failed_transfer";
+        board.submit(ticket(failed, BoardCase.TRANSFER_ITEM, Optional.empty(), now), at(helper));
+        board.board().claim(failed, holder.getUUID(), now);
+        board.board().fail(failed);
+        board.submit(ticket("dispatch:furnace", BoardCase.CRAFT_FURNACE, Optional.empty(), now), at(helper));
+
+        board.rebuild(level, level.getGameTime());
+
+        boolean fromHolder = board.board().all().stream()
+                .anyMatch(t -> t.boardCase() == BoardCase.TRANSFER_ITEM
+                        && t.assignee().filter(holder.getUUID()::equals).isPresent()
+                        && board.board().statusOf(t.id()).orElse(null) == BoardStatus.PENDING);
+        helper.assertTrue(
+                !fromHolder,
+                "Отдающий на паузе передач (застрял) не источник: его передача висела PENDING, крафт ждал вечно "
+                        + "(INC-43); задания " + board.board().all());
+        crafter.discard();
+        holder.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
     @GameTest(template = "arena", batch = "board_dispatch_displaced", timeoutTicks = 200)
     public static void displaced_ForeignTaskFinished_TicketStaysWithSpiritAndResumes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
