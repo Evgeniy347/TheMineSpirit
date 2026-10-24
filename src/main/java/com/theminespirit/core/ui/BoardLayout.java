@@ -3,7 +3,7 @@ package com.theminespirit.core.ui;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Раскладка экрана доски задач: окно, кнопки фильтров, четыре равные колонки, заголовки и плитки. */
+/** Раскладка экрана доски задач: окно, кнопки фильтров, три равные колонки, заголовки и плитки. */
 public final class BoardLayout {
     public static final int MARGIN = 8;
     public static final int STAGE_HEIGHT = 12;
@@ -14,7 +14,7 @@ public final class BoardLayout {
     public static final int BORDER_TOP = 18;
     public static final int BORDER_RIGHT = 9;
     public static final int BORDER_BOTTOM = 9;
-    public static final int COLUMN_COUNT = 4;
+    public static final int COLUMN_COUNT = 3;
     public static final int COLUMN_GAP = 4;
     public static final int COLUMN_HEADER = 12;
     public static final int CONTENT_PAD = 2;

@@ -30,8 +30,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Экран поселения, вкладка «Доска задач»: окно в рамке экрана достижений растягивается по размеру окна,
- * четыре колонки групп (завершённые, активные, доступные, недоступные) со своими списками и прокруткой
- * колесом под курсором, сверху кнопки фильтров по статусу и исполнителю. Данные — снимок доски,
+ * три колонки групп (завершённые, активные, доступные) со своими списками и прокруткой колесом под
+ * курсором, сверху кнопки фильтров по статусу и исполнителю. Задания, которые не удалось завершить,
+ * стоят в колонке завершённых с красной подписью и причиной в подсказке. Данные — снимок доски,
  * полученный с сервера при открытии; живого обновления нет.
  */
 public final class BoardScreen extends Screen {
@@ -52,12 +53,13 @@ public final class BoardScreen extends Screen {
     private static final int MUTED_COLOR = 0xFFA0A0A0;
     private static final int TILE_COLOR = 0xC0101010;
     private static final int TILE_HOVER_COLOR = 0xE0303030;
+    private static final int HEADER_BG_COLOR = 0xE0101010;
     private static final int UNRESOLVED_COLOR = 0xFFFFAAAA;
+    private static final int FAILED_COLOR = 0xFFFF5555;
     private static final Map<BoardTileGroup, Integer> GROUP_COLORS = Map.of(
             BoardTileGroup.DONE, 0xFF55AA55,
             BoardTileGroup.ACTIVE, 0xFFFFAA00,
-            BoardTileGroup.AVAILABLE, 0xFF55AAFF,
-            BoardTileGroup.UNAVAILABLE, 0xFFAA5555);
+            BoardTileGroup.AVAILABLE, 0xFF55AAFF);
 
     private BoardLayout layout = BoardLayout.of(0, 0);
     private @Nullable List<BoardTile> tiles;
@@ -172,7 +174,16 @@ public final class BoardScreen extends Screen {
             Component headerText = Component.translatable(
                             KEY + "group." + column.group().name().toLowerCase(Locale.ROOT))
                     .append(" " + column.tiles().size());
-            graphics.drawString(font, headerText, header.x(), header.y(), GROUP_COLORS.get(column.group()), false);
+            graphics.fill(header.x(), header.y(), header.right(), header.bottom(), HEADER_BG_COLOR);
+            String headerLine =
+                    font.plainSubstrByWidth(headerText.getString(), header.width() - 2 * BoardLayout.CONTENT_PAD);
+            graphics.drawString(
+                    font,
+                    headerLine,
+                    header.x() + BoardLayout.CONTENT_PAD,
+                    header.y() + BoardLayout.CONTENT_PAD,
+                    GROUP_COLORS.get(column.group()),
+                    true);
             graphics.enableScissor(area.x(), list.y(), area.right(), list.bottom());
             for (int j = 0; j < column.tiles().size(); j++) {
                 BoardLayout.Rect rect = layout.tile(i, j);
@@ -259,16 +270,29 @@ public final class BoardScreen extends Screen {
 
     private void renderTile(GuiGraphics graphics, BoardTile tile, int x, int y, int width, boolean over) {
         graphics.fill(x, y, x + width, y + BoardLayout.TILE_HEIGHT, over ? TILE_HOVER_COLOR : TILE_COLOR);
-        graphics.fill(x, y, x + STRIPE, y + BoardLayout.TILE_HEIGHT, GROUP_COLORS.get(tile.group()));
+        graphics.fill(
+                x,
+                y,
+                x + STRIPE,
+                y + BoardLayout.TILE_HEIGHT,
+                tile.unfinished() ? FAILED_COLOR : GROUP_COLORS.get(tile.group()));
         int textWidth = width - 2 * TEXT_PAD;
         String text = font.plainSubstrByWidth(taskText(tile).getString(), textWidth);
         graphics.drawString(font, text, x + TEXT_PAD, y + 3, TEXT_COLOR);
         String details = font.plainSubstrByWidth(detailsText(tile).getString(), textWidth);
         graphics.drawString(font, details, x + TEXT_PAD, y + 3 + font.lineHeight + 1, MUTED_COLOR);
         List<BoardWaitReasons.Wait> waits = waitReasons.get(tile.id());
-        if (waits != null && !waits.isEmpty()) {
-            String reason = font.plainSubstrByWidth(waitText(waits.get(0)).getString(), textWidth);
-            graphics.drawString(font, reason, x + TEXT_PAD, y + 3 + 2 * (font.lineHeight + 1), UNRESOLVED_COLOR);
+        String third = null;
+        int thirdColor = UNRESOLVED_COLOR;
+        if (tile.unfinished()) {
+            third = Component.translatable(KEY + "unfinished").getString();
+            thirdColor = FAILED_COLOR;
+        } else if (waits != null && !waits.isEmpty()) {
+            third = waitText(waits.get(0)).getString();
+        }
+        if (third != null) {
+            String reason = font.plainSubstrByWidth(third, textWidth);
+            graphics.drawString(font, reason, x + TEXT_PAD, y + 3 + 2 * (font.lineHeight + 1), thirdColor);
         }
     }
 
@@ -290,6 +314,9 @@ public final class BoardScreen extends Screen {
         List<Component> lines = new ArrayList<>();
         lines.add(taskText(tile));
         lines.add(Component.translatable(KEY + "group." + tile.group().name().toLowerCase(Locale.ROOT)));
+        if (tile.unfinished()) {
+            lines.add(Component.translatable(KEY + "unfinished"));
+        }
         lines.add(Component.translatableWithFallback(
                 KEY + "status." + tile.status().toLowerCase(Locale.ROOT), tile.status()));
         lines.add(detailsText(tile));

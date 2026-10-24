@@ -1,7 +1,9 @@
 package com.theminespirit.core.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.rest.BoardTask;
 import java.util.List;
@@ -44,7 +46,7 @@ class BoardSnapshotTests {
     }
 
     @Test
-    void build_MixedBoard_OrdersDoneActiveAvailableUnavailable() {
+    void build_MixedBoard_PutsUnfinishedTasksIntoDoneColumn() {
         List<BoardTask> tasks = List.of(
                 task("lack", 90, "WAITING_RESOURCES", Map.of("oak_log", 3), List.of(), 1),
                 task("free-low", 10, "PENDING", Map.of(), List.of(), 2),
@@ -57,12 +59,15 @@ class BoardSnapshotTests {
                 BoardSnapshot.build(tasks, Map.of("done-late", 900L, "done-early", 100L), uuid -> "Тихон");
 
         assertEquals(
-                List.of("done-early", "done-late", "work", "free-high", "free-low", "lack"),
+                List.of("done-early", "done-late", "lack", "work", "free-high", "free-low"),
                 tiles.stream().map(BoardTile::id).toList(),
-                "Порядок плиток: завершённые по времени, активные, доступные и недоступные по приоритету");
+                "Порядок плиток: успешно завершённые по времени, затем не удавшиеся в той же колонке, "
+                        + "активные и доступные по приоритету");
         assertEquals(100L, tiles.get(0).doneAt(), "Завершённая плитка обязана нести тик завершения из журнала");
-        assertEquals("Тихон", tiles.get(2).spirit(), "Плитка обязана называть духа-исполнителя по имени");
-        assertNull(tiles.get(3).spirit(), "Невыданная плитка не называет исполнителя");
+        assertTrue(tiles.get(2).unfinished(), "Задание без ресурсов обязано попасть в завершённые как не удавшееся");
+        assertEquals(0L, tiles.get(2).doneAt(), "Не удавшееся задание не имеет тика завершения");
+        assertEquals("Тихон", tiles.get(3).spirit(), "Плитка обязана называть духа-исполнителя по имени");
+        assertNull(tiles.get(4).spirit(), "Невыданная плитка не называет исполнителя");
     }
 
     @Test
@@ -76,13 +81,13 @@ class BoardSnapshotTests {
     }
 
     @Test
-    void groupOf_PendingWithUnfinishedDependency_IsUnavailable() {
+    void groupOf_PendingWithUnfinishedDependency_GoesToDone() {
         BoardTask dependant = task("after", 50, "PENDING", Map.of(), List.of("before"), 1);
 
         assertEquals(
-                BoardTileGroup.UNAVAILABLE,
+                BoardTileGroup.DONE,
                 BoardSnapshot.groupOf(dependant, Set.of("before", "after")),
-                "Задание, ждущее незавершённую зависимость, не может быть доступным");
+                "Задание, ждущее незавершённую зависимость, показывается в завершённых как не удавшееся");
         assertEquals(
                 BoardTileGroup.AVAILABLE,
                 BoardSnapshot.groupOf(dependant, Set.of("after")),
@@ -90,15 +95,24 @@ class BoardSnapshotTests {
     }
 
     @Test
-    void groupOf_FailedOrBlocked_IsUnavailable() {
+    void groupOf_FailedOrBlocked_GoesToDone() {
         assertEquals(
-                BoardTileGroup.UNAVAILABLE,
+                BoardTileGroup.DONE,
                 BoardSnapshot.groupOf(task("x", 1, "BLOCKED", Map.of(), List.of(), 1), Set.of()),
-                "Заблокированное задание показывается среди недоступных");
+                "Заблокированное задание показывается в завершённых как не удавшееся");
         assertEquals(
-                BoardTileGroup.UNAVAILABLE,
+                BoardTileGroup.DONE,
                 BoardSnapshot.groupOf(task("y", 1, "FAILED", Map.of(), List.of(), 1), Set.of()),
-                "Проваленное задание показывается среди недоступных");
+                "Проваленное задание показывается в завершённых как не удавшееся");
+    }
+
+    @Test
+    void unfinishedTask_InDoneColumn_IsNotCompleted() {
+        List<BoardTile> tiles = BoardSnapshot.build(
+                List.of(task("blocked", 1, "BLOCKED", Map.of(), List.of(), 1)), Map.of(), uuid -> null);
+
+        assertTrue(tiles.get(0).unfinished(), "Заблокированное задание в завершённых помечается как не удавшееся");
+        assertFalse(tiles.get(0).completed(), "Заблокированное задание нельзя считать успешно завершённым");
     }
 
     @Test
