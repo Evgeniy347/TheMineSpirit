@@ -350,13 +350,11 @@ public final class ClearGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
+            // Защищённые клетки пропускаются и ящик не валят (INC-71): задача завершается, стенка игрока цела.
             helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "чужую постройку разбирать нельзя: задача обязана провалиться, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
-            helper.assertTrue(
-                    spirit.taskFailureReason().orElse("").contains("защищено"),
-                    "причина обязана называть защиту, фактически: "
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "защищённая стенка игрока пропускается, ящик не проваливается: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(
                     helper.getBlockState(new BlockPos(2, 1, 2)).is(Blocks.COBBLESTONE)

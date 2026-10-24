@@ -90,7 +90,7 @@ public final class ProtectionGate {
                 // Участок поселения: постройки прошлых версий (старая ограда, дом, ступени) — свои, а не «постройка
                 // игрока» по искусственным соседям; поставленное игроком по-прежнему защищено (INC-70: «защищено: 19,
                 // убрано 0 из 1088»).
-                decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
+                decision = PROTECTION.checkSettlement(blockId(state), inProtectedZone);
             } else {
                 decision = PROTECTION.check(
                         blockId(state),
