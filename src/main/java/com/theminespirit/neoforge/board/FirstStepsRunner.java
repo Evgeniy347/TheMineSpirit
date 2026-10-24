@@ -73,6 +73,8 @@ public final class FirstStepsRunner {
             BoardCase.CRAFT_FURNACE);
     private static final String FIRST_PREFIX = "first:";
     private static final String CLEAR_PART_PREFIX = "clear:";
+    // Каменный шаг, открытый вместе с текущим, — помощник шага (как четверти расчистки): «first:» всегда один.
+    private static final String STONE_PART_PREFIX = "stone:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
     private static final int FEET_SCAN_DEPTH = 48;
@@ -97,6 +99,9 @@ public final class FirstStepsRunner {
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         String wood = woodOf(level, home, stock);
         String log = WoodSpecies.swap("oak_log", wood);
+        if (next.isPresent() && STONE_STEPS.contains(next.orElseThrow())) {
+            parallelStone(level, service, facts, new StoneSite(home, wood), stock, next.orElseThrow(), now);
+        }
         if (next.isEmpty() || hasActive(service, next.orElseThrow())) {
             TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0, log), now);
             next.filter(PREFETCH_DURING::contains)
@@ -164,6 +169,57 @@ public final class FirstStepsRunner {
             // Только реально поставленный шаг: BLOCKED/FAILED-тикет доска не переоткрывает, и строка «открыт»
             // каждые 5 с вводила в заблуждение (INC-26).
             LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
+        }
+    }
+
+    // Каменные шаги после текущего — сразу, если булыжника в запасе хватает на все вместе: по одному шагу за раз
+    // инструменты и печь крафтил один дух ~2000 тиков, двое простаивали (приёмка «джунгли» 24.10, тики 4216–6604).
+    private static void parallelStone(
+            ServerLevel level,
+            BoardService service,
+            SettlementFacts facts,
+            StoneSite site,
+            StockView stock,
+            BoardCase current,
+            long now) {
+        BlockCoord home = site.home();
+        String wood = site.wood();
+        MaterialSource source = materialSource(level);
+        Map<String, Integer> booked = new HashMap<>();
+        boolean after = false;
+        for (BoardCase step : STONE_STEPS) {
+            TicketTarget target = targetFor(step, home, wood);
+            Map<String, Integer> need = new HashMap<>();
+            materials(source, step, target)
+                    .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+            if (step == current) {
+                after = true;
+            }
+            if (facts.done().contains(step)) {
+                continue;
+            }
+            need.forEach((item, count) -> booked.merge(item, count, Integer::sum));
+            if (!after || step == current || hasActive(service, step)) {
+                continue;
+            }
+            if (!ResourceGate.missing(new StockNeed(booked), stock).isEmpty()) {
+                return;
+            }
+            BoardOutcome outcome = service.submit(
+                    new BoardTicket(
+                            STONE_PART_PREFIX + step.name().toLowerCase(Locale.ROOT),
+                            step,
+                            Optional.empty(),
+                            BoardRules.priorityOf(step),
+                            now,
+                            1,
+                            BoardTicket.ALWAYS_CAUSE,
+                            List.of(),
+                            Map.copyOf(need)),
+                    target);
+            if (outcome == BoardOutcome.ACCEPTED) {
+                LOGGER.info("Каменный шаг {} открыт вместе с {}: булыжника хватает на оба", step, current);
+            }
         }
     }
 
@@ -405,6 +461,8 @@ public final class FirstStepsRunner {
     }
 
     private record Scan(SettlementFacts facts, boolean furnaceBlock) {}
+
+    private record StoneSite(BlockCoord home, String wood) {}
 
     private static Scan buildFacts(ServerLevel level, BlockCoord home, StockView stock, BoardService service) {
         boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
