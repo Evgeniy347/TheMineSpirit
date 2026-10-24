@@ -17,6 +17,10 @@ import java.util.Optional;
 import net.minecraft.world.item.ItemStack;
 
 public final class ActivityTaskFactory {
+    // Со своими брёвнами от 5 дух плавит из них: вход c и топливо ~2c/3 (бревно горит полторы плавки).
+    private static final int MIN_OWN_LOGS = 5;
+    private static final int FUEL_SHARE_NUM = 2;
+    private static final int FUEL_SHARE_DEN = 3;
     private static final String RADIUS = "radius";
 
     private ActivityTaskFactory() {}
@@ -51,17 +55,41 @@ public final class ActivityTaskFactory {
     private static TaskNode charcoal(ActivityIntent intent, String log, SpiritEntity spirit) {
         Map<String, Object> smelt = new HashMap<>(intent.params());
         smelt.remove(SmeltActivity.CHARCOAL_LOG);
-        Map<String, Object> logs = acquireParams(
-                new ActivityIntent(
-                        intent.id(),
-                        Optional.of(ActivityIntent.ACQUIRE),
-                        Map.of("item", log, "count", smelt.get("count")),
-                        Optional.empty()),
-                spirit);
         List<TaskNode> steps = new ArrayList<>();
-        steps.add(new ScriptCall(ActivityIntent.ACQUIRE, logs));
+        int held = heldLogs(spirit, log);
+        int count = smelt.get("count") instanceof Integer wanted ? wanted : 1;
+        if (held >= MIN_OWN_LOGS) {
+            // Плавка из своих брёвен (вход + топливо ~2/3 входа): дух с 13 брёвнами добывал ещё 8 («×21») и падал на
+            // недостижимом верху джунглевого дерева (INC-44, живой 24.10).
+            smelt.put("count", Math.min(count, held * FUEL_SHARE_DEN / (FUEL_SHARE_DEN + FUEL_SHARE_NUM)));
+        } else {
+            steps.add(new ScriptCall(
+                    ActivityIntent.ACQUIRE,
+                    acquireParams(
+                            new ActivityIntent(
+                                    intent.id(),
+                                    Optional.of(ActivityIntent.ACQUIRE),
+                                    Map.of("item", log, "count", count),
+                                    Optional.empty()),
+                            spirit)));
+        }
         steps.addAll(withHome(spirit, new ScriptCall("smelt", Map.copyOf(smelt))));
         return new SequenceNode(steps);
+    }
+
+    private static int heldLogs(SpiritEntity spirit, String log) {
+        if (spirit == null) {
+            return 0;
+        }
+        String id = log.startsWith("minecraft:") ? log : "minecraft:" + log;
+        int count = 0;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (!stack.isEmpty() && StackMapper.itemId(stack).equals(id)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
     }
 
     // Плавка — у дома: печь стоит во дворе станций, а дух с расчистки угла участка или из шахты искал её в 16 вокруг
