@@ -948,7 +948,9 @@ public final class CoreScripts {
                                 ParamSpec.text(CONTAINER, false, NEAREST),
                                 ParamSpec.text(ITEM, true),
                                 ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
-                                containerRadius()),
+                                containerRadius(),
+                                // leftover: сдача остатков после шага — не нужда плана (иначе дух не отдаёт их)
+                                ParamSpec.bool("leftover", false, false)),
                         List.of("контейнер доступен"),
                         List.of("предметы в контейнере", "контейнер отсортирован")),
                 spec(
