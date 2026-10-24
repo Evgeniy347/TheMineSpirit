@@ -22,6 +22,7 @@ public final class ActivityTaskFactory {
     private static final int FUEL_SHARE_NUM = 2;
     private static final int FUEL_SHARE_DEN = 3;
     private static final String RADIUS = "radius";
+    private static final String COUNT = "count";
 
     private ActivityTaskFactory() {}
 
@@ -41,9 +42,9 @@ public final class ActivityTaskFactory {
             return Optional.of(new SequenceNode(withHome(spirit, new ScriptCall(script, intent.params()))));
         }
         Map<String, Object> params = switch (script) {
-            case "chop_tree" -> Map.of("species", "any", "count", 4, RADIUS, 16, "replant", true);
+            case "chop_tree" -> Map.of("species", "any", COUNT, 4, RADIUS, 16, "replant", true);
             case "harvest_crop" -> Map.of("crop", "any", RADIUS, 8, "replant", true);
-            case "mine_vein" -> Map.of("ore", "any", "count", 8, RADIUS, 16);
+            case "mine_vein" -> Map.of("ore", "any", COUNT, 8, RADIUS, 16);
             case "unload" -> Map.of("container", "auto", RADIUS, 8, "force", false);
             case "wait" -> Map.of("ticks", 200);
             case ActivityIntent.ACQUIRE -> acquireParams(intent, spirit);
@@ -57,11 +58,11 @@ public final class ActivityTaskFactory {
         smelt.remove(SmeltActivity.CHARCOAL_LOG);
         List<TaskNode> steps = new ArrayList<>();
         int held = heldLogs(spirit, log);
-        int count = smelt.get("count") instanceof Integer wanted ? wanted : 1;
+        int count = smelt.get(COUNT) instanceof Integer wanted ? wanted : 1;
         if (held >= MIN_OWN_LOGS) {
             // Плавка из своих брёвен (вход + топливо ~2/3 входа): дух с 13 брёвнами добывал ещё 8 («×21») и падал на
             // недостижимом верху джунглевого дерева (INC-44, живой 24.10).
-            smelt.put("count", Math.min(count, held * FUEL_SHARE_DEN / (FUEL_SHARE_DEN + FUEL_SHARE_NUM)));
+            smelt.put(COUNT, Math.min(count, held * FUEL_SHARE_DEN / (FUEL_SHARE_DEN + FUEL_SHARE_NUM)));
         } else {
             steps.add(new ScriptCall(
                     ActivityIntent.ACQUIRE,
@@ -69,7 +70,7 @@ public final class ActivityTaskFactory {
                             new ActivityIntent(
                                     intent.id(),
                                     Optional.of(ActivityIntent.ACQUIRE),
-                                    Map.of("item", log, "count", count),
+                                    Map.of("item", log, COUNT, count),
                                     Optional.empty()),
                             spirit)));
         }
@@ -107,7 +108,7 @@ public final class ActivityTaskFactory {
             throw new IllegalArgumentException("acquire без духа не строится: цель считается по его инвентарю");
         }
         if (!(intent.params().get("item") instanceof String item)
-                || !(intent.params().get("count") instanceof Integer more)) {
+                || !(intent.params().get(COUNT) instanceof Integer more)) {
             throw new IllegalArgumentException(
                     "Намерение acquire " + intent.id() + " без item/count: " + intent.params());
         }
@@ -119,6 +120,6 @@ public final class ActivityTaskFactory {
             }
         }
         AcquireOrder order = AcquireOrder.of(item, more, held);
-        return Map.of("item", order.item(), "count", order.count());
+        return Map.of("item", order.item(), COUNT, order.count());
     }
 }

@@ -69,7 +69,7 @@ public final class DoorPairs {
                     continue;
                 }
                 Optional<Facing> otherFacing = facing(other);
-                if (otherFacing.isPresent() && !otherFacing.get().equals(facing.get())) {
+                if (otherFacing.isPresent() && otherFacing.get() != facing.get()) {
                     return Optional.of("две двери [" + door.getKey().x() + ","
                             + door.getKey().y() + ","
                             + door.getKey().z() + "] и [" + neighbor.x() + "," + neighbor.y() + "," + neighbor.z()

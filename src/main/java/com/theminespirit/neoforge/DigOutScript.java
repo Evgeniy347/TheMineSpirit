@@ -4,6 +4,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.GotoParams;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public final class DigOutScript implements ScriptInstance {
     // большая пещера замурованной не считается).
     public static boolean sealed(Level level, BlockPos feet) {
         Set<BlockPos> seen = new HashSet<>();
-        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
         queue.add(feet);
         seen.add(feet);
         while (!queue.isEmpty()) {
@@ -171,7 +172,7 @@ public final class DigOutScript implements ScriptInstance {
             return turnOrFail("в проходе жидкость в " + cell.toShortString());
         }
         return switch (breaker.begin(cell)) {
-            case BlockBreaker.Started started -> {
+            case BlockBreaker.Started ignored -> {
                 breaking = true;
                 yield ScriptStatus.RUNNING;
             }
@@ -184,7 +185,7 @@ public final class DigOutScript implements ScriptInstance {
 
     private Optional<String> placeFloor(BlockPos cell) {
         return switch (placer.begin(cell, Blocks.COBBLESTONE.defaultBlockState(), FLOOR_BLOCK)) {
-            case BlockPlacer.Started started -> Optional.empty();
+            case BlockPlacer.Started ignored -> Optional.empty();
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };

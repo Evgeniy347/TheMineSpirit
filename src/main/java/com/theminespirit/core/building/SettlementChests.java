@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -115,7 +116,7 @@ public final class SettlementChests {
     /** Ленивый обход сундуков от ближнего к дальнему: читает ячейки только до первого нужного результата. */
     public final class Search {
         private final BlockCoord from;
-        private final PriorityQueue<BlockCoord> pending;
+        private final Queue<BlockCoord> pending;
         private int ring = -1;
         private int loaded;
 
