@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.PresetLibrary;
@@ -40,6 +41,28 @@ class SettlementLayoutTests {
                 List.of(SettlementLayout.HOUSE_WIDTH, SettlementLayout.HOUSE_DEPTH),
                 List.of(hut.sizeX(), hut.sizeZ()),
                 "Хижина ставится в центр участка по своему габариту: схема и раскладка обязаны совпадать");
+    }
+
+    @Test
+    void gatherForbidden_PlotGroundAndCaveUnderSettlement_Forbidden() {
+        BlockCoord pocket = new BlockCoord(ANCHOR.x() + 5, ANCHOR.y() - 7, ANCHOR.z() - 2);
+        BlockCoord outsideDirt =
+                new BlockCoord(ANCHOR.x() + SettlementLayout.LEVEL_HALF + 4, ANCHOR.y() - 1, ANCHOR.z());
+
+        assertTrue(
+                SettlementLayout.gatherForbidden(ANCHOR, pocket, 7),
+                "Карман под участком — не место добычи земли: 4-й раз тот же карман (INC-69)");
+        assertTrue(
+                SettlementLayout.gatherForbidden(
+                        ANCHOR, new BlockCoord(ANCHOR.x() + SettlementLayout.LEVEL_HALF + 6, 60, ANCHOR.z()), 6),
+                "Пещера глубже 3 под поверхностью рядом с поселением — не цель добычи");
+        assertFalse(
+                SettlementLayout.gatherForbidden(ANCHOR, outsideDirt, 1),
+                "Земля под дёрном за оградой — законная добыча на подсыпку");
+        BlockCoord mine = SettlementLayout.mineEntrance(ANCHOR);
+        assertFalse(
+                SettlementLayout.gatherForbidden(ANCHOR, new BlockCoord(mine.x(), mine.y() - 5, mine.z() + 3), 6),
+                "Шахта плана — исключение: камень добывается в ней");
     }
 
     @Test

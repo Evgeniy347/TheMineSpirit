@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
+import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -13,6 +14,7 @@ import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +54,14 @@ public final class ProtectionGate {
         return checkBreak(pos, state);
     }
 
+    private static boolean onSettlementPlot(ServerLevel level, BlockCoord coord) {
+        return SettlementPlotStore.get(level)
+                .plot()
+                .map(plot -> Math.abs(coord.x() - plot.anchor().x()) <= SettlementLayout.LEVEL_HALF
+                        && Math.abs(coord.z() - plot.anchor().z()) <= SettlementLayout.LEVEL_HALF)
+                .orElse(false);
+    }
+
     private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
@@ -76,10 +86,17 @@ public final class ProtectionGate {
         } else {
             boolean placedByPlayer = level instanceof ServerLevel server
                     && PlacedBlocksData.get(server).isMarked(pos);
-            decision = PROTECTION.check(
-                    blockId(state),
-                    neighbours(level, pos),
-                    new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+            if (!placedByPlayer && level instanceof ServerLevel server && onSettlementPlot(server, coord)) {
+                // Участок поселения: постройки прошлых версий (старая ограда, дом, ступени) — свои, а не «постройка
+                // игрока» по искусственным соседям; поставленное игроком по-прежнему защищено (INC-70: «защищено: 19,
+                // убрано 0 из 1088»).
+                decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
+            } else {
+                decision = PROTECTION.check(
+                        blockId(state),
+                        neighbours(level, pos),
+                        new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+            }
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
