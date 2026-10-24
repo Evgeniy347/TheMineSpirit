@@ -107,6 +107,17 @@ public final class SettlementLayout {
         return fence || hut || yardCell || torch;
     }
 
+    // Стоянка подсыпки (INC-72): на участке поселения (кроме спуска в шахту) — только с небом над ней, пещера под
+    // участком не цель; вне участка правило не действует.
+    public static boolean fillStandAllowed(BlockCoord anchor, BlockCoord stand, boolean sky) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него считается участок");
+        Objects.requireNonNull(stand, "Стоянка не может быть null: проверяется её клетка");
+        boolean onPlot = Math.abs(stand.x() - anchor.x()) <= LEVEL_HALF
+                && Math.abs(stand.z() - anchor.z()) <= LEVEL_HALF
+                && !mineColumn(anchor, stand.x(), stand.z());
+        return sky || !onPlot;
+    }
+
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.
     public static BlockCoord workYard(BlockCoord anchor) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится рабочий двор");
