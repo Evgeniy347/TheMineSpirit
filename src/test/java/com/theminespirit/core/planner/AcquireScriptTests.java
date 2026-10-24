@@ -13,6 +13,7 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -51,6 +52,30 @@ class AcquireScriptTests {
                 registryCalls.get(),
                 "Реестр скриптов не должен запрашиваться: подплан не строится, когда хватает инвентаря");
         assertNull(script.failureReason(), "Успешный acquire не несёт причины провала");
+    }
+
+    @Test
+    void gatherAt_InventoryCoversLayer_NoWalkOutside() {
+        AcquireScript script = script(4, new StubSupplies(5, Map.of()), alwaysGatherable(), new AtomicInteger())
+                .gatherAt(new BlockCoord(30, 64, 30));
+
+        assertEquals(
+                Optional.empty(),
+                script.buildSubplan(),
+                "Земли в инвентаре хватает на слой — добор пропускается, дух не ходит за ограду (INC-68)");
+    }
+
+    @Test
+    void gatherAt_Shortfall_WalksToPlaceBeforeGather() {
+        AcquireScript script = script(4, new StubSupplies(1, Map.of()), alwaysGatherable(), new AtomicInteger())
+                .gatherAt(new BlockCoord(30, 64, 30));
+
+        List<TaskNode> steps = ((SequenceNode) script.buildSubplan().orElseThrow()).steps();
+
+        assertEquals(
+                new ScriptCall("goto", Map.of("x", 30, "y", 64, "z", 30)),
+                steps.get(0),
+                "Не хватает — сначала к месту добычи за оградой, а не копать землю участка (INC-68)");
     }
 
     @Test

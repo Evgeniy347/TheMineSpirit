@@ -670,16 +670,21 @@ public final class TicketPlans {
                 // Земля под слой (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
                 // добычей за оградой, а не из земли участка; сундука до выравнивания нет. Нехватка — не провал
                 // задания: слой досыплется следующей попыткой выравнивания.
+                // Хватает в инвентаре — добор не ходит за ограду (acquire идёт к месту добычи только при нехватке).
                 steps.add(new FallbackNode(List.of(
-                        sequence(
-                                gotoPoint(source),
-                                new ScriptCall(
-                                        "acquire",
-                                        Map.of(
-                                                ITEM,
-                                                "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
-                                                COUNT,
-                                                Math.min(layer.volume(), CatalogLimits.COUNT_MAX)))),
+                        new ScriptCall(
+                                "acquire_at",
+                                Map.of(
+                                        ITEM,
+                                        "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
+                                        COUNT,
+                                        Math.min(layer.volume(), CatalogLimits.COUNT_MAX),
+                                        "x",
+                                        source.x(),
+                                        "y",
+                                        source.y(),
+                                        "z",
+                                        source.z())),
                         new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
             }
             steps.add(new FallbackNode(List.of(

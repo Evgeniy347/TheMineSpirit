@@ -137,6 +137,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 - `smelt` (`item`, `count`, `radius`) — переплавить предмет
 - `equip` (`item`) — надеть предмет
 - `acquire` (`item`, `count`) — добыть предмет любым способом
+- `acquire_at` (`item`, `count`, `x`, `y`, `z`) — иметь предмет; не хватает — добыть у заданного места
 - `attack` (`target`) — атаковать цель
 - `defend` (`target`) — защитить цель
 - `retreat` — отступить

@@ -915,22 +915,30 @@ class TicketPlansTests {
 
         List<String> scripts = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
                 .map(ScriptCall::script)
-                .filter(script -> List.of("acquire", "fill").contains(script))
+                .filter(script -> List.of("acquire_at", "fill").contains(script))
                 .toList();
 
         assertEquals(
-                List.of("acquire", "fill", "acquire", "fill", "acquire", "fill", "acquire", "fill"),
+                List.of("acquire_at", "fill", "acquire_at", "fill", "acquire_at", "fill", "acquire_at", "fill"),
                 scripts,
                 "Перед каждым слоем подсыпки (ящик 2×4 — четыре слоя) — добор земли под слой ≤64, а не один заход на "
                         + "всю яму (INC-68)");
         assertEquals(
-                "acquire",
+                "acquire_at",
                 scripts.get(0),
                 "Земля на подсыпку добывается до засыпки (своя со срезки или за оградой): иначе «не хватило dirt: нужно 4, "
                         + "есть 0» (INC-68)");
         assertTrue(
                 Math.abs(TicketPlans.dirtSource(anchor, 4).x()) > SettlementLayout.LEVEL_HALF,
                 "Землю добывают за оградой, а не из земли участка");
+        assertTrue(
+                calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
+                        .noneMatch(call -> "goto".equals(call.script())
+                                && call.params()
+                                        .get("x")
+                                        .equals(TicketPlans.dirtSource(anchor, 4)
+                                                .x())),
+                "Отдельного выхода за ограду в плане нет: acquire идёт туда сам и только при нехватке");
     }
 
     // Вызовы плана в порядке исполнения (обход в глубину).
