@@ -29,6 +29,13 @@ public final class WoodSpecies {
         return species;
     }
 
+    // Порода деревянного предмета по префиксу имени (jungle_fence → jungle); не деревянный — пусто.
+    public static Optional<String> speciesOf(String item) {
+        Objects.requireNonNull(item, "Предмет не может быть null: породу берут из имени");
+        String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        return ALL.stream().filter(species -> name.startsWith(species + "_")).findFirst();
+    }
+
     public static String swap(String block, String species) {
         Objects.requireNonNull(block, "Блок не может быть null: заменять нечего");
         check(species);

@@ -105,6 +105,7 @@ public final class FirstStepsRunner {
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         String wood = woodOf(level, home, stock);
         String log = WoodSpecies.swap("oak_log", wood);
+        dropOtherWood(level, service, wood);
         if (next.isPresent() && STONE_STEPS.contains(next.orElseThrow())) {
             parallelStone(level, service, facts, new StoneSite(home, wood), stock, next.orElseThrow(), now);
         }
@@ -180,6 +181,21 @@ public final class FirstStepsRunner {
             // Только реально поставленный шаг: BLOCKED/FAILED-тикет доска не переоткрывает, и строка «открыт»
             // каждые 5 с вводила в заблуждение (INC-26).
             LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
+        }
+    }
+
+    // Добыча под другую породу снимается: порода поселения меняется по голосам (запас, деревья рядом, биом), а
+    // gather:oak_fence, поставленный до смены, висел PENDING рядом с выбранной jungle (INC-42, живой 24.10).
+    public static void dropOtherWood(ServerLevel level, BoardService service, String wood) {
+        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+            if (!ticket.id().startsWith(GATHER_PREFIX) || !active(service, ticket.id())) {
+                continue;
+            }
+            String item = bare(ticket.id().substring(GATHER_PREFIX.length()));
+            Optional<String> species = WoodSpecies.speciesOf(item);
+            if (species.isPresent() && !species.orElseThrow().equals(wood) && service.cancel(level, ticket.id())) {
+                LOGGER.info("[wood] снята добыча {}: порода поселения {}", ticket.id(), wood);
+            }
         }
     }
 
