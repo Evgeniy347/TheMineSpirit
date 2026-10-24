@@ -66,10 +66,7 @@ public final class SettlementWood {
                 NEARBY.put(home, Map.copyOf(nearby));
             }
         }
-        String biome = WoodSpecies.ofBiome(level.getBiome(new BlockPos(home.x(), home.y(), home.z()))
-                .unwrapKey()
-                .map(key -> key.location().toString())
-                .orElse(WoodSpecies.OAK));
+        String biome = biomeAt(level, home);
         String species = vote(stock, nearby, biome);
         if (!species.equals(CHOSEN.put(home, species))) {
             // Строка выбора — при смене породы у дома: по ней видно, из чего сложились голоса (INC-41).
@@ -97,13 +94,36 @@ public final class SettlementWood {
 
     // Порода — по большинству брёвен в запасе и вокруг дома плюс вес биома (INC-39): раньше любой запас брёвен
     // решал один, и пара дубовых брёвен в джунглях ставила gather:oak_fence.
-    static String vote(Map<String, Integer> stock, Map<String, Integer> nearby, String biome) {
-        Map<String, Integer> votes = new HashMap<>();
-        nearby.forEach((item, count) -> votes.merge(item, count * NEARBY_WEIGHT, Integer::sum));
+    public static String biomeAt(ServerLevel level, BlockCoord place) {
+        return WoodSpecies.ofBiome(level.getBiome(new BlockPos(place.x(), place.y(), place.z()))
+                .unwrapKey()
+                .map(key -> key.location().toString())
+                .orElse(WoodSpecies.OAK));
+    }
+
+    // Правило владельца (INC-62): нет породы с запасом от STOCK_MIN брёвен — решает биом, деревья рядом не голосуют
+    // (6 дубов в джунглях закрепили дуб в плане). Пусто — запас большой, решает голосование.
+    public static Optional<String> biomeRules(Map<String, Integer> stock, String biome) {
+        Map<String, Integer> logs = stockLogs(stock);
+        return logs.values().stream().anyMatch(count -> count >= STOCK_MIN) ? Optional.empty() : Optional.of(biome);
+    }
+
+    private static Map<String, Integer> stockLogs(Map<String, Integer> stock) {
         Map<String, Integer> stockLogs = new HashMap<>();
         stock.forEach((item, count) -> WoodSpecies.speciesOf(item)
                 .filter(species -> item.endsWith("_log"))
                 .ifPresent(species -> stockLogs.merge(species + "_log", count, Integer::sum)));
+        return stockLogs;
+    }
+
+    static String vote(Map<String, Integer> stock, Map<String, Integer> nearby, String biome) {
+        Optional<String> ruled = biomeRules(stock, biome);
+        if (ruled.isPresent()) {
+            return ruled.get();
+        }
+        Map<String, Integer> votes = new HashMap<>();
+        nearby.forEach((item, count) -> votes.merge(item, count * NEARBY_WEIGHT, Integer::sum));
+        Map<String, Integer> stockLogs = stockLogs(stock);
         // Малый запас (меньше STOCK_MIN брёвен породы) не голосует: 2 дубовых бревна без деревьев рядом перебивали
         // биом jungle, и ограда шла из дуба (INC-42, живой 24.10).
         stockLogs.forEach((item, count) -> {

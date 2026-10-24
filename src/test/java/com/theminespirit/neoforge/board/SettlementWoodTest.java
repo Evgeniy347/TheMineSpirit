@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class SettlementWoodTest {
@@ -16,10 +17,19 @@ class SettlementWoodTest {
                 "jungle",
                 SettlementWood.vote(Map.of(), Map.of(), "jungle"),
                 "без брёвен в запасе и деревьев рядом порода — по биому (INC-37)");
+    }
+
+    @Test
+    void vote_SmallStockOakTreesJungleBiome_Biome() {
         assertEquals(
                 "jungle",
+                SettlementWood.vote(Map.of("jungle_log", 9), Map.of("oak_log", 6), "jungle"),
+                "запас меньше 16 — решает биом, 6 дубов рядом не голосуют: иначе план закреплял дуб в джунглях "
+                        + "(INC-62, правило владельца)");
+        assertEquals(
+                "oak",
                 SettlementWood.vote(Map.of("oak_log", 3), Map.of("jungle_log", 20), "oak"),
-                "деревья вокруг дома перевешивают пару брёвен чужой породы в запасе (INC-39)");
+                "запас меньше 16 — решает биом и при деревьях другой породы рядом (INC-62)");
     }
 
     @Test
@@ -53,5 +63,18 @@ class SettlementWoodTest {
                 "jungle",
                 SettlementWood.vote(Map.of("oak_log", 15), Map.of(), "jungle"),
                 "запас меньше 16 брёвен не голосует");
+    }
+
+    @Test
+    void biomeRules_StoredOakSmallJungleStock_RecomputedToBiome() {
+        assertEquals(
+                Optional.of("jungle"),
+                SettlementWood.biomeRules(Map.of("jungle_log", 9), "jungle"),
+                "план с дубом при запасе 9 jungle_log в джунглях нарушает правило — порода пересчитывается по биому "
+                        + "(INC-62)");
+        assertEquals(
+                Optional.empty(),
+                SettlementWood.biomeRules(Map.of("oak_log", 20), "jungle"),
+                "запас от 16 — правило биома не действует, закреплённая порода плана не меняется");
     }
 }
