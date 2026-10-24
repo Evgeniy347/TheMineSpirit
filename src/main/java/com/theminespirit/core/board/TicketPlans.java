@@ -663,21 +663,28 @@ public final class TicketPlans {
         List<PlotLeveling.Box> fills = leveling.fill().stream()
                 .filter(box -> !single || quarterOf(box, center) == quarter)
                 .toList();
-        int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
-        if (volume > 0 && PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
-            // Земля на подсыпку (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
-            // добычей за оградой, а не из земли участка; сундука до выравнивания нет.
-            steps.add(gotoPoint(dirtSource(center, single ? quarter : 1)));
-            steps.add(new ScriptCall(
-                    "acquire",
-                    Map.of(
-                            ITEM,
-                            "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
-                            COUNT,
-                            Math.min(volume, CatalogLimits.COUNT_MAX))));
-        }
+        boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
+        BlockCoord source = dirtSource(center, single ? quarter : 1);
         for (PlotLeveling.Box layer : layers(fills)) {
-            steps.add(new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))));
+            if (dirt) {
+                // Земля под слой (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
+                // добычей за оградой, а не из земли участка; сундука до выравнивания нет. Нехватка — не провал
+                // задания: слой досыплется следующей попыткой выравнивания.
+                steps.add(new FallbackNode(List.of(
+                        sequence(
+                                gotoPoint(source),
+                                new ScriptCall(
+                                        "acquire",
+                                        Map.of(
+                                                ITEM,
+                                                "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
+                                                COUNT,
+                                                Math.min(layer.volume(), CatalogLimits.COUNT_MAX)))),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+            }
+            steps.add(new FallbackNode(List.of(
+                    new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))),
+                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
         }
         // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
         // карман духу не достать, это не повод валить выравнивание (INC-67).

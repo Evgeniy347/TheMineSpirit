@@ -919,6 +919,11 @@ class TicketPlansTests {
                 .toList();
 
         assertEquals(
+                List.of("acquire", "fill", "acquire", "fill", "acquire", "fill", "acquire", "fill"),
+                scripts,
+                "Перед каждым слоем подсыпки (ящик 2×4 — четыре слоя) — добор земли под слой ≤64, а не один заход на "
+                        + "всю яму (INC-68)");
+        assertEquals(
                 "acquire",
                 scripts.get(0),
                 "Земля на подсыпку добывается до засыпки (своя со срезки или за оградой): иначе «не хватило dirt: нужно 4, "
@@ -928,20 +933,21 @@ class TicketPlansTests {
                 "Землю добывают за оградой, а не из земли участка");
     }
 
+    // Вызовы плана в порядке исполнения (обход в глубину).
     private static List<ScriptCall> calls(TaskNode root) {
         List<ScriptCall> found = new ArrayList<>();
-        Deque<TaskNode> queue = new ArrayDeque<>(List.of(root));
-        while (!queue.isEmpty()) {
-            TaskNode node = queue.poll();
-            if (node instanceof ScriptCall call) {
-                found.add(call);
-            } else if (node instanceof SequenceNode sequence) {
-                queue.addAll(sequence.steps());
-            } else if (node instanceof FallbackNode fallback) {
-                queue.addAll(fallback.steps());
-            }
-        }
+        collect(root, found);
         return found;
+    }
+
+    private static void collect(TaskNode node, List<ScriptCall> found) {
+        if (node instanceof ScriptCall call) {
+            found.add(call);
+        } else if (node instanceof SequenceNode sequence) {
+            sequence.steps().forEach(step -> collect(step, found));
+        } else if (node instanceof FallbackNode fallback) {
+            fallback.steps().forEach(step -> collect(step, found));
+        }
     }
 
     @Test
