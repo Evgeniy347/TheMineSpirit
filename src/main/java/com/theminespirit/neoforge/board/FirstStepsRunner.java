@@ -98,8 +98,26 @@ public final class FirstStepsRunner {
 
     private FirstStepsRunner() {}
 
+    // Как мир сверяется с планом поселения: AUDIT — постройки плана сверяются с миром (боевой режим);
+    // JOURNAL — сделанная по журналу постройка считается стоящей. JOURNAL — только сценам GameTest, проверяющим шаги
+    // после построек плана (наковальня), где участок 23×23 и спуск до y=−58 на арене 11×11 не поставить.
+    public enum PlanWorld {
+        AUDIT,
+        JOURNAL
+    }
+
     public static void tick(
             ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
+        tick(level, service, spirits, stock, now, PlanWorld.AUDIT);
+    }
+
+    public static void tick(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            long now,
+            PlanWorld world) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
@@ -112,7 +130,7 @@ public final class FirstStepsRunner {
         BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
         BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
-        Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service);
+        Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance();
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
@@ -647,7 +665,12 @@ public final class FirstStepsRunner {
     private record StoneSite(BlockCoord home, String wood) {}
 
     private static Scan buildFacts(
-            ServerLevel level, StoneSite site, BlockCoord anchor, StockView stock, BoardService service) {
+            ServerLevel level,
+            StoneSite site,
+            BlockCoord anchor,
+            StockView stock,
+            BoardService service,
+            PlanWorld world) {
         BlockCoord home = site.home();
         boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
         boolean hasHome = true;
@@ -698,14 +721,16 @@ public final class FirstStepsRunner {
         // Ровность — свой факт мира (INC-50): голый неровный участок без деревьев тоже выравнивается.
         // Сделанная по журналу расчистка без ровного участка (с полосой за оградой) снова в очереди: ограда — только
         // на ровном (INC-53).
-        boolean plotLevel = PlotLeveling.isLevel(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
+        boolean journal = world == PlanWorld.JOURNAL;
+        boolean plotLevel =
+                journal || PlotLeveling.isLevel(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
         // Постройки раскладки сверяются с миром только сделанные по журналу: несделанные и так в очереди.
         // Шахта — постройка плана: спуск mine_descent_v1 на своём месте сверяется по схеме, а не «лестница рядом»
         // (INC-59: старая яма засчитывалась шахтой).
-        boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, anchor, site);
-        boolean lighting = built(level, done, BoardCase.LIGHTING, anchor, site);
-        boolean fence = built(level, done, BoardCase.BUILD_FENCE, anchor, site);
-        boolean houses = built(level, done, BoardCase.BUILD_HOUSE, anchor, site);
+        boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, anchor, site, journal);
+        boolean lighting = built(level, done, BoardCase.LIGHTING, anchor, site, journal);
+        boolean fence = built(level, done, BoardCase.BUILD_FENCE, anchor, site, journal);
+        boolean houses = built(level, done, BoardCase.BUILD_HOUSE, anchor, site, journal);
         SettlementFacts facts = new SettlementFacts(
                 hasHome,
                 groundsCleared,
@@ -727,9 +752,14 @@ public final class FirstStepsRunner {
 
     // Постройка раскладки стоит в мире целиком: каждый блок её плана (факел, схема без поворота) на своей клетке.
     private static boolean built(
-            ServerLevel level, Set<BoardCase> done, BoardCase step, BlockCoord anchor, StoneSite site) {
-        if (!done.contains(step)) {
-            return false;
+            ServerLevel level,
+            Set<BoardCase> done,
+            BoardCase step,
+            BlockCoord anchor,
+            StoneSite site,
+            boolean journal) {
+        if (!done.contains(step) || journal) {
+            return done.contains(step);
         }
         Placed placed = audit(level, step, anchor, site.wood());
         // Допуск — 2% клеток (трава, лиана на месте блока схемы не возвращают стройку по кругу); 4 факела — без
