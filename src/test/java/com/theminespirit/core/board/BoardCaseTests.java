@@ -20,6 +20,7 @@ class BoardCaseTests {
                 "ACTIVITY_COMBAT",
                 "ACTIVITY_CRAFT",
                 "ACTIVITY_DEFEND",
+                "ACTIVITY_ESCAPE",
                 "ACTIVITY_EXPEDITION",
                 "ACTIVITY_EXTERNAL",
                 "ACTIVITY_FARM",

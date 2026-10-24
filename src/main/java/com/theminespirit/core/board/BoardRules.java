@@ -41,6 +41,7 @@ public final class BoardRules {
         priorities.put(BoardCase.ACTIVITY_ARM, 100);
         priorities.put(BoardCase.ACTIVITY_EXTERNAL, 95);
         priorities.put(BoardCase.ACTIVITY_EXPEDITION, 95);
+        priorities.put(BoardCase.ACTIVITY_ESCAPE, 95);
         priorities.put(BoardCase.ACTIVITY_DEFEND, 29);
         priorities.put(BoardCase.ACTIVITY_UNLOAD, 25);
         priorities.put(BoardCase.ACTIVITY_CRAFT, 20);

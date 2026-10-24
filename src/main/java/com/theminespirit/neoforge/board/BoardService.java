@@ -37,6 +37,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -72,6 +73,8 @@ import org.slf4j.Logger;
  */
 public final class BoardService {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final String DIG_OUT = "dig_out";
+    private static final long DIG_OUT_PAUSE_TICKS = 1200;
 
     private final Board board;
     private final HerdCycles animals;
@@ -83,6 +86,7 @@ public final class BoardService {
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
+    private final Map<UUID, Long> digOutAfter = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
     // Духи, чьё задание снял сброс при смене сборки: их задача по снятому заданию (восстановлена из сохранения)
     // ещё идёт и держит духа «внешним занятием» — spirit-5 50+ мин копал dig_area бывшего mine_level_3 (INC-40).
@@ -212,6 +216,7 @@ public final class BoardService {
         liveCauses.addAll(liveDropCauses(level));
         board.retain(liveCauses, now);
         retains++;
+        digOut(level, spirits);
         issue(level, spirits, now);
         reconcileActivities(spirits, true);
         flushBlockNotes();
@@ -496,10 +501,41 @@ public final class BoardService {
         }
     }
 
+    // Замурованный дух (воздуха к поверхности нет) сам копает лестницу вверх к дому: всю ночь стоял в каменном
+    // кармане, а доска показывала «Бой» (INC-45, живой 24.10). Задание доски у такого духа всё равно бы «застряло».
+    private void digOut(ServerLevel level, List<SpiritEntity> spirits) {
+        for (SpiritEntity spirit : spirits) {
+            boolean digging = DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
+                    && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
+            long now = level.getGameTime();
+            if (spirit.isRemoved()
+                    || spirit.home().isEmpty()
+                    || digging
+                    || now < digOutAfter.getOrDefault(spirit.getUUID(), 0L)
+                    || !DigOutScript.sealed(level, spirit.blockPosition())) {
+                continue;
+            }
+            // Сорвавшийся выход не перезапускается каждую пересборку: пауза, чтобы доска успела выдать другое.
+            digOutAfter.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
+            BlockCoord home = spirit.home().orElseThrow();
+            LOGGER.warn(
+                    "[incident] дух {} замурован в {}: воздуха к поверхности нет — копает лестницу вверх к дому {}",
+                    spirit.displayName(),
+                    spirit.blockPosition().toShortString(),
+                    home);
+            board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
+            spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", home.x(), "y", home.y(), "z", home.z())));
+        }
+    }
+
     private Optional<BoardCase> occupationOf(SpiritEntity spirit) {
         UUID id = spirit.getUUID();
         if (spirit.isRemoved()) {
             return Optional.empty();
+        }
+        if (DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
+                && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
+            return Optional.of(BoardCase.ACTIVITY_ESCAPE);
         }
         if (spirit.tactics().wantsControl()) {
             return Optional.of(BoardCase.ACTIVITY_COMBAT);
