@@ -5,6 +5,7 @@ import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
+import com.theminespirit.core.building.CaveStand;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
@@ -38,9 +39,6 @@ public class ClearAreaSession {
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
-    // Стоянка не ниже низа ящика больше чем на это: расчистка участка снизу из старой пещеры под ним водила духа
-    // по пещере 10 минут (INC-67). Ниже — клетка «недостижима».
-    private static final int STAND_BELOW_BOX = 2;
     // Строка прогресса — через столько срезанных блоков (INC-67: расчистка шла без единой строки).
     private static final int PROGRESS_EVERY = 16;
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -195,7 +193,8 @@ public class ClearAreaSession {
         }
         MiningPlanner.Next next = (MiningPlanner.Next) result;
         remaining.remove(next.target());
-        if (next.stand().y() < box.minY() - STAND_BELOW_BOX) {
+        BlockPos standPos = toPos(next.stand());
+        if (CaveStand.cave(next.stand().y(), box.minY(), level.canSeeSky(standPos))) {
             unreachable++;
             tally.skipped();
             LOGGER.info(
