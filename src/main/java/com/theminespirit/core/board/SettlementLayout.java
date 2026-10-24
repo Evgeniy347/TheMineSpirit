@@ -18,6 +18,8 @@ public final class SettlementLayout {
     // Выравнивание захватывает полосу за линией ограды: уступ земли у забора давал перелезть через него (INC-53).
     public static final int LEVEL_MARGIN = 2;
     public static final int LEVEL_HALF = HALF + LEVEL_MARGIN;
+    // Глубже — пещера под поселением, не место добычи (INC-69).
+    public static final int CAVE_DEPTH = 3;
     // Хижина 5×5 и ряд крыльца перед дверью (схема hut_1: 5 в ширину, 6 в глубину с крыльцом).
     public static final int HOUSE_WIDTH = 5;
     public static final int HOUSE_DEPTH = 6;
@@ -59,6 +61,23 @@ public final class SettlementLayout {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
         BlockCoord entrance = mineEntrance(anchor);
         return Math.abs(x - entrance.x()) <= 1 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
+    }
+
+    // Добыча (gather земли, камня) не берёт блоки участка и пещер под поселением (INC-69: 4-й раз тот же карман под
+    // участком). Участок — его площадь с полосой выравнивания на любой высоте; пещера — глубже CAVE_DEPTH под
+    // поверхностью колонки в двух участках от центра. Спуск в шахту плана — исключение.
+    public static boolean gatherForbidden(BlockCoord anchor, BlockCoord target, int depthBelowSurface) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него считается запретная зона добычи");
+        Objects.requireNonNull(target, "Цель добычи не может быть null: проверяется её клетка");
+        if (mineColumn(anchor, target.x(), target.z())) {
+            return false;
+        }
+        int dx = Math.abs(target.x() - anchor.x());
+        int dz = Math.abs(target.z() - anchor.z());
+        if (dx <= LEVEL_HALF && dz <= LEVEL_HALF) {
+            return true;
+        }
+        return depthBelowSurface > CAVE_DEPTH && dx <= 2 * PLOT && dz <= 2 * PLOT;
     }
 
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.

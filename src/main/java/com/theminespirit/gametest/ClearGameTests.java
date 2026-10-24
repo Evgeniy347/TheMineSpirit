@@ -1,12 +1,15 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -359,6 +362,43 @@ public final class ClearGameTests {
                     helper.getBlockState(new BlockPos(2, 1, 2)).is(Blocks.COBBLESTONE)
                             && helper.getBlockState(new BlockPos(3, 1, 2)).is(Blocks.COBBLESTONE),
                     "стенка игрока обязана остаться целой");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    // Постройки поселения прошлых версий на участке (старая ограда, дом) — не «постройка игрока» по искусственным
+    // соседям: выравнивание их убирает (INC-70: «защищено: 19, убрано 0 из 1088»).
+    @GameTest(template = "arena", batch = "clear_settlement_leftovers", timeoutTicks = 400)
+    public static void clear_OldSettlementWallOnPlot_Removed(GameTestHelper helper) {
+        prepare(helper);
+        for (int x = 2; x <= 3; x++) {
+            for (int y = 1; y <= 2; y++) {
+                helper.setBlock(new BlockPos(x, y, 2), Blocks.OAK_PLANKS);
+            }
+        }
+        BlockPos center = helper.absolutePos(new BlockPos(4, 1, 4));
+        SettlementPlotStore.get(helper.getLevel())
+                .fix(new SettlementPlot(
+                        new BlockCoord(center.getX(), center.getY(), center.getZ()),
+                        center.getY(),
+                        center.getY(),
+                        1,
+                        "oak"));
+        SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, clearCall(helper, new BlockPos(2, 1, 2), new BlockPos(3, 2, 2)), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "старая стенка поселения на участке убирается, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(3, 2, 2)).isAir(),
+                    "середина старой стенки убрана: постройка поселения прошлой версии — не чужая постройка");
+            SettlementPlotStore.get(helper.getLevel()).clear();
             GameTestFixtures.finish(helper);
         });
     }
