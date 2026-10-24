@@ -880,7 +880,7 @@ class TicketPlansTests {
         assertEquals(
                 List.of(3),
                 calls.stream()
-                        .filter(call -> call.script().equals("clear_area")
+                        .filter(call -> "clear_area".equals(call.script())
                                 && call.params().containsKey("y2"))
                         .filter(call -> Integer.valueOf(65).equals(call.params().get("y2")))
                         .map(call -> call.params().get("x1"))
@@ -888,7 +888,7 @@ class TicketPlansTests {
                 "Четверть 2 (восток-север) срезает только свой выступ: выравнивание делится между духами, а не идёт "
                         + "одним духом в первой четверти (INC-64)");
         assertTrue(
-                calls.stream().noneMatch(call -> call.script().equals("fill")),
+                calls.stream().noneMatch(call -> "fill".equals(call.script())),
                 "Подсыпка четверти 4 не попадает в четверть 2");
     }
 
