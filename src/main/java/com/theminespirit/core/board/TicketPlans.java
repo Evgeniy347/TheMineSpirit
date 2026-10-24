@@ -131,8 +131,8 @@ public final class TicketPlans {
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
             // Сундуки склада ставятся во дворе сразу (place): в инвентаре крафтера склада не было (приёмка «джунгли»).
-            case STOCK_CHESTS -> placeInYard("minecraft:chest", 2, target);
-            case CRAFTING_STATION -> craftInYard("minecraft:crafting_table", 1, target);
+            case STOCK_CHESTS -> yard(target);
+            case CRAFTING_STATION -> tableNearSpirit(target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
@@ -389,13 +389,43 @@ public final class TicketPlans {
                 target);
     }
 
-    private static TaskNode craftInYard(String item, int count, TicketTarget target) {
+    // Порядок владельца (INC-63): первый верстак — временный, рядом с духом, без привязки к двору; двор ставится после
+    // выравнивания на высоте плана.
+    private static TaskNode tableNearSpirit(TicketTarget target) {
+        return withLeftovers(
+                new ScriptCall(
+                        "craft",
+                        Map.of(
+                                ITEM,
+                                "minecraft:crafting_table",
+                                COUNT,
+                                1,
+                                RADIUS,
+                                CatalogLimits.STATION_RADIUS_DEFAULT,
+                                "place",
+                                true)),
+                target);
+    }
+
+    // Двор после выравнивания: сундуки склада и постоянный верстак двора (поиск в радиусе 1 — временный верстак у
+    // места первых крафтов его не заменяет).
+    private static TaskNode yard(TicketTarget target) {
         return withLeftovers(
                 sequence(
                         gotoPoint(SettlementLayout.workYard(target.target())),
                         new ScriptCall(
                                 "craft",
-                                Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT))),
+                                Map.of(
+                                        ITEM,
+                                        "minecraft:chest",
+                                        COUNT,
+                                        2,
+                                        RADIUS,
+                                        CatalogLimits.STATION_RADIUS_DEFAULT,
+                                        "place",
+                                        true)),
+                        new ScriptCall(
+                                "craft", Map.of(ITEM, "minecraft:crafting_table", COUNT, 1, RADIUS, 1, "place", true))),
                 target);
     }
 

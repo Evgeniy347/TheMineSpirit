@@ -169,9 +169,9 @@ public final class BoardSettlementStartGameTests {
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), clock.get());
 
         helper.assertTrue(
-                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
+                board.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
                 "Заблокированный шаг не держит цепочку: дух получает следующее задание (правило владельца), статус "
-                        + board.board().statusOf("first:stock_chests"));
+                        + board.board().statusOf("first:craft_wooden_pickaxe"));
         spirit.discard();
         GameTestFixtures.finish(helper);
         helper.succeed();

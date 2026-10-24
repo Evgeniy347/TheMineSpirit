@@ -24,12 +24,12 @@ class FirstStepsPlanTests {
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
         chain.add(BoardCase.CRAFTING_STATION);
-        chain.add(BoardCase.STOCK_CHESTS);
         chain.addAll(ToolSet.wooden());
+        chain.add(BoardCase.CLEAR_GROUNDS);
+        chain.add(BoardCase.STOCK_CHESTS);
         chain.add(BoardCase.BUILD_MINE);
         chain.addAll(ToolSet.stone());
         chain.add(BoardCase.CRAFT_FURNACE);
-        chain.add(BoardCase.CLEAR_GROUNDS);
         chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.BUILD_FENCE);
         chain.add(BoardCase.BUILD_HOUSE);
@@ -113,19 +113,17 @@ class FirstStepsPlanTests {
         }
         int light = chain.indexOf(BoardCase.LIGHTING);
         assertEquals(
-                chain.indexOf(BoardCase.CRAFTING_STATION) + 1,
+                chain.indexOf(BoardCase.CLEAR_GROUNDS) + 1,
                 chain.indexOf(BoardCase.STOCK_CHESTS),
-                "Сундуки — сразу после верстака (владелец 23.10): добыча с первых шагов складывается в сундук");
+                "Сундуки — сразу после выравнивания (владелец 24.10, INC-63): двор на высоте плана");
         for (BoardCase building : List.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
             assertTrue(
                     chain.indexOf(building) > light,
                     building + " — после факелов: постройки только после инструментов, шахты и света");
         }
         assertTrue(
-                chain.indexOf(BoardCase.CLEAR_GROUNDS) > chain.indexOf(BoardCase.CRAFT_FURNACE)
-                        && chain.indexOf(BoardCase.CLEAR_GROUNDS) < light,
-                "Расчистка — после инструментов и шахты, но до факелов: факелы встают по углам участка, где до"
-                        + " расчистки деревья");
+                chain.indexOf(BoardCase.CLEAR_GROUNDS) < mine && chain.indexOf(BoardCase.CLEAR_GROUNDS) < light,
+                "Расчистка — после деревянных инструментов, до шахты и факелов: факелы и двор встают на ровном участке");
     }
 
     @Test
@@ -212,11 +210,29 @@ class FirstStepsPlanTests {
     }
 
     @Test
+    void chain_Order_LevelingBeforeYard() {
+        List<BoardCase> chain = FirstStepsPlan.chain();
+        int leveling = chain.indexOf(BoardCase.CLEAR_GROUNDS);
+
+        assertEquals(
+                BoardCase.CRAFTING_STATION,
+                chain.get(0),
+                "Первым — временный верстак рядом с духом: без него не скрафтить деревянные инструменты");
+        assertTrue(
+                chain.indexOf(BoardCase.CRAFT_WOODEN_AXE) < leveling,
+                "Деревянные инструменты — до выравнивания: топор нужен расчистке");
+        assertTrue(
+                leveling < chain.indexOf(BoardCase.STOCK_CHESTS) && leveling < chain.indexOf(BoardCase.CRAFT_FURNACE),
+                "Двор (сундуки, печь) — после выравнивания, на высоте плана: двор до него вставал в яме на 4 ниже "
+                        + "плана, и все духи «застревали» в одной точке (INC-63, порядок владельца)");
+    }
+
+    @Test
     void next_BlockedStep_NextStepGiven() {
         SettlementFacts facts = facts(Set.of(), Set.of(), Set.of(BoardCase.CRAFTING_STATION));
 
         assertEquals(
-                Optional.of(BoardCase.STOCK_CHESTS),
+                Optional.of(BoardCase.CRAFT_WOODEN_PICKAXE),
                 FirstStepsPlan.next(facts),
                 "Шаг, упавший до BLOCKED, не держит цепочку: дух получает следующее задание, а не стоит "
                         + "(правило владельца — провал → инцидент и новое задание)");

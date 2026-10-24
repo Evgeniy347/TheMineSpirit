@@ -152,7 +152,9 @@ public final class BoardFirstStepsGameTests {
 
         for (int step = 0; step < 40 && !foreignTrees; step++) {
             long now = level.getGameTime();
-            FirstStepsRunner.tick(level, board, List.of(spirit), stockOf(board), now);
+            // Постройки плана (шахта, выравнивание 27×27) на арене не поставить: маркеры и журнал (PlanWorld.JOURNAL).
+            FirstStepsRunner.tick(
+                    level, board, List.of(spirit), stockOf(board), now, FirstStepsRunner.PlanWorld.JOURNAL);
             List<BoardTicket> active = board.board().all().stream()
                     .filter(ticket -> ticket.id().startsWith("first:"))
                     .filter(ticket -> {
@@ -238,9 +240,9 @@ public final class BoardFirstStepsGameTests {
                         + board.board().statusOf("first:crafting_station")
                         + ": ложный шаг отправил бы духа крафтить второй верстак");
         helper.assertTrue(
-                board.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
-                "С верстаком цепочка сразу идёт к сундукам, статус "
-                        + board.board().statusOf("first:stock_chests"));
+                board.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                "С верстаком цепочка сразу идёт к деревянной кирке (INC-63), статус "
+                        + board.board().statusOf("first:craft_wooden_pickaxe"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -281,9 +283,9 @@ public final class BoardFirstStepsGameTests {
                         + restarted.board().statusOf("first:crafting_station") + ": отсутствие верстака в мире "
                         + "не перебивает факт done");
         helper.assertTrue(
-                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
-                "После верстака цепочка идёт дальше — к сундукам, статус "
-                        + restarted.board().statusOf("first:stock_chests"));
+                restarted.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                "После верстака цепочка идёт дальше — к деревянной кирке (INC-63), статус "
+                        + restarted.board().statusOf("first:craft_wooden_pickaxe"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -325,9 +327,9 @@ public final class BoardFirstStepsGameTests {
                 "Выполненный шаг верстака не переоткрывается после перезапуска, статус "
                         + restarted.board().statusOf("first:crafting_station"));
         helper.assertTrue(
-                restarted.board().statusOf("first:stock_chests").orElse(null) == BoardStatus.PENDING,
-                "После верстака цепочка идёт дальше — к сундукам, статус "
-                        + restarted.board().statusOf("first:stock_chests"));
+                restarted.board().statusOf("first:craft_wooden_pickaxe").orElse(null) == BoardStatus.PENDING,
+                "После верстака цепочка идёт дальше — к деревянной кирке (INC-63), статус "
+                        + restarted.board().statusOf("first:craft_wooden_pickaxe"));
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -362,9 +364,9 @@ public final class BoardFirstStepsGameTests {
         board.board().complete("first:crafting_station");
         FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), now);
         helper.assertTrue(
-                board.board().statusOf("first:stock_chests").isPresent(),
-                "После верстака наступают сундуки: цепочка не перескакивает шаги, статус "
-                        + board.board().statusOf("first:stock_chests"));
+                board.board().statusOf("first:craft_wooden_pickaxe").isPresent(),
+                "После верстака наступает деревянная кирка (INC-63): цепочка не перескакивает шаги, статус "
+                        + board.board().statusOf("first:craft_wooden_pickaxe"));
 
         board.journal().flushAll();
         List<BoardLogEntry> log = board.journal().last(64);
@@ -372,8 +374,8 @@ public final class BoardFirstStepsGameTests {
                 hasPosted(log, "gather:oak_planks"),
                 "Журнал доски обязан содержать постановку добычи: по ней разбирают, кто что получил");
         helper.assertTrue(
-                hasPosted(log, "first:crafting_station") && hasPosted(log, "first:stock_chests"),
-                "Журнал доски обязан содержать постановки шагов — верстак и сундуки");
+                hasPosted(log, "first:crafting_station") && hasPosted(log, "first:craft_wooden_pickaxe"),
+                "Журнал доски обязан содержать постановки шагов — верстак и деревянная кирка");
         GameTestFixtures.finish(helper);
         helper.succeed();
     }
@@ -649,13 +651,13 @@ public final class BoardFirstStepsGameTests {
 
     private static StockView stockOf(BoardService board) {
         Map<String, Integer> items = new HashMap<>(board.stock().available());
-        items.putIfAbsent("oak_planks", 256);
-        items.putIfAbsent("stick", 256);
-        items.putIfAbsent("oak_fence", 256);
-        items.putIfAbsent("torch", 256);
-        items.putIfAbsent("cobblestone", 256);
-        items.putIfAbsent("iron_ingot", 256);
-        items.putIfAbsent("iron_block", 256);
+        items.merge("oak_planks", 256, Math::max);
+        items.merge("stick", 256, Math::max);
+        items.merge("oak_fence", 256, Math::max);
+        items.merge("torch", 256, Math::max);
+        items.merge("cobblestone", 256, Math::max);
+        items.merge("iron_ingot", 256, Math::max);
+        items.merge("iron_block", 256, Math::max);
         return new StockView(items);
     }
 
