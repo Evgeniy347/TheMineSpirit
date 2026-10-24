@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildOrder;
 import com.theminespirit.core.building.BuildReservations;
@@ -11,6 +12,7 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -231,6 +234,15 @@ public final class FillSession {
                 cursor++;
                 continue;
             }
+            stands = stands.stream().filter(this::allowedStand).toList();
+            if (stands.isEmpty()) {
+                noStand++;
+                skipped++;
+                tally.skipped();
+                release(cell);
+                cursor++;
+                continue;
+            }
             BlockCoord stand = stands.get(0);
             approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
             state = State.APPROACH;
@@ -262,6 +274,19 @@ public final class FillSession {
     private boolean onFloor() {
         BlockPos below = spirit.blockPosition().below();
         return level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
+    }
+
+    // На участке поселения подсыпка не встаёт в пещеру без неба (INC-72: засыпка пустот под участком уводила духа в
+    // карман (-165,64,-489) в 5-й раз): закрытую пустоту не засыпать, а не лезть в неё. Шахта и ямы с небом — можно.
+    private boolean allowedStand(BlockCoord stand) {
+        if (!(level instanceof ServerLevel server)) {
+            return true;
+        }
+        boolean sky = level.canSeeSky(toPos(stand));
+        return SettlementPlotStore.get(server)
+                .plot()
+                .map(plot -> SettlementLayout.fillStandAllowed(plot.anchor(), stand, sky))
+                .orElse(true);
     }
 
     private void approachTick() {

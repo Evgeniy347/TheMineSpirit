@@ -10,6 +10,7 @@ import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.neoforge.LevelSafetyView;
@@ -54,6 +55,13 @@ public final class ProtectionGate {
         return checkBreak(pos, state);
     }
 
+    private static boolean inPlan(ServerLevel level, BlockCoord coord) {
+        return SettlementPlotStore.get(level)
+                .plot()
+                .map(plot -> SettlementLayout.planCell(plot.anchor(), coord.x(), coord.y(), coord.z()))
+                .orElse(false);
+    }
+
     private static boolean onSettlementPlot(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .plot()
@@ -80,23 +88,32 @@ public final class ProtectionGate {
                     blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
                     new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
-        } else if (level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
-            decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
         } else {
-            boolean placedByPlayer = level instanceof ServerLevel server
-                    && PlacedBlocksData.get(server).isMarked(pos);
-            if (!placedByPlayer && level instanceof ServerLevel server && onSettlementPlot(server, coord)) {
-                // Участок поселения: постройки прошлых версий (старая ограда, дом, ступени) — свои, а не «постройка
-                // игрока» по искусственным соседям; поставленное игроком по-прежнему защищено (INC-70: «защищено: 19,
-                // убрано 0 из 1088»).
-                decision = PROTECTION.checkSettlement(blockId(state), inProtectedZone);
-            } else {
-                decision = PROTECTION.check(
-                        blockId(state),
-                        neighbours(level, pos),
-                        new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+            boolean spiritMarked = false;
+            boolean placedByPlayer = false;
+            boolean onPlot = false;
+            boolean inPlan = false;
+            if (level instanceof ServerLevel server) {
+                spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
+                placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
+                onPlot = onSettlementPlot(server, coord);
+                inPlan = onPlot && inPlan(server, coord);
             }
+            SettlementBreak.Origin origin = placedByPlayer
+                    ? SettlementBreak.Origin.PLAYER
+                    : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
+            SettlementBreak.Place place = inPlan
+                    ? SettlementBreak.Place.PLAN
+                    : onPlot ? SettlementBreak.Place.PLOT : SettlementBreak.Place.OFF_PLOT;
+            decision = switch (SettlementBreak.of(origin, place)) {
+                case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
+                case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone);
+                case DEFAULT ->
+                    PROTECTION.check(
+                            blockId(state),
+                            neighbours(level, pos),
+                            new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+            };
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
