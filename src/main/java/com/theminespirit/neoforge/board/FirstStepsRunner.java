@@ -13,6 +13,7 @@ import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.PlotLeveling;
+import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementLayout;
@@ -177,7 +178,9 @@ public final class FirstStepsRunner {
         if (LAYOUT_STEPS.contains(caseValue)
                 || caseValue == BoardCase.CLEAR_GROUNDS
                 || caseValue == BoardCase.BUILD_MINE) {
-            reopenDone(level, service, step, parts, now);
+            if (reopenDone(level, service, step, parts, now)) {
+                return;
+            }
         }
         BoardOutcome outcome = BoardOutcome.ACCEPTED;
         for (int part = 1; part <= parts; part++) {
@@ -214,18 +217,22 @@ public final class FirstStepsRunner {
 
     // Постройка раскладки сделана по журналу, но в мире её нет (DONE старой сборки, сломана): задание и его куски
     // снимаются с доски вместе с отметкой — иначе submit отвечает DUPLICATE и шаг вечно «сделан» (INC-50).
-    private static void reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
+    // Постройка плана построена (DONE), но мир с ней разошёлся: схема — задание REPAIR_BUILDING «восстановление»
+    // (INC-60), прочее (свет, шахта, выравнивание) — шаг снова в очереди. true — восстановление поставлено.
+    private static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
         BoardCase caseValue = step.caseValue();
         if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE) {
-            return;
+            return false;
         }
         Placed placed = audit(level, caseValue, step.target().target(), step.wood());
         int missing = placed.total() - placed.done();
+        Optional<TicketTarget> scheme = RepairPlan.target(TicketPlans.plan(caseValue, 1, step.target()));
         LOGGER.info(
-                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: шаг снова в очереди",
+                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: {}",
                 caseValue,
                 missing,
-                placed.total());
+                placed.total(),
+                scheme.isPresent() ? "восстановление" : "шаг снова в очереди");
         service.journal()
                 .recordEntry(BoardLog.note(
                         "layout:" + caseValue.name().toLowerCase(Locale.ROOT),
@@ -234,12 +241,40 @@ public final class FirstStepsRunner {
                         List.of("missing=" + missing, "total=" + placed.total()),
                         null,
                         ConfigStamp.current()));
+        if (scheme.isPresent()) {
+            BoardOutcome repair = submitRepair(service, step, scheme.orElseThrow(), now);
+            if (repair == BoardOutcome.ACCEPTED || repair == BoardOutcome.DUPLICATE) {
+                return true;
+            }
+        }
         for (int part = 1; part <= parts; part++) {
             String id = partId(caseValue, part);
             if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
                 service.reopen(id);
             }
         }
+        return false;
+    }
+
+    private static BoardOutcome submitRepair(BoardService service, OpenStep step, TicketTarget target, long now) {
+        String id = RepairPlan.PREFIX + step.caseValue().name().toLowerCase(Locale.ROOT);
+        BoardOutcome outcome = service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.REPAIR_BUILDING,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.REPAIR_BUILDING),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.copyOf(step.need())),
+                target);
+        if (outcome == BoardOutcome.ACCEPTED) {
+            LOGGER.info(
+                    "[layout] восстановление {}: задание {} по схеме {}", step.caseValue(), id, target.schemeFile());
+        }
+        return outcome;
     }
 
     // Добыча под другую породу снимается: порода поселения меняется по голосам (запас, деревья рядом, биом), а
