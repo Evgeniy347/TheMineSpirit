@@ -13,7 +13,7 @@ import net.jqwik.api.Property;
 
 class ChopPlanProperties {
     @Property(tries = 200)
-    void of_AnyTreeAndStand_OrdersAllLogsFarthestFirst(@ForAll long seed) {
+    void of_AnyTreeAndStand_OrdersAllLogsTopDown(@ForAll long seed) {
         Tree tree = randomTree(seed);
         BlockCoord from = new BlockCoord((int) (seed % 5) - 2, 63, (int) (seed % 7) - 3);
 
@@ -29,12 +29,14 @@ class ChopPlanProperties {
                 Set.copyOf(plan.order()),
                 "Множество целей плана обязано совпасть с брёвнами дерева: план не добавляет и не теряет клеток");
         for (int i = 1; i < plan.order().size(); i++) {
+            BlockCoord previous = plan.order().get(i - 1);
+            BlockCoord current = plan.order().get(i);
             assertTrue(
-                    distanceSquared(plan.order().get(i - 1), from)
-                            >= distanceSquared(plan.order().get(i), from),
-                    "Порядок обязан быть по убыванию расстояния от стоянки: бревно "
-                            + plan.order().get(i) + " ближе предыдущего "
-                            + plan.order().get(i - 1) + " при стоянке " + from);
+                    previous.y() > current.y()
+                            || (previous.y() == current.y()
+                                    && distanceSquared(previous, from) >= distanceSquared(current, from)),
+                    "Порядок — сверху вниз, на одной высоте дальнее первым (INC-49): бревно " + current
+                            + " нарушает порядок после " + previous + " при стоянке " + from);
         }
     }
 

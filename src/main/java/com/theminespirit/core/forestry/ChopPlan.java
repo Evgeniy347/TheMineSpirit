@@ -14,15 +14,17 @@ public record ChopPlan(List<BlockCoord> order) {
     public static ChopPlan of(Tree tree, BlockCoord from) {
         Objects.requireNonNull(tree, "tree не может быть null: план рубки строится по разобранному дереву");
         Objects.requireNonNull(from, "from не может быть null: порядок рубки считается от стоянки духа");
-        List<BlockCoord> ordered =
-                tree.logs().stream().sorted(farthestFirst(from)).toList();
+        List<BlockCoord> ordered = tree.logs().stream().sorted(topFirst(from)).toList();
         return new ChopPlan(ordered);
     }
 
-    private static Comparator<BlockCoord> farthestFirst(BlockCoord from) {
-        return Comparator.comparingLong((BlockCoord coord) -> distanceSquared(coord, from))
+    // Правило владельца (INC-49): с самого высокого бревна вниз; на одной высоте — дальнее первым. «Дальнее первым»
+    // без высоты рубило у джунглей сначала нижнюю дальнюю ветку.
+    private static Comparator<BlockCoord> topFirst(BlockCoord from) {
+        return Comparator.comparingInt(BlockCoord::y)
                 .reversed()
-                .thenComparing(Comparator.comparingInt(BlockCoord::y).reversed())
+                .thenComparing(Comparator.comparingLong((BlockCoord coord) -> distanceSquared(coord, from))
+                        .reversed())
                 .thenComparingInt(BlockCoord::x)
                 .thenComparingInt(BlockCoord::z);
     }

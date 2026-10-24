@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class ChopPlanTests {
     @Test
-    void of_StraightTrunk_OrdersFarthestFirst() {
+    void of_StraightTrunk_OrdersTopDown() {
         ChopPlan plan = ChopPlan.of(trunk(64, 6), new BlockCoord(0, 64, 0));
 
         assertEquals(
@@ -22,22 +22,22 @@ class ChopPlanTests {
                         new BlockCoord(0, 65, 0),
                         new BlockCoord(0, 64, 0)),
                 plan.order(),
-                "Дух рубит с одной стоянки и дотягивается до любого бревна: порядок обязан идти от самого "
-                        + "дальнего (высокого) бревна к ближнему, а не снизу вверх");
+                "Дух рубит с одной стоянки у ствола: порядок — с самого высокого бревна вниз (правило владельца, "
+                        + "INC-49), а не снизу вверх");
     }
 
     @Test
-    void of_FarBranch_ChoppedBeforeNearHighTrunk() {
+    void of_FarLowBranch_ChoppedAfterHighTrunk() {
         Tree tree = new Tree(
                 new BlockCoord(0, 64, 0),
                 List.of(new BlockCoord(0, 64, 0), new BlockCoord(0, 65, 0), new BlockCoord(5, 64, 0)));
         ChopPlan plan = ChopPlan.of(tree, new BlockCoord(0, 64, 0));
 
         assertEquals(
-                List.of(new BlockCoord(5, 64, 0), new BlockCoord(0, 65, 0), new BlockCoord(0, 64, 0)),
+                List.of(new BlockCoord(0, 65, 0), new BlockCoord(5, 64, 0), new BlockCoord(0, 64, 0)),
                 plan.order(),
-                "Порядок считается по расстоянию от стоянки, а не по одной высоте: далёкая ветка впереди "
-                        + "низкого верхнего бревна ствола, иначе «самое дальнее» правило нарушено");
+                "Порядок — по высоте сверху вниз, на одной высоте — дальнее первым: дальняя нижняя ветка джунглей "
+                        + "больше не рубится раньше верха ствола (INC-49)");
     }
 
     @Test
