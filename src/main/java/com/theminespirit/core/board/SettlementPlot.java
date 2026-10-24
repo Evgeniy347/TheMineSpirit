@@ -75,6 +75,10 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
         return Math.abs(center.x() - anchor.x()) <= DRIFT && Math.abs(center.z() - anchor.z()) <= DRIFT;
     }
 
+    public SettlementPlot withWood(String species) {
+        return new SettlementPlot(anchor, min, max, columns, species);
+    }
+
     // Запись журнала доски: кто и когда зафиксировал высоту участка (INC-55).
     public BoardLogEntry journalEntry(long tick, String configHash) {
         return BoardLog.note(

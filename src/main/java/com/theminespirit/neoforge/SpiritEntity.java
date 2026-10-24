@@ -143,6 +143,7 @@ public final class SpiritEntity extends PathfinderMob {
     protected void customServerAiStep() {
         super.customServerAiStep();
         applyPendingRestore();
+        WallEscape.tick(this);
         chunkLoader.tick();
         armorEquip.tick();
         hunger.tick();

@@ -908,7 +908,7 @@ public final class FirstStepsRunner {
         Optional<SettlementPlot> stored = store.plot();
         BlockCoord center = SettlementPlot.center(homes);
         if (stored.isPresent() && stored.orElseThrow().covers(center)) {
-            return stored.orElseThrow();
+            return checkedWood(level, service, store, stored.orElseThrow(), now);
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
         SettlementPlot plot =
@@ -926,6 +926,25 @@ public final class FirstStepsRunner {
                 wood);
         service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current()));
         return plot;
+    }
+
+    // Порода плана, нарушающая правило «запас < 16 — решает биом» (закреплена старой сборкой, INC-62), пересчитывается
+    // с записью [plot]; правилу не противоречит — закреплённая порода не меняется.
+    private static SettlementPlot checkedWood(
+            ServerLevel level, BoardService service, SettlementPlotStore store, SettlementPlot plot, long now) {
+        Optional<String> ruled =
+                SettlementWood.biomeRules(service.stock().available(), SettlementWood.biomeAt(level, plot.anchor()));
+        if (ruled.isEmpty() || ruled.get().equals(plot.wood())) {
+            return plot;
+        }
+        SettlementPlot fixed = plot.withWood(ruled.get());
+        store.fix(fixed);
+        LOGGER.info(
+                "[plot] порода плана {} → {}: запас брёвен меньше 16 — решает биом (INC-62)",
+                plot.wood(),
+                fixed.wood());
+        service.journal().recordEntry(fixed.journalEntry(now, ConfigStamp.current()));
+        return fixed;
     }
 
     private static List<BlockCoord> homes(List<SpiritEntity> spirits) {
