@@ -100,6 +100,26 @@ class BoardTests {
     }
 
     @Test
+    void reopen_DoneFirstStep_ResubmitAcceptedAndMarkForgotten() {
+        Board board = boardAt(0);
+        board.submit(ticket("first:lighting", BoardCase.LIGHTING, 0, List.of()));
+        board.claim("first:lighting", SPIRIT_ONE, 0);
+        board.complete("first:lighting");
+
+        boolean reopened = board.reopen("first:lighting");
+        BoardOutcome outcome = board.submit(ticket("first:lighting", BoardCase.LIGHTING, 0, List.of()));
+
+        assertTrue(reopened, "DONE шага раскладки, разошедшийся с миром, переоткрывается (INC-50)");
+        assertFalse(
+                board.ledger().has(BoardCase.LIGHTING, 1),
+                "Отметка постройки снимается: иначе цепочка и этапы считают свет готовым при нуле факелов");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                outcome,
+                "Переоткрытый шаг ставится заново, а не отвечает DUPLICATE навсегда (INC-50)");
+    }
+
+    @Test
     void submit_DoneFirstStep_NotReopened() {
         Board board = boardAt(0);
         board.submit(ticket("first:clear_grounds", BoardCase.CLEAR_GROUNDS, 0, List.of()));

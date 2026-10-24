@@ -388,6 +388,16 @@ public final class BoardService {
         return outcome;
     }
 
+    // Сделанное задание снова в работе (мир с ним разошёлся, INC-50): снимается с доски и из отметок построек.
+    public boolean reopen(String ticketId) {
+        boolean reopened = board.reopen(ticketId);
+        if (reopened) {
+            targets.remove(ticketId);
+            persist();
+        }
+        return reopened;
+    }
+
     public boolean cancel(ServerLevel level, String ticketId) {
         Set<UUID> holders = new HashSet<>();
         collectHolders(ticketId, holders, new HashSet<>());

@@ -50,6 +50,14 @@ public final class SettlementLayout {
         return new BlockCoord(anchor.x() + MINE_OFFSET, anchor.y() - 1, anchor.z());
     }
 
+    // Колонка спуска в шахту: ступени 3 в ширину вглубь на юг от входа до края участка. Её высоту выравнивание не
+    // трогает — иначе подсыпка засыпала бы спуск, а ровность участка не достигалась бы никогда (INC-50).
+    public static boolean mineColumn(BlockCoord anchor, int x, int z) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
+        BlockCoord entrance = mineEntrance(anchor);
+        return Math.abs(x - entrance.x()) <= 1 && z >= entrance.z() - 1 && z <= anchor.z() + HALF;
+    }
+
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.
     public static BlockCoord workYard(BlockCoord anchor) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится рабочий двор");

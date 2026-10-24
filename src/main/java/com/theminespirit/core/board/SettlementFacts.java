@@ -8,10 +8,16 @@ import java.util.Set;
  * шахту, печь, забор, освещение, постройки, стол кузнеца и наковальня, а также шаги, сделанные по журналу доски
  * ({@code done}) и заблокированные провалами ({@code blocked}). Собирает адаптер из снимка мира и доски; генератор
  * читает только эти данные.
+ *
+ * <p>{@code groundsCleared} — на участке нет деревьев; {@code plotLevel} — перепад высот колонок участка в допуске
+ * {@link PlotLeveling#TOLERANCE} (выравнивание — отдельный факт, INC-50). {@code lighting}, {@code fence},
+ * {@code houses} — постройки раскладки стоят в мире целиком по своим клеткам ({@link SettlementLayout}): сделанный по
+ * журналу шаг без них снова идёт в очередь.
  */
 public record SettlementFacts(
         boolean hasHome,
         boolean groundsCleared,
+        boolean plotLevel,
         int chests,
         boolean craftingStation,
         Set<String> tools,

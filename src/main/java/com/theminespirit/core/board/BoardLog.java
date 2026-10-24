@@ -26,7 +26,10 @@ public final class BoardLog {
         BLOCKED,
         UNBLOCKED,
         CANCELLED,
-        DETACHED
+        DETACHED,
+        // Сделанный шаг снова в работе: мир с ним разошёлся (INC-50) — отметка постройки снимается и при чтении
+        // журнала.
+        REOPENED
     }
 
     private static final int MAX_LINE_LENGTH = 8192;

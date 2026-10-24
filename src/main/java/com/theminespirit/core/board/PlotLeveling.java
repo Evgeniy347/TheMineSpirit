@@ -20,6 +20,8 @@ import org.jspecify.annotations.Nullable;
 public record PlotLeveling(List<Box> cut, List<Box> fill, String block) {
     public static final int MAX_SHIFT = 10;
     public static final String DEFAULT_BLOCK = "dirt";
+    // Допуск ровного участка: колонка на блок выше или ниже уровня — ровно, ступенька в блок проходима (INC-50).
+    public static final int TOLERANCE = 1;
     public static final PlotLeveling FLAT = new PlotLeveling(List.of(), List.of(), DEFAULT_BLOCK);
 
     public record Box(int x1, int y1, int z1, int x2, int y2, int z2) {
@@ -56,6 +58,20 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block) {
         }
         Arrays.sort(heights);
         return heights[heights.length / 2];
+    }
+
+    // Участок ровный, если каждая колонка в допуске TOLERANCE от уровня {@code anchor.y()}.
+    public static boolean isLevel(BlockCoord anchor, int half, IntBinaryOperator feet) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: ровность читается вокруг него");
+        Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них ровность не проверить");
+        for (int dx = -half; dx <= half; dx++) {
+            for (int dz = -half; dz <= half; dz++) {
+                if (Math.abs(feet.applyAsInt(anchor.x() + dx, anchor.z() + dz) - anchor.y()) > TOLERANCE) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     // План для участка {@code half} вокруг якоря; уровень ног участка — {@code anchor.y()}.

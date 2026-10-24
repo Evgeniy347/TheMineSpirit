@@ -327,6 +327,22 @@ public final class Board {
         return true;
     }
 
+    // Сделанное задание снимается с доски вместе с отметкой постройки, чтобы его можно было поставить заново:
+    // DONE шага раскладки, с которым разошёлся мир (факелов нет, ограды нет — INC-50), иначе вечен.
+    public boolean reopen(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: переоткрытие идёт по id задания");
+        BoardTicket ticket = tickets.get(ticketId);
+        if (ticket == null || statuses.get(ticketId) != BoardStatus.DONE) {
+            return false;
+        }
+        tickets.remove(ticketId);
+        statuses.remove(ticketId);
+        claimAssignees.remove(ticketId);
+        ledger.forget(ticket.boardCase(), ticket.level());
+        events.transition(BoardLog.Event.REOPENED, ticket, null, nowTicks.getAsLong());
+        return true;
+    }
+
     public boolean release(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
         if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
