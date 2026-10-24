@@ -665,6 +665,16 @@ public final class TicketPlans {
         for (PlotLeveling.Box layer : layers(fills)) {
             steps.add(new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))));
         }
+        // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
+        // карман духу не достать, это не повод валить выравнивание (INC-67).
+        List<PlotLeveling.Box> voids = leveling.voids().stream()
+                .filter(box -> !single || quarterOf(box, center) == quarter)
+                .toList();
+        for (PlotLeveling.Box layer : layers(voids)) {
+            steps.add(new FallbackNode(List.of(
+                    new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))),
+                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+        }
         return withLeftovers(new SequenceNode(steps), target);
     }
 
