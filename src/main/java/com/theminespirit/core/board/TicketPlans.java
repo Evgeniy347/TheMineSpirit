@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.SchematicPart;
+import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.OreKind;
@@ -34,6 +35,8 @@ public final class TicketPlans {
     // Ограда кусками периметра на разных духов: одним духом она шла ~2900 тиков, двое простаивали (приёмка «джунгли»).
     public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
+    // Брёвен с малого дерева (дуб 4–6): число деревьев под добычу брёвен — с запасом (INC-64).
+    private static final int LOGS_PER_TREE = 4;
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
     private static final int LEFT_ORE_RADIUS = 4;
@@ -601,7 +604,37 @@ public final class TicketPlans {
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
         // fresh: добыть ещё, а не взять из сундука, куда добыча же сдаёт (запас не рос).
-        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch, "fresh", true)));
+        ScriptCall acquire = new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch, "fresh", true));
+        Optional<TreeSpecies> tree = treeOf(item);
+        if (tree.isPresent()) {
+            // Брёвна — рубкой деревьев (INC-64): chop_tree выбирает дерево с доступной стоянкой и пропускает
+            // недостижимое; acquire (gather) трижды бился в одно недостижимое бревно и уходил в BLOCKED. Деревьев — с
+            // запасом на малые; нет деревьев рядом — запасной путь acquire.
+            int trees = Math.min(CatalogLimits.COUNT_MAX, (batch + LOGS_PER_TREE - 1) / LOGS_PER_TREE);
+            return sequence(
+                    gotoTarget(target),
+                    new FallbackNode(List.of(
+                            new ScriptCall(
+                                    "chop_tree",
+                                    Map.of(
+                                            "species",
+                                            tree.get().id(),
+                                            COUNT,
+                                            trees,
+                                            RADIUS,
+                                            CatalogLimits.CHOP_RADIUS_MAX,
+                                            "replant",
+                                            true)),
+                            acquire)));
+        }
+        return sequence(gotoTarget(target), acquire);
+    }
+
+    private static Optional<TreeSpecies> treeOf(String item) {
+        String full = item.startsWith("minecraft:") ? item : "minecraft:" + item;
+        return TreeSpecies.ALL.stream()
+                .filter(tree -> tree.logId().equals(full))
+                .findFirst();
     }
 
     // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
@@ -615,19 +648,29 @@ public final class TicketPlans {
         int quarter = target.count();
         boolean single = quarter >= 1 && quarter <= CLEAR_QUARTERS;
         List<TaskNode> steps = new ArrayList<>(single ? List.of(chunks.get(quarter - 1)) : chunks);
-        if (single && quarter > 1) {
-            return withLeftovers(new SequenceNode(steps), target);
-        }
         // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
-        // земля — запас подсыпки), потом подсыпка ям.
+        // земля — запас подсыпки), потом подсыпка ям. Выравнивание делится по четвертям, как расчистка: всё оно шло
+        // в первой четверти одним духом, двое стояли (INC-64).
         PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
+        BlockCoord center = target.target();
         for (PlotLeveling.Box box : leveling.cut()) {
-            steps.add(new ScriptCall("clear_area", boxParams(box, Map.of())));
+            if (!single || quarterOf(box, center) == quarter) {
+                steps.add(new ScriptCall("clear_area", boxParams(box, Map.of())));
+            }
         }
         for (PlotLeveling.Box box : leveling.fill()) {
-            steps.add(new ScriptCall("fill", boxParams(box, Map.of(BLOCK, leveling.block()))));
+            if (!single || quarterOf(box, center) == quarter) {
+                steps.add(new ScriptCall("fill", boxParams(box, Map.of(BLOCK, leveling.block()))));
+            }
         }
         return withLeftovers(new SequenceNode(steps), target);
+    }
+
+    // Четверть ящика выравнивания по его началу — те же четверти, что у расчистки (1 — запад-север … 4 — восток-юг).
+    static int quarterOf(PlotLeveling.Box box, BlockCoord center) {
+        boolean east = box.x1() >= center.x();
+        boolean south = box.z1() >= center.z();
+        return 1 + (east ? 1 : 0) + (south ? 2 : 0);
     }
 
     private static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {

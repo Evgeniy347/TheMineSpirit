@@ -849,6 +849,66 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_GatherJungleLogs_ChopsTreesThenAcquire() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("jungle_log", 32);
+        TaskNode plan = TicketPlans.plan(BoardCase.GATHER_MATERIALS, target);
+
+        ScriptCall chop = findCall(plan, "chop_tree");
+
+        assertEquals(
+                Map.of("species", "jungle", "count", 8, "radius", CatalogLimits.CHOP_RADIUS_MAX, "replant", true),
+                chop.params(),
+                "Брёвна добываются рубкой деревьев с доступной стоянкой (32 бревна — 8 деревьев по 4): gather трижды "
+                        + "бился в одно недостижимое бревно и уходил в BLOCKED (INC-64)");
+        assertEquals(
+                "acquire",
+                findCall(plan, "acquire").script(),
+                "Запасной путь без деревьев рядом — acquire, а не провал задания");
+    }
+
+    @Test
+    void plan_ClearQuarter_OnlyItsLevelingBoxes() {
+        BlockCoord anchor = new BlockCoord(0, 64, 0);
+        PlotLeveling leveling = new PlotLeveling(
+                List.of(new PlotLeveling.Box(-5, 64, -5, -3, 65, -5), new PlotLeveling.Box(3, 64, -5, 5, 65, -5)),
+                List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)),
+                "dirt");
+        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(2);
+
+        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter));
+
+        assertEquals(
+                List.of(3),
+                calls.stream()
+                        .filter(call -> call.script().equals("clear_area")
+                                && call.params().containsKey("y2"))
+                        .filter(call -> Integer.valueOf(65).equals(call.params().get("y2")))
+                        .map(call -> call.params().get("x1"))
+                        .toList(),
+                "Четверть 2 (восток-север) срезает только свой выступ: выравнивание делится между духами, а не идёт "
+                        + "одним духом в первой четверти (INC-64)");
+        assertTrue(
+                calls.stream().noneMatch(call -> call.script().equals("fill")),
+                "Подсыпка четверти 4 не попадает в четверть 2");
+    }
+
+    private static List<ScriptCall> calls(TaskNode root) {
+        List<ScriptCall> found = new ArrayList<>();
+        Deque<TaskNode> queue = new ArrayDeque<>(List.of(root));
+        while (!queue.isEmpty()) {
+            TaskNode node = queue.poll();
+            if (node instanceof ScriptCall call) {
+                found.add(call);
+            } else if (node instanceof SequenceNode sequence) {
+                queue.addAll(sequence.steps());
+            } else if (node instanceof FallbackNode fallback) {
+                queue.addAll(fallback.steps());
+            }
+        }
+        return found;
+    }
+
+    @Test
     void plan_GatherCoal_MinesCoalVein() {
         TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply(TorchRules.COAL, 4);
 
