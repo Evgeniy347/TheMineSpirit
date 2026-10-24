@@ -93,4 +93,12 @@ class WoodSpeciesTests {
                 "Без запаса — доски породы поселения, а не первые в теге");
         assertEquals(Optional.empty(), WoodSpecies.prefer(planks, Map.of(), "oak"), "Дуб — общий порядок");
     }
+
+    @Test
+    void speciesOf_WoodenItem_ReturnsPrefixSpecies() {
+        assertEquals(Optional.of("jungle"), WoodSpecies.speciesOf("minecraft:jungle_fence"), "забор джунглей");
+        assertEquals(Optional.of("oak"), WoodSpecies.speciesOf("oak_fence_gate:2"), "id второй доли добычи");
+        assertEquals(Optional.of("dark_oak"), WoodSpecies.speciesOf("dark_oak_log"), "тёмный дуб — не дуб");
+        assertEquals(Optional.empty(), WoodSpecies.speciesOf("cobblestone"), "не дерево");
+    }
 }

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicPart;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
@@ -21,6 +22,12 @@ public final class SchematicResources {
         Objects.requireNonNull(file, "Имя схемы не может быть null: без него неизвестно, что грузить");
         if (file.isBlank()) {
             throw new IllegalArgumentException("Имя схемы пусто: по пустому имени схему не найти");
+        }
+        // Часть схемы (ограда кусками на разных духов): та же схема, только колонны своего сектора.
+        Optional<SchematicPart.Ref> part = SchematicPart.parse(file);
+        if (part.isPresent()) {
+            SchematicPart.Ref ref = part.orElseThrow();
+            return SchematicPart.of(load(ref.file()), ref.part(), ref.parts());
         }
         Optional<TableHolder<Schematic>> live = DataTables.INSTANCE.schematic(file);
         if (live.isPresent()) {
