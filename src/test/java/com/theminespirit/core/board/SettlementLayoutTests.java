@@ -43,6 +43,17 @@ class SettlementLayoutTests {
     }
 
     @Test
+    void yardAnchor_PitBelowPlan_YardOnGround() {
+        BlockCoord anchor = new BlockCoord(0, 71, 0);
+
+        assertEquals(
+                new BlockCoord(0, 67, 0),
+                SettlementLayout.yardAnchor(anchor, (x, z) -> 67),
+                "До выравнивания двор ставится на земле под ним (67), а не в воздухе на высоте плана (71): иначе все "
+                        + "духи «застревали» в одной точке и сундуки уходили в BLOCKED (INC-63)");
+    }
+
+    @Test
     void layout_EveryPart_InsideFenceAndDisjoint() {
         Map<String, List<Cell>> parts = new HashMap<>();
         parts.put(
