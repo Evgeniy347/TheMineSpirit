@@ -17,9 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public final class FillSession {
     public enum Outcome {
@@ -32,6 +34,7 @@ public final class FillSession {
         EXIT,
         PICK,
         APPROACH,
+        PILLAR,
         DONE
     }
 
@@ -64,6 +67,7 @@ public final class FillSession {
     private int blockReads;
 
     private final BuildResult tally = new BuildResult();
+    private @Nullable PillarColumn pillar;
 
     public FillSession(SpiritEntity spirit, String blockId, BuildBox box) {
         this(spirit, blockId, box.cellsBottomUp());
@@ -82,7 +86,9 @@ public final class FillSession {
         Set<BlockCoord> occupied = spiritCells();
         this.spiritCells = Set.copyOf(occupied);
         this.order = BuildOrder.placement(List.copyOf(cells), occupied);
-        if (insideBox(spirit.blockPosition()) && !occupied.isEmpty()) {
+        // Дух в яме, которую засыпает, не выходит из неё (выход уводил его на край, откуда дно не достать, INC-66):
+        // засыпает вокруг себя слой за слоем, а свою клетку — под себя столбом.
+        if (insideBox(spirit.blockPosition()) && !occupied.isEmpty() && !onFloor()) {
             state = State.EXIT;
         }
     }
@@ -98,6 +104,7 @@ public final class FillSession {
             case EXIT -> exitTick();
             case PICK -> pick();
             case APPROACH -> approachTick();
+            case PILLAR -> pillarTick();
             case DONE -> finish();
         }
         return outcome;
@@ -208,6 +215,12 @@ public final class FillSession {
             }
             reservations.reserve(cell, spirit.getUUID());
             this.current = cell;
+            if (cell.equals(spiritCoord())) {
+                // Своя клетка — под себя: прыжок и блок под ноги, дух поднимается на слой (INC-66).
+                pillar = new PillarColumn(spirit, blockId, 1);
+                state = State.PILLAR;
+                return;
+            }
             List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
 
             if (stands.isEmpty()) {
@@ -227,6 +240,30 @@ public final class FillSession {
         finish();
     }
 
+    private void pillarTick() {
+        switch (pillar.tick()) {
+            case RUNNING -> {}
+            case BUILT -> {
+                placed++;
+                tally.placed(blockId);
+                releaseAndAdvance();
+                state = State.PICK;
+            }
+            case FAILED -> {
+                skipped++;
+                tally.skipped();
+                releaseAndAdvance();
+                state = State.PICK;
+            }
+        }
+    }
+
+    // Под ногами духа твёрдый пол: столбом под себя он поднимется, выходить из ямы не нужно.
+    private boolean onFloor() {
+        BlockPos below = spirit.blockPosition().below();
+        return level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
+    }
+
     private void approachTick() {
         switch (approach.tick()) {
             case MOVING -> {}
@@ -242,6 +279,11 @@ public final class FillSession {
     }
 
     private void placeCurrent() {
+        if (current.equals(spiritCoord())) {
+            pillar = new PillarColumn(spirit, blockId, 1);
+            state = State.PILLAR;
+            return;
+        }
         BlockPos pos = toPos(current);
         BlockPlacer.Begin begin = placer.begin(pos, wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {

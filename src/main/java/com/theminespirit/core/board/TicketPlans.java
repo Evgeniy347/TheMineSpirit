@@ -14,6 +14,7 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -658,12 +659,45 @@ public final class TicketPlans {
                 steps.add(new ScriptCall("clear_area", boxParams(box, Map.of())));
             }
         }
-        for (PlotLeveling.Box box : leveling.fill()) {
-            if (!single || quarterOf(box, center) == quarter) {
-                steps.add(new ScriptCall("fill", boxParams(box, Map.of(BLOCK, leveling.block()))));
-            }
+        List<PlotLeveling.Box> fills = leveling.fill().stream()
+                .filter(box -> !single || quarterOf(box, center) == quarter)
+                .toList();
+        for (PlotLeveling.Box layer : layers(fills)) {
+            steps.add(new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))));
         }
         return withLeftovers(new SequenceNode(steps), target);
+    }
+
+    // Подсыпка — слоями снизу вверх по всей яме, а не рядами на всю глубину (INC-66): засыпав свой ряд, дух поднимался
+    // на край, а соседний ряд оставался траншеей, дна которой с края не достать. В слое ряды с одинаковым x сливаются.
+    static List<PlotLeveling.Box> layers(List<PlotLeveling.Box> fills) {
+        List<PlotLeveling.Box> out = new ArrayList<>();
+        int bottom = fills.stream().mapToInt(PlotLeveling.Box::y1).min().orElse(0);
+        int top = fills.stream().mapToInt(PlotLeveling.Box::y2).max().orElse(-1);
+        for (int y = bottom; y <= top; y++) {
+            int level = y;
+            List<PlotLeveling.Box> rows = fills.stream()
+                    .filter(box -> box.y1() <= level && level <= box.y2())
+                    .sorted(Comparator.comparingInt(PlotLeveling.Box::x1)
+                            .thenComparingInt(PlotLeveling.Box::x2)
+                            .thenComparingInt(PlotLeveling.Box::z1))
+                    .toList();
+            PlotLeveling.Box open = null;
+            for (PlotLeveling.Box row : rows) {
+                if (open != null && open.x1() == row.x1() && open.x2() == row.x2() && open.z2() + 1 == row.z1()) {
+                    open = new PlotLeveling.Box(open.x1(), y, open.z1(), open.x2(), y, row.z2());
+                    continue;
+                }
+                if (open != null) {
+                    out.add(open);
+                }
+                open = new PlotLeveling.Box(row.x1(), y, row.z1(), row.x2(), y, row.z2());
+            }
+            if (open != null) {
+                out.add(open);
+            }
+        }
+        return out;
     }
 
     // Четверть ящика выравнивания по его началу — те же четверти, что у расчистки (1 — запад-север … 4 — восток-юг).
