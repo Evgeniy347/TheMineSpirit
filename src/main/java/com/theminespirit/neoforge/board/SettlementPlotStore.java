@@ -20,6 +20,7 @@ public final class SettlementPlotStore extends SavedData {
     private static final String MIN = "Min";
     private static final String MAX = "Max";
     private static final String COLUMNS = "Columns";
+    private static final String WOOD = "Wood";
     private static final SavedData.Factory<SettlementPlotStore> FACTORY =
             new SavedData.Factory<>(SettlementPlotStore::new, SettlementPlotStore::load);
 
@@ -40,6 +41,12 @@ public final class SettlementPlotStore extends SavedData {
         setDirty();
     }
 
+    // Участок забыт (сцена GameTest начинается с чистого места): следующий шаг первых шагов обмерит его заново.
+    public void clear() {
+        plot = null;
+        setDirty();
+    }
+
     private static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider registries) {
         SettlementPlotStore store = new SettlementPlotStore();
         if (tag.contains(COLUMNS)) {
@@ -47,7 +54,8 @@ public final class SettlementPlotStore extends SavedData {
                     new BlockCoord(tag.getInt(X), tag.getInt(Y), tag.getInt(Z)),
                     tag.getInt(MIN),
                     tag.getInt(MAX),
-                    tag.getInt(COLUMNS));
+                    tag.getInt(COLUMNS),
+                    tag.getString(WOOD));
         }
         return store;
     }
@@ -62,6 +70,7 @@ public final class SettlementPlotStore extends SavedData {
             tag.putInt(MIN, current.min());
             tag.putInt(MAX, current.max());
             tag.putInt(COLUMNS, current.columns());
+            tag.putString(WOOD, current.wood());
         }
         return tag;
     }

@@ -6,6 +6,7 @@ import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
@@ -184,7 +185,9 @@ final class SchematicSite {
             return SchematicBlocks.isFloorClass(BlockStates.idOf(current));
         }
         BlockState wanted = wanted(entry);
-        return current.is(wanted.getBlock()) && sameSpecifiedState(current, wanted, entry.state());
+        boolean block = current.is(wanted.getBlock())
+                || WoodSpecies.sameRole(BlockStates.idOf(current), BlockStates.idOf(wanted));
+        return block && sameSpecifiedState(current, wanted, entry.state());
     }
 
     boolean rightBlockWrongState(Schematic.PlacedEntry entry) {

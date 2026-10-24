@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,7 +13,7 @@ import java.util.function.IntBinaryOperator;
  * (INC-55, INC-56). Центр — покомпонентная медиана домов духов: не зависит от порядка духов в списке; высота —
  * медиана уровней ног колонок участка {@code SettlementLayout.PLOT}², с минимумом и максимумом для разбора.
  */
-public record SettlementPlot(BlockCoord anchor, int min, int max, int columns) {
+public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, String wood) {
     public static final String JOURNAL_ID = "plot";
     // Сдвиг центра домов — для участка: дом духа переехал на пару блоков — участок тот же; центр ушёл дальше
     // четверти участка — это другое поселение, его обмеряют заново.
@@ -20,6 +21,7 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns) {
 
     public SettlementPlot {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него раскладка и выравнивание");
+        WoodSpecies.check(wood);
         if (min > anchor.y() || max < anchor.y() || columns < 1) {
             throw new IllegalArgumentException("Высота участка " + anchor.y() + " вне [" + min + ", " + max
                     + "] или колонок " + columns + ": медиана лежит между минимумом и максимумом");
@@ -39,7 +41,8 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns) {
     }
 
     // Обмер участка {@code half} вокруг центра: высота — медиана уровней ног колонок, плюс минимум и максимум.
-    public static SettlementPlot survey(BlockCoord center, int half, IntBinaryOperator feet) {
+    // Порода поселения фиксируется в плане вместе с высотой: расход запаса брёвен её больше не меняет (INC-47, INC-58).
+    public static SettlementPlot survey(BlockCoord center, int half, IntBinaryOperator feet, String wood) {
         Objects.requireNonNull(center, "Центр участка не может быть null: обмер идёт вокруг него");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них высоты участка нет");
         int side = 2 * half + 1;
@@ -53,7 +56,18 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns) {
         Arrays.sort(heights);
         int level = heights[heights.length / 2];
         return new SettlementPlot(
-                new BlockCoord(center.x(), level, center.z()), heights[0], heights[heights.length - 1], heights.length);
+                new BlockCoord(center.x(), level, center.z()),
+                heights[0],
+                heights[heights.length - 1],
+                heights.length,
+                wood);
+    }
+
+    // Место лежит на участке (с полосой в участок вокруг): здесь действует порода поселения из плана.
+    public boolean contains(BlockCoord place) {
+        Objects.requireNonNull(place, "Место не может быть null: проверяется, лежит ли оно на участке");
+        return Math.abs(place.x() - anchor.x()) <= SettlementLayout.PLOT
+                && Math.abs(place.z() - anchor.z()) <= SettlementLayout.PLOT;
     }
 
     public boolean covers(BlockCoord center) {
@@ -73,7 +87,8 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns) {
                         "z=" + anchor.z(),
                         "min=" + min,
                         "max=" + max,
-                        "columns=" + columns),
+                        "columns=" + columns,
+                        "wood=" + wood),
                 null,
                 configHash);
     }

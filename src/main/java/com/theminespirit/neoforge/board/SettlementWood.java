@@ -1,10 +1,12 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -37,7 +39,18 @@ public final class SettlementWood {
 
     private SettlementWood() {}
 
+    // Порода места: на участке поселения — зафиксированная в плане (INC-47, INC-58), вне его — голосование.
     public static String of(ServerLevel level, BlockCoord home, Map<String, Integer> stock) {
+        Objects.requireNonNull(home, "Порода без места не определяется: деревья ищутся вокруг дома");
+        Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
+        if (plot.isPresent() && plot.orElseThrow().contains(home)) {
+            return plot.orElseThrow().wood();
+        }
+        return survey(level, home, stock);
+    }
+
+    // Голосование пород у места: запас, деревья вокруг, биом.
+    public static String survey(ServerLevel level, BlockCoord home, Map<String, Integer> stock) {
         Objects.requireNonNull(level, "Порода без уровня не определяется: деревья стоят в мире");
         Objects.requireNonNull(home, "Порода без места не определяется: деревья ищутся вокруг дома");
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");

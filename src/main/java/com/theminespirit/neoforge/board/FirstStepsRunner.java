@@ -587,8 +587,7 @@ public final class FirstStepsRunner {
                     String block = bare(WoodSpecies.swap(entry.block(), wood));
                     BlockState state =
                             level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
-                    if (bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())
-                            .equals(block)) {
+                    if (placed(state, block)) {
                         String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(entry.block()), wood));
                         need.computeIfPresent(item, (key, count) -> count > 1 ? count - 1 : null);
                     }
@@ -747,7 +746,9 @@ public final class FirstStepsRunner {
     // Факел у стены — тот же факел: place_block ставит настенный, если пол занят.
     private static boolean placed(BlockState state, String block) {
         String actual = bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
-        return actual.equals(block) || ("torch".equals(block) && "wall_torch".equals(actual));
+        return actual.equals(block)
+                || WoodSpecies.sameRole(actual, block)
+                || ("torch".equals(block) && "wall_torch".equals(actual));
     }
 
     private static Set<BoardCase> journalSteps(BoardService service, boolean blocked) {
@@ -801,18 +802,20 @@ public final class FirstStepsRunner {
         if (stored.isPresent() && stored.orElseThrow().covers(center)) {
             return stored.orElseThrow();
         }
+        String wood = SettlementWood.survey(level, center, service.stock().available());
         SettlementPlot plot =
-                SettlementPlot.survey(center, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, center.y()));
+                SettlementPlot.survey(center, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, center.y()), wood);
         store.fix(plot);
         LOGGER.info(
-                "[plot] высота {}: медиана по {} колонкам, мин {} макс {}, центр ({}, {}) по {} домам духов",
+                "[plot] высота {}: медиана по {} колонкам, мин {} макс {}, центр ({}, {}) по {} домам духов, порода {}",
                 plot.anchor().y(),
                 plot.columns(),
                 plot.min(),
                 plot.max(),
                 plot.anchor().x(),
                 plot.anchor().z(),
-                homes.size());
+                homes.size(),
+                wood);
         service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current()));
         return plot;
     }
