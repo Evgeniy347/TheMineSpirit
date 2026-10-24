@@ -2,11 +2,13 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.CaseMaterials;
+import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
@@ -14,6 +16,7 @@ import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementLayout;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
@@ -96,18 +99,15 @@ public final class FirstStepsRunner {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        // Поселение задаёт дом: без него homeOf подставил бы (0,64,0) и доска выдала бы first:*
+        // Поселение задаёт дом: без него центра участка нет и доска выдала бы first:*
         // духу без дома (сцена REST получала чужое задание до своего POST).
         if (spirits.stream().noneMatch(spirit -> spirit.home().isPresent())) {
             return;
         }
-        BlockCoord home = homeOf(spirits);
+        // Якорь участка — один на поселение, зафиксирован в мире: от него выравнивание и все постройки раскладки.
+        BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
+        BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
-        // Якорь участка — дом на средней высоте участка: от неё выравнивание и все постройки раскладки.
-        BlockCoord anchor = new BlockCoord(
-                home.x(),
-                PlotLeveling.level(home, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, home.y())),
-                home.z());
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service);
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
@@ -172,7 +172,7 @@ public final class FirstStepsRunner {
         // ограда ~2900, двое простаивали (приёмка «джунгли» 24.10). Первая часть — first:, остальные — помощники.
         int parts = partsOf(caseValue);
         if (LAYOUT_STEPS.contains(caseValue)) {
-            reopenDone(service, caseValue, parts);
+            reopenDone(level, service, step, parts, now);
         }
         BoardOutcome outcome = BoardOutcome.ACCEPTED;
         for (int part = 1; part <= parts; part++) {
@@ -209,11 +209,30 @@ public final class FirstStepsRunner {
 
     // Постройка раскладки сделана по журналу, но в мире её нет (DONE старой сборки, сломана): задание и его куски
     // снимаются с доски вместе с отметкой — иначе submit отвечает DUPLICATE и шаг вечно «сделан» (INC-50).
-    private static void reopenDone(BoardService service, BoardCase caseValue, int parts) {
+    private static void reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
+        BoardCase caseValue = step.caseValue();
+        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE) {
+            return;
+        }
+        Placed placed = placedBlocks(level, TicketPlans.plan(caseValue, 1, step.target()), step.wood());
+        int missing = placed.total() - placed.done();
+        LOGGER.info(
+                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: шаг снова в очереди",
+                caseValue,
+                missing,
+                placed.total());
+        service.journal()
+                .recordEntry(BoardLog.note(
+                        "layout:" + caseValue.name().toLowerCase(Locale.ROOT),
+                        caseValue,
+                        now,
+                        List.of("missing=" + missing, "total=" + placed.total()),
+                        null,
+                        ConfigStamp.current()));
         for (int part = 1; part <= parts; part++) {
             String id = partId(caseValue, part);
-            if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE && service.reopen(id)) {
-                LOGGER.info("[layout] {} сделан по журналу, но в мире постройки нет: шаг снова в очереди", id);
+            if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
+                service.reopen(id);
             }
         }
     }
@@ -771,13 +790,39 @@ public final class FirstStepsRunner {
         return tools;
     }
 
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BlockCoord> home = spirit.home();
-            if (home.isPresent()) {
-                return home.orElseThrow();
-            }
+    // Участок фиксируется один раз до расчистки (INC-55): центр — медиана домов духов, не дом первого в списке
+    // (INC-56); высота — медиана ног 23×23. Пишется в лог и журнал доски. Якорь вдали от всех домов — старое
+    // поселение: участок обмеряется заново.
+    public static SettlementPlot plotOf(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+        List<BlockCoord> homes = homes(spirits);
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        Optional<SettlementPlot> stored = store.plot();
+        BlockCoord center = SettlementPlot.center(homes);
+        if (stored.isPresent() && stored.orElseThrow().covers(center)) {
+            return stored.orElseThrow();
         }
-        return new BlockCoord(0, 64, 0);
+        SettlementPlot plot =
+                SettlementPlot.survey(center, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, center.y()));
+        store.fix(plot);
+        LOGGER.info(
+                "[plot] высота {}: медиана по {} колонкам, мин {} макс {}, центр ({}, {}) по {} домам духов",
+                plot.anchor().y(),
+                plot.columns(),
+                plot.min(),
+                plot.max(),
+                plot.anchor().x(),
+                plot.anchor().z(),
+                homes.size());
+        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current()));
+        return plot;
+    }
+
+    private static List<BlockCoord> homes(List<SpiritEntity> spirits) {
+        return spirits.stream().flatMap(spirit -> spirit.home().stream()).toList();
+    }
+
+    // Уровень, на котором стоят станции и сундуки поселения: медиана домов духов (для обзора вокруг дома).
+    private static int homeY(List<SpiritEntity> spirits) {
+        return SettlementPlot.center(homes(spirits)).y();
     }
 }

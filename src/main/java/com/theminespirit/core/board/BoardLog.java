@@ -29,13 +29,23 @@ public final class BoardLog {
         DETACHED,
         // Сделанный шаг снова в работе: мир с ним разошёлся (INC-50) — отметка постройки снимается и при чтении
         // журнала.
-        REOPENED
+        REOPENED,
+        // Заметка без перехода задания: высота участка, сверка постройки с миром, задача духа вне доски.
+        NOTE
     }
 
     private static final int MAX_LINE_LENGTH = 8192;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private BoardLog() {}
+
+    // Заметка журнала без перехода задания (NOTE): id и кейс — к чему относится, details — «ключ=значение».
+    public static BoardLogEntry note(
+            String id, BoardCase boardCase, long tick, List<String> details, @Nullable String spirit, String hash) {
+        int priority = BoardRules.priorityOf(boardCase);
+        return new BoardLogEntry(
+                Event.NOTE, tick, id, boardCase, 1, id, priority, priority, details, spirit, hash, tick);
+    }
 
     public static Map<String, Object> toMap(BoardLogEntry entry) {
         Objects.requireNonNull(entry, "Запись журнала не может быть null: писать нечего");
