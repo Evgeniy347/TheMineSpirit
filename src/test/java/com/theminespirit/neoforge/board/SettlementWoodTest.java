@@ -23,6 +23,15 @@ class SettlementWoodTest {
     }
 
     @Test
+    void vote_MiddleOakStockJungleAround_Jungle() {
+        assertEquals(
+                "jungle",
+                SettlementWood.vote(Map.of("minecraft:oak_log", 30), Map.of("jungle_log", 15), "jungle"),
+                "дуб из прошлых прогонов в сундуках (30) не перевешивает джунгли вокруг: выборка через клетку видит "
+                        + "четверть стволов, а ограда вставала дубовой (INC-41)");
+    }
+
+    @Test
     void vote_StockMajority_StockSpecies() {
         assertEquals(
                 "oak",

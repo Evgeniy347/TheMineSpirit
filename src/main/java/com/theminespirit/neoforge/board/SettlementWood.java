@@ -5,10 +5,13 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Порода дерева поселения: голосование брёвен запаса, деревьев вокруг дома (одна выборка на место) и биома.
@@ -21,7 +24,13 @@ public final class SettlementWood {
     // Вес биома в голосовании пород — один голос: решает, когда нет ни брёвен в запасе, ни деревьев рядом. Больший
     // вес перебивал запас брёвен в тесте вдали от дуба (biome тайга, сцена — дубы, выборка через 2 их не видела).
     private static final int BIOME_WEIGHT = 1;
+    // Выборка вокруг дома — через клетку по x и z: видна примерно четверть стволов. Вес 3 — деревья вокруг
+    // перевешивают средний запас чужой породы (INC-41: дуб из прошлых прогонов в сундуках ставил gather:oak_fence в
+    // джунглях), а большой свой запас (64) по-прежнему решает.
+    private static final int NEARBY_WEIGHT = 3;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SettlementWood.class);
     private static final Map<BlockCoord, Map<String, Integer>> NEARBY = new ConcurrentHashMap<>();
+    private static final Map<BlockCoord, String> CHOSEN = new ConcurrentHashMap<>();
 
     private SettlementWood() {}
 
@@ -41,13 +50,36 @@ public final class SettlementWood {
                 .unwrapKey()
                 .map(key -> key.location().toString())
                 .orElse(WoodSpecies.OAK));
-        return vote(stock, nearby, biome);
+        String species = vote(stock, nearby, biome);
+        if (!species.equals(CHOSEN.put(home, species))) {
+            // Строка выбора — при смене породы у дома: по ней видно, из чего сложились голоса (INC-41).
+            LOGGER.info(
+                    "[wood] порода {} у {}: запас {}, деревья {} (вес {}), биом {}",
+                    species,
+                    home,
+                    logsOf(stock),
+                    logsOf(nearby),
+                    NEARBY_WEIGHT,
+                    biome);
+        }
+        return species;
+    }
+
+    private static Map<String, Integer> logsOf(Map<String, Integer> items) {
+        Map<String, Integer> logs = new TreeMap<>();
+        items.forEach((item, count) -> {
+            if (item.endsWith("_log")) {
+                logs.merge(item, count, Integer::sum);
+            }
+        });
+        return logs;
     }
 
     // Порода — по большинству брёвен в запасе и вокруг дома плюс вес биома (INC-39): раньше любой запас брёвен
     // решал один, и пара дубовых брёвен в джунглях ставила gather:oak_fence.
     static String vote(Map<String, Integer> stock, Map<String, Integer> nearby, String biome) {
-        Map<String, Integer> votes = new HashMap<>(nearby);
+        Map<String, Integer> votes = new HashMap<>();
+        nearby.forEach((item, count) -> votes.merge(item, count * NEARBY_WEIGHT, Integer::sum));
         stock.forEach((item, count) -> votes.merge(item, count, Integer::sum));
         votes.merge(biome + "_log", BIOME_WEIGHT, Integer::sum);
         return WoodSpecies.of(votes);

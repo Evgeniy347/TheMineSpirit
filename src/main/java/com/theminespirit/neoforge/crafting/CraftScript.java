@@ -275,7 +275,10 @@ public final class CraftScript implements ScriptInstance {
         }
         StationType type = StationType.byId(params.item()).orElseThrow();
         if (StationPlacer.place(spirit, type).isEmpty()) {
-            return fail("негде поставить " + type.noun() + ": вокруг духа нет свободной клетки на твёрдом полу");
+            // Вплотную к духу места нет (двор занят верстаком и сундуками) — клетка в шаге досягаемости: печь
+            // оставалась в инвентаре, шаг падал, а запас «с печью» закрывал CRAFT_FURNACE без записи в журнале
+            // (приёмка «джунгли» 24.10: «нет [CRAFT_FURNACE]»).
+            return placeBlocks();
         }
         return ScriptStatus.SUCCEEDED;
     }

@@ -22,8 +22,12 @@ import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
@@ -40,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.PickaxeItem;
@@ -72,6 +77,7 @@ public final class FirstStepsRunner {
             BoardCase.CRAFT_STONE_SWORD,
             BoardCase.CRAFT_FURNACE);
     private static final String FIRST_PREFIX = "first:";
+    private static final String MINECRAFT = "minecraft:";
     private static final String CLEAR_PART_PREFIX = "clear:";
     // Каменный шаг, открытый вместе с текущим, — помощник шага (как четверти расчистки): «first:» всегда один.
     private static final String STONE_PART_PREFIX = "stone:";
@@ -123,6 +129,11 @@ public final class FirstStepsRunner {
         // Доски, брёвна и деревянные блоки — породы поселения: в джунглях «oak_planks» не добыть (INC-36).
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        if (WOODEN_BUILDINGS.contains(caseValue)) {
+            // Повтор проваленной стройки просит только непоставленное: после провала ограды на 91/94 доска снова
+            // заказывала забор ×72 на всю схему — 1800 тиков лишней добычи (приёмка «джунгли» 24.10).
+            minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
+        }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         // Факелы шага (ограда — на столбах углов и калитки) — сверх обычного запаса факелов: иначе шаг ждал бы их
         // вечно.
@@ -458,6 +469,39 @@ public final class FirstStepsRunner {
             return false;
         }
         return !COBBLESTONE.equals(item) || facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+    }
+
+    // Блоки схем плана, уже стоящие в мире, вычитаются из нужды шага (схема без поворота, порода — поселения).
+    public static void minusPlaced(ServerLevel level, TaskNode plan, String wood, Map<String, Integer> need) {
+        switch (plan) {
+            case SequenceNode sequence -> sequence.steps().forEach(step -> minusPlaced(level, step, wood, need));
+            case ScriptCall call
+            when "build_schematic".equals(call.script())
+                    && !call.params().containsKey("rotation")
+                    && call.params().get("file") instanceof String file
+                    && call.params().get("x") instanceof Integer x
+                    && call.params().get("y") instanceof Integer y
+                    && call.params().get("z") instanceof Integer z -> {
+                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
+                    if (entry.optional() || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
+                        continue;
+                    }
+                    String block = bare(WoodSpecies.swap(entry.block(), wood));
+                    BlockState state =
+                            level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
+                    if (bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())
+                            .equals(block)) {
+                        String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(entry.block()), wood));
+                        need.computeIfPresent(item, (key, count) -> count > 1 ? count - 1 : null);
+                    }
+                }
+            }
+            default -> {}
+        }
+    }
+
+    private static String bare(String id) {
+        return id.startsWith(MINECRAFT) ? id.substring(MINECRAFT.length()) : id;
     }
 
     private record Scan(SettlementFacts facts, boolean furnaceBlock) {}

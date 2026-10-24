@@ -140,6 +140,47 @@ public final class CraftGameTests {
         });
     }
 
+    // Вплотную к духу места нет (двор занят) — печь ставится в шаге досягаемости, а не остаётся в инвентаре: иначе
+    // шаг печи падал, запас «с печью» закрывал CRAFT_FURNACE без записи в журнале (приёмка «джунгли» 24.10).
+    @GameTest(template = FIELD, batch = "craft_furnace_place_crowded", timeoutTicks = TIMEOUT)
+    public static void craft_FurnaceWithPlaceCrowded_FurnacePlacedFurther(GameTestHelper helper) {
+        field(helper);
+        SpiritEntity spirit = prepare(helper, stack(Items.COBBLESTONE, 8));
+        BlockPos feet = spirit.blockPosition();
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                if (dx != 0 || dz != 0) {
+                    helper.getLevel().setBlockAndUpdate(feet.offset(dx, 0, dz), Blocks.STONE.defaultBlockState());
+                    helper.getLevel().setBlockAndUpdate(feet.offset(dx, 1, dz), Blocks.STONE.defaultBlockState());
+                }
+            }
+        }
+        // Верстак — часть тесного двора: станция крафта стоит, место есть только дальше.
+        helper.getLevel().setBlockAndUpdate(feet.offset(1, 0, 0), Blocks.CRAFTING_TABLE.defaultBlockState());
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "craft",
+                        Map.of("item", "furnace", "count", 1, "radius", CraftTestSupport.RADIUS, "place", true)),
+                1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.FURNACE, 0, "печь в инвентаре после крафта с place в тесноте");
+            helper.assertTrue(
+                    blocksOnField(helper, Blocks.FURNACE) == 1,
+                    "печь обязана встать дальше от духа, на поле печей " + blocksOnField(helper, Blocks.FURNACE));
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    helper.getLevel().setBlockAndUpdate(feet.offset(dx, 0, dz), Blocks.AIR.defaultBlockState());
+                    helper.getLevel().setBlockAndUpdate(feet.offset(dx, 1, dz), Blocks.AIR.defaultBlockState());
+                }
+            }
+            cleanup(helper, spirit);
+        });
+    }
+
     // Сундуки склада первых шагов ставятся сразу после крафта (place), не вплотную друг к другу: в инвентаре крафтера
     // склада не было, сдача добытого не находила сундук (приёмка «джунгли» 24.10: «сундуки []»).
     @GameTest(template = FIELD, batch = "craft_chest_place", timeoutTicks = TIMEOUT)
