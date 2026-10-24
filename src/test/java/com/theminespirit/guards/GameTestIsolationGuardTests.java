@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class GameTestIsolationGuardTests {
     private static final Pattern GAMETEST_ANNOTATION =
-            Pattern.compile("@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
+            Pattern.compile("@(?:GameTest|SceneStep)\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final String[] SPAWN_MARKERS = {
         ".spawn(",
         "ModEntities.SPIRIT",

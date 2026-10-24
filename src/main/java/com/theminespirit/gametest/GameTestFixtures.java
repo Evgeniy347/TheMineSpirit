@@ -83,6 +83,13 @@ final class GameTestFixtures {
         unregisterScene(helper);
     }
 
+    // Узкая чистка между шагами укрупнённой сцены: своя площадка, сцена остаётся зарегистрированной.
+    static void clearStage(GameTestHelper helper, int clearHeight) {
+        clearBlocks(helper, clearHeight);
+        clearEntities(helper, clearHeight);
+        SettlementPlotStore.get(helper.getLevel()).clear();
+    }
+
     private static void clearBlocks(GameTestHelper helper, int clearHeight) {
         for (int x = -CLEAR_MARGIN; x < FLOOR_SIZE + CLEAR_MARGIN; x++) {
             for (int y = 0; y < clearHeight; y++) {
@@ -181,6 +188,10 @@ final class GameTestFixtures {
             TIME_HOLDS.put(helper.testInfo, hold);
             helper.testInfo.addListener(hold);
         }
+        if (helper instanceof StepHelper step) {
+            long before = level.getDayTime();
+            step.atStepEnd(() -> level.setDayTime(before));
+        }
         level.setDayTime(dayTime);
     }
 
@@ -245,7 +256,7 @@ final class GameTestFixtures {
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
         BlockPos absolute = helper.absolutePos(relative);
         player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        helper.testInfo.addListener(new PlayerCleanup(server, player));
+        removeAtEnd(helper, server, player);
         return player;
     }
 
@@ -266,8 +277,16 @@ final class GameTestFixtures {
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
         BlockPos absolute = helper.absolutePos(relative);
         player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        helper.testInfo.addListener(new PlayerCleanup(server, player));
+        removeAtEnd(helper, server, player);
         return player;
+    }
+
+    private static void removeAtEnd(GameTestHelper helper, MinecraftServer server, ServerPlayer player) {
+        if (helper instanceof StepHelper step) {
+            step.atStepEnd(() -> server.getPlayerList().remove(player));
+            return;
+        }
+        helper.testInfo.addListener(new PlayerCleanup(server, player));
     }
 
     static BlockPos firstUnloadedChunkEast(GameTestHelper helper, BlockPos base) {

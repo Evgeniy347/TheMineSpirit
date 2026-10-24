@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 class TestNamingGuardTests {
     private static final Pattern TEST_METHOD =
-            Pattern.compile("@(Test|Property|Example|GameTest|ParameterizedTest)\\b[^\\n]*\\n"
+            Pattern.compile("@(Test|Property|Example|GameTest|SceneStep|ParameterizedTest)\\b[^\\n]*\\n"
                     + "(?:[ \\t]*@[^\\n]*\\n)*"
                     + "[ \\t]*(?:(?:public|protected|private|static|final)\\s+)*void\\s+(\\w+)\\s*\\(");
     private static final Pattern GOOD_NAME = Pattern.compile("[a-z][A-Za-z0-9]*_[A-Z][A-Za-z0-9]*_[A-Z][A-Za-z0-9]*");
