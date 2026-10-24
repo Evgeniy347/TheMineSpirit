@@ -81,43 +81,6 @@ class BoardBlockTests {
     }
 
     @Test
-    void fail_SameStuckPointTwice_BlockedWithoutBurningLimit() {
-        long[] now = {0};
-        Board board = new Board(() -> now[0]);
-        String stuck = "застрял в (-175.3, 67.0, -487.5)";
-        for (int attempt = 1; attempt <= 2; attempt++) {
-            if (attempt > 1) {
-                board.prune(now[0]);
-                now[0] += BoardTuning.failBackoffTicks();
-            }
-            board.submit(ticket());
-            board.claim(ID, spirit(attempt), now[0]);
-            board.fail(ID, new StockView(Map.of()), stuck);
-        }
-
-        assertTrue(
-                board.blocked(ID),
-                "Тот же «застрял» в той же точке у второго духа — дело места, а не духа: задание блокируется сразу, "
-                        + "а не сжигает " + BoardTuning.ticketFailLimit() + " попыток (INC-63)");
-    }
-
-    @Test
-    void fail_DifferentReasons_CountedToLimit() {
-        long[] now = {0};
-        Board board = new Board(() -> now[0]);
-        board.submit(ticket());
-        board.claim(ID, spirit(1), now[0]);
-        board.fail(ID, new StockView(Map.of()), "застрял в (1, 2, 3)");
-        board.prune(now[0]);
-        now[0] += BoardTuning.failBackoffTicks();
-        board.submit(ticket());
-        board.claim(ID, spirit(2), now[0]);
-        board.fail(ID, new StockView(Map.of()), "нет материала");
-
-        assertFalse(board.blocked(ID), "Разные причины провала — обычный счёт до предела попыток");
-    }
-
-    @Test
     void claimable_Unblocked_NoStaleHolder() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

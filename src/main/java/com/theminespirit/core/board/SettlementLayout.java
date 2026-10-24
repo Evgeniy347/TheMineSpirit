@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.IntBinaryOperator;
 
 /**
  * Раскладка участка поселения этапа 1 (решение 54b п.2): детерминированно от якоря — дома поселения, он же центр
@@ -52,16 +51,6 @@ public final class SettlementLayout {
     public static BlockCoord mineEntrance(BlockCoord anchor) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
         return new BlockCoord(anchor.x() + MINE_OFFSET, anchor.y() - 1, anchor.z());
-    }
-
-    // Якорь двора до выравнивания (INC-63): высота — земля под двором, а не высота плана. Двор (верстак, сундуки,
-    // печь) ставится раньше выравнивания, и на яме в 4 блока ниже плана «подход к двору» вёл в воздух — все духи
-    // «застревали» в одной точке, шаг уходил в BLOCKED.
-    public static BlockCoord yardAnchor(BlockCoord anchor, IntBinaryOperator feet) {
-        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится рабочий двор");
-        Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них земли двора не найти");
-        BlockCoord yard = workYard(anchor);
-        return new BlockCoord(anchor.x(), feet.applyAsInt(yard.x(), yard.z()), anchor.z());
     }
 
     // Колонка спуска в шахту: ступени 3 в ширину вглубь на юг от входа до края участка. Её высоту выравнивание не

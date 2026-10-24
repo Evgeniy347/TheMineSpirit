@@ -70,8 +70,6 @@ import org.slf4j.Logger;
 public final class FirstStepsRunner {
     private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
     private static final int LAYOUT_SLACK_DIVISOR = 50;
-    private static final Set<BoardCase> YARD_STEPS =
-            EnumSet.of(BoardCase.CRAFTING_STATION, BoardCase.STOCK_CHESTS, BoardCase.CRAFT_FURNACE);
     private static final Set<BoardCase> LAYOUT_STEPS =
             EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
     // Заранее — только с расчистки: раньше добыча забора отнимала доски у первых инструментов (простой 1947 тиков).
@@ -148,7 +146,7 @@ public final class FirstStepsRunner {
             return;
         }
         BoardCase caseValue = next.orElseThrow();
-        TicketTarget target = targetFor(caseValue, YARD_STEPS.contains(caseValue) ? yard(level, anchor) : anchor, wood);
+        TicketTarget target = targetFor(caseValue, anchor, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, anchor, stock));
         }
@@ -352,7 +350,7 @@ public final class FirstStepsRunner {
         Map<String, Integer> booked = new HashMap<>();
         boolean after = false;
         for (BoardCase step : STONE_STEPS) {
-            TicketTarget target = targetFor(step, YARD_STEPS.contains(step) ? yard(level, home) : home, wood);
+            TicketTarget target = targetFor(step, home, wood);
             Map<String, Integer> need = new HashMap<>();
             materials(source, step, target)
                     .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
@@ -403,10 +401,6 @@ public final class FirstStepsRunner {
                     plan.block());
         }
         return plan;
-    }
-
-    private static BlockCoord yard(ServerLevel level, BlockCoord anchor) {
-        return SettlementLayout.yardAnchor(anchor, (x, z) -> feetAt(level, x, z, anchor.y()));
     }
 
     // Высоты колонок участка для выравнивания: спуск в шахту — на уровне участка, его не засыпают (INC-50).
