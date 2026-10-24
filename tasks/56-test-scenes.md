@@ -50,3 +50,17 @@
 Группы по классам: движение — `Movement*`, `HouseMovement`, `WaterCross`, `Pillar`, `NightLeash`…; добыча — `BlockBreaker`,
 `CollectDrops`, `Dig*`, `Clear`, `Acquire*`…; REST-мост — `Rest*`; стройка — `Build*`, `PresetBuild`, `Schematic`, `Demo{Build,City,Layout,Spirit}`;
 этап 1 (`JungleSettlement`, `BoardFirstSteps*`, `BoardSettlementStart*`) — ветка `opus/scenes`, здесь не трогается.
+
+## Пункт 3: ход (24.10, остановка по выключению ПК)
+
+- Инструмент: `SceneSteps` + `StepHelper` + `@SceneStep` — бывшие сцены идут шагами одной сцены, проверки не
+  переписываются; упавший шаг не прячет остальные, сцена падает в конце со списком.
+- Сделано и закоммичено: рубка (38 → 2 сцены), плавка (17 → 1).
+- Остальные механики сконвертированы в рабочем дереве `wt-testcut` (не закоммичены): все сцены прогнаны по
+  отдельности. Падают шаги: чужие и на main — `firstTools_WoodOnly`, `relocate_PenMoved`, `setCombatMode_Passive`,
+  `passive_HuskAttacks`, `move_MansionBalcony`; разобрать (утечка между шагами или чужое) — `plantCrop_WheatOnNine`,
+  `clear_PlayerWall`, `gather_SettledSpiritStone`, `lake_GotoWithoutBypass`, `creeper_FourBlocksAway`,
+  `creeper_StrikeAndRetreat`, `leash_PostUnreachable`, `retreat_LowHpWithBlocks`, `defendedPoint_*` (Camp),
+  `schematic_Shortage`, `schematic_NeedSeventeen`.
+- Осталось: разбор этих шагов, коммиты по механикам, перенос логики в unit, сторож числа сцен (шаг 3).
+- PMD на main не грузит набор (`AvoidAccessibilityAlteration` нет в PMD 7.28) — задача прошла «зелёной» без проверки.

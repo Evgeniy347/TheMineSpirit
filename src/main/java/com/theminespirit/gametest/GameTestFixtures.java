@@ -3,12 +3,16 @@ package com.theminespirit.gametest;
 import com.mojang.authlib.GameProfile;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.neoforge.MineOreLedger;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +49,7 @@ final class GameTestFixtures {
 
     private static final int CLEAR_MARGIN = 2;
     private static final int CLEAR_HEIGHT = 8;
+    private static final int STAGE_BELOW = 16;
     private static final int SWEEP_MARGIN = 48;
     private static final int SWEEP_BELOW = 16;
     private static final int SWEEP_ABOVE = 40;
@@ -84,10 +89,26 @@ final class GameTestFixtures {
     }
 
     // Узкая чистка между шагами укрупнённой сцены: своя площадка, сцена остаётся зарегистрированной.
+    // Отдельная сцена стояла на новом месте мира, а шаг — на месте прошлого шага: память мира, привязанная к
+    // клеткам (метки поставленных блоков, оставленная руда, координатор поселения по дому), обнуляется здесь.
     static void clearStage(GameTestHelper helper, int clearHeight) {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
-        SettlementPlotStore.get(helper.getLevel()).clear();
+        ServerLevel level = helper.getLevel();
+        SettlementPlotStore.get(level).clear();
+        CoordinatorRegistry.clear();
+        PlacedBlocksData placed = PlacedBlocksData.get(level);
+        MineOreLedger ores = MineOreLedger.get(level);
+        AABB box = area(helper, clearHeight).inflate(0, STAGE_BELOW, 0);
+        for (BlockCoord ore : List.copyOf(ores.ores().keySet())) {
+            if (box.contains(ore.x() + 0.5, ore.y() + 0.5, ore.z() + 0.5)) {
+                ores.forget(ore);
+            }
+        }
+        BlockPos.betweenClosedStream(box.contract(1.0E-3, 1.0E-3, 1.0E-3)).forEach(pos -> {
+            placed.unmark(pos);
+            placed.unmarkSpirit(pos);
+        });
     }
 
     private static void clearBlocks(GameTestHelper helper, int clearHeight) {
