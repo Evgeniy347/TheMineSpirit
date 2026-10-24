@@ -10,6 +10,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CraftParams;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.PlacementJournal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,11 +32,13 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class CraftScript implements ScriptInstance {
     private static final String CRAFTED_KEY = "crafted";
     private static final int PLACE_REACH = 3;
+    private static final int PLACE_PASSES = 3;
 
     private enum Phase {
         PREPARE,
@@ -307,13 +310,17 @@ public final class CraftScript implements ScriptInstance {
         cells.sort(Comparator.comparingDouble((BlockPos cell) -> cell.distSqr(origin))
                 .thenComparing(Comparator.naturalOrder()));
         Level level = spirit.level();
-        for (BlockPos cell : cells) {
-            if (left <= 0) {
+        // Сундук — сначала второй половиной к одиночному сундуку рядом, затем первым так, чтобы рядом было место второй
+        // половине: два сундука склада — двойной (INC-52).
+        while (left > 0) {
+            Optional<BlockPos> placed = Optional.empty();
+            for (int pass = 0; pass < PLACE_PASSES && placed.isEmpty(); pass++) {
+                placed = placeOnce(level, placer, cells, state, id, pass, left);
+            }
+            if (placed.isEmpty()) {
                 break;
             }
-            if (freeCell(level, cell, state) && placer.begin(cell, state, id) instanceof BlockPlacer.Started) {
-                left--;
-            }
+            left--;
         }
         if (left > 0) {
             return fail("негде поставить '" + params.item() + "': осталось " + left
@@ -322,19 +329,55 @@ public final class CraftScript implements ScriptInstance {
         return ScriptStatus.SUCCEEDED;
     }
 
-    private static boolean freeCell(Level level, BlockPos cell, BlockState state) {
+    // Проход 0 — вторая половина к одиночному сундуку; 1 — одиночный с местом для второй половины (сундуков ещё
+    // больше одного); 2 — любая свободная клетка.
+    private Optional<BlockPos> placeOnce(
+            Level level, BlockPlacer placer, List<BlockPos> cells, BlockState state, String id, int pass, int left) {
+        for (BlockPos cell : cells) {
+            Optional<BlockState> pair = ChestPairing.paired(level, cell, state);
+            boolean wanted = pass == 0
+                    ? pair.isPresent()
+                    : pair.isEmpty() && (pass == 2 || (left > 1 && partnerFree(level, cells, cell, state)));
+            if (wanted
+                    && freeCell(level, cell, state, pair.isPresent())
+                    && placer.begin(cell, pair.orElse(state), id) instanceof BlockPlacer.Started) {
+                PlacementJournal.placed(
+                        spirit, id, cell, "скрафчено с place" + (pair.isPresent() ? ", вторая половина двойного" : ""));
+                return Optional.of(cell);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static boolean partnerFree(Level level, List<BlockPos> cells, BlockPos cell, BlockState state) {
+        if (!(state.getBlock() instanceof ChestBlock)) {
+            return false;
+        }
+        Direction facing = state.getValue(ChestBlock.FACING);
+        for (BlockPos partner :
+                List.of(cell.relative(facing.getClockWise()), cell.relative(facing.getCounterClockWise()))) {
+            if (cells.contains(partner) && freeCell(level, partner, state, false)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // paired — клетка второй половины двойного сундука: соседний сундук там и нужен, второй сосед — нет.
+    private static boolean freeCell(Level level, BlockPos cell, BlockState state, boolean paired) {
         BlockPos floor = cell.below();
         if (!level.getBlockState(cell).isAir()
                 || !level.getBlockState(cell.above()).isAir()
                 || !level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)) {
             return false;
         }
+        int neighbours = 0;
         for (Direction side : Direction.Plane.HORIZONTAL) {
             if (level.getBlockState(cell.relative(side)).is(state.getBlock())) {
-                return false;
+                neighbours++;
             }
         }
-        return true;
+        return neighbours == (paired ? 1 : 0);
     }
 
     private static String shortage(CraftPlan plan) {

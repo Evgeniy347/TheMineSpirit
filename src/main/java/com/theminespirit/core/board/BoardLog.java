@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -38,6 +39,18 @@ public final class BoardLog {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private BoardLog() {}
+
+    // Установка блока духом вне плана стройки (станция, сундук): кто, в какой задаче, где и зачем (INC-54).
+    public static BoardLogEntry placement(
+            String spirit, String task, String block, BlockCoord pos, String reason, long tick, String hash) {
+        return note(
+                "place:" + block,
+                BoardCase.ACTIVITY_EXTERNAL,
+                tick,
+                List.of("task=" + task, "pos=" + pos.x() + "," + pos.y() + "," + pos.z(), "reason=" + reason),
+                spirit,
+                hash);
+    }
 
     // Заметка журнала без перехода задания (NOTE): id и кейс — к чему относится, details — «ключ=значение».
     public static BoardLogEntry note(

@@ -30,6 +30,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -181,10 +184,10 @@ public final class CraftGameTests {
         });
     }
 
-    // Сундуки склада первых шагов ставятся сразу после крафта (place), не вплотную друг к другу: в инвентаре крафтера
-    // склада не было, сдача добытого не находила сундук (приёмка «джунгли» 24.10: «сундуки []»).
+    // Сундуки склада первых шагов ставятся сразу после крафта (place): в инвентаре крафтера склада не было, сдача
+    // добытого не находила сундук (приёмка «джунгли» 24.10). Два сундука — один двойной, как у игрока (INC-52).
     @GameTest(template = FIELD, batch = "craft_chest_place", timeoutTicks = TIMEOUT)
-    public static void craft_ChestsWithPlace_TwoSingleChestsOnField(GameTestHelper helper) {
+    public static void craft_ChestsWithPlace_OneDoubleChestOnField(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 16));
         SpiritRun run = SpiritRun.launch(
@@ -200,6 +203,10 @@ public final class CraftGameTests {
             helper.assertTrue(
                     blocksOnField(helper, Blocks.CHEST) == 2,
                     "дух обязан поставить оба скрафченных сундука, на поле " + blocksOnField(helper, Blocks.CHEST));
+            helper.assertTrue(
+                    doubleChestHalves(helper) == 2,
+                    "два сундука рядом обязаны слиться в двойной (left/right), а не стоять single; половин двойного "
+                            + doubleChestHalves(helper));
             cleanup(helper, spirit);
         });
     }
@@ -409,6 +416,19 @@ public final class CraftGameTests {
 
     private static int tablesOnField(GameTestHelper helper) {
         return blocksOnField(helper, Blocks.CRAFTING_TABLE);
+    }
+
+    private static int doubleChestHalves(GameTestHelper helper) {
+        int halves = 0;
+        for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
+            for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
+                BlockState state = helper.getBlockState(new BlockPos(x, 1, z));
+                if (state.is(Blocks.CHEST) && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                    halves++;
+                }
+            }
+        }
+        return halves;
     }
 
     private static int blocksOnField(GameTestHelper helper, Block block) {

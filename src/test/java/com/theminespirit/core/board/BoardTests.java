@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +119,31 @@ class BoardTests {
                 BoardOutcome.ACCEPTED,
                 outcome,
                 "Переоткрытый шаг ставится заново, а не отвечает DUPLICATE навсегда (INC-50)");
+    }
+
+    @Test
+    void occupy_ExternalTaskScript_ShownOnActivity() {
+        Board board = boardAt(0);
+
+        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_EXTERNAL, "chop_tree", 0);
+
+        assertEquals(
+                List.of("script=chop_tree"),
+                board.all().stream()
+                        .filter(ticket -> ticket.id().equals(BoardActivities.idOf(SPIRIT_ONE)))
+                        .findFirst()
+                        .orElseThrow()
+                        .modifiers(),
+                "Задача духа через REST видна на доске занятием со своим скриптом, а не безымянной (INC-48)");
+    }
+
+    @Test
+    void scriptOf_GotoThenChop_NamesWork() {
+        assertEquals(
+                "chop_tree",
+                BoardActivities.scriptOf(new SequenceNode(
+                        List.of(new ScriptCall("goto", Map.of()), new ScriptCall("chop_tree", Map.of())))),
+                "Название задачи — работа, а не подход к месту: «goto» не показывается (INC-48)");
     }
 
     @Test

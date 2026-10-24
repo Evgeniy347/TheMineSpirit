@@ -479,7 +479,7 @@ public final class BoardService {
             return false;
         }
         launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
-        board.occupy(spirit.getUUID(), activity, board.now());
+        board.occupy(spirit.getUUID(), activity, script, board.now());
         return true;
     }
 
@@ -489,7 +489,12 @@ public final class BoardService {
             present.add(spirit.getUUID());
             Optional<BoardCase> occupation = occupationOf(spirit);
             if (occupation.isPresent()) {
-                board.occupy(spirit.getUUID(), occupation.get(), board.now());
+                // Любая задача духа (доска, REST, команда, интеллект) видна занятием со своим скриптом (INC-48).
+                board.occupy(
+                        spirit.getUUID(),
+                        occupation.get(),
+                        spirit.currentPlan().map(BoardActivities::scriptOf).orElse(null),
+                        board.now());
             } else {
                 board.vacate(spirit.getUUID());
             }

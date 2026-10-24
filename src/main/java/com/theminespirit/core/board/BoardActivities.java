@@ -1,6 +1,10 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.intellect.ActivityId;
+import com.theminespirit.core.plan.RepeatNode;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Задания-занятия доски: всё, что дух делает не по заданию доски (фоновое занятие интеллекта, бой тактики,
@@ -18,6 +23,7 @@ import java.util.UUID;
  */
 public final class BoardActivities {
     public static final String ID_PREFIX = "activity:";
+    public static final String SCRIPT_KEY = "script=";
     public static final Set<BoardCase> CASES = EnumSet.of(
             BoardCase.ACTIVITY_ARM,
             BoardCase.ACTIVITY_CHOP,
@@ -32,6 +38,7 @@ public final class BoardActivities {
             BoardCase.ACTIVITY_REST,
             BoardCase.ACTIVITY_SMELT,
             BoardCase.ACTIVITY_UNLOAD);
+    private static final String GOTO = "goto";
 
     private BoardActivities() {}
 
@@ -59,7 +66,35 @@ public final class BoardActivities {
         };
     }
 
-    static BoardTicket ticket(UUID spirit, BoardCase boardCase, long now) {
+    // Название задачи духа по её плану: скрипт верхнего вызова, у цепочки — первый вызов не «goto» (подход к месту
+    // работы — не работа): «chop_tree», а не «ACTIVITY_UNLOAD» (INC-48).
+    public static @Nullable String scriptOf(TaskNode plan) {
+        Objects.requireNonNull(plan, "План задачи не может быть null: название берётся из него");
+        if (plan instanceof ScriptCall call) {
+            return call.script();
+        }
+        if (plan instanceof SequenceNode sequence) {
+            String first = null;
+            for (TaskNode step : sequence.steps()) {
+                String name = scriptOf(step);
+                if (name != null && !GOTO.equals(name)) {
+                    return name;
+                }
+                first = first == null ? name : first;
+            }
+            return first;
+        }
+        if (plan instanceof RepeatNode repeat) {
+            return scriptOf(repeat.step());
+        }
+        return null;
+    }
+
+    public static List<String> details(@Nullable String script) {
+        return script == null || script.isBlank() ? List.of() : List.of(SCRIPT_KEY + script);
+    }
+
+    static BoardTicket ticket(UUID spirit, BoardCase boardCase, long now, List<String> details) {
         if (!isActivity(boardCase)) {
             throw new IllegalArgumentException("Кейс " + boardCase + " — не занятие: задание-занятие строится только "
                     + "из ACTIVITY_*, иначе доска спутает его с очередью");
@@ -73,6 +108,7 @@ public final class BoardActivities {
                 1,
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
-                Map.of());
+                Map.of(),
+                details);
     }
 }
