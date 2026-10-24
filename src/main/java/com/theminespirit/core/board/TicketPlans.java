@@ -53,6 +53,17 @@ public final class TicketPlans {
     private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     private static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
+    // Остатки шага (палки, доски, брёвна, камень, уголь, факелы) — в сундук сразу по окончании шага: у занятого духа
+    // палки после добычи забора держали крафт факелов ~2000 тиков (приёмка «джунгли» 24.10, transfer…:stick PENDING).
+    private static final List<String> LEFTOVERS = List.of(
+            "minecraft:stick",
+            "minecraft:*_planks",
+            "minecraft:*_log",
+            "minecraft:cobblestone",
+            "minecraft:charcoal",
+            "minecraft:coal",
+            "minecraft:torch");
+
     private static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RESTOCK_FOOD_COUNT = 48;
@@ -130,9 +141,7 @@ public final class TicketPlans {
             case CRAFT_TORCHES ->
                 sequence(
                         craft("minecraft:torch", torchCount(target), target),
-                        store(target, "minecraft:torch"),
-                        store(target, "minecraft:charcoal"),
-                        store(target, "minecraft:coal"));
+                        store(target, LEFTOVERS.toArray(String[]::new)));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -357,18 +366,31 @@ public final class TicketPlans {
     // габарита дома, иначе стройка дома упиралась в верстак у якоря (решение 54b п.2).
     // Скрафтить во дворе станций и сразу поставить там (place): печь и сундуки склада первых шагов.
     private static TaskNode placeInYard(String item, int count, TicketTarget target) {
-        return sequence(
-                gotoPoint(SettlementLayout.workYard(target.target())),
-                new ScriptCall(
-                        "craft",
-                        Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT, "place", true)));
+        return withLeftovers(
+                sequence(
+                        gotoPoint(SettlementLayout.workYard(target.target())),
+                        new ScriptCall(
+                                "craft",
+                                Map.of(
+                                        ITEM,
+                                        item,
+                                        COUNT,
+                                        count,
+                                        RADIUS,
+                                        CatalogLimits.STATION_RADIUS_DEFAULT,
+                                        "place",
+                                        true))),
+                target);
     }
 
     private static TaskNode craftInYard(String item, int count, TicketTarget target) {
-        return sequence(
-                gotoPoint(SettlementLayout.workYard(target.target())),
-                new ScriptCall(
-                        "craft", Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+        return withLeftovers(
+                sequence(
+                        gotoPoint(SettlementLayout.workYard(target.target())),
+                        new ScriptCall(
+                                "craft",
+                                Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT))),
+                target);
     }
 
     private static TaskNode craft(String item, int count, TicketTarget target) {
@@ -407,31 +429,41 @@ public final class TicketPlans {
                 new ScriptCall(
                         "smelt",
                         Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)),
-                store(target, "minecraft:charcoal"));
+                store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
     // Сдать всё названное в ближайший сундук у места задания; сундука нет или сдавать нечего — шаг не валит план.
-    private static TaskNode store(TicketTarget target, String item) {
-        return sequence(
-                gotoTarget(target),
-                new FallbackNode(List.of(
-                        new ScriptCall(
-                                "deposit",
-                                Map.of(
-                                        CONTAINER,
-                                        NEAREST,
-                                        ITEM,
-                                        item,
-                                        COUNT,
-                                        CatalogLimits.COUNT_MAX,
-                                        RADIUS,
-                                        SUPPLY_CONTAINER_RADIUS)),
-                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+    private static TaskNode store(TicketTarget target, String... items) {
+        List<TaskNode> steps = new ArrayList<>(items.length + 1);
+        steps.add(gotoTarget(target));
+        for (String item : items) {
+            steps.add(new FallbackNode(List.of(
+                    new ScriptCall(
+                            "deposit",
+                            Map.of(
+                                    CONTAINER,
+                                    NEAREST,
+                                    ITEM,
+                                    item,
+                                    COUNT,
+                                    CatalogLimits.COUNT_MAX,
+                                    RADIUS,
+                                    SUPPLY_CONTAINER_RADIUS,
+                                    "leftover",
+                                    true)),
+                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+        }
+        return new SequenceNode(steps);
+    }
+
+    private static TaskNode withLeftovers(TaskNode step, TicketTarget target) {
+        return sequence(step, store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
         int count = target.toolCount() > 0 ? target.toolCount() : 1;
-        return craft(ToolSet.itemId(boardCase), Math.min(count, CatalogLimits.COUNT_MAX), target);
+        return withLeftovers(
+                craft(ToolSet.itemId(boardCase), Math.min(count, CatalogLimits.COUNT_MAX), target), target);
     }
 
     private static TaskNode lighting(TicketTarget target) {
@@ -502,7 +534,8 @@ public final class TicketPlans {
                         new ScriptCall(
                                 "deposit",
                                 Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)),
-                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
+                store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
     private static TaskNode gatherOnly(TicketTarget target) {
@@ -547,7 +580,7 @@ public final class TicketPlans {
         boolean single = quarter >= 1 && quarter <= CLEAR_QUARTERS;
         List<TaskNode> steps = new ArrayList<>(single ? List.of(chunks.get(quarter - 1)) : chunks);
         if (single && quarter > 1) {
-            return new SequenceNode(steps);
+            return withLeftovers(new SequenceNode(steps), target);
         }
         // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
         // земля — запас подсыпки), потом подсыпка ям.
@@ -558,7 +591,7 @@ public final class TicketPlans {
         for (PlotLeveling.Box box : leveling.fill()) {
             steps.add(new ScriptCall("fill", boxParams(box, Map.of(BLOCK, leveling.block()))));
         }
-        return new SequenceNode(steps);
+        return withLeftovers(new SequenceNode(steps), target);
     }
 
     private static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {
@@ -782,20 +815,24 @@ public final class TicketPlans {
                     "deliver", Map.of(ITEM, target.supplyItem(), COUNT, count, "to", "spirit:" + target.transferTo()));
         }
         // Со склада: сначала к месту задания (сундуки у дома), затем withdraw рядом — получатель брал «ближайший»
-        // вокруг себя и падал «рядом нет допустимого контейнера» (приёмка «джунгли» 24.10).
+        // вокруг себя и падал «рядом нет допустимого контейнера» (приёмка «джунгли» 24.10). Сундук успели опустошить
+        // (добыча берёт из сундука сама) — передача не валится: провал ставил кейс передач духа на паузу, и все его
+        // передачи ждали; крафт закажет недостающее заново по сундуку.
         return sequence(
                 gotoTarget(target),
-                new ScriptCall(
-                        "withdraw",
-                        Map.of(
-                                CONTAINER,
-                                NEAREST,
-                                ITEM,
-                                target.supplyItem(),
-                                COUNT,
-                                count,
-                                RADIUS,
-                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
+                new FallbackNode(List.of(
+                        new ScriptCall(
+                                "withdraw",
+                                Map.of(
+                                        CONTAINER,
+                                        "auto",
+                                        ITEM,
+                                        target.supplyItem(),
+                                        COUNT,
+                                        count,
+                                        RADIUS,
+                                        CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
     }
 
     private static TaskNode restockFood(TicketTarget target) {

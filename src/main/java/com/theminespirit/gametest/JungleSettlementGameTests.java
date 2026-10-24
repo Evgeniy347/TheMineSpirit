@@ -64,6 +64,8 @@ public final class JungleSettlementGameTests {
         Map<UUID, Integer> idle = new HashMap<>();
         int[] worstIdle = {0};
         String[] worstWhen = {"-"};
+        // Первое превышение предела: худший простой растёт до конца прогона и затирает, с чего всё началось.
+        String[] firstOver = {"-"};
         helper.onEachTick(() -> {
             for (SpiritEntity spirit : spirits) {
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
@@ -71,20 +73,15 @@ public final class JungleSettlementGameTests {
                         || !board.board().assignedTo(spirit.getUUID()).isEmpty();
                 int ticks = busy ? 0 : idle.getOrDefault(spirit.getUUID(), 0) + 1;
                 idle.put(spirit.getUUID(), ticks);
+                if (ticks == IDLE_LIMIT + 1 && "-".equals(firstOver[0])) {
+                    firstOver[0] = spirit.displayName() + " с тика " + (helper.getTick() - IDLE_LIMIT) + ", открыто "
+                            + openTickets(board);
+                }
                 if (ticks > worstIdle[0]) {
                     worstIdle[0] = ticks;
                     // Кто и когда простаивал дольше всех: без этого красный прогон не говорит, какой шаг держал духа.
-                    worstWhen[0] = spirit.displayName() + " до тика " + helper.getTick() + ", открыто "
-                            + board.board().all().stream()
-                                    .filter(ticket -> board.board()
-                                            .statusOf(ticket.id())
-                                            .map(status -> status != BoardStatus.DONE)
-                                            .orElse(false))
-                                    .map(ticket -> ticket.id() + "="
-                                            + board.board()
-                                                    .statusOf(ticket.id())
-                                                    .orElse(null))
-                                    .toList();
+                    worstWhen[0] =
+                            spirit.displayName() + " до тика " + helper.getTick() + ", открыто " + openTickets(board);
                 }
             }
         });
@@ -102,7 +99,7 @@ public final class JungleSettlementGameTests {
                     worstIdle[0] <= IDLE_LIMIT && missing.isEmpty() && stage >= 2,
                     "Этап 1 в джунглях: простой " + worstIdle[0] + " тиков подряд (" + worstWhen[0] + "; предел "
                             + IDLE_LIMIT
-                            + "), нет " + missing + ", этап на доске " + stage + "; духи "
+                            + "; впервые " + firstOver[0] + "), нет " + missing + ", этап на доске " + stage + "; духи "
                             + spirits.stream()
                                     .map(spirit -> spirit.displayName() + "="
                                             + spirit.currentTaskScript().orElse("-"))
@@ -139,6 +136,17 @@ public final class JungleSettlementGameTests {
             }
         }
         return found;
+    }
+
+    private static List<String> openTickets(BoardService board) {
+        return board.board().all().stream()
+                .filter(ticket -> board.board()
+                        .statusOf(ticket.id())
+                        .map(status -> status != BoardStatus.DONE)
+                        .orElse(false))
+                .map(ticket ->
+                        ticket.id() + "=" + board.board().statusOf(ticket.id()).orElse(null))
+                .toList();
     }
 
     private static List<BoardCase> stageOne() {

@@ -25,9 +25,11 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.social.TransferOrder;
 import com.theminespirit.core.social.TransferPlanner;
 import com.theminespirit.core.social.TransferSource;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
+import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Blocks;
@@ -48,6 +51,8 @@ import org.slf4j.Logger;
 public final class TransferWatch {
     private static final String TABLE_ITEM = "minecraft:crafting_table";
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final int CHEST_RADIUS = 16;
+    private static final int CHEST_PROBES = 4;
     // Факелы освещения — тоже материал стройки: без передачи дух шёл ставить их пустым («нет материала torch»).
     private static final Set<BoardCase> BUILDS =
             Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING);
@@ -99,8 +104,14 @@ public final class TransferWatch {
         BlockCoord crafterAt = at(crafter);
         // Добыча сама рубит и крафтит («acquire»): ждать передачу от занятого стройкой духа незачем — свободный
         // дух простаивал 1845 тиков, пока строитель ограды держал доски и брёвна (приёмка «джунгли» 24.10).
-        List<SpiritEntity> donors =
-                gather ? spirits.stream().filter(spirit -> !busy(spirit)).toList() : spirits;
+        // Есть сундук поселения — передачи только со склада и от свободных духов: остатки каждый дух сдаёт в сундук
+        // по окончании шага (TicketPlans.LEFTOVERS), а передача от занятого духа висела до 10000 тиков (приёмка
+        // «джунгли» 24.10). Свободный дух шага не кончает и не сдаёт: взятое со склада под крафт, отданный
+        // другому духу, без передачи от него застревало, крафт падал «не хватает» (settlement_EmptyTwoSpirits).
+        boolean chest = hasSettlementChest(level, place);
+        List<SpiritEntity> donors = chest || gather
+                ? spirits.stream().filter(spirit -> !busy(spirit)).toList()
+                : spirits;
         List<TransferSource> sources = sources(donors, mapper, recipes, crafter.getUUID());
         List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
                 craftItem.orElseThrow(),
@@ -109,11 +120,58 @@ public final class TransferWatch {
                 stacks(crafter.getInventory(), mapper),
                 ingredients,
                 sources,
-                warehouse(stock, spirits, mapper),
+                // Без сундука склада нет: снимок запаса считал складом устаревшие инвентари, передача «со склада»
+                // ничего не брала, а крафт падал «не хватает» (settlement_EmptyTwoSpirits 24.10).
+                chest ? chestStock(level, service, place, craftTicket.id()) : Map.of(),
                 InventoryTables.values(),
                 BoardTuning.transferRadiusBlocks(),
                 BoardTuning.transferMaxCount()));
-        return submitOrders(service, spirits, craftTicket, orders, now);
+        if (submitOrders(service, spirits, craftTicket, orders, now)) {
+            return true;
+        }
+        // Ингредиент только у занятого духа: по окончании шага он сдаст его в сундук (или отдаст излишек передачей,
+        // если сундука нет) — крафт ждёт, а не падает «не хватает: cobblestone» (приёмка «джунгли» 24.10) или
+        // «не хватает: oak_planks 1 из 9» у сундуков склада (settlement_EmptyTwoSpirits).
+        return heldByBusy(ingredients, crafter, orders, Map.of(), spirits, mapper);
+    }
+
+    private static boolean heldByBusy(
+            List<Ingredient> ingredients,
+            SpiritEntity crafter,
+            List<TransferOrder> orders,
+            Map<String, Integer> stored,
+            List<SpiritEntity> spirits,
+            StackMapper mapper) {
+        for (Ingredient ingredient : ingredients) {
+            int have = count(stacks(crafter.getInventory(), mapper), ingredient.item())
+                    + stored.getOrDefault(ingredient.item(), 0);
+            for (TransferOrder order : orders) {
+                if (order.item().equals(ingredient.item())) {
+                    have += order.count();
+                }
+            }
+            if (have >= ingredient.count()) {
+                continue;
+            }
+            for (SpiritEntity spirit : spirits) {
+                if (!spirit.getUUID().equals(crafter.getUUID())
+                        && busy(spirit)
+                        && count(stacks(spirit.getInventory(), mapper), ingredient.item()) > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static int count(List<Stack> stacks, String item) {
+        int total = 0;
+        for (Stack stack : stacks) {
+            if (stack != null && stack.item().equals(item)) {
+                total += stack.count();
+            }
+        }
+        return total;
     }
 
     // Стройка первых шагов: материалы, собранные другими духами, лежат у них в инвентаре — строитель брал из
@@ -141,18 +199,31 @@ public final class TransferWatch {
         }
         StackMapper mapper = new StackMapper();
         RecipeKnowledge recipes = RecipeKnowledge.of(level);
+        BlockCoord home = builder.home().orElseGet(() -> at(builder));
+        boolean chest = hasSettlementChest(level, home);
         List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
                 build.boardCase().name().toLowerCase(Locale.ROOT),
                 builder.getUUID(),
                 at(builder),
                 stacks(builder.getInventory(), mapper),
                 materials,
-                sources(spirits, mapper, recipes, builder.getUUID()),
+                sources(
+                        chest ? spirits.stream().filter(spirit -> !busy(spirit)).toList() : spirits,
+                        mapper,
+                        recipes,
+                        builder.getUUID()),
                 Map.of(),
                 InventoryTables.values(),
                 BoardTuning.transferRadiusBlocks(),
                 BoardTuning.transferMaxCount()));
-        return submitOrders(service, spirits, build, orders, level.getGameTime());
+        if (submitOrders(service, spirits, build, orders, level.getGameTime())) {
+            return true;
+        }
+        // Материал стройки ещё у занятого духа (добытчик не сдал брёвна в сундук) — стройка ждёт, а не падает
+        // «не хватило материала 'jungle_log': поставлено 7 из 94, есть 0» (приёмка «джунгли» 24.10). Сундуки
+        // строитель обходит сам — их содержимое считается имеющимся.
+        Map<String, Integer> stored = chest ? chestStock(level, service, home, build.id()) : Map.of();
+        return heldByBusy(materials, builder, orders, stored, spirits, mapper);
     }
 
     private static boolean submitOrders(
@@ -295,17 +366,52 @@ public final class TransferWatch {
         return sources;
     }
 
-    private static Map<String, Integer> warehouse(StockView stock, List<SpiritEntity> spirits, StackMapper mapper) {
-        Map<String, Integer> containers = new HashMap<>(stock.available());
-        for (SpiritEntity spirit : spirits) {
-            for (Stack stack : stacks(spirit.getInventory(), mapper)) {
-                if (stack != null) {
-                    containers.merge(stack.item(), -stack.count(), Integer::sum);
+    // Склад — то, что сейчас лежит в сундуках у дома (досягаемость withdraw), за вычетом открытых передач со склада:
+    // снимок запаса устаревает между пересборками, и одни и те же палки заказывались дважды — передача падала
+    // «в сундуках рядом только 0 из 3 'jungle_planks'» (приёмка «джунгли» 24.10).
+    private static Map<String, Integer> chestStock(
+            ServerLevel level, BoardService service, BlockCoord home, String craftId) {
+        Map<String, Integer> containers = new HashMap<>();
+        StackMapper mapper = new StackMapper();
+        for (BlockCoord pos : SettlementChestStore.get(level).chests().nearest(home, CHEST_PROBES)) {
+            int dx = pos.x() - home.x();
+            int dz = pos.z() - home.z();
+            if (dx * dx + dz * dz > CatalogLimits.CONTAINER_RADIUS_DEFAULT * CatalogLimits.CONTAINER_RADIUS_DEFAULT) {
+                continue;
+            }
+            if (ContainerAccess.open(level, new BlockPos(pos.x(), pos.y(), pos.z()))
+                    instanceof ContainerAccess.Opened opened) {
+                for (Stack stack : stacks(opened.container(), mapper)) {
+                    if (stack != null) {
+                        containers.merge(stack.item(), stack.count(), Integer::sum);
+                    }
                 }
+            }
+        }
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
+                    || cause(craftId).equals(ticket.cause())
+                    || !ticket.modifiers().contains("from=warehouse")
+                    || !active(service, ticket.id())) {
+                continue;
+            }
+            String item = modifier(ticket, "item=");
+            String count = modifier(ticket, "count=");
+            if (item != null && count != null) {
+                containers.merge(item, -Integer.parseInt(count), Integer::sum);
             }
         }
         containers.entrySet().removeIf(entry -> entry.getValue() <= 0);
         return Map.copyOf(containers);
+    }
+
+    private static String modifier(BoardTicket ticket, String prefix) {
+        for (String modifier : ticket.modifiers()) {
+            if (modifier.startsWith(prefix)) {
+                return modifier.substring(prefix.length());
+            }
+        }
+        return null;
     }
 
     private static List<Stack> stacks(Container inventory, StackMapper mapper) {
@@ -319,6 +425,21 @@ public final class TransferWatch {
                                     ItemIds.normalize(stack.item()), stack.variant(), stack.count(), stack.maxStack()));
         }
         return normalized;
+    }
+
+    // Сундук поселения рядом с домом (реестр сундуков, блок на месте проверяется: запись могла устареть).
+    static boolean hasSettlementChest(ServerLevel level, BlockCoord home) {
+        for (BlockCoord pos : SettlementChestStore.get(level).chests().nearest(home, CHEST_PROBES)) {
+            int dx = pos.x() - home.x();
+            int dz = pos.z() - home.z();
+            if (dx * dx + dz * dz > CHEST_RADIUS * CHEST_RADIUS || Math.abs(pos.y() - home.y()) > CHEST_RADIUS) {
+                return false;
+            }
+            if (ContainerAccess.allowed(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasActiveTransfer(BoardService service, String craftId) {

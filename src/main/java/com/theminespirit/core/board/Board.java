@@ -20,8 +20,10 @@ import org.jspecify.annotations.Nullable;
  */
 public final class Board {
     private static final String FIRST_STEPS_PREFIX = "first:";
+    // Каменный шаг, открытый вместе с текущим шагом первых шагов (FirstStepsRunner), — так же одноразовый.
+    private static final String STONE_PART_PREFIX = "stone:";
     private static final List<String> SOURCE_PREFIXES =
-            List.of(FIRST_STEPS_PREFIX, "gather:", "supply:", "mine_level_", "repair_tool:");
+            List.of(FIRST_STEPS_PREFIX, STONE_PART_PREFIX, "gather:", "supply:", "mine_level_", "repair_tool:");
     private static final Comparator<BoardTicket> QUEUE_ORDER = Comparator.<BoardTicket>comparingInt(
                     ticket -> BoardRules.priorityOf(ticket.boardCase()))
             .reversed()
@@ -112,7 +114,9 @@ public final class Board {
         }
         if (tickets.containsKey(ticket.id())) {
             BoardStatus current = statuses.get(ticket.id());
-            if (current == BoardStatus.DONE && ticket.id().startsWith(FIRST_STEPS_PREFIX)) {
+            if (current == BoardStatus.DONE
+                    && (ticket.id().startsWith(FIRST_STEPS_PREFIX)
+                            || ticket.id().startsWith(STONE_PART_PREFIX))) {
                 // Шаг первых шагов одноразовый: DONE — это факт «сделано», а не тень для
                 // переиздания. Иначе пересборка возвращала бы выполненный кейс в очередь.
                 return BoardOutcome.DUPLICATE;

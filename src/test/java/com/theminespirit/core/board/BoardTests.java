@@ -893,6 +893,31 @@ class BoardTests {
     }
 
     @Test
+    void submit_StonePartDone_Duplicate() {
+        Board board = new Board(() -> 0);
+        BoardTicket axe = simpleTicket("stone:craft_stone_axe", BoardCase.CRAFT_STONE_AXE);
+        board.submit(axe);
+        board.claim(axe.id(), SPIRIT_ONE, 0);
+        board.complete(axe.id());
+
+        assertEquals(
+                BoardOutcome.DUPLICATE,
+                board.submit(axe),
+                "Каменный шаг-помощник одноразовый, как «first:»: переподача сделанного крафтила бы топор заново");
+    }
+
+    @Test
+    void resetForNewRules_StonePartWaiting_Removed() {
+        Board board = new Board(() -> 0);
+        BoardTicket axe = simpleTicket("stone:craft_stone_axe", BoardCase.CRAFT_STONE_AXE);
+        board.submit(axe);
+
+        assertTrue(
+                board.resetForNewRules().contains(axe.id()),
+                "Ожидающий каменный шаг — задание источника: при смене сборки сбрасывается (INC-39)");
+    }
+
+    @Test
     void resetForNewRules_BlockedAndSourceWaiting_RemovedDoneKept() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

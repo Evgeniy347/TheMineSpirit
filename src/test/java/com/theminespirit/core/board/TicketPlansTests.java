@@ -755,7 +755,10 @@ class TicketPlansTests {
                 withdraw.params().get("item"),
                 "Со склада берут тот же предмет, которого не хватает крафтеру");
         assertEquals(3, withdraw.params().get("count"), "Со склада берут ровно нехватку");
-        assertEquals("nearest", withdraw.params().get("container"), "Склад ищется ближайшим контейнером к получателю");
+        assertEquals(
+                "auto",
+                withdraw.params().get("container"),
+                "Склад — ближайший сундук, где предмет есть: ближайший вообще часто пуст (два сундука во дворе)");
     }
 
     @Test
