@@ -70,6 +70,12 @@ public final class TacticsService {
     private static final int NEVER = -1_000_000;
     private static final double RETURN_PROGRESS = 0.5;
     private static final int RETURN_STALL_TICKS = 200;
+    // Возврат к якорю без врагов дольше этого — снимается, как застрявший: дух под землёй (шахта, y=64 при якоре
+    // y=71) шёл к якорю, понемногу приближаясь, и 25+ минут числился в бою (INC-40).
+    private static final int RETURN_MAX_TICKS = 600;
+    // После снятого возврата новый не начинается столько тиков: каждая оценка тактики сбрасывала «вернулся», и дух
+    // снова уходил к недостижимому якорю, числясь в бою (INC-40).
+    private static final int RETURN_COOLDOWN_TICKS = 1200;
 
     private final SpiritEntity spirit;
     private final TacticsAdapterSettings settings = TacticsAdapterSettings.loadDefault();
@@ -96,6 +102,8 @@ public final class TacticsService {
     private Optional<RetreatPlan> plan = Optional.empty();
     private RetreatMethod planMethod = RetreatMethod.NONE;
     private Optional<Point> returnTarget = Optional.empty();
+    private int returnTicks;
+    private long returnBlockedUntil;
     private @Nullable Point stallPoint;
     private double stallBest;
     private int stallTicks;
@@ -527,6 +535,8 @@ public final class TacticsService {
                 : entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
+            returnTicks = 0;
+            returnBlockedUntil = 0;
             retreating.reset();
             if (result instanceof ExecutionResult.Shooting && spirit.gear().arrows() > 0) {
                 combat.shoot(target);
@@ -535,7 +545,10 @@ public final class TacticsService {
             }
             return;
         }
-        if (outcome.decision() == TacticalOption.IGNORE && returnTarget.isPresent() && !returned) {
+        if (outcome.decision() == TacticalOption.IGNORE
+                && returnTarget.isPresent()
+                && !returned
+                && spirit.level().getGameTime() >= returnBlockedUntil) {
             active = true;
             returnToAnchor(returnTarget.get());
             return;
@@ -551,12 +564,28 @@ public final class TacticsService {
         if (distance <= RETURN_ARRIVAL) {
             approach.cancel();
             returned = true;
+            returnTicks = 0;
             return;
         }
-        if (stalledReturn(point, distance)) {
-            // Без врагов возврат к якорю, который не приближается, держал бы духа в «бою» вечно (INC-35).
+        returnTicks++;
+        if (stalledReturn(point, distance) || returnTicks > RETURN_MAX_TICKS) {
+            // Без врагов возврат к якорю, который не приближается, держал бы духа в «бою» вечно (INC-35, INC-40).
+            if (returnTicks > RETURN_MAX_TICKS) {
+                LOGGER.warn(
+                        "[incident] дух {} шёл к якорю {} дольше {} тиков (осталось {}, стоит в {}): возврат снят на {}"
+                                + " тиков, дух свободен",
+                        spirit.displayName(),
+                        point,
+                        RETURN_MAX_TICKS,
+                        String.format(Locale.ROOT, "%.1f", distance),
+                        spirit.blockPosition().toShortString(),
+                        RETURN_COOLDOWN_TICKS);
+            }
             approach.cancel();
             returned = true;
+            returnTicks = 0;
+            stallPoint = null;
+            returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;
             return;
         }
         if (!approach.isActive()) {

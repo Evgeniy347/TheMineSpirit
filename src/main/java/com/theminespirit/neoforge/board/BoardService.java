@@ -84,6 +84,9 @@ public final class BoardService {
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
+    // Духи, чьё задание снял сброс при смене сборки: их задача по снятому заданию (восстановлена из сохранения)
+    // ещё идёт и держит духа «внешним занятием» — spirit-5 50+ мин копал dig_area бывшего mine_level_3 (INC-40).
+    private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
@@ -118,7 +121,7 @@ public final class BoardService {
             store.restoreInto(board);
             String build = BuildFingerprint.current();
             if (!build.equals(store.build())) {
-                List<String> reset = board.resetForNewRules();
+                List<String> reset = resetForNewRules();
                 if (!reset.isEmpty()) {
                     LOGGER.warn(
                             "[incident] сборка мода сменилась ({} → {}): сброшено {} заданий старых правил {}, источники "
@@ -197,6 +200,7 @@ public final class BoardService {
         targets.keySet().retainAll(alive);
         issuedGenerations.keySet().retainAll(alive);
         List<SpiritEntity> spirits = census(level);
+        cancelOrphans(spirits);
         settleOwners(spirits);
         refreshStock(level, spirits);
         ensureSupply(spirits, stock, now);
@@ -575,6 +579,47 @@ public final class BoardService {
 
     private static String cycleId(Species species, String suffix) {
         return species.name().toLowerCase(Locale.ROOT) + "_" + suffix;
+    }
+
+    private void cancelOrphans(List<SpiritEntity> spirits) {
+        if (orphans.isEmpty()) {
+            return;
+        }
+        for (SpiritEntity spirit : spirits) {
+            String ticket = orphans.remove(spirit.getUUID());
+            // Занятие (activity:<дух>, внешняя задача) — не задание: оно и есть след снятой задачи.
+            boolean holdsTicket = board.assignedTo(spirit.getUUID()).stream()
+                    .anyMatch(held -> !BoardActivities.isActivity(held.boardCase()));
+            if (ticket == null || spirit.isRemoved() || holdsTicket) {
+                continue;
+            }
+            if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
+                spirit.cancelTask();
+                LOGGER.warn(
+                        "[incident] дух {}: задание {} снято сбросом при смене сборки — его задача {} отменена, дух "
+                                + "свободен для доски",
+                        spirit.displayName(),
+                        ticket,
+                        spirit.currentTaskScript().orElse("-"));
+            }
+        }
+    }
+
+    // Сброс заданий старых правил (смена сборки); держатели снятых заданий запоминаются — их задачи отменит
+    // cancelOrphans при ближайшей пересборке. Публичен для GameTest: сброс без перезапуска сервера.
+    public List<String> resetForNewRules() {
+        Map<String, UUID> holders = new HashMap<>();
+        for (BoardTicket ticket : board.all()) {
+            board.holderOf(ticket.id()).ifPresent(holder -> holders.put(ticket.id(), holder));
+        }
+        List<String> reset = board.resetForNewRules();
+        for (String id : reset) {
+            UUID holder = holders.get(id);
+            if (holder != null) {
+                orphans.put(holder, id);
+            }
+        }
+        return reset;
     }
 
     private void settleOwners(List<SpiritEntity> spirits) {
