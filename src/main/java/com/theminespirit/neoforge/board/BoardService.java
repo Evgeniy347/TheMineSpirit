@@ -26,6 +26,7 @@ import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
@@ -59,9 +60,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -1049,7 +1052,19 @@ public final class BoardService {
         // после закрытия задания духа не держат, иначе доска выдала бы духу одно задание навсегда.
         return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit()
                 && board.availableTo(spirit.getUUID(), ticket.boardCase(), now)
+                && ToolGate.allows(ticket.boardCase(), itemIds(spirit))
                 && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
+    }
+
+    private static List<String> itemIds(SpiritEntity spirit) {
+        List<String> ids = new ArrayList<>();
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (!stack.isEmpty()) {
+                ids.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+            }
+        }
+        return ids;
     }
 
     private static EatNeed eatNeed(SpiritEntity spirit) {
