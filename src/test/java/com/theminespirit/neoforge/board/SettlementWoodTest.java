@@ -35,11 +35,23 @@ class SettlementWoodTest {
     void vote_StockMajority_StockSpecies() {
         assertEquals(
                 "oak",
-                SettlementWood.vote(Map.of("oak_log", 2), Map.of(), "spruce"),
-                "свой запас брёвен без деревьев рядом важнее биома: биом — один голос");
+                SettlementWood.vote(Map.of("oak_log", 20), Map.of(), "spruce"),
+                "свой запас брёвен (от 16) без деревьев рядом важнее биома: биом — один голос");
         assertEquals(
                 "oak",
                 SettlementWood.vote(Map.of("oak_log", 64), Map.of("jungle_log", 20), "jungle"),
                 "большой запас своей породы решает: строить есть из чего");
+    }
+
+    @Test
+    void vote_SmallOakStockNoTreesJungleBiome_Jungle() {
+        assertEquals(
+                "jungle",
+                SettlementWood.vote(Map.of("minecraft:oak_log", 2), Map.of(), "jungle"),
+                "2 дубовых бревна без деревьев рядом (вырублены расчисткой) не перебивают биом jungle (INC-42)");
+        assertEquals(
+                "jungle",
+                SettlementWood.vote(Map.of("oak_log", 15), Map.of(), "jungle"),
+                "запас меньше 16 брёвен не голосует");
     }
 }
