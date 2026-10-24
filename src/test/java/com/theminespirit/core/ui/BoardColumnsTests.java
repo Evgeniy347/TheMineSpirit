@@ -12,24 +12,19 @@ class BoardColumnsTests {
     }
 
     @Test
-    void split_FourGroups_ReturnsColumnsInShowOrderAndKeepsTiles() {
+    void split_ThreeGroups_ReturnsColumnsInShowOrderAndKeepsTiles() {
         List<BoardTile> tiles = List.of(
                 tile("done", BoardTileGroup.DONE),
                 tile("active", BoardTileGroup.ACTIVE),
                 tile("free-1", BoardTileGroup.AVAILABLE),
-                tile("blocked", BoardTileGroup.UNAVAILABLE),
                 tile("free-2", BoardTileGroup.AVAILABLE));
 
         List<BoardColumns.BoardColumn> columns = BoardColumns.split(tiles);
 
         assertEquals(
-                List.of(
-                        BoardTileGroup.DONE,
-                        BoardTileGroup.ACTIVE,
-                        BoardTileGroup.AVAILABLE,
-                        BoardTileGroup.UNAVAILABLE),
+                List.of(BoardTileGroup.DONE, BoardTileGroup.ACTIVE, BoardTileGroup.AVAILABLE),
                 columns.stream().map(BoardColumns.BoardColumn::group).toList(),
-                "Колонки обязаны идти в порядке показа: завершённые, активные, доступные, недоступные");
+                "Колонки обязаны идти в порядке показа: завершённые, активные, доступные");
         assertEquals(
                 List.of("free-1", "free-2"),
                 columns.get(2).tiles().stream().map(BoardTile::id).toList(),
@@ -37,10 +32,10 @@ class BoardColumnsTests {
     }
 
     @Test
-    void split_EmptyBoard_ReturnsFourEmptyColumns() {
+    void split_EmptyBoard_ReturnsThreeEmptyColumns() {
         List<BoardColumns.BoardColumn> columns = BoardColumns.split(List.of());
 
-        assertEquals(4, columns.size(), "Пустая доска всё равно показывает четыре колонки");
+        assertEquals(3, columns.size(), "Пустая доска всё равно показывает три колонки");
         assertEquals(
                 0,
                 columns.stream().mapToInt(column -> column.tiles().size()).sum(),

@@ -30,6 +30,7 @@ public final class BoardActivities {
             BoardCase.ACTIVITY_COMBAT,
             BoardCase.ACTIVITY_CRAFT,
             BoardCase.ACTIVITY_DEFEND,
+            BoardCase.ACTIVITY_ESCAPE,
             BoardCase.ACTIVITY_EXPEDITION,
             BoardCase.ACTIVITY_EXTERNAL,
             BoardCase.ACTIVITY_FARM,
