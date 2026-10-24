@@ -8,16 +8,21 @@ import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CraftParams;
+import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
@@ -25,14 +30,18 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 public final class CraftScript implements ScriptInstance {
     private static final String CRAFTED_KEY = "crafted";
+    private static final int PLACE_REACH = 3;
 
     private enum Phase {
         PREPARE,
         STATION,
-        CRAFT
+        CRAFT,
+        PLACE
     }
 
     private record Step(List<Item> consumed, List<ItemStack> produced, int output, boolean target) {}
@@ -46,6 +55,7 @@ public final class CraftScript implements ScriptInstance {
     private int nextStep;
     private int ticksSinceCraft = CraftTuning.CRAFT_INTERVAL_TICKS;
     private StationAccess station;
+    private StationFinder placedFinder;
 
     public CraftScript(SpiritEntity spirit, CraftParams params) {
         this.spirit = spirit;
@@ -60,7 +70,8 @@ public final class CraftScript implements ScriptInstance {
         return switch (phase) {
             case PREPARE -> prepare();
             case STATION -> useStation();
-            case CRAFT -> craft();
+            case CRAFT -> finish(craft());
+            case PLACE -> place();
         };
     }
 
@@ -91,7 +102,7 @@ public final class CraftScript implements ScriptInstance {
     private ScriptStatus prepare() {
         int remaining = params.count() - crafted;
         if (remaining <= 0) {
-            return ScriptStatus.SUCCEEDED;
+            return finish(ScriptStatus.SUCCEEDED);
         }
         String name = ItemIds.normalize(params.item());
         RecipeKnowledge knowledge = RecipeKnowledge.of(spirit.level());
@@ -113,7 +124,7 @@ public final class CraftScript implements ScriptInstance {
         Optional<StationType> needed = Stations.forRecipe(finalRecipe).flatMap(StationType::byId);
         if (needed.isEmpty()) {
             phase = Phase.CRAFT;
-            return craft();
+            return finish(craft());
         }
         station = new StationAccess(spirit, needed.get(), params.radius());
         phase = Phase.STATION;
@@ -209,7 +220,7 @@ public final class CraftScript implements ScriptInstance {
             case WORKING -> ScriptStatus.RUNNING;
             case READY -> {
                 phase = Phase.CRAFT;
-                yield craft();
+                yield finish(craft());
             }
             case FAILED -> fail(station.failureReason());
         };
@@ -239,6 +250,88 @@ public final class CraftScript implements ScriptInstance {
             crafted += step.output();
         }
         return nextStep >= steps.size() ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
+    }
+
+    // Скрафченная станция с place ставится рядом, если такой поблизости нет (печь первых шагов — у двора станций).
+    private ScriptStatus finish(ScriptStatus status) {
+        if (status != ScriptStatus.SUCCEEDED || !params.place()) {
+            return status;
+        }
+        Optional<StationType> type = StationType.byId(params.item());
+        if (type.isEmpty()) {
+            return placeBlocks();
+        }
+        placedFinder = new StationFinder(spirit.level(), spirit.blockPosition(), params.radius(), type.get());
+        phase = Phase.PLACE;
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus place() {
+        if (!placedFinder.step()) {
+            return ScriptStatus.RUNNING;
+        }
+        if (placedFinder.found().isPresent()) {
+            return ScriptStatus.SUCCEEDED;
+        }
+        StationType type = StationType.byId(params.item()).orElseThrow();
+        if (StationPlacer.place(spirit, type).isEmpty()) {
+            return fail("негде поставить " + type.noun() + ": вокруг духа нет свободной клетки на твёрдом полу");
+        }
+        return ScriptStatus.SUCCEEDED;
+    }
+
+    // Не станция (сундуки склада первых шагов): скрафченное ставится рядом с духом, не вплотную к другому сундуку.
+    // Сундуки оставались в инвентаре крафтера — на участке их не было, и сдача добытого не находила склад
+    // (приёмка «джунгли» 24.10: «сундуки []»).
+    private ScriptStatus placeBlocks() {
+        Optional<Item> item = ItemIds.item(ItemIds.normalize(params.item()));
+        if (item.isEmpty() || !(item.get() instanceof BlockItem blockItem)) {
+            return fail("place: '" + params.item() + "' не блок — ставить нечего");
+        }
+        int left = Math.min(crafted, spirit.getInventory().countItem(blockItem));
+        BlockPlacer placer = new BlockPlacer(spirit);
+        BlockState state = blockItem.getBlock().defaultBlockState();
+        String id = "minecraft:" + ItemIds.normalize(params.item());
+        BlockPos origin = spirit.blockPosition();
+        List<BlockPos> cells = new ArrayList<>();
+        for (int dx = -PLACE_REACH; dx <= PLACE_REACH; dx++) {
+            for (int dz = -PLACE_REACH; dz <= PLACE_REACH; dz++) {
+                if (dx != 0 || dz != 0) {
+                    cells.add(origin.offset(dx, 0, dz));
+                }
+            }
+        }
+        cells.sort(Comparator.comparingDouble((BlockPos cell) -> cell.distSqr(origin))
+                .thenComparing(Comparator.naturalOrder()));
+        Level level = spirit.level();
+        for (BlockPos cell : cells) {
+            if (left <= 0) {
+                break;
+            }
+            if (freeCell(level, cell, state) && placer.begin(cell, state, id) instanceof BlockPlacer.Started) {
+                left--;
+            }
+        }
+        if (left > 0) {
+            return fail("негде поставить '" + params.item() + "': осталось " + left
+                    + ", вокруг духа нет свободной клетки на твёрдом полу");
+        }
+        return ScriptStatus.SUCCEEDED;
+    }
+
+    private static boolean freeCell(Level level, BlockPos cell, BlockState state) {
+        BlockPos floor = cell.below();
+        if (!level.getBlockState(cell).isAir()
+                || !level.getBlockState(cell.above()).isAir()
+                || !level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)) {
+            return false;
+        }
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            if (level.getBlockState(cell.relative(side)).is(state.getBlock())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static String shortage(CraftPlan plan) {

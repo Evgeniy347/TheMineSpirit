@@ -4,6 +4,7 @@ import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -115,13 +116,23 @@ public final class TicketPlans {
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
-            case STOCK_CHESTS -> craftInYard("minecraft:chest", 2, target);
+            // Сундуки склада ставятся во дворе сразу (place): в инвентаре крафтера склада не было (приёмка «джунгли»).
+            case STOCK_CHESTS -> placeInYard("minecraft:chest", 2, target);
             case CRAFTING_STATION -> craftInYard("minecraft:crafting_table", 1, target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
-            case CRAFT_FURNACE -> craftInYard("minecraft:furnace", 1, target);
-            case CRAFT_TORCHES -> craft("minecraft:torch", torchCount(target), target);
+            // Печь ставится во дворе станций сразу: в инвентаре крафтера её не находила плавка других духов, а сам
+            // крафтер ставил её там, где плавил (24.10: «нужна печь: рядом (16) нет», факелы ограды ждали печь).
+            case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
+            // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
+            // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
+            case CRAFT_TORCHES ->
+                sequence(
+                        craft("minecraft:torch", torchCount(target), target),
+                        store(target, "minecraft:torch"),
+                        store(target, "minecraft:charcoal"),
+                        store(target, "minecraft:coal"));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -344,6 +355,15 @@ public final class TicketPlans {
 
     // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
     // габарита дома, иначе стройка дома упиралась в верстак у якоря (решение 54b п.2).
+    // Скрафтить во дворе станций и сразу поставить там (place): печь и сундуки склада первых шагов.
+    private static TaskNode placeInYard(String item, int count, TicketTarget target) {
+        return sequence(
+                gotoPoint(SettlementLayout.workYard(target.target())),
+                new ScriptCall(
+                        "craft",
+                        Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT, "place", true)));
+    }
+
     private static TaskNode craftInYard(String item, int count, TicketTarget target) {
         return sequence(
                 gotoPoint(SettlementLayout.workYard(target.target())),
@@ -386,7 +406,27 @@ public final class TicketPlans {
                 new ScriptCall("acquire", Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
                 new ScriptCall(
                         "smelt",
-                        Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+                        Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)),
+                store(target, "minecraft:charcoal"));
+    }
+
+    // Сдать всё названное в ближайший сундук у места задания; сундука нет или сдавать нечего — шаг не валит план.
+    private static TaskNode store(TicketTarget target, String item) {
+        return sequence(
+                gotoTarget(target),
+                new FallbackNode(List.of(
+                        new ScriptCall(
+                                "deposit",
+                                Map.of(
+                                        CONTAINER,
+                                        NEAREST,
+                                        ITEM,
+                                        item,
+                                        COUNT,
+                                        CatalogLimits.COUNT_MAX,
+                                        RADIUS,
+                                        SUPPLY_CONTAINER_RADIUS)),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
     }
 
     private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
@@ -449,7 +489,23 @@ public final class TicketPlans {
         return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
     }
 
+    // Добытое — в сундук поселения рядом с домом (решение главного агента 24.10): крафт и стройка берут из сундука,
+    // а не ждут передачу от занятого духа-«копилки». Сундука нет — добытое остаётся у духа (передачи дух→дух).
     private static TaskNode gatherMaterials(TicketTarget target) {
+        String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
+        int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
+        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
+        return sequence(
+                gatherOnly(target),
+                gotoTarget(target),
+                new FallbackNode(List.of(
+                        new ScriptCall(
+                                "deposit",
+                                Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)),
+                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+    }
+
+    private static TaskNode gatherOnly(TicketTarget target) {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
@@ -475,7 +531,8 @@ public final class TicketPlans {
                     new ScriptCall(
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
-        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)));
+        // fresh: добыть ещё, а не взять из сундука, куда добыча же сдаёт (запас не рос).
+        return sequence(gotoTarget(target), new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch, "fresh", true)));
     }
 
     // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
@@ -724,17 +781,21 @@ public final class TicketPlans {
             return new ScriptCall(
                     "deliver", Map.of(ITEM, target.supplyItem(), COUNT, count, "to", "spirit:" + target.transferTo()));
         }
-        return new ScriptCall(
-                "withdraw",
-                Map.of(
-                        CONTAINER,
-                        NEAREST,
-                        ITEM,
-                        target.supplyItem(),
-                        COUNT,
-                        count,
-                        RADIUS,
-                        CatalogLimits.CONTAINER_RADIUS_DEFAULT));
+        // Со склада: сначала к месту задания (сундуки у дома), затем withdraw рядом — получатель брал «ближайший»
+        // вокруг себя и падал «рядом нет допустимого контейнера» (приёмка «джунгли» 24.10).
+        return sequence(
+                gotoTarget(target),
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                target.supplyItem(),
+                                COUNT,
+                                count,
+                                RADIUS,
+                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
     }
 
     private static TaskNode restockFood(TicketTarget target) {

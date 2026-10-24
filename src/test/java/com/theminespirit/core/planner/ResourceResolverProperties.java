@@ -189,7 +189,8 @@ class ResourceResolverProperties {
 
     private static TaskNode expectedFinalStep(String item, int count, ResourceKnowledge knowledge) {
         if (knowledge.isCraftable(item)) {
-            return new ScriptCall("craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS));
+            return new ScriptCall(
+                    "craft", Map.of("item", item, "count", count, "radius", STATION_RADIUS, "place", false));
         }
         if (knowledge.isSmeltable(item)) {
             return new ScriptCall("smelt", Map.of("item", item, "count", count, "radius", STATION_RADIUS));

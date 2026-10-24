@@ -17,15 +17,18 @@ import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -109,6 +112,53 @@ public final class CraftGameTests {
             helper.assertTrue(
                     tablesOnField(helper) == 1,
                     "дух обязан поставить ровно один верстак из инвентаря, на поле их " + tablesOnField(helper));
+            cleanup(helper, spirit);
+        });
+    }
+
+    // Печь первых шагов ставится сразу после крафта (place): в инвентаре крафтера её не видела плавка других духов
+    // (приёмка «джунгли» 24.10: «нужна печь: рядом (16) нет, в инвентаре нет»).
+    @GameTest(template = FIELD, batch = "craft_furnace_place", timeoutTicks = TIMEOUT)
+    public static void craft_FurnaceWithPlace_FurnaceStandsOnField(GameTestHelper helper) {
+        field(helper);
+        SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.COBBLESTONE, 8));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "craft",
+                        Map.of("item", "furnace", "count", 1, "radius", CraftTestSupport.RADIUS, "place", true)),
+                1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.FURNACE, 0, "печь в инвентаре после крафта с place");
+            helper.assertTrue(
+                    blocksOnField(helper, Blocks.FURNACE) == 1,
+                    "дух обязан поставить скрафченную печь, на поле печей " + blocksOnField(helper, Blocks.FURNACE));
+            cleanup(helper, spirit);
+        });
+    }
+
+    // Сундуки склада первых шагов ставятся сразу после крафта (place), не вплотную друг к другу: в инвентаре крафтера
+    // склада не было, сдача добытого не находила сундук (приёмка «джунгли» 24.10: «сундуки []»).
+    @GameTest(template = FIELD, batch = "craft_chest_place", timeoutTicks = TIMEOUT)
+    public static void craft_ChestsWithPlace_TwoSingleChestsOnField(GameTestHelper helper) {
+        field(helper);
+        SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 16));
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "craft", Map.of("item", "chest", "count", 2, "radius", CraftTestSupport.RADIUS, "place", true)),
+                1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.CHEST, 0, "сундуки в инвентаре после крафта с place");
+            helper.assertTrue(
+                    blocksOnField(helper, Blocks.CHEST) == 2,
+                    "дух обязан поставить оба скрафченных сундука, на поле " + blocksOnField(helper, Blocks.CHEST));
             cleanup(helper, spirit);
         });
     }
@@ -317,10 +367,14 @@ public final class CraftGameTests {
     }
 
     private static int tablesOnField(GameTestHelper helper) {
+        return blocksOnField(helper, Blocks.CRAFTING_TABLE);
+    }
+
+    private static int blocksOnField(GameTestHelper helper, Block block) {
         int tables = 0;
         for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
             for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
-                if (helper.getBlockState(new BlockPos(x, 1, z)).is(Blocks.CRAFTING_TABLE)) {
+                if (helper.getBlockState(new BlockPos(x, 1, z)).is(block)) {
                     tables++;
                 }
             }

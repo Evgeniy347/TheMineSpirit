@@ -11,38 +11,46 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Порода дерева поселения: по запасу брёвен, а пока брёвен нет — по деревьям вокруг дома (одна выборка на место).
+ * Порода дерева поселения: голосование брёвен запаса, деревьев вокруг дома (одна выборка на место) и биома.
  * Нужна первым шагам (схемы и материалы) и выбору варианта рецепта (доски для палок и сундуков), иначе в джунглях
  * брались дубовые доски, которых не добыть (INC-36, приёмка «джунгли»).
  */
 public final class SettlementWood {
     private static final int SCAN_RADIUS = 24;
     private static final int SCAN_HEIGHT = 8;
-    private static final Map<BlockCoord, String> NEARBY = new ConcurrentHashMap<>();
+    // Вес биома в голосовании пород — один голос: решает, когда нет ни брёвен в запасе, ни деревьев рядом. Больший
+    // вес перебивал запас брёвен в тесте вдали от дуба (biome тайга, сцена — дубы, выборка через 2 их не видела).
+    private static final int BIOME_WEIGHT = 1;
+    private static final Map<BlockCoord, Map<String, Integer>> NEARBY = new ConcurrentHashMap<>();
 
     private SettlementWood() {}
 
     public static String of(ServerLevel level, BlockCoord home, Map<String, Integer> stock) {
         Objects.requireNonNull(level, "Порода без уровня не определяется: деревья стоят в мире");
         Objects.requireNonNull(home, "Порода без места не определяется: деревья ищутся вокруг дома");
-        if (WoodSpecies.hasLogs(stock)) {
-            return WoodSpecies.of(stock);
+        Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
+        Map<String, Integer> nearby = NEARBY.get(home);
+        if (nearby == null) {
+            nearby = nearby(level, home);
+            if (WoodSpecies.hasLogs(nearby)) {
+                // Без брёвен рядом выборка не запоминается: деревья могут прогрузиться позже.
+                NEARBY.put(home, Map.copyOf(nearby));
+            }
         }
-        String cached = NEARBY.get(home);
-        if (cached != null) {
-            return cached;
-        }
-        Map<String, Integer> logs = nearby(level, home);
-        if (!WoodSpecies.hasLogs(logs)) {
-            // Без брёвен рядом порода — по биому дома и не запоминается: деревья могут прогрузиться позже.
-            return WoodSpecies.ofBiome(level.getBiome(new BlockPos(home.x(), home.y(), home.z()))
-                    .unwrapKey()
-                    .map(key -> key.location().toString())
-                    .orElse(WoodSpecies.OAK));
-        }
-        String species = WoodSpecies.of(logs);
-        NEARBY.put(home, species);
-        return species;
+        String biome = WoodSpecies.ofBiome(level.getBiome(new BlockPos(home.x(), home.y(), home.z()))
+                .unwrapKey()
+                .map(key -> key.location().toString())
+                .orElse(WoodSpecies.OAK));
+        return vote(stock, nearby, biome);
+    }
+
+    // Порода — по большинству брёвен в запасе и вокруг дома плюс вес биома (INC-39): раньше любой запас брёвен
+    // решал один, и пара дубовых брёвен в джунглях ставила gather:oak_fence.
+    static String vote(Map<String, Integer> stock, Map<String, Integer> nearby, String biome) {
+        Map<String, Integer> votes = new HashMap<>(nearby);
+        stock.forEach((item, count) -> votes.merge(item, count, Integer::sum));
+        votes.merge(biome + "_log", BIOME_WEIGHT, Integer::sum);
+        return WoodSpecies.of(votes);
     }
 
     private static Map<String, Integer> nearby(ServerLevel level, BlockCoord home) {

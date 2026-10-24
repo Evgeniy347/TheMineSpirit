@@ -20,7 +20,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class Board {
     private static final String FIRST_STEPS_PREFIX = "first:";
-    private static final List<String> SOURCE_PREFIXES = List.of(FIRST_STEPS_PREFIX, "gather:", "supply:");
+    private static final List<String> SOURCE_PREFIXES =
+            List.of(FIRST_STEPS_PREFIX, "gather:", "supply:", "mine_level_", "repair_tool:");
     private static final Comparator<BoardTicket> QUEUE_ORDER = Comparator.<BoardTicket>comparingInt(
                     ticket -> BoardRules.priorityOf(ticket.boardCase()))
             .reversed()
@@ -384,13 +385,16 @@ public final class Board {
 
     public List<String> resetForNewRules() {
         // Новая сборка мода — новые правила: задания, заблокированные или поставленные источниками по старым
-        // правилам (gather:oak_* в джунглях), сбрасываются, источники ставят их заново; сделанное и выданное
-        // остаётся, паузы и счётчики провалов обнуляются.
+        // правилам (gather:oak_* в джунглях), сбрасываются, источники ставят их заново; сделанное остаётся,
+        // паузы и счётчики провалов обнуляются. Выданные задания источников тоже сбрасываются (INC-39): после
+        // выкладки gather:oak_fence в джунглях жил ASSIGNED дальше; задания игрока и занятия не трогаются.
         List<String> removed = new ArrayList<>();
         for (BoardTicket ticket : List.copyOf(tickets.values())) {
             BoardStatus status = statuses.get(ticket.id());
             boolean sourceMade = SOURCE_PREFIXES.stream().anyMatch(ticket.id()::startsWith);
-            boolean waiting = status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES;
+            boolean waiting = status == BoardStatus.PENDING
+                    || status == BoardStatus.WAITING_RESOURCES
+                    || status == BoardStatus.ASSIGNED;
             if (status == BoardStatus.BLOCKED || status == BoardStatus.FAILED || (sourceMade && waiting)) {
                 tickets.remove(ticket.id());
                 statuses.remove(ticket.id());

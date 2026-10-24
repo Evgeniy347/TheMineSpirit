@@ -22,6 +22,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -105,6 +107,7 @@ public final class JungleSettlementGameTests {
                                     .map(spirit -> spirit.displayName() + "="
                                             + spirit.currentTaskScript().orElse("-"))
                                     .toList()
+                            + "; сундуки " + chests(helper)
                             + "; доска "
                             + board.board().all().stream()
                                     .map(ticket -> ticket.id() + "="
@@ -117,6 +120,25 @@ public final class JungleSettlementGameTests {
             }
             GameTestFixtures.finish(helper);
         });
+    }
+
+    // Сундуки участка и их содержимое: добытое сдаётся в сундук поселения — красный прогон показывает, дошло ли.
+    private static List<String> chests(GameTestHelper helper) {
+        List<String> found = new ArrayList<>();
+        for (BlockPos pos : BlockPos.betweenClosed(HOME.offset(-16, -3, -16), HOME.offset(16, 3, 16))) {
+            if (helper.getBlockState(pos).is(Blocks.CHEST)
+                    && helper.getBlockEntity(pos) instanceof Container container) {
+                Map<String, Integer> items = new HashMap<>();
+                for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                    ItemStack stack = container.getItem(slot);
+                    if (!stack.isEmpty()) {
+                        items.merge(stack.getItem().toString(), stack.getCount(), Integer::sum);
+                    }
+                }
+                found.add(pos.toShortString() + items);
+            }
+        }
+        return found;
     }
 
     private static List<BoardCase> stageOne() {

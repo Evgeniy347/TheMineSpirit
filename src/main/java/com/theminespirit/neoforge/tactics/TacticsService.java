@@ -99,6 +99,8 @@ public final class TacticsService {
     private @Nullable Point stallPoint;
     private double stallBest;
     private int stallTicks;
+    // Последний итог подхода к якорю — в строку инцидента (INC-38: почему дух не дошёл, а не только сколько осталось).
+    private String lastReturnState = "-";
     private CombatDirective directive;
     private final DirectiveOwnership ownership = new DirectiveOwnership();
     private Optional<StoredTactics> preDirective = Optional.empty();
@@ -560,7 +562,10 @@ public final class TacticsService {
         if (!approach.isActive()) {
             approach.begin(target, RETURN_ARRIVAL);
         }
-        approach.tick();
+        Approach.State state = approach.tick();
+        if (state != Approach.State.MOVING) {
+            lastReturnState = state + (approach.refusal() == null ? "" : ": " + approach.refusal());
+        }
     }
 
     private boolean stalledReturn(Point point, double distance) {
@@ -578,11 +583,15 @@ public final class TacticsService {
         stallTicks++;
         if (stallTicks == RETURN_STALL_TICKS) {
             LOGGER.warn(
-                    "[incident] дух {} не дошёл до якоря {} за {} тиков (осталось {}): возврат снят, дух свободен",
+                    "[incident] дух {} не дошёл до якоря {} за {} тиков (осталось {}, стоит в {}, подход {}): возврат "
+                            + "снят, дух свободен",
                     spirit.displayName(),
                     point,
                     RETURN_STALL_TICKS,
-                    String.format(Locale.ROOT, "%.1f", distance));
+                    String.format(Locale.ROOT, "%.1f", distance),
+                    spirit.blockPosition().toShortString(),
+                    lastReturnState);
+            lastReturnState = "-";
         }
         return stallTicks >= RETURN_STALL_TICKS;
     }

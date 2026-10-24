@@ -194,7 +194,14 @@ public final class TransferWatch {
                             List.of(),
                             Map.of(),
                             modifiers),
-                    TicketTarget.at(at(recipient.orElseThrow()))
+                    // Со склада — к дому получателя (сундуки поселения у дома), от духа — к получателю.
+                    TicketTarget.at(
+                                    order.from().isPresent()
+                                            ? at(recipient.orElseThrow())
+                                            : recipient
+                                                    .orElseThrow()
+                                                    .home()
+                                                    .orElseGet(() -> at(recipient.orElseThrow())))
                             .withTransfer(order.from().orElse(null), order.to(), order.item(), order.count()));
             // Проваленная передача остаётся FAILED, повторная подача — DUPLICATE: крафт «ждал передачу» без
             // открытой передачи до конца приёмки (gather:jungle_fence после «stick: нужно 16, в инвентаре 15»).

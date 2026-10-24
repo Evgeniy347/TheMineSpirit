@@ -42,6 +42,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
@@ -63,6 +64,13 @@ public final class FirstStepsRunner {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
+    private static final String GATHER_PART_SUFFIX = ":2";
+    private static final List<BoardCase> STONE_STEPS = List.of(
+            BoardCase.CRAFT_STONE_PICKAXE,
+            BoardCase.CRAFT_STONE_AXE,
+            BoardCase.CRAFT_STONE_SHOVEL,
+            BoardCase.CRAFT_STONE_SWORD,
+            BoardCase.CRAFT_FURNACE);
     private static final String FIRST_PREFIX = "first:";
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String COBBLESTONE = "cobblestone";
@@ -120,7 +128,11 @@ public final class FirstStepsRunner {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
             for (Map.Entry<String, Integer> entry : missing.entrySet()) {
                 if (gatherable(entry.getKey(), facts)) {
-                    postGather(service, source, home, entry.getKey(), entry.getValue(), now);
+                    int shortage = entry.getValue();
+                    if (COBBLESTONE.equals(entry.getKey())) {
+                        shortage = Math.max(shortage, stoneAhead(source, facts, anchor, wood, stock));
+                    }
+                    postGather(service, source, home, entry.getKey(), shortage, helpers(entry.getKey(), spirits), now);
                 }
             }
             return;
@@ -225,7 +237,7 @@ public final class FirstStepsRunner {
         raw.forEach((item, count) -> rawNeed.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         ResourceGate.missing(new StockNeed(rawNeed), stock).forEach((item, count) -> {
             if (gatherable(item, facts)) {
-                postGather(service, source, home, item, count, now);
+                postGather(service, source, home, item, count, 1, now);
             }
         });
     }
@@ -258,16 +270,68 @@ public final class FirstStepsRunner {
         return ToolSet.isTool(caseValue) ? target.withToolCount(1) : target;
     }
 
+    // Булыжник на все оставшиеся каменные шаги разом: добыча по 3 на каждый инструмент шла цепочкой «добыл → скрафтил
+    // → добыл», двое духов простаивали (приёмка «джунгли» 24.10, тики 2099–4619). Добытое лежит в сундуке склада, и
+    // фоновая плавка его на печь не тратит (считает только инвентари).
+    private static int stoneAhead(
+            MaterialSource source, SettlementFacts facts, BlockCoord anchor, String wood, StockView stock) {
+        int need = 0;
+        for (BoardCase step : STONE_STEPS) {
+            if (!facts.done().contains(step)) {
+                need += materials(source, step, targetFor(step, anchor, wood)).getOrDefault(COBBLESTONE, 0);
+            }
+        }
+        return Math.max(0, need - stock.available().getOrDefault(COBBLESTONE, 0));
+    }
+
+    // Сколько духов могут добывать: булыжник и уголь — только с киркой (вторая доля без кирки падала «нужен
+    // инструмент (кирка) для stone», 24.10), остальное — любой.
+    private static int helpers(String item, List<SpiritEntity> spirits) {
+        if (!COBBLESTONE.equals(item) && !TorchRules.COAL.equals(item)) {
+            return spirits.size();
+        }
+        int miners = 0;
+        for (SpiritEntity spirit : spirits) {
+            var inventory = spirit.getInventory();
+            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+                if (inventory.getItem(slot).getItem() instanceof PickaxeItem) {
+                    miners++;
+                    break;
+                }
+            }
+        }
+        return miners;
+    }
+
     private static void postGather(
-            BoardService service, MaterialSource source, BlockCoord home, String item, int shortage, long now) {
+            BoardService service,
+            MaterialSource source,
+            BlockCoord home,
+            String item,
+            int shortage,
+            int helpers,
+            long now) {
         String id = GATHER_PREFIX + item;
-        BoardStatus status = service.board().statusOf(id).orElse(null);
-        if (status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED) {
+        if (active(service, id) || active(service, id + GATHER_PART_SUFFIX)) {
             return;
         }
         int batch = GatherBatch.round(shortage, source.outputCount(item));
+        // Большая добыча — на двух духов: один дух копал всё, остальные стояли.
+        List<Integer> portions = GatherBatch.split(batch, source.outputCount(item), helpers);
+        for (int part = 0; part < portions.size(); part++) {
+            submitGather(service, home, part == 0 ? id : id + GATHER_PART_SUFFIX, item, portions.get(part), now);
+        }
+    }
+
+    private static boolean active(BoardService service, String id) {
+        BoardStatus status = service.board().statusOf(id).orElse(null);
+        return status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED;
+    }
+
+    private static void submitGather(
+            BoardService service, BlockCoord home, String id, String item, int batch, long now) {
         LOGGER.info("Поставлено: добыть {} ×{} (кейс первых шагов ждёт)", item, batch);
         service.submit(
                 new BoardTicket(

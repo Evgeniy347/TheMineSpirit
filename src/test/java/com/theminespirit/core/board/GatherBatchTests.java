@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
@@ -44,5 +45,23 @@ class GatherBatchTests {
 
         assertEquals(0, batch % output, "Партия кратна выходу рецепта: " + batch + " не делится на " + output);
         assertTrue(batch >= shortage, "Партия не меньше недостачи: " + batch + " < " + shortage);
+    }
+
+    @Test
+    void split_LargeBatchTwoHelpers_TwoWholeCraftPortions() {
+        assertEquals(
+                List.of(36, 36),
+                GatherBatch.split(72, 3, 3),
+                "забор ×72 — на двух духов целыми крафтами по 3: один дух добывал всё (24.10)");
+        assertEquals(List.of(9, 8), GatherBatch.split(17, 1, 2), "булыжник 17 — две доли");
+    }
+
+    @Test
+    void split_SmallOrOneHelper_OnePortion() {
+        assertEquals(
+                List.of(17),
+                GatherBatch.split(17, 1, 1),
+                "кирка у одного духа — одна доля: вторая падала «нужен инструмент (кирка)» (24.10)");
+        assertEquals(List.of(3), GatherBatch.split(3, 1, 3), "мелкая добыча не делится");
     }
 }
