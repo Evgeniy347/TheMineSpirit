@@ -81,6 +81,7 @@ public final class FirstStepsRunner {
     private static final String CLEAR_PART_PREFIX = "clear:";
     // Каменный шаг, открытый вместе с текущим, — помощник шага (как четверти расчистки): «first:» всегда один.
     private static final String STONE_PART_PREFIX = "stone:";
+    private static final String FENCE_PART_PREFIX = "fence:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
     private static final int FEET_SCAN_DEPTH = 48;
@@ -154,15 +155,32 @@ public final class FirstStepsRunner {
             }
             return;
         }
-        String id = FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
-        // Расчистка — четвертями на разных духов: одним духом она шла ~4000 тиков, двое простаивали (приёмка
-        // «джунгли» 24.10). Выравнивание и бронь — в первой четверти; остальные — помощники шага, как добыча.
-        int parts = caseValue == BoardCase.CLEAR_GROUNDS ? TicketPlans.CLEAR_QUARTERS : 1;
+        openStep(level, service, new OpenStep(caseValue, target, need, wood), source, now);
+    }
+
+    private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
+
+    private static void openStep(
+            ServerLevel level, BoardService service, OpenStep step, MaterialSource source, long now) {
+        BoardCase caseValue = step.caseValue();
+        TicketTarget target = step.target();
+        Map<String, Integer> need = step.need();
+        String wood = step.wood();
+        // Расчистка — четвертями, ограда — кусками периметра на разных духов: одним духом расчистка шла ~4000 тиков,
+        // ограда ~2900, двое простаивали (приёмка «джунгли» 24.10). Первая часть — first:, остальные — помощники.
+        int parts = partsOf(caseValue);
         BoardOutcome outcome = BoardOutcome.ACCEPTED;
         for (int part = 1; part <= parts; part++) {
+            TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
+            Map<String, Integer> reserve = part == 1 ? need : Map.of();
+            if (caseValue == BoardCase.BUILD_FENCE) {
+                // Ограда — кусками периметра (решение главного агента 24.10): у куска своя бронь — материалы его
+                // клеток без поставленного, строители не делят один материал (проба fence:2 давала «141 из 94»).
+                reserve = partNeed(level, source, partTarget, wood);
+            }
             BoardOutcome submitted = service.submit(
                     new BoardTicket(
-                            part == 1 ? id : CLEAR_PART_PREFIX + part,
+                            partId(caseValue, part),
                             caseValue,
                             Optional.empty(),
                             BoardRules.priorityOf(caseValue),
@@ -171,8 +189,8 @@ public final class FirstStepsRunner {
                             BoardTicket.ALWAYS_CAUSE,
                             List.of(),
                             // Материалы шага — бронь доски: фоновые занятия их не трогают (BoardReserve).
-                            part == 1 ? Map.copyOf(need) : Map.of()),
-                    parts == 1 ? target : target.withCount(part));
+                            Map.copyOf(reserve)),
+                    partTarget);
             if (part == 1) {
                 outcome = submitted;
             }
@@ -197,6 +215,30 @@ public final class FirstStepsRunner {
                 LOGGER.info("[wood] снята добыча {}: порода поселения {}", ticket.id(), wood);
             }
         }
+    }
+
+    private static int partsOf(BoardCase caseValue) {
+        return switch (caseValue) {
+            case CLEAR_GROUNDS -> TicketPlans.CLEAR_QUARTERS;
+            case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
+            default -> 1;
+        };
+    }
+
+    private static String partId(BoardCase caseValue, int part) {
+        if (part == 1) {
+            return FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
+        }
+        return (caseValue == BoardCase.BUILD_FENCE ? FENCE_PART_PREFIX : CLEAR_PART_PREFIX) + part;
+    }
+
+    private static Map<String, Integer> partNeed(
+            ServerLevel level, MaterialSource source, TicketTarget target, String wood) {
+        Map<String, Integer> need = new HashMap<>();
+        materials(source, BoardCase.BUILD_FENCE, target)
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        minusPlaced(level, TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target), wood, need);
+        return need;
     }
 
     // Каменные шаги после текущего — сразу, если булыжника в запасе хватает на все вместе: по одному шагу за раз
@@ -611,12 +653,28 @@ public final class FirstStepsRunner {
             String id = FIRST_PREFIX + step.name().toLowerCase(Locale.ROOT);
             boolean match = blocked
                     ? service.board().statusOf(id).orElse(null) == BoardStatus.BLOCKED
-                    : service.board().ledger().has(step, 1);
+                    : service.board().ledger().has(step, 1) && partsDone(service, step);
             if (match) {
                 steps.add(step);
             }
         }
         return steps;
+    }
+
+    // Шаг кусками (ограда) сделан, когда сделаны все куски: отметку в журнале ставит первый сделанный кусок.
+    // Мир до кусков (first:build_fence DONE, кусков на доске нет) — ограда целиком, она сделана.
+    private static boolean partsDone(BoardService service, BoardCase step) {
+        if (step != BoardCase.BUILD_FENCE) {
+            return true;
+        }
+        boolean anyPart = false;
+        boolean allDone = true;
+        for (int part = 1; part <= TicketPlans.FENCE_PARTS; part++) {
+            Optional<BoardStatus> status = service.board().statusOf(partId(step, part));
+            anyPart |= part > 1 && status.isPresent();
+            allDone &= status.orElse(null) == BoardStatus.DONE;
+        }
+        return allDone || (!anyPart && service.board().statusOf(partId(step, 1)).orElse(null) == BoardStatus.DONE);
     }
 
     private static Set<String> toolStock(StockView stock) {

@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.SchematicPart;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.OreKind;
@@ -30,6 +31,8 @@ public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     public static final int CLEAR_QUARTERS = 4;
+    // Ограда кусками периметра на разных духов: одним духом она шла ~2900 тиков, двое простаивали (приёмка «джунгли»).
+    public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
@@ -357,9 +360,12 @@ public final class TicketPlans {
     }
 
     // Ограда — по периметру участка вокруг дома (SettlementLayout): точка задания — якорь участка.
+    // count задания — номер куска периметра (1..FENCE_PARTS) для отдельного духа; 0 — вся ограда одним заданием.
     private static TaskNode buildFence(TicketTarget target) {
-        return sequence(
-                gotoTarget(target), schematic(FENCE_SCHEME, SettlementLayout.fenceOrigin(target.target()), target));
+        int part = target.count();
+        String scheme =
+                part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(FENCE_SCHEME, part, FENCE_PARTS) : FENCE_SCHEME;
+        return sequence(gotoTarget(target), schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
     }
 
     // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
