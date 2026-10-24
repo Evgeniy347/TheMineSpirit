@@ -87,6 +87,7 @@ public final class BoardService {
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
     private final Map<UUID, Long> digOutAfter = new HashMap<>();
+    private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
     // Духи, чьё задание снял сброс при смене сборки: их задача по снятому заданию (восстановлена из сохранения)
     // ещё идёт и держит духа «внешним занятием» — spirit-5 50+ мин копал dig_area бывшего mine_level_3 (INC-40).
@@ -504,24 +505,41 @@ public final class BoardService {
     // Замурованный дух (воздуха к поверхности нет) сам копает лестницу вверх к дому: всю ночь стоял в каменном
     // кармане, а доска показывала «Бой» (INC-45, живой 24.10). Задание доски у такого духа всё равно бы «застряло».
     private void digOut(ServerLevel level, List<SpiritEntity> spirits) {
+        long now = level.getGameTime();
         for (SpiritEntity spirit : spirits) {
+            BlockPos feet = spirit.blockPosition();
+            if (spirit.isRemoved() || DigOutScript.open(level, feet)) {
+                continue;
+            }
             boolean digging = DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
                     && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
-            long now = level.getGameTime();
-            if (spirit.isRemoved()
-                    || spirit.home().isEmpty()
-                    || digging
-                    || now < digOutAfter.getOrDefault(spirit.getUUID(), 0L)
-                    || !DigOutScript.sealed(level, spirit.blockPosition())) {
+            boolean paused = now < digOutAfter.getOrDefault(spirit.getUUID(), 0L);
+            boolean sealed = !digging && !paused && DigOutScript.sealed(level, feet);
+            // Без своего дома — к дому поселения: живой карман INC-59 не дал ни одной строки dig_out, причину
+            // триггера теперь видно в логе.
+            BlockCoord home = spirit.home().orElseGet(() -> homeOf(spirits));
+            if (now >= digOutChecked.getOrDefault(spirit.getUUID(), 0L)) {
+                digOutChecked.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
+                LOGGER.info(
+                        "[dig_out] проверка: дух {} в {} без неба над головой — замурован {}, уже копает {}, пауза {}, задача {}"
+                                + ", дом {}",
+                        spirit.displayName(),
+                        feet.toShortString(),
+                        sealed,
+                        digging,
+                        paused,
+                        spirit.currentTaskScript().orElse("-"),
+                        spirit.home().isPresent() ? home : "нет (дом поселения " + home + ")");
+            }
+            if (!sealed) {
                 continue;
             }
             // Сорвавшийся выход не перезапускается каждую пересборку: пауза, чтобы доска успела выдать другое.
             digOutAfter.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
-            BlockCoord home = spirit.home().orElseThrow();
             LOGGER.warn(
                     "[incident] дух {} замурован в {}: воздуха к поверхности нет — копает лестницу вверх к дому {}",
                     spirit.displayName(),
-                    spirit.blockPosition().toShortString(),
+                    feet.toShortString(),
                     home);
             board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
             spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", home.x(), "y", home.y(), "z", home.z())));
