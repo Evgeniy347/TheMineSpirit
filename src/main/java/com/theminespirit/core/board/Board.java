@@ -702,6 +702,8 @@ public final class Board {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);
+            // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
+            claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
             blockedMissing.remove(ticket.id());
             blockNotes.add(new BoardLogEntry(
@@ -731,6 +733,8 @@ public final class Board {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);
+            // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
+            claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
             blockedMissing.remove(ticket.id());
             blockedAt.remove(ticket.id());
