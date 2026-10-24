@@ -892,6 +892,21 @@ class TicketPlansTests {
                 "Подсыпка четверти 4 не попадает в четверть 2");
     }
 
+    @Test
+    void layers_PitRows_BottomUpLayersMerged() {
+        List<PlotLeveling.Box> rows =
+                List.of(new PlotLeveling.Box(0, 64, 0, 2, 66, 0), new PlotLeveling.Box(0, 65, 1, 2, 66, 1));
+
+        assertEquals(
+                List.of(
+                        new PlotLeveling.Box(0, 64, 0, 2, 64, 0),
+                        new PlotLeveling.Box(0, 65, 0, 2, 65, 1),
+                        new PlotLeveling.Box(0, 66, 0, 2, 66, 1)),
+                TicketPlans.layers(rows),
+                "Подсыпка — слоями снизу вверх по всей яме, ряды слоя слиты: рядами на всю глубину дух выбирался на "
+                        + "край, и соседний ряд оставался траншеей без стоянки (INC-66)");
+    }
+
     private static List<ScriptCall> calls(TaskNode root) {
         List<ScriptCall> found = new ArrayList<>();
         Deque<TaskNode> queue = new ArrayDeque<>(List.of(root));
