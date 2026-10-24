@@ -22,6 +22,7 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
@@ -87,6 +88,7 @@ public final class BoardService {
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
     private final Map<UUID, Long> digOutAfter = new HashMap<>();
+    private final TaskStall stall = new TaskStall();
     private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
     // Духи, чьё задание снял сброс при смене сборки: их задача по снятому заданию (восстановлена из сохранения)
@@ -713,9 +715,29 @@ public final class BoardService {
             switch (run) {
                 case SUCCEEDED, FAILED -> settle(spirit, ticket, run == TicketRun.SUCCEEDED);
                 case RESUME -> resume(spirit, ticket, spirits);
-                case RUNNING, DISPLACED -> {}
+                case RUNNING -> checkStall(spirit, ticket);
+                case DISPLACED -> {}
             }
         }
+    }
+
+    // Задание стоит (INC-65): скрипта нет или подход не двигается минуту — провал с причиной и строкой в логе.
+    private void checkStall(SpiritEntity spirit, BoardTicket ticket) {
+        BlockPos feet = spirit.blockPosition();
+        String script = spirit.currentTaskScript().orElse(null);
+        if (!stall.stalled(
+                spirit.getUUID(), script, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), board.now())) {
+            return;
+        }
+        String reason = "задание стоит " + TaskStall.STALL_TICKS + " тиков: "
+                + (script == null ? "скрипт не стартовал" : "подход не двигается") + " в " + feet.toShortString()
+                + (spirit.tactics().wantsControl() ? ", тактика держит духа" : "")
+                + spirit.taskSuspendReason().map(why -> ", пауза: " + why).orElse("");
+        LOGGER.warn("[incident] дух {}: {} {}; задание провалено", spirit.displayName(), ticket.id(), reason);
+        stall.forget(spirit.getUUID());
+        issuedGenerations.remove(ticket.id());
+        spirit.cancelTask();
+        board.fail(ticket.id(), stock, reason);
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
