@@ -22,6 +22,7 @@ import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildRotation;
@@ -136,6 +137,7 @@ public final class FirstStepsRunner {
         Optional<BoardCase> next = FirstStepsPlan.next(facts);
         String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, wood);
+        ensurePickaxe(level, service, spirits, stock, new StoneSite(home, wood), next, now);
         if (next.isPresent() && STONE_STEPS.contains(next.orElseThrow())) {
             parallelStone(level, service, facts, new StoneSite(home, wood), stock, next.orElseThrow(), now);
         }
@@ -614,6 +616,52 @@ public final class FirstStepsRunner {
                 return underground ? Map.of() : PresetLibrary.countMaterials(SchematicResources.load(file));
             }
         };
+    }
+
+    // Кирки нет ни у одного духа, а расчистка или шахта ждут её (гейт ToolGate, INC-67): задание на деревянную кирку,
+    // без досок и палок — добыча дерева на них.
+    private static void ensurePickaxe(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            StoneSite site,
+            Optional<BoardCase> next,
+            long now) {
+        boolean gated = next.filter(step -> ToolGate.required(step).isPresent()).isPresent()
+                || hasActive(service, BoardCase.CLEAR_GROUNDS)
+                || hasActive(service, BoardCase.BUILD_MINE);
+        boolean nobody = spirits.stream()
+                .noneMatch(spirit -> ToolGate.allows(BoardCase.CLEAR_GROUNDS, BoardService.itemIds(spirit)));
+        if (!gated || !nobody || active(service, BoardService.PICKAXE_TICKET)) {
+            return;
+        }
+        MaterialSource source = materialSource(level);
+        TicketTarget target = targetFor(BoardCase.CRAFT_WOODEN_PICKAXE, site.home(), site.wood());
+        Map<String, Integer> need = new HashMap<>();
+        materials(source, BoardCase.CRAFT_WOODEN_PICKAXE, target)
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, site.wood()), count, Integer::sum));
+        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
+        if (!missing.isEmpty()) {
+            LOGGER.info("[tool] кирки нет ни у одного духа: на кирку не хватает {} — добыча", missing);
+            missing.forEach((item, count) -> postGather(service, source, site.home(), item, count, 1, now));
+            return;
+        }
+        BoardOutcome outcome = service.submit(
+                new BoardTicket(
+                        BoardService.PICKAXE_TICKET,
+                        BoardCase.CRAFT_WOODEN_PICKAXE,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.CRAFT_WOODEN_PICKAXE),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.copyOf(need)),
+                target);
+        if (outcome == BoardOutcome.ACCEPTED) {
+            LOGGER.info("[tool] кирки нет ни у одного духа: поставлено {}", BoardService.PICKAXE_TICKET);
+        }
     }
 
     private static boolean hasActive(BoardService service, BoardCase boardCase) {

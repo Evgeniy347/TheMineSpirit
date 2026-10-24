@@ -76,6 +76,8 @@ import org.slf4j.Logger;
  * ядра не читает, а план собирается из них при выдаче.
  */
 public final class BoardService {
+    // Задание на деревянную кирку, когда её нет ни у одного духа (гейт ToolGate, INC-67).
+    static final String PICKAXE_TICKET = "tool:wooden_pickaxe";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
     private static final long DIG_OUT_PAUSE_TICKS = 1200;
@@ -863,6 +865,7 @@ public final class BoardService {
         }
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now, awaited);
+            noteToolGate(ticket, spirits);
             if (spirit == null) {
                 LOGGER.debug(
                         "Задание {} ждёт свободного духа: {}",
@@ -1056,7 +1059,14 @@ public final class BoardService {
                 && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
     }
 
-    private static List<String> itemIds(SpiritEntity spirit) {
+    // Гейт по инструменту виден на доске (waitReason, экран J): ни у кого нет кирки — «нет духа с киркой».
+    private void noteToolGate(BoardTicket ticket, List<SpiritEntity> spirits) {
+        boolean gated = ToolGate.required(ticket.boardCase()).isPresent()
+                && spirits.stream().noneMatch(candidate -> ToolGate.allows(ticket.boardCase(), itemIds(candidate)));
+        board.noteWait(ticket.id(), gated ? "нет духа с киркой: ждёт кирку (задание " + PICKAXE_TICKET + ")" : null);
+    }
+
+    static List<String> itemIds(SpiritEntity spirit) {
         List<String> ids = new ArrayList<>();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);

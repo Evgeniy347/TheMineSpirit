@@ -661,6 +661,37 @@ public final class BoardFirstStepsGameTests {
         return new StockView(items);
     }
 
+    // Гейт по инструменту (INC-67): расчистка ждёт кирку, а кирки нет ни у кого — доска ставит задание на кирку.
+    @GameTest(template = "arena", batch = "board_first_steps_pickaxe", timeoutTicks = 100)
+    public static void firstSteps_ClearWithoutAnyPickaxe_PickaxeTicketPosted(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.setHome(absolute(helper, new BlockPos(4, 1, 4)));
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-first-steps-pickaxe.jsonl");
+        board.board()
+                .submit(new BoardTicket(
+                        "clear:2",
+                        BoardCase.CLEAR_GROUNDS,
+                        Optional.empty(),
+                        50,
+                        level.getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()));
+
+        FirstStepsRunner.tick(level, board, List.of(spirit), stocked(), level.getGameTime());
+
+        helper.assertTrue(
+                board.board().statusOf("tool:wooden_pickaxe").isPresent(),
+                "Расчистка ждёт кирку, а её нет ни у одного духа — на доске задание на деревянную кирку, а не тишина "
+                        + "(INC-67)");
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
     @GameTest(template = "arena", batch = "board_first_steps_nohome", timeoutTicks = 100)
     public static void firstSteps_SpiritWithoutHome_NoTickets(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

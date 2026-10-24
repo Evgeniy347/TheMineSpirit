@@ -147,6 +147,20 @@ class BoardTests {
     }
 
     @Test
+    void waitReason_ToolGateNote_ShownUntilClaimed() {
+        Board board = boardAt(0);
+        board.submit(ticket("clear:2", BoardCase.CLEAR_GROUNDS, 0, List.of()));
+        board.noteWait("clear:2", "нет духа с киркой");
+
+        assertEquals(
+                Optional.of("нет духа с киркой"),
+                BoardWhy.waitReason(board, board.find("clear:2").orElseThrow(), new StockView(Map.of()), 0),
+                "Гейт по инструменту виден в waitReason доски (и на экране J): иначе расчистка ждёт молча (INC-67)");
+        board.claim("clear:2", SPIRIT_ONE, 0);
+        assertEquals(Optional.empty(), board.waitNote("clear:2"), "Выданное задание причину ожидания снимает");
+    }
+
+    @Test
     void submit_DoneFirstStep_NotReopened() {
         Board board = boardAt(0);
         board.submit(ticket("first:clear_grounds", BoardCase.CLEAR_GROUNDS, 0, List.of()));
