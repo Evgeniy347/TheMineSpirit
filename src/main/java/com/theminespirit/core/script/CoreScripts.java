@@ -1033,6 +1033,23 @@ public final class CoreScripts {
                         List.of("есть материал для блоков"),
                         List.of("дух поднялся на высоту")),
                 spec(
+                        "dig_out",
+                        "выбраться из-под земли: лестница вверх (ступень 1, проход 2) в сторону точки",
+                        List.of(
+                                ParamSpec.integer(
+                                        "x",
+                                        true,
+                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                                ParamSpec.integer(
+                                        "z",
+                                        true,
+                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                        List.of("дух замурован: воздуха к поверхности нет"),
+                        List.of("дух под открытым небом или на высоте точки")),
+                spec(
                         "pillar_down",
                         "разобрать свой столб и вернуть блоки",
                         List.of(),

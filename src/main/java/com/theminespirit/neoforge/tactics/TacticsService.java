@@ -42,6 +42,7 @@ import com.theminespirit.core.tactics.adapter.TacticsSchedule;
 import com.theminespirit.core.tactics.adapter.TacticsTrace;
 import com.theminespirit.core.tactics.adapter.TargetDesignation;
 import com.theminespirit.neoforge.Approach;
+import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -586,6 +587,14 @@ public final class TacticsService {
             returnTicks = 0;
             stallPoint = null;
             returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;
+            return;
+        }
+        if (!approach.isActive() && DigOutScript.sealed(spirit.level(), spirit.blockPosition())) {
+            // Замурованному к якорю не пройти: возврат держал его «в бою» часами (INC-45) — выход копает dig_out.
+            returned = true;
+            returnTicks = 0;
+            returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;
+            release();
             return;
         }
         if (!approach.isActive()) {

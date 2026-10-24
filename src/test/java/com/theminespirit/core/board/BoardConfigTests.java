@@ -66,6 +66,7 @@ class BoardConfigTests {
                 Map.entry("ACTIVITY_ARM", 100),
                 Map.entry("ACTIVITY_EXTERNAL", 95),
                 Map.entry("ACTIVITY_EXPEDITION", 95),
+                Map.entry("ACTIVITY_ESCAPE", 95),
                 Map.entry("ACTIVITY_DEFEND", 29),
                 Map.entry("ACTIVITY_UNLOAD", 25),
                 Map.entry("ACTIVITY_CRAFT", 20),
