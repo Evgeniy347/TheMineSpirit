@@ -43,6 +43,7 @@ public final class Board {
     private final Map<String, UUID> claimAssignees = new LinkedHashMap<>();
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
     private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
+    private final Map<String, String> lastFailReasons = new LinkedHashMap<>();
     private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
     private final Map<String, Long> blockedAt = new LinkedHashMap<>();
     private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
@@ -136,6 +137,7 @@ public final class Board {
                 statuses.put(ticket.id(), BoardStatus.PENDING);
                 claimAssignees.remove(ticket.id());
                 ticketFailures.remove(ticket.id());
+                lastFailReasons.remove(ticket.id());
                 blockedMissing.remove(ticket.id());
                 events.transition(BoardLog.Event.SUBMITTED, ticket, null, nowTicks.getAsLong());
                 return BoardOutcome.ACCEPTED;
@@ -228,6 +230,7 @@ public final class Board {
             caseFailures.remove(new SpiritCase(holder, ticket.boardCase()));
         }
         ticketFailures.remove(ticketId);
+        lastFailReasons.remove(ticketId);
         blockedMissing.remove(ticketId);
         statuses.put(ticketId, BoardStatus.DONE);
         ledger.note(ticket.boardCase(), ticket.level());
@@ -240,6 +243,12 @@ public final class Board {
     }
 
     public boolean fail(String ticketId, StockView stock) {
+        return fail(ticketId, stock, null);
+    }
+
+    // reason — причина провала: тот же провал подряд у разных духов («застрял в той же точке») — дело места, а не
+    // духа: задание блокируется сразу, а не сжигает весь предел попыток (INC-63).
+    public boolean fail(String ticketId, StockView stock, @Nullable String reason) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: провал идёт по id задания");
         Objects.requireNonNull(stock, "stock не может быть null: по нему фиксируются условия блокировки");
         BoardTicket ticket = tickets.get(ticketId);
@@ -253,6 +262,10 @@ public final class Board {
         UUID holder = holder(ticket);
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
+        }
+        String previous = reason == null ? null : lastFailReasons.put(ticketId, reason);
+        if (reason != null && reason.equals(previous)) {
+            ticketFailures.put(ticketId, BoardTuning.ticketFailLimit() - 1);
         }
         noteTicketFailure(ticket, now, stock);
         return true;
@@ -618,6 +631,7 @@ public final class Board {
                 && status != BoardStatus.CANCELLED) {
             statuses.put(ticketId, BoardStatus.CANCELLED);
             ticketFailures.remove(ticketId);
+            lastFailReasons.remove(ticketId);
             blockedMissing.remove(ticketId);
             events.transition(event, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         }
@@ -705,6 +719,7 @@ public final class Board {
             // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
             claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
+            lastFailReasons.remove(ticket.id());
             blockedMissing.remove(ticket.id());
             blockNotes.add(new BoardLogEntry(
                     BoardLog.Event.UNBLOCKED,
@@ -736,6 +751,7 @@ public final class Board {
             // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
             claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
+            lastFailReasons.remove(ticket.id());
             blockedMissing.remove(ticket.id());
             blockedAt.remove(ticket.id());
             blockNotes.add(new BoardLogEntry(

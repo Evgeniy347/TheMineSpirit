@@ -760,7 +760,7 @@ public final class BoardService {
                 default -> {}
             }
         } else {
-            board.fail(ticket.id(), stock);
+            board.fail(ticket.id(), stock, spirit.taskFailureReason().orElse(null));
             LOGGER.warn(
                     "[incident] дух {} ({}) провалил задание доски {} (кейс {}): {}; статус {}; доска выдаёт "
                             + "следующее задание",
