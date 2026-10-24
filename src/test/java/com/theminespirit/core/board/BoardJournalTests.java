@@ -47,6 +47,21 @@ class BoardJournalTests {
     }
 
     @Test
+    void load_ReopenedAfterDone_MarkForgotten() {
+        BoardJournal journal = new BoardJournal(log());
+        journal.enqueue(entry(BoardLog.Event.DONE, "first:lighting", BoardCase.LIGHTING, 1));
+        journal.enqueue(entry(BoardLog.Event.REOPENED, "first:lighting", BoardCase.LIGHTING, 1));
+        journal.flushAll();
+        BoardLedger ledger = new BoardLedger();
+
+        journal.load(ledger);
+
+        assertFalse(
+                ledger.has(BoardCase.LIGHTING, 1),
+                "REOPENED после DONE снимает отметку и после перезапуска: иначе журнал вернул бы старый DONE (INC-50)");
+    }
+
+    @Test
     void load_BrokenTail_TruncatesItAndKeepsPreviousMarks() throws IOException {
         BoardJournal journal = new BoardJournal(log());
         journal.enqueue(entry(BoardLog.Event.DONE, "mine", BoardCase.BUILD_MINE, 1));

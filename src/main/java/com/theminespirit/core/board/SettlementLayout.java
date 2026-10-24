@@ -15,6 +15,9 @@ import java.util.Objects;
 public final class SettlementLayout {
     public static final int PLOT = 23;
     public static final int HALF = PLOT / 2;
+    // Выравнивание захватывает полосу за линией ограды: уступ земли у забора давал перелезть через него (INC-53).
+    public static final int LEVEL_MARGIN = 2;
+    public static final int LEVEL_HALF = HALF + LEVEL_MARGIN;
     // Хижина 5×5 и ряд крыльца перед дверью (схема hut_1: 5 в ширину, 6 в глубину с крыльцом).
     public static final int HOUSE_WIDTH = 5;
     public static final int HOUSE_DEPTH = 6;
@@ -48,6 +51,14 @@ public final class SettlementLayout {
     public static BlockCoord mineEntrance(BlockCoord anchor) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
         return new BlockCoord(anchor.x() + MINE_OFFSET, anchor.y() - 1, anchor.z());
+    }
+
+    // Колонка спуска в шахту: ступени 3 в ширину вглубь на юг от входа до края участка. Её высоту выравнивание не
+    // трогает — иначе подсыпка засыпала бы спуск, а ровность участка не достигалась бы никогда (INC-50).
+    public static boolean mineColumn(BlockCoord anchor, int x, int z) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
+        BlockCoord entrance = mineEntrance(anchor);
+        return Math.abs(x - entrance.x()) <= 1 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
     }
 
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.

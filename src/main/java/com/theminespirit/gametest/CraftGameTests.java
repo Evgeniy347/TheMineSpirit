@@ -13,12 +13,14 @@ import static com.theminespirit.gametest.CraftTestSupport.reload;
 import static com.theminespirit.gametest.CraftTestSupport.stack;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -181,10 +186,10 @@ public final class CraftGameTests {
         });
     }
 
-    // Сундуки склада первых шагов ставятся сразу после крафта (place), не вплотную друг к другу: в инвентаре крафтера
-    // склада не было, сдача добытого не находила сундук (приёмка «джунгли» 24.10: «сундуки []»).
+    // Сундуки склада первых шагов ставятся сразу после крафта (place): в инвентаре крафтера склада не было, сдача
+    // добытого не находила сундук (приёмка «джунгли» 24.10). Два сундука — один двойной, как у игрока (INC-52).
     @GameTest(template = FIELD, batch = "craft_chest_place", timeoutTicks = TIMEOUT)
-    public static void craft_ChestsWithPlace_TwoSingleChestsOnField(GameTestHelper helper) {
+    public static void craft_ChestsWithPlace_OneDoubleChestOnField(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 16));
         SpiritRun run = SpiritRun.launch(
@@ -200,6 +205,42 @@ public final class CraftGameTests {
             helper.assertTrue(
                     blocksOnField(helper, Blocks.CHEST) == 2,
                     "дух обязан поставить оба скрафченных сундука, на поле " + blocksOnField(helper, Blocks.CHEST));
+            helper.assertTrue(
+                    doubleChestHalves(helper) == 2,
+                    "два сундука рядом обязаны слиться в двойной (left/right), а не стоять single; половин двойного "
+                            + doubleChestHalves(helper));
+            cleanup(helper, spirit);
+        });
+    }
+
+    // Станции поселения общие (INC-51): верстак на участке дальше радиуса поиска — дух идёт к нему, а свой из
+    // инвентаря не ставит (вторая печь и второй верстак на живом сервере).
+    @GameTest(template = FIELD, batch = "craft_settlement_table", timeoutTicks = TIMEOUT)
+    public static void craft_TableOnPlotBeyondRadius_UsesItNoNewTable(GameTestHelper helper) {
+        field(helper);
+        helper.setBlock(new BlockPos(8, 1, 8), Blocks.CRAFTING_TABLE);
+        SpiritEntity spirit =
+                prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 3), stack(Items.STICK, 2));
+        BlockPos center = helper.absolutePos(new BlockPos(8, 1, 7));
+        SettlementPlotStore.get(helper.getLevel())
+                .fix(new SettlementPlot(
+                        new BlockCoord(center.getX(), center.getY(), center.getZ()),
+                        center.getY(),
+                        center.getY(),
+                        1,
+                        "oak"));
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new ScriptCall("craft", Map.of("item", "wooden_pickaxe", "count", 1, "radius", 2)), 1);
+
+        helper.succeedWhen(() -> {
+            assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            assertCount(helper, spirit, Items.WOODEN_PICKAXE, 1, "кирка скрафчена у верстака поселения");
+            assertCount(helper, spirit, Items.CRAFTING_TABLE, 1, "свой верстак остался в инвентаре");
+            helper.assertTrue(
+                    blocksOnField(helper, Blocks.CRAFTING_TABLE) == 1,
+                    "второй верстак не ставится, пока на участке есть свой: на поле "
+                            + blocksOnField(helper, Blocks.CRAFTING_TABLE));
+            SettlementPlotStore.get(helper.getLevel()).clear();
             cleanup(helper, spirit);
         });
     }
@@ -409,6 +450,19 @@ public final class CraftGameTests {
 
     private static int tablesOnField(GameTestHelper helper) {
         return blocksOnField(helper, Blocks.CRAFTING_TABLE);
+    }
+
+    private static int doubleChestHalves(GameTestHelper helper) {
+        int halves = 0;
+        for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
+            for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
+                BlockState state = helper.getBlockState(new BlockPos(x, 1, z));
+                if (state.is(Blocks.CHEST) && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                    halves++;
+                }
+            }
+        }
+        return halves;
     }
 
     private static int blocksOnField(GameTestHelper helper, Block block) {

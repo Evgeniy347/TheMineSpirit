@@ -217,8 +217,7 @@ public final class PresetBuildGameTests {
         SpiritEntity spirit = spawnWith(
                 helper,
                 new BlockPos(4, 1, 6),
-                new ItemStack(Items.OAK_FENCE, 5),
-                new ItemStack(Items.OAK_LOG, 2),
+                new ItemStack(Items.OAK_FENCE, 7),
                 new ItemStack(Items.TORCH, 2),
                 new ItemStack(Items.OAK_FENCE_GATE, 1));
         SpiritRun run = SpiritRun.launch(helper, spirit, buildCall(helper, "palisade_section", anchor), SETTLE_TICKS);

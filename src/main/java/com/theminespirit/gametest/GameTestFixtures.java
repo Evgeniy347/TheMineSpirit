@@ -8,6 +8,7 @@ import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +69,8 @@ final class GameTestFixtures {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
         sweepEntities(helper);
+        // Участок поселения хранится в мире: сцена не наследует якорь и породу прошлой сцены (INC-55).
+        SettlementPlotStore.get(helper.getLevel()).clear();
     }
 
     static void finish(GameTestHelper helper) {

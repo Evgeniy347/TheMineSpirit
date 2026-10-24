@@ -327,6 +327,22 @@ public final class Board {
         return true;
     }
 
+    // Сделанное задание снимается с доски вместе с отметкой постройки, чтобы его можно было поставить заново:
+    // DONE шага раскладки, с которым разошёлся мир (факелов нет, ограды нет — INC-50), иначе вечен.
+    public boolean reopen(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: переоткрытие идёт по id задания");
+        BoardTicket ticket = tickets.get(ticketId);
+        if (ticket == null || statuses.get(ticketId) != BoardStatus.DONE) {
+            return false;
+        }
+        tickets.remove(ticketId);
+        statuses.remove(ticketId);
+        claimAssignees.remove(ticketId);
+        ledger.forget(ticket.boardCase(), ticket.level());
+        events.transition(BoardLog.Event.REOPENED, ticket, null, nowTicks.getAsLong());
+        return true;
+    }
+
     public boolean release(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
         if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
@@ -338,14 +354,22 @@ public final class Board {
     }
 
     public void occupy(UUID spirit, BoardCase activity, long now) {
+        occupy(spirit, activity, null, now);
+    }
+
+    // script — скрипт задачи духа (chop_tree): занятие на доске и в журнале называет, что дух делает (INC-48).
+    public void occupy(UUID spirit, BoardCase activity, @Nullable String script, long now) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие показывается на конкретного духа");
         requireNow(now);
         String id = BoardActivities.idOf(spirit);
         BoardTicket current = tickets.get(id);
-        if (current != null && current.boardCase() == activity) {
+        List<String> details = BoardActivities.details(script);
+        if (current != null
+                && current.boardCase() == activity
+                && current.modifiers().equals(details)) {
             return;
         }
-        BoardTicket ticket = BoardActivities.ticket(spirit, activity, now);
+        BoardTicket ticket = BoardActivities.ticket(spirit, activity, now, details);
         tickets.remove(id);
         tickets.put(id, ticket);
         statuses.put(id, BoardStatus.ASSIGNED);
@@ -678,6 +702,8 @@ public final class Board {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);
+            // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
+            claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
             blockedMissing.remove(ticket.id());
             blockNotes.add(new BoardLogEntry(
@@ -707,6 +733,8 @@ public final class Board {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);
+            // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
+            claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
             blockedMissing.remove(ticket.id());
             blockedAt.remove(ticket.id());

@@ -458,7 +458,13 @@ public final class BoardFirstStepsGameTests {
         BoardService board = isolatedBoard(level, "gametest-first-steps-smithy.jsonl");
         groundsCleared(board, spirit);
 
-        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(true)), level.getGameTime());
+        FirstStepsRunner.tick(
+                level,
+                board,
+                List.of(spirit),
+                new StockView(smithyStock(true)),
+                level.getGameTime(),
+                FirstStepsRunner.PlanWorld.JOURNAL);
 
         helper.assertTrue(
                 board.board().statusOf("first:craft_anvil").isPresent(),
@@ -476,7 +482,13 @@ public final class BoardFirstStepsGameTests {
         BoardService board = isolatedBoard(level, "gametest-first-steps-smithy-iron.jsonl");
         groundsCleared(board, spirit);
 
-        FirstStepsRunner.tick(level, board, List.of(spirit), new StockView(smithyStock(false)), level.getGameTime());
+        FirstStepsRunner.tick(
+                level,
+                board,
+                List.of(spirit),
+                new StockView(smithyStock(false)),
+                level.getGameTime(),
+                FirstStepsRunner.PlanWorld.JOURNAL);
 
         helper.assertTrue(
                 board.board().statusOf("first:craft_anvil").isEmpty(),
@@ -494,10 +506,15 @@ public final class BoardFirstStepsGameTests {
     }
 
     // Деревья соседних сцен попадают в обзор 16 блоков: расчистка отмечена сделанной по журналу, как после неё.
-    // Свет, ограда и дом раскладки готовы только по журналу (маркеры в мире их не заменяют) — отмечены так же.
+    // Шахта, свет, ограда и дом плана готовы только по журналу и миру: сцены наковальни идут с PlanWorld.JOURNAL —
+    // участок 23×23 и спуск шахты на арене не поставить, проверяется гейт железа, а не постройки.
     private static void groundsCleared(BoardService board, SpiritEntity spirit) {
-        for (BoardCase step :
-                List.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)) {
+        for (BoardCase step : List.of(
+                BoardCase.BUILD_MINE,
+                BoardCase.CLEAR_GROUNDS,
+                BoardCase.LIGHTING,
+                BoardCase.BUILD_FENCE,
+                BoardCase.BUILD_HOUSE)) {
             String id = "first:" + step.name().toLowerCase(Locale.ROOT);
             board.board()
                     .submit(new BoardTicket(

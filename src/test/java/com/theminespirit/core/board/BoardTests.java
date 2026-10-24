@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +99,51 @@ class BoardTests {
                 board.ledger().has(BoardCase.BUILD_HOUSE, 1),
                 "Отметка ledger переживает замену: условие «постройка стоит» не теряется, когда "
                         + "задание переиздано");
+    }
+
+    @Test
+    void reopen_DoneFirstStep_ResubmitAcceptedAndMarkForgotten() {
+        Board board = boardAt(0);
+        board.submit(ticket("first:lighting", BoardCase.LIGHTING, 0, List.of()));
+        board.claim("first:lighting", SPIRIT_ONE, 0);
+        board.complete("first:lighting");
+
+        boolean reopened = board.reopen("first:lighting");
+        BoardOutcome outcome = board.submit(ticket("first:lighting", BoardCase.LIGHTING, 0, List.of()));
+
+        assertTrue(reopened, "DONE шага раскладки, разошедшийся с миром, переоткрывается (INC-50)");
+        assertFalse(
+                board.ledger().has(BoardCase.LIGHTING, 1),
+                "Отметка постройки снимается: иначе цепочка и этапы считают свет готовым при нуле факелов");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                outcome,
+                "Переоткрытый шаг ставится заново, а не отвечает DUPLICATE навсегда (INC-50)");
+    }
+
+    @Test
+    void occupy_ExternalTaskScript_ShownOnActivity() {
+        Board board = boardAt(0);
+
+        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_EXTERNAL, "chop_tree", 0);
+
+        assertEquals(
+                List.of("script=chop_tree"),
+                board.all().stream()
+                        .filter(ticket -> ticket.id().equals(BoardActivities.idOf(SPIRIT_ONE)))
+                        .findFirst()
+                        .orElseThrow()
+                        .modifiers(),
+                "Задача духа через REST видна на доске занятием со своим скриптом, а не безымянной (INC-48)");
+    }
+
+    @Test
+    void scriptOf_GotoThenChop_NamesWork() {
+        assertEquals(
+                "chop_tree",
+                BoardActivities.scriptOf(new SequenceNode(
+                        List.of(new ScriptCall("goto", Map.of()), new ScriptCall("chop_tree", Map.of())))),
+                "Название задачи — работа, а не подход к месту: «goto» не показывается (INC-48)");
     }
 
     @Test

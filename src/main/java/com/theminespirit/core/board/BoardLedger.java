@@ -58,6 +58,11 @@ public final class BoardLedger {
         built.add(key(boardCase, level));
     }
 
+    public void forget(BoardCase boardCase, int level) {
+        Objects.requireNonNull(boardCase, "Кейс снятия отметки не может быть null: без него непонятно, что снимать");
+        built.remove(key(boardCase, level));
+    }
+
     public void clear() {
         built.clear();
     }

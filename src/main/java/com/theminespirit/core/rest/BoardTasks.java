@@ -26,7 +26,13 @@ public final class BoardTasks {
     public static BoardTask of(Board board, BoardTicket ticket, BoardStatus status, StockView stock) {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         Optional<UUID> holder = board.holderOf(ticket.id());
-        boolean done = status == BoardStatus.DONE || board.ledger().has(ticket.boardCase(), ticket.level());
+        // Задание в очереди или в работе — не «сделано», даже если такой кейс уже закрывался раньше (INC-47:
+        // gather PENDING с done:true).
+        boolean queued = status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED;
+        boolean done =
+                status == BoardStatus.DONE || (!queued && board.ledger().has(ticket.boardCase(), ticket.level()));
         return new BoardTask(
                 ticket.id(),
                 ticket.boardCase().name(),

@@ -2,25 +2,32 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.CaseMaterials;
+import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.PlotLeveling;
+import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementLayout;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
+import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildingType;
+import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -43,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.IntBinaryOperator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -50,8 +58,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
@@ -63,6 +69,9 @@ import org.slf4j.Logger;
  */
 public final class FirstStepsRunner {
     private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+    private static final int LAYOUT_SLACK_DIVISOR = 50;
+    private static final Set<BoardCase> LAYOUT_STEPS =
+            EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
     // Заранее — только с расчистки: раньше добыча забора отнимала доски у первых инструментов (простой 1947 тиков).
     private static final Set<BoardCase> PREFETCH_DURING =
             EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE);
@@ -89,22 +98,42 @@ public final class FirstStepsRunner {
 
     private FirstStepsRunner() {}
 
+    // Как мир сверяется с планом поселения: AUDIT — постройки плана сверяются с миром (боевой режим);
+    // JOURNAL — сделанная по журналу постройка считается стоящей. JOURNAL — только сценам GameTest, проверяющим шаги
+    // после построек плана (наковальня), где участок 23×23 и спуск до y=−58 на арене 11×11 не поставить.
+    public enum PlanWorld {
+        AUDIT,
+        JOURNAL
+    }
+
     public static void tick(
             ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
+        tick(level, service, spirits, stock, now, PlanWorld.AUDIT);
+    }
+
+    public static void tick(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            long now,
+            PlanWorld world) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        // Поселение задаёт дом: без него homeOf подставил бы (0,64,0) и доска выдала бы first:*
+        // Поселение задаёт дом: без него центра участка нет и доска выдала бы first:*
         // духу без дома (сцена REST получала чужое задание до своего POST).
         if (spirits.stream().noneMatch(spirit -> spirit.home().isPresent())) {
             return;
         }
-        BlockCoord home = homeOf(spirits);
-        Scan scan = buildFacts(level, home, stock, service);
-        SettlementFacts facts = scan.facts();
-        boolean mine = facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
-        Optional<BoardCase> next = FirstStepsPlan.next(facts);
+        // Якорь участка — один на поселение, зафиксирован в мире: от него выравнивание и все постройки раскладки.
+        BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
+        BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
+        Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
+        SettlementFacts facts = scan.facts();
+        boolean mine = facts.mineEntrance();
+        Optional<BoardCase> next = FirstStepsPlan.next(facts);
         String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, wood);
         if (next.isPresent() && STONE_STEPS.contains(next.orElseThrow())) {
@@ -117,11 +146,6 @@ public final class FirstStepsRunner {
             return;
         }
         BoardCase caseValue = next.orElseThrow();
-        // Якорь участка — дом на средней высоте участка: от неё выравнивание и все постройки раскладки.
-        BlockCoord anchor = new BlockCoord(
-                home.x(),
-                PlotLeveling.level(home, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, home.y())),
-                home.z());
         TicketTarget target = targetFor(caseValue, anchor, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, anchor, stock));
@@ -169,6 +193,13 @@ public final class FirstStepsRunner {
         // Расчистка — четвертями, ограда — кусками периметра на разных духов: одним духом расчистка шла ~4000 тиков,
         // ограда ~2900, двое простаивали (приёмка «джунгли» 24.10). Первая часть — first:, остальные — помощники.
         int parts = partsOf(caseValue);
+        if (LAYOUT_STEPS.contains(caseValue)
+                || caseValue == BoardCase.CLEAR_GROUNDS
+                || caseValue == BoardCase.BUILD_MINE) {
+            if (reopenDone(level, service, step, parts, now)) {
+                return;
+            }
+        }
         BoardOutcome outcome = BoardOutcome.ACCEPTED;
         for (int part = 1; part <= parts; part++) {
             TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
@@ -200,6 +231,68 @@ public final class FirstStepsRunner {
             // каждые 5 с вводила в заблуждение (INC-26).
             LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
         }
+    }
+
+    // Постройка раскладки сделана по журналу, но в мире её нет (DONE старой сборки, сломана): задание и его куски
+    // снимаются с доски вместе с отметкой — иначе submit отвечает DUPLICATE и шаг вечно «сделан» (INC-50).
+    // Постройка плана построена (DONE), но мир с ней разошёлся: схема — задание REPAIR_BUILDING «восстановление»
+    // (INC-60), прочее (свет, шахта, выравнивание) — шаг снова в очереди. true — восстановление поставлено.
+    private static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
+        BoardCase caseValue = step.caseValue();
+        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE) {
+            return false;
+        }
+        Placed placed = audit(level, caseValue, step.target().target(), step.wood());
+        int missing = placed.total() - placed.done();
+        Optional<TicketTarget> scheme = RepairPlan.target(TicketPlans.plan(caseValue, 1, step.target()));
+        LOGGER.info(
+                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: {}",
+                caseValue,
+                missing,
+                placed.total(),
+                scheme.isPresent() ? "восстановление" : "шаг снова в очереди");
+        service.journal()
+                .recordEntry(BoardLog.note(
+                        "layout:" + caseValue.name().toLowerCase(Locale.ROOT),
+                        caseValue,
+                        now,
+                        List.of("missing=" + missing, "total=" + placed.total()),
+                        null,
+                        ConfigStamp.current()));
+        if (scheme.isPresent()) {
+            BoardOutcome repair = submitRepair(service, step, scheme.orElseThrow(), now);
+            if (repair == BoardOutcome.ACCEPTED || repair == BoardOutcome.DUPLICATE) {
+                return true;
+            }
+        }
+        for (int part = 1; part <= parts; part++) {
+            String id = partId(caseValue, part);
+            if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
+                service.reopen(id);
+            }
+        }
+        return false;
+    }
+
+    private static BoardOutcome submitRepair(BoardService service, OpenStep step, TicketTarget target, long now) {
+        String id = RepairPlan.PREFIX + step.caseValue().name().toLowerCase(Locale.ROOT);
+        BoardOutcome outcome = service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.REPAIR_BUILDING,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.REPAIR_BUILDING),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.copyOf(step.need())),
+                target);
+        if (outcome == BoardOutcome.ACCEPTED) {
+            LOGGER.info(
+                    "[layout] восстановление {}: задание {} по схеме {}", step.caseValue(), id, target.schemeFile());
+        }
+        return outcome;
     }
 
     // Добыча под другую породу снимается: порода поселения меняется по голосам (запас, деревья рядом, биом), а
@@ -295,7 +388,7 @@ public final class FirstStepsRunner {
     // Выравнивание участка (решение 16): срезка и подсыпка по высотам колонок; яма — булыжником, если его хватает в
     // запасе, иначе землёй.
     private static PlotLeveling leveling(ServerLevel level, BlockCoord anchor, StockView stock) {
-        PlotLeveling plan = PlotLeveling.plan(anchor, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, anchor.y()));
+        PlotLeveling plan = PlotLeveling.plan(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
         if (plan.fillVolume() > 0 && stock.available().getOrDefault(COBBLESTONE, 0) >= plan.fillVolume()) {
             plan = plan.withBlock(COBBLESTONE);
         }
@@ -308,6 +401,11 @@ public final class FirstStepsRunner {
                     plan.block());
         }
         return plan;
+    }
+
+    // Высоты колонок участка для выравнивания: спуск в шахту — на уровне участка, его не засыпают (INC-50).
+    private static IntBinaryOperator plotFeet(ServerLevel level, BlockCoord anchor) {
+        return (x, z) -> SettlementLayout.mineColumn(anchor, x, z) ? anchor.y() : feetAt(level, x, z, anchor.y());
     }
 
     // Уровень ног колонки — над верхним блоком земли; постройки, станции, деревья и растения землёй не считаются.
@@ -526,7 +624,8 @@ public final class FirstStepsRunner {
         if (TorchRules.handles(item)) {
             return false;
         }
-        return !COBBLESTONE.equals(item) || facts.mineEntrance() || facts.done().contains(BoardCase.BUILD_MINE);
+        // Камень — только из шахты плана: старая яма с лестницей шахтой не считается (INC-59).
+        return !COBBLESTONE.equals(item) || facts.mineEntrance();
     }
 
     // Блоки схем плана, уже стоящие в мире, вычитаются из нужды шага (схема без поворота, порода — поселения).
@@ -547,8 +646,7 @@ public final class FirstStepsRunner {
                     String block = bare(WoodSpecies.swap(entry.block(), wood));
                     BlockState state =
                             level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
-                    if (bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())
-                            .equals(block)) {
+                    if (placed(state, block)) {
                         String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(entry.block()), wood));
                         need.computeIfPresent(item, (key, count) -> count > 1 ? count - 1 : null);
                     }
@@ -566,16 +664,19 @@ public final class FirstStepsRunner {
 
     private record StoneSite(BlockCoord home, String wood) {}
 
-    private static Scan buildFacts(ServerLevel level, BlockCoord home, StockView stock, BoardService service) {
+    private static Scan buildFacts(
+            ServerLevel level,
+            StoneSite site,
+            BlockCoord anchor,
+            StockView stock,
+            BoardService service,
+            PlanWorld world) {
+        BlockCoord home = site.home();
         boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
         boolean hasHome = true;
         boolean groundsCleared = true;
         int chests = 0;
         boolean craftingStation = false;
-        boolean mineEntrance = false;
-        boolean fence = false;
-        boolean lighting = false;
-        boolean houses = false;
         boolean smithingTable = false;
         boolean anvil = false;
         boolean furnace = false;
@@ -595,9 +696,6 @@ public final class FirstStepsRunner {
                     if (!groundsDone && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
                         groundsCleared = false;
                     }
-                    if (state.is(Blocks.LADDER)) {
-                        mineEntrance = true;
-                    }
                     if (state.is(Blocks.CHEST)) {
                         chests++;
                     }
@@ -606,15 +704,6 @@ public final class FirstStepsRunner {
                     }
                     if (state.is(Blocks.FURNACE)) {
                         furnace = true;
-                    }
-                    if (state.is(Blocks.TORCH) || state.is(Blocks.WALL_TORCH)) {
-                        lighting = true;
-                    }
-                    if (FenceWatch.isFence(state)) {
-                        fence = true;
-                    }
-                    if (state.getBlock() instanceof StairBlock || state.getBlock() instanceof SlabBlock) {
-                        houses = true;
                     }
                     if (state.is(Blocks.SMITHING_TABLE)) {
                         smithingTable = true;
@@ -629,9 +718,23 @@ public final class FirstStepsRunner {
         Set<BoardCase> done = journalSteps(service, false);
         Set<BoardCase> blocked = journalSteps(service, true);
         boolean furnaceAvailable = furnace || stock.available().getOrDefault(FURNACE_ITEM, 0) > 0;
+        // Ровность — свой факт мира (INC-50): голый неровный участок без деревьев тоже выравнивается.
+        // Сделанная по журналу расчистка без ровного участка (с полосой за оградой) снова в очереди: ограда — только
+        // на ровном (INC-53).
+        boolean journal = world == PlanWorld.JOURNAL;
+        boolean plotLevel =
+                journal || PlotLeveling.isLevel(anchor, SettlementLayout.LEVEL_HALF, plotFeet(level, anchor));
+        // Постройки раскладки сверяются с миром только сделанные по журналу: несделанные и так в очереди.
+        // Шахта — постройка плана: спуск mine_descent_v1 на своём месте сверяется по схеме, а не «лестница рядом»
+        // (INC-59: старая яма засчитывалась шахтой).
+        boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, anchor, site, journal);
+        boolean lighting = built(level, done, BoardCase.LIGHTING, anchor, site, journal);
+        boolean fence = built(level, done, BoardCase.BUILD_FENCE, anchor, site, journal);
+        boolean houses = built(level, done, BoardCase.BUILD_HOUSE, anchor, site, journal);
         SettlementFacts facts = new SettlementFacts(
                 hasHome,
                 groundsCleared,
+                plotLevel,
                 chests,
                 craftingStation,
                 tools,
@@ -645,6 +748,115 @@ public final class FirstStepsRunner {
                 done,
                 blocked);
         return new Scan(facts, furnace);
+    }
+
+    // Постройка раскладки стоит в мире целиком: каждый блок её плана (факел, схема без поворота) на своей клетке.
+    private static boolean built(
+            ServerLevel level,
+            Set<BoardCase> done,
+            BoardCase step,
+            BlockCoord anchor,
+            StoneSite site,
+            boolean journal) {
+        if (!done.contains(step) || journal) {
+            return done.contains(step);
+        }
+        Placed placed = audit(level, step, anchor, site.wood());
+        // Допуск — 2% клеток (трава, лиана на месте блока схемы не возвращают стройку по кругу); 4 факела — без
+        // допуска, ограда 93 из 105 — не готова.
+        return (placed.total() - placed.done()) * LAYOUT_SLACK_DIVISOR <= placed.total();
+    }
+
+    // Сверка постройки плана с миром: шахта — по развёртке спуска, остальное — по блокам своего плана.
+    private static Placed audit(ServerLevel level, BoardCase step, BlockCoord anchor, String wood) {
+        if (step == BoardCase.BUILD_MINE) {
+            return mineAudit(level, anchor);
+        }
+        return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(step, anchor, wood)), wood);
+    }
+
+    // Спуск по схеме: клетки прохода свободны (факел и лестница не мешают), пол — твёрдый блок класса пола.
+    private static Placed mineAudit(ServerLevel level, BlockCoord anchor) {
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
+        if (preset.isEmpty()) {
+            return new Placed(0, 0);
+        }
+        MineLayout layout = MineLayout.place(
+                preset.get().schematic(),
+                preset.get().entry(),
+                TicketPlans.mineDescentOrigin(anchor),
+                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
+                MineLayout.Extent.NONE);
+        int done = 0;
+        for (BlockCoord cell : layout.air()) {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                done++;
+            }
+        }
+        for (BlockCoord cell : layout.floors()) {
+            BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
+            if (SchematicBlocks.isFloorClass(
+                    BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())) {
+                done++;
+            }
+        }
+        return new Placed(done, layout.air().size() + layout.floors().size());
+    }
+
+    private record Placed(int done, int total) {
+        Placed plus(Placed other) {
+            return new Placed(done + other.done, total + other.total);
+        }
+    }
+
+    private static Placed placedBlocks(ServerLevel level, TaskNode plan, String wood) {
+        return switch (plan) {
+            case SequenceNode sequence ->
+                sequence.steps().stream()
+                        .map(step -> placedBlocks(level, step, wood))
+                        .reduce(new Placed(0, 0), Placed::plus);
+            case ScriptCall call
+            when "place_block".equals(call.script())
+                    && call.params().get("block") instanceof String block
+                    && call.params().get("x") instanceof Integer x
+                    && call.params().get("y") instanceof Integer y
+                    && call.params().get("z") instanceof Integer z ->
+                new Placed(
+                        placed(level.getBlockState(new BlockPos(x, y, z)), bare(WoodSpecies.swap(block, wood))) ? 1 : 0,
+                        1);
+            case ScriptCall call
+            when "build_schematic".equals(call.script())
+                    && !call.params().containsKey("rotation")
+                    && call.params().get("file") instanceof String file
+                    && call.params().get("x") instanceof Integer x
+                    && call.params().get("y") instanceof Integer y
+                    && call.params().get("z") instanceof Integer z -> {
+                int done = 0;
+                int total = 0;
+                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
+                    if (entry.optional() || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
+                        continue;
+                    }
+                    BlockState state =
+                            level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
+                    total++;
+                    if (placed(state, bare(WoodSpecies.swap(entry.block(), wood)))) {
+                        done++;
+                    }
+                }
+                yield new Placed(done, total);
+            }
+            default -> new Placed(0, 0);
+        };
+    }
+
+    // Факел у стены — тот же факел: place_block ставит настенный, если пол занят.
+    private static boolean placed(BlockState state, String block) {
+        String actual = bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+        return actual.equals(block)
+                || WoodSpecies.sameRole(actual, block)
+                || ("torch".equals(block) && "wall_torch".equals(actual));
     }
 
     private static Set<BoardCase> journalSteps(BoardService service, boolean blocked) {
@@ -687,13 +899,41 @@ public final class FirstStepsRunner {
         return tools;
     }
 
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BlockCoord> home = spirit.home();
-            if (home.isPresent()) {
-                return home.orElseThrow();
-            }
+    // Участок фиксируется один раз до расчистки (INC-55): центр — медиана домов духов, не дом первого в списке
+    // (INC-56); высота — медиана ног 23×23. Пишется в лог и журнал доски. Якорь вдали от всех домов — старое
+    // поселение: участок обмеряется заново.
+    public static SettlementPlot plotOf(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+        List<BlockCoord> homes = homes(spirits);
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        Optional<SettlementPlot> stored = store.plot();
+        BlockCoord center = SettlementPlot.center(homes);
+        if (stored.isPresent() && stored.orElseThrow().covers(center)) {
+            return stored.orElseThrow();
         }
-        return new BlockCoord(0, 64, 0);
+        String wood = SettlementWood.survey(level, center, service.stock().available());
+        SettlementPlot plot =
+                SettlementPlot.survey(center, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, center.y()), wood);
+        store.fix(plot);
+        LOGGER.info(
+                "[plot] высота {}: медиана по {} колонкам, мин {} макс {}, центр ({}, {}) по {} домам духов, порода {}",
+                plot.anchor().y(),
+                plot.columns(),
+                plot.min(),
+                plot.max(),
+                plot.anchor().x(),
+                plot.anchor().z(),
+                homes.size(),
+                wood);
+        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current()));
+        return plot;
+    }
+
+    private static List<BlockCoord> homes(List<SpiritEntity> spirits) {
+        return spirits.stream().flatMap(spirit -> spirit.home().stream()).toList();
+    }
+
+    // Уровень, на котором стоят станции и сундуки поселения: медиана домов духов (для обзора вокруг дома).
+    private static int homeY(List<SpiritEntity> spirits) {
+        return SettlementPlot.center(homes(spirits)).y();
     }
 }

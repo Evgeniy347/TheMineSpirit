@@ -1,7 +1,9 @@
 package com.theminespirit.core.building;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,18 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class WoodSpeciesTests {
+
+    @Test
+    void sameRole_LogOfOtherSpecies_KeptByBuilder() {
+        assertTrue(
+                WoodSpecies.sameRole("minecraft:jungle_log", "oak_log"),
+                "Столб jungle_log на месте oak_log схемы — тот же блок поселения: стройка его не сносит (INC-58)");
+        assertTrue(WoodSpecies.sameRole("dark_oak_fence", "minecraft:oak_fence"), "Забор любой породы — забор");
+        assertFalse(
+                WoodSpecies.sameRole("jungle_log", "oak_planks"),
+                "Бревно на месте досок — другой блок: стройка его заменяет");
+        assertFalse(WoodSpecies.sameRole("stone", "oak_log"), "Не деревянный блок — не та же роль");
+    }
 
     @Test
     void of_JungleLogsOnly_Jungle() {

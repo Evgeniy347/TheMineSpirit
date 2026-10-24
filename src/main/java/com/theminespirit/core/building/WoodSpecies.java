@@ -36,6 +36,21 @@ public final class WoodSpecies {
         return ALL.stream().filter(species -> name.startsWith(species + "_")).findFirst();
     }
 
+    // Тот же деревянный блок другой породы (jungle_log и oak_log, jungle_fence и oak_fence): стройка такой не сносит —
+    // поставленный поселением столб при смене породы считался «чужим» и ломался (INC-58).
+    public static boolean sameRole(String first, String second) {
+        Objects.requireNonNull(first, "Блок не может быть null: роль сравнивают по имени");
+        Objects.requireNonNull(second, "Блок не может быть null: роль сравнивают по имени");
+        Optional<String> left = speciesOf(first);
+        Optional<String> right = speciesOf(second);
+        return left.isPresent() && right.isPresent() && role(first, left.get()).equals(role(second, right.get()));
+    }
+
+    private static String role(String block, String species) {
+        String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
+        return name.substring(species.length() + 1);
+    }
+
     public static String swap(String block, String species) {
         Objects.requireNonNull(block, "Блок не может быть null: заменять нечего");
         check(species);

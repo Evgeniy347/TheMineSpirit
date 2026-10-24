@@ -394,6 +394,16 @@ public final class BoardService {
         return outcome;
     }
 
+    // Сделанное задание снова в работе (мир с ним разошёлся, INC-50): снимается с доски и из отметок построек.
+    public boolean reopen(String ticketId) {
+        boolean reopened = board.reopen(ticketId);
+        if (reopened) {
+            targets.remove(ticketId);
+            persist();
+        }
+        return reopened;
+    }
+
     public boolean cancel(ServerLevel level, String ticketId) {
         Set<UUID> holders = new HashSet<>();
         collectHolders(ticketId, holders, new HashSet<>());
@@ -475,7 +485,7 @@ public final class BoardService {
             return false;
         }
         launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
-        board.occupy(spirit.getUUID(), activity, board.now());
+        board.occupy(spirit.getUUID(), activity, script, board.now());
         return true;
     }
 
@@ -485,7 +495,12 @@ public final class BoardService {
             present.add(spirit.getUUID());
             Optional<BoardCase> occupation = occupationOf(spirit);
             if (occupation.isPresent()) {
-                board.occupy(spirit.getUUID(), occupation.get(), board.now());
+                // Любая задача духа (доска, REST, команда, интеллект) видна занятием со своим скриптом (INC-48).
+                board.occupy(
+                        spirit.getUUID(),
+                        occupation.get(),
+                        spirit.currentPlan().map(BoardActivities::scriptOf).orElse(null),
+                        board.now());
             } else {
                 board.vacate(spirit.getUUID());
             }

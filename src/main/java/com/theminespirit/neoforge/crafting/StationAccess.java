@@ -1,11 +1,15 @@
 package com.theminespirit.neoforge.crafting;
 
+import com.theminespirit.core.board.SettlementLayout;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.crafting.WorkCorner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ReachApproach;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 final class StationAccess {
     enum State {
@@ -20,6 +24,8 @@ final class StationAccess {
     }
 
     private static final Supply NO_SUPPLY = spirit -> false;
+    // Дух дальше от участка (поход) — станция поселения не ищется: идти к ней дольше, чем поставить свою.
+    private static final int SETTLEMENT_REACH = 48;
 
     private final SpiritEntity spirit;
     private final StationType type;
@@ -31,6 +37,8 @@ final class StationAccess {
     private BlockPos pos;
     private BlockPos anchor;
     private StationFinder cornerFinder;
+    private StationFinder settlementFinder;
+    private boolean settlementSearched;
     private String failureReason;
 
     StationAccess(SpiritEntity spirit, StationType type, int radius) {
@@ -83,6 +91,27 @@ final class StationAccess {
             headTo(existing.get());
             return;
         }
+        // Станции поселения общие (INC-51): нет рядом с духом — сначала к станции на участке, новая не ставится.
+        if (!settlementSearched && settlementFinder == null) {
+            Optional<BlockPos> center = settlementCenter()
+                    .filter(at -> at.distSqr(spirit.blockPosition()) <= SETTLEMENT_REACH * SETTLEMENT_REACH);
+            if (center.isPresent()) {
+                settlementFinder = new StationFinder(spirit.level(), center.get(), SettlementLayout.PLOT, type);
+            } else {
+                settlementSearched = true;
+            }
+        }
+        if (!settlementSearched) {
+            if (!settlementFinder.step()) {
+                return;
+            }
+            settlementSearched = true;
+            Optional<BlockPos> shared = settlementFinder.found();
+            if (shared.isPresent()) {
+                headTo(shared.get());
+                return;
+            }
+        }
         if (spirit.getInventory().countItem(type.item()) < 1 && !supply.provide(spirit)) {
             fail(type.needed() + ": рядом (" + radius + ") нет, в инвентаре нет");
             return;
@@ -97,6 +126,18 @@ final class StationAccess {
             return;
         }
         headTo(placed.get());
+    }
+
+    private Optional<BlockPos> settlementCenter() {
+        if (spirit.level() instanceof ServerLevel level) {
+            Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
+            if (plot.isPresent()) {
+                BlockCoord anchor = plot.get().anchor();
+                return Optional.of(new BlockPos(anchor.x(), anchor.y(), anchor.z()));
+            }
+        }
+        // Без зафиксированного участка поселения нет: дом одного духа — не участок.
+        return Optional.empty();
     }
 
     private BlockPos placementAnchor() {

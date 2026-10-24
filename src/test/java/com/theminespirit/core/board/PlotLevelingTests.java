@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -8,6 +10,33 @@ import org.junit.jupiter.api.Test;
 
 class PlotLevelingTests {
     private static final BlockCoord ANCHOR = new BlockCoord(0, 64, 0);
+
+    @Test
+    void isLevel_StepOfOneBlock_Level() {
+        assertTrue(
+                PlotLeveling.isLevel(ANCHOR, 11, (x, z) -> x > 0 ? 65 : 64),
+                "Ступенька в блок — в допуске: ровный участок не выравнивается по кругу");
+    }
+
+    @Test
+    void isLevel_HumpOfTwoBlocks_NotLevel() {
+        assertFalse(
+                PlotLeveling.isLevel(ANCHOR, 11, (x, z) -> x == 11 && z == -11 ? 66 : 64),
+                "Бугор в два блока у края участка 23×23 — вне допуска: участок без деревьев всё равно выравнивается "
+                        + "(INC-50)");
+    }
+
+    @Test
+    void mineColumn_DescentInsidePlot_SkippedByLeveling() {
+        BlockCoord entrance = SettlementLayout.mineEntrance(ANCHOR);
+
+        assertTrue(
+                SettlementLayout.mineColumn(ANCHOR, entrance.x(), entrance.z() + 5),
+                "Спуск в шахту на юг от входа — не яма участка: подсыпка засыпала бы его");
+        assertFalse(
+                SettlementLayout.mineColumn(ANCHOR, entrance.x() + 2, entrance.z()),
+                "Колонка за стенкой спуска — обычная земля участка, её выравнивают");
+    }
 
     @Test
     void plan_FlatPlot_NothingToDo() {

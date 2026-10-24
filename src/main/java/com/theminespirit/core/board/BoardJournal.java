@@ -104,6 +104,8 @@ public final class BoardJournal {
                 if (entry.event() == BoardLog.Event.DONE) {
                     ledger.note(entry.boardCase(), entry.level());
                     restored++;
+                } else if (entry.event() == BoardLog.Event.REOPENED) {
+                    ledger.forget(entry.boardCase(), entry.level());
                 }
             } catch (RuntimeException failure) {
                 lastLine = index + 1;

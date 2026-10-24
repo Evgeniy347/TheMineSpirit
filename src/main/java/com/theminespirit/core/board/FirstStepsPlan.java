@@ -13,12 +13,11 @@ import java.util.function.Predicate;
  *
  * <p>Порядок — решение владельца 21.10: верстак → деревянные инструменты → шахта (вход и спуск) →
  * каменные инструменты (булыжник со спуска) → печь → свет (факелы) → сундуки → расчистка участка → забор → дом →
- * стол кузнеца → наковальня. Шаг, сделанный по журналу доски, больше не повторяется, даже если факт мира не виден
- * или регрессировал (шахта без лестницы, сломанный инструмент — его восполняет постоянный запас); шаг, упавший до
- * BLOCKED, пропускается — дух получает следующий шаг, а не стоит (правило владельца).
+ * стол кузнеца → наковальня. Шаг, сделанный по журналу доски (кроме построек раскладки — их сверяет мир), больше
+ * не повторяется, даже если факт мира не виден или регрессировал (шахта без лестницы, сломанный инструмент — его
+ * восполняет постоянный запас); шаг, упавший до BLOCKED, пропускается — дух получает следующий шаг, а не стоит (правило владельца).
  */
 public final class FirstStepsPlan {
-    private static final Predicate<SettlementFacts> LAYOUT_BUILD = facts -> false;
     private static final List<Step> ORDER = order();
 
     private FirstStepsPlan() {}
@@ -34,12 +33,10 @@ public final class FirstStepsPlan {
         }
         for (Step step : ORDER) {
             BoardCase boardCase = step.boardCase();
-            if (facts.done().contains(boardCase) || facts.blocked().contains(boardCase)) {
+            if (facts.blocked().contains(boardCase) || step.finished(facts)) {
                 continue;
             }
-            if (!step.satisfied().test(facts)) {
-                return Optional.of(boardCase);
-            }
+            return Optional.of(boardCase);
         }
         return Optional.empty();
     }
@@ -55,9 +52,7 @@ public final class FirstStepsPlan {
                 passed = boardCase == current;
                 continue;
             }
-            boolean pending = !facts.done().contains(boardCase)
-                    && !facts.blocked().contains(boardCase)
-                    && !step.satisfied().test(facts);
+            boolean pending = !facts.blocked().contains(boardCase) && !step.finished(facts);
             if (pending && wanted.contains(boardCase)) {
                 return Optional.of(boardCase);
             }
@@ -72,24 +67,41 @@ public final class FirstStepsPlan {
         for (BoardCase tool : ToolSet.wooden()) {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
-        steps.add(new Step(BoardCase.BUILD_MINE, SettlementFacts::mineEntrance));
+        // Шахта — постройка плана поселения (INC-59): сделана, только если спуск по схеме стоит на своём месте.
+        steps.add(Step.layout(BoardCase.BUILD_MINE, SettlementFacts::mineEntrance));
         for (BoardCase tool : ToolSet.stone()) {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));
         }
         steps.add(new Step(BoardCase.CRAFT_FURNACE, SettlementFacts::furnace));
         // Расчистка — до факелов: факелы встают по углам участка (SettlementLayout), а до расчистки там деревья
         // («клетка … занята», приёмка «джунгли» 23.10).
-        steps.add(new Step(BoardCase.CLEAR_GROUNDS, SettlementFacts::groundsCleared));
-        // Свет, ограда и дом — постройки раскладки участка (SettlementLayout): готовы, только когда их задание
-        // закрыто в журнале. Любой факел или кусок забора рядом их не заменяет: недостроенная ограда (93 из 105)
-        // считалась готовой, шаг больше не ставился, и этап 1 не закрывался (приёмка «джунгли» 23.10).
-        steps.add(new Step(BoardCase.LIGHTING, LAYOUT_BUILD));
-        steps.add(new Step(BoardCase.BUILD_FENCE, LAYOUT_BUILD));
-        steps.add(new Step(BoardCase.BUILD_HOUSE, LAYOUT_BUILD));
+        // Выравнивание — свой факт мира, а не «нет деревьев»: на голом неровном участке расчистка с выравниванием
+        // пропускалась навсегда (INC-50).
+        steps.add(new Step(BoardCase.CLEAR_GROUNDS, SettlementFacts::groundsCleared, SettlementFacts::plotLevel));
+        // Свет, ограда и дом — постройки раскладки участка (SettlementLayout): готовы, только когда задание закрыто
+        // в журнале И постройка стоит в мире по своим клеткам. Любой факел рядом её не заменяет (ограда 93 из 105
+        // считалась готовой, приёмка 23.10), а DONE старой сборки при пустом мире не вечен (INC-50).
+        steps.add(Step.layout(BoardCase.LIGHTING, SettlementFacts::lighting));
+        steps.add(Step.layout(BoardCase.BUILD_FENCE, SettlementFacts::fence));
+        steps.add(Step.layout(BoardCase.BUILD_HOUSE, SettlementFacts::houses));
         steps.add(new Step(BoardCase.CRAFT_SMITHING_TABLE, SettlementFacts::smithingTable));
         steps.add(new Step(BoardCase.CRAFT_ANVIL, SettlementFacts::anvil));
         return List.copyOf(steps);
     }
 
-    private record Step(BoardCase boardCase, Predicate<SettlementFacts> satisfied) {}
+    // satisfied — факт мира, заменяющий журнал; world — факт мира, без которого шаг не сделан и по журналу.
+    private record Step(BoardCase boardCase, Predicate<SettlementFacts> satisfied, Predicate<SettlementFacts> world) {
+        Step(BoardCase boardCase, Predicate<SettlementFacts> satisfied) {
+            this(boardCase, satisfied, facts -> true);
+        }
+
+        // Постройка раскладки: журнал её не заменяет, а мир обязателен.
+        static Step layout(BoardCase boardCase, Predicate<SettlementFacts> built) {
+            return new Step(boardCase, facts -> false, built);
+        }
+
+        boolean finished(SettlementFacts facts) {
+            return (facts.done().contains(boardCase) || satisfied.test(facts)) && world.test(facts);
+        }
+    }
 }

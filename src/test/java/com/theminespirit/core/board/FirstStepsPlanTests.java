@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class FirstStepsPlanTests {
     private static final Set<BoardCase> LAYOUT =
-            EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+            EnumSet.of(BoardCase.BUILD_MINE, BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
 
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
@@ -42,7 +42,7 @@ class FirstStepsPlanTests {
         List<BoardCase> chain = chain();
         Set<BoardCase> passed = EnumSet.noneOf(BoardCase.class);
         passed.addAll(chain.subList(0, Math.min(step, chain.size())));
-        // Постройки раскладки (свет, ограда, дом) готовы только по журналу: пройденные — закрыты в нём.
+        // Постройки плана (шахта, свет, ограда, дом) готовы только по журналу и миру: пройденные — закрыты в нём.
         Set<BoardCase> done = EnumSet.noneOf(BoardCase.class);
         passed.stream().filter(LAYOUT::contains).forEach(done::add);
         return facts(passed, done, Set.of());
@@ -57,6 +57,7 @@ class FirstStepsPlanTests {
         }
         return new SettlementFacts(
                 true,
+                world.contains(BoardCase.CLEAR_GROUNDS),
                 world.contains(BoardCase.CLEAR_GROUNDS),
                 world.contains(BoardCase.STOCK_CHESTS) ? 2 : 0,
                 world.contains(BoardCase.CRAFTING_STATION),
@@ -128,16 +129,86 @@ class FirstStepsPlanTests {
     }
 
     @Test
-    void next_StepDoneInLedgerButFactMissing_Skipped() {
+    void next_MineDoneInLedgerButDescentMissing_MineAgain() {
         Set<BoardCase> world = EnumSet.noneOf(BoardCase.class);
         world.addAll(chain().subList(0, chain().indexOf(BoardCase.BUILD_MINE)));
         SettlementFacts facts = facts(world, Set.of(BoardCase.BUILD_MINE), Set.of());
 
         assertEquals(
-                Optional.of(BoardCase.CRAFT_STONE_PICKAXE),
+                Optional.of(BoardCase.BUILD_MINE),
                 FirstStepsPlan.next(facts),
-                "Шахта сделана по журналу доски, но лестницы в мире нет (спуск её не ставит): цепочка идёт дальше, "
-                        + "а не встаёт навсегда на DONE-шаге, который нельзя переиздать");
+                "Шахта закрыта в журнале (старой сборкой), но спуска по схеме на месте плана нет: шахта снова в "
+                        + "очереди, а старая яма шахтой не считается (INC-59)");
+    }
+
+    @Test
+    void next_LayoutDoneInJournalButMissingInWorld_StepQueuedAgain() {
+        int lighting = chain().indexOf(BoardCase.LIGHTING);
+        Set<BoardCase> world = EnumSet.copyOf(chain().subList(0, lighting));
+        Set<BoardCase> done = EnumSet.of(BoardCase.BUILD_MINE, BoardCase.LIGHTING);
+        SettlementFacts facts = facts(world, done, Set.of());
+
+        assertEquals(
+                Optional.of(BoardCase.LIGHTING),
+                FirstStepsPlan.next(facts),
+                "Свет закрыт в журнале (старой сборкой), но факелов в клетках раскладки нет: шаг снова в очереди, "
+                        + "иначе поселение навсегда без факелов (INC-50)");
+    }
+
+    @Test
+    void next_NoTreesButPlotUneven_ClearGroundsQueued() {
+        int clear = chain().indexOf(BoardCase.CLEAR_GROUNDS);
+        SettlementFacts level = factsAt(clear);
+        SettlementFacts facts = new SettlementFacts(
+                true,
+                true,
+                false,
+                level.chests(),
+                level.craftingStation(),
+                level.tools(),
+                level.mineEntrance(),
+                level.furnace(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                level.done(),
+                level.blocked());
+
+        assertEquals(
+                Optional.of(BoardCase.CLEAR_GROUNDS),
+                FirstStepsPlan.next(facts),
+                "Деревьев нет, но перепад высот вне допуска: расчистка с выравниванием встаёт в очередь — "
+                        + "выравнивание отдельный факт, а не «нет брёвен» (INC-50)");
+    }
+
+    @Test
+    void next_ClearDoneInJournalButPlotUneven_ClearBeforeFence() {
+        int clear = chain().indexOf(BoardCase.CLEAR_GROUNDS);
+        SettlementFacts level = factsAt(clear);
+        SettlementFacts facts = new SettlementFacts(
+                true,
+                true,
+                false,
+                level.chests(),
+                level.craftingStation(),
+                level.tools(),
+                level.mineEntrance(),
+                level.furnace(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                EnumSet.of(BoardCase.BUILD_MINE, BoardCase.CLEAR_GROUNDS),
+                level.blocked());
+
+        assertEquals(
+                Optional.of(BoardCase.CLEAR_GROUNDS),
+                FirstStepsPlan.next(facts),
+                "Расчистка закрыта в журнале, но участок с полосой за оградой не ровный: ограда не ставится, пока "
+                        + "уступ у забора даёт перелезть — сначала снова выравнивание (INC-53)");
     }
 
     @Test
@@ -157,6 +228,7 @@ class FirstStepsPlanTests {
         SettlementFacts base = facts(world, Set.of(), Set.of());
         SettlementFacts facts = new SettlementFacts(
                 true,
+                false,
                 false,
                 2,
                 true,
@@ -188,7 +260,8 @@ class FirstStepsPlanTests {
     @Test
     void next_NoHome_Empty() {
         SettlementFacts noHome = new SettlementFacts(
-                false, false, 0, false, Set.of(), false, false, false, false, false, false, false, Set.of(), Set.of());
+                false, false, false, 0, false, Set.of(), false, false, false, false, false, false, false, Set.of(),
+                Set.of());
 
         assertEquals(Optional.empty(), FirstStepsPlan.next(noHome), "Без дома первых шагов нет: цепочку задаёт дом");
     }
@@ -204,7 +277,8 @@ class FirstStepsPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SettlementFacts(
-                        true, true, -1, true, Set.of(), true, true, true, true, true, true, true, Set.of(), Set.of()),
+                        true, true, true, -1, true, Set.of(), true, true, true, true, true, true, true, Set.of(),
+                        Set.of()),
                 "Отрицательное число сундуков — ошибка адаптера");
     }
 

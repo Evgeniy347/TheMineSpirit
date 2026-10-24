@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.crafting;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritGesture;
+import com.theminespirit.neoforge.board.PlacementJournal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +35,7 @@ public final class StationPlacer {
                 spirit.getInventory().removeItemType(type.item(), 1);
                 level.setBlock(cell, state, Block.UPDATE_ALL);
                 SpiritGesture.workOn(spirit, cell);
+                PlacementJournal.placed(spirit, type.noun(), cell, "своей станции рядом не найдено");
                 return Optional.of(cell);
             }
         }

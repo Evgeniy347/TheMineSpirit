@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
@@ -10,13 +11,19 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;
+import java.util.Locale;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 final class TreeChop {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final double DIAGONAL_PENALTY = 10_000;
+
     enum State {
         RUNNING,
         DONE,
@@ -74,6 +81,7 @@ final class TreeChop {
     private int skippedCells;
     private boolean lackedSaplings;
     private boolean breaking;
+    private @Nullable BlockPos stand;
 
     TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, TreeView view) {
         this.spirit = spirit;
@@ -101,7 +109,8 @@ final class TreeChop {
         lackedSaplings = false;
         breaking = false;
         Vec3 approachPoint = stand == null ? Vec3.atCenterOf(toPos(target.base())) : Vec3.atBottomCenterOf(stand);
-        approach.begin(approachPoint, ChopTuning.STAND_DISTANCE);
+        this.stand = stand;
+        approach.begin(approachPoint, stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
     }
 
@@ -148,6 +157,16 @@ final class TreeChop {
     }
 
     private Outcome resumeChop() {
+        if (phase == Phase.APPROACH) {
+            BlockCoord base = tree.base();
+            double trunk = Math.sqrt(spirit.position().distanceToSqr(Vec3.atBottomCenterOf(toPos(base))));
+            LOGGER.info(
+                    "[chop] {} у дерева {}: стоянка {}, до ствола {}",
+                    spirit.getName().getString(),
+                    base,
+                    stand == null ? "нет (подход к стволу)" : stand.toShortString(),
+                    String.format(Locale.ROOT, "%.1f", trunk));
+        }
         phase = Phase.CHOP;
         return Outcome.running();
     }
@@ -249,7 +268,10 @@ final class TreeChop {
                         if (!isStandable(pos)) {
                             continue;
                         }
-                        double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos));
+                        // Соседняя по стороне клетка — вплотную к стволу; по диагонали — только если сбоку негде
+                        // встать (INC-49).
+                        double diagonal = dx != 0 && dz != 0 ? DIAGONAL_PENALTY : 0;
+                        double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos)) + diagonal;
                         if (distance < bestDistance) {
                             bestDistance = distance;
                             best = pos;

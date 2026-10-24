@@ -7,10 +7,9 @@ entrance: 3,0,0
 legend:
   'F': oak_fence
   'G': oak_fence_gate
-  'L': oak_log[axis=y]
   'T': torch
 layers:
   - y0 секция, столбы по краям: |
-      LFFGFFFL
+      FFFGFFFF
   - y1 факелы на столбах: |
       T      T

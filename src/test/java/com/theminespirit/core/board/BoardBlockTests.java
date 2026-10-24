@@ -81,6 +81,29 @@ class BoardBlockTests {
     }
 
     @Test
+    void claimable_Unblocked_NoStaleHolder() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        int limit = BoardTuning.ticketFailLimit();
+        for (int attempt = 1; attempt <= limit; attempt++) {
+            if (attempt > 1) {
+                board.prune(now[0]);
+                now[0] += BoardTuning.failBackoffTicks();
+            }
+            board.submit(ticket());
+            board.claim(ID, spirit(attempt), now[0]);
+            board.fail(ID);
+        }
+
+        board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
+
+        assertEquals(
+                Optional.empty(),
+                board.holderOf(ID),
+                "Снова PENDING — без держателя: «PENDING с assignee» висел на доске, будто задание взято (INC-47)");
+    }
+
+    @Test
     void claimable_MaterialsAppeared_UnblocksAndWritesJournal() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

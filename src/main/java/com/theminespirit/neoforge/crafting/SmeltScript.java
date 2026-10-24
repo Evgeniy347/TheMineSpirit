@@ -235,8 +235,9 @@ public final class SmeltScript implements ScriptInstance {
         if (!adopted
                 && FurnaceSession.contentsAt(spirit.level(), pos)
                         .map(c -> !c.isEmpty())
-                        .orElse(false)) {
-            return fail("печь в " + pos.toShortString() + " занята: в ней лежат чужие предметы");
+                        .orElse(false)
+                && !FurnaceSession.shareSettlementFurnace(spirit, pos, inputItem)) {
+            return fail("печь в " + pos.toShortString() + " занята: в ней идёт плавка другого сырья");
         }
         FurnaceSession.Job job = new FurnaceSession.Job(
                 inputItem,
