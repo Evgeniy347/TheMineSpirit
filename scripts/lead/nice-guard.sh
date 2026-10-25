@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# Сторож приоритета на сервере: исполнители opencode и всё, что они породили (bash, gradle, java GameTest), —
-# с наименьшим приоритетом процессора (nice 19) и диска (ionice idle), чтобы живой сервер и машина не тормозили.
-# Цели: потомки надзора scripts/opencode-task.sh и opencode; процессы с рабочей папкой в /opt/minecraft/wt/;
-# демоны и рабочие Gradle (у демона рабочая папка ~/.gradle/daemon — он собирает worktree исполнителей).
-# Не трогаем никогда: живой сервер (/opt/minecraft/server), tmux (в его командной строке бывает имя надзора — тогда
-# всё в tmux оказалось бы «потомком»), сторожей (mem-guard, nice-guard).
-# Запуск: tmux new-session -d -s nice-guard "bash /opt/minecraft/the-mine-spirit/scripts/lead/nice-guard.sh";
-# журнал — /opt/minecraft/wt/logs/nice-guard.log (строка на каждое понижение).
 set -u
 INTERVAL="${NICE_GUARD_INTERVAL:-30}"
 LOG="${NICE_GUARD_LOG:-/opt/minecraft/wt/logs/nice-guard.log}"
@@ -24,7 +16,6 @@ targets() {
     for p in $(pgrep -f 'opencode-task[.]sh|[.]opencode/bin/opencode'); do
         case "$(ps -o comm= -p "$p" 2>/dev/null)" in tmux*|"") ;; *) roots="$roots $p" ;; esac
     done
-    # Потомки корней: обход дерева по таблице pid→ppid за один снимок ps.
     ps -eo pid=,ppid= | awk -v roots="$roots" '
         { parent[$1] = $2; pids[NR] = $1 }
         END {
@@ -36,7 +27,6 @@ targets() {
             }
             for (p in mark) print p
         }'
-    # Рабочая папка в worktree исполнителей (временные проверки — тоже там), демоны и рабочие Gradle.
     local d cwd
     for d in /proc/[0-9]*; do
         cwd=$(readlink "$d/cwd" 2>/dev/null) || continue

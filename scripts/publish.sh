@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Каноническая публикация мода: сборка, снимок мира, установка jar на сервер, перезапуск.
-#
-# ВНИМАНИЕ: публикация мода и перезапуск сервера выполняются ТОЛЬКО ПО ПРЕДВАРИТЕЛЬНОМУ
-# СОГЛАСОВАНИЮ С ПОЛЬЗОВАТЕЛЕМ. По умолчанию скрипт требует интерактивного подтверждения
-# и без него не меняет ничего. Флаг -y/--yes означает, что согласование уже получено.
 set -euo pipefail
 
 MOD_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -40,7 +35,6 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# --- Гейт согласования: до любых изменений ---------------------------------
 echo "ВНИМАНИЕ: публикация мода и перезапуск сервера выполняются ТОЛЬКО ПО"
 echo "ПРЕДВАРИТЕЛЬНОМУ СОГЛАСОВАНИЮ С ПОЛЬЗОВАТЕЛЕМ."
 echo
@@ -59,7 +53,6 @@ elif ! $dry_run; then
     esac
 fi
 
-# --- Режим dry-run: только план --------------------------------------------
 if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet build"
@@ -78,13 +71,10 @@ if $dry_run; then
     exit 0
 fi
 
-# --- Сборка ----------------------------------------------------------------
 cd "$MOD_DIR"
 echo "Сборка мода..."
 ./gradlew --quiet build
 
-# --- Поиск jar мода по шаблону ---------------------------------------------
-# Имя содержит версию, поэтому старые jar остаются в build/libs; свежесобранный — самый новый.
 mapfile -t jars < <(find build/libs -maxdepth 1 -name 'theminespirit-*.jar' \
     ! -name '*-sources.jar' ! -name '*-javadoc.jar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
 if [ "${#jars[@]}" -eq 0 ]; then
@@ -103,9 +93,7 @@ if [ "$size" -lt 4096 ]; then
 fi
 echo "Найден $(basename "$jar") ($size байт)"
 
-# --- Определение состояния сервера -----------------------------------------
 if [ -f "$SERVER_DIR/scripts/common.sh" ]; then
-    # shellcheck source=/dev/null
     source "$SERVER_DIR/scripts/common.sh"
     TMUX_SESSION="${TMUX_SESSION:-minecraft}"
 else
@@ -118,7 +106,6 @@ if is_running; then
     was_running=true
 fi
 
-# --- Снимок мира (если есть) -----------------------------------------------
 if [ -x "$SERVER_DIR/scripts/snapshot.sh" ]; then
     echo "Снимок мира..."
     "$SERVER_DIR/scripts/snapshot.sh"
@@ -126,7 +113,6 @@ else
     echo "snapshot.sh не найден, снимок мира пропущен."
 fi
 
-# --- Установка мода --------------------------------------------------------
 if $do_restart && $was_running; then
     echo "Остановка сервера..."
     "$SERVER_DIR/scripts/stop.sh"
@@ -137,7 +123,6 @@ rm -f "$SERVER_DIR"/mods/theminespirit-*.jar
 cp "$jar" "$SERVER_DIR/mods/"
 echo "Установлен $(basename "$jar")"
 
-# --- Перезапуск ------------------------------------------------------------
 if $do_restart; then
     if $was_running; then
         echo "Запуск сервера..."
@@ -150,8 +135,6 @@ elif $was_running; then
     echo "(выбран --no-restart)."
 fi
 
-# --- Страница «Сервер» на gateway ------------------------------------------
-# Дата берётся из mtime установленного jar: cp в mods/ ставит его в момент установки.
 installed="$SERVER_DIR/mods/${jar##*/}"
 status_args=("$installed")
 if $was_running && ! $do_restart; then
@@ -161,7 +144,6 @@ if ! bash "$MOD_DIR/scripts/publish-status.sh" "${status_args[@]}"; then
     echo "ВНИМАНИЕ: публикация состоялась, но страница «Сервер» не обновлена" >&2
 fi
 
-# --- Тег версии -------------------------------------------------------------
 version="${jar##*/}"
 version="${version#theminespirit-}"
 version="${version%.jar}"

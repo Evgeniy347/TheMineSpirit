@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Выбор бесплатной модели opencode для нового задания по свежим сбоям и загрузке (docs/EXECUTOR-MODELS.md).
-# Оценка = сбои модели в failures.log за последние OPENCODE_PICK_WINDOW минут + OPENCODE_PICK_SESSION_COST × её
-# работающих процессов opencode. Побеждает наименьшая; ничья — по порядку списка (сильные модели первыми).
-# Печатает имя модели; с --table — таблицу оценок. Список кандидатов — OPENCODE_PICK_MODELS (через пробел).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 models="${OPENCODE_PICK_MODELS:-opencode/longcat-2.5-preview-free opencode/mimo-v2.6-flash-free opencode/muse-spark-1.3-contributor-free opencode/big-pickle opencode/nemotron-3-ultra-free opencode/step-5-preview-free opencode/ling-3.1-flash-free}"

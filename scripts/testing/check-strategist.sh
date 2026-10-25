@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка агента-стратега (~1 мин): python3 -m unittest в agents/strategist и сценарии scripts/strategist.sh
-# на временном STRATEGIST_HOME с фейковым REST (--fixtures) и командным «мозгом». Реального opencode и сервера Minecraft нет.
-# Каждая строка вывода начинается с OK или FAIL; код выхода 1, если есть хотя бы один FAIL.
 cd "$(dirname "$0")/../.." || exit 2
 root="$PWD"
 work="$root/TestResults/strategist-check"

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка scripts/opencode-task.sh на подделке opencode (~4 мин). Каждая строка вывода начинается с OK или FAIL.
 cd "$(dirname "$0")/../.."
 work="TestResults/opencode-check"
 rm -rf "$work"
@@ -7,7 +6,6 @@ mkdir -p "$work"
 export OPENCODE_BIN="$PWD/scripts/testing/fake-opencode.sh"
 export OPENCODE_LOG_ROOT="$PWD/$work/logs"
 export OPENCODE_ALLOW_DIRTY=1
-# Правило «короткий ответ при грязном дереве — обрыв» проверяется отдельным случаем: рабочее дерево проверки само бывает грязным.
 export OPENCODE_DIRTY_SHORT_ANSWER=0
 export OPENCODE_TASK_FILE="$PWD/$work/task.md"
 failures_log="$OPENCODE_LOG_ROOT/failures.log"
@@ -41,7 +39,6 @@ for net_case in network_error_json network_error_stderr; do
 done
 check silent_model 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6
 check busy_tool_is_not_silence 0 1 FAKE_BUSY_TOOL=15 OPENCODE_IDLE_LIMIT=6
-# Как на ПК (без pgrep): долгий прогон тестов виден только по пульсу scripts/test.sh, без пульса — молчание.
 check heartbeat_is_not_silence 0 1 FAKE_HEARTBEAT=15 OPENCODE_IDLE_LIMIT=6 OPENCODE_NO_PGREP=1
 check silent_without_pgrep 0 2 FAKE_SILENT=1 OPENCODE_IDLE_LIMIT=6 OPENCODE_NO_PGREP=1
 check tool_read_mentions_error 0 1 FAKE_TOOL_READ=1
@@ -71,7 +68,6 @@ failures_after=$(wc -l < "$failures_log")
 echo "  строк добавлено в failures.log: $((failures_after - failures_before)) (ожидаю 2+1+2+1+2+3+6 = 17: сбои провайдера, сетевые сбои, молчание, оборванные ответы, исчерпание; плюс записи зацикливания)"
 tail -n 1 "$failures_log" | sed 's/^/  последняя: /'
 
-# Режим ожидания (короткие интервалы через переменные): 5 быстрых перезапусков исчерпаны, дальше — пробы провайдера.
 wait_env=(OPENCODE_RETRY_DELAYS="1 1 1 1 1" OPENCODE_PROBE_INTERVAL=2 OPENCODE_PROBE_TIMEOUT=3)
 check_probes() {
     local name="$1" min="$2" max="$3" probes

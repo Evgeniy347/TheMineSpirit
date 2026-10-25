@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка хука scripts/git-hooks/pre-commit на временном клоне (~1–2 мин). Каждая строка вывода начинается с OK или FAIL.
-# Клон лежит в TestResults/pre-commit-check/clone; хуки берутся из рабочего дерева (не из HEAD), основной репозиторий не меняется.
 cd "$(dirname "$0")/../.." || exit 2
 src="$PWD"
 work="$src/TestResults/pre-commit-check"
@@ -21,7 +19,6 @@ write_probe() {
         "$1" "$2" >"$probe"
 }
 
-# check <имя> <ожидаемый код git> <ожидаемо ли «прогоняю» в выводе: да|нет> <команда коммита…>
 check() {
     local name="$1" want_code="$2" want_run="$3"
     shift 3
@@ -47,12 +44,10 @@ write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 git add "$probe"
 check green_test_accepted 0 да git commit -m "test: зелёный зонд"
 
-# git commit -- <путь> идёт через временный индекс (GIT_INDEX_FILE): хук обязан увидеть и его.
 write_probe fail 'fail("красный тест-зонд");'
 check partial_commit_red_rejected 1 да git commit -m "test: красный зонд через путь" -- "$probe"
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 
-# Незастейдженная правка в src/ — предупреждение, что прогон относится к рабочему дереву.
 printf 'package com.theminespirit;
 class Unstaged {}
 ' >src/test/java/com/theminespirit/Unstaged.java
@@ -62,7 +57,6 @@ check unstaged_warning 0 да git commit -m "test: пустой класс-зо�
 grep -q "ВНИМАНИЕ — прогон относится к рабочему дереву" "$work/unstaged_warning.out"     && echo "OK предупреждение о незастейдженных правках напечатано" || echo "FAIL предупреждения о незастейдженных правках нет"
 git checkout -q HEAD -- "$probe"
 
-# Слияние — без прогона, даже если ветки меняли src/.
 git checkout -q -b side
 echo "// ветка" >>src/test/java/com/theminespirit/Unstaged.java
 git add -A && git commit -q -m "test: правка на ветке"

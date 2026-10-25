@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка замка scripts/test.sh gametest (и обёртки scripts/gametest.sh) без Gradle (секунды):
-# фейковый gradlew пишет время старта и конца и спит, поэтому видно, пересекаются ли запуски.
-# Отдельно проверяются гонки маркера: чужой живой замок с мёртвым PID и свежим пульсом не снимается,
-# release снимает только свой замок (по токену), два параллельных test.sh видят совпадающий токен.
-# Каждая строка вывода начинается с OK или FAIL; код выхода 1 при FAIL.
 cd "$(dirname "$0")/../.." || exit 2
 root="$PWD"
 work="$root/TestResults/gametest-lock-check"
@@ -11,11 +6,8 @@ rm -rf "$work"
 mkdir -p "$work/bin" "$work/tmp"
 failed=0
 
-# Запасной путь включаем явно (THEMINESPIRIT_GAMETEST_NOFLOCK=1): так проверка одинакова на Linux с flock и в Git Bash.
-# Проверки про один сервер: шарды проверяются в check-test-runner.sh.
 export THEMINESPIRIT_GAMETEST_SHARDS=1
 
-# Фейковый gradlew: время старта/конца в файл и сон на заданное время.
 cat >"$work/fake-gradlew" <<'FAKE'
 #!/usr/bin/env bash
 log="${FAKE_LOG:?}"
@@ -33,7 +25,6 @@ fail() { echo "FAIL $1"; failed=1; }
 export THEMINESPIRIT_GRADLEW="$work/fake-gradlew"
 export THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock"
 
-# 1. Два параллельных запуска не пересекаются по времени.
 log="$work/parallel.log"; : >"$log"
 THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$log" FAKE_SLEEP=3 bash scripts/gametest.sh >"$work/parallel1.out" 2>&1 &
 p1=$!
@@ -51,7 +42,6 @@ else
     fail "parallel: пересечение запусков (стартов $starts, концов $ends)"
 fi
 
-# 2. Протухший замок (пульс не обновлялся дольше порога) снимается, запуск идёт.
 rm -rf "$work/tmp/lock.d"
 mkdir -p "$work/tmp/lock.d"
 echo 999999 >"$work/tmp/lock.d/pid"
@@ -64,7 +54,6 @@ code=$?
 [ ! -d "$work/tmp/lock.d" ] && ok "stale: каталог замка удалён после выхода" || fail "stale: каталог замка остался"
 grep -q 'протухший' "$work/stale.out" && ok "stale: сообщение о протухшем замке напечатано" || fail "stale: нет сообщения о протухшем замке"
 
-# 3. Живой замок и малое ожидание — код 75; чужой маркер не тронут.
 rm -rf "$work/tmp/lock.d"
 mkdir -p "$work/tmp/lock.d"
 echo $$ >"$work/tmp/lock.d/pid"
@@ -78,13 +67,11 @@ code=$?
     && ok "busy: чужой токен не перезаписан" || fail "busy: чужой маркер изменён или снят"
 rm -rf "$work/tmp/lock.d"
 
-# 4. Падение gradlew: test.sh анализирует лог и возвращает 1 (FAIL gametest).
 THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$work/exitcode.log" FAKE_SLEEP=1 FAKE_EXIT=3 bash scripts/gametest.sh >"$work/exitcode.out" 2>&1
 code=$?
 [ "$code" = 1 ] && ok "exitcode: код=1 (FAIL)" || fail "exitcode: код=$code (ожидал 1)"
 [ ! -d "$work/tmp/lock.d" ] && ok "exitcode: каталог замка удалён после падения gradlew" || fail "exitcode: каталог замка остался"
 
-# 5. Ctrl+C (INT) снимает замок.
 THEMINESPIRIT_GAMETEST_NOFLOCK=1 FAKE_LOG="$work/int.log" FAKE_SLEEP=30 bash scripts/gametest.sh >"$work/int.out" 2>&1 &
 pi=$!
 sleep 1
@@ -93,9 +80,6 @@ wait "$pi" 2>/dev/null
 sleep 1
 [ ! -d "$work/tmp/lock.d" ] && ok "int: каталог замка снят по Ctrl+C" || fail "int: каталог замка остался после Ctrl+C"
 
-# 6. Протухший замок снимает ровно один из двух ожидающих: оба стартуют вместе и видят мёртвый pid,
-# снятие атомарно (mv во временное имя), поэтому сообщение о снятии печатает только победитель,
-# а оба запуска отрабатывают по очереди, без пересечения.
 rm -rf "$work/tmp/lock.d" "$work"/tmp/lock.d.stale.*
 mkdir -p "$work/tmp/lock.d"
 echo 999999 >"$work/tmp/lock.d/pid"
@@ -127,11 +111,6 @@ fi
 leftovers=$(ls -d "$work"/tmp/lock.d.stale.* 2>/dev/null | wc -l)
 [ "$leftovers" = 0 ] && ok "stale-race: переименованных остатков .stale.* не осталось" || fail "stale-race: остались $leftovers каталогов .stale.*"
 
-# 7. Дефолтный путь замка — общий для всех сессий: на Windows под $ALLUSERSPROFILE (ProgramData),
-# не %TEMP% (у разных сессий opencode TEMP может указывать в разные каталоги, а /tmp в Git Bash
-# монтируется именно в %TEMP%). Проверка поведенческая: фейковый gradlew в момент запуска пишет,
-# существует ли маркер по дефолту и в %TEMP%; TMP/TEMP обнулены намеренно, а ALLUSERSPROFILE
-# подменён тестовым каталогом — проверка не трогает общий замок машины.
 cat >"$work/fake-check-lock" <<'FAKE'
 #!/usr/bin/env bash
 log="${FAKE_LOG:?}"
@@ -174,8 +153,6 @@ if [ -n "$CHECK_TMP_DIR" ]; then
 fi
 unset CHECK_DEFAULT_DIR CHECK_TMP_DIR
 
-# 8. «Мёртвый» PID холдера при свежем пульсе: замок живой, не снимается (kill -0 больше не судья).
-# Это ровно случай Windows, когда PID другого сеанса MSYS выглядит мёртвым.
 rm -rf "$work/tmp/lock.d"
 mkdir -p "$work/tmp/lock.d"
 echo 999999 >"$work/tmp/lock.d/pid"
@@ -193,7 +170,6 @@ grep -q 'протухший' "$work/deadpid.out" \
     && fail "deadpid-fresh-beat: замок сняли как протухший" || ok "deadpid-fresh-beat: протухшим не признан"
 rm -rf "$work/tmp/lock.d"
 
-# 9. Маркер старого формата (PID без heartbeat и токена) при свежем mtime не снимается.
 rm -rf "$work/tmp/lock.d"
 mkdir -p "$work/tmp/lock.d"
 echo 999999 >"$work/tmp/lock.d/pid"
@@ -207,8 +183,6 @@ grep -q 'протухший' "$work/legacy.out" \
     && fail "legacy-fresh: старый маркер сняли как протухший" || ok "legacy-fresh: протухшим не признан"
 rm -rf "$work/tmp/lock.d"
 
-# 10. Два параллельных scripts/test.sh gametest: оба видят свой токен в маркере (сверка как в build.gradle)
-# и не пересекаются по времени.
 cat >"$work/fake-lock-check" <<'FAKE'
 #!/usr/bin/env bash
 log="${FAKE_LOG:?}"
@@ -261,8 +235,6 @@ else
     fail "token-race: стартов $starts, концов $ends — пересечение или не все отработали"
 fi
 
-# 11. Чужой release не снимает замок: пока идёт прогон, маркер перезаписан чужим токеном;
-# выходящий владелец оставляет каталог чужому.
 cat >"$work/fake-foreign-token" <<'FAKE'
 #!/usr/bin/env bash
 lock=""

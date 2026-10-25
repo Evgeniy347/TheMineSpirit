@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка scripts/lead/chkq.sh на пустом временном репозитории (секунды, без Gradle и Minecraft):
-# фейковые ветки и подмена scripts/test.sh. Строки вывода начинаются с OK или FAIL; код 1, если есть FAIL.
 cd "$(dirname "$0")/../.." || exit 2
 chkq="$PWD/scripts/lead/chkq.sh"
 work="$PWD/TestResults/chkq-check"
@@ -12,7 +10,6 @@ git config user.email "check-chkq@example.invalid"
 git config user.name "check-chkq"
 failed=0
 
-# Подмена scripts/test.sh: unit падает, если в ветке есть scripts/FAIL_UNIT; иначе unit и gametest — 0.
 cat > scripts/test.sh <<'EOF'
 #!/usr/bin/env bash
 [ "${1:-}" = unit ] && [ -e "$(dirname "$0")/FAIL_UNIT" ] && exit 1

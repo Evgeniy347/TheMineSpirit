@@ -1,23 +1,4 @@
 #!/usr/bin/env bash
-# Выполняет задание в opencode (модель big-pickle) и следит за ним.
-# Сбой провайдера модели («Free usage exceeded», «Rate limit exceeded», квота, 429, модель недоступна), сетевой сбой
-# (нет соединения, «Endpoint is unavailable») и молчание модели (повтор отложен надолго или ответ не пришёл) лечит
-# перезапуском той же сессии в новом процессе
-# (новое HTTP-подключение без старых cookie) с паузами 5, 5, 10, 30, 60 с. После пятого перезапуска включает режим
-# ожидания: сбои провайдера — это временная недоступность на минуты, поэтому раз в OPENCODE_PROBE_INTERVAL (120 с)
-# скрипт шлёт короткую пробу той же модели (тайм-аут OPENCODE_PROBE_TIMEOUT, 60 с) из пустого каталога вне репозитория:
-# проба не трогает дерево и не создаёт сессию в нём. Проба удалась — та же сессия продолжается, счётчик быстрых
-# перезапусков сбрасывается. Общий предел потерянного на сбои времени (паузы и ожидание за весь запуск) —
-# OPENCODE_WAIT_LIMIT (7200 с); исчерпан — остановка с кодом 75. OPENCODE_WAIT_LIMIT=0 — режим ожидания выключен.
-#
-# Использование:
-#   scripts/opencode-task.sh "текст задания"
-#   scripts/opencode-task.sh -f задание.md
-#   scripts/opencode-task.sh -s ses_XXXX "замечания ревью"     (продолжить существующую сессию)
-#
-# Коды выхода: 0 — opencode завершил работу; 75 — сбой провайдера не прошёл ни после 5 перезапусков, ни за предел ожидания;
-# 3 — новое задание в грязном дереве (там может работать другой агент); иначе — код самого opencode.
-# Каждый сбой, проба ожидания и возврат провайдера пишутся строкой в TestResults/opencode/failures.log.
 set -uo pipefail
 
 REPO_DIR="${OPENCODE_REPO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -28,7 +9,6 @@ PROBE_INTERVAL="${OPENCODE_PROBE_INTERVAL:-120}"
 PROBE_TIMEOUT="${OPENCODE_PROBE_TIMEOUT:-60}"
 WAIT_LIMIT="${OPENCODE_WAIT_LIMIT:-7200}"
 PROBE_PROMPT="ответь OK"
-# Без pgrep (Git Bash на Windows) долгий хук или сборка не отличимы от молчания — предел по умолчанию больше.
 if command -v pgrep >/dev/null; then SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"; else SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-1200}"; fi
 HEARTBEAT_FRESH="${OPENCODE_HEARTBEAT_FRESH:-120}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error|stream interrupted|readtimeout'
@@ -36,33 +16,22 @@ NETWORK_PATTERN='cannot connect|unable to connect|econnrefused|econnreset|enotfo
 FAILURE_PATTERN="$PROVIDER_PATTERN|$NETWORK_PATTERN"
 CONTINUE_PROMPT="Продолжай выполнение задания с того места, где остановился. Если не помнишь деталей — сначала \
 перечитай TestResults/task.md (задание) и TestResults/progress.md (твой прогресс)."
-# opencode сжимает разговор, когда контекст модели заполнен (у моделей на 200 тыс. — каждые 20–60 шагов), и подробности
-# задания теряются. Надзор ловит сжатие, останавливает ход и продолжает сессию с напоминанием перечитать файлы.
 COMPACTED_PROMPT="Контекст сессии только что сжат — подробности задания и сделанного могли потеряться. Перечитай \
 TestResults/task.md (задание) и TestResults/progress.md (твой прогресс), сверь с git log и продолжай с нужного места."
-# Ловим конец сжатия (синтетическое «Continue…» после сводки), а не его начало (agent=compaction в логе): оборвать само
-# сжатие — значит вернуть полный контекст и зациклиться на новом сжатии.
 COMPACTION_PATTERN='"compaction_continue":true'
 TASK_FILE="${OPENCODE_TASK_FILE:-$REPO_DIR/TestResults/task.md}"
 UNFINISHED_PROMPT="Ты закончил ход на полуслове, не доделав задание и без итогового отчёта. Продолжай с того места, где \
 остановился, и не заканчивай ход, пока не будет итогового отчёта: хэши коммитов, итог тестов, что не сделано."
-# Модель иногда заканчивает ход фразой «Теперь посмотрю …:» — надзор продолжает ту же сессию, не больше UNFINISHED_LIMIT раз.
 UNFINISHED_LIMIT="${OPENCODE_UNFINISHED_LIMIT:-3}"
-# Ответ короче этого при грязном дереве — не итоговый отчёт (отчёт перечисляет коммиты, тесты, несделанное).
 DIRTY_SHORT_ANSWER="${OPENCODE_DIRTY_SHORT_ANSWER:-600}"
-# Зацикливание: одна и та же команда инструмента столько раз подряд (36Б на beam 17.10 — 1400 раз `git diff` пустого
-# файла). Надзор обрывает ход и продолжает сессию с LOOP_PROMPT, не больше LOOP_LIMIT раз, дальше — остановка.
 LOOP_REPEAT="${OPENCODE_LOOP_REPEAT:-15}"
 LOOP_LIMIT="${OPENCODE_LOOP_LIMIT:-3}"
 LOOP_PROMPT="Ты ${LOOP_REPEAT} раз подряд выполнил одну и ту же команду — это зацикливание. Остановись: посмотри git status (правки в индексе видны в git diff --cached), перечитай TestResults/task.md и TestResults/progress.md, реши, какой следующий шаг задания, и сделай его другой командой."
 EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): работаешь без собеседника — вопросов не задавай, решай сам по правилам проекта. Работа БЛОКАМИ: законченный кусок правишь целиком, затем тесты, затем один коммит; тесты — когда считаешь, что всё должно стать зелёным, а не после каждой правки; коммиты не мельчить. Тесты — только scripts/test.sh (unit [--tests …] / gametest [пачка…]), полный лог уже в TestResults/logs/; полный unit перед коммитом гоняет хук; полный GameTest — в финале. Красное не коммитишь, хук не обходишь (--no-verify запрещён). Новый тест доказываешь подлогом по существу (код компилируется, тест краснеет); сторожа и проверки не ослабляешь, таймауты не поднимаешь вместо исправления. Код смотри через codegraph (MCP codegraph_*), полученному коду верь и не перечитывай; правки — точечные (edit), не переписывание файла целиком; вывод команд — не больше 40 строк. Задание — TestResults/task.md; в конце каждого блока — запись в TestResults/progress.md (хэши, решения, что дальше); после продолжения сессии сначала перечитай оба файла. Процессы останавливай только свои, по PID; pkill -f/killall по шаблону запрещены. Публикацию мода и перезапуск сервера не делаешь. В конце — отчёт: хэши коммитов, итог тестов, что не сделано и почему."
 POLL_SECONDS=2
-# opencode запускается через setsid и переживает свой надзор: при остановке надзора (tmux kill-session, Ctrl+C)
-# его надо гасить явно, иначе осиротевший процесс продолжит править дерево рядом с новым исполнителем.
 current_pid=""
 trap '[ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null' EXIT
 trap 'exit 143' TERM HUP INT
-# На Windows python3 — заглушка магазина: там задают PYTHON=python.
 PYTHON="${PYTHON:-python3}"
 EXIT_PROVIDER_EXHAUSTED=75
 EXIT_DIRTY_TREE=3
@@ -140,13 +109,9 @@ sys.exit(1)
 
 waiting_for_model() {
     local pid="$1" hb="$REPO_DIR/TestResults/test-running"
-    # scripts/test.sh, пока ждёт замок GameTest или гоняет тесты, раз в 20 с трогает этот файл — это работа, не молчание
-    # (на ПК шесть исполнителей стоят в очереди за замком GameTest дольше предела молчания).
     if [ -f "$hb" ] && [ $(( $(date +%s) - $(stat -c %Y "$hb" 2>/dev/null || echo 0) )) -lt "$HEARTBEAT_FRESH" ]; then
         return 1
     fi
-    # Без pgrep (Git Bash на Windows) дочерние процессы не видны: молчание считается по одному таймеру —
-    # поэтому без pgrep предел молчания по умолчанию 1200 с (SILENCE_LIMIT).
     { [ -z "${OPENCODE_NO_PGREP:-}" ] && command -v pgrep >/dev/null; } || return 0
     ! pgrep -a -P "$pid" 2>/dev/null | grep -qvE 'lsp|language.?server|jdtls|mcp'
 }
@@ -219,7 +184,6 @@ run_attempt() {
     return "$code"
 }
 
-# Последние LOOP_REPEAT вызовов инструментов — одна и та же команда: печатает её и выходит с 0.
 command_loop() {
     tail -n 300 "$1" 2>/dev/null | "$PYTHON" -I -c '
 import json, sys
@@ -243,7 +207,6 @@ sys.exit(1)
 ' "$LOOP_REPEAT"
 }
 
-# Ответ оборван: кончается двоеточием или многоточием либо это короткое «Теперь …/Сейчас …/Let me …» без отчёта.
 answer_unfinished() {
     "$PYTHON" -I -c '
 import re, sys
@@ -252,7 +215,6 @@ if not text:
     sys.exit(1)
 if text.endswith((":", "…", "...")):
     sys.exit(0)
-# Мост к веб-модели (deepseek-web) иногда отдаёт вызов инструмента текстом («<invoke name=...», «<｜工具调用>») — это не конец работы.
 if re.search(r"<(invoke|parameter|function_calls)|工具调用", text[-400:]):
     sys.exit(0)
 starts = r"^(Теперь|Сейчас|Дальше|Продолжаю|Смотрю|Проверяю|Переписываю|Готовлю|Запускаю|Читаю|Let me|Now |Next)"
@@ -276,8 +238,6 @@ print(last)
 ' "$1"
 }
 
-# Одна проба провайдера: та же модель, пустой каталог вне репозитория, жёсткий тайм-аут. Успех — выход 0, текстовый
-# ответ и ни следа сбоя провайдера. Результат (текст ошибки при неудаче) — в probe_text.
 probe_text=""
 probe_provider() {
     local out="$probe_dir/probe.jsonl" err="$probe_dir/probe.err" code
@@ -296,8 +256,6 @@ probe_provider() {
     return 0
 }
 
-# Режим ожидания после быстрых перезапусков. 0 — провайдер вернулся, можно продолжать; 1 — предел исчерпан.
-# lost_seconds — всё время, потерянное на сбои за запуск (паузы перезапусков и ожидание): предел общий.
 lost_seconds=0
 wait_for_provider() {
     local started probes=0 elapsed remaining pause
@@ -332,15 +290,12 @@ run_no=0
 unfinished=0
 loops=0
 message="$prompt"
-# Индекс codegraph для инструментов исполнителя: worktree новый на каждую задачу, индекс строится за ~1 мин.
 CODEGRAPH_BIN="${CODEGRAPH_BIN:-$(command -v codegraph || echo "$HOME/.npm-global/bin/codegraph")}"
 if [ -x "$CODEGRAPH_BIN" ] || command -v "$CODEGRAPH_BIN" >/dev/null 2>&1; then
     if [ ! -d "$REPO_DIR/.codegraph" ]; then
         nice -n 19 "$CODEGRAPH_BIN" init -i "$REPO_DIR" >"$log_dir/codegraph-init.log" 2>&1             || echo "opencode: индекс codegraph не построен, лог $log_dir/codegraph-init.log" >&2
     fi
 fi
-# Задание — в файл: после сжатия контекста модель перечитывает его, а не вспоминает. Продолжение с новым текстом
-# (правки по ревью) дописывается к заданию.
 if [ "$prompt" != "$CONTINUE_PROMPT" ]; then
     mkdir -p "$(dirname "$TASK_FILE")"
     if [ -n "$session" ] && [ -s "$TASK_FILE" ]; then
@@ -395,7 +350,6 @@ while true; do
             message="$COMPACTED_PROMPT"
             ;;
         *)
-            # Короткий последний ответ при незакоммиченных правках — тоже обрыв: модель ушла посреди подлога или правки.
             last_answer="$(print_last_answer "$attempt_log.jsonl")"
             dirty_now="$(git -C "$REPO_DIR" status --short --untracked-files=no)"
             if [ "$code" = 0 ] && [ -n "$session" ] && [ "$unfinished" -lt "$UNFINISHED_LIMIT" ] \

@@ -2,7 +2,6 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
     }
-    // Версии плагинов анализаторов — в gradle.properties (сторож DependencyVersionGuardTests)
     plugins {
         id 'net.neoforged.moddev' version "${moddev_plugin_version}"
         id 'com.diffplug.spotless' version "${spotless_plugin_version}"

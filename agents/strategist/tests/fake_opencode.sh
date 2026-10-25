@@ -1,22 +1,9 @@
 #!/usr/bin/env bash
-# Подделка opencode для тестов brain.py (образец: scripts/testing/fake-opencode.sh).
-# FAKE_STATE=путь       — счётчик запусков в $FAKE_STATE, аргументы и каталог в $FAKE_STATE.args (обязательна)
-# FAKE_REPLY=текст      — текст ответа модели (по умолчанию валидный skip-JSON)
-# FAKE_REPLY_PARTS=JSON — массив текстовых кусков: по одному событию text на элемент (проверка склейки)
-# FAKE_ERROR=json|stderr — сбой провайдера: событие error в stdout или строка level=ERROR в stderr, затем зависание
-# FAKE_ERROR_TEXT=текст — текст сбоя (по умолчанию «Free usage exceeded»)
-# FAKE_SILENT=1         — молчит и висит (дочерний процесс sleep, чтобы проверить убийство группы)
-# FAKE_GARBAGE=1        — печатает мусор, не JSON, и выходит с кодом 0
-# FAKE_EXIT=N           — выходит с кодом N без вывода
-# FAKE_TOOL=reject|executed — событие tool_use: отклонённое (status error) или выполненное (status completed)
-# FAKE_BAD_MODEL=m      — для модели m (аргумент -m) сбой провайдера; для остальных работает
-# FAKE_PROBE_FAIL=1     — проба «ответь OK» сообщает о сбое провайдера
 state="${FAKE_STATE:?FAKE_STATE обязателен}"
 if [ "$1" = "--version" ]; then
     echo "fake-opencode 9.9.9"
     exit 0
 fi
-# FAKE_AGENT=allow|late_allow|garbage — итоговые права агента в «opencode debug agent»: bash allow / шаблон allow после общего ask / не JSON
 if [ "$1 $2" = "debug agent" ]; then
     echo "DEBUG_ENV: PERMISSION=${OPENCODE_PERMISSION-unset} CONFIG=${OPENCODE_CONFIG-unset} CONTENT=${OPENCODE_CONFIG_CONTENT-unset} DIR=${OPENCODE_CONFIG_DIR-unset} DATADIR=${XDG_DATA_HOME-unset}" >> "$state.args"
     case "${FAKE_AGENT:-}" in

@@ -1,17 +1,4 @@
 #!/usr/bin/env bash
-# Механическое доказательство правила «тест сначала красный» (docs/TESTING.md → «Тест, который может упасть»).
-# Берёт тестовые файлы fix-коммита (src/test/java), кладёт их на РОДИТЕЛЯ коммита и ждёт красный прогон, затем
-# прогоняет на самом коммите и ждёт зелёный. Временный worktree — TestResults/prove-red/<хэш>/, в конце удаляется;
-# основное дерево и ветки не меняются.
-#
-# Использование:
-#   scripts/prove-red.sh <fix-коммит> [фильтр-тестов]
-# Фильтр — формат `gradlew test --tests` (например, '*FallbackPlannerTests'); по умолчанию — классы из изменённых файлов.
-#
-# Итог — строка на тест-класс: OK красный→зелёный | FAIL зелёный уже до исправления | FAIL красный после исправления.
-# Тест, который на родителе не компилируется (новый API), тоже «красный», но доказательство слабее: печатается отдельно.
-# Коды выхода: 0 — все классы OK; 1 — есть FAIL; 2 — ошибка запуска/сборки, вердикта нет; 3 — JUnit-тестов в коммите нет.
-# Подробные логи gradle — TestResults/prove-red/<хэш>-parent.log и <хэш>-fix.log. PROVE_RED_KEEP=1 — не удалять worktree.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
@@ -35,7 +22,6 @@ out_root="$REPO_DIR/TestResults/prove-red"
 work="$out_root/$short"
 mkdir -p "$out_root"
 
-# --- что изменил коммит ---
 changed_tests="$(git diff --name-only --diff-filter=AM "$parent" "$fix" -- "$TEST_DIR")"
 gametest_changed="$(git diff --name-only --diff-filter=AM "$parent" "$fix" -- "$GAMETEST_DIR")"
 if [ -n "$gametest_changed" ]; then
@@ -46,7 +32,6 @@ if [ -z "$changed_tests" ]; then
     exit "$EXIT_NOTHING"
 fi
 
-# Тест-классы: файлы с тестовыми аннотациями (остальные — вспомогательные, их копируем, но не оцениваем).
 classes=()
 filters=()
 while IFS= read -r file; do
@@ -67,7 +52,6 @@ fi
 filter_args=()
 for f in "${filters[@]}"; do filter_args+=(--tests "$f"); done
 
-# --- временный worktree ---
 cleanup() {
     if [ -z "${PROVE_RED_KEEP:-}" ]; then
         git -C "$REPO_DIR" worktree remove --force "$work" 2>/dev/null
@@ -80,8 +64,6 @@ rm -rf "$work"
 git worktree prune
 git worktree add --detach --quiet "$work" "$parent" || { echo "Не удалось создать worktree $work" >&2; exit 2; }
 
-# Прогон gradle в worktree. Код: 0 — зелёный; 10 — красный (тесты упали); 11 — красный (тесты не компилируются);
-# 12 — сбой, вердикта нет. XML-отчёты остаются в $work/TestResults/unit/xml.
 run_gradle() {
     local log="$1" code
     rm -rf "$work/TestResults/unit"
@@ -97,7 +79,6 @@ run_gradle() {
     return 12
 }
 
-# Рабочий python 3: на Windows `python3` может быть заглушкой Microsoft Store.
 pick_python() {
     local cand
     for cand in python3 python python3.exe python.exe; do
@@ -114,7 +95,6 @@ PYTHON="$(pick_python)" || {
     exit 2
 }
 
-# Статус каждого класса по XML: red | green | none. Печатает «класс статус».
 class_statuses() {
     "$PYTHON" -I - "$work/TestResults/unit/xml" "$@" <<'PY'
 import glob, sys, xml.etree.ElementTree as ET
@@ -134,7 +114,6 @@ for name in names:
 PY
 }
 
-# --- 1. родитель + тесты из fix ---
 while IFS= read -r file; do
     mkdir -p "$work/$(dirname "$file")"
     git show "$fix:$file" >"$work/$file"
@@ -160,7 +139,6 @@ else
     echo "prove-red: родитель отработал за ${parent_took} с"
 fi
 
-# --- 2. сам fix ---
 started=$(date +%s)
 echo "prove-red: [2/2] коммит $short, ожидаю ЗЕЛЁНЫЙ…"
 git -C "$work" checkout --quiet --force --detach "$fix" || { echo "Не удалось перейти на $short в worktree" >&2; exit 2; }
@@ -180,7 +158,6 @@ while read -r name status; do
 done < <(class_statuses "${classes[@]}")
 echo "prove-red: коммит отработал за ${fix_took} с"
 
-# --- итог ---
 echo "--- итог $short ---"
 bad=0
 for c in "${all_classes[@]}"; do

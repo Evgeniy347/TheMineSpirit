@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Сводка в тему «Оповещения» Telegram (таймер раз в 5 мин): прогресс плана и список работающих агентов.
-# Список ведёт главный агент вне репозитория: $LEAD_AGENTS (по умолчанию /opt/minecraft/lead-agents.txt), строка —
-# «машина|модель|задача|начало (unix-время)»; время работы скрипт считает сам. Молчит, если список пуст.
 dir="$(cd "$(dirname "$0")" && pwd)"
 agents_file="${LEAD_AGENTS:-/opt/minecraft/lead-agents.txt}"
 now=$(date +%s)

@@ -1,5 +1,3 @@
-# Не даёт ПК уснуть, пока работает этот процесс (запрос SetThreadExecutionState, настройки питания не меняются).
-# Остановка — завершить процесс; запрос снимается вместе с ним.
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;

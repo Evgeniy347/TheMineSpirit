@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка хуков истории (pre-rebase, reference-transaction) на пустом временном репозитории, секунды.
-# Каждая строка вывода начинается с OK или FAIL; код выхода 1, если есть FAIL.
 cd "$(dirname "$0")/../.." || exit 2
 hooks="$PWD/scripts/git-hooks"
 work="$PWD/TestResults/history-hooks-check"

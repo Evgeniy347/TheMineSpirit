@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Общий прогресс плана по todo.md: «сделано N» из строки прогресса + открытые пункты [ ]. Печатает «N% (x из всего)».
 todo="$(cd "$(dirname "$0")/.." && pwd)/todo.md"
 closed=$(grep -m1 -oE '^Прогресс: сделано [0-9]+' "$todo" | grep -oE '[0-9]+$')
 closed=${closed:-0}

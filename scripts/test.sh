@@ -1,22 +1,7 @@
 #!/usr/bin/env bash
-# Единый запуск тестов (docs/TESTING.md → «Два уровня»). Исполнители запускают тесты ТОЛЬКО через этот скрипт.
-# Полный лог всегда в TestResults/logs/<дата-время>-<режим>.log; на экран — только итог.
-# Режимы:
-#   scripts/test.sh unit [--tests <фильтр gradle>]… [--fast-analyzers]
-#   scripts/test.sh gametest [--full] [--seed N] [имя пачки или теста…]
-# Пределы времени (переменные окружения, секунды):
-#   THEMINESPIRIT_UNIT_WARN_SECONDS (по умолчанию 90), THEMINESPIRIT_UNIT_STOP_SECONDS (200)
-#   THEMINESPIRIT_GAMETEST_WARN_SECONDS (120), THEMINESPIRIT_GAMETEST_STOP_SECONDS (200) — быстрый набор
-#   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS (180), THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS (300) — --full
-# Руководство: демо-аудиты построек — ручные тесты, в общих прогонах (в том числе --full) не идут;
-# запускаются только явным фильтром, например scripts/test.sh gametest demo_audit_familyhouse.
-# Коды выхода: 0 — успех; 1 — падение тестов; 2 — ошибка запуска; 75 — чужой GameTest; 124 — стоп по пределу времени.
-# Без -e: коды проверяются явно; под -e пустой grep в разборе падения молча обрывал скрипт без итога.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-# Реальный путь worktree (pwd -P): /proc/<pid>/cwd отдаёт разыменованный путь, и по логическому
-# (с символической ссылкой) каталог сервера не нашёлся бы.
 GAMETEST_WORKTREE="$(pwd -P)"
 GAMETEST_RUN_DIR="$GAMETEST_WORKTREE/build/gametest-run"
 
@@ -24,7 +9,6 @@ GRADLEW="${THEMINESPIRIT_GRADLEW:-./gradlew}"
 LOG_DIR="TestResults/logs"
 mkdir -p "$LOG_DIR"
 
-# Пределы времени (секунды)
 UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-90}"
 UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-200}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-120}"
@@ -32,10 +16,6 @@ GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-200}"
 GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-180}"
 GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-300}"
 
-# Замок GameTest (переиспользуем логику из scripts/gametest.sh).
-# Дефолт: на Windows — C:\ProgramData\theminespirit (общий для всех сессий и пользователей машины;
-# /tmp в Git Bash монтируется в %TEMP% текущего пользователя — у разных сессий opencode TEMP может
-# указывать в разные каталоги, и замок перестаёт быть общим). На Linux — /tmp.
 case "$OSTYPE" in
     msys*|cygwin*|win*)
         GAMETEST_LOCK="${THEMINESPIRIT_GAMETEST_LOCK:-${ALLUSERSPROFILE:-C:/ProgramData}/theminespirit/theminespirit-gametest.lock}"
@@ -47,10 +27,6 @@ esac
 GAMETEST_WAIT="${THEMINESPIRIT_GAMETEST_WAIT:-1800}"
 GAMETEST_LOCK_DIR="$GAMETEST_LOCK.d"
 GAMETEST_TOKEN=""
-# Протухание mkdir-замка — по возрасту пульса, а не по PID: в Git Bash PID чужого сеанса MSYS
-# может выглядеть мёртвым для kill -0, и живой замок снимался как протухший (токен перезаписывался,
-# а вышедший первым владелец удалял уже чужой маркер). Владелец обновляет heartbeat раз в
-# GAMETEST_BEAT_INTERVAL; маркер старого test.sh (pid без токена и пульса) стареет по mtime.
 GAMETEST_BEAT_INTERVAL="${THEMINESPIRIT_GAMETEST_BEAT_SECONDS:-10}"
 GAMETEST_STALE="${THEMINESPIRIT_GAMETEST_STALE_SECONDS:-120}"
 GAMETEST_LEGACY_STALE="${THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS:-900}"
@@ -105,7 +81,6 @@ EOF
     exit 2
 }
 
-# ── Парсинг аргументов ───────────────────────────────────────────────────────
 MODE=""
 UNIT_TESTS=()
 GAMETEST_FILTERS=()
@@ -163,9 +138,6 @@ done
 
 [ -n "$MODE" ] || usage
 
-# Шарды GameTest. ПК (Git Bash) — 3 сервера, Linux-сервер (domovoy, 4 ядра и Minecraft) — 1;
-# THEMINESPIRIT_GAMETEST_SHARDS перекрывает. Явный фильтр всегда один сервер: иначе часть шардов
-# осталась бы без тестов. Шарды делят пачки, а не отдельные тесты (GameTestFilter).
 GAMETEST_SHARDS="${THEMINESPIRIT_GAMETEST_SHARDS:-}"
 if [ -z "$GAMETEST_SHARDS" ]; then
     case "$OSTYPE" in
@@ -177,7 +149,6 @@ case "$GAMETEST_SHARDS" in ''|*[!0-9]*) GAMETEST_SHARDS=1 ;; esac
 [ "$GAMETEST_SHARDS" -ge 1 ] || GAMETEST_SHARDS=1
 [ ${#GAMETEST_FILTERS[@]} -gt 0 ] && GAMETEST_SHARDS=1
 
-# ── Замок GameTest (flock на Linux, mkdir на Windows Git Bash) ───────────────
 noflock() {
     [ -n "${THEMINESPIRIT_GAMETEST_NOFLOCK:-}" ] && return 0
     command -v flock >/dev/null 2>&1 && return 1
@@ -188,14 +159,7 @@ file_mtime() {
     stat -c %Y "$1" 2>/dev/null || echo 0
 }
 
-# ── Гашение сервера GameTest своего worktree ─────────────────────────────────
-# Игру запускает демон Gradle отдельным процессом, чья рабочая папка — <worktree>/build/gametest-run
-# (build.gradle → gameTestServer.gameDirectory). Стоп по пределу убивает только клиент gradle, а игровой
-# сервер переживает его, ест CPU, и следующий прогон идёт параллельно уже без замка (todo.md 17.10).
-# Поэтому сервер гасим сами — и до снятия замка. Чужие worktree не трогаем: у каждого свой каталог.
 
-# Жив ли процесс. Зомби (state Z в /proc/<pid>/stat) уже мёртв: его не считаем и не ждём — иначе
-# ожидание KILL тянется 10 с, пока родитель не соберёт статус. На не-Linux — обычный kill -0.
 pid_is_live() {
     local pid="$1" rest
     if [ -r "/proc/$pid/stat" ]; then
@@ -211,13 +175,10 @@ pid_is_live() {
     kill -0 "$pid" 2>/dev/null
 }
 
-# PID java-процессов, чья рабочая папка — каталог GameTest этого worktree ($1).
 gametest_server_pids() {
     local dir="$1" d pid exe cwd
     case "$OSTYPE" in
         msys*|cygwin*|win*)
-            # Git Bash на Windows: /proc/<pid>/cwd нет. Ищем java.exe по CommandLine — путь worktree
-            # (в fml.modFolders и classpath) или gameDir; чужой worktree даёт другой путь.
             local win_worktree win_dir
             win_worktree=$(cygpath -w "$GAMETEST_WORKTREE" 2>/dev/null || printf '%s' "$GAMETEST_WORKTREE")
             win_dir=$(cygpath -w "$dir" 2>/dev/null || printf '%s' "$dir")
@@ -244,7 +205,6 @@ gametest_server_pids() {
     return 0
 }
 
-# Сначала TERM, через 10 с — KILL. Пустой список — тихо выходим (обычный успешный прогон: сервер уже мёртв).
 kill_gametest_server() {
     [ "${MODE:-}" = "gametest" ] || return 0
     local pids pid alive waited
@@ -270,16 +230,11 @@ kill_gametest_server() {
     return 0
 }
 
-# ── Гашение своих процессов по PID ───────────────────────────────────────────
-# Только дерево от известного своего PID (снимок ps до сигнала: после смерти родителя дети уходят к init).
-# Никаких pkill по шаблону — на машине живут прогоны других исполнителей.
 
-# Текущее время, с — встроенным printf, без fork date (на общей машине fork в дефиците).
 now_s() {
     printf -v "$1" '%(%s)T' -1
 }
 
-# PID $1 и всех его потомков (корень первым). Пусто — корня нет среди живых процессов.
 own_tree_pids() {
     ps -ef 2>/dev/null | awk -v root="$1" '
         $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2; alive[$2] = 1 }
@@ -294,8 +249,6 @@ own_tree_pids() {
         }'
 }
 
-# TERM процессу $1 и его потомкам, до $2 с (по умолчанию 5) ждём смерти, остальным — KILL.
-# $3=group — ещё и TERM группе $1 (gradle под setsid на Linux — лидер своей группы).
 kill_own_tree() {
     local root="$1" grace="${2:-5}" pids pid alive now deadline
     [ -n "$root" ] || return 0
@@ -308,7 +261,6 @@ kill_own_tree() {
     for pid in $pids; do
         kill -TERM "$pid" 2>/dev/null
     done
-    # Ожидание — по часам, а не по числу итераций: при нехватке fork каждый sleep сам тянется ~30 с.
     now_s now
     deadline=$((now + grace))
     while :; do
@@ -328,8 +280,6 @@ kill_own_tree() {
     return 0
 }
 
-# Свой фоновый цикл (монитор, пульс): TERM — его trap гасит свой sleep и выходит; ждём до $2 с
-# без ps (быстро — выход скрипта не тормозит снятие замка), не умер — KILL всему его дереву.
 stop_own_loop() {
     local pid="$1" grace="${2:-2}" now deadline
     [ -n "$pid" ] || return 0
@@ -354,8 +304,6 @@ stop_lock_beat() {
     fi
 }
 
-# Пульс замка: пишется только пока в маркере наш токен (перехваченный чужой маркер не трогаем).
-# Токен и время — встроенными read/printf (без fork на удар); sleep — в фоне с wait, чтобы его гасил trap.
 start_lock_beat() {
     (
         sleeper=""
@@ -385,7 +333,6 @@ release_dir_lock() {
     if [ "$owner" = "$GAMETEST_TOKEN" ]; then
         rm -rf "$GAMETEST_LOCK_DIR"
     elif [ -z "$owner" ] && [ "$(cat "$GAMETEST_LOCK_DIR/pid" 2>/dev/null)" = "$$" ]; then
-        # Наш pid без токена (запись токена сорвалась) — маркер всё равно наш.
         rm -rf "$GAMETEST_LOCK_DIR"
     elif [ -n "$owner" ]; then
         echo "gametest: замок уже не наш (чужой токен), не снимаю $GAMETEST_LOCK_DIR." >&2
@@ -401,8 +348,6 @@ acquire_dir_lock() {
             printf '%s\n' "$(date +%s)" >"$GAMETEST_LOCK_DIR/heartbeat"
             export GAMETEST_LOCK GAMETEST_TOKEN
             start_lock_beat
-            # Замок снимает общий trap выхода (cleanup) — после stop_monitor, т. е. после смерти сервера
-            # GameTest и gradle: иначе следующий прогон стартует параллельно.
             DIR_LOCK_HELD=1
             return 0
         fi
@@ -413,7 +358,6 @@ acquire_dir_lock() {
             [ -n "$beat" ] || beat=$(file_mtime "$GAMETEST_LOCK_DIR/heartbeat")
             limit="$GAMETEST_STALE"
         else
-            # Маркер старого test.sh: pid без токена и пульса — возраст по mtime pid/каталога.
             beat=$(file_mtime "$GAMETEST_LOCK_DIR/pid")
             [ "$beat" -gt 0 ] 2>/dev/null || beat=$(file_mtime "$GAMETEST_LOCK_DIR")
             limit="$GAMETEST_LEGACY_STALE"
@@ -423,8 +367,6 @@ acquire_dir_lock() {
         if [ "$age" -gt "$limit" ]; then
             stale="$GAMETEST_LOCK_DIR.stale.$$"
             if mv "$GAMETEST_LOCK_DIR" "$stale" 2>/dev/null; then
-                # Снимаем, только если переименовали именно тот маркер, который судили:
-                # иначе пока читали, замок перехватил другой — возвращаем на место.
                 if [ "$(cat "$stale/token" 2>/dev/null || echo "")" = "$holder_token" ] \
                         && [ "$(cat "$stale/pid" 2>/dev/null || echo "")" = "$holder_pid" ]; then
                     echo "gametest: снимаю протухший замок $GAMETEST_LOCK_DIR (пульс не обновлялся ${age} с)." >&2
@@ -449,17 +391,12 @@ busy_hint() {
     echo "gametest: GameTest — один на машину; дождись освобождения или освободи блокировку вручную." >&2
 }
 
-# ── Мониторинг времени ───────────────────────────────────────────────────────
 WARN_SECONDS=0
 STOP_SECONDS=0
 MONITOR_PID=""
 GRADLE_PID=""
 START_TIME=0
 
-# Цикл монитора (в фоне). По пределу: метка .stopped, сервер GameTest своего worktree, затем дерево gradle
-# по PID (TERM, через 10 с KILL) и TERM главному скрипту: тот выходит с 124, даже если gradle не умер
-# и `wait` не вернулся бы. Сервер гасим первым: иначе снятие замка (flock/$LOCK.d) обгонит его смерть,
-# и следующий прогон пойдёт параллельно уже без замка (todo.md 17.10). Главный скрипт умер — монитор выходит.
 monitor_loop() {
     local warned=0 now elapsed gpid sleeper=""
     trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
@@ -507,11 +444,9 @@ start_monitor() {
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
            MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP=""
-    # Монитор в ветке setsid — отдельный bash: функции и переменные для гашения нужны в окружении.
     export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE
     export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree monitor_loop
     if command -v setsid >/dev/null 2>&1; then
-        # gradle unit/gametest без flock запускается под setsid — лидером своей группы.
         MONITOR_GRADLE_GROUP=group
         setsid bash -c monitor_loop </dev/null >/dev/null 2>&1 &
     else
@@ -527,13 +462,6 @@ stop_timer() {
     fi
 }
 
-# Пульс для надзора исполнителя (scripts/opencode-task.sh): пока скрипт жив — ждёт замок или гоняет тесты —
-# файл обновляется раз в 20 с, и надзор не путает долгий прогон с молчанием модели. В файле — PID пульса.
-# Пульс живёт не дольше самого долгого законного прогона (ожидание замка + предел + запас): на Windows
-# осиротевший test.sh без gradle (17.10) держал пульс часами, и надзор не перезапускал зависшую сессию. Срок — по часам,
-# а не по числу ударов: при нехватке fork каждый sleep тянется ~30 с, и счёт ударов растягивался бы на часы.
-# Без fork на удар, кроме sleep: время — printf, запись — перенаправлением. sleep — в фоне с wait, чтобы
-# trap TERM гасил и его: после выхода скрипта от пульса не остаётся ни одного процесса.
 HEARTBEAT_FILE="${THEMINESPIRIT_TEST_HEARTBEAT:-TestResults/test-running}"
 HEARTBEAT_PID=""
 start_heartbeat() {
@@ -542,8 +470,6 @@ start_heartbeat() {
     : >"$HEARTBEAT_FILE"
     now_s now
     deadline=$(( now + GAMETEST_WAIT + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
-    # stdout/stderr — в /dev/null: иначе фоновый sleep наследует пайп вызывающего
-    # (out=$(scripts/test.sh …)) и держит его открытым до конца сна, задерживая проверки.
     (
         sleeper=""
         trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
@@ -569,8 +495,6 @@ stop_heartbeat() {
 }
 
 stop_monitor() {
-    # Сервер GameTest и gradle гасим до снятия замка (release_dir_lock в cleanup идёт после stop_monitor):
-    # иначе замок освободится, пока старый сервер ещё работает, и следующий прогон пойдёт параллельно.
     kill_gametest_server
     if [ -n "$GRADLE_PID" ]; then
         kill_own_tree "$GRADLE_PID" 10 "${MONITOR_GRADLE_GROUP:-}"
@@ -594,8 +518,6 @@ cleanup() {
     return 0
 }
 
-# Сигнал: выходим сразу (trap без exit продолжал скрипт с прерванной команды — test.sh жил после TERM).
-# TERM от монитора по пределу — код 124; чужой TERM/INT — 143/130. Уборка — в trap EXIT.
 on_signal() {
     trap - TERM INT
     if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ]; then
@@ -610,13 +532,6 @@ trap cleanup EXIT
 trap 'on_signal 143' TERM
 trap 'on_signal 130' INT
 
-# ── Анализ результатов unit ──────────────────────────────────────────────────
-# Отчёты JUnit разбираются ОДНИМ процессом на все файлы: python, если есть, иначе один awk.
-# Прежний разбор делал ~18 fork на каждый XML (подоболочки $(echo | grep | head | grep), awk | sort на файл);
-# на Windows (MSYS) при сотнях XML и общей машине (ulimit -u 256, сотни bash) fork кончались, bash повторял
-# каждый ~30 с, и test.sh после BUILD SUCCESSFUL висел часами. Вывод разборщика: первая строка
-# «тестов падений ошибок», дальше — по строке на упавший тест «класс.имя» (без повторов, в порядке файлов).
-# THEMINESPIRIT_PYTHON — путь к python для разбора; none — только awk.
 read -r -d '' UNIT_REPORT_PY <<'PYEOF'
 import glob, html, os, re, sys
 attr = re.compile(r'([\w:.-]+)=\x22([^\x22]*)\x22')
@@ -650,8 +565,6 @@ out = ['%d %d %d' % (tot, fails, errs)] + names
 sys.stdout.buffer.write(('\n'.join(out) + '\n').encode('utf-8'))
 PYEOF
 
-# Тот же разбор одним awk: список файлов идёт на stdin (не в argv — на Windows 6000 путей не влезут в командную
-# строку), каждый файл читается getline. CDATA (system-out тестов) вырезается: текст в нём — не теги.
 UNIT_REPORT_AWK='
 function unesc(s) {
     gsub(/&lt;/, "<", s); gsub(/&gt;/, ">", s); gsub(/&quot;/, "\"", s); gsub(/&apos;/, "\047", s)
@@ -689,8 +602,6 @@ function attr(s, key) {
 }
 END { print tot + 0, fails + 0, errs + 0; for (i = 1; i <= n; i++) print order[i] }'
 
-# Путь к python для разбора (без fork: hash/BASH_CMDS вместо $(command -v)). Заглушку магазина
-# (…/WindowsApps/python3.exe) пропускаем: без установленного python она не разбирает, а открывает магазин.
 REPORT_PYTHON=""
 find_report_python() {
     local cand path
@@ -709,7 +620,6 @@ find_report_python() {
     return 1
 }
 
-# Печатает итог разбора (формат — выше). Python упал или выдал не то — разбираем awk.
 parse_unit_reports() {
     local dir="$1" out=""
     if find_report_python; then
@@ -742,7 +652,6 @@ analyze_unit() {
 
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
         if [ "$gradle_code" -ne 0 ]; then
-            # Тесты зелёные, но gradle упал: красный анализатор (staticAnalysis) или задача после тестов.
             echo "FAIL static: $total тестов зелёные, но сборка упала (код gradle $gradle_code)"
             grep -A3 "What went wrong" "$log" | grep -v "^--$" | head -16
             grep -m10 -E "violation|\[(ERROR|WARN)\]|spotlessApply" "$log" | head -10
@@ -762,7 +671,6 @@ analyze_unit() {
 
     echo "FAIL unit: прошло $((total - failures - errors)), упало $((failures + errors))"
     if [ "$failures" -gt 0 ] || [ "$errors" -gt 0 ]; then
-        # Без -m1: на Windows (MSYS) grep с -m1 рано закрывает pipe, и `| head` теряет контекст -A.
         first_error=$(grep -E "FAILED|Exception|Error:" "$log" | head -1)
         first_stack=$(grep -A 10 -E "FAILED|Exception|Error:" "$log" | head -12)
         [ -n "$first_error" ] && echo "$first_error"
@@ -776,13 +684,9 @@ analyze_unit() {
     return 1
 }
 
-# ── Анализ результатов gametest ──────────────────────────────────────────────
 analyze_gametest() {
     local log="$1"
 
-    # Провал — по строке-итогу сервера «N required tests failed :(», а не по любому «failed»:
-    # имена пачек вроде rest_events_failed содержат «failed» и давали ложный FAIL. Шардов несколько —
-    # считаем сумму и перечисляем падения всех шардов.
     local failed_line=$(grep -E "[0-9]+ required tests failed" "$log" | tail -1)
     if [ -n "$failed_line" ]; then
         local failed_count=$(grep -E "[0-9]+ required tests failed" "$log" \
@@ -797,7 +701,6 @@ analyze_gametest() {
     local passed_line=$(grep -E "All [0-9]+ required tests passed" "$log" | tail -1)
 
     if [ -n "$passed_line" ]; then
-        # Шарды пишут по строке-итогу каждый; всего пройдено — сумма, а не только последняя.
         local count
         count=$(grep -E "All [0-9]+ required tests passed" "$log" \
             | sed -E 's/.*All ([0-9]+) required tests passed.*/\1/' | awk '{s += $1} END {print s + 0}')
@@ -810,7 +713,6 @@ analyze_gametest() {
     return 1
 }
 
-# ── Запуск ───────────────────────────────────────────────────────────────────
 STAMP=$(date +%Y%m%d-%H%M%S-%N)
 LOG_FILE="$LOG_DIR/${STAMP}-${MODE}.log"
 rm -f "$LOG_FILE.stopped"
@@ -824,11 +726,7 @@ start_heartbeat
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml
     start_monitor "unit"
-    # --rerun: XML стёрты выше, а :test UP-TO-DATE/FROM-CACHE (build cache) их не вернёт — итог был бы total=0.
 
-    # Полный прогон (без --tests, в том числе хук pre-commit) гоняет анализаторы (tasks/46):
-    # в хуке — быстрые (--fast-analyzers: Spotless, Checkstyle), при приёмке — все, включая SpotBugs и PMD.
-    # --continue — тесты идут и при красном анализаторе, итог называет обе части.
     UNIT_EXTRA=()
     if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
         if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
@@ -848,8 +746,6 @@ if [ "$MODE" = "unit" ]; then
     wait "$GRADLE_PID"
     CODE=$?
     GRADLE_PID=""
-    # Предел — только на gradle: монитор гасим до разбора отчётов, и метка .stopped после проверки ниже
-    # уже не появится (раньше она возникала посреди разбора, а скрипт продолжал жить).
     stop_timer
     rm -f "$LOG_FILE.gradlepid"
 
@@ -866,8 +762,6 @@ if [ "$MODE" = "unit" ]; then
     exit $?
 
 else
-    # GameTest. Фильтр идёт системным свойством Gradle: его читает build.gradle на этапе
-    # конфигурации и перекладывает в JVM игры (переменной окружения gradle-демон не увидит).
     GAMETEST_GRADLE_ARGS=()
     if [ ${#GAMETEST_FILTERS[@]} -gt 0 ]; then
         FILTER_VALUE=$(IFS=,; echo "${GAMETEST_FILTERS[*]}")
@@ -876,14 +770,11 @@ else
     if [ -n "$GAMETEST_SEED" ]; then
         GAMETEST_GRADLE_ARGS+=("-Dtheminespirit.gametest.seed=$GAMETEST_SEED")
     fi
-    # Демо-аудиты построек — ручные тесты: в общем наборе (в том числе --full) их нет, только явный фильтр.
     GAMETEST_EXCLUDE=""
     if [ ${#GAMETEST_FILTERS[@]} -eq 0 ]; then
         GAMETEST_EXCLUDE="demo_audit"
     fi
 
-    # Шарды живут под одним замком машины: dir-замок умеет держать несколько своих серверов,
-    # flock — нет (второй ждал бы первого).
     USE_DIR_LOCK=0
     noflock && USE_DIR_LOCK=1
     [ "$GAMETEST_SHARDS" -gt 1 ] && USE_DIR_LOCK=1
@@ -915,13 +806,8 @@ else
     GRADLE_PIDS=()
     : >"$LOG_FILE.gradlepids"
 
-    # Шарды читают общие артефакты сборки (build/moddev): createMinecraftArtifacts каждый раз пересоздаёт
-    # jar и при трёх одновременных запусках удаляет его из-под соседа (Language.loadFromJson → NPE).
-    # Поэтому подготовка идёт один раз, а шардам остаётся только runGameTestServer.
     SHARD_EXCLUDES=()
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
-        # Кэш проекта и configuration cache — общие: подготовка в тёплом дереве ~2 с (свой кэш каждый раз
-        # заново конфигурировал build.gradle — 25 с на пустом месте).
         "$GRADLEW" createMinecraftArtifacts classes \
             writeGameTestServerLegacyClasspath prepareGameTestServerRun \
             >"$LOG_FILE.preflight" 2>&1 &
@@ -956,14 +842,11 @@ else
             shard_value="$shard/$GAMETEST_SHARDS"
             shard_args+=("-Dtheminespirit.gametest.dir=build/gametest-run/shard-$shard")
         fi
-        # Параметры прогона — в своём gameDirectory: общий файл аргументов JVM три сервера перезаписывают.
         mkdir -p "$shard_run_dir"
         {
             echo "exclude=$GAMETEST_EXCLUDE"
             echo "shard=$shard_value"
         } >"$shard_run_dir/theminespirit-gametest.properties"
-        # У каждого шарда свой кэш проекта и configuration cache: три gradle на одном проекте иначе
-        # сериализуются. -D читаются через providers, поэтому смена каталога мира не теряется в кэше.
         CACHE_ARGS=()
         [ "$GAMETEST_SHARDS" -gt 1 ] && CACHE_ARGS=(--project-cache-dir "$GAMETEST_WORKTREE/build/.gradle-gametest-shard-$shard")
         if [ "$USE_DIR_LOCK" = 1 ]; then
@@ -999,7 +882,6 @@ else
         release_dir_lock
     fi
 
-    # Полный лог — один файл по обещанному пути: склеиваем логи шардов после их смерти.
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
         cat "$LOG_FILE".shard-* >"$LOG_FILE"
         rm -f "$LOG_FILE".shard-*

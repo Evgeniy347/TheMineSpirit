@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Короткая сводка о текущем задании opencode: жив ли процесс, давно ли писал, чем занят, что в git.
-# Использование: scripts/opencode-status.sh [число последних действий, по умолчанию 5]
 set -uo pipefail
 cd "$(dirname "$0")/.."
 actions="${1:-5}"

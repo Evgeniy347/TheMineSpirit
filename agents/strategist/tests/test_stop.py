@@ -232,7 +232,7 @@ class TimelineBrain:
 
     def _window(self, call):
         start = time.monotonic()
-        time.sleep(0.02)  # вызов модели длится не мгновенно: только окно в миллисекунды заметило бы чужой опрос
+        time.sleep(0.02)
         if self.on_call is not None:
             self.on_call()
         try:
