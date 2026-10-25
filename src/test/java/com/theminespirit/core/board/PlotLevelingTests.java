@@ -137,4 +137,19 @@ class PlotLevelingTests {
 
         assertEquals(64, level, "Средняя высота — медиана: постройка на части колонок якорь не сдвигает");
     }
+
+    @Test
+    void plan_HillsAndPits_CutNeverBelowLevel() {
+        BlockCoord anchor = new BlockCoord(10, 70, -5);
+        PlotLeveling leveling = PlotLeveling.plan(anchor, 6, (x, z) -> 70 + ((x * 7 + z * 3) % 9) - 4);
+
+        assertTrue(!leveling.cut().isEmpty() && !leveling.fill().isEmpty(), "В участке есть и холмы, и ямы");
+        assertTrue(
+                leveling.cut().stream().allMatch(box -> box.y1() >= anchor.y()),
+                "Срезка снимает только клетки на уровне ног и выше: срезка ниже уровня роет яму посреди участка (INC-77), "
+                        + "срезка " + leveling.cut());
+        assertTrue(
+                leveling.fill().stream().allMatch(box -> box.y2() < anchor.y()),
+                "Подсыпка — только под уровнем ног: подсыпка " + leveling.fill());
+    }
 }

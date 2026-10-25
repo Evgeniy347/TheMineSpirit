@@ -11,6 +11,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -108,6 +109,37 @@ public final class ClearGameTests {
                     GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE) == 9,
                     "дроп обязан подобраться в инвентарь: 9 булыжников, фактически "
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @SceneStep(template = "arena", timeoutTicks = 400)
+    public static void clear_FilledPitKeepGround_KeepsDirtRemovesLog(GameTestHelper helper) {
+        prepare(helper);
+        helper.setBlock(new BlockPos(5, 1, 4), Blocks.DIRT);
+        helper.setBlock(new BlockPos(5, 2, 4), Blocks.DIRT);
+        helper.setBlock(new BlockPos(5, 1, 5), Blocks.OAK_LOG);
+        SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
+        Map<String, Object> params = new HashMap<>(
+                clearCall(helper, new BlockPos(5, 1, 4), new BlockPos(5, 2, 5)).params());
+        params.put("keep_ground", true);
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("clear_area", params), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "расчистка ямы с keep_ground обязана завершиться, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(5, 1, 4)).is(Blocks.DIRT)
+                            && helper.getBlockState(new BlockPos(5, 2, 4)).is(Blocks.DIRT),
+                    "уже засыпанная земля в яме подсыпки остаётся: расчистка с keep_ground снимала бы её, и дух рыл "
+                            + "яму посреди участка (INC-77)");
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(5, 1, 5)).isAir(),
+                    "ствол в яме расчистка убирает: в занятую клетку подсыпка не встаёт");
             GameTestFixtures.finish(helper);
         });
     }

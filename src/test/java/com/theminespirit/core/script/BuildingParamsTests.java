@@ -83,6 +83,20 @@ class BuildingParamsTests {
     }
 
     @Test
+    void clearArea_KeepGroundFlag_DefaultsFalseAndParsesTrue() {
+        ClearAreaParams regular = ClearAreaParams.from(Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1));
+        ClearAreaParams pit = ClearAreaParams.from(
+                Map.of("x1", 0, "y1", 64, "z1", 0, "x2", 1, "y2", 65, "z2", 1, "keep_ground", true));
+
+        assertEquals(false, regular.keepGround(), "Без флага расчистка снимает и землю: так срезается холм");
+        assertEquals(
+                true,
+                pit.keepGround(),
+                "keep_ground=true — расчистка ямы подсыпки: землю и камень в ней не трогает, иначе снимает уже "
+                        + "засыпанное (INC-77)");
+    }
+
+    @Test
     void digArea_SizeZero_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,

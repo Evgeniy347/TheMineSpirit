@@ -896,6 +896,30 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround() {
+        BlockCoord anchor = new BlockCoord(0, 70, 0);
+        PlotLeveling leveling = PlotLeveling.plan(anchor, 4, (x, z) -> x < 0 ? 64 : x > 2 ? 73 : 70);
+        TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
+
+        List<ScriptCall> clears = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole)).stream()
+                .filter(call -> "clear_area".equals(call.script()))
+                .toList();
+
+        assertTrue(
+                clears.stream().anyMatch(call -> ((Integer) call.params().get("y1")) < anchor.y()),
+                "В плане есть расчистка ям под уровнем (ствол, кусты в яме): без неё проверка ниже ничего не доказывает");
+        for (ScriptCall clear : clears) {
+            boolean below = ((Integer) clear.params().get("y1")) < anchor.y();
+            assertEquals(
+                    below,
+                    Boolean.TRUE.equals(clear.params().get("keep_ground")),
+                    "Расчистка ниже уровня участка " + anchor.y() + " — только яма подсыпки и только с keep_ground: "
+                            + "иначе она снимает уже засыпанную землю, дух роет яму посреди участка и падает в неё "
+                            + "(INC-77); срезка выше уровня землю снимает: " + clear.params());
+        }
+    }
+
+    @Test
     void layers_PitRows_BottomUpLayersMerged() {
         List<PlotLeveling.Box> rows =
                 List.of(new PlotLeveling.Box(0, 64, 0, 2, 66, 0), new PlotLeveling.Box(0, 65, 1, 2, 66, 1));

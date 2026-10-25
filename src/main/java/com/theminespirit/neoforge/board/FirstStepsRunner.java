@@ -41,6 +41,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.OwnWood;
+import com.theminespirit.neoforge.PlotGround;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -540,12 +541,7 @@ public final class FirstStepsRunner {
     }
 
     private static boolean isGround(BlockState state) {
-        return state.is(BlockTags.DIRT)
-                || state.is(BlockTags.BASE_STONE_OVERWORLD)
-                || state.is(BlockTags.SAND)
-                || state.is(Blocks.GRAVEL)
-                || state.is(Blocks.COBBLESTONE)
-                || state.is(Blocks.CLAY)
+        return PlotGround.natural(state)
                 // Вода — не земля участка: пруд в низине засыпается до дна, а не «подсыпка над водой», где у ямы нет
                 // ни стоянки, ни опоры, и выравнивание шло по кругу (сцена 56, сид −1042323956605046699).
                 || (!state.getFluidState().isEmpty() && !state.getFluidState().is(FluidTags.WATER));
