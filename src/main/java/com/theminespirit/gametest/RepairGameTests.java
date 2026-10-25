@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +22,7 @@ public final class RepairGameTests {
 
     private RepairGameTests() {}
 
-    @GameTest(template = "arena", batch = "repair_anvil", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void repair_AnvilWithIngot_RaisesDurability(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -55,7 +54,7 @@ public final class RepairGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "repair_most_worn", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void repair_LightlyAndHeavilyWorn_RepairsHeavilyWorn(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -82,7 +81,7 @@ public final class RepairGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "repair_wooden", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void repair_TwoDamagedWoodenPickaxes_Combines(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -116,7 +115,7 @@ public final class RepairGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "repair_two_damaged", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void repair_TwoDamagedIronPickaxes_LeavesOneRepaired(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -146,7 +145,7 @@ public final class RepairGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "repair_single_damaged", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void repair_SingleDamagedIronPickaxe_Fails(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -19,11 +19,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritScripts;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -44,38 +40,8 @@ public final class FirstToolsGameTests {
 
     private FirstToolsGameTests() {}
 
-    @BeforeBatch(batch = "first_tools_wood")
-    public static void mobsOffWood(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = "first_tools_wood")
-    public static void mobsOnWood(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @BeforeBatch(batch = "first_tools_stone")
-    public static void mobsOffStone(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = "first_tools_stone")
-    public static void mobsOnStone(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @BeforeBatch(batch = "first_tools_corner")
-    public static void mobsOffCorner(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = "first_tools_corner")
-    public static void mobsOnCorner(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
     // [флак] три acquire подряд (кирка, топор, лопата), запас 2× к замеру цепочки
-    @GameTest(template = "arena", batch = "first_tools_wood", timeoutTicks = 1500)
+    @SceneStep(template = "arena", timeoutTicks = 1500, calmMobs = true)
     public static void firstTools_WoodOnly_PlacesTableAndCraftsPickaxeAxeShovel(GameTestHelper helper) {
         field(helper);
         GameTestFixtures.holdDayTime(helper, DAY_TIME);
@@ -107,7 +73,7 @@ public final class FirstToolsGameTests {
     }
 
     // [флак] четыре acquire подряд (кирка, топор, лопата, меч), запас 2× к замеру цепочки
-    @GameTest(template = "arena", batch = "first_tools_stone", timeoutTicks = 1200)
+    @SceneStep(template = "arena", timeoutTicks = 1200, calmMobs = true)
     public static void firstTools_WoodAndStone_CraftsStonePickaxeAxeShovelSword(GameTestHelper helper) {
         field(helper);
         GameTestFixtures.holdDayTime(helper, DAY_TIME);
@@ -145,7 +111,7 @@ public final class FirstToolsGameTests {
     // [флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
     // кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
     // компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
-    @GameTest(template = "arena", batch = "first_tools_corner", timeoutTicks = 1200)
+    @SceneStep(template = "arena", timeoutTicks = 1200, calmMobs = true)
     public static void firstTools_FromScratch_FurnaceBesideTableAndCharcoalTorches(GameTestHelper helper) {
         field(helper);
         GameTestFixtures.holdDayTime(helper, DAY_TIME);
@@ -192,7 +158,7 @@ public final class FirstToolsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "first_tools_corner", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, calmMobs = true)
     public static void firstTools_TableAlreadyStanding_FurnaceBesideIt(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

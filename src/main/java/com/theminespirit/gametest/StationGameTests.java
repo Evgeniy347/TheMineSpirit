@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.crafting.StationType;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -30,7 +29,7 @@ public final class StationGameTests {
 
     private StationGameTests() {}
 
-    @GameTest(template = FIELD, batch = "station_finder", timeoutTicks = SEARCH_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = SEARCH_TIMEOUT)
     public static void finder_TwoTables_FindsTheNearestOne(GameTestHelper helper) {
         prepareField(helper);
         helper.setBlock(3, 1, 3, Blocks.CRAFTING_TABLE);
@@ -51,7 +50,7 @@ public final class StationGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "station_finder", timeoutTicks = SEARCH_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = SEARCH_TIMEOUT)
     public static void finder_TableOutsideRadius_NothingFound(GameTestHelper helper) {
         prepareField(helper);
         helper.setBlock(8, 1, 8, Blocks.CRAFTING_TABLE);
@@ -67,7 +66,7 @@ public final class StationGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "station_finder", timeoutTicks = SEARCH_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = SEARCH_TIMEOUT)
     public static void finder_FurnaceBlockWhenLookingForTable_NothingFound(GameTestHelper helper) {
         prepareField(helper);
         helper.setBlock(3, 1, 3, Blocks.FURNACE);
@@ -84,7 +83,7 @@ public final class StationGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = PLACE_TIMEOUT)
     public static void placer_TableInInventory_PlacedOnSolidFloorNextToSpirit(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -116,7 +115,7 @@ public final class StationGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = PLACE_TIMEOUT)
     public static void placer_FurnaceInInventory_FacesTheSpirit(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -138,7 +137,7 @@ public final class StationGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = PLACE_TIMEOUT)
     public static void placer_NoFreeCellAround_ReturnsEmptyAndKeepsItem(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -155,7 +154,7 @@ public final class StationGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = PLACE_TIMEOUT)
     public static void placer_NoFloorAround_ReturnsEmpty(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -178,7 +177,7 @@ public final class StationGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "station_placer", timeoutTicks = PLACE_TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = PLACE_TIMEOUT)
     public static void placer_NoItemInInventory_ReturnsEmptyAndPlacesNothing(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);

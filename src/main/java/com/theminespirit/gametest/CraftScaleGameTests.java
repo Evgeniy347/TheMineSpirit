@@ -21,7 +21,6 @@ import com.theminespirit.neoforge.crafting.StationFinder;
 import com.theminespirit.neoforge.crafting.StationType;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -47,7 +46,7 @@ public final class CraftScaleGameTests {
 
     private CraftScaleGameTests() {}
 
-    @GameTest(template = FIELD, batch = "craft_scale_index", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void index_ManyKnowledgeCalls_BuildsOncePerManagerAndLooksUpInConstantProbes(GameTestHelper helper) {
         RecipeManager real = helper.getLevel().getRecipeManager();
         RecipeManager fresh = new RecipeManager(helper.getLevel().registryAccess());
@@ -81,7 +80,7 @@ public final class CraftScaleGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "craft_scale_grid", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void recipes_AllServerRecipes_FitGridOfNineSlots(GameTestHelper helper) {
         List<RecipeSpec> specs = RecipeSource.read(
                 helper.getLevel().getRecipeManager(), helper.getLevel().registryAccess());
@@ -98,7 +97,7 @@ public final class CraftScaleGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "craft_scale_search", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void finder_RadiusThirtyTwo_UsesAtMostFourSlicesPerTick(GameTestHelper helper) {
         field(helper);
         StationFinder finder = new StationFinder(
@@ -114,7 +113,7 @@ public final class CraftScaleGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_scale_poll", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void furnaceSession_ObservedHundredTicks_PollsAtMostOncePerTenTicks(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -141,7 +140,7 @@ public final class CraftScaleGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_scale_no_search", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_RecipeWithoutStation_StartsNoWorldSearch(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 2));
@@ -157,7 +156,7 @@ public final class CraftScaleGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_scale_one_search", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_RecipeWithTable_StartsExactlyOneWorldSearch(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_CELL, Blocks.CRAFTING_TABLE);
