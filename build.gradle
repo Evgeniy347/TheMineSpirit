@@ -113,6 +113,8 @@ neoForge {
             // пусто или не задано — идут все тесты. providers.systemProperty — чтобы configuration cache
             // видел смену -D между прогонами.
             systemProperty 'theminespirit.gametest.filter', providers.systemProperty('theminespirit.gametest.filter').orElse('').get()
+            // Сид генерируемой сцены (scripts/test.sh gametest --seed N): пусто — сцена берёт новый случайный.
+            systemProperty 'theminespirit.gametest.seed', providers.systemProperty('theminespirit.gametest.seed').orElse('').get()
             // Исключения (быстрый набор) и номер шарда игра читает из theminespirit-gametest.properties
             // в своём gameDirectory: общий файл аргументов JVM при трёх одновременных серверах перезаписывается.
             // SerialGC и потолок памяти. C1-only (TieredStopAtLevel=1) снят 23.10: он ускорял старт на 15 тестах,

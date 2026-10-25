@@ -63,7 +63,15 @@ public final class SettlementLayout {
     public static boolean mineColumn(BlockCoord anchor, int x, int z) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
         BlockCoord entrance = mineEntrance(anchor);
-        return Math.abs(x - entrance.x()) <= 1 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
+        // Схема (ширина 3: стенка, проход, стенка) от угла входа идёт по +x: проход на x+1, стенки на x и x+2. Колонка
+        // по центру входа (x−1…x+1) оставляла стенку x+2 бугром на ровном участке, и выравнивание срезало её по кругу
+        // (сцена 56).
+        return x >= entrance.x() && x <= entrance.x() + 2 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
+    }
+
+    // Проход спуска (средняя колонка из трёх): его не засыпают; стенки по бокам — засыпают ямы до уровня участка.
+    public static boolean minePassage(BlockCoord anchor, int x, int z) {
+        return mineColumn(anchor, x, z) && x == mineEntrance(anchor).x() + 1;
     }
 
     // Добыча (gather земли, камня) не берёт блоки участка и пещер под поселением (INC-69: 4-й раз тот же карман под
@@ -99,8 +107,7 @@ public final class SettlementLayout {
         int dz = z - anchor.z();
         boolean fence =
                 (Math.abs(dx) == HALF && Math.abs(dz) <= HALF) || (Math.abs(dz) == HALF && Math.abs(dx) <= HALF);
-        BlockCoord house = houseOrigin(anchor);
-        boolean hut = x >= house.x() && x < house.x() + HOUSE_WIDTH && z >= house.z() && z < house.z() + HOUSE_DEPTH;
+        boolean hut = houseColumn(anchor, x, z);
         BlockCoord yard = workYard(anchor);
         boolean yardCell = Math.abs(x - yard.x()) <= YARD_RADIUS && Math.abs(z - yard.z()) <= YARD_RADIUS;
         boolean torch = lighting(anchor).stream().anyMatch(cell -> cell.x() == x && cell.z() == z);
@@ -119,6 +126,12 @@ public final class SettlementLayout {
     }
 
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.
+    // Колонка габарита хижины (с крыльцом).
+    public static boolean houseColumn(BlockCoord anchor, int x, int z) {
+        BlockCoord house = houseOrigin(anchor);
+        return x >= house.x() && x < house.x() + HOUSE_WIDTH && z >= house.z() && z < house.z() + HOUSE_DEPTH;
+    }
+
     public static BlockCoord workYard(BlockCoord anchor) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится рабочий двор");
         return new BlockCoord(anchor.x() + YARD_OFFSET, anchor.y(), anchor.z());

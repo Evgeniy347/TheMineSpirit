@@ -40,6 +40,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.DigOutScript;
+import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -78,6 +79,8 @@ import org.slf4j.Logger;
 public final class BoardService {
     // Задание на деревянную кирку, когда её нет ни у одного духа (гейт ToolGate, INC-67).
     static final String PICKAXE_TICKET = "tool:wooden_pickaxe";
+    // Не чаще раза в столько тиков — досрочная выдача заданий, когда дух освободился.
+    private static final long EARLY_DISPATCH_TICKS = 20;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
     private static final long DIG_OUT_PAUSE_TICKS = 1200;
@@ -103,6 +106,8 @@ public final class BoardService {
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
+    private boolean freshTickets;
+    private long lastDispatch;
     private int claims;
     private int retains;
     private long stockBlockReads;
@@ -197,13 +202,35 @@ public final class BoardService {
 
     public void tick(ServerLevel level, long now) {
         journal.flush(JournalService.FLUSH_BUDGET);
-        if (now - lastRebuild < BoardTuning.boardIntervalTicks()) {
+        long since = now - lastRebuild;
+        if (since >= BoardTuning.boardIntervalTicks()) {
+            rebuild(level, now);
             return;
         }
-        rebuild(level, now);
+        // Между циклами — только выдача уже стоящих заданий освободившемуся духу (не пересборка): дух ждал выдачи
+        // следующей части по ~50 тиков после каждой, ~1200 тиков простоя на трёх духах (сцена 56).
+        if (now - lastDispatch >= EARLY_DISPATCH_TICKS && (freshTickets || holderFreed(level))) {
+            lastDispatch = now;
+            freshTickets = false;
+            issue(level, census(level), now);
+        }
+    }
+
+    // Дух с заданием доски закончил задачу: следующий цикл — сразу, а не через до 100 тиков. На этапе 1 дух ждал
+    // выдачи следующей части по ~50 тиков после каждой, ~1200 тиков простоя на трёх духах (сцена 56).
+    private boolean holderFreed(ServerLevel level) {
+        for (UUID holder : board.assignedCounts().keySet()) {
+            if (level.getEntity(holder) instanceof SpiritEntity spirit
+                    && spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void rebuild(ServerLevel level, long now) {
+        // Задания, поставленные этим циклом (шаг первых шагов открыт после выдачи), выдаются следующим — досрочно.
+        freshTickets = false;
         board.prune(now);
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
@@ -381,6 +408,7 @@ public final class BoardService {
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
+            freshTickets = true;
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persist();
@@ -748,11 +776,24 @@ public final class BoardService {
                 + " в " + feet.toShortString()
                 + (spirit.tactics().wantsControl() ? ", тактика держит духа" : "")
                 + spirit.taskSuspendReason().map(why -> ", пауза: " + why).orElse("");
-        LOGGER.warn("[incident] дух {}: {} {}; задание провалено", spirit.displayName(), ticket.id(), reason);
+        LOGGER.warn(
+                "[incident] дух {}: {} {}; задание провалено; {}",
+                spirit.displayName(),
+                ticket.id(),
+                reason,
+                incident(spirit, ticket, reason));
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
         board.fail(ticket.id(), stock, reason);
+    }
+
+    // Всё для повтора провала в тесте: дух, задание с целью, позиция, инвентарь и снимок окрестности в папке мира.
+    private String incident(SpiritEntity spirit, BoardTicket ticket, String reason) {
+        TicketTarget target = targets.get(ticket.id());
+        String aim = target == null ? "-" : target.target() + " часть " + target.count();
+        String what = ticket.id() + " (" + ticket.boardCase() + ", цель " + aim + "): " + reason;
+        return spirit.level() instanceof ServerLevel level ? IncidentSnapshots.record(level, spirit, what) : what;
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
@@ -800,13 +841,14 @@ public final class BoardService {
             board.fail(ticket.id(), stock, spirit.taskFailureReason().orElse(null));
             LOGGER.warn(
                     "[incident] дух {} ({}) провалил задание доски {} (кейс {}): {}; статус {}; доска выдаёт "
-                            + "следующее задание",
+                            + "следующее задание; {}",
                     spirit.displayName(),
                     spirit.getUUID(),
                     ticket.id(),
                     ticket.boardCase(),
                     spirit.taskFailureReason().orElse("причина не записана"),
-                    board.statusOf(ticket.id()).orElse(null));
+                    board.statusOf(ticket.id()).orElse(null),
+                    incident(spirit, ticket, spirit.taskFailureReason().orElse("причина не записана")));
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
@@ -1170,7 +1212,10 @@ public final class BoardService {
                             Map.of()),
                     target.withSupply(item, count));
         }
-        permanentSupplies(spirits, stock, now);
+        // Постоянный запас (книги, бумага на полки) — после этапа 1: его добыча уводила духов с ограды (сцена 56).
+        if (!FirstStepsRunner.stageOneBuilding(this)) {
+            permanentSupplies(spirits, stock, now);
+        }
     }
 
     private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {

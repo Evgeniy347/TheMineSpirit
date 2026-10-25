@@ -34,9 +34,11 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
@@ -106,6 +108,7 @@ public final class HarvestSession {
     private int collectRuns;
 
     private int entityQueries;
+    private final int surfaceY;
 
     private HarvestSession(SpiritEntity spirit, Spec spec) {
         this.spirit = spirit;
@@ -120,6 +123,7 @@ public final class HarvestSession {
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
+        this.surfaceY = spirit.blockPosition().getY();
     }
 
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
@@ -299,6 +303,13 @@ public final class HarvestSession {
         BlockPos from = spirit.blockPosition();
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
         List<BlockCoord> candidates = buffer.targets(origin);
+        if (kind == WorkKind.GATHER) {
+            candidates = shallow(candidates);
+            if (candidates.isEmpty()) {
+                state = State.FIND;
+                return;
+            }
+        }
         for (BlockCoord candidate : candidates) {
             boolean ownColumn = candidate.x() == origin.x() && candidate.z() == origin.z();
             if (SpiritReach.reachable(origin, candidate) && !ownColumn && (vein || exposed(candidate))) {
@@ -337,6 +348,22 @@ public final class HarvestSession {
         beginApproach(
                 new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5));
         state = State.APPROACH;
+    }
+
+    // Земля, песок и гравий берутся слоем не глубже блока под ногами на старте: добыча вглубь рыла траншею в 3
+    // блока, из которой дух не выбирался (сцена 56, сид 519074267563303498: земля на подсыпку за оградой).
+    private List<BlockCoord> shallow(List<BlockCoord> candidates) {
+        List<BlockCoord> kept = new ArrayList<>();
+        for (BlockCoord candidate : candidates) {
+            BlockState state = level.getBlockState(toPos(candidate));
+            boolean soil = state.is(BlockTags.DIRT) || state.is(BlockTags.SAND) || state.is(Blocks.GRAVEL);
+            if (soil && candidate.y() < surfaceY - 1) {
+                buffer.remove(candidate);
+            } else {
+                kept.add(candidate);
+            }
+        }
+        return kept;
     }
 
     private boolean standReachable(BlockCoord stand) {

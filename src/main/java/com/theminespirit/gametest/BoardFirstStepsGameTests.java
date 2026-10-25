@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -163,11 +164,14 @@ public final class BoardFirstStepsGameTests {
                                 || status == BoardStatus.WAITING_RESOURCES
                                 || status == BoardStatus.ASSIGNED;
                     })
+                    .sorted(Comparator.comparingInt(
+                            ticket -> FirstStepsPlan.chain().indexOf(ticket.boardCase())))
                     .toList();
+            boolean parallel = active.stream().allMatch(ticket -> parallelStep(ticket.boardCase()));
             helper.assertTrue(
-                    active.size() <= 1,
-                    "Задание первых шагов всегда одно: активных " + active.size()
-                            + ": иначе поселение строится вразнобой");
+                    active.size() <= 1 || parallel,
+                    "Задание первых шагов до выравнивания и после хижины одно, иначе поселение строится вразнобой: "
+                            + active.stream().map(BoardTicket::boardCase).toList());
             if (active.isEmpty()) {
                 if (lastCase != null
                         && board.board()
@@ -821,5 +825,13 @@ public final class BoardFirstStepsGameTests {
     private static BlockCoord absolute(GameTestHelper helper, BlockPos relative) {
         BlockPos pos = helper.absolutePos(relative);
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    // После выравнивания шаги до хижины идут параллельно на разных духов (решение владельца 25.10), до него и после
+    // хижины — по одному.
+    private static boolean parallelStep(BoardCase step) {
+        int index = FirstStepsPlan.chain().indexOf(step);
+        return index > FirstStepsPlan.chain().indexOf(BoardCase.CLEAR_GROUNDS)
+                && index <= FirstStepsPlan.chain().indexOf(BoardCase.BUILD_HOUSE);
     }
 }

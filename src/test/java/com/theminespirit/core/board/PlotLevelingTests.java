@@ -12,6 +12,22 @@ class PlotLevelingTests {
     private static final BlockCoord ANCHOR = new BlockCoord(0, 64, 0);
 
     @Test
+    void cutTopDown_HillWithRuinOnTop_HighestBoxFirst() {
+        PlotLeveling plan = PlotLeveling.plan(ANCHOR, 2, (x, z) -> x == 1 && z == 1 ? 69 : z == 1 ? 68 : 64);
+        List<PlotLeveling.Box> layers = plan.cutTopDown();
+        assertEquals(
+                List.of(
+                        new PlotLeveling.Box(1, 68, 1, 1, 68, 1),
+                        new PlotLeveling.Box(-2, 67, 1, 2, 67, 1),
+                        new PlotLeveling.Box(-2, 66, 1, 2, 66, 1),
+                        new PlotLeveling.Box(-2, 65, 1, 2, 65, 1),
+                        new PlotLeveling.Box(-2, 64, 1, 2, 64, 1)),
+                layers,
+                "Срезка с вершин слоями в блок: стенка на холме (ноги 69) — раньше холма, иначе висит без стоянки; "
+                        + "ящик колонкой на всю высоту рыл траншею, из которой дух не выбирался (сцена 56)");
+    }
+
+    @Test
     void isLevel_StepOfOneBlock_Level() {
         assertTrue(
                 PlotLeveling.isLevel(ANCHOR, 11, (x, z) -> x > 0 ? 65 : 64),
@@ -33,9 +49,27 @@ class PlotLevelingTests {
         assertTrue(
                 SettlementLayout.mineColumn(ANCHOR, entrance.x(), entrance.z() + 5),
                 "Спуск в шахту на юг от входа — не яма участка: подсыпка засыпала бы его");
-        assertFalse(
+        assertTrue(
                 SettlementLayout.mineColumn(ANCHOR, entrance.x() + 2, entrance.z()),
+                "Стенка спуска (x+2 от угла входа) — часть спуска: её срезка выравниванием шла по кругу (сцена 56)");
+        assertFalse(
+                SettlementLayout.mineColumn(ANCHOR, entrance.x() + 3, entrance.z()),
                 "Колонка за стенкой спуска — обычная земля участка, её выравнивают");
+        assertFalse(
+                SettlementLayout.mineColumn(ANCHOR, entrance.x() - 1, entrance.z()),
+                "Колонка перед стенкой спуска — обычная земля участка, её выравнивают");
+    }
+
+    @Test
+    void minePassage_MiddleOfThree_OnlyPassageNotWalls() {
+        BlockCoord entrance = SettlementLayout.mineEntrance(ANCHOR);
+
+        assertTrue(
+                SettlementLayout.minePassage(ANCHOR, entrance.x() + 1, entrance.z() + 2),
+                "Проход спуска (средняя колонка) не засыпается выравниванием: иначе спуск завален");
+        assertFalse(
+                SettlementLayout.minePassage(ANCHOR, entrance.x(), entrance.z() + 2),
+                "Стенка спуска — не проход: яму в ней засыпают, иначе строители ограды падали в неё (сцена 56)");
     }
 
     @Test

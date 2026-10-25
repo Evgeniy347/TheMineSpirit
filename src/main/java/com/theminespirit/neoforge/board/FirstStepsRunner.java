@@ -12,6 +12,7 @@ import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
@@ -39,10 +40,12 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.neoforge.OwnWood;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,6 +59,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -96,6 +100,7 @@ public final class FirstStepsRunner {
     private static final String FURNACE_ITEM = "furnace";
     private static final int FEET_SCAN_DEPTH = 48;
     private static final int EXPAND_DEPTH = 4;
+    private static final int LEVELING_SHOWN = 6;
 
     private FirstStepsRunner() {}
 
@@ -134,20 +139,65 @@ public final class FirstStepsRunner {
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance();
-        Optional<BoardCase> next = FirstStepsPlan.next(facts);
+        List<BoardCase> ready = FirstStepsPlan.ready(facts);
+        Optional<BoardCase> next = ready.stream().findFirst();
         String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, wood);
         ensurePickaxe(level, service, spirits, stock, new StoneSite(home, wood), next, now);
-        if (next.isPresent() && STONE_STEPS.contains(next.orElseThrow())) {
+        if (ready.size() == 1 && STONE_STEPS.contains(next.orElseThrow())) {
             parallelStone(level, service, facts, new StoneSite(home, wood), stock, next.orElseThrow(), now);
         }
-        if (next.isEmpty() || hasActive(service, next.orElseThrow())) {
-            TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0, log), now);
-            next.filter(PREFETCH_DURING::contains)
-                    .ifPresent(current -> prefetch(level, service, facts, home, stock, current, now));
-            return;
+        next.filter(PREFETCH_DURING::contains)
+                .filter(current -> hasActive(service, current))
+                .ifPresent(current -> prefetch(level, service, facts, home, stock, current, now));
+        int torches = 0;
+        for (BoardCase caseValue : ready) {
+            if (!hasActive(service, caseValue)) {
+                StepContext context = new StepContext(level, service, spirits, stock, facts, anchor, wood, now);
+                torches = Math.max(torches, openIfStocked(context, caseValue));
+            }
         }
-        BoardCase caseValue = next.orElseThrow();
+        TorchWatch.tick(
+                service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, torches, log), now);
+    }
+
+    // Шаг открывается, когда его материалы в запасе; нехватка — добыча. Возвращает факелы шага сверх запаса.
+    // Деревянное стройки (забор, ступени, дверь, доски) строители крафтят сами из брёвен поселения: шаг не ждёт его
+    // в запасе, когда брёвен хватает (сцена 56: ограда ждала забор ×82, куски шли по одному через передачи).
+    private static void dropOwnWood(Map<String, Integer> need, StockView stock, String wood) {
+        int cost = 0;
+        List<String> items = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : need.entrySet()) {
+            if (wood.equals(OwnWood.species(entry.getKey()))) {
+                cost += OwnWood.plankCost(entry.getKey(), entry.getValue());
+                items.add(entry.getKey());
+            }
+        }
+        if (!items.isEmpty() && OwnWood.planksIn(stock.available(), wood) >= cost) {
+            items.forEach(need::remove);
+        }
+    }
+
+    private record StepContext(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            SettlementFacts facts,
+            BlockCoord anchor,
+            String wood,
+            long now) {}
+
+    private static int openIfStocked(StepContext context, BoardCase caseValue) {
+        ServerLevel level = context.level();
+        BoardService service = context.service();
+        List<SpiritEntity> spirits = context.spirits();
+        StockView stock = context.stock();
+        SettlementFacts facts = context.facts();
+        BlockCoord anchor = context.anchor();
+        String wood = context.wood();
+        long now = context.now();
+        BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         TicketTarget target = targetFor(caseValue, anchor, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, anchor, stock));
@@ -157,17 +207,34 @@ public final class FirstStepsRunner {
         // Доски, брёвна и деревянные блоки — породы поселения: в джунглях «oak_planks» не добыть (INC-36).
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        if (caseValue == BoardCase.CLEAR_GROUNDS) {
+            // Землю на подсыпку расчистка берёт сама — со срезки и добычей за оградой (INC-68): ждать её в запасе
+            // до открытия шага — вечное ожидание, земля под травой участка доской не добывается (сцена 56, сид
+            // 519074267563303498: dirt=96 ждала 6000 тиков).
+            need.remove(PlotLeveling.DEFAULT_BLOCK);
+        }
+        if (caseValue == BoardCase.BUILD_MINE) {
+            // Пол и стенки спуска над землёй и в пустотах кладутся из запаса: строитель шахты не нёс ни булыжника, ни
+            // земли — их сдала в сундук расчистка — и падал «нет булыжника на стенку» (сцена 56).
+            int floors = mineFloorsToPlace(level, anchor);
+            String block = stock.available().getOrDefault(COBBLESTONE, 0) >= floors
+                            || stock.available().getOrDefault(PlotLeveling.DEFAULT_BLOCK, 0) < floors
+                    ? COBBLESTONE
+                    : PlotLeveling.DEFAULT_BLOCK;
+            if (floors > 0) {
+                need.merge(block, floors, Integer::sum);
+            }
+        }
         if (WOODEN_BUILDINGS.contains(caseValue)) {
             // Повтор проваленной стройки просит только непоставленное: после провала ограды на 91/94 доска снова
             // заказывала забор ×72 на всю схему — 1800 тиков лишней добычи (приёмка «джунгли» 24.10).
             minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
+            dropOwnWood(need, stock, wood);
         }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         // Факелы шага (ограда — на столбах углов и калитки) — сверх обычного запаса факелов: иначе шаг ждал бы их
         // вечно.
-        TorchWatch.Site site =
-                new TorchWatch.Site(scan.furnaceBlock(), mine, need.getOrDefault(TorchRules.TORCH, 0), log);
-        TorchWatch.tick(service, spirits, home, stock, site, now);
+        int torches = need.getOrDefault(TorchRules.TORCH, 0);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
             for (Map.Entry<String, Integer> entry : missing.entrySet()) {
@@ -179,9 +246,10 @@ public final class FirstStepsRunner {
                     postGather(service, source, home, entry.getKey(), shortage, helpers(entry.getKey(), spirits), now);
                 }
             }
-            return;
+            return torches;
         }
         openStep(level, service, new OpenStep(caseValue, target, need, wood), source, now);
+        return torches;
     }
 
     private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
@@ -209,7 +277,9 @@ public final class FirstStepsRunner {
             if (caseValue == BoardCase.BUILD_FENCE) {
                 // Ограда — кусками периметра (решение главного агента 24.10): у куска своя бронь — материалы его
                 // клеток без поставленного, строители не делят один материал (проба fence:2 давала «141 из 94»).
-                reserve = partNeed(level, source, partTarget, wood);
+                // Деревянное, которое строители крафтят сами (снято с нужд шага), куску не бронируется.
+                reserve = new HashMap<>(partNeed(level, source, partTarget, wood));
+                reserve.keySet().retainAll(need.keySet());
             }
             BoardOutcome submitted = service.submit(
                     new BoardTicket(
@@ -217,7 +287,9 @@ public final class FirstStepsRunner {
                             caseValue,
                             Optional.empty(),
                             BoardRules.priorityOf(caseValue),
-                            now,
+                            // Части — в очередь по номеру: при равном времени доска брала по имени, «clear:N» раньше
+                            // «first:», и первая часть шла последней одним духом, двое стояли (сцена 56).
+                            now + part - 1,
                             1,
                             BoardTicket.ALWAYS_CAUSE,
                             List.of(),
@@ -312,9 +384,19 @@ public final class FirstStepsRunner {
         }
     }
 
+    // Этап 1 ещё строится: открыт шаг первых шагов, кусок ограды или часть расчистки. Отметку журнала постройке
+    // ставит первый сделанный кусок, и этап 2 (уровень шахты, склад) начинался посреди этапа 1 (сцена 56).
+    public static boolean stageOneBuilding(BoardService service) {
+        return service.board().all().stream()
+                .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
+                                || ticket.id().startsWith(FENCE_PART_PREFIX)
+                                || ticket.id().startsWith(CLEAR_PART_PREFIX))
+                        && active(service, ticket.id()));
+    }
+
     private static int partsOf(BoardCase caseValue) {
         return switch (caseValue) {
-            case CLEAR_GROUNDS -> TicketPlans.CLEAR_QUARTERS;
+            case CLEAR_GROUNDS -> TicketPlans.CLEAR_PARTS;
             case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
             default -> 1;
         };
@@ -409,13 +491,35 @@ public final class FirstStepsRunner {
                     plan.fillVolume(),
                     plan.block(),
                     plan.voids().size());
+            if (plan.cut().size() + plan.fill().size() <= LEVELING_SHOWN) {
+                // Остаток выравнивания из пары ящиков — их координаты: повтор по кругу из лога виден сразу (сцена 56).
+                LOGGER.info("[plot] остаток выравнивания: срезка {}, подсыпка {}", plan.cut(), plan.fill());
+            }
         }
         return plan;
     }
 
     // Высоты колонок участка для выравнивания: спуск в шахту — на уровне участка, его не засыпают (INC-50).
+    private static int descentEnd(BlockCoord anchor) {
+        try {
+            return MineDescentBottom.standOf(anchor).map(BlockCoord::z).orElse(Integer.MAX_VALUE);
+        } catch (IllegalStateException | IllegalArgumentException unbuildable) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
     private static IntBinaryOperator plotFeet(ServerLevel level, BlockCoord anchor) {
-        return (x, z) -> SettlementLayout.mineColumn(anchor, x, z) ? anchor.y() : feetAt(level, x, z, anchor.y());
+        // Колонки стенок спуска: яма засыпается (иначе у спуска оставалась яма, и строители ограды падали в неё по
+        // 1000+ тиков, сцена 56), бугор (стенка над землёй у входа) не срезается. Проход — на уровне участка.
+        // Проход за низом спуска — обычная земля участка: колонка спуска до края участка длиннее самого спуска.
+        int passageEnd = descentEnd(anchor);
+        return (x, z) -> {
+            if (SettlementLayout.minePassage(anchor, x, z) && z <= passageEnd) {
+                return anchor.y();
+            }
+            int feet = feetAt(level, x, z, anchor.y());
+            return SettlementLayout.mineColumn(anchor, x, z) ? Math.min(feet, anchor.y()) : feet;
+        };
     }
 
     // Уровень ног колонки — над верхним блоком земли; постройки, станции, деревья и растения землёй не считаются.
@@ -441,7 +545,9 @@ public final class FirstStepsRunner {
                 || state.is(Blocks.GRAVEL)
                 || state.is(Blocks.COBBLESTONE)
                 || state.is(Blocks.CLAY)
-                || !state.getFluidState().isEmpty();
+                // Вода — не земля участка: пруд в низине засыпается до дна, а не «подсыпка над водой», где у ямы нет
+                // ни стоянки, ни опоры, и выравнивание шло по кругу (сцена 56, сид −1042323956605046699).
+                || (!state.getFluidState().isEmpty() && !state.getFluidState().is(FluidTags.WATER));
     }
 
     // Пока шаг идёт (расчистку ведёт один дух), материалы ближайшей деревянной стройки добываются заранее: иначе
@@ -831,33 +937,51 @@ public final class FirstStepsRunner {
         return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(step, anchor, wood)), wood);
     }
 
-    // Спуск по схеме: клетки прохода свободны (факел и лестница не мешают), пол — твёрдый блок класса пола.
-    private static Placed mineAudit(ServerLevel level, BlockCoord anchor) {
-        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
-        if (preset.isEmpty()) {
+    private static int mineFloorsToPlace(ServerLevel level, BlockCoord anchor) {
+        Placed floors = mineFloors(level, anchor);
+        return floors.total() - floors.done();
+    }
+
+    private static Placed mineFloors(ServerLevel level, BlockCoord anchor) {
+        Optional<MineLayout> layout = mineLayout(anchor);
+        if (layout.isEmpty()) {
             return new Placed(0, 0);
         }
-        MineLayout layout = MineLayout.place(
-                preset.get().schematic(),
-                preset.get().entry(),
-                TicketPlans.mineDescentOrigin(anchor),
-                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
-                MineLayout.Extent.NONE);
         int done = 0;
-        for (BlockCoord cell : layout.air()) {
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
-                done++;
-            }
-        }
-        for (BlockCoord cell : layout.floors()) {
+        for (BlockCoord cell : layout.get().floors()) {
             BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
             if (SchematicBlocks.isFloorClass(
                     BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())) {
                 done++;
             }
         }
-        return new Placed(done, layout.air().size() + layout.floors().size());
+        return new Placed(done, layout.get().floors().size());
+    }
+
+    private static Optional<MineLayout> mineLayout(BlockCoord anchor) {
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
+        return preset.map(found -> MineLayout.place(
+                found.schematic(),
+                found.entry(),
+                TicketPlans.mineDescentOrigin(anchor),
+                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
+                MineLayout.Extent.NONE));
+    }
+
+    // Спуск по схеме: клетки прохода свободны (факел и лестница не мешают), пол — твёрдый блок класса пола.
+    private static Placed mineAudit(ServerLevel level, BlockCoord anchor) {
+        Optional<MineLayout> layout = mineLayout(anchor);
+        if (layout.isEmpty()) {
+            return new Placed(0, 0);
+        }
+        int done = 0;
+        for (BlockCoord cell : layout.get().air()) {
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                done++;
+            }
+        }
+        return new Placed(done, layout.get().air().size()).plus(mineFloors(level, anchor));
     }
 
     private record Placed(int done, int total) {
@@ -932,6 +1056,16 @@ public final class FirstStepsRunner {
     // Шаг кусками (ограда) сделан, когда сделаны все куски: отметку в журнале ставит первый сделанный кусок.
     // Мир до кусков (first:build_fence DONE, кусков на доске нет) — ограда целиком, она сделана.
     private static boolean partsDone(BoardService service, BoardCase step) {
+        if (step == BoardCase.CLEAR_GROUNDS) {
+            // Расчистка сделана, когда ни одна её часть не идёт: шахта, открытая по первой части, строилась в ящике
+            // ещё идущей расчистки, и та срывала её стенки (сцена 56). Ровность после частей сверяет мир.
+            for (int part = 2; part <= TicketPlans.CLEAR_PARTS; part++) {
+                if (active(service, partId(step, part))) {
+                    return false;
+                }
+            }
+            return true;
+        }
         if (step != BoardCase.BUILD_FENCE) {
             return true;
         }

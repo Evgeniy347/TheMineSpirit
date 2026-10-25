@@ -32,13 +32,22 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
-    public static final int CLEAR_QUARTERS = 4;
+    // Расчистка и выравнивание — 9 частей 3×3 на свободных духов: четверти на трёх духах оставляли одну на одного, и
+    // остальные стояли до её конца (сцена 56: холм целиком в одной четверти).
+    public static final int CLEAR_GRID = 3;
+    public static final int CLEAR_PARTS = CLEAR_GRID * CLEAR_GRID;
     // Ограда кусками периметра на разных духов: одним духом она шла ~2900 тиков, двое простаивали (приёмка «джунгли»).
     public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     // Брёвен с малого дерева (дуб 4–6): число деревьев под добычу брёвен — с запасом (INC-64).
     private static final int LOGS_PER_TREE = 4;
     private static final int DIRT_SOURCE_GAP = 4;
+    // Допуск неравенства объёма срезки между частями, блоков: в его пределах ящик остаётся в своей части.
+    private static final int CUT_SLACK = 12;
+    // Допуск для рядов подсыпки шире: яма — одно место, дальний дух ходил к ней через участок (подсыпка 2200 тиков).
+    private static final int FILL_SLACK = 40;
+    // Запас пола и стенок спуска, который строитель шахты берёт из сундука (блоков каждого вида).
+    private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
     private static final int LEFT_ORE_RADIUS = 4;
@@ -58,6 +67,8 @@ public final class TicketPlans {
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
     private static final String CLEAR_AREA = "clear_area";
+    private static final String WITHDRAW = "withdraw";
+    private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
@@ -156,8 +167,16 @@ public final class TicketPlans {
             case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
             // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
             // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
+            // Палки факелам — свои из брёвен (acquire крафтит): крафт ждал передачу палок от занятого соседа, и кусок
+            // ограды падал «не хватило torch» (сцена 56).
             case CRAFT_TORCHES ->
-                sequence(craft(TORCH, torchCount(target), target), store(target, LEFTOVERS.toArray(String[]::new)));
+                sequence(
+                        new FallbackNode(List.of(
+                                new ScriptCall(
+                                        ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, (torchCount(target) + 3) / 4)),
+                                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
+                        craft(TORCH, torchCount(target), target),
+                        store(target, LEFTOVERS.toArray(String[]::new)));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -207,8 +226,16 @@ public final class TicketPlans {
         BlockCoord origin = mineDescentOrigin(target.target());
         int x = origin.x();
         int z = origin.z();
+        // Пол и стенки спуска — из сундука поселения: расчистка сдала туда землю и булыжник, а строитель шахты пришёл
+        // пустым и падал «нет булыжника на стенку» (сцена 56). Сколько есть — столько и берёт.
+        // Подход ко входу — без провала: колонку спуска выравнивание не трогает, и вход бывает в толще холма; к нему
+        // ведёт сама проходка (сцена 56: «тупик» у духа на холме над входом валил шахту).
         return sequence(
-                gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                new FallbackNode(List.of(
+                        gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
+                takeFloor("minecraft:cobblestone"),
+                takeFloor(MINECRAFT + PlotLeveling.DEFAULT_BLOCK),
                 new ScriptCall(
                         BUILD_SCHEMATIC,
                         Map.of(
@@ -222,6 +249,22 @@ public final class TicketPlans {
                                 z,
                                 "rotation",
                                 MINE_DESCENT_ROTATION)));
+    }
+
+    private static TaskNode takeFloor(String item) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        WITHDRAW,
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                item,
+                                COUNT,
+                                MINE_FLOOR_TAKE,
+                                RADIUS,
+                                SUPPLY_CONTAINER_RADIUS)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode buildMineLevel(int level, TicketTarget target) {
@@ -353,7 +396,7 @@ public final class TicketPlans {
     private static TaskNode luredCapture(Species species, String feed) {
         return sequence(
                 new ScriptCall(
-                        "withdraw",
+                        WITHDRAW,
                         Map.of(
                                 CONTAINER,
                                 NEAREST,
@@ -378,7 +421,12 @@ public final class TicketPlans {
         int part = target.count();
         String scheme =
                 part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(FENCE_SCHEME, part, FENCE_PARTS) : FENCE_SCHEME;
-        return sequence(gotoTarget(target), schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
+        // Подход к якорю — без провала: при параллельных шагах на якоре уже стоит хижина, и «тупик» у её стены валил
+        // кусок ограды; к своим клеткам стройка подходит сама (сцена 56).
+        return sequence(
+                new FallbackNode(
+                        List.of(gotoTarget(target), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
+                schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
     }
 
     // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
@@ -640,7 +688,7 @@ public final class TicketPlans {
     }
 
     private static Optional<TreeSpecies> treeOf(String item) {
-        String full = item.startsWith("minecraft:") ? item : "minecraft:" + item;
+        String full = item.startsWith("minecraft:") ? item : MINECRAFT + item;
         return TreeSpecies.ALL.stream()
                 .filter(tree -> tree.logId().equals(full))
                 .findFirst();
@@ -649,27 +697,57 @@ public final class TicketPlans {
     // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
     private static TaskNode clearGrounds(TicketTarget target) {
         int radius = GROUNDS_CLEAR_RADIUS;
-        List<TaskNode> chunks = List.of(
-                clearGroundsChunk(target, -radius, -radius, -1, -1),
-                clearGroundsChunk(target, 0, -radius, radius, -1),
-                clearGroundsChunk(target, -radius, 0, -1, radius),
-                clearGroundsChunk(target, 0, 0, radius, radius));
-        int quarter = target.count();
-        boolean single = quarter >= 1 && quarter <= CLEAR_QUARTERS;
-        List<TaskNode> steps = new ArrayList<>(single ? List.of(chunks.get(quarter - 1)) : chunks);
-        // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
-        // земля — запас подсыпки), потом подсыпка ям. Выравнивание делится по четвертям, как расчистка: всё оно шло
-        // в первой четверти одним духом, двое стояли (INC-64).
-        PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
-        BlockCoord center = target.target();
-        for (PlotLeveling.Box box : leveling.cut()) {
-            if (!single || quarterOf(box, center) == quarter) {
-                steps.add(new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())));
+        List<TaskNode> chunks = new ArrayList<>();
+        int band = (2 * radius + 1) / CLEAR_GRID;
+        for (int row = 0; row < CLEAR_GRID; row++) {
+            for (int col = 0; col < CLEAR_GRID; col++) {
+                int dx = -radius + col * band;
+                int dz = -radius + row * band;
+                int lastX = col == CLEAR_GRID - 1 ? radius : dx + band - 1;
+                int lastZ = row == CLEAR_GRID - 1 ? radius : dz + band - 1;
+                chunks.add(clearGroundsChunk(target, dx, dz, lastX, lastZ));
             }
         }
-        List<PlotLeveling.Box> fills = leveling.fill().stream()
-                .filter(box -> !single || quarterOf(box, center) == quarter)
-                .toList();
+        int quarter = target.count();
+        boolean single = quarter >= 1 && quarter <= CLEAR_PARTS;
+        List<TaskNode> steps = new ArrayList<>();
+        // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
+        // земля — запас подсыпки), потом подсыпка ям. Выравнивание делится по четвертям, как расчистка: всё оно шло
+        // в первой четверти одним духом, двое стояли (INC-64). Срезка — до расчистки ящика на 3 над участком:
+        // расчистка срывала холм под старой стенкой на его вершине, и стенка висела без стоянки (сцена 56).
+        PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
+        BlockCoord center = target.target();
+        // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
+        // его берёт следующий обмер, когда соседние ряды срезаны.
+        List<PlotLeveling.Box> cuts = leveling.cutTopDown();
+        List<Integer> cutPart = balancedParts(cuts, center, CUT_SLACK);
+        for (int index = 0; index < cuts.size(); index++) {
+            PlotLeveling.Box box = cuts.get(index);
+            if (!single || cutPart.get(index) == quarter) {
+                steps.add(new FallbackNode(List.of(
+                        new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+            }
+        }
+        // Ряды подсыпки — тоже по частям поровну: яма низины целиком в части 1 держала её духа ~4700 тиков, пока
+        // остальные части были готовы к ~3600 (сцена 56). Своей срезки части хватает на свою долю ям.
+        List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), center, quarter) : leveling.fill();
+        // Ямы подсыпки — сперва от того, что в них стоит (ствол дерева в низине, кусты): высота ног их не видит, а
+        // подсыпка в занятую клетку не встаёт — яма с деревом оставалась, выравнивание шло по кругу (сцена 56).
+        // Воду и пустые клетки расчистка пропускает быстро.
+        for (PlotLeveling.Box box : fills) {
+            steps.add(new FallbackNode(List.of(
+                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+        }
+        int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
+        if (volume > 0 && !PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
+            // Булыжник на подсыпку — из запаса поселения (сундуки, свой инвентарь): духу четверти его никто не нёс, и
+            // подсыпка падала «не хватило cobblestone: нужно 2, есть 0» (сцена 56).
+            steps.add(new ScriptCall(
+                    ACQUIRE,
+                    Map.of(ITEM, MINECRAFT + leveling.block(), COUNT, Math.min(volume, CatalogLimits.COUNT_MAX))));
+        }
         boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
         BlockCoord source = dirtSource(center, single ? quarter : 1);
         for (PlotLeveling.Box layer : layers(fills)) {
@@ -683,7 +761,7 @@ public final class TicketPlans {
                                 "acquire_at",
                                 Map.of(
                                         ITEM,
-                                        "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
+                                        MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
                                         COUNT,
                                         Math.min(layer.volume(), CatalogLimits.COUNT_MAX),
                                         "x",
@@ -701,13 +779,16 @@ public final class TicketPlans {
         // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
         // карман духу не достать, это не повод валить выравнивание (INC-67).
         List<PlotLeveling.Box> voids = leveling.voids().stream()
-                .filter(box -> !single || quarterOf(box, center) == quarter)
+                .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
         for (PlotLeveling.Box layer : layers(voids)) {
             steps.add(new FallbackNode(List.of(
                     new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
+        // Расчистка своей части (растения, деревья, старые постройки) — после срезки и подсыпки: до них она срезала
+        // заодно холм своей части, доли срезки по объёму теряли смысл, и части 1–3 шли по 2000+ тиков (сцена 56).
+        steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         return withLeftovers(new SequenceNode(steps), target);
     }
 
@@ -744,18 +825,60 @@ public final class TicketPlans {
     }
 
     // Место добычи земли для подсыпки четверти — за оградой с её стороны, чтобы не копать участок.
-    static BlockCoord dirtSource(BlockCoord center, int quarter) {
+    static BlockCoord dirtSource(BlockCoord center, int part) {
         int reach = SettlementLayout.LEVEL_HALF + DIRT_SOURCE_GAP;
-        int dx = quarter == 2 || quarter == 4 ? reach : -reach;
-        int dz = quarter >= 3 ? reach : -reach;
-        return new BlockCoord(center.x() + dx, center.y(), center.z() + dz);
+        int dx = ((part - 1) % CLEAR_GRID - 1) * reach;
+        int dz = ((part - 1) / CLEAR_GRID - 1) * reach;
+        return new BlockCoord(center.x() + dx, center.y(), center.z() + (dx == 0 && dz == 0 ? -reach : dz));
     }
 
-    // Четверть ящика выравнивания по его началу — те же четверти, что у расчистки (1 — запад-север … 4 — восток-юг).
-    static int quarterOf(PlotLeveling.Box box, BlockCoord center) {
-        boolean east = box.x1() >= center.x();
-        boolean south = box.z1() >= center.z();
-        return 1 + (east ? 1 : 0) + (south ? 2 : 0);
+    // Часть ящика выравнивания по его началу — те же части 3×3, что у расчистки (1 — северо-запад … 9 — юго-восток).
+    static int partOf(PlotLeveling.Box box, BlockCoord center) {
+        return 1 + band(box.x1() - center.x()) + CLEAR_GRID * band(box.z1() - center.z());
+    }
+
+    // Часть каждого ящика срезки — по объёму поровну (с допуском CUT_SLACK к ближайшей части): холм в середине
+    // участка целиком доставался части 5, её дух срезал его ~4700 тиков, пока двое других ждали (сцена 56).
+    // Порядок «сверху вниз» сохраняется внутри каждой части.
+    private static List<PlotLeveling.Box> ofPart(List<PlotLeveling.Box> boxes, BlockCoord center, int part) {
+        List<Integer> parts = balancedParts(boxes, center, FILL_SLACK);
+        List<PlotLeveling.Box> mine = new ArrayList<>();
+        for (int index = 0; index < boxes.size(); index++) {
+            if (parts.get(index) == part) {
+                mine.add(boxes.get(index));
+            }
+        }
+        return mine;
+    }
+
+    static List<Integer> balancedParts(List<PlotLeveling.Box> cuts, BlockCoord center, int slack) {
+        int[] load = new int[CLEAR_PARTS + 1];
+        List<Integer> parts = new ArrayList<>(cuts.size());
+        for (PlotLeveling.Box box : cuts) {
+            int home = partOf(box, center);
+            int least = Integer.MAX_VALUE;
+            for (int part = 1; part <= CLEAR_PARTS; part++) {
+                least = Math.min(least, load[part]);
+            }
+            int chosen = home;
+            int bestDistance = Integer.MAX_VALUE;
+            for (int part = 1; part <= CLEAR_PARTS; part++) {
+                int distance = Math.abs((part - 1) % CLEAR_GRID - (home - 1) % CLEAR_GRID)
+                        + Math.abs((part - 1) / CLEAR_GRID - (home - 1) / CLEAR_GRID);
+                if (load[part] <= least + slack && distance < bestDistance) {
+                    chosen = part;
+                    bestDistance = distance;
+                }
+            }
+            load[chosen] += box.volume();
+            parts.add(chosen);
+        }
+        return parts;
+    }
+
+    private static int band(int offset) {
+        int width = (2 * GROUNDS_CLEAR_RADIUS + 1) / CLEAR_GRID;
+        return Math.max(0, Math.min(CLEAR_GRID - 1, (offset + GROUNDS_CLEAR_RADIUS) / width));
     }
 
     private static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {
@@ -986,7 +1109,7 @@ public final class TicketPlans {
                 gotoTarget(target),
                 new FallbackNode(List.of(
                         new ScriptCall(
-                                "withdraw",
+                                WITHDRAW,
                                 Map.of(
                                         CONTAINER,
                                         "auto",
@@ -1005,7 +1128,7 @@ public final class TicketPlans {
                     + "конкретный продукт, без имени предмета withdraw нечего взять");
         }
         return new ScriptCall(
-                "withdraw",
+                WITHDRAW,
                 Map.of(
                         CONTAINER,
                         NEAREST,

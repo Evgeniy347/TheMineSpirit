@@ -25,6 +25,7 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.social.TransferOrder;
 import com.theminespirit.core.social.TransferPlanner;
 import com.theminespirit.core.social.TransferSource;
+import com.theminespirit.neoforge.OwnWood;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;
@@ -45,6 +46,7 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import org.slf4j.Logger;
 
@@ -53,6 +55,7 @@ public final class TransferWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int CHEST_RADIUS = 16;
     private static final int CHEST_PROBES = 4;
+    private static final int TORCHES_PER_COAL = 4;
     // Факелы освещения — тоже материал стройки: без передачи дух шёл ставить их пустым («нет материала torch»).
     private static final Set<BoardCase> BUILDS =
             Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.REPAIR_BUILDING);
@@ -95,6 +98,30 @@ public final class TransferWatch {
                 : craftNeed(recipes, craftTicket, target, craftItem.orElseThrow());
         need.forEach((item, count) -> ingredients.add(new Ingredient(ItemIds.normalize(item), count)));
         if (ingredients.isEmpty()) {
+            return false;
+        }
+        if (craftTicket.boardCase() == BoardCase.CRAFT_TORCHES) {
+            // Палки факелам крафтер берёт из своих брёвен сам (шаг acquire в плане) — их не ждём передачей.
+            Map<String, Integer> sticks = new HashMap<>();
+            need.forEach((item, count) -> {
+                if (OwnWood.stick(item)) {
+                    sticks.put(item, count);
+                }
+            });
+            if (!sticks.isEmpty()
+                    && OwnWood.planksHeld(crafter.getInventory(), SettlementWood.of(level, place, stock.available()))
+                            >= sticks.values().stream()
+                                    .mapToInt(count -> OwnWood.plankCost("stick", count))
+                                    .sum()) {
+                ingredients.removeIf(ingredient -> OwnWood.stick(ingredient.item()));
+                if (ingredients.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        if (gather && ownWoodCovers(crafter, need)) {
+            // Доски и палки добыча крафтит сама из своих брёвен: крафтер ограды с 60 брёвнами ждал передачу досок от
+            // соседа, ингредиент за ингредиентом, а двое стояли (сцена 56).
             return false;
         }
         if (needsTable(level, recipes, craftItem.orElseThrow(), service.targetPoint(craftTicket.id(), spirits))) {
@@ -193,6 +220,28 @@ public final class TransferWatch {
         } catch (RuntimeException failure) {
             LOGGER.warn("Материалы стройки {} для передачи не посчитаны: {}", build.id(), failure.getMessage());
             return false;
+        }
+        Map<String, Integer> wood = new HashMap<>();
+        need.forEach((item, count) -> {
+            if (!OwnWood.species(item).isEmpty() || OwnWood.stick(item)) {
+                wood.put(item, count);
+            }
+        });
+        if (!wood.isEmpty() && ownWoodCovers(builder, wood)) {
+            // Деревянное стройки строитель крафтит сам из своих брёвен (заход стройки за материалом): передача
+            // забора куску ограды ждала, пока сосед достроит свой кусок, куски шли по одному (сцена 56).
+            need = new HashMap<>(need);
+            need.keySet().removeAll(wood.keySet());
+        }
+        int torches = need.getOrDefault("torch", 0) + need.getOrDefault("minecraft:torch", 0);
+        int coal = builder.getInventory().countItem(Items.COAL)
+                + builder.getInventory().countItem(Items.CHARCOAL);
+        if (torches > 0 && coal * TORCHES_PER_COAL >= torches) {
+            // Факелы строитель крафтит сам из своего угля (заход стройки, acquire света): передача факелов ждала
+            // соседа, и куски ограды стояли (сцена 56).
+            need = new HashMap<>(need);
+            need.remove("torch");
+            need.remove("minecraft:torch");
         }
         List<Ingredient> materials = new ArrayList<>();
         need.forEach((item, count) -> materials.add(new Ingredient(ItemIds.normalize(item), count)));
@@ -483,6 +532,23 @@ public final class TransferWatch {
             }
         }
         return false;
+    }
+
+    // Хватает ли своих досок и брёвен на деревянное из need (доски, палки, забор…): его дух крафтит сам.
+    private static boolean ownWoodCovers(SpiritEntity crafter, Map<String, Integer> need) {
+        String species = need.keySet().stream()
+                .map(OwnWood::species)
+                .filter(found -> !found.isEmpty())
+                .findFirst()
+                .orElse("");
+        if (species.isEmpty()
+                || !need.keySet().stream().allMatch(id -> OwnWood.stick(id) || species.equals(OwnWood.species(id)))) {
+            return false;
+        }
+        int cost = need.entrySet().stream()
+                .mapToInt(entry -> OwnWood.plankCost(entry.getKey(), entry.getValue()))
+                .sum();
+        return OwnWood.planksHeld(crafter.getInventory(), species) >= cost;
     }
 
     private static boolean busy(SpiritEntity spirit) {

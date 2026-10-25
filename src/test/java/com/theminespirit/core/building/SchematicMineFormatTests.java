@@ -70,6 +70,10 @@ class SchematicMineFormatTests {
                 SchematicBlocks.isFloorClass("minecraft:deepslate"),
                 "глубинный сланец — пол: класс принимает любой дешёвый твёрдый блок");
         assertTrue(SchematicBlocks.isFloorClass("minecraft:cobblestone"), "булыжник — пол");
+        assertTrue(
+                SchematicBlocks.isFloorClass("minecraft:grass_block"),
+                "трава — пол: строитель шахты оставляет её у входа, а аудит без неё считал спуск недостроенным и "
+                        + "шахта переоткрывалась по кругу (сцена 56)");
         assertFalse(
                 SchematicBlocks.isFloorClass("minecraft:oak_planks"),
                 "доски не пол шахты: класс не должен прощать дорогой блок");

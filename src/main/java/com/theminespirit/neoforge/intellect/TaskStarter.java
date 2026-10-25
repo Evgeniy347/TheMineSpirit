@@ -8,10 +8,12 @@ import com.theminespirit.core.intellect.TaskAdmission;
 import com.theminespirit.core.intellect.TaskBackoff;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 public final class TaskStarter {
@@ -88,15 +90,7 @@ public final class TaskStarter {
                         && last.generation() == generation) {
                     backoff.noteFailure(id, last.script(), tick);
                     failures++;
-                    LOGGER.warn(
-                            "[incident] дух {} ({}) провалил задачу '{}': {}; состояние {}; пауза {} тиков, "
-                                    + "тот же скрипт не повторяется",
-                            spirit.getName().getString(),
-                            id,
-                            last.script(),
-                            spirit.taskFailureReason().orElse("причина не записана"),
-                            status.orElseThrow(),
-                            IntellectTuning.loadDefault().failBackoffTicks());
+                    logFailure(spirit, id, last.script(), status.orElseThrow());
                     if (last.script().equals(script)) {
                         return false;
                     }
@@ -119,5 +113,24 @@ public final class TaskStarter {
 
     public int failures() {
         return failures;
+    }
+
+    private static void logFailure(SpiritEntity spirit, UUID id, String script, RunStatus status) {
+        LOGGER.warn(
+                "[incident] дух {} ({}) провалил задачу '{}': {}; состояние {}; пауза {} тиков, "
+                        + "тот же скрипт не повторяется; {}",
+                spirit.getName().getString(),
+                id,
+                script,
+                spirit.taskFailureReason().orElse("причина не записана"),
+                status,
+                IntellectTuning.loadDefault().failBackoffTicks(),
+                incident(spirit, script));
+    }
+
+    private static String incident(SpiritEntity spirit, String script) {
+        return spirit.level() instanceof ServerLevel level
+                ? IncidentSnapshots.record(level, spirit, "задача " + script)
+                : "-";
     }
 }

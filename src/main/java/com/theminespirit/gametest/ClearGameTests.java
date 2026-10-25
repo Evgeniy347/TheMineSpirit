@@ -191,9 +191,10 @@ public final class ClearGameTests {
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
             String reason = spirit.taskFailureReason().orElse("");
             helper.assertTrue(
-                    reason.contains("недостижимо: 10"),
-                    "причина обязана назвать 10 недостижимых клеток (8 земли кольца и 2 воздуха кармана "
-                            + "с той же запечатанной стоянкой), фактически: " + reason);
+                    reason.contains("недостижимо: 8"),
+                    "причина обязана назвать 8 недостижимых клеток земли кольца с запечатанной стоянкой; воздух "
+                            + "кармана — не цель расчистки (к нему дух ходил впустую, сцена 56), фактически: "
+                            + reason);
             int left = 0;
             for (int x = 3; x <= 5; x++) {
                 for (int y = 1; y <= 2; y++) {

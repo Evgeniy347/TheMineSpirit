@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -870,26 +871,28 @@ class TicketPlansTests {
     void plan_ClearQuarter_OnlyItsLevelingBoxes() {
         BlockCoord anchor = new BlockCoord(0, 64, 0);
         PlotLeveling leveling = new PlotLeveling(
-                List.of(new PlotLeveling.Box(-5, 64, -5, -3, 65, -5), new PlotLeveling.Box(3, 64, -5, 5, 65, -5)),
+                List.of(
+                        new PlotLeveling.Box(-12, 64, -12, -10, 65, -12),
+                        new PlotLeveling.Box(8, 64, -12, 10, 65, -12)),
                 List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)),
                 "dirt");
-        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(2);
+        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(3);
 
         List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter));
 
         assertEquals(
-                List.of(3),
+                List.of(8),
                 calls.stream()
                         .filter(call -> "clear_area".equals(call.script())
                                 && call.params().containsKey("y2"))
                         .filter(call -> Integer.valueOf(65).equals(call.params().get("y2")))
                         .map(call -> call.params().get("x1"))
                         .toList(),
-                "Четверть 2 (восток-север) срезает только свой выступ: выравнивание делится между духами, а не идёт "
-                        + "одним духом в первой четверти (INC-64)");
+                "Часть 3 (северо-восток) срезает только свой выступ: выравнивание делится между духами, а не идёт "
+                        + "одним духом в первой части (INC-64)");
         assertTrue(
                 calls.stream().noneMatch(call -> "fill".equals(call.script())),
-                "Подсыпка четверти 4 не попадает в четверть 2");
+                "Подсыпка центральной части 5 не попадает в часть 3");
     }
 
     @Test
@@ -911,7 +914,7 @@ class TicketPlansTests {
     void plan_ClearQuarterWithFill_DirtAcquiredOutsideBeforeFill() {
         BlockCoord anchor = new BlockCoord(0, 64, 0);
         PlotLeveling leveling = new PlotLeveling(List.of(), List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)), "dirt");
-        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(4);
+        TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(5);
 
         List<String> scripts = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
                 .map(ScriptCall::script)
@@ -929,7 +932,10 @@ class TicketPlansTests {
                 "Земля на подсыпку добывается до засыпки (своя со срезки или за оградой): иначе «не хватило dirt: нужно 4, "
                         + "есть 0» (INC-68)");
         assertTrue(
-                Math.abs(TicketPlans.dirtSource(anchor, 4).x()) > SettlementLayout.LEVEL_HALF,
+                Math.max(
+                                Math.abs(TicketPlans.dirtSource(anchor, 5).x()),
+                                Math.abs(TicketPlans.dirtSource(anchor, 5).z()))
+                        > SettlementLayout.LEVEL_HALF,
                 "Землю добывают за оградой, а не из земли участка");
         assertTrue(
                 calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
@@ -1079,11 +1085,36 @@ class TicketPlansTests {
         assertEquals(
                 1,
                 collectCalls(quarter, "clear_area").size(),
-                "Четверть расчистки — одна четверть: четыре духа чистят участок параллельно, а не один всё");
+                "Часть расчистки — одна часть 3×3: духи чистят участок параллельно, а не один всё");
         assertEquals(
-                TicketPlans.CLEAR_QUARTERS,
+                TicketPlans.CLEAR_PARTS,
                 collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target()), "clear_area")
                         .size(),
                 "Без номера четверти — вся расчистка одним заданием");
+    }
+
+    @Test
+    void plan_ClearPartsLevelingRemainder_EveryCutLayerInSomePart() {
+        BlockCoord anchor = new BlockCoord(0, 64, 0);
+        PlotLeveling leveling = new PlotLeveling(
+                List.of(new PlotLeveling.Box(-6, 64, 2, -6, 65, 2), new PlotLeveling.Box(-5, 64, 2, -5, 66, 2)),
+                List.of(),
+                "dirt");
+        Set<Integer> layers = new TreeSet<>();
+        for (int part = 1; part <= TicketPlans.CLEAR_PARTS; part++) {
+            TaskNode plan = TicketPlans.plan(
+                    BoardCase.CLEAR_GROUNDS,
+                    TicketTarget.at(anchor).withLeveling(leveling).withCount(part));
+            for (ScriptCall call : collectCalls(plan, "clear_area")) {
+                if (call.params().get("y1").equals(call.params().get("y2"))) {
+                    layers.add((Integer) call.params().get("y1"));
+                }
+            }
+        }
+        assertEquals(
+                Set.of(64, 65, 66),
+                layers,
+                "Каждый слой срезки остатка выравнивания — в плане какой-то части: иначе холмик в пару колонок "
+                        + "остаётся и выравнивание идёт по кругу (сцена 56)");
     }
 }

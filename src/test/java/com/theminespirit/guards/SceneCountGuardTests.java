@@ -25,7 +25,8 @@ class SceneCountGuardTests {
     private static final int MAX_SCENES_TOTAL = 49;
 
     // Классы вне схемы «механика → *ScenesGameTests» и их потолок: демо-аудиты — ручные, вне общего прогона;
-    // этап 1 укрупняет ветка opus/scenes. Новой записи сюда не добавлять: новая сцена — шаг сцены механики.
+    // FirstStageGameTests — сквозная сцена этапа 1 (заменила JungleSettlementGameTests). Новой записи сюда не
+    // добавлять: новая сцена — шаг сцены механики.
     private static final Map<String, Integer> OUTSIDE_SCENES = Map.of(
             "DemoAuditGameTests", 110,
             "BoardFirstStepsGameTests", 11,
@@ -33,7 +34,7 @@ class SceneCountGuardTests {
             "SettlementChestGameTests", 3,
             "SettlementWoodBoardGameTests", 1,
             "SettlementChunkGameTests", 1,
-            "JungleSettlementGameTests", 1);
+            "FirstStageGameTests", 1);
 
     @Test
     void scenes_PerMechanicAndTotal_DoNotGrow() {
@@ -140,7 +141,7 @@ class SceneCountGuardTests {
 
     private static int total(Map<String, Integer> counts) {
         return counts.entrySet().stream()
-                .filter(entry -> !entry.getKey().equals("DemoAuditGameTests"))
+                .filter(entry -> !"DemoAuditGameTests".equals(entry.getKey()))
                 .mapToInt(Map.Entry::getValue)
                 .sum();
     }
