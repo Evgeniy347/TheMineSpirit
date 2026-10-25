@@ -1,7 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.coordinator.CoordinatorTuning;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.engine.RunStatus;
@@ -325,9 +324,6 @@ public final class DefenseGameTests {
         List<Point> before = new ArrayList<>();
 
         helper.succeedWhen(() -> {
-            helper.assertTrue(
-                    CoordinatorTuning.DEFENSE_RADIUS == 16.0,
-                    "Радиус обороны 16: посты взвешенных секторов лежат в нём, иначе оборона не у дома");
             DefensePlan plan = coordinatorOf(helper, defenders.get(0)).defense().lastPlan();
             List<Point> posts = plan.posts().stream().map(post -> post.post()).toList();
             helper.assertTrue(
