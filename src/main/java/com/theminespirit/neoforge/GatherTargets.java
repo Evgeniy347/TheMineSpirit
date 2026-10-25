@@ -52,7 +52,7 @@ final class GatherTargets implements HarvestTargets {
                     surfaceStone++;
                     continue;
                 }
-                if (forbiddenBySettlement(pos)) {
+                if (PlotGround.natural(level.getBlockState(pos)) && forbiddenBySettlement(pos)) {
                     settlementSkipped++;
                     continue;
                 }

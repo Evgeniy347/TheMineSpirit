@@ -112,6 +112,20 @@ class StageSiteTests {
     }
 
     @Test
+    void gatherForbidden_MineColumn_ShallowKeptDeepAllowed() {
+        BlockCoord entrance = SITE.mineEntrance();
+        BlockCoord wall = new BlockCoord(entrance.x(), entrance.y() - 2, entrance.z() + 3);
+        BlockCoord deep =
+                new BlockCoord(entrance.x(), SITE.anchor().y() - StageSite.MINE_SHALLOW - 1, entrance.z() + 3);
+        assertTrue(
+                SITE.gatherForbidden(wall, 2),
+                "Стенки спуска у поверхности не добываются: добыча булыжника разбирала спуск, и его чинили по кругу");
+        assertFalse(
+                SITE.gatherForbidden(deep, StageSite.MINE_SHALLOW + 1),
+                "Глубже спуска колонна шахты — законный карьер: булыжник поселение берёт только в шахте");
+    }
+
+    @Test
     void gatherForbidden_InsideFenceAndDeepNearby_ForbiddenFarCaveAllowed() {
         BlockCoord inside = new BlockCoord(
                 SITE.grove().x(), TownFixtures.LEVEL - 1, SITE.grove().z());

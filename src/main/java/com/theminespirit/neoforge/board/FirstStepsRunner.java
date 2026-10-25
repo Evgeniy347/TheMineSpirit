@@ -90,6 +90,11 @@ public final class FirstStepsRunner {
             BoardCase.CRAFT_STONE_SHOVEL,
             BoardCase.CRAFT_STONE_SWORD,
             BoardCase.CRAFT_FURNACE);
+    private static final Set<BoardCase> BEFORE_YARD = EnumSet.of(
+            BoardCase.CRAFTING_STATION,
+            BoardCase.CRAFT_WOODEN_PICKAXE,
+            BoardCase.CRAFT_WOODEN_AXE,
+            BoardCase.CRAFT_WOODEN_SHOVEL);
     private static final Set<BoardCase> EXACT_STEPS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
     private static final Set<BoardCase> AT_YARD_TABLE =
@@ -143,7 +148,8 @@ public final class FirstStepsRunner {
         OldChests.tick(level, service, stage, now);
         ChestSpaceWatch.tick(level, service, stage, now);
         SettlementPlotStore.get(level).town().ifPresent(town -> PlanDemolition.tick(level, service, stage, town, now));
-        BlockCoord home = stage.workYard();
+        BlockCoord home = new BlockCoord(
+                stage.anchor().x(), homeY(spirits), stage.anchor().z());
         String wood = woodOf(level, home, stock);
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
@@ -178,7 +184,12 @@ public final class FirstStepsRunner {
         }
         WoodWatch.tick(level, service, spirits, stock, home, wood, now);
         TorchWatch.tick(
-                service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, torches, log), now);
+                service,
+                spirits,
+                stage.workYard(),
+                stock,
+                new TorchWatch.Site(scan.furnaceBlock(), mine, torches, log),
+                now);
     }
 
     private static void dropOwnWood(Map<String, Integer> need, StockView stock, String wood) {
@@ -227,7 +238,8 @@ public final class FirstStepsRunner {
         StageSite stage = context.stage();
         String wood = context.wood();
         long now = context.now();
-        BlockCoord home = stage.workYard();
+        BlockCoord home = new BlockCoord(
+                stage.anchor().x(), homeY(spirits), stage.anchor().z());
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, stage, stock));
@@ -577,8 +589,9 @@ public final class FirstStepsRunner {
     }
 
     public static TicketTarget targetFor(ServerLevel level, BoardCase caseValue, StageSite stage, String wood) {
-        TicketTarget target = TicketTarget.at(stage.workYard())
-                .withWork(new StageWork(stage, StageBlocks.of(level, caseValue, stage, 0)));
+        BlockCoord point = BEFORE_YARD.contains(caseValue) ? stage.anchor() : stage.workYard();
+        TicketTarget target =
+                TicketTarget.at(point).withWork(new StageWork(stage, StageBlocks.of(level, caseValue, stage, 0)));
         if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
         }
@@ -1108,6 +1121,10 @@ public final class FirstStepsRunner {
                 fixed.wood());
         service.journal().recordEntry(fixed.journalEntry(now, ConfigStamp.current()));
         return fixed;
+    }
+
+    private static int homeY(List<SpiritEntity> spirits) {
+        return SettlementPlot.center(homes(spirits)).y();
     }
 
     private static List<BlockCoord> homes(List<SpiritEntity> spirits) {
