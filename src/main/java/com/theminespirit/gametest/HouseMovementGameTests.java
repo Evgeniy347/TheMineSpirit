@@ -5,12 +5,15 @@ import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.movement.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.movement.NetworkLevelView;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -113,6 +116,28 @@ public final class HouseMovementGameTests {
     @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_PlayerHouse3Balcony_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "player_house", 3, Spot.BALCONY);
+    }
+
+    @SceneStep(template = "big_arena", timeoutTicks = 20)
+    public static void networkView_CellAboveFence_NotStandable(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        helper.setBlock(new BlockPos(2, 1, 2), Blocks.STONE);
+        helper.setBlock(new BlockPos(3, 1, 2), Blocks.STONE);
+        helper.setBlock(new BlockPos(2, 2, 2), Blocks.DARK_OAK_FENCE);
+        NetworkLevelView view = new NetworkLevelView(helper.getLevel());
+        BlockPos floor = helper.absolutePos(new BlockPos(3, 2, 2));
+        BlockPos fenceTop = helper.absolutePos(new BlockPos(2, 3, 2));
+        BlockCoord beside = new BlockCoord(floor.getX(), floor.getY(), floor.getZ());
+        helper.assertTrue(
+                MiningSafety.canStand(beside, view),
+                "Клетка пола рядом с забором — стоянка сети тропинок; иначе сеть теряет проходы вдоль перил");
+        helper.assertTrue(
+                !MiningSafety.canStand(new BlockCoord(fenceTop.getX(), fenceTop.getY(), fenceTop.getZ()), view)
+                        && BodyStep.step(beside, -1, 0, view) == null,
+                "Верх забора (1,5 блока) — не стоянка сети тропинок: путь игры на перила не ведёт, отрезок по ним "
+                        + "бракуется, и дух с балкона особняка застревает над сундуком (move_MansionBalcony)");
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 
     private static void scene(GameTestHelper helper, String building, int level, Spot spot) {
