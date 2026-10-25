@@ -17,14 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class IntellectScaleGameTests {
     private static final int SPIRITS = 20;
     private static final int OBSERVED_TICKS = 1150;
@@ -32,7 +30,7 @@ public final class IntellectScaleGameTests {
     private IntellectScaleGameTests() {}
 
     // [флак] замер 1150 тиков наблюдения: окно отката 200 и фаза пересчёта 100 видны только на дистанции
-    @GameTest(template = "arena", batch = "intellect_scale", timeoutTicks = 1400)
+    @SceneStep(template = "arena", timeoutTicks = 1400, coordinator = true)
     public static void scale_TwentySpiritsNoWork_StartsAndFailuresBounded(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         long started = helper.getLevel().getGameTime();
@@ -140,7 +138,7 @@ public final class IntellectScaleGameTests {
     }
 
     // [флак] замер ~410 тиков: провал, окно отката 200 и фаза пересчёта 100
-    @GameTest(template = "arena", batch = "intellect_backoff", timeoutTicks = 800)
+    @SceneStep(template = "arena", timeoutTicks = 800, coordinator = true)
     public static void backoff_FailedWork_NotRestartedWithinWindow(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -181,7 +179,7 @@ public final class IntellectScaleGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_no_farm", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void noFarm_HungryWithoutCrops_DoesNotAssignFarm(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
