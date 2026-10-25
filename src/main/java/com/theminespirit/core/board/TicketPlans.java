@@ -67,6 +67,7 @@ public final class TicketPlans {
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
     private static final String CLEAR_AREA = "clear_area";
+    private static final String KEEP_GROUND = "keep_ground";
     private static final String WITHDRAW = "withdraw";
     private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
@@ -737,7 +738,7 @@ public final class TicketPlans {
         // Воду и пустые клетки расчистка пропускает быстро.
         for (PlotLeveling.Box box : fills) {
             steps.add(new FallbackNode(List.of(
-                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
+                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of(KEEP_GROUND, true))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();

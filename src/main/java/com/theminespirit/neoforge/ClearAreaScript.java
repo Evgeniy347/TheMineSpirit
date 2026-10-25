@@ -32,7 +32,8 @@ final class ClearAreaScript implements ScriptInstance {
         this.session = new ClearAreaSession(
                 spirit,
                 BuildBox.of(params.x1(), params.y1(), params.z1(), params.x2(), params.y2(), params.z2()),
-                params.demolish());
+                params.demolish(),
+                params.keepGround());
     }
 
     ClearAreaScript(ClearAreaSession session) {

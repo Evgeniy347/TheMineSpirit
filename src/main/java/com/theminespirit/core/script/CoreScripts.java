@@ -1186,7 +1186,8 @@ public final class CoreScripts {
                                         true,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.bool("demolish", false, false)),
+                                ParamSpec.bool("demolish", false, false),
+                                ParamSpec.bool("keep_ground", false, false)),
                         List.of(),
                         List.of("область очищена")));
     }

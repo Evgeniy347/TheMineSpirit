@@ -25,6 +25,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -95,6 +96,7 @@ public class ClearAreaSession {
     private int longApproaches;
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     private final boolean demolish;
+    private final boolean keepGround;
     private List<String> leftover = List.of();
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
@@ -102,6 +104,10 @@ public class ClearAreaSession {
     }
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box, boolean demolish) {
+        this(spirit, box, demolish, false);
+    }
+
+    public ClearAreaSession(SpiritEntity spirit, BuildBox box, boolean demolish, boolean keepGround) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.box = box;
@@ -111,6 +117,7 @@ public class ClearAreaSession {
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         this.demolish = demolish;
+        this.keepGround = keepGround;
     }
 
     public Outcome tick() {
@@ -344,7 +351,8 @@ public class ClearAreaSession {
     }
 
     private boolean clear(BlockCoord cell) {
-        return level.getBlockState(toPos(cell)).isAir();
+        BlockState state = level.getBlockState(toPos(cell));
+        return state.isAir() || (keepGround && PlotGround.natural(state));
     }
 
     private void arrived() {

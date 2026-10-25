@@ -603,6 +603,17 @@ class ScriptCatalogTests {
     }
 
     @Test
+    void defaultCatalog_ClearArea_KeepGroundOptionalFalse() {
+        ParamSpec keepGround =
+                param(CoreScripts.defaultCatalog().find("clear_area").orElseThrow(), "keep_ground");
+
+        assertEquals(ParamType.BOOL, keepGround.type(), "keep_ground в clear_area — флаг ямы подсыпки");
+        assertEquals(false, keepGround.required(), "keep_ground необязателен: старые планы остаются валидными");
+        assertEquals(
+                false, keepGround.defaultValue(), "По умолчанию keep_ground=false: срезка холма обязана снимать землю");
+    }
+
+    @Test
     void defaultCatalog_MineVein_OreEnumAndDefaults() {
         ScriptSpec mineVein = CoreScripts.defaultCatalog().find("mine_vein").orElseThrow();
 
