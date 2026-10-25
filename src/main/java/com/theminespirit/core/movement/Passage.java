@@ -23,8 +23,8 @@ public final class Passage {
 
     public record Cell(BlockCoord coord, Kind kind, boolean open) {
         public Cell {
-            Objects.requireNonNull(coord, "Клетка прохода не может быть null: неизвестно, что открывать");
-            Objects.requireNonNull(kind, "Вид прохода не может быть null: дверь и калитка открываются по-разному");
+            Objects.requireNonNull(coord, "������ ������� �� ����� ���� null: ����������, ��� ���������");
+            Objects.requireNonNull(kind, "��� ������� �� ����� ���� null: ����� � ������� ����������� ��-�������");
         }
 
         public boolean passable() {
@@ -49,9 +49,9 @@ public final class Passage {
     }
 
     public static Optional<Cell> towardTarget(BlockCoord feet, BlockCoord target, Collection<Cell> candidates) {
-        Objects.requireNonNull(feet, "Ноги духа не могут быть null: проход выбирается от них");
-        Objects.requireNonNull(target, "Цель не может быть null: проход выбирается к ней");
-        Objects.requireNonNull(candidates, "Кандидаты не могут быть null: пустой список задаётся List.of()");
+        Objects.requireNonNull(feet, "���� ���� �� ����� ���� null: ������ ���������� �� ���");
+        Objects.requireNonNull(target, "���� �� ����� ���� null: ������ ���������� � ���");
+        Objects.requireNonNull(candidates, "��������� �� ����� ���� null: ������ ������ ������� List.of()");
         long limit = distanceSquared(feet, target);
         Cell best = null;
         long bestDistance = Long.MAX_VALUE;
@@ -71,6 +71,49 @@ public final class Passage {
             }
         }
         return Optional.ofNullable(best);
+    }
+
+    public static boolean blockedBetween(BlockCoord from, BlockCoord to, Collection<Cell> passages) {
+        Objects.requireNonNull(from, "������ �������� �� ����� ���� null: ��� ���� ���������� �������");
+        Objects.requireNonNull(to, "����� �������� �� ����� ���� null: ��� ���� ���������� �������");
+        Objects.requireNonNull(passages, "������� �� ����� ���� null: ������ ������ ������� List.of()");
+        for (Cell passage : passages) {
+            if (!passage.open() && intersects(from, to, passage.coord())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean intersects(BlockCoord from, BlockCoord to, BlockCoord cell) {
+        double[] start = {from.x() + 0.5, from.y() + 0.5, from.z() + 0.5};
+        double[] end = {to.x() + 0.5, to.y() + 0.5, to.z() + 0.5};
+        double[] low = {cell.x(), cell.y(), cell.z()};
+        double[] high = {cell.x() + 1.0, cell.y() + 1.0, cell.z() + 1.0};
+        double enter = 0.0;
+        double exit = 1.0;
+        for (int axis = 0; axis < 3; axis++) {
+            double direction = end[axis] - start[axis];
+            if (Math.abs(direction) < 1e-9) {
+                if (start[axis] < low[axis] || start[axis] > high[axis]) {
+                    return false;
+                }
+                continue;
+            }
+            double first = (low[axis] - start[axis]) / direction;
+            double second = (high[axis] - start[axis]) / direction;
+            if (first > second) {
+                double swap = first;
+                first = second;
+                second = swap;
+            }
+            enter = Math.max(enter, first);
+            exit = Math.min(exit, second);
+            if (enter > exit) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static long distanceSquared(BlockCoord a, BlockCoord b) {

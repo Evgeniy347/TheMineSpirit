@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,7 +58,8 @@ public final class PassageWalk {
         for (int dx = -SEARCH; dx <= SEARCH; dx++) {
             for (int dz = -SEARCH; dz <= SEARCH; dz++) {
                 for (int dy = -1; dy <= 2; dy++) {
-                    Passage.Cell cell = passage(new BlockCoord(feet.x() + dx, feet.y() + dy, feet.z() + dz));
+                    Passage.Cell cell =
+                            passageAt(spirit.level(), new BlockCoord(feet.x() + dx, feet.y() + dy, feet.z() + dz));
                     if (cell != null && !cell.open()) {
                         candidates.add(cell);
                     }
@@ -86,7 +88,7 @@ public final class PassageWalk {
                 continue;
             }
             BlockCoord coord = new BlockCoord(node.x, node.y, node.z);
-            Passage.Cell cell = passage(coord);
+            Passage.Cell cell = passageAt(spirit.level(), coord);
             if (cell != null && !cell.open() && withinReach(coord)) {
                 return Optional.of(coord);
             }
@@ -122,7 +124,7 @@ public final class PassageWalk {
         }
         List<BlockCoord> closing = new ArrayList<>();
         for (BlockCoord coord : opened) {
-            Passage.Cell cell = passage(coord);
+            Passage.Cell cell = passageAt(spirit.level(), coord);
             if (cell == null || !cell.open()) {
                 closing.add(coord);
             } else if (ready.test(coord)) {
@@ -137,7 +139,7 @@ public final class PassageWalk {
     private void close(BlockCoord coord) {
         opened.remove(coord);
         BlockPos pos = toPos(coord);
-        Passage.Cell cell = passage(coord);
+        Passage.Cell cell = passageAt(spirit.level(), coord);
         if (cell == null || !cell.open() || occupied(coord)) {
             return;
         }
@@ -162,8 +164,8 @@ public final class PassageWalk {
         return result.consumesAction();
     }
 
-    private Passage.@Nullable Cell passage(BlockCoord coord) {
-        BlockState state = spirit.level().getBlockState(toPos(coord));
+    public static Passage.@Nullable Cell passageAt(Level level, BlockCoord coord) {
+        BlockState state = level.getBlockState(toPos(coord));
         if (state.getBlock() instanceof DoorBlock door && door.type().canOpenByHand()) {
             if (state.getValue(DoorBlock.HALF) != DoubleBlockHalf.LOWER) {
                 return null;
@@ -194,7 +196,7 @@ public final class PassageWalk {
     }
 
     private String label(BlockCoord coord) {
-        Passage.Cell cell = passage(coord);
+        Passage.Cell cell = passageAt(spirit.level(), coord);
         if (cell == null) {
             return "проход";
         }

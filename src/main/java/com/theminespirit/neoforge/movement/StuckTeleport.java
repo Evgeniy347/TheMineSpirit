@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.movement.Passage;
 import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
@@ -9,8 +10,9 @@ import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.PathMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.NightLeashGate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -61,14 +63,24 @@ public final class StuckTeleport {
     }
 
     private static boolean clearPath(SpiritEntity spirit, BlockCoord cell) {
-        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-        Vec3 lowFrom = spirit.position().add(0, 0.25, 0);
-        Vec3 lowTo = new Vec3(pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5);
-        if (!clearLine(spirit, lowFrom, lowTo)) {
-            return false;
+        Vec3 eye = spirit.getEyePosition();
+        Vec3 head = new Vec3(cell.x() + 0.5, cell.y() + spirit.getEyeHeight(), cell.z() + 0.5);
+        return clearLine(spirit, eye, head) && !crossesClosedPassage(spirit, blockCoord(spirit.position()), cell);
+    }
+
+    private static boolean crossesClosedPassage(SpiritEntity spirit, BlockCoord from, BlockCoord to) {
+        List<Passage.Cell> passages = new ArrayList<>();
+        for (int x = Math.min(from.x(), to.x()) - 1; x <= Math.max(from.x(), to.x()) + 1; x++) {
+            for (int y = Math.min(from.y(), to.y()) - 1; y <= Math.max(from.y(), to.y()) + 1; y++) {
+                for (int z = Math.min(from.z(), to.z()) - 1; z <= Math.max(from.z(), to.z()) + 1; z++) {
+                    Passage.Cell passage = PassageWalk.passageAt(spirit.level(), new BlockCoord(x, y, z));
+                    if (passage != null) {
+                        passages.add(passage);
+                    }
+                }
+            }
         }
-        Vec3 eyeTo = new Vec3(pos.getX() + 0.5, pos.getY() + spirit.getEyeHeight(), pos.getZ() + 0.5);
-        return clearLine(spirit, spirit.getEyePosition(), eyeTo);
+        return Passage.blockedBetween(from, to, passages);
     }
 
     private static boolean clearLine(SpiritEntity spirit, Vec3 from, Vec3 to) {
