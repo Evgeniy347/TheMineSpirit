@@ -111,5 +111,13 @@
   "theminespirit.board.case.stock_chests": "Stock up chests",
   "theminespirit.board.case.supply_site": "Supply the building site",
   "theminespirit.board.case.transfer_item": "Transfer items",
-  "theminespirit.board.case.weave_wool": "Weave wool"
+  "theminespirit.board.case.weave_wool": "Weave wool",
+  "theminespirit.tab.board": "Board",
+  "theminespirit.tab.plan": "Plan",
+  "theminespirit.map.title": "Settlement plan",
+  "theminespirit.map.loading": "Loading plan…",
+  "theminespirit.map.empty": "No settlement plan yet",
+  "theminespirit.map.offline": "Server without the mod: plan unavailable",
+  "theminespirit.map.lot": "Done: %s%%",
+  "theminespirit.map.lot.damaged": "Damaged: %s%% intact, %s%% to restore"
 }

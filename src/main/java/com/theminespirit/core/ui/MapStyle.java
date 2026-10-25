@@ -1,0 +1,45 @@
+package com.theminespirit.core.ui;
+
+import java.util.Objects;
+
+public final class MapStyle {
+    public static final int BACKGROUND = 0xFF2B2A26;
+    public static final int LOT_BORDER = 0xFF1E1A14;
+    public static final int HOVER_BORDER = 0xFFFFF3B0;
+    public static final int CONTOUR = 0xFFE0D6C2;
+    public static final int STAGE_FENCE = 0xFFC8862E;
+    public static final int GATE = 0xFF4FC3F7;
+    public static final int TEXT = 0xFFFFFFFF;
+    private static final int PERCENT = 100;
+    private static final int LOT_EMPTY = 0xFF4E5A3A;
+    private static final int LOT_DONE = 0xFF6FA548;
+    private static final int LOT_DAMAGED = 0xFFB0503A;
+
+    private MapStyle() {}
+
+    public static int fill(TownMapView.MapRect rect) {
+        Objects.requireNonNull(rect, "Прямоугольник карты не может быть null");
+        return switch (rect.kind()) {
+            case STREET_MAIN -> 0xFF8C8577;
+            case STREET_SIDE -> 0xFF77716A;
+            case STREET_RING -> 0xFF6B665F;
+            case PATH -> 0xFFB79C6B;
+            case LOT -> rect.damaged() ? LOT_DAMAGED : blend(LOT_EMPTY, LOT_DONE, rect.percent());
+        };
+    }
+
+    public static int line(TownMapView.LineKind kind) {
+        return kind == TownMapView.LineKind.CONTOUR ? CONTOUR : STAGE_FENCE;
+    }
+
+    public static int blend(int from, int to, int percent) {
+        int share = Math.max(0, Math.min(PERCENT, percent));
+        int out = 0xFF000000;
+        for (int shift = 0; shift <= 16; shift += 8) {
+            int a = from >> shift & 0xFF;
+            int b = to >> shift & 0xFF;
+            out |= (a + (b - a) * share / PERCENT) << shift;
+        }
+        return out;
+    }
+}

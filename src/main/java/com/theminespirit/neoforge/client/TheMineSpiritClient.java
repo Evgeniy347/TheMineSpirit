@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.net.BoardViewChannel;
+import com.theminespirit.neoforge.net.TownMapChannel;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -29,6 +30,11 @@ public final class TheMineSpiritClient {
         BoardViewChannel.onClientStage(stage -> {
             if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
                 screen.showStage(stage);
+            }
+        });
+        TownMapChannel.onClientReply(view -> {
+            if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
+                screen.show(view);
             }
         });
         BoardViewChannel.onClientReply(tiles -> {

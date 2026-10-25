@@ -111,5 +111,13 @@
   "theminespirit.board.case.stock_chests": "Сделать сундуки",
   "theminespirit.board.case.supply_site": "Подвезти материалы на стройку",
   "theminespirit.board.case.transfer_item": "Перенести предметы",
-  "theminespirit.board.case.weave_wool": "Сделать шерсть"
+  "theminespirit.board.case.weave_wool": "Сделать шерсть",
+  "theminespirit.tab.board": "Доска",
+  "theminespirit.tab.plan": "План",
+  "theminespirit.map.title": "План поселения",
+  "theminespirit.map.loading": "Загрузка плана…",
+  "theminespirit.map.empty": "Плана поселения пока нет",
+  "theminespirit.map.offline": "Сервер без мода: план недоступен",
+  "theminespirit.map.lot": "Готово: %s%%",
+  "theminespirit.map.lot.damaged": "Повреждена: цела на %s%%, до восстановления %s%%"
 }

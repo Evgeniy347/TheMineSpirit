@@ -9,6 +9,7 @@ import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
 import com.theminespirit.core.ui.BoardWaitReasons;
+import com.theminespirit.core.ui.ScreenTabs;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
 import java.util.ArrayList;
@@ -98,6 +99,7 @@ public final class BoardScreen extends Screen {
                 })
                 .bounds(spirit.x(), spirit.y(), spirit.width(), spirit.height())
                 .build());
+        ScreenTabButtons.add(this::addRenderableWidget, width, ScreenTabs.Tab.BOARD);
         if (tiles == null) {
             requestSnapshot();
         }
