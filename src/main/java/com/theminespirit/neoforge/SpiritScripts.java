@@ -319,7 +319,12 @@ public final class SpiritScripts {
         {
             SpiritSupplies supplies = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
             int count = parsed.count();
-            AcquireSupplies source = supplies;
+            AcquireSupplies source = parsed.gatherAt() == null
+                    ? supplies
+                    : new SettlementSupplies(
+                            spirit,
+                            supplies,
+                            DataTables.INSTANCE.leveling().current().chestKeep());
             if (parsed.fresh()) {
                 count = Math.min(supplies.inInventory(parsed.item()) + count, CatalogLimits.COUNT_MAX);
                 source = new FreshSupplies(supplies, parsed.item());

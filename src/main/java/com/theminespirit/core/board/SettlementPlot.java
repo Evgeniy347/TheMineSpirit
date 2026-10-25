@@ -2,10 +2,12 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.function.IntBinaryOperator;
 
 /**
@@ -43,6 +45,11 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
     // Обмер участка {@code half} вокруг центра: высота — медиана уровней ног колонок, плюс минимум и максимум.
     // Порода поселения фиксируется в плане вместе с высотой: расход запаса брёвен её больше не меняет (INC-47, INC-58).
     public static SettlementPlot survey(BlockCoord center, int half, IntBinaryOperator feet, String wood) {
+        return survey(center, half, feet, wood, OptionalInt.empty());
+    }
+
+    public static SettlementPlot survey(
+            BlockCoord center, int half, IntBinaryOperator feet, String wood, OptionalInt chosen) {
         Objects.requireNonNull(center, "Центр участка не может быть null: обмер идёт вокруг него");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них высоты участка нет");
         int side = 2 * half + 1;
@@ -54,11 +61,11 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
             }
         }
         Arrays.sort(heights);
-        int level = heights[heights.length / 2];
+        int level = chosen.orElse(heights[heights.length / 2]);
         return new SettlementPlot(
                 new BlockCoord(center.x(), level, center.z()),
-                heights[0],
-                heights[heights.length - 1],
+                Math.min(heights[0], level),
+                Math.max(heights[heights.length - 1], level),
                 heights.length,
                 wood);
     }
@@ -75,26 +82,35 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
         return Math.abs(center.x() - anchor.x()) <= DRIFT && Math.abs(center.z() - anchor.z()) <= DRIFT;
     }
 
+    public SettlementPlot withLevel(int level) {
+        return new SettlementPlot(
+                new BlockCoord(anchor.x(), level, anchor.z()),
+                Math.min(min, level),
+                Math.max(max, level),
+                columns,
+                wood);
+    }
+
     public SettlementPlot withWood(String species) {
         return new SettlementPlot(anchor, min, max, columns, species);
     }
 
     // Запись журнала доски: кто и когда зафиксировал высоту участка (INC-55).
     public BoardLogEntry journalEntry(long tick, String configHash) {
-        return BoardLog.note(
-                JOURNAL_ID,
-                BoardCase.CLEAR_GROUNDS,
-                tick,
-                List.of(
-                        "x=" + anchor.x(),
-                        "y=" + anchor.y(),
-                        "z=" + anchor.z(),
-                        "min=" + min,
-                        "max=" + max,
-                        "columns=" + columns,
-                        "wood=" + wood),
-                null,
-                configHash);
+        return journalEntry(tick, configHash, List.of());
+    }
+
+    public BoardLogEntry journalEntry(long tick, String configHash, List<String> extra) {
+        List<String> details = new ArrayList<>(List.of(
+                "x=" + anchor.x(),
+                "y=" + anchor.y(),
+                "z=" + anchor.z(),
+                "min=" + min,
+                "max=" + max,
+                "columns=" + columns,
+                "wood=" + wood));
+        details.addAll(extra);
+        return BoardLog.note(JOURNAL_ID, BoardCase.CLEAR_GROUNDS, tick, List.copyOf(details), null, configHash);
     }
 
     private static int median(int[] values) {
