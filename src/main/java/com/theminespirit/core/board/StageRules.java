@@ -14,12 +14,18 @@ import java.util.Set;
 public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> schemes) {
     public static final String RESOURCE = "data/theminespirit/board/stages.json";
     private static final Set<String> ROOT_FIELDS = Set.of("stages", "schemes");
-    private static final Set<String> STAGE_FIELDS = Set.of("stage", "buildings");
+    private static final Set<String> STAGE_FIELDS = Set.of("stage", "buildings", "plan");
 
-    public record Stage(int stage, Map<BoardCase, Integer> buildings) {
+    public record Stage(int stage, Map<BoardCase, Integer> buildings, List<String> plan) {
+        public Stage(int stage, Map<BoardCase, Integer> buildings) {
+            this(stage, buildings, List.of());
+        }
+
         public Stage {
             buildings = Map.copyOf(Objects.requireNonNull(
                     buildings, "Состав этапа не может быть null: этап без построек задают пустой картой"));
+            plan = List.copyOf(Objects.requireNonNull(
+                    plan, "Набор этапа в плане не может быть null: этап без мест задают пустым списком"));
             for (Map.Entry<BoardCase, Integer> entry : buildings.entrySet()) {
                 if (entry.getValue() < 1) {
                     throw new IllegalArgumentException("Этап " + stage + ": уровень " + entry.getKey() + " = "
@@ -48,6 +54,10 @@ public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> scheme
                         + stages.get(i).stage() + ": этапы идут подряд с первого, иначе переход перепрыгнет этап");
             }
         }
+    }
+
+    public List<List<String>> plans() {
+        return stages.stream().map(Stage::plan).toList();
     }
 
     public int stageOf(BoardLedger ledger) {
@@ -89,7 +99,8 @@ public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> scheme
                 JsonResource.checkFields(node, STAGE_FIELDS, origin, "этап stages.json");
                 stages.add(new Stage(
                         JsonResource.integer(node.get("stage"), origin, "stage"),
-                        buildings(node.get("buildings"), origin)));
+                        buildings(node.get("buildings"), origin),
+                        JsonResource.optionalStrings(node.get("plan"), origin, "набора этапа в плане")));
             }
             return new StageRules(stages, schemes(root.get("schemes"), origin));
         } catch (IllegalArgumentException error) {

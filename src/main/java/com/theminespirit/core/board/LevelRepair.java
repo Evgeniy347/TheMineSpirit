@@ -39,7 +39,7 @@ public final class LevelRepair {
         leveling.cut().forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
         int volume = leveling.fillVolume();
         if (volume > 0) {
-            BlockCoord source = TicketPlans.dirtSource(target.target(), 1);
+            BlockCoord source = GroundsPlan.dirtSource(target, 1);
             steps.add(retried(new ScriptCall(
                     "acquire_at",
                     Map.of(

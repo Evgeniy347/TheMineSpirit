@@ -9,9 +9,9 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ChestMove;
 import com.theminespirit.core.board.ConfigStamp;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.ArrayList;
@@ -36,12 +36,12 @@ final class OldChests {
 
     private OldChests() {}
 
-    static void tick(ServerLevel level, BoardService service, BlockCoord anchor, long now) {
+    static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
         SettlementChestStore store = SettlementChestStore.get(level);
         List<BlockCoord> yard = new ArrayList<>();
         List<BlockCoord> old = new ArrayList<>();
         for (BlockCoord chest : store.chests().all()) {
-            (inYard(anchor, chest) ? yard : old).add(chest);
+            (inYard(site, chest) ? yard : old).add(chest);
         }
         if (yard.isEmpty() || old.isEmpty()) {
             return;
@@ -106,12 +106,9 @@ final class OldChests {
         return true;
     }
 
-    private static boolean inYard(BlockCoord anchor, BlockCoord chest) {
-        BlockCoord yard = SettlementLayout.workYard(anchor);
-        int reach = SettlementLayout.YARD_RADIUS + YARD_SLACK;
-        return Math.abs(chest.x() - yard.x()) <= reach
-                && Math.abs(chest.z() - yard.z()) <= reach
-                && Math.abs(chest.y() - anchor.y()) <= YARD_SLACK;
+    private static boolean inYard(StageSite site, BlockCoord chest) {
+        return site.yardColumn(chest.x(), chest.z())
+                && Math.abs(chest.y() - site.anchor().y()) <= YARD_SLACK;
     }
 
     private static Map<String, Integer> contents(ServerLevel level, BlockCoord chest) {

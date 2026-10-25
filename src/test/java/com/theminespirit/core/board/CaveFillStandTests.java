@@ -4,25 +4,31 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.TownFixtures;
 import org.junit.jupiter.api.Test;
 
 class CaveFillStandTests {
-    private static final BlockCoord ANCHOR = new BlockCoord(-170, 71, -487);
+    private static final StageSite SITE = TownFixtures.flatSite();
 
     @Test
-    void fillStandAllowed_CaveUnderPlot_Refused() {
+    void fillStandAllowed_CaveUnderPad_Refused() {
+        BlockCoord pocket = new BlockCoord(
+                SITE.yard().x(), SITE.anchor().y() - 7, SITE.yard().z());
         assertFalse(
-                SettlementLayout.fillStandAllowed(ANCHOR, new BlockCoord(-165, 64, -489), false),
-                "Подсыпка не встаёт в пещеру без неба под участком: карман (-165,64,-489) в 5-й раз (INC-72)");
+                SITE.fillStandAllowed(pocket, false),
+                "Подсыпка не встаёт в пещеру без неба под площадкой: карман " + pocket + " (INC-72)");
     }
 
     @Test
     void fillStandAllowed_OpenPitOrOutside_Allowed() {
+        BlockCoord pit = new BlockCoord(
+                SITE.yard().x(), SITE.anchor().y() - 3, SITE.yard().z());
+        BlockCoord far =
+                new BlockCoord(SITE.enclosure().minX() - 30, 40, SITE.anchor().z());
+        assertTrue(SITE.fillStandAllowed(pit, true), "Открытая низина площадки с небом — законная стоянка (INC-66)");
         assertTrue(
-                SettlementLayout.fillStandAllowed(ANCHOR, new BlockCoord(-171, 68, -483), true),
-                "Открытая низина участка с небом — законная стоянка подсыпки (INC-66)");
-        assertTrue(
-                SettlementLayout.fillStandAllowed(ANCHOR, new BlockCoord(-100, 40, -487), false),
-                "Вне участка правило не действует: подсыпка в шахте и ямах далеко от поселения");
+                SITE.fillStandAllowed(far, false),
+                "Вне площадок правило не действует: подсыпка в шахте и ямах далеко от поселения");
     }
 }

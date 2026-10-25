@@ -42,6 +42,7 @@ import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
+import com.theminespirit.core.town.TownRules;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -83,6 +84,7 @@ public final class DataTables {
     private final TableHolder<Unstuck> unstuck;
     private final TableHolder<StageRules> stages;
     private final TableHolder<LevelingRules> leveling;
+    private final TableHolder<TownRules> town;
     private final TableHolder<PersonalSpace> personalSpace;
     private final TableHolder<HungerRules> hunger;
     private final TableHolder<RespawnRules> respawn;
@@ -147,6 +149,7 @@ public final class DataTables {
         this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
         this.stages = single("stages", StageRules.RESOURCE, StageRules::parse, StageRules::load);
         this.leveling = single("leveling", LevelingRules.RESOURCE, LevelingRules::parse, LevelingRules::load);
+        this.town = single("town", TownRules.RESOURCE, TownRules::parse, TownRules::load);
         this.personalSpace =
                 single("personal_space", PersonalSpace.RESOURCE, PersonalSpace::parse, PersonalSpace::load);
         this.doors = single("doors", "data/theminespirit/doors/doors.json", DoorTuning::parse, DoorTuning::loadDefault);
@@ -334,6 +337,10 @@ public final class DataTables {
 
     public TableHolder<LevelingRules> leveling() {
         return leveling;
+    }
+
+    public TableHolder<TownRules> town() {
+        return town;
     }
 
     public TableHolder<FishingWait> fishingWait() {

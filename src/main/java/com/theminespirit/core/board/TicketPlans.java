@@ -14,7 +14,6 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -27,14 +26,9 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
-    public static final int CLEAR_GRID = 3;
-    public static final int CLEAR_PARTS = CLEAR_GRID * CLEAR_GRID;
     public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
     private static final int LOGS_PER_TREE = 4;
-    private static final int DIRT_SOURCE_GAP = 4;
-    private static final int CUT_SLACK = 12;
-    private static final int FILL_SLACK = 40;
     private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
@@ -55,7 +49,6 @@ public final class TicketPlans {
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
     private static final String CLEAR_AREA = "clear_area";
-    private static final String KEEP_GROUND = "keep_ground";
     private static final String WITHDRAW = "withdraw";
     private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
@@ -63,7 +56,6 @@ public final class TicketPlans {
     private static final String DEFAULT_LURE_ITEM = "wheat";
     private static final String DEFAULT_SUPPLY_ITEM = "dirt";
     private static final int DEFAULT_SUPPLY_COUNT = 64;
-    private static final int GROUNDS_CLEAR_RADIUS = 16;
     private static final int CRATER_FILL_RADIUS = 1;
     private static final int DISMANTLE_RADIUS = 4;
     private static final String FENCE_SCHEME = "fence";
@@ -84,6 +76,9 @@ public final class TicketPlans {
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RESTOCK_FOOD_COUNT = 48;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
+
+    private static final List<BlockCoord> LIGHT_OFFSETS = List.of(
+            new BlockCoord(-3, 0, -3), new BlockCoord(3, 0, -3), new BlockCoord(-3, 0, 3), new BlockCoord(3, 0, 3));
 
     private TicketPlans() {}
 
@@ -121,6 +116,10 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Уровень " + level + " кейса " + boardCase + " выше максимального " + max
                     + ": уровень постройки не существует и выдавать его нельзя");
         }
+        Optional<TaskNode> staged = StagePlans.plan(boardCase, level, target);
+        if (staged.isPresent()) {
+            return staged.orElseThrow();
+        }
         return switch (boardCase) {
             case BUILD_MINE -> buildMineLevel(level, target);
             case BUILD_PEN -> buildPenLevel(level, target);
@@ -139,7 +138,7 @@ public final class TicketPlans {
             case LURE_ANIMAL -> lureAnimal(target);
             case SUPPLY_SITE -> supplySite(target);
             case GATHER_MATERIALS -> gatherMaterials(target);
-            case CLEAR_GROUNDS -> clearGrounds(target);
+            case CLEAR_GROUNDS -> withLeftovers(GroundsPlan.plan(target), target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
@@ -151,12 +150,19 @@ public final class TicketPlans {
             case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
             case CRAFT_TORCHES ->
                 sequence(
+                        gotoTarget(target),
+                        takeFrom("minecraft:coal", (torchCount(target) + 3) / 4),
+                        takeFrom("minecraft:charcoal", (torchCount(target) + 3) / 4),
                         new FallbackNode(List.of(
                                 new ScriptCall(
                                         ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, (torchCount(target) + 3) / 4)),
                                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                         craft(TORCH, torchCount(target), target),
-                        store(target, LEFTOVERS.toArray(String[]::new)));
+                        store(
+                                target,
+                                LEFTOVERS.stream()
+                                        .filter(item -> !TORCH.equals(item))
+                                        .toArray(String[]::new)));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -187,6 +193,7 @@ public final class TicketPlans {
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);
+            case PLANT_GROVE -> StagePlans.groveAround(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
             case BREED_ANIMALS -> breedAnimals(target);
@@ -203,13 +210,13 @@ public final class TicketPlans {
         };
     }
 
-    public static BlockCoord mineDescentOrigin(BlockCoord home) {
-        Objects.requireNonNull(home, "Дом не может быть null: спуск в шахту ставится в стороне от дома");
-        return SettlementLayout.mineEntrance(home);
+    public static BlockCoord mineDescentOrigin(TicketTarget target) {
+        Objects.requireNonNull(target, "Цель задания не может быть null: спуск ставится по плану или в цели");
+        return target.work() == null ? target.target() : target.work().site().mineEntrance();
     }
 
     private static TaskNode mineDescent(TicketTarget target) {
-        BlockCoord origin = mineDescentOrigin(target.target());
+        BlockCoord origin = mineDescentOrigin(target);
         int x = origin.x();
         int z = origin.z();
         return sequence(
@@ -231,6 +238,22 @@ public final class TicketPlans {
                                 z,
                                 "rotation",
                                 MINE_DESCENT_ROTATION)));
+    }
+
+    private static TaskNode takeFrom(String item, int count) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        WITHDRAW,
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                item,
+                                COUNT,
+                                Math.max(1, Math.min(count, CatalogLimits.COUNT_MAX)),
+                                RADIUS,
+                                SUPPLY_CONTAINER_RADIUS)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode takeFloor(String item) {
@@ -404,13 +427,13 @@ public final class TicketPlans {
         return sequence(
                 new FallbackNode(
                         List.of(gotoTarget(target), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
+                schematic(scheme, target.target(), target));
     }
 
     private static TaskNode placeInYard(String item, int count, TicketTarget target) {
         return withLeftovers(
                 sequence(
-                        gotoPoint(SettlementLayout.workYard(target.target())),
+                        gotoTarget(target),
                         new ScriptCall(
                                 CRAFT,
                                 Map.of(
@@ -444,7 +467,7 @@ public final class TicketPlans {
     private static TaskNode yard(TicketTarget target) {
         return withLeftovers(
                 sequence(
-                        gotoPoint(SettlementLayout.workYard(target.target())),
+                        gotoTarget(target),
                         new ScriptCall(
                                 CRAFT,
                                 Map.of(
@@ -533,7 +556,12 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
-        List<BlockCoord> torches = SettlementLayout.lighting(target.target());
+        List<BlockCoord> torches = LIGHT_OFFSETS.stream()
+                .map(offset -> new BlockCoord(
+                        target.target().x() + offset.x(),
+                        target.target().y(),
+                        target.target().z() + offset.z()))
+                .toList();
         List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
         steps.add(gotoTarget(target));
         steps.add(new ScriptCall(ACQUIRE, Map.of(ITEM, TORCH, COUNT, torches.size())));
@@ -653,220 +681,6 @@ public final class TicketPlans {
                 .findFirst();
     }
 
-    private static TaskNode clearGrounds(TicketTarget target) {
-        int radius = GROUNDS_CLEAR_RADIUS;
-        List<TaskNode> chunks = new ArrayList<>();
-        int band = (2 * radius + 1) / CLEAR_GRID;
-        for (int row = 0; row < CLEAR_GRID; row++) {
-            for (int col = 0; col < CLEAR_GRID; col++) {
-                int dx = -radius + col * band;
-                int dz = -radius + row * band;
-                int lastX = col == CLEAR_GRID - 1 ? radius : dx + band - 1;
-                int lastZ = row == CLEAR_GRID - 1 ? radius : dz + band - 1;
-                chunks.add(clearGroundsChunk(target, dx, dz, lastX, lastZ));
-            }
-        }
-        int quarter = target.count();
-        boolean single = quarter >= 1 && quarter <= CLEAR_PARTS;
-        List<TaskNode> steps = new ArrayList<>();
-        PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
-        BlockCoord center = target.target();
-        List<PlotLeveling.Box> cuts = leveling.cutTopDown();
-        List<Integer> cutPart = balancedParts(cuts, center, CUT_SLACK);
-        for (int index = 0; index < cuts.size(); index++) {
-            PlotLeveling.Box box = cuts.get(index);
-            if (!single || cutPart.get(index) == quarter) {
-                steps.add(new FallbackNode(List.of(
-                        new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
-                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-            }
-        }
-        List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), center, quarter) : leveling.fill();
-        for (PlotLeveling.Box box : fills) {
-            steps.add(new FallbackNode(List.of(
-                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of(KEEP_GROUND, true))),
-                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-        }
-        boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
-        BlockCoord source = dirtSource(center, single ? quarter : 1);
-        List<PlotLeveling.Box> voids = leveling.voids().stream()
-                .filter(box -> !single || partOf(box, center) == quarter)
-                .toList();
-        List<PlotLeveling.Box> pits = new ArrayList<>(layers(fills));
-        pits.addAll(layers(voids));
-        int batch = Math.min(DataTables.INSTANCE.leveling().current().batch(), CatalogLimits.COUNT_MAX);
-        if (dirt) {
-            for (List<PlotLeveling.Box> group : FillBatches.of(pits, batch)) {
-                steps.add(dirtFor(FillBatches.volume(group), source));
-                for (PlotLeveling.Box layer : group) {
-                    steps.add(fillLayer(layer, PlotLeveling.DEFAULT_BLOCK));
-                }
-            }
-        } else {
-            List<PlotLeveling.Box> top = new ArrayList<>();
-            List<PlotLeveling.Box> deep = new ArrayList<>();
-            for (PlotLeveling.Box layer : pits) {
-                (PlotLeveling.topLayer(layer.y1(), center.y()) ? top : deep).add(layer);
-            }
-            int deepVolume = FillBatches.volume(deep);
-            if (deepVolume > 0) {
-                steps.add(new ScriptCall(
-                        ACQUIRE,
-                        Map.of(
-                                ITEM,
-                                MINECRAFT + leveling.block(),
-                                COUNT,
-                                Math.min(deepVolume, CatalogLimits.COUNT_MAX))));
-            }
-            for (PlotLeveling.Box layer : deep) {
-                steps.add(fillLayer(layer, leveling.block()));
-            }
-            for (List<PlotLeveling.Box> group : FillBatches.of(top, batch)) {
-                steps.add(dirtFor(FillBatches.volume(group), source));
-                for (PlotLeveling.Box layer : group) {
-                    steps.add(fillLayer(layer, PlotLeveling.fillBlock(layer.y1(), center.y(), leveling.block())));
-                }
-            }
-        }
-        steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
-        return withLeftovers(new SequenceNode(steps), target);
-    }
-
-    private static TaskNode fillLayer(PlotLeveling.Box layer, String block) {
-        return new FallbackNode(List.of(
-                new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, block))),
-                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
-    }
-
-    private static TaskNode dirtFor(int volume, BlockCoord source) {
-        return new FallbackNode(List.of(
-                new ScriptCall(
-                        "acquire_at",
-                        Map.of(
-                                ITEM,
-                                MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
-                                COUNT,
-                                Math.min(volume, CatalogLimits.COUNT_MAX),
-                                "x",
-                                source.x(),
-                                "y",
-                                source.y(),
-                                "z",
-                                source.z())),
-                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
-    }
-
-    static List<PlotLeveling.Box> layers(List<PlotLeveling.Box> fills) {
-        List<PlotLeveling.Box> out = new ArrayList<>();
-        int bottom = fills.stream().mapToInt(PlotLeveling.Box::y1).min().orElse(0);
-        int top = fills.stream().mapToInt(PlotLeveling.Box::y2).max().orElse(-1);
-        for (int y = bottom; y <= top; y++) {
-            int level = y;
-            List<PlotLeveling.Box> rows = fills.stream()
-                    .filter(box -> box.y1() <= level && level <= box.y2())
-                    .sorted(Comparator.comparingInt(PlotLeveling.Box::x1)
-                            .thenComparingInt(PlotLeveling.Box::x2)
-                            .thenComparingInt(PlotLeveling.Box::z1))
-                    .toList();
-            PlotLeveling.Box open = null;
-            for (PlotLeveling.Box row : rows) {
-                if (open != null && open.x1() == row.x1() && open.x2() == row.x2() && open.z2() + 1 == row.z1()) {
-                    open = new PlotLeveling.Box(open.x1(), y, open.z1(), open.x2(), y, row.z2());
-                    continue;
-                }
-                if (open != null) {
-                    out.add(open);
-                }
-                open = new PlotLeveling.Box(row.x1(), y, row.z1(), row.x2(), y, row.z2());
-            }
-            if (open != null) {
-                out.add(open);
-            }
-        }
-        return out;
-    }
-
-    static BlockCoord dirtSource(BlockCoord center, int part) {
-        int reach = SettlementLayout.LEVEL_HALF + DIRT_SOURCE_GAP;
-        int dx = ((part - 1) % CLEAR_GRID - 1) * reach;
-        int dz = ((part - 1) / CLEAR_GRID - 1) * reach;
-        return new BlockCoord(center.x() + dx, center.y(), center.z() + (dx == 0 && dz == 0 ? -reach : dz));
-    }
-
-    static int partOf(PlotLeveling.Box box, BlockCoord center) {
-        return 1 + band(box.x1() - center.x()) + CLEAR_GRID * band(box.z1() - center.z());
-    }
-
-    private static List<PlotLeveling.Box> ofPart(List<PlotLeveling.Box> boxes, BlockCoord center, int part) {
-        List<Integer> parts = balancedParts(boxes, center, FILL_SLACK);
-        List<PlotLeveling.Box> mine = new ArrayList<>();
-        for (int index = 0; index < boxes.size(); index++) {
-            if (parts.get(index) == part) {
-                mine.add(boxes.get(index));
-            }
-        }
-        return mine;
-    }
-
-    static List<Integer> balancedParts(List<PlotLeveling.Box> cuts, BlockCoord center, int slack) {
-        int[] load = new int[CLEAR_PARTS + 1];
-        List<Integer> parts = new ArrayList<>(cuts.size());
-        for (PlotLeveling.Box box : cuts) {
-            int home = partOf(box, center);
-            int least = Integer.MAX_VALUE;
-            for (int part = 1; part <= CLEAR_PARTS; part++) {
-                least = Math.min(least, load[part]);
-            }
-            int chosen = home;
-            int bestDistance = Integer.MAX_VALUE;
-            for (int part = 1; part <= CLEAR_PARTS; part++) {
-                int distance = Math.abs((part - 1) % CLEAR_GRID - (home - 1) % CLEAR_GRID)
-                        + Math.abs((part - 1) / CLEAR_GRID - (home - 1) / CLEAR_GRID);
-                if (load[part] <= least + slack && distance < bestDistance) {
-                    chosen = part;
-                    bestDistance = distance;
-                }
-            }
-            load[chosen] += box.volume();
-            parts.add(chosen);
-        }
-        return parts;
-    }
-
-    private static int band(int offset) {
-        int width = (2 * GROUNDS_CLEAR_RADIUS + 1) / CLEAR_GRID;
-        return Math.max(0, Math.min(CLEAR_GRID - 1, (offset + GROUNDS_CLEAR_RADIUS) / width));
-    }
-
-    private static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {
-        Map<String, Object> params = new LinkedHashMap<>(extra);
-        params.put("x1", box.x1());
-        params.put("y1", box.y1());
-        params.put("z1", box.z1());
-        params.put("x2", box.x2());
-        params.put("y2", box.y2());
-        params.put("z2", box.z2());
-        return Map.copyOf(params);
-    }
-
-    private static ScriptCall clearGroundsChunk(TicketTarget target, int dx1, int dz1, int dx2, int dz2) {
-        return new ScriptCall(
-                CLEAR_AREA,
-                Map.of(
-                        "x1",
-                        target.target().x() + dx1,
-                        "y1",
-                        target.target().y(),
-                        "z1",
-                        target.target().z() + dz1,
-                        "x2",
-                        target.target().x() + dx2,
-                        "y2",
-                        target.target().y() + 3,
-                        "z2",
-                        target.target().z() + dz2));
-    }
-
     private static TaskNode buildHouse(int level, TicketTarget target) {
         if (target.schemeFile() != null) {
             return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
@@ -875,9 +689,7 @@ public final class TicketPlans {
         if (staged.isEmpty()) {
             return sequence(gotoTarget(target), schematic(DEFAULT_SCHEME, target));
         }
-        return sequence(
-                gotoTarget(target),
-                schematic(staged.orElseThrow(), SettlementLayout.houseOrigin(target.target()), target));
+        return sequence(gotoTarget(target), schematic(staged.orElseThrow(), target.target(), target));
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {

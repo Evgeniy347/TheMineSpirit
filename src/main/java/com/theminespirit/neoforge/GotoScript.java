@@ -1,12 +1,11 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.board.SettlementLayout;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.WalkCarefulParams;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.movement.TravelCheck;
 import java.util.Optional;
@@ -45,14 +44,14 @@ public final class GotoScript implements ScriptInstance {
         if (!(level instanceof ServerLevel server)) {
             return goal;
         }
-        Optional<SettlementPlot> plot = SettlementPlotStore.get(server).plot();
-        if (plot.isEmpty()) {
+        Optional<StageSite> site = SettlementPlotStore.get(server).site();
+        if (site.isEmpty()) {
             return goal;
         }
-        BlockCoord anchor = plot.orElseThrow().anchor();
-        boolean inHut = SettlementLayout.houseColumn(anchor, goal.getX(), goal.getZ())
+        BlockCoord anchor = site.orElseThrow().anchor();
+        boolean inHut = site.orElseThrow().houseColumn(goal.getX(), goal.getZ())
                 && goal.getY() >= anchor.y() - 1
-                && goal.getY() <= anchor.y() + SettlementLayout.BUILDING_HEIGHT;
+                && goal.getY() <= anchor.y() + StageSite.BUILDING_HEIGHT;
         BlockPos floor = new BlockPos(goal.getX(), anchor.y() - 1, goal.getZ());
         BlockPos wallFeet = new BlockPos(goal.getX(), anchor.y(), goal.getZ());
         boolean built = !level.getBlockState(floor).is(BlockTags.DIRT)
@@ -60,7 +59,7 @@ public final class GotoScript implements ScriptInstance {
         if (!inHut || !built) {
             return goal;
         }
-        BlockCoord yard = SettlementLayout.workYard(anchor);
+        BlockCoord yard = site.orElseThrow().workYard();
         return new BlockPos(yard.x(), yard.y(), yard.z());
     }
 

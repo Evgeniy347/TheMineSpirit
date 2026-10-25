@@ -17,9 +17,9 @@ class RepairPlanTests {
         Optional<TicketTarget> repair = RepairPlan.target(TicketPlans.plan(BoardCase.BUILD_FENCE, 1, built));
 
         assertEquals(
-                Optional.of(SettlementLayout.fenceOrigin(ANCHOR)),
+                Optional.of(ANCHOR),
                 repair.map(TicketTarget::target),
-                "Восстановление ограды — по её схеме от угла участка: иначе REPAIR_BUILDING строит не там (INC-60)");
+                "Восстановление ограды без плана — по её схеме от цели задания: иначе REPAIR_BUILDING строит не там (INC-60)");
         assertEquals(Optional.of("fence"), repair.map(TicketTarget::schemeFile), "Восстановление ограды — схема fence");
         assertEquals(
                 Optional.of("jungle"),

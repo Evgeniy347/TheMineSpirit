@@ -115,6 +115,10 @@ public final class PlacedBlocksData extends SavedData {
         return spiritSet.contains(toCoord(pos));
     }
 
+    public List<BlockCoord> spiritMarkedIn(int chunkX, int chunkZ) {
+        return spiritSet.inChunk(chunkX, chunkZ);
+    }
+
     public int size() {
         return set.size();
     }

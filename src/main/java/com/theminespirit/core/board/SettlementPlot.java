@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,7 +13,7 @@ import java.util.function.IntBinaryOperator;
 
 public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, String wood) {
     public static final String JOURNAL_ID = "plot";
-    public static final int DRIFT = SettlementLayout.HALF / 2;
+    public static final int DRIFT = 5;
 
     public SettlementPlot {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него раскладка и выравнивание");
@@ -34,23 +35,18 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
                 median(homes.stream().mapToInt(BlockCoord::z).toArray()));
     }
 
-    public static SettlementPlot survey(BlockCoord center, int half, IntBinaryOperator feet, String wood) {
-        return survey(center, half, feet, wood, OptionalInt.empty());
-    }
-
     public static SettlementPlot survey(
-            BlockCoord center, int half, IntBinaryOperator feet, String wood, OptionalInt chosen) {
-        Objects.requireNonNull(center, "Центр участка не может быть null: обмер идёт вокруг него");
+            BlockCoord center, ColumnMask area, IntBinaryOperator feet, String wood, OptionalInt chosen) {
+        Objects.requireNonNull(center, "Центр участка не может быть null: от него якорь плана");
+        Objects.requireNonNull(area, "Площадки не могут быть null: обмер идёт по ним");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них высоты участка нет");
-        int side = 2 * half + 1;
-        int[] heights = new int[side * side];
-        int index = 0;
-        for (int dx = -half; dx <= half; dx++) {
-            for (int dz = -half; dz <= half; dz++) {
-                heights[index++] = feet.applyAsInt(center.x() + dx, center.z() + dz);
-            }
+        int[] heights = area.cells().stream()
+                .mapToInt(cell -> feet.applyAsInt(cell.x(), cell.z()))
+                .sorted()
+                .toArray();
+        if (heights.length == 0) {
+            throw new IllegalArgumentException("Площадок этапа нет: обмерять нечего, план без построек этапа");
         }
-        Arrays.sort(heights);
         int level = chosen.orElse(heights[heights.length / 2]);
         return new SettlementPlot(
                 new BlockCoord(center.x(), level, center.z()),
@@ -58,12 +54,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
                 Math.max(heights[heights.length - 1], level),
                 heights.length,
                 wood);
-    }
-
-    public boolean contains(BlockCoord place) {
-        Objects.requireNonNull(place, "Место не может быть null: проверяется, лежит ли оно на участке");
-        return Math.abs(place.x() - anchor.x()) <= SettlementLayout.PLOT
-                && Math.abs(place.z() - anchor.z()) <= SettlementLayout.PLOT;
     }
 
     public boolean covers(BlockCoord center) {

@@ -28,9 +28,9 @@ class MineDescentBottomTests {
 
     @Test
     void standOf_EntranceBelowTarget_ZeroStepsAtEntrance() {
-        BlockCoord home = new BlockCoord(0, -59, 0);
+        BlockCoord entrance = new BlockCoord(0, -60, 0);
 
-        BlockCoord stand = MineDescentBottom.standOf(home).orElseThrow();
+        BlockCoord stand = MineDescentBottom.standOf(entrance).orElseThrow();
 
         assertEquals(
                 -57,

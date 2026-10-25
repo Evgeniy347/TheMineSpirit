@@ -13,12 +13,14 @@ import com.theminespirit.core.script.BuildSchematicParams;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 public final class CaseMaterials {
     private static final String MINECRAFT_PREFIX = "minecraft:";
+    private static final String ITEM = "item";
 
     private CaseMaterials() {}
 
@@ -36,20 +38,22 @@ public final class CaseMaterials {
         Objects.requireNonNull(source, "Источник материалов не может быть null: без него рецепт не прочитать");
         Map<String, Integer> need = new HashMap<>();
         Map<String, Integer> acquired = new HashMap<>();
+        Map<String, Integer> placed = new HashMap<>();
+        Map<String, Integer> crafted = new HashMap<>();
         Deque<TaskNode> queue = new ArrayDeque<>();
         queue.add(plan);
         while (!queue.isEmpty()) {
             switch (queue.poll()) {
                 case ScriptCall call -> {
                     if (craftOnly == null) {
-                        addCall(need, acquired, call, source);
-                    } else if ("craft".equals(call.script()) && craftOnly.equals(normalize(text(call, "item")))) {
+                        addCall(need, new Taken(acquired, placed, crafted), call, source);
+                    } else if ("craft".equals(call.script()) && craftOnly.equals(normalize(text(call, ITEM)))) {
                         addCraft(need, call, source);
                     }
                 }
                 case SequenceNode sequence -> queue.addAll(sequence.steps());
                 case RepeatNode repeat -> queue.add(repeat.step());
-                case FallbackNode fallback -> queue.addAll(fallback.steps());
+                case FallbackNode fallback -> queue.addAll(alternatives(fallback));
                 case ParallelNode parallel -> queue.addAll(parallel.steps());
                 case ConditionNode condition -> {
                     queue.add(condition.thenStep());
@@ -59,23 +63,36 @@ public final class CaseMaterials {
                 }
             }
         }
+        crafted.forEach(
+                (item, count) -> placed.computeIfPresent(item, (key, left) -> left > count ? left - count : null));
+        placed.forEach((item, count) -> merge(need, item, count));
         acquired.forEach((item, count) -> need.merge(item, count, Math::max));
         return Map.copyOf(need);
     }
 
-    private static void addCall(
-            Map<String, Integer> need, Map<String, Integer> acquired, ScriptCall call, MaterialSource source) {
+    private static List<TaskNode> alternatives(FallbackNode fallback) {
+        TaskNode first = fallback.steps().get(0);
+        boolean retriedPlace = first instanceof ScriptCall call && "place_block".equals(call.script());
+        return retriedPlace ? List.of(first) : fallback.steps();
+    }
+
+    private record Taken(Map<String, Integer> acquired, Map<String, Integer> placed, Map<String, Integer> crafted) {}
+
+    private static void addCall(Map<String, Integer> need, Taken taken, ScriptCall call, MaterialSource source) {
         switch (call.script()) {
-            case "craft" -> addCraft(need, call, source);
+            case "craft" -> {
+                addCraft(need, call, source);
+                merge(taken.crafted(), normalize(text(call, ITEM)), integer(call, "count"));
+            }
             case "build_schematic" -> addSchematic(need, call, source);
-            case "place_block" -> merge(need, normalize(text(call, "block")), 1);
-            case "acquire" -> merge(acquired, normalize(text(call, "item")), integer(call, "count"));
+            case "place_block" -> merge(taken.placed(), normalize(withoutState(text(call, "block"))), 1);
+            case "acquire" -> merge(taken.acquired(), normalize(text(call, ITEM)), integer(call, "count"));
             default -> {}
         }
     }
 
     private static void addCraft(Map<String, Integer> need, ScriptCall call, MaterialSource source) {
-        String item = text(call, "item");
+        String item = text(call, ITEM);
         int count = integer(call, "count");
         int output = source.outputCount(item);
         if (output <= 0) {
@@ -119,6 +136,11 @@ public final class CaseMaterials {
                     + "': по плану не посчитать материалы — исправьте план кейса");
         }
         return number;
+    }
+
+    private static String withoutState(String block) {
+        int state = block.indexOf('[');
+        return state < 0 ? block : block.substring(0, state);
     }
 
     private static String normalize(String item) {

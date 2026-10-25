@@ -9,11 +9,11 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PriorityContext;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -53,10 +53,12 @@ final class MineLevels {
         if (active(service, id)) {
             return;
         }
-        BlockCoord home = SettlementPlotStore.get(level)
-                .plot()
-                .map(SettlementPlot::anchor)
-                .orElseGet(() -> homeOf(spirits));
+        Optional<StageSite> stage = SettlementPlotStore.get(level).site();
+        BlockCoord home = stage.map(StageSite::mineEntrance)
+                .orElseGet(() -> SettlementPlotStore.get(level)
+                        .plot()
+                        .map(plot -> plot.anchor())
+                        .orElseGet(() -> homeOf(spirits)));
         BlockCoord site;
         try {
             site = MineDescentBottom.standOf(home).orElse(null);
@@ -87,20 +89,17 @@ final class MineLevels {
                 TicketTarget.at(site));
     }
 
+    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
+        return spirits.stream()
+                .flatMap(spirit -> spirit.home().stream())
+                .findFirst()
+                .orElse(new BlockCoord(0, 64, 0));
+    }
+
     private static boolean active(BoardService service, String id) {
         BoardStatus status = service.board().statusOf(id).orElse(null);
         return status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
-    }
-
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BlockCoord> home = spirit.home();
-            if (home.isPresent()) {
-                return home.orElseThrow();
-            }
-        }
-        return new BlockCoord(0, 64, 0);
     }
 }

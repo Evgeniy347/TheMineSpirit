@@ -1,8 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
@@ -21,19 +20,18 @@ final class PlanCells {
             return false;
         }
         return SettlementPlotStore.get(server)
-                        .plot()
-                        .filter(plot -> SettlementLayout.planCell(plot.anchor(), pos.getX(), pos.getY(), pos.getZ())
-                                && !oldFill(level, plot.anchor(), pos))
+                        .site()
+                        .filter(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ()) && !oldFill(level, site, pos))
                         .isPresent()
                 && PlacedBlocksData.get(server).isSpiritMarked(pos);
     }
 
-    private static boolean oldFill(Level level, BlockCoord anchor, BlockPos pos) {
+    private static boolean oldFill(Level level, StageSite site, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        if (SettlementLayout.mineColumn(anchor, pos.getX(), pos.getZ())) {
+        if (site.mineColumn(pos.getX(), pos.getZ())) {
             String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
             return !SchematicBlocks.isFloorClass(id) && !state.is(Blocks.TORCH) && !state.is(Blocks.WALL_TORCH);
         }
-        return pos.getY() >= anchor.y() && state.is(BlockTags.DIRT);
+        return pos.getY() >= site.anchor().y() && state.is(BlockTags.DIRT);
     }
 }

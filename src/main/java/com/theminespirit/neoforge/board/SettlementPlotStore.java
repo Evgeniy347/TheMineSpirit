@@ -1,8 +1,14 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StageSites;
+import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.core.town.TownPlanCodec;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.HolderLookup;
@@ -10,6 +16,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class SettlementPlotStore extends SavedData {
     private static final String DATA_NAME = ModIdentity.MOD_ID + "_settlement_plot";
@@ -21,10 +28,15 @@ public final class SettlementPlotStore extends SavedData {
     private static final String COLUMNS = "Columns";
     private static final String WOOD = "Wood";
     private static final String LEVELED = "Leveled";
+    private static final String TOWN = "Town";
+    private static final int FIRST_STAGE = 1;
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final SavedData.Factory<SettlementPlotStore> FACTORY =
             new SavedData.Factory<>(SettlementPlotStore::new, SettlementPlotStore::load);
 
     private @Nullable SettlementPlot plot;
+    private @Nullable TownPlan town;
+    private @Nullable StageSite site;
     private boolean leveled;
 
     private SettlementPlotStore() {}
@@ -37,6 +49,40 @@ public final class SettlementPlotStore extends SavedData {
         return Optional.ofNullable(plot);
     }
 
+    public Optional<TownPlan> town() {
+        return Optional.ofNullable(town);
+    }
+
+    public void fixTown(TownPlan next) {
+        town = Objects.requireNonNull(next, "План поселения не может быть null: фиксируется размеченный план");
+        plot = null;
+        site = null;
+        leveled = false;
+        setDirty();
+    }
+
+    public Optional<StageSite> site() {
+        SettlementPlot current = plot;
+        TownPlan plan = town;
+        if (current == null || plan == null) {
+            return Optional.empty();
+        }
+        StageSite cached = site;
+        if (cached == null || cached.anchor().y() != current.anchor().y()) {
+            Optional<StageSite> found = StageSites.find(
+                    plan,
+                    FIRST_STAGE,
+                    current.anchor().y(),
+                    DataTables.INSTANCE.town().current());
+            if (found.isEmpty()) {
+                return Optional.empty();
+            }
+            cached = found.orElseThrow();
+            site = cached;
+        }
+        return Optional.of(cached);
+    }
+
     public void fix(SettlementPlot next) {
         Objects.requireNonNull(next, "Участок не может быть null: фиксируется обмеренный участок");
         SettlementPlot before = plot;
@@ -46,6 +92,7 @@ public final class SettlementPlotStore extends SavedData {
             leveled = false;
         }
         plot = next;
+        site = null;
         setDirty();
     }
 
@@ -62,6 +109,8 @@ public final class SettlementPlotStore extends SavedData {
 
     public void clear() {
         plot = null;
+        town = null;
+        site = null;
         leveled = false;
         setDirty();
     }
@@ -76,6 +125,15 @@ public final class SettlementPlotStore extends SavedData {
                     tag.getInt(MAX),
                     tag.getInt(COLUMNS),
                     tag.getString(WOOD));
+        }
+        if (tag.contains(TOWN)) {
+            try {
+                store.town = TownPlanCodec.decode(tag.getString(TOWN));
+            } catch (IllegalArgumentException broken) {
+                LOGGER.error(
+                        "[plot] сохранённый план поселения не читается, план будет размечен заново: {}",
+                        broken.getMessage());
+            }
         }
         return store;
     }
@@ -92,6 +150,10 @@ public final class SettlementPlotStore extends SavedData {
             tag.putInt(MAX, current.max());
             tag.putInt(COLUMNS, current.columns());
             tag.putString(WOOD, current.wood());
+        }
+        TownPlan plan = town;
+        if (plan != null) {
+            tag.putString(TOWN, TownPlanCodec.encode(plan));
         }
         return tag;
     }

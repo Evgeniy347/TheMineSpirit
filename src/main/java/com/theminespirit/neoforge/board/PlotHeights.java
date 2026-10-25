@@ -5,10 +5,11 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.PlotHeight;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.StageSite;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -23,19 +24,21 @@ final class PlotHeights {
     static SettlementPlot surveyed(
             BoardService service,
             SettlementPlotStore store,
-            BlockCoord center,
+            StageSite draft,
             int homes,
             String wood,
             IntBinaryOperator feet,
             long now) {
-        PlotHeight height = PlotHeight.choose(center, SettlementLayout.LEVEL_HALF, feet, rules());
-        SettlementPlot plot =
-                SettlementPlot.survey(center, SettlementLayout.LEVEL_HALF, feet, wood, OptionalInt.of(height.level()));
+        ColumnMask area = draft.level();
+        BlockCoord center = draft.anchor();
+        PlotHeight height = PlotHeight.choose(area, feet, rules());
+        SettlementPlot plot = SettlementPlot.survey(center, area, feet, wood, OptionalInt.of(height.level()));
         store.fix(plot);
         LOGGER.info(
-                "{}; медиана {}, мин {} макс {} по {} колонкам, центр ({}, {}) по {} домам духов, порода {}",
+                "{}; медиана {}, мин {} макс {} по {} колонкам площадок этапа, центр ({}, {}) по {} домам духов, "
+                        + "порода {}",
                 height.describe(),
-                SettlementPlot.survey(center, SettlementLayout.LEVEL_HALF, feet, wood)
+                SettlementPlot.survey(center, area, feet, wood, OptionalInt.empty())
                         .anchor()
                         .y(),
                 plot.min(),
@@ -54,13 +57,14 @@ final class PlotHeights {
         if (service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
             store.markLeveled();
         }
-        if (store.leveled()) {
+        Optional<StageSite> site = store.site();
+        if (store.leveled() || site.isEmpty()) {
             return stored;
         }
+        StageSite current = site.orElseThrow();
         BlockCoord anchor = stored.anchor();
-        IntBinaryOperator plotFeet =
-                (x, z) -> SettlementLayout.mineColumn(anchor, x, z) ? anchor.y() : feet.applyAsInt(x, z);
-        Optional<PlotHeight> better = PlotHeight.recheck(stored, SettlementLayout.LEVEL_HALF, plotFeet, rules());
+        IntBinaryOperator plotFeet = (x, z) -> current.mineColumn(x, z) ? anchor.y() : feet.applyAsInt(x, z);
+        Optional<PlotHeight> better = PlotHeight.recheck(stored, current.level(), plotFeet, rules());
         if (better.isEmpty() || better.get().level() == anchor.y()) {
             return stored;
         }

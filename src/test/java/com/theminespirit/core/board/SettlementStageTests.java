@@ -16,8 +16,14 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class SettlementStageTests {
-    private static final List<BoardCase> FIRST_STAGE =
-            List.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+    private static final List<BoardCase> FIRST_STAGE = List.of(
+            BoardCase.CLEAR_GROUNDS,
+            BoardCase.BUILD_MINE,
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.STOCK_CHESTS,
+            BoardCase.CRAFT_FURNACE,
+            BoardCase.LIGHTING);
 
     @Test
     void of_NothingBuilt_FirstStage() {

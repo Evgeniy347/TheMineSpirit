@@ -44,7 +44,7 @@ class FenceGateMaterialsTests {
         TaskNode plan = TicketPlans.plan(
                 BoardCase.BUILD_FENCE, 1, TicketTarget.at(ANCHOR).withWood("jungle"));
         Map<String, Integer> need = CaseMaterials.need(plan, source);
-        int gates = 4 * FenceGateRule.gates(SettlementLayout.PLOT).size();
+        int gates = 4 * FenceGateRule.gates(fence.sizeX()).size();
 
         assertEquals(
                 gates,

@@ -3,9 +3,11 @@ package com.theminespirit.neoforge.policy;
 import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
 public final class NightLeashGate {
@@ -42,10 +44,18 @@ public final class NightLeashGate {
                 LEASH.settlementRadius(),
                 new NightLeash.TargetState(
                         LEASH.isEvening(dayFraction(spirit.level())), spirit.nightLeashArmed(), following));
-        if (decision instanceof NightLeash.Refused refused) {
+        if (decision instanceof NightLeash.Refused refused && !onPlan(spirit.level(), target)) {
             return refused.reason();
         }
         return null;
+    }
+
+    private static boolean onPlan(Level level, BlockCoord target) {
+        return level instanceof ServerLevel server
+                && SettlementPlotStore.get(server)
+                        .site()
+                        .map(site -> site.near(target.x(), target.z()))
+                        .orElse(false);
     }
 
     private static double dayFraction(Level level) {

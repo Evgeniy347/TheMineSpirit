@@ -2,7 +2,6 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.Schematic;
@@ -31,7 +30,7 @@ public final class FirstStepsRemainderGameTests {
     public static void remainder_FencePartlyBuilt_NeedsOnlyUnplaced(GameTestHelper helper) {
         BlockPos anchorPos = helper.absolutePos(new BlockPos(4, 1, 4));
         BlockCoord anchor = new BlockCoord(anchorPos.getX(), anchorPos.getY(), anchorPos.getZ());
-        BlockCoord origin = SettlementLayout.fenceOrigin(anchor);
+        BlockCoord origin = anchor;
         int placed = 0;
         for (Schematic.Entry entry : SchematicResources.load("fence").blocks()) {
             if (placed < PLACED

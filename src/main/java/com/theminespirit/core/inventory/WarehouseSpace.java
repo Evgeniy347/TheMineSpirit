@@ -7,6 +7,14 @@ public final class WarehouseSpace {
 
     private WarehouseSpace() {}
 
+    public static boolean needsChest(int freeSlots, int slotCount, int minFreePercent) {
+        if (freeSlots < 0 || slotCount < freeSlots || minFreePercent < 0 || minFreePercent > 100) {
+            throw new IllegalArgumentException("Свободно " + freeSlots + " из " + slotCount + " слотов при пороге "
+                    + minFreePercent + "%: свободных не больше всех, порог 0..100");
+        }
+        return slotCount > 0 && (long) freeSlots * 100 < (long) slotCount * minFreePercent;
+    }
+
     public static boolean canTakeNewSlot(ContainerSnapshot snapshot, int minFreeSlotsPercent) {
         Objects.requireNonNull(snapshot, "Снимок контейнера не может быть null: по нему считают свободные слоты");
         if (minFreeSlotsPercent < 0 || minFreeSlotsPercent > 100) {

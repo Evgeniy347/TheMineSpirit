@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.BuildPlanCursor;
@@ -785,8 +784,8 @@ final class BuildSchematicScript implements ScriptInstance {
     private List<ScriptCall> ownCraft(String blockId, int count) {
         List<ScriptCall> steps = new ArrayList<>();
         if (spirit.level() instanceof ServerLevel server) {
-            SettlementPlotStore.get(server).plot().ifPresent(plot -> {
-                BlockCoord yard = SettlementLayout.workYard(plot.anchor());
+            SettlementPlotStore.get(server).site().ifPresent(site -> {
+                BlockCoord yard = site.workYard();
                 steps.add(new ScriptCall("goto", Map.of("x", yard.x(), "y", yard.y(), "z", yard.z())));
             });
         }

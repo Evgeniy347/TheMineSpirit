@@ -5,20 +5,23 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.incident.IncidentNote;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.scene.ScenePlan;
+import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -51,18 +55,27 @@ import org.slf4j.Logger;
 public final class FirstStageGameTests {
     static final String BATCH = "first_stage";
     private static final int STUCK_LIMIT = 600;
-    private static final int STARTING_LOGS = 40;
+    private static final int STARTING_LOGS = 64;
     private static final int PIT_DEPTH = 3;
     private static final long NOON = 6000;
     private static final int SPIRITS = 3;
     private static final int REPORT_EVERY = 500;
     private static final int COPY_SHIFT = 46;
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Set<BoardCase> WORK = EnumSet.of(
+            BoardCase.CLEAR_GROUNDS,
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_MINE,
+            BoardCase.LIGHTING,
+            BoardCase.STOCK_CHESTS,
+            BoardCase.REPAIR_BUILDING,
+            BoardCase.DISMANTLE_SHELTER);
 
     private FirstStageGameTests() {}
 
-    // [флак] этап 1 целиком — выравнивание участка 27×27, шахта, ограда 23×23 и хижина тремя духами: тысячи тиков по
-    // решению владельца (≤ 6000); простой и застревание меряет STUCK_LIMIT, предел — потолок всего этапа.
+    // [флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина с палисадником и
+    // факелы тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
     @GameTest(template = "settlement_arena", batch = BATCH, timeoutTicks = 6000, skyAccess = true)
     public static void firstStage_GeneratedWorldThreeSpirits_PlotBuiltByPlan(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -82,16 +95,23 @@ public final class FirstStageGameTests {
         helper.onEachTick(watch::tick);
         helper.succeedWhen(() -> {
             String head = "сид " + seed + " (повтор: scripts/test.sh gametest --seed " + seed + " " + BATCH + "): ";
-            Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
+            SettlementPlotStore store = SettlementPlotStore.get(level);
+            Optional<SettlementPlot> plot = store.plot();
             helper.assertTrue(watch.stuck.isEmpty(), head + "дух застрял: " + watch.stuck + "; " + watch.state());
-            helper.assertTrue(plot.isPresent(), head + "участок не обмерен — доска не начала этап 1");
-            BlockCoord anchor = plot.orElseThrow().anchor();
-            List<String> pits = pitsOutside(helper, scene, anchor);
+            helper.assertTrue(
+                    plot.isPresent() && store.site().isPresent() && store.town().isPresent(),
+                    head + "участок не обмерен или плана нет — доска не начала этап 1");
+            StageSite site = store.site().orElseThrow();
+            BlockCoord anchor = site.anchor();
+            List<String> pits = pitsOutside(helper, scene, site);
             helper.assertTrue(
                     pits.isEmpty() && watch.fell.isEmpty(),
                     head + "за оградой ямы ниже участка " + pits + ", духи в ямах " + watch.fell);
-            List<String> problems =
-                    StageOneAudit.problems(level, anchor, plot.orElseThrow().wood());
+            List<String> problems = StageOneAudit.problems(
+                    level,
+                    site,
+                    store.town().orElseThrow().region(),
+                    plot.orElseThrow().wood());
             helper.assertTrue(
                     problems.isEmpty(),
                     head + "этап 1 не по плану на якоре " + anchor + ": " + problems + "; " + watch.state());
@@ -100,13 +120,15 @@ public final class FirstStageGameTests {
         });
     }
 
-    private static List<String> pitsOutside(GameTestHelper helper, ScenePlan scene, BlockCoord anchor) {
+    private static List<String> pitsOutside(GameTestHelper helper, ScenePlan scene, StageSite site) {
+        BlockCoord anchor = site.anchor();
         List<String> pits = new ArrayList<>();
         for (int x = -scene.radius(); x <= scene.radius(); x++) {
             for (int z = -scene.radius(); z <= scene.radius(); z++) {
                 int top = scene.height(x, z);
-                boolean outside = Math.max(Math.abs(x), Math.abs(z)) > SettlementLayout.LEVEL_HALF;
                 BlockPos under = GeneratedScene.at(x, top - 1, z);
+                BlockPos column = helper.absolutePos(under);
+                boolean outside = !site.inside(column.getX(), column.getZ());
                 if (outside
                         && helper.absolutePos(under).getY() < anchor.y()
                         && helper.getBlockState(GeneratedScene.at(x, top, z)).isAir()
@@ -160,14 +182,18 @@ public final class FirstStageGameTests {
         int logs = 0;
         int planks = 0;
         int sticks = 0;
+        int stone = 0;
+        int coal = 0;
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);
             String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
             logs += id.endsWith("_log") ? stack.getCount() : 0;
             planks += id.endsWith("_planks") ? stack.getCount() : 0;
             sticks += "stick".equals(id) ? stack.getCount() : 0;
+            stone += "cobblestone".equals(id) ? stack.getCount() : 0;
+            coal += id.endsWith("coal") ? stack.getCount() : 0;
         }
-        return "log" + logs + "/pl" + planks + "/st" + sticks;
+        return "log" + logs + "/pl" + planks + "/st" + sticks + "/cb" + stone + "/c" + coal;
     }
 
     private static int countItems(SpiritEntity spirit) {
@@ -214,17 +240,33 @@ public final class FirstStageGameTests {
         void tick() {
             if (helper.getTick() % REPORT_EVERY == 0) {
                 LOGGER.info("[scene] {}", state());
+                SettlementPlotStore store = SettlementPlotStore.get(helper.getLevel());
+                if (store.site().isPresent()
+                        && store.town().isPresent()
+                        && store.plot().isPresent()) {
+                    LOGGER.info(
+                            "[scene] аудит этапа 1 на тике {}: {}",
+                            helper.getTick(),
+                            StageOneAudit.problems(
+                                    helper.getLevel(),
+                                    store.site().orElseThrow(),
+                                    store.town().orElseThrow().region(),
+                                    store.plot().orElseThrow().wood()));
+                }
             }
-            Optional<SettlementPlot> plot =
-                    SettlementPlotStore.get(helper.getLevel()).plot();
-            plot.ifPresent(p -> digPitAfterLeveling(p.anchor()));
+            Optional<StageSite> site =
+                    SettlementPlotStore.get(helper.getLevel()).site();
+            site.ifPresent(this::digPitAfterLeveling);
+            boolean waiting = board.board().all().stream()
+                    .filter(ticket -> WORK.contains(ticket.boardCase()))
+                    .anyMatch(ticket -> board.board().statusOf(ticket.id()).orElse(null) == BoardStatus.PENDING);
             for (SpiritEntity spirit : spirits) {
                 spent.merge(spirit.currentTaskScript().orElse("-"), 1, Integer::sum);
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
                         || !board.board().assignedTo(spirit.getUUID()).isEmpty();
-                boolean below = plot.map(p -> below(spirit, p.anchor())).orElse(false);
-                plot.ifPresent(p -> inPit(spirit, p.anchor()));
-                count(spirit, idle, !busy, "без задания");
+                boolean below = site.map(s -> below(spirit, s)).orElse(false);
+                site.ifPresent(s -> inPit(spirit, s));
+                count(spirit, idle, !busy && waiting, "без задания при открытой работе доски");
                 count(
                         spirit,
                         low,
@@ -233,7 +275,8 @@ public final class FirstStageGameTests {
             }
         }
 
-        private void digPitAfterLeveling(BlockCoord anchor) {
+        private void digPitAfterLeveling(StageSite site) {
+            BlockCoord anchor = site.anchor();
             boolean leveling = board.board().all().stream()
                     .filter(ticket -> ticket.boardCase() == BoardCase.CLEAR_GROUNDS)
                     .anyMatch(
@@ -242,7 +285,11 @@ public final class FirstStageGameTests {
                 return;
             }
             pitDug = true;
-            BlockPos top = new BlockPos(anchor.x() - SettlementLayout.HALF + 2, anchor.y() - 1, anchor.z() + 6);
+            ColumnMask.Cell spot = site.level().cells().stream()
+                    .filter(cell -> !site.planCell(cell.x(), anchor.y(), cell.z()))
+                    .findFirst()
+                    .orElse(site.level().cells().get(0));
+            BlockPos top = new BlockPos(spot.x(), anchor.y() - 1, spot.z());
             for (int depth = 0; depth < PIT_DEPTH; depth++) {
                 helper.getLevel().setBlockAndUpdate(top.below(depth), Blocks.AIR.defaultBlockState());
             }
@@ -252,12 +299,14 @@ public final class FirstStageGameTests {
                     PIT_DEPTH);
         }
 
-        private void inPit(SpiritEntity spirit, BlockCoord anchor) {
+        private void inPit(SpiritEntity spirit, StageSite site) {
+            BlockCoord anchor = site.anchor();
             BlockPos at = helper.relativePos(spirit.blockPosition());
             int x = at.getX() - GeneratedScene.CENTER;
             int z = at.getZ() - GeneratedScene.CENTER;
             int edge = Math.max(Math.abs(x), Math.abs(z));
-            if (edge > SettlementLayout.LEVEL_HALF
+            BlockPos feet = spirit.blockPosition();
+            if (!site.inside(feet.getX(), feet.getZ())
                     && edge <= scene.radius()
                     && at.getY() - GeneratedScene.SURFACE < scene.height(x, z)
                     && spirit.blockPosition().getY() < anchor.y()
@@ -267,11 +316,10 @@ public final class FirstStageGameTests {
             }
         }
 
-        private static boolean below(SpiritEntity spirit, BlockCoord anchor) {
+        private static boolean below(SpiritEntity spirit, StageSite site) {
             BlockPos at = spirit.blockPosition();
-            boolean onPlot = Math.abs(at.getX() - anchor.x()) <= SettlementLayout.LEVEL_HALF
-                    && Math.abs(at.getZ() - anchor.z()) <= SettlementLayout.LEVEL_HALF;
-            return onPlot && at.getY() < anchor.y() - 1 && !SettlementLayout.mineColumn(anchor, at.getX(), at.getZ());
+            return site.levelColumn(at.getX(), at.getZ())
+                    && at.getY() < site.anchor().y() - 1;
         }
 
         private void count(SpiritEntity spirit, Map<UUID, Integer> ticks, boolean now, String what) {
@@ -281,6 +329,28 @@ public final class FirstStageGameTests {
                 stuck.add(spirit.displayName() + " " + what + " с тика " + (helper.getTick() - STUCK_LIMIT)
                         + " (задача " + spirit.currentTaskScript().orElse("-") + ")");
             }
+        }
+
+        private Map<String, Integer> chestStock() {
+            Map<String, Integer> stock = new TreeMap<>();
+            for (BlockCoord chest :
+                    SettlementChestStore.get(helper.getLevel()).chests().all()) {
+                if (helper.getLevel().getBlockEntity(new BlockPos(chest.x(), chest.y(), chest.z()))
+                        instanceof Container container) {
+                    for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                        ItemStack stack = container.getItem(slot);
+                        if (!stack.isEmpty()) {
+                            stock.merge(
+                                    BuiltInRegistries.ITEM
+                                            .getKey(stack.getItem())
+                                            .getPath(),
+                                    stack.getCount(),
+                                    Integer::sum);
+                        }
+                    }
+                }
+            }
+            return stock;
         }
 
         String state() {
@@ -297,8 +367,8 @@ public final class FirstStageGameTests {
                     .map(ticket -> ticket.id() + "="
                             + board.board().statusOf(ticket.id()).orElse(null))
                     .toList();
-            return "тик " + helper.getTick() + ", духи " + spiritsNow + ", открыто " + open + ", тики по сценариям "
-                    + spent;
+            return "тик " + helper.getTick() + ", духи " + spiritsNow + ", сундуки " + chestStock() + ", открыто "
+                    + open + ", тики по сценариям " + spent;
         }
     }
 }

@@ -1,9 +1,16 @@
 {
   "stages": [
-    {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_FENCE": 1, "BUILD_HOUSE": 1}},
-    {"stage": 2, "buildings": {"BUILD_MINE": 2, "BUILD_WAREHOUSE": 2}},
-    {"stage": 3, "buildings": {"BUILD_MINE": 3, "BUILD_WAREHOUSE": 3}},
-    {"stage": 4, "buildings": {"BUILD_MINE": 4, "BUILD_WAREHOUSE": 4}}
+    {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_FENCE": 1, "BUILD_HOUSE": 1,
+                              "STOCK_CHESTS": 1, "LIGHTING": 1},
+     "plan": ["hut", "yard", "mine", "grove", "fence", "torches"]},
+    {"stage": 2, "buildings": {"BUILD_MINE": 2, "BUILD_WAREHOUSE": 2},
+     "plan": ["plaza", "family_house_a", "family_house_b", "family_house_c", "storage", "barn", "field_a", "field_b",
+              "pen", "well", "lumber_yard", "workshop", "orchard"]},
+    {"stage": 3, "buildings": {"BUILD_MINE": 3, "BUILD_WAREHOUSE": 3},
+     "plan": ["player_house", "forge", "bakery", "apiary", "kennel", "stable", "barracks", "weaver"]},
+    {"stage": 4, "buildings": {"BUILD_MINE": 4, "BUILD_WAREHOUSE": 4},
+     "plan": ["town_hall", "tavern", "infirmary", "training_yard", "enchant_room", "alchemy", "library",
+              "trading_post"]}
   ],
   "schemes": {
     "BUILD_HOUSE": ["hut_1", "stone_house"]
