@@ -123,6 +123,7 @@ public final class FirstStepsRunner {
         }
         BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
         PlotAudit.tick(level, service, anchor, now);
+        OldChests.tick(level, service, anchor, now);
         BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
@@ -143,8 +144,12 @@ public final class FirstStepsRunner {
         for (BoardCase caseValue : ready) {
             if (!hasActive(service, caseValue)) {
                 StepContext context = new StepContext(level, service, spirits, stock, facts, anchor, wood, now);
-                torches = Math.max(torches, openIfStocked(context, caseValue));
+                torches = Math.max(torches, openIfStocked(context, caseValue, false));
             }
+        }
+        for (BoardCase caseValue : FirstStepsPlan.blockedStageOne(facts)) {
+            StepContext context = new StepContext(level, service, spirits, stock, facts, anchor, wood, now);
+            openIfStocked(context, caseValue, true);
         }
         TorchWatch.tick(
                 service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, torches, log), now);
@@ -164,6 +169,19 @@ public final class FirstStepsRunner {
         }
     }
 
+    private static void asPlanks(Map<String, Integer> need, String wood) {
+        int cost = 0;
+        for (Map.Entry<String, Integer> entry : List.copyOf(need.entrySet())) {
+            if (wood.equals(OwnWood.species(entry.getKey()))) {
+                cost += OwnWood.plankCost(entry.getKey(), entry.getValue());
+                need.remove(entry.getKey());
+            }
+        }
+        if (cost > 0) {
+            need.merge(wood + "_planks", cost, Integer::sum);
+        }
+    }
+
     private record StepContext(
             ServerLevel level,
             BoardService service,
@@ -174,7 +192,7 @@ public final class FirstStepsRunner {
             String wood,
             long now) {}
 
-    private static int openIfStocked(StepContext context, BoardCase caseValue) {
+    private static int openIfStocked(StepContext context, BoardCase caseValue, boolean blocked) {
         ServerLevel level = context.level();
         BoardService service = context.service();
         List<SpiritEntity> spirits = context.spirits();
@@ -207,7 +225,11 @@ public final class FirstStepsRunner {
         }
         if (WOODEN_BUILDINGS.contains(caseValue)) {
             minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
-            dropOwnWood(need, stock, wood);
+            if (blocked) {
+                asPlanks(need, wood);
+            } else {
+                dropOwnWood(need, stock, wood);
+            }
         }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         int torches = need.getOrDefault(TorchRules.TORCH, 0);

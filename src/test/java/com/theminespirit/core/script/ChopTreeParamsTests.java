@@ -73,7 +73,8 @@ class ChopTreeParamsTests {
     void from_RadiusAboveRange_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ChopTreeParams.from(Map.of("species", "oak", "count", 1, "radius", 33, "replant", false)),
+                () -> ChopTreeParams.from(Map.of(
+                        "species", "oak", "count", 1, "radius", CatalogLimits.CHOP_RADIUS_MAX + 1, "replant", false)),
                 "Радиус выше максимума обязан быть отклонён: поиск на всю карту обходится слишком дорого");
     }
 

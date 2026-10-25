@@ -29,6 +29,7 @@ public final class DigOutScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final Level level;
     private final GotoParams target;
+    private final boolean fromPit;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private Direction direction;
@@ -44,6 +45,7 @@ public final class DigOutScript implements ScriptInstance {
         this.spirit = spirit;
         this.level = spirit.level();
         this.target = target;
+        this.fromPit = open(level, spirit.blockPosition());
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
     }
@@ -106,7 +108,7 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         BlockPos feet = spirit.blockPosition();
-        if (open(level, feet) || feet.getY() >= target.y()) {
+        if ((open(level, feet) && !fromPit) || feet.getY() >= target.y()) {
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }

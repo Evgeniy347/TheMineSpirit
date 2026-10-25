@@ -29,40 +29,46 @@ import org.slf4j.Logger;
 
 final class PlotAudit {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final long COOLDOWN = 6000;
+    private static final long COOLDOWN = 600;
     private static final Set<BoardCase> WORKS = EnumSet.of(
             BoardCase.CLEAR_GROUNDS,
             BoardCase.BUILD_MINE,
             BoardCase.BUILD_FENCE,
             BoardCase.BUILD_HOUSE,
-            BoardCase.LIGHTING,
-            BoardCase.REPAIR_BUILDING);
+            BoardCase.LIGHTING);
+    private static final Set<BoardCase> EXCLUSIVE = EnumSet.of(BoardCase.REPAIR_BUILDING, BoardCase.CLEAR_GROUNDS);
     private static final Set<BoardStatus> OPEN =
             EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
     private PlotAudit() {}
 
     static void tick(ServerLevel level, BoardService service, BlockCoord anchor, long now) {
-        if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1) || busy(service) || recent(service, now)) {
+        if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)
+                || open(service, EXCLUSIVE)
+                || recent(service, now)) {
             return;
         }
+        boolean building = open(service, WORKS);
         List<BlockCoord> holes = new ArrayList<>();
         List<BlockCoord> extras = new ArrayList<>();
         int half = SettlementLayout.LEVEL_HALF;
         for (int x = anchor.x() - half; x <= anchor.x() + half; x++) {
             for (int z = anchor.z() - half; z <= anchor.z() + half; z++) {
                 boolean mine = SettlementLayout.mineColumn(anchor, x, z) || SettlementLayout.minePassage(anchor, x, z);
+                boolean planned = SettlementLayout.houseColumn(anchor, x, z) || fence(anchor, x, z);
                 for (int dy = -1; dy < PlotCells.FREE_HEIGHT; dy++) {
                     BlockCoord cell = new BlockCoord(x, anchor.y() + dy, z);
                     Optional<PlotCells.Defect> defect = PlotCells.defect(
-                            new PlotCells.Cell(dy, mine, false), found(level.getBlockState(pos(cell))));
+                            new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))));
                     defect.filter(PlotCells.Defect.HOLE::equals).ifPresent(hole -> holes.addAll(down(level, cell)));
-                    defect.filter(PlotCells.Defect.EXTRA::equals).ifPresent(extra -> {
-                        extras.add(cell);
-                        if (cell.y() == anchor.y() - 1) {
-                            holes.add(cell);
-                        }
-                    });
+                    defect.filter(PlotCells.Defect.EXTRA::equals)
+                            .filter(extra -> !building)
+                            .ifPresent(extra -> {
+                                extras.add(cell);
+                                if (cell.y() == anchor.y() - 1) {
+                                    holes.add(cell);
+                                }
+                            });
                 }
             }
         }
@@ -105,7 +111,7 @@ final class PlotAudit {
     private static List<BlockCoord> down(ServerLevel level, BlockCoord top) {
         List<BlockCoord> column = new ArrayList<>();
         column.add(top);
-        for (int depth = 1; depth <= PlotLeveling.VOID_DEPTH; depth++) {
+        for (int depth = 1; depth <= PlotLeveling.MAX_SHIFT; depth++) {
             BlockCoord below = new BlockCoord(top.x(), top.y() - depth, top.z());
             if (found(level.getBlockState(pos(below))) != PlotCells.Found.OPEN) {
                 break;
@@ -124,9 +130,16 @@ final class PlotAudit {
                 .anyMatch(tick -> now - tick < COOLDOWN);
     }
 
-    private static boolean busy(BoardService service) {
+    private static boolean fence(BlockCoord anchor, int x, int z) {
+        int dx = Math.abs(x - anchor.x());
+        int dz = Math.abs(z - anchor.z());
+        int half = SettlementLayout.HALF;
+        return (dx == half && dz <= half) || (dz == half && dx <= half);
+    }
+
+    private static boolean open(BoardService service, Set<BoardCase> cases) {
         return service.board().all().stream()
-                .filter(ticket -> WORKS.contains(ticket.boardCase()))
+                .filter(ticket -> cases.contains(ticket.boardCase()))
                 .anyMatch(ticket -> service.board()
                         .statusOf(ticket.id())
                         .map(OPEN::contains)

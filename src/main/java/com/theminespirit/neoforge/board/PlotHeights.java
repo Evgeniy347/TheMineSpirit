@@ -52,6 +52,9 @@ final class PlotHeights {
     static SettlementPlot rechecked(
             BoardService service, SettlementPlotStore store, SettlementPlot stored, IntBinaryOperator feet, long now) {
         if (service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
+            store.markLeveled();
+        }
+        if (store.leveled()) {
             return stored;
         }
         BlockCoord anchor = stored.anchor();

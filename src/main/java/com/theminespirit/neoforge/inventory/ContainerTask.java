@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.inventory;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -10,6 +11,7 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
 
 abstract class ContainerTask implements ScriptInstance {
 
@@ -22,6 +24,7 @@ abstract class ContainerTask implements ScriptInstance {
 
     protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {}
 
+    private static final Logger LOGGER = LogUtils.getLogger();
     protected final SpiritEntity spirit;
 
     private final ContainerFinder finder;
@@ -220,9 +223,16 @@ abstract class ContainerTask implements ScriptInstance {
                 runner = isAuto() ? current.runner() : beginTransfer(container);
                 phase = Phase.TRANSFER;
             }
-            case STUCK, TIMEOUT ->
-                fail("дух не дошёл до контейнера: путь заблокирован или слишком далеко"
-                        + (approach.refusal() == null ? "" : " (" + approach.refusal() + ")"));
+            case STUCK, TIMEOUT -> {
+                String reason = "дух не дошёл до контейнера: путь заблокирован или слишком далеко"
+                        + (approach.refusal() == null ? "" : " (" + approach.refusal() + ")");
+                LOGGER.info(
+                        "[container] {} в {}: {}",
+                        spirit.displayName(),
+                        spirit.blockPosition().toShortString(),
+                        reason);
+                fail(reason);
+            }
         }
     }
 

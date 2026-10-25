@@ -34,6 +34,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.movement.PitEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -521,9 +522,16 @@ public final class BoardService {
         }
         for (BoardTicket ticket : board.all()) {
             UUID holder = ticket.assignee().orElse(null);
-            if (BoardActivities.isActivity(ticket.boardCase()) && holder != null && !present.contains(holder)) {
+            if (holder == null || present.contains(holder)) {
+                continue;
+            }
+            if (BoardActivities.isActivity(ticket.boardCase())) {
                 board.vacate(holder);
                 launched.remove(holder);
+            } else if (board.statusOf(ticket.id()).orElse(null) == BoardStatus.ASSIGNED) {
+                LOGGER.info(
+                        "[board] задание {} снято с духа {}: его нет среди живых духов поселения", ticket.id(), holder);
+                board.release(ticket.id());
             }
         }
     }
@@ -532,12 +540,18 @@ public final class BoardService {
         long now = level.getGameTime();
         for (SpiritEntity spirit : spirits) {
             BlockPos feet = spirit.blockPosition();
-            if (spirit.isRemoved() || DigOutScript.open(level, feet)) {
+            if (spirit.isRemoved()) {
                 continue;
             }
             boolean digging = DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
                     && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
             boolean paused = now < digOutAfter.getOrDefault(spirit.getUUID(), 0L);
+            if (DigOutScript.open(level, feet)) {
+                if (!digging && !paused && idleOrActivity(spirit)) {
+                    climbOut(spirit, now);
+                }
+                continue;
+            }
             boolean sealed = !digging && !paused && DigOutScript.sealed(level, feet);
             BlockCoord home = spirit.home().orElseGet(() -> homeOf(spirits));
             if (now >= digOutChecked.getOrDefault(spirit.getUUID(), 0L)) {
@@ -565,6 +579,33 @@ public final class BoardService {
             board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
             spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", home.x(), "y", home.y(), "z", home.z())));
         }
+    }
+
+    private boolean idleOrActivity(SpiritEntity spirit) {
+        if (spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
+            return true;
+        }
+        Launched own = launched.get(spirit.getUUID());
+        return own != null && own.generation() == spirit.taskGeneration();
+    }
+
+    private void climbOut(SpiritEntity spirit, long now) {
+        Optional<PitEscape.Exit> pit = PitRescue.trapped(spirit);
+        if (pit.isEmpty()) {
+            return;
+        }
+        digOutAfter.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
+        PitEscape.Exit exit = pit.orElseThrow();
+        LOGGER.warn(
+                "[incident] дух {} в яме {}: пути наверх нет — поднимается на {} у ({}, {}) к краю",
+                spirit.displayName(),
+                spirit.blockPosition().toShortString(),
+                exit.rise(),
+                exit.dx(),
+                exit.dz());
+        board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
+        launched.remove(spirit.getUUID());
+        spirit.startTask(PitRescue.plan(spirit, exit));
     }
 
     private Optional<BoardCase> occupationOf(SpiritEntity spirit) {
@@ -1230,7 +1271,7 @@ public final class BoardService {
     private static List<SpiritEntity> census(ServerLevel level) {
         List<SpiritEntity> spirits = new ArrayList<>();
         for (Entity entity : level.getAllEntities()) {
-            if (entity instanceof SpiritEntity spirit && !spirit.isRemoved()) {
+            if (entity instanceof SpiritEntity spirit && !spirit.isRemoved() && spirit.isAlive() && !spirit.isDemo()) {
                 spirits.add(spirit);
             }
         }
