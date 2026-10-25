@@ -18,6 +18,11 @@ public final class SettlementLayout {
     // Выравнивание захватывает полосу за линией ограды: уступ земли у забора давал перелезть через него (INC-53).
     public static final int LEVEL_MARGIN = 2;
     public static final int LEVEL_HALF = HALF + LEVEL_MARGIN;
+    // Глубже — пещера под поселением, не место добычи (INC-69).
+    public static final int CAVE_DEPTH = 3;
+    // Клетки построек плана: двор станций вокруг его точки, высота построек над уровнем участка.
+    public static final int YARD_RADIUS = 2;
+    public static final int BUILDING_HEIGHT = 7;
     // Хижина 5×5 и ряд крыльца перед дверью (схема hut_1: 5 в ширину, 6 в глубину с крыльцом).
     public static final int HOUSE_WIDTH = 5;
     public static final int HOUSE_DEPTH = 6;
@@ -59,6 +64,58 @@ public final class SettlementLayout {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
         BlockCoord entrance = mineEntrance(anchor);
         return Math.abs(x - entrance.x()) <= 1 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
+    }
+
+    // Добыча (gather земли, камня) не берёт блоки участка и пещер под поселением (INC-69: 4-й раз тот же карман под
+    // участком). Участок — его площадь с полосой выравнивания на любой высоте; пещера — глубже CAVE_DEPTH под
+    // поверхностью колонки в двух участках от центра. Спуск в шахту плана — исключение.
+    public static boolean gatherForbidden(BlockCoord anchor, BlockCoord target, int depthBelowSurface) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него считается запретная зона добычи");
+        Objects.requireNonNull(target, "Цель добычи не может быть null: проверяется её клетка");
+        if (mineColumn(anchor, target.x(), target.z())) {
+            return false;
+        }
+        int dx = Math.abs(target.x() - anchor.x());
+        int dz = Math.abs(target.z() - anchor.z());
+        if (dx <= LEVEL_HALF && dz <= LEVEL_HALF) {
+            return true;
+        }
+        return depthBelowSurface > CAVE_DEPTH && dx <= 2 * PLOT && dz <= 2 * PLOT;
+    }
+
+    // Клетка постройки плана (ограда, хижина, двор, факелы, шахта): расчистка и выравнивание её не трогают, если там
+    // стоит поставленное поселением — запрет по плану, а не по порядку шагов (переоткрытая расчистка сносила бы
+    // ограду).
+
+    public static boolean planCell(BlockCoord anchor, int x, int y, int z) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: клетки плана считаются от него");
+        if (mineColumn(anchor, x, z)) {
+            return true;
+        }
+        if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
+            return false;
+        }
+        int dx = x - anchor.x();
+        int dz = z - anchor.z();
+        boolean fence =
+                (Math.abs(dx) == HALF && Math.abs(dz) <= HALF) || (Math.abs(dz) == HALF && Math.abs(dx) <= HALF);
+        BlockCoord house = houseOrigin(anchor);
+        boolean hut = x >= house.x() && x < house.x() + HOUSE_WIDTH && z >= house.z() && z < house.z() + HOUSE_DEPTH;
+        BlockCoord yard = workYard(anchor);
+        boolean yardCell = Math.abs(x - yard.x()) <= YARD_RADIUS && Math.abs(z - yard.z()) <= YARD_RADIUS;
+        boolean torch = lighting(anchor).stream().anyMatch(cell -> cell.x() == x && cell.z() == z);
+        return fence || hut || yardCell || torch;
+    }
+
+    // Стоянка подсыпки (INC-72): на участке поселения (кроме спуска в шахту) — только с небом над ней, пещера под
+    // участком не цель; вне участка правило не действует.
+    public static boolean fillStandAllowed(BlockCoord anchor, BlockCoord stand, boolean sky) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него считается участок");
+        Objects.requireNonNull(stand, "Стоянка не может быть null: проверяется её клетка");
+        boolean onPlot = Math.abs(stand.x() - anchor.x()) <= LEVEL_HALF
+                && Math.abs(stand.z() - anchor.z()) <= LEVEL_HALF
+                && !mineColumn(anchor, stand.x(), stand.z());
+        return sky || !onPlot;
     }
 
     // Рабочий двор: здесь дух ставит верстак, сундуки и печь — вне габарита дома.

@@ -48,6 +48,7 @@ public final class CoreScripts {
         specs.addAll(huntingSpecs());
         specs.addAll(fishingSpecs());
         specs.addAll(itemSpecs());
+        specs.add(acquireAtSpec());
         specs.addAll(combatAndClimbSpecs());
         specs.addAll(placementSpecs());
         specs.addAll(fillAndClearSpecs());
@@ -993,6 +994,26 @@ public final class CoreScripts {
                                 ParamSpec.bool("fresh", false, false)),
                         List.of(),
                         List.of("предмет есть в инвентаре")));
+    }
+
+    // Добор с местом добычи (INC-68): земля на подсыпку участка — за оградой, не из земли участка.
+    private static ScriptSpec acquireAtSpec() {
+        return spec(
+                "acquire_at",
+                "иметь предмет в инвентаре; не хватает — добыть у заданного места (земля подсыпки за оградой)",
+                List.of(
+                        ParamSpec.text(ITEM, true),
+                        ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
+                        ParamSpec.integer(
+                                "x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT, CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                        ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
+                        ParamSpec.integer(
+                                "z",
+                                true,
+                                -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
+                                CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                List.of(),
+                List.of("предмет есть в инвентаре"));
     }
 
     private static List<ScriptSpec> combatAndClimbSpecs() {

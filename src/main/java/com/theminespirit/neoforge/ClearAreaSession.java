@@ -16,7 +16,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
-import com.theminespirit.core.policy.PolicyId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +42,7 @@ public class ClearAreaSession {
     private static final double APPROACH_ARRIVAL = 0.6;
     // Строка прогресса — через столько срезанных блоков (INC-67: расчистка шла без единой строки).
     private static final int PROGRESS_EVERY = 16;
+    private static final int PROTECTED_LOGGED = 10;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int COLLECT_RADIUS = 4;
     private static final int LEFTOVER_SHOWN = 4;
@@ -74,7 +74,6 @@ public class ClearAreaSession {
     protected int restoredSkipped;
 
     private final BuildResult tally = new BuildResult();
-    private int keptBlocks;
     private final boolean demolish;
     private List<String> leftover = List.of();
 
@@ -251,6 +250,14 @@ public class ClearAreaSession {
     }
 
     private void prepareBreak() {
+        if (PlanCells.keep(level, toPos(currentTarget))) {
+            // Постройка плана поселения (ограда, хижина, двор, факелы, шахта) — не цель расчистки (запрет по плану).
+            protectedSkipped++;
+            tally.skipped();
+            releaseCurrent();
+            state = State.PICK;
+            return;
+        }
         if (!(MiningSafety.canBreak(currentTarget, safety) instanceof BreakSafety.Safe)) {
             unsafe++;
             tally.skipped();
@@ -260,10 +267,18 @@ public class ClearAreaSession {
         }
         BlockBreaker.Begin begin = breaker.begin(toPos(currentTarget), false, demolish);
         if (begin instanceof BlockBreaker.Protected kept) {
-            if (kept.policy() == PolicyId.PROTECTED_BLOCKS) {
-                keptBlocks++;
-            }
             protectedSkipped++;
+            if (protectedSkipped <= PROTECTED_LOGGED) {
+                // Что именно защищено и почему (INC-71: «защищено: 22» на участке без имён клеток).
+                LOGGER.info(
+                        "[clear] {}: защищено {} — {}: {} ({})",
+                        spirit.getName().getString(),
+                        currentTarget,
+                        BuiltInRegistries.BLOCK.getKey(
+                                level.getBlockState(toPos(currentTarget)).getBlock()),
+                        kept.policy(),
+                        kept.reason());
+            }
             tally.skipped();
             releaseCurrent();
             state = State.PICK;
@@ -342,7 +357,9 @@ public class ClearAreaSession {
         }
         // Провал — только если ломать было что, но ничего не сломано; чистый участок — выполненная расчистка.
         // Блоки под защитой (верстак, факелы, чёрный список) участок и должен сохранить — это не провал.
-        if (removed == 0 && skippedTotal() - keptBlocks > 0) {
+        // Защищённые клетки пропускаются и ящик не валят: провал — только если не убрано ничего из доступного
+        // (непрочное, без стоянки, недостижимое), INC-71: «убрано 0 из 1156; защищено: 22; FAILED».
+        if (removed == 0 && skippedTotal() - protectedSkipped > 0) {
             fail(summary() + "; не убран ни один блок");
             return;
         }
