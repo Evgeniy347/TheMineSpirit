@@ -12,7 +12,6 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -28,8 +27,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ChunkLoadingGameTests {
     private ChunkLoadingGameTests() {}
 
-    // thenWaitUntil, а не succeedAfter: дух может быть удалён чужим reset структуры
-    @GameTest(template = "arena", batch = "chunk_loading_move", timeoutTicks = 200)
+    // succeedWhen, а не succeedAfter: дух может быть удалён чужим reset структуры
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void chunkLoading_SpiritSpawnedMovedAndDiscarded_KeepsTickingSquare(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         int radius = SpiritConfig.radiusFor(level);
@@ -49,50 +48,50 @@ public final class ChunkLoadingGameTests {
                     "Дальний угол квадрата обязан тикать, как у игрока: иначе дух не выполняет задачу вдали от игрока");
 
             spirit.teleportTo(spirit.getX() + 16.0, spirit.getY(), spirit.getZ());
-            helper.startSequence()
-                    .thenWaitUntil(() -> {
-                        helper.assertTrue(
-                                !spirit.isRemoved(),
-                                "Дух удалён до сдвига набора (причина: " + spirit.getRemovalReason()
-                                        + "): телепорт на +16 уводит его в структуру соседнего теста, её reset "
-                                        + "удаляет духа. Исправление: шаблон arena или телепорт в сторону от сетки");
-                        ChunkPos moved = spirit.chunkPosition();
-                        helper.assertTrue(
-                                moved.x == center.x + 1 && moved.z == center.z,
-                                "Дух обязан оказаться в соседнем по X чанке: был (" + center.x + ", " + center.z
-                                        + "), стал (" + moved.x + ", " + moved.z + ")");
-                        Set<ChunkCoord> expectedMoved = ChunkSquare.chunks(new ChunkCoord(moved.x, moved.z), radius);
-                        helper.assertTrue(
-                                spirit.trackedChunks().equals(expectedMoved),
-                                "После перехода в соседний чанк набор обязан сдвинуться на один ряд: ожидалось "
-                                        + expectedMoved.size() + " чанков вокруг (" + moved.x + ", " + moved.z
-                                        + "), удержано "
-                                        + spirit.trackedChunks().size()
-                                        + ". Сдвиг делает SpiritChunkLoader в тик духа, а после телепорта движок "
-                                        + "переводит духа в секцию чанка назначения: пока её статус не TICKING, "
-                                        + "дух не тикает (tickCount замирает) и набор стоит. Ждём тик духа "
-                                        + "thenWaitUntil, а не фиксированные 20 тиков");
-                    })
-                    .thenExecute(() -> {
-                        long ticketsBeforeDiscard = ticketCount(level);
-                        spirit.discard();
-                        long ticketsAfterDiscard = ticketCount(level);
-                        helper.assertTrue(
-                                spirit.trackedChunks().isEmpty(),
-                                "После discard дух обязан перестать держать чанки: осталось "
-                                        + spirit.trackedChunks().size());
-                        helper.assertTrue(
-                                ticketsBeforeDiscard - ticketsAfterDiscard == squareSize(radius),
-                                "После discard обязаны сняться ровно все билеты духа: ожидалось "
-                                        + squareSize(radius) + ", снялось "
-                                        + (ticketsBeforeDiscard - ticketsAfterDiscard)
-                                        + ". Иначе мёртвый дух держит чанки нагруженными навсегда");
-                    })
-                    .thenSucceed();
+            boolean[] discarded = {false};
+            helper.succeedWhen(() -> {
+                if (!discarded[0]) {
+                    helper.assertTrue(
+                            !spirit.isRemoved(),
+                            "Дух удалён до сдвига набора (причина: " + spirit.getRemovalReason()
+                                    + "): телепорт на +16 уводит его в структуру соседнего теста, её reset "
+                                    + "удаляет духа. Исправление: шаблон arena или телепорт в сторону от сетки");
+                    ChunkPos moved = spirit.chunkPosition();
+                    helper.assertTrue(
+                            moved.x == center.x + 1 && moved.z == center.z,
+                            "Дух обязан оказаться в соседнем по X чанке: был (" + center.x + ", " + center.z
+                                    + "), стал (" + moved.x + ", " + moved.z + ")");
+                    Set<ChunkCoord> expectedMoved = ChunkSquare.chunks(new ChunkCoord(moved.x, moved.z), radius);
+                    helper.assertTrue(
+                            spirit.trackedChunks().equals(expectedMoved),
+                            "После перехода в соседний чанк набор обязан сдвинуться на один ряд: ожидалось "
+                                    + expectedMoved.size() + " чанков вокруг (" + moved.x + ", " + moved.z
+                                    + "), удержано "
+                                    + spirit.trackedChunks().size()
+                                    + ". Сдвиг делает SpiritChunkLoader в тик духа, а после телепорта движок "
+                                    + "переводит духа в секцию чанка назначения: пока её статус не TICKING, "
+                                    + "дух не тикает (tickCount замирает) и набор стоит. Ждём тик духа "
+                                    + "succeedWhen, а не фиксированные 20 тиков");
+                }
+                discarded[0] = true;
+                long ticketsBeforeDiscard = ticketCount(level);
+                spirit.discard();
+                long ticketsAfterDiscard = ticketCount(level);
+                helper.assertTrue(
+                        spirit.trackedChunks().isEmpty(),
+                        "После discard дух обязан перестать держать чанки: осталось "
+                                + spirit.trackedChunks().size());
+                helper.assertTrue(
+                        ticketsBeforeDiscard - ticketsAfterDiscard == squareSize(radius),
+                        "После discard обязаны сняться ровно все билеты духа: ожидалось "
+                                + squareSize(radius) + ", снялось "
+                                + (ticketsBeforeDiscard - ticketsAfterDiscard)
+                                + ". Иначе мёртвый дух держит чанки нагруженными навсегда");
+            });
         });
     }
 
-    @GameTest(template = "empty", batch = "chunk_loading_unload", timeoutTicks = 200)
+    @SceneStep(template = "empty", timeoutTicks = 200)
     public static void chunkLoading_UnloadedToChunk_KeepsTickets(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         onlinePlayer(helper);
@@ -118,7 +117,7 @@ public final class ChunkLoadingGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "chunk_loading_dimension", timeoutTicks = 200)
+    @SceneStep(template = "empty", timeoutTicks = 200)
     public static void chunkLoading_ChangedDimension_ReleasesSourceTickets(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         int radius = SpiritConfig.radiusFor(level);

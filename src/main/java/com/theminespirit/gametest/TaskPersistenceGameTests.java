@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -29,7 +28,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class TaskPersistenceGameTests {
     private TaskPersistenceGameTests() {}
 
-    @GameTest(batch = "task_savedRunningSequence", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void savedRunningSequence_ResumesAtSecondStep_AndReachesTarget(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -73,7 +72,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_savedCancelledTask", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void savedCancelledTask_AfterReload_StaysCancelledAndStill(GameTestHelper helper) {
         buildFloor(helper);
         SpiritEntity spirit = loadTask(helper, terminalJson(RunStatus.CANCELLED, null), new BlockPos(1, 1, 1));
@@ -91,7 +90,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
+    @SceneStep(template = "empty", timeoutTicks = 120)
     public static void savedFailedTask_AfterReload_KeepsReasonVerbatim(GameTestHelper helper) {
         String reason = "цель недостижима: провал записан дословно";
         SpiritEntity spirit = loadTask(helper, terminalJson(RunStatus.FAILED, reason), new BlockPos(1, 1, 1));
@@ -109,7 +108,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_corruptedSpiritTask", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void corruptedSpiritTask_AfterReload_MarksFailedAndStaysAlive(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = loadTask(helper, "{это не json", new BlockPos(1, 1, 1));
@@ -129,7 +128,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
+    @SceneStep(template = "empty", timeoutTicks = 120)
     public static void futureVersionSpiritTask_AfterReload_MentionsVersionInReason(GameTestHelper helper) {
         String json = "{\"version\":999,\"status\":\"SUCCEEDED\"}";
         SpiritEntity spirit = loadTask(helper, json, new BlockPos(1, 1, 1));
@@ -147,7 +146,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
+    @SceneStep(template = "empty", timeoutTicks = 120)
     public static void unknownScriptInTask_AfterReload_MentionsScriptInReason(GameTestHelper helper) {
         TaskSnapshot snapshot = new TaskSnapshot(
                 TaskSnapshot.VERSION,
@@ -170,7 +169,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_legacySpiritWithoutTaskKey", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void legacySpiritWithoutTaskKey_AfterReload_HasNoTaskAndKeepsInventory(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -192,7 +191,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_savedTaskAndInventory", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void savedTaskAndInventory_AfterReload_KeepsBoth(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));
@@ -222,7 +221,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_saveWhileRunning", template = "arena", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void saveWhileRunning_DoesNotDisturbOriginalTask_UntilItReachesTarget(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -248,7 +247,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_runningTask", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void runningTask_ForHundredTicks_BuildsNoSnapshot(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -265,7 +264,7 @@ public final class TaskPersistenceGameTests {
         });
     }
 
-    @GameTest(batch = "task_saveBeforeFirstTick", template = "arena", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void saveBeforeFirstTick_OnLiveSpirit_KeepsTaskBytesUnchanged(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         BlockPos target = helper.absolutePos(new BlockPos(2, 1, 1));

@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.experience.SettlementExperience;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -41,7 +40,7 @@ public final class ExperienceGameTests {
         return helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
     }
 
-    @GameTest(template = "arena", batch = "xp_mob_kill", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void zombie_SpiritKillWithOnePlayerOnline_AwardsExperienceAndNoOrbs(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, ZOMBIE_AT, "xp_kill_single");
@@ -67,7 +66,7 @@ public final class ExperienceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "xp_mob_kill_two", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void zombie_SpiritKillWithTwoPlayersOnline_SplitsExperienceEvenly(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         ServerPlayer first = GameTestFixtures.mockPlayer(helper, ZOMBIE_AT, "xp_kill_two_a");
@@ -95,7 +94,7 @@ public final class ExperienceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "xp_block_redstone", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void blockBreaker_SpiritMinesRedstoneOre_AwardsExperienceAndNoOrbs(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
@@ -119,7 +118,7 @@ public final class ExperienceGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "xp_block_diamond", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void blockBreaker_SpiritMinesDiamondOre_PlayerGainsAtLeastThreeExperience(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
@@ -142,7 +141,7 @@ public final class ExperienceGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "xp_pool", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void blockBreaker_SpiritMinesOreWithNoPlayersOnline_PoolsThenGivesOnLogin(GameTestHelper helper) {
         SettlementExperience.get(helper.getLevel().getServer()).drain();
         SpiritEntity spirit = spirit(helper);
@@ -174,7 +173,7 @@ public final class ExperienceGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "xp_mob_finish_two", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void zombie_TwoPlayerHitZombiesFinishedBySpirit_AwardsBothAndNoOrbs(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 3), "xp_finish_player");
