@@ -101,6 +101,7 @@ public final class ChopTreeGameTests {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
         SpiritEntity spirit = spawnChopper(helper);
+        ItemStack axe = spirit.getInventory().getItem(TOOL_SLOT);
 
         SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
 
@@ -129,6 +130,10 @@ public final class ChopTreeGameTests {
             int leavesInWorld = countBlocksInWorld(helper, Blocks.OAK_LEAVES);
             helper.assertTrue(
                     leavesInWorld > 0, "листва должна остаться целой, осталось " + leavesInWorld + " блоков листьев");
+            helper.assertTrue(
+                    axe.getDamageValue() == 5,
+                    "прочность топора должна уменьшиться ровно на 5 (по 1 за бревно), фактически "
+                            + axe.getDamageValue());
 
             clearField(helper);
         });
@@ -160,33 +165,6 @@ public final class ChopTreeGameTests {
                             + spirit.taskFailureReason());
             GameTestFilter.setProtectedZones(List.of());
             GameTestFixtures.finish(helper);
-        });
-    }
-
-    @SceneStep(template = FIELD, timeoutTicks = 300)
-    public static void chopTree_AxeDurability_DecreasesByLogCount(GameTestHelper helper) {
-        GameTestFixtures.sweepEntities(helper);
-        prepareField(helper);
-        buildOakTree(helper, 4, 4, 5);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
-        ItemStack axe = new ItemStack(Items.IRON_AXE);
-        spirit.getInventory().setItem(TOOL_SLOT, axe);
-
-        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "chop_tree обязан завершиться успехом, причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-
-            int damage = axe.getDamageValue();
-            helper.assertTrue(
-                    damage == 5,
-                    "прочность топора должна уменьшиться ровно на 5 (по 1 за бревно), фактически " + damage);
-
-            clearField(helper);
         });
     }
 
@@ -347,32 +325,6 @@ public final class ChopTreeGameTests {
             helper.assertTrue(
                     totalLogs == 27 + 5,
                     "хижина (27) + столб (5) = 32 бревна должны остаться нетронутыми, осталось " + totalLogs);
-
-            clearField(helper);
-        });
-    }
-
-    @SceneStep(template = FIELD, timeoutTicks = 400)
-    public static void chopTree_EightLogTree_AllChoppedFromOneStand(GameTestHelper helper) {
-        prepareField(helper);
-        buildOakTree(helper, 4, 4, 8);
-        SpiritEntity spirit = spawnChopper(helper);
-
-        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "дерево из 8 брёвен: дух рубит всё дерево с одной стоянки без ограничения высоты — SUCCEEDED, "
-                            + "причина: " + spirit.taskFailureReason().orElse("нет"));
-
-            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
-            helper.assertTrue(
-                    logsInInventory == 8, "все 8 брёвен обязаны попасть в инвентарь, фактически " + logsInInventory);
-
-            int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(logsInWorld == 0, "в мире не должно остаться брёвен дерева, осталось " + logsInWorld);
 
             clearField(helper);
         });

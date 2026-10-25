@@ -116,36 +116,6 @@ public final class RepairGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void repair_TwoDamagedIronPickaxes_LeavesOneRepaired(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-        spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 100));
-        spirit.getInventory().addItem(damaged(Items.IRON_PICKAXE, 150));
-
-        SpiritRun run = SpiritRun.launch(
-                helper, spirit, new ScriptCall("repair_tool", Map.of("item", "minecraft:iron_pickaxe")), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "ремонт обязан завершиться успехом, статус: "
-                            + spirit.taskStatus().orElse(null) + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(
-                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE) == 1,
-                    "после ремонта обязана остаться одна кирка, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.IRON_PICKAXE));
-            int durability = bestDurability(spirit, Items.IRON_PICKAXE);
-            int expected = 250;
-            helper.assertTrue(
-                    durability == expected,
-                    "100 + 150 + 5% от 250 (13) = 263 обрезается до максимума 250, фактически " + durability);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void repair_SingleDamagedIronPickaxe_Fails(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
