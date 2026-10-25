@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -78,7 +77,7 @@ public final class SchematicGameTests {
         return found;
     }
 
-    @GameTest(template = "arena", batch = "build_schematic_shared", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_TwoSpiritsOneHouse_EachBlockPlacedOnce(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity firstSpirit = spawnWith(helper, new BlockPos(1, 1, 1), 17);
@@ -110,7 +109,7 @@ public final class SchematicGameTests {
 
     // Свободный дух стоит в клетке схемы: строитель отводит его за габарит и ставит блок (хижина вставала 100 из 101
     // «клетку занимает живое существо», приёмка «джунгли» 24.10).
-    @GameTest(template = "arena", batch = "build_schematic_make_way", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_IdleSpiritInCell_MovedAsideAndHouseDone(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity builder = spawnWith(helper, new BlockPos(1, 1, 1), 17);
@@ -134,7 +133,7 @@ public final class SchematicGameTests {
         return spirit.taskStatus().isPresent() && spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED;
     }
 
-    @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_HouseFromFile_StandsWithCountedMaterials(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 17);
@@ -161,7 +160,7 @@ public final class SchematicGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_AlreadyBuilt_SucceedsWithoutSpending(GameTestHelper helper) {
         prepare(helper);
         buildHouseByHand(helper, ANCHOR);
@@ -186,7 +185,7 @@ public final class SchematicGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_schematic", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_NeedSeventeenHaveFive_FailsWithNumbersKeepsFive(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 5);

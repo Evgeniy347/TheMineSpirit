@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -26,7 +25,7 @@ public final class BuildFarmGameTests {
 
     private BuildFarmGameTests() {}
 
-    @GameTest(template = "arena", batch = "build_farm_script", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void buildFarm_PlotNearWater_TillsAndPlantsEveryCell(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

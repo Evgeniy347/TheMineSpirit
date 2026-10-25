@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -46,7 +45,7 @@ public final class BuildResultGameTests {
         return ((ScriptResult.Data) spirit.taskResult().orElseThrow()).fields();
     }
 
-    @GameTest(template = "arena", batch = "build_result", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_SucceededTask_ResultHoldsPlacedCounts(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.COBBLESTONE, 2));
@@ -93,7 +92,7 @@ public final class BuildResultGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_result", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void placeBlock_SucceededTask_ResultHoldsSinglePlaced(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.COBBLESTONE, 1));
@@ -128,7 +127,7 @@ public final class BuildResultGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_result", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clearArea_SucceededTask_ResultHoldsRemovedCounts(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(4, 1, 4), Blocks.COBBLESTONE);
@@ -171,7 +170,7 @@ public final class BuildResultGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_result", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void digArea_SucceededTask_ResultHoldsRemovedCounts(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(4, 1, 4), Blocks.STONE);
@@ -199,7 +198,7 @@ public final class BuildResultGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_result", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_SucceededTask_ResultHoldsPlacedCounts(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.COBBLESTONE, 17));
@@ -234,7 +233,7 @@ public final class BuildResultGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_result", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_Shortage_ResultEmptyWithNumberedReason(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.COBBLESTONE, 5));

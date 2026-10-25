@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -53,7 +52,7 @@ public final class ShelterBuildGameTests {
 
     // [флак] полная схема 6×6: расчистка 36 клеток земли, план, 130 блоков корпуса, полублок и факел;
     // запас на подходы полного прогона
-    @GameTest(template = "arena", batch = "shelter_cheap", timeoutTicks = 6000)
+    @SceneStep(template = "arena", timeoutTicks = 6000)
     public static void shelter_CheapMaterial_BuildsAndSpiritLeaves(GameTestHelper helper) {
         prepare(helper);
         BlockPos origin = START.offset(-3, -1, -3);
@@ -122,7 +121,7 @@ public final class ShelterBuildGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "shelter_short", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void shelter_ShortMaterial_FailsBeforeFirstBlock(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(
@@ -154,7 +153,7 @@ public final class ShelterBuildGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "shelter_torch", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void shelter_NoTorch_FailsBeforeFirstBlock(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(

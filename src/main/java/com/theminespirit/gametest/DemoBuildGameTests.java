@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -66,7 +65,7 @@ public final class DemoBuildGameTests {
 
     // [флак] 82 блока склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "demo_arena", batch = "demo_build", timeoutTicks = 2600)
+    @SceneStep(template = "demo_arena", timeoutTicks = 2600)
     public static void demo_StorageHutCommand_ChestAndSpiritBuildThenSpiritLeaves(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
@@ -111,7 +110,7 @@ public final class DemoBuildGameTests {
 
     // [флак] Загон строится двумя уровнями: дух проходит подход к 4+7 клеткам забора с лесами; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "demo_arena", batch = "demo_upgrade", timeoutTicks = 2600)
+    @SceneStep(template = "demo_arena", timeoutTicks = 2600)
     public static void demo_PenUpgradeOneToTwo_LeavesBiggerPen(GameTestHelper helper) throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
         BlockPos anchorRelative = new BlockPos(15, 1, 15);

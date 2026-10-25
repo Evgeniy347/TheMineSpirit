@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -50,7 +49,7 @@ public final class DemoSpiritGameTests {
         return helper.getLevel().getEntitiesOfClass(SpiritEntity.class, box, spirit -> !spirit.isRemoved());
     }
 
-    @GameTest(template = "demo_arena", batch = "demo_spirit", timeoutTicks = 400)
+    @SceneStep(template = "demo_arena", timeoutTicks = 400)
     public static void demoSpirit_ZombieThreeBlocksAway_IsNotTargetedAndNeverRetreats(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
@@ -103,7 +102,7 @@ public final class DemoSpiritGameTests {
         });
     }
 
-    @GameTest(template = "demo_arena", batch = "demo_spirit", timeoutTicks = 400)
+    @SceneStep(template = "demo_arena", timeoutTicks = 400)
     public static void demoSpirit_SecondRunSamePlayer_StopsPreviousSession(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
@@ -135,7 +134,7 @@ public final class DemoSpiritGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "demo_arena", batch = "demo_spirit", timeoutTicks = 400)
+    @SceneStep(template = "demo_arena", timeoutTicks = 400)
     public static void demoSpirit_RemovedSpirit_StripsArmor(GameTestHelper helper) throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

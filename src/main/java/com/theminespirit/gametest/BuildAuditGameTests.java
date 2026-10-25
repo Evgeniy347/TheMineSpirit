@@ -16,7 +16,6 @@ import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
@@ -50,7 +49,7 @@ public final class BuildAuditGameTests {
                 1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "minecraft:oak_stairs", Map.of("facing", "east"))));
     }
 
-    @GameTest(template = "arena", batch = "build_audit_selftest", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void audit_BlockShiftedByOne_ReportsMissingAndExtra(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         BlockCoord origin = origin(helper, new BlockPos(3, 1, 3));
@@ -74,7 +73,7 @@ public final class BuildAuditGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "build_audit_selftest", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void audit_ExtraBlock_ReportsExtraPlacement(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         BlockCoord origin = origin(helper, new BlockPos(3, 1, 3));
@@ -96,7 +95,7 @@ public final class BuildAuditGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "build_audit_selftest", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void audit_WrongFacing_ReportsStateMismatch(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         BlockCoord origin = origin(helper, new BlockPos(3, 1, 3));
@@ -116,7 +115,7 @@ public final class BuildAuditGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "build_audit_wall", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void build_WallSixHigh_PlacedWithoutScaffoldsAndExtras(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -150,7 +149,7 @@ public final class BuildAuditGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_audit_state", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void build_TwoPartBlocksAndNeighbourShapes_StandsWhole(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -202,7 +201,7 @@ public final class BuildAuditGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_audit_placer", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void blockPlacer_LivingEntityInCell_RefusesOccupied(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -223,7 +222,7 @@ public final class BuildAuditGameTests {
     }
 
     // [флак] Дом из 17 блоков с одной занятой клеткой: перебор стоянок и повторный проход перед провалом.
-    @GameTest(template = "arena", batch = "build_audit_blocked", timeoutTicks = 800)
+    @SceneStep(template = "arena", timeoutTicks = 800)
     public static void build_UnbreakableBlockInCell_FailsNamingBlock(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -256,7 +255,7 @@ public final class BuildAuditGameTests {
     }
 
     // [флак] 17 блоков плиты и одна очистка клетки от земли: с запасом на подходы.
-    @GameTest(template = "arena", batch = "build_audit_dirt_cell", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void build_DirtInSchemeCell_ClearedThenBuilt(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -304,7 +303,7 @@ public final class BuildAuditGameTests {
     }
 
     // [флак] Восемь блоков с поворотом: дух подходит к каждой клетке с запасом.
-    @GameTest(template = "arena", batch = "build_audit_state_rot", timeoutTicks = 1800)
+    @SceneStep(template = "arena", timeoutTicks = 1800)
     public static void build_StateDemoRotated90_StatesTurnWithScheme(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

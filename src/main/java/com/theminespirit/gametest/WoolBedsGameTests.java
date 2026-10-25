@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -123,8 +122,7 @@ public final class WoolBedsGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "woolbeds_gate", timeoutTicks = 200)
-    @SettlementSystems(board = true)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true)
     public static void woolWatch_PenGate_OnlyAtFourSheep(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -174,7 +172,7 @@ public final class WoolBedsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "woolbeds_shear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void shear_SheepInPen_ShearedAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -197,7 +195,7 @@ public final class WoolBedsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "woolbeds_hunt", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void hunt_PenSheepAlive_WildSheepCulled(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -230,7 +228,7 @@ public final class WoolBedsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "woolbeds_string", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void weave_StringEight_OneWoolFourLeft(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -256,7 +254,7 @@ public final class WoolBedsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "woolbeds_bed", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void craft_ThreeWoolThreePlanks_BedInInventory(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

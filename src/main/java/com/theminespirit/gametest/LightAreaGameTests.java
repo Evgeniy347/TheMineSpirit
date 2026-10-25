@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -91,7 +90,7 @@ public final class LightAreaGameTests {
         return ((ScriptResult.Data) spirit.taskResult().orElseThrow()).fields();
     }
 
-    @GameTest(template = "arena", batch = "light_area", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void light_DarkRoom_EveryCellLitByOneTorch(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);
@@ -139,7 +138,7 @@ public final class LightAreaGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "light_area", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void light_NoTorches_ReportsMissingPartial(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);

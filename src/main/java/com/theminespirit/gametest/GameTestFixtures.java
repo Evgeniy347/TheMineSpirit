@@ -7,6 +7,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.neoforge.MineOreLedger;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
@@ -97,6 +98,7 @@ final class GameTestFixtures {
         ServerLevel level = helper.getLevel();
         SettlementPlotStore.get(level).clear();
         CoordinatorRegistry.clear();
+        forgetChests(level);
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         MineOreLedger ores = MineOreLedger.get(level);
         AABB box = area(helper, clearHeight).inflate(0, STAGE_BELOW, 0);
@@ -109,6 +111,16 @@ final class GameTestFixtures {
             placed.unmark(pos);
             placed.unmarkSpirit(pos);
         });
+    }
+
+    // Реестр сундуков поселения общий на мир, а план стройки берёт материал из любого сундука реестра: сундук прошлого
+    // шага или прошлой сцены (её площадка осталась в мире) уводил духа за чужим материалом. Укрупнённая сцена одна в
+    // своей пачке, пачки идут по очереди — шаг начинает с пустым реестром, свои сундуки он ставит сам.
+    static void forgetChests(ServerLevel level) {
+        SettlementChestStore store = SettlementChestStore.get(level);
+        for (BlockCoord chest : store.chests().all()) {
+            store.forget(new BlockPos(chest.x(), chest.y(), chest.z()));
+        }
     }
 
     private static void clearBlocks(GameTestHelper helper, int clearHeight) {

@@ -51,6 +51,7 @@ final class SceneSteps {
                 timeout >= total,
                 "тайм-аут сцены " + timeout + " меньше суммы бюджетов шагов (+1 тик на переход) " + total
                         + ": последние шаги упали бы по чужому тайм-ауту; поставь timeoutTicks = " + total);
+        GameTestFixtures.forgetChests(helper.getLevel());
         SceneSteps scene = new SceneSteps(helper, steps);
         scene.startNext();
         helper.onEachTick(scene::tick);
