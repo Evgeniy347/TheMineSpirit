@@ -25,7 +25,7 @@ class TownSnapshotTests {
                 snapshot.lots().size(),
                 "Карта показывает каждое место плана: постройка без прямоугольника пропадёт с экрана J");
         TownSnapshot.Lot hut = snapshot.lots().stream()
-                .filter(lot -> lot.id().equals(StageSites.HUT))
+                .filter(lot -> StageSites.HUT.equals(lot.id()))
                 .findFirst()
                 .orElseThrow();
         assertEquals(

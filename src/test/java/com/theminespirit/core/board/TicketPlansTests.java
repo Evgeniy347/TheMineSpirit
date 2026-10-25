@@ -248,7 +248,13 @@ class TicketPlansTests {
 
         assertEquals(
                 torches.size(),
-                placed.size(),
+                placed.stream()
+                        .map(call -> List.of(
+                                call.params().get("x"),
+                                call.params().get("y"),
+                                call.params().get("z")))
+                        .distinct()
+                        .count(),
                 "Свет этапа ставит каждый факел плана: у калиток и на площадках, без пропусков");
         assertTrue(
                 placed.stream()

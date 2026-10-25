@@ -100,7 +100,7 @@ public final class FirstStepsPlan {
                 BoardCase.CLEAR_GROUNDS,
                 SettlementFacts::groundsCleared,
                 facts -> facts.plotLevel() || facts.done().contains(BoardCase.CLEAR_GROUNDS)));
-        steps.add(new Step(BoardCase.STOCK_CHESTS, facts -> facts.chests() >= 2));
+        steps.add(new Step(BoardCase.STOCK_CHESTS, facts -> facts.chests() >= 2, facts -> facts.chests() >= 2));
         steps.add(Step.layout(BoardCase.BUILD_MINE, SettlementFacts::mineEntrance));
         for (BoardCase tool : ToolSet.stone()) {
             steps.add(new Step(tool, facts -> ToolSet.covered(tool, facts.tools())));

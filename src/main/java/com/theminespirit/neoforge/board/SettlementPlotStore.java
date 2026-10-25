@@ -69,11 +69,15 @@ public final class SettlementPlotStore extends SavedData {
         }
         StageSite cached = site;
         if (cached == null || cached.anchor().y() != current.anchor().y()) {
-            cached = StageSites.of(
+            Optional<StageSite> found = StageSites.find(
                     plan,
                     FIRST_STAGE,
                     current.anchor().y(),
                     DataTables.INSTANCE.town().current());
+            if (found.isEmpty()) {
+                return Optional.empty();
+            }
+            cached = found.orElseThrow();
             site = cached;
         }
         return Optional.of(cached);

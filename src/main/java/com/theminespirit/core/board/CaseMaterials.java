@@ -13,6 +13,7 @@ import com.theminespirit.core.script.BuildSchematicParams;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -52,7 +53,7 @@ public final class CaseMaterials {
                 }
                 case SequenceNode sequence -> queue.addAll(sequence.steps());
                 case RepeatNode repeat -> queue.add(repeat.step());
-                case FallbackNode fallback -> queue.addAll(fallback.steps());
+                case FallbackNode fallback -> queue.addAll(alternatives(fallback));
                 case ParallelNode parallel -> queue.addAll(parallel.steps());
                 case ConditionNode condition -> {
                     queue.add(condition.thenStep());
@@ -67,6 +68,12 @@ public final class CaseMaterials {
         placed.forEach((item, count) -> merge(need, item, count));
         acquired.forEach((item, count) -> need.merge(item, count, Math::max));
         return Map.copyOf(need);
+    }
+
+    private static List<TaskNode> alternatives(FallbackNode fallback) {
+        TaskNode first = fallback.steps().get(0);
+        boolean retriedPlace = first instanceof ScriptCall call && "place_block".equals(call.script());
+        return retriedPlace ? List.of(first) : fallback.steps();
     }
 
     private record Taken(Map<String, Integer> acquired, Map<String, Integer> placed, Map<String, Integer> crafted) {}

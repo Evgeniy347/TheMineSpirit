@@ -10,6 +10,7 @@ import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
@@ -20,6 +21,7 @@ public final class StageBlocks {
     public static final String SUPPORT = "minecraft:dirt";
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final int CLEAR_ABOVE = 2;
+    private static final int POST_DRIFT = 3;
 
     private StageBlocks() {}
 
@@ -28,9 +30,9 @@ public final class StageBlocks {
             case BUILD_FENCE -> fence(level, site, part);
             case LIGHTING -> torches(level, site);
             case PLANT_GROVE -> grove(level, site);
-            case STOCK_CHESTS -> grounded(level, site, StagePlans.yardBlocks(site, part));
-            case CRAFT_FURNACE -> grounded(level, site, List.of(new PlannedBlock(site.furnace(), StagePlans.FURNACE)));
-            case BUILD_HOUSE -> grounded(level, site, StagePlans.palisade(site));
+            case STOCK_CHESTS -> StagePlans.yardBlocks(site, part);
+            case CRAFT_FURNACE -> List.of(new PlannedBlock(site.furnace(), StagePlans.FURNACE));
+            case BUILD_HOUSE -> palisade(level, site);
             default -> List.of();
         };
     }
@@ -54,11 +56,16 @@ public final class StageBlocks {
         int from = part >= 1 && part <= parts ? (part - 1) * size / parts : 0;
         int to = part >= 1 && part <= parts ? part * size / parts : size;
         List<PlannedBlock> blocks = new ArrayList<>();
+        Set<ColumnMask.Cell> torchPosts = Set.copyOf(site.torchPosts());
         for (int index = from; index < to; index++) {
             ColumnMask.Cell post = ring.posts().get(index);
             int ground =
                     GroundProbe.feet(level, post.x(), post.z(), site.anchor().y());
-            int base = postY(level, site, post);
+            int planned = postY(level, site, post);
+            int base = builtPost(level, post, planned);
+            if (base != planned) {
+                ground = base;
+            }
             for (int y = base; y <= base + CLEAR_ABOVE; y++) {
                 if (blocking(level.getBlockState(new BlockPos(post.x(), y, post.z())))) {
                     blocks.add(new PlannedBlock(new BlockCoord(post.x(), y, post.z()), StagePlans.AIR));
@@ -71,29 +78,43 @@ public final class StageBlocks {
                     ? StagePlans.FENCE
                     : ring.alongX(index) ? StagePlans.GATE_NORTH : StagePlans.GATE_EAST;
             blocks.add(new PlannedBlock(new BlockCoord(post.x(), base, post.z()), block));
+            if (torchPosts.contains(post)) {
+                blocks.add(new PlannedBlock(new BlockCoord(post.x(), base + 1, post.z()), StagePlans.TORCH));
+            }
         }
         return List.copyOf(blocks);
     }
 
     private static List<PlannedBlock> torches(ServerLevel level, StageSite site) {
-        List<PlannedBlock> blocks = new ArrayList<>();
-        for (ColumnMask.Cell post : site.torchPosts()) {
-            int base = postY(level, site, post);
-            if (level.getBlockState(new BlockPos(post.x(), base, post.z())).is(BlockTags.FENCES)) {
-                blocks.add(new PlannedBlock(new BlockCoord(post.x(), base + 1, post.z()), StagePlans.TORCH));
-            }
-        }
-        List<PlannedBlock> planned = site.groundTorches().stream()
-                .map(cell -> new PlannedBlock(cell, StagePlans.TORCH))
-                .toList();
-        for (PlannedBlock torch : grounded(level, site, planned)) {
-            BlockCoord ground = torch.at();
-            BlockPos below = new BlockPos(ground.x(), ground.y() - 1, ground.z());
-            if (!level.getBlockState(below).getCollisionShape(level, below).isEmpty()) {
-                blocks.add(new PlannedBlock(ground, StagePlans.TORCH));
-            }
-        }
+        return grounded(
+                level,
+                site,
+                site.groundTorches().stream()
+                        .map(cell -> new PlannedBlock(cell, StagePlans.TORCH))
+                        .toList());
+    }
+
+    private static List<PlannedBlock> palisade(ServerLevel level, StageSite site) {
+        List<PlannedBlock> blocks = new ArrayList<>(StagePlans.palisade(site));
+        blocks.addAll(grounded(
+                level,
+                site,
+                site.palisadeTorches().stream()
+                        .map(cell -> new PlannedBlock(cell, StagePlans.TORCH))
+                        .toList()));
         return List.copyOf(blocks);
+    }
+
+    public static int builtPost(ServerLevel level, ColumnMask.Cell post, int planned) {
+        for (int shift = 0; shift <= POST_DRIFT; shift++) {
+            for (int y : new int[] {planned - shift, planned + shift}) {
+                BlockState state = level.getBlockState(new BlockPos(post.x(), y, post.z()));
+                if (state.is(BlockTags.FENCES) || state.is(BlockTags.FENCE_GATES)) {
+                    return y;
+                }
+            }
+        }
+        return planned;
     }
 
     private static List<PlannedBlock> grove(ServerLevel level, StageSite site) {

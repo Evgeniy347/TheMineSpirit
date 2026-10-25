@@ -11,6 +11,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -35,12 +36,8 @@ import net.minecraft.world.level.block.state.BlockState;
 final class StageOneAudit {
     private static final int SHOWN = 6;
     private static final int SCAN = 12;
-    private static final List<BoardCase> STEPS = List.of(
-            BoardCase.BUILD_FENCE,
-            BoardCase.BUILD_HOUSE,
-            BoardCase.LIGHTING,
-            BoardCase.STOCK_CHESTS,
-            BoardCase.CRAFT_FURNACE);
+    private static final List<BoardCase> STEPS =
+            List.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
 
     private StageOneAudit() {}
 
@@ -83,7 +80,7 @@ final class StageOneAudit {
         List<String> steps = new ArrayList<>();
         int[][] sides = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         for (ColumnMask.Cell post : site.ring().posts()) {
-            int base = StageBlocks.postY(level, site, post);
+            int base = StageBlocks.builtPost(level, post, StageBlocks.postY(level, site, post));
             for (int[] side : sides) {
                 int x = post.x() + side[0];
                 int z = post.z() + side[1];
@@ -108,6 +105,10 @@ final class StageOneAudit {
     }
 
     private static void collect(ServerLevel level, TaskNode plan, String wood, List<String> missing, int[] total) {
+        if (plan instanceof FallbackNode fallback) {
+            collect(level, fallback.steps().get(0), wood, missing, total);
+            return;
+        }
         if (plan instanceof SequenceNode sequence) {
             sequence.steps().forEach(node -> collect(level, node, wood, missing, total));
             return;

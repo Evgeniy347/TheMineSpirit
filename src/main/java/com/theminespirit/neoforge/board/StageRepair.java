@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.RepairPlan;
@@ -33,6 +34,9 @@ final class StageRepair {
         }
         String id = RepairPlan.PREFIX + step.name().toLowerCase(Locale.ROOT);
         int percent = total == 0 ? 0 : missing * PERCENT / total;
+        if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
+            service.reopen(id);
+        }
         BoardOutcome outcome = service.submit(
                 new BoardTicket(
                         id,

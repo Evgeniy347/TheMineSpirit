@@ -54,10 +54,11 @@ final class MineLevels {
             return;
         }
         Optional<StageSite> stage = SettlementPlotStore.get(level).site();
-        if (stage.isEmpty()) {
-            return;
-        }
-        BlockCoord home = stage.orElseThrow().mineEntrance();
+        BlockCoord home = stage.map(StageSite::mineEntrance)
+                .orElseGet(() -> SettlementPlotStore.get(level)
+                        .plot()
+                        .map(plot -> plot.anchor())
+                        .orElseGet(() -> homeOf(spirits)));
         BlockCoord site;
         try {
             site = MineDescentBottom.standOf(home).orElse(null);
@@ -86,6 +87,13 @@ final class MineLevels {
                         List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1)),
                         LEVEL_MATERIALS.getOrDefault(levelValue, Map.of())),
                 TicketTarget.at(site));
+    }
+
+    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
+        return spirits.stream()
+                .flatMap(spirit -> spirit.home().stream())
+                .findFirst()
+                .orElse(new BlockCoord(0, 64, 0));
     }
 
     private static boolean active(BoardService service, String id) {

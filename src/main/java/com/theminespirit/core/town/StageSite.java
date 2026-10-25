@@ -28,6 +28,7 @@ public record StageSite(
     public static final int MINE_SHIFT = 1;
     public static final int MINE_WIDTH = 3;
     public static final int GROVE_INSET = 2;
+    public static final int MINE_SHALLOW = 12;
 
     public StageSite {
         Objects.requireNonNull(anchor, "Якорь этапа не может быть null: от него высота площадок");
@@ -115,10 +116,14 @@ public record StageSite(
         return List.copyOf(posts);
     }
 
-    public List<BlockCoord> groundTorches() {
+    public List<BlockCoord> palisadeTorches() {
         return List.of(
                 new BlockCoord(hut.x() + PALISADE_GATE - 1, anchor.y() + 1, hut.z()),
-                new BlockCoord(hut.x() + PALISADE_GATE + 1, anchor.y() + 1, hut.z()),
+                new BlockCoord(hut.x() + PALISADE_GATE + 1, anchor.y() + 1, hut.z()));
+    }
+
+    public List<BlockCoord> groundTorches() {
+        return List.of(
                 new BlockCoord(yard.x() + yard.width() - 1, anchor.y(), yard.z() + YARD_STATION_ROW),
                 new BlockCoord(mine.x(), anchor.y(), mine.z()),
                 new BlockCoord(mine.x() + mine.width() - 1, anchor.y(), mine.z()));
@@ -153,7 +158,7 @@ public record StageSite(
     public boolean gatherForbidden(BlockCoord target, int depthBelowSurface) {
         Objects.requireNonNull(target, "Цель добычи не может быть null: проверяется её клетка");
         if (mineColumn(target.x(), target.z())) {
-            return false;
+            return target.y() >= anchor.y() - MINE_SHALLOW;
         }
         if (inside(target.x(), target.z())) {
             return true;

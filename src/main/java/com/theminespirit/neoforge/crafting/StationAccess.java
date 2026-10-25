@@ -128,9 +128,12 @@ final class StationAccess {
 
     private Optional<BlockPos> settlementCenter() {
         if (spirit.level() instanceof ServerLevel level) {
-            Optional<StageSite> site = SettlementPlotStore.get(level).site();
-            if (site.isPresent()) {
-                BlockCoord yard = site.get().workYard();
+            Optional<BlockCoord> center = SettlementPlotStore.get(level)
+                    .site()
+                    .map(StageSite::workYard)
+                    .or(() -> SettlementPlotStore.get(level).plot().map(plot -> plot.anchor()));
+            if (center.isPresent()) {
+                BlockCoord yard = center.get();
                 return Optional.of(new BlockPos(yard.x(), yard.y(), yard.z()));
             }
         }

@@ -15,9 +15,11 @@ import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PlotLeveling;
+import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementPlot;
+import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
@@ -34,6 +36,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -87,23 +90,20 @@ public final class FirstStepsRunner {
             BoardCase.CRAFT_STONE_SHOVEL,
             BoardCase.CRAFT_STONE_SWORD,
             BoardCase.CRAFT_FURNACE);
-    private static final Set<BoardCase> AT_YARD_TABLE = EnumSet.of(
-            BoardCase.BUILD_FENCE,
-            BoardCase.BUILD_HOUSE,
-            BoardCase.LIGHTING,
-            BoardCase.CRAFT_STONE_PICKAXE,
-            BoardCase.CRAFT_STONE_AXE,
-            BoardCase.CRAFT_STONE_SHOVEL,
-            BoardCase.CRAFT_STONE_SWORD,
-            BoardCase.CRAFT_FURNACE);
+    private static final Set<BoardCase> EXACT_STEPS =
+            EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
+    private static final Set<BoardCase> AT_YARD_TABLE =
+            EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.CRAFT_FURNACE);
     private static final String FIRST_PREFIX = "first:";
     private static final String MINECRAFT = "minecraft:";
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String STONE_PART_PREFIX = "stone:";
     private static final String FENCE_PART_PREFIX = "fence:";
+    private static final String HOUSE_PART_PREFIX = "house:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
     private static final String SAPLING = "_sapling";
+    private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
     private static final int LEVELING_SHOWN = 6;
 
@@ -132,7 +132,9 @@ public final class FirstStepsRunner {
         if (spirits.stream().noneMatch(spirit -> spirit.home().isPresent())) {
             return;
         }
-        plotOf(level, service, spirits, now);
+        if (plotOf(level, service, spirits, now).isEmpty()) {
+            return;
+        }
         StageSite stage = SettlementPlotStore.get(level)
                 .site()
                 .orElseThrow(() -> new IllegalStateException(
@@ -148,14 +150,16 @@ public final class FirstStepsRunner {
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance();
         boolean yardTable = facts.done().contains(BoardCase.STOCK_CHESTS);
+        boolean clearing = clearing(service);
         List<BoardCase> ready = FirstStepsPlan.ready(facts).stream()
                 .filter(step -> yardTable || !AT_YARD_TABLE.contains(step))
+                .filter(step -> !clearing || step == BoardCase.CLEAR_GROUNDS)
                 .toList();
         Optional<BoardCase> next = ready.stream().findFirst();
         String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, wood);
         ensurePickaxe(level, service, spirits, stock, site, next, now);
-        if (yardTable && ready.size() == 1 && STONE_STEPS.contains(next.orElseThrow())) {
+        if (ready.size() == 1 && STONE_STEPS.contains(next.orElseThrow())) {
             parallelStone(level, service, facts, site, stock, next.orElseThrow(), now);
         }
         next.filter(PREFETCH_DURING::contains)
@@ -252,6 +256,9 @@ public final class FirstStepsRunner {
                 need.merge(block, floors, Integer::sum);
             }
         }
+        if (caseValue == BoardCase.LIGHTING) {
+            minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
+        }
         if (WOODEN_BUILDINGS.contains(caseValue)) {
             minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
             if (blocked) {
@@ -290,6 +297,7 @@ public final class FirstStepsRunner {
         int parts = partsOf(caseValue);
         if (LAYOUT_STEPS.contains(caseValue)
                 || caseValue == BoardCase.CLEAR_GROUNDS
+                || caseValue == BoardCase.STOCK_CHESTS
                 || caseValue == BoardCase.BUILD_MINE) {
             if (reopenDone(level, service, step, parts, now)) {
                 return;
@@ -377,10 +385,18 @@ public final class FirstStepsRunner {
         }
     }
 
+    private static boolean clearing(BoardService service) {
+        return service.board().all().stream()
+                .filter(ticket -> ticket.boardCase() == BoardCase.CLEAR_GROUNDS)
+                .anyMatch(ticket -> active(service, ticket.id()));
+    }
+
     public static boolean stageOneBuilding(BoardService service) {
         return service.board().all().stream()
                 .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
                                 || ticket.id().startsWith(FENCE_PART_PREFIX)
+                                || ticket.id().startsWith(HOUSE_PART_PREFIX)
+                                || ticket.id().startsWith(RepairPlan.PREFIX)
                                 || ticket.id().startsWith(CLEAR_PART_PREFIX))
                         && active(service, ticket.id()));
     }
@@ -389,6 +405,7 @@ public final class FirstStepsRunner {
         return switch (caseValue) {
             case CLEAR_GROUNDS -> GroundsPlan.CLEAR_PARTS;
             case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
+            case BUILD_HOUSE -> StagePlans.HOUSE_PARTS;
             default -> 1;
         };
     }
@@ -397,7 +414,12 @@ public final class FirstStepsRunner {
         if (part == 1) {
             return FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
         }
-        return (caseValue == BoardCase.BUILD_FENCE ? FENCE_PART_PREFIX : CLEAR_PART_PREFIX) + part;
+        String prefix = switch (caseValue) {
+            case BUILD_FENCE -> FENCE_PART_PREFIX;
+            case BUILD_HOUSE -> HOUSE_PART_PREFIX;
+            default -> CLEAR_PART_PREFIX;
+        };
+        return prefix + part;
     }
 
     private static Map<String, Integer> partNeed(
@@ -741,6 +763,7 @@ public final class FirstStepsRunner {
     public static void minusPlaced(ServerLevel level, TaskNode plan, String wood, Map<String, Integer> need) {
         switch (plan) {
             case SequenceNode sequence -> sequence.steps().forEach(step -> minusPlaced(level, step, wood, need));
+            case FallbackNode fallback -> minusPlaced(level, fallback.steps().get(0), wood, need);
             case ScriptCall call
             when "build_schematic".equals(call.script())
                     && !call.params().containsKey("rotation")
@@ -798,37 +821,41 @@ public final class FirstStepsRunner {
         boolean smithingTable = false;
         boolean anvil = false;
         boolean furnace = false;
-        BlockPos start = new BlockPos(home.x(), home.y(), home.z());
-        for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
-            for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
-                if (dx * dx + dz * dz > SCAN_RADIUS * SCAN_RADIUS) {
-                    continue;
-                }
-                BlockPos pos = start.offset(dx, 0, dz);
-                for (int dy = -2; dy <= 2; dy++) {
-                    BlockPos check = pos.offset(0, dy, 0);
-                    if (!level.isLoaded(check)) {
+        Set<BlockPos> seen = new HashSet<>();
+        BlockCoord anchor = stage.anchor();
+        for (BlockPos start :
+                List.of(new BlockPos(home.x(), home.y(), home.z()), new BlockPos(anchor.x(), anchor.y(), anchor.z()))) {
+            for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
+                for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
+                    if (dx * dx + dz * dz > SCAN_RADIUS * SCAN_RADIUS) {
                         continue;
                     }
-                    var state = level.getBlockState(check);
-                    boolean onPad = stage.levelColumn(check.getX(), check.getZ());
-                    if (!groundsDone && onPad && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
-                        groundsCleared = false;
-                    }
-                    if (state.is(Blocks.CHEST)) {
-                        chests++;
-                    }
-                    if (state.is(Blocks.CRAFTING_TABLE)) {
-                        craftingStation = true;
-                    }
-                    if (state.is(Blocks.FURNACE)) {
-                        furnace = true;
-                    }
-                    if (state.is(Blocks.SMITHING_TABLE)) {
-                        smithingTable = true;
-                    }
-                    if (state.getBlock() instanceof AnvilBlock) {
-                        anvil = true;
+                    BlockPos pos = start.offset(dx, 0, dz);
+                    for (int dy = -2; dy <= 2; dy++) {
+                        BlockPos check = pos.offset(0, dy, 0);
+                        if (!level.isLoaded(check) || !seen.add(check)) {
+                            continue;
+                        }
+                        var state = level.getBlockState(check);
+                        boolean onPad = stage.levelColumn(check.getX(), check.getZ());
+                        if (!groundsDone && onPad && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
+                            groundsCleared = false;
+                        }
+                        if (state.is(Blocks.CHEST)) {
+                            chests++;
+                        }
+                        if (state.is(Blocks.CRAFTING_TABLE)) {
+                            craftingStation = true;
+                        }
+                        if (state.is(Blocks.FURNACE)) {
+                            furnace = true;
+                        }
+                        if (state.is(Blocks.SMITHING_TABLE)) {
+                            smithingTable = true;
+                        }
+                        if (state.getBlock() instanceof AnvilBlock) {
+                            anvil = true;
+                        }
                     }
                 }
             }
@@ -868,6 +895,9 @@ public final class FirstStepsRunner {
             return done.contains(step);
         }
         Placed placed = audit(level, step, site.stage(), site.wood());
+        if (EXACT_STEPS.contains(step)) {
+            return placed.done() == placed.total();
+        }
         return (placed.total() - placed.done()) * LAYOUT_SLACK_DIVISOR <= placed.total();
     }
 
@@ -939,6 +969,7 @@ public final class FirstStepsRunner {
 
     private static Placed placedBlocks(ServerLevel level, TaskNode plan, String wood) {
         return switch (plan) {
+            case FallbackNode fallback -> placedBlocks(level, fallback.steps().get(0), wood);
             case SequenceNode sequence ->
                 sequence.steps().stream()
                         .map(step -> placedBlocks(level, step, wood))
@@ -1008,12 +1039,12 @@ public final class FirstStepsRunner {
             }
             return true;
         }
-        if (step != BoardCase.BUILD_FENCE) {
+        if (step != BoardCase.BUILD_FENCE && step != BoardCase.BUILD_HOUSE) {
             return true;
         }
         boolean anyPart = false;
         boolean allDone = true;
-        for (int part = 1; part <= TicketPlans.FENCE_PARTS; part++) {
+        for (int part = 1; part <= partsOf(step); part++) {
             Optional<BoardStatus> status = service.board().statusOf(partId(step, part));
             anyPart |= part > 1 && status.isPresent();
             allDone &= status.orElse(null) == BoardStatus.DONE;
@@ -1031,21 +1062,32 @@ public final class FirstStepsRunner {
         return tools;
     }
 
-    public static SettlementPlot plotOf(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+    public static Optional<SettlementPlot> plotOf(
+            ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         List<BlockCoord> homes = homes(spirits);
         SettlementPlotStore store = SettlementPlotStore.get(level);
         BlockCoord center = SettlementPlot.center(homes);
         TownPlan town = TownSurvey.town(level, service, store, center, now);
         IntBinaryOperator feet = (x, z) -> GroundProbe.feet(level, x, z, center.y());
+        Optional<StageSite> draft =
+                StageSites.find(town, 1, center.y(), DataTables.INSTANCE.town().current());
+        if (draft.isEmpty()) {
+            if (now % PLAN_WARN_EVERY != 0) {
+                return Optional.empty();
+            }
+            LOGGER.warn(
+                    "[plot] в плане у {} нет мест этапа 1 (не поместилось {}): первые шаги ждут другого места дома",
+                    center,
+                    town.unplaced());
+            return Optional.empty();
+        }
         Optional<SettlementPlot> stored = store.plot();
         if (stored.isPresent() && stored.orElseThrow().covers(center)) {
             SettlementPlot kept = PlotHeights.rechecked(service, store, stored.orElseThrow(), feet, now);
-            return checkedWood(level, service, store, kept, now);
+            return Optional.of(checkedWood(level, service, store, kept, now));
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
-        StageSite draft =
-                StageSites.of(town, 1, center.y(), DataTables.INSTANCE.town().current());
-        return PlotHeights.surveyed(service, store, draft, homes.size(), wood, feet, now);
+        return Optional.of(PlotHeights.surveyed(service, store, draft.orElseThrow(), homes.size(), wood, feet, now));
     }
 
     private static SettlementPlot checkedWood(

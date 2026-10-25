@@ -35,11 +35,7 @@ public final class WarehouseWatch {
         if (!houseBuilt(service) || FirstStepsRunner.stageOneBuilding(service)) {
             return;
         }
-        Optional<BlockCoord> lot = storageLot(level);
-        if (lot.isEmpty()) {
-            return;
-        }
-        BlockCoord home = lot.orElseThrow();
+        BlockCoord home = storageLot(level).orElseGet(() -> homeOf(spirits));
         Set<Integer> standing = doneLevels(service);
         submitRelocations(service, home, standing, now);
         int next = WarehouseRules.nextLevel(standing);
@@ -136,6 +132,13 @@ public final class WarehouseWatch {
 
     private static String shortId(String item) {
         return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
+    }
+
+    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
+        return spirits.stream()
+                .flatMap(spirit -> spirit.home().stream())
+                .findFirst()
+                .orElse(new BlockCoord(0, 64, 0));
     }
 
     private static Optional<BlockCoord> storageLot(ServerLevel level) {

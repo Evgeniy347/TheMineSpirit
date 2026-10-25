@@ -19,6 +19,7 @@ import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -54,6 +55,7 @@ import org.slf4j.Logger;
 
 public final class TransferWatch {
     private static final String TABLE_ITEM = "minecraft:crafting_table";
+    private static final String DIRT = "dirt";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int CHEST_RADIUS = 16;
     private static final int CHEST_PROBES = 4;
@@ -207,13 +209,32 @@ public final class TransferWatch {
                 wood.put(item, count);
             }
         });
-        if (!wood.isEmpty() && ownWoodCovers(builder, wood)) {
+        BlockCoord yard = SettlementPlotStore.get(level)
+                .site()
+                .map(site -> site.workYard())
+                .orElseGet(() -> builder.home().orElseGet(() -> at(builder)));
+        Map<String, Integer> pooled =
+                hasSettlementChest(level, yard) ? chestStock(level, service, yard, build.id()) : Map.of();
+        if (!wood.isEmpty() && (ownWoodCovers(builder, wood) || pooledWoodCovers(builder, wood, pooled))) {
             need = new HashMap<>(need);
             need.keySet().removeAll(wood.keySet());
         }
+        if (need.containsKey(DIRT) || need.containsKey("minecraft:" + DIRT)) {
+            need = new HashMap<>(need);
+            need.remove(DIRT);
+            need.remove("minecraft:" + DIRT);
+        }
+        if (!pooled.isEmpty()) {
+            Map<String, Integer> missing = new HashMap<>(need);
+            missing.entrySet().removeIf(entry -> pooledCount(pooled, bareId(entry.getKey())) >= entry.getValue());
+            need = missing;
+        }
         int torches = need.getOrDefault("torch", 0) + need.getOrDefault("minecraft:torch", 0);
         int coal = builder.getInventory().countItem(Items.COAL)
-                + builder.getInventory().countItem(Items.CHARCOAL);
+                + builder.getInventory().countItem(Items.CHARCOAL)
+                + pooledCount(pooled, "coal")
+                + pooledCount(pooled, "charcoal")
+                + (pooledCount(pooled, "torch") + TORCHES_PER_COAL - 1) / TORCHES_PER_COAL;
         if (torches > 0 && coal * TORCHES_PER_COAL >= torches) {
             need = new HashMap<>(need);
             need.remove("torch");
@@ -354,6 +375,7 @@ public final class TransferWatch {
     private static boolean placesTable(TaskNode plan) {
         return switch (plan) {
             case SequenceNode sequence -> sequence.steps().stream().anyMatch(TransferWatch::placesTable);
+            case FallbackNode fallback -> placesTable(fallback.steps().get(0));
             case ScriptCall call ->
                 "place_block".equals(call.script())
                         && TABLE_ITEM.equals(call.params().get("block"));
@@ -526,6 +548,30 @@ public final class TransferWatch {
                 .mapToInt(entry -> OwnWood.plankCost(entry.getKey(), entry.getValue()))
                 .sum();
         return OwnWood.planksHeld(crafter.getInventory(), species) >= cost;
+    }
+
+    private static String bareId(String item) {
+        return item.substring(item.indexOf(':') + 1);
+    }
+
+    private static int pooledCount(Map<String, Integer> pooled, String item) {
+        return pooled.getOrDefault(item, 0) + pooled.getOrDefault("minecraft:" + item, 0);
+    }
+
+    private static boolean pooledWoodCovers(
+            SpiritEntity builder, Map<String, Integer> need, Map<String, Integer> pooled) {
+        String species = need.keySet().stream()
+                .map(OwnWood::species)
+                .filter(found -> !found.isEmpty())
+                .findFirst()
+                .orElse("");
+        if (species.isEmpty()) {
+            return false;
+        }
+        int cost = need.entrySet().stream()
+                .mapToInt(entry -> OwnWood.plankCost(entry.getKey(), entry.getValue()))
+                .sum();
+        return OwnWood.planksHeld(builder.getInventory(), species) + OwnWood.planksIn(pooled, species) >= cost;
     }
 
     private static boolean busy(SpiritEntity spirit) {

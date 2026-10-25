@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
@@ -24,13 +25,24 @@ public final class StagePlans {
     public static final String GATE_EAST = "minecraft:oak_fence_gate[facing=east]";
     public static final String TORCH = "minecraft:torch";
     public static final String AIR = "minecraft:air";
+    public static final int HOUSE_PARTS = 2;
     public static final String CHEST_LEFT = "minecraft:chest[facing=north,type=left]";
     public static final String CHEST_RIGHT = "minecraft:chest[facing=north,type=right]";
     public static final String TABLE = "minecraft:crafting_table";
     public static final String FURNACE = "minecraft:furnace[facing=north]";
+    private static final String MINECRAFT = "minecraft:";
+    private static final String WAIT = "wait";
+    private static final String TICKS = "ticks";
     private static final int PALISADE_WIDTH = 7;
     private static final int PALISADE_DEPTH = 3;
     private static final int GROVE_STEP = 2;
+    private static final int CHEST_PLANKS = 20;
+    private static final int FURNACE_STONE = 8;
+    private static final int PLANKS_PER_LOG = 4;
+    private static final int PLANKS_PER_GATE = 4;
+    private static final int FENCES_PER_CRAFT = 3;
+    private static final int PLANKS_PER_FENCE_CRAFT = 5;
+    private static final int YARD_REACH = 8;
 
     private StagePlans() {}
 
@@ -67,7 +79,7 @@ public final class StagePlans {
     }
 
     public static String sapling(String wood) {
-        return "minecraft:" + WoodSpecies.swap("oak_sapling", wood);
+        return MINECRAFT + WoodSpecies.swap("oak_sapling", wood);
     }
 
     public static List<PlannedBlock> palisade(StageSite site) {
@@ -114,14 +126,28 @@ public final class StagePlans {
         }
         List<TaskNode> steps = new ArrayList<>();
         steps.add(gotoPoint(site.workYard()));
+        DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
+                        .forEach((item, count) -> {
+                            String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
+                            steps.add(acquire(
+                                    id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
+                        }));
         steps.add(new ScriptCall("build_schematic", Map.copyOf(params)));
-        steps.add(placeAll(target, palisade));
+        if (target.count() != 1) {
+            steps.add(placeAll(target, palisade));
+        }
         return new SequenceNode(steps);
     }
 
     private static TaskNode chests(TicketTarget target, StageSite site, List<PlannedBlock> blocks) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(gotoPoint(site.workYard()));
+        String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
+        steps.add(withdraw(MINECRAFT + wood + "_planks", CHEST_PLANKS));
         if (blocks.size() > 2) {
             steps.add(craft(TABLE, 1));
             steps.add(place(blocks.get(2), target));
@@ -135,6 +161,7 @@ public final class StagePlans {
     private static TaskNode station(TicketTarget target, BlockCoord yard, List<PlannedBlock> blocks) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(gotoPoint(yard));
+        steps.add(withdraw("minecraft:cobblestone", FURNACE_STONE));
         for (PlannedBlock block : blocks) {
             steps.add(craft(bare(block.block()), 1));
             steps.add(place(block, target));
@@ -150,6 +177,16 @@ public final class StagePlans {
             }
         }
         List<TaskNode> steps = new ArrayList<>();
+        StageWork work = target.work();
+        if (work != null) {
+            steps.add(gotoPoint(work.site().workYard()));
+            counts.forEach((item, count) -> steps.add(withdraw(item, Math.min(count, CatalogLimits.COUNT_MAX))));
+            int logs = (woodPlanks(counts) + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG;
+            String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
+            if (logs > 0) {
+                steps.add(withdraw(MINECRAFT + wood + "_log", Math.min(logs, CatalogLimits.COUNT_MAX)));
+            }
+        }
         if (!blocks.isEmpty()) {
             steps.add(gotoPoint(blocks.get(0).at()));
         }
@@ -188,16 +225,20 @@ public final class StagePlans {
                                 at.z(),
                                 "demolish",
                                 demolish)),
-                new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN))));
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode place(PlannedBlock block, TicketTarget target) {
         BlockCoord at = block.at();
         if (AIR.equals(block.block())) {
-            return clear(at, false);
+            return clear(at, true);
         }
         String id = target.wood() == null ? block.block() : WoodSpecies.swap(block.block(), target.wood());
-        return new ScriptCall("place_block", Map.of("block", id, "x", at.x(), "y", at.y(), "z", at.z()));
+        ScriptCall put = new ScriptCall("place_block", Map.of("block", id, "x", at.x(), "y", at.y(), "z", at.z()));
+        return new FallbackNode(List.of(
+                put,
+                new SequenceNode(List.of(clear(at, true), put)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static String item(PlannedBlock block, TicketTarget target) {
@@ -210,6 +251,26 @@ public final class StagePlans {
         return state < 0 ? block : block.substring(0, state);
     }
 
+    private static int woodPlanks(Map<String, Integer> counts) {
+        int planks = 0;
+        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+            int count = entry.getValue();
+            if (entry.getKey().endsWith("_fence_gate")) {
+                planks += count * PLANKS_PER_GATE;
+            } else if (entry.getKey().endsWith("_fence")) {
+                planks += (count + FENCES_PER_CRAFT - 1) / FENCES_PER_CRAFT * PLANKS_PER_FENCE_CRAFT;
+            }
+        }
+        return planks;
+    }
+
+    private static TaskNode withdraw(String item, int count) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        "withdraw", Map.of("container", "nearest", "item", item, "count", count, "radius", YARD_REACH)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
+    }
+
     private static ScriptCall craft(String item, int count) {
         return new ScriptCall(
                 "craft", Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
@@ -218,7 +279,7 @@ public final class StagePlans {
     private static TaskNode acquire(String item, int count) {
         return new FallbackNode(List.of(
                 new ScriptCall("acquire", Map.of("item", item, "count", count)),
-                new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN))));
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static ScriptCall gotoPoint(BlockCoord point) {

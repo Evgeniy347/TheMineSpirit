@@ -150,12 +150,19 @@ public final class TicketPlans {
             case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
             case CRAFT_TORCHES ->
                 sequence(
+                        gotoTarget(target),
+                        takeFrom("minecraft:coal", (torchCount(target) + 3) / 4),
+                        takeFrom("minecraft:charcoal", (torchCount(target) + 3) / 4),
                         new FallbackNode(List.of(
                                 new ScriptCall(
                                         ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, (torchCount(target) + 3) / 4)),
                                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                         craft(TORCH, torchCount(target), target),
-                        store(target, LEFTOVERS.toArray(String[]::new)));
+                        store(
+                                target,
+                                LEFTOVERS.stream()
+                                        .filter(item -> !TORCH.equals(item))
+                                        .toArray(String[]::new)));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -231,6 +238,22 @@ public final class TicketPlans {
                                 z,
                                 "rotation",
                                 MINE_DESCENT_ROTATION)));
+    }
+
+    private static TaskNode takeFrom(String item, int count) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        WITHDRAW,
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                item,
+                                COUNT,
+                                Math.max(1, Math.min(count, CatalogLimits.COUNT_MAX)),
+                                RADIUS,
+                                SUPPLY_CONTAINER_RADIUS)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode takeFloor(String item) {

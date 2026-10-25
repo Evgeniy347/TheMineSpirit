@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class StageSites {
     public static final String HUT = "hut";
@@ -12,6 +13,13 @@ public final class StageSites {
     public static final String GROVE = "grove";
 
     private StageSites() {}
+
+    public static Optional<StageSite> find(TownPlan plan, int stage, int levelY, TownRules rules) {
+        Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
+        boolean placed = List.of(HUT, YARD, MINE, GROVE).stream()
+                .allMatch(id -> plan.placement(id).isPresent());
+        return placed ? Optional.of(of(plan, stage, levelY, rules)) : Optional.empty();
+    }
 
     public static StageSite of(TownPlan plan, int stage, int levelY, TownRules rules) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
