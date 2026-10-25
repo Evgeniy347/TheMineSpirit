@@ -17,6 +17,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
     protected PathFinder createPathFinder(int maxVisitedNodes) {
         this.nodeEvaluator = new SpiritNodeEvaluator();
         this.nodeEvaluator.setCanPassDoors(true);
+        this.nodeEvaluator.setCanOpenDoors(true);
         return new PathFinder(this.nodeEvaluator, maxVisitedNodes);
     }
 
