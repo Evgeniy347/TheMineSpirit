@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -46,7 +45,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class CoordinatorGameTests {
     private CoordinatorGameTests() {}
 
@@ -55,7 +53,7 @@ public final class CoordinatorGameTests {
         return new WorkTarget(WorkKind.TREE, new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()));
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void workReserve_TwoSpiritsOneTarget_SecondRefusedUntilRelease(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -80,7 +78,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void workChoose_TargetUnderForeignReservation_NotTaken(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity owner = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -101,7 +99,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void workCancelTask_ReservedTarget_ReleasesIt(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity owner = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -121,7 +119,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void workSpiritRemoved_ReservedTarget_ReleasedForOther(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity owner = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -138,7 +136,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_lifecycle", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void coordinator_RegistryQuery_SameInstancePerSettlement(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         SettlementKey home = SettlementKey.homed(new BlockCoord(100, 64, -40));
@@ -157,7 +155,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_snapshot", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void snapshotRead_AttackerJustBeyondThreatRadius_StillCountsAsThreat(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -180,7 +178,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_defense", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void defense_FourSpiritsOneMob_PostsAroundHomeAndOneEngages(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
@@ -308,7 +306,7 @@ public final class CoordinatorGameTests {
                 "Посты перераспределились за новой угрозой: иначе координатор держит мёртвые сектора");
     }
 
-    @GameTest(template = "arena", batch = "coordinator_assist", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void assist_OneAttacked_NearestFreeDefenderProtectsVictim(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
@@ -389,7 +387,7 @@ public final class CoordinatorGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void workPull_ThreeSpiritsThreeTrees_EachReservesOwnTree(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         List<SpiritEntity> spirits = new ArrayList<>();
@@ -447,7 +445,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work_free_tree", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void workFree_TwoSpiritsTwoTrees_EachReservesOwnTree(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         // Деревья разнесены дальше радиуса подбора дропа (ChopTuning.COLLECT_RADIUS = 6) по обеим осям:
@@ -498,7 +496,7 @@ public final class CoordinatorGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "coordinator_work_free_drop", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300, coordinator = true)
     public static void workFree_TwoSpiritsTwoDrops_EachReservesOwnDrop(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -555,7 +553,7 @@ public final class CoordinatorGameTests {
         return posts;
     }
 
-    @GameTest(template = "arena", batch = "coordinator_directive_owner", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void directive_TestDirective_CoordinatorClearsOnlyItsOwn(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));
@@ -594,7 +592,7 @@ public final class CoordinatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "coordinator_lifecycle", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void coordinator_ServerTicks_BuildsSnapshotWithoutManualTick(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
