@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
@@ -107,7 +106,7 @@ public final class TacticsJournalGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "tactics_journal", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void journal_HuskAttacksAfterCalm_RecordsIgnoreToFightWithReason(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos at = new BlockPos(5, 1, 5);
@@ -154,7 +153,7 @@ public final class TacticsJournalGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_journal_command", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void decisions_EmptyThenFilledJournal_CommandPrintsLastRecordsInChat(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         String tag = freshTag("decisions");

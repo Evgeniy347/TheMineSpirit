@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -34,7 +33,7 @@ public final class TacticsPolicyGameTests {
 
     private TacticsPolicyGameTests() {}
 
-    @GameTest(template = "arena", batch = "tactics_policy_lava", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void lava_BesideFightingSpirit_TacticsFrozenTaskRunningAndTacticsResumesAfterTenQuietTicks(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);
@@ -150,7 +149,7 @@ public final class TacticsPolicyGameTests {
                         + spirit.tactics().combat().strikes() + ", история " + history);
     }
 
-    @GameTest(template = "arena", batch = "tactics_policy_explosive", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void creeper_FourBlocksAway_ExplosionReflexOwnsTickTacticsFrozenAndSpiritKeepsSeven(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);

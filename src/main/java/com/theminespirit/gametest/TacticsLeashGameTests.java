@@ -5,7 +5,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
@@ -44,7 +43,7 @@ public final class TacticsLeashGameTests {
         return husk.isDeadOrDying() || husk.isRemoved();
     }
 
-    @GameTest(template = "arena", batch = "tactics_leash_walled", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void leash_PostUnreachableNoEnemies_ReleasesControl(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos at = new BlockPos(2, 1, 2);
@@ -74,7 +73,7 @@ public final class TacticsLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_leash_inside", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void leash_TargetFourBlocksFromPostOfSix_SpiritChasesAndKills(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos post = new BlockPos(3, 1, 5);
@@ -92,7 +91,7 @@ public final class TacticsLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_leash_border", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void leash_TargetExactlyAtSixBlocksFromPostOfSix_SpiritDoesNotChaseBecauseBorderPressureIsMaximal(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);
@@ -118,7 +117,7 @@ public final class TacticsLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_leash_outside", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void leash_TargetSevenBlocksFromPostOfSix_SpiritReturnsToPostAndDoesNotChase(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos post = new BlockPos(3, 1, 5);
@@ -142,7 +141,7 @@ public final class TacticsLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_leash_nozone", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void leash_GuardModeWithoutZone_FallsBackToDefensiveAndFightsAttackerSixBlocksAway(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);

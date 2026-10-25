@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -46,7 +45,7 @@ public final class CombatGameTests {
 
     private CombatGameTests() {}
 
-    @GameTest(template = "arena", batch = "combat_directive", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void directive_ApplyThenClear_RestoresModeAndKeepsTactics(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -91,7 +90,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_directive_flee", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void directive_FleeForcesRetreat_EvenWithoutEnemies(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -112,7 +111,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_forced_attack", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void forcedAttack_PassiveTarget_SpiritStillStrikes(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -132,7 +131,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_forced_attack_animal", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void forcedAttack_AnimalTarget_SpiritStillStrikes(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -163,7 +162,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_target_player", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void targets_ResolvePlayerByName_ReturnsThatPlayer(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -179,7 +178,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_target_spirit", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void targets_ResolveSpiritUuid_ReturnsThatSpirit(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -194,7 +193,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_target_hostile", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void targets_ResolveHostileKind_ReturnsNearestMonster(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -211,7 +210,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_target_missing", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void targets_ResolveUnknownPlayer_ReturnsEmpty(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -224,7 +223,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_target_empty", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void targets_ResolveWithoutTargets_ReturnsEmpty(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -237,7 +236,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_target_queries", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void targets_ResolveTwice_CountsTwoEntityQueries(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -253,7 +252,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_attack", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void attack_HuskNearby_SpiritKillsTargetAndRestoresMode(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -329,7 +328,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_attack_queries", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void attack_TargetResolvedOnce_EntityQueriesDontGrowPerTick(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -362,7 +361,7 @@ public final class CombatGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "combat_defend", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void defend_WardUnderThreat_SpiritKillsAggressorAndWardSurvives(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(3, 1, 5));
@@ -402,7 +401,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_defend_missing", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void defend_WardMissing_FailsWithReason(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -424,7 +423,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_flee", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void flee_HuskClose_SpiritEscapesWithoutFighting(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -477,7 +476,7 @@ public final class CombatGameTests {
     }
 
     // [флак] тайм-аут скрипта FLEE_SAFE/FLEE_TIMEOUT_TICKS=600 тиков: ловушка честно ждёт отказ по тайм-ауту
-    @GameTest(template = "arena", batch = "combat_flee_trap", timeoutTicks = 900)
+    @SceneStep(template = "arena", timeoutTicks = 900)
     public static void flee_TrappedInWalls_TimesOutWithTickCount(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -510,7 +509,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_retreat", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void retreat_HomeSet_SpiritReturnsToHome(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 9));
@@ -536,7 +535,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_retreat_missing", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void retreat_NoHome_FailsWithNoPoint(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -557,7 +556,7 @@ public final class CombatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "combat_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scale_TwentySpiritsAttackOneHusk_QueriesStayWithinLimits(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         List<SpiritEntity> spirits = new ArrayList<>();

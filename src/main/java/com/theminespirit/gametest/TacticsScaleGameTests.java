@@ -5,7 +5,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -22,7 +21,7 @@ public final class TacticsScaleGameTests {
 
     private TacticsScaleGameTests() {}
 
-    @GameTest(template = "arena", batch = "tactics_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scale_FiftySpiritsSeeOneHuskForTwoHundredTicks_ReadsQueriesAndStepsStayWithinLimits(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);

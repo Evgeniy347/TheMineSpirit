@@ -4,7 +4,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
@@ -36,7 +35,7 @@ public final class TacticsRetreatGameTests {
 
     private TacticsRetreatGameTests() {}
 
-    @GameTest(template = "arena", batch = "tactics_retreat_home", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreatHome_LowHpHuskFourBlocksAway_RunsToHomeEightBlocksAwayWithoutStriking(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);
@@ -75,7 +74,7 @@ public final class TacticsRetreatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_retreat_cover", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreatCover_LowHpWitchInView_RunsBehindWallAndBreaksSight(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         for (int z = 3; z <= 5; z++) {
@@ -113,7 +112,7 @@ public final class TacticsRetreatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_retreat_kite", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void retreatKite_LowHpWithBowSlowHusk_BacksAwayAndHitsItWithArrows(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -154,7 +153,7 @@ public final class TacticsRetreatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_retreat_water", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreatWater_LowHpHuskNear_RunsIntoPondSevenBlocksAway(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         for (int x = 7; x <= 9; x++) {
@@ -209,7 +208,7 @@ public final class TacticsRetreatGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "tactics_retreat_fire_bucket", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreatWater_OnFireWithBucket_PoursWaterUnderSelfAndExtinguishes(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -254,7 +253,7 @@ public final class TacticsRetreatGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_retreat_fire_away", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreatWater_OnFireWithoutBucket_RunsAwayInsteadOfPouring(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -304,7 +303,7 @@ public final class TacticsRetreatGameTests {
 
     // Отход без стройки (решение владельца 18.10): с блоками в инвентаре и врагом в четырёх блоках (раньше — сцена
     // баррикады) дух не строит ни баррикаду, ни столб — только уходит; блоки остаются в инвентаре.
-    @GameTest(template = "arena", batch = "tactics_retreat_no_build", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreat_LowHpWithBlocksHuskFourAway_PlacesNoBlocks(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -349,7 +348,7 @@ public final class TacticsRetreatGameTests {
         return count;
     }
 
-    @GameTest(template = "arena", batch = "tactics_retreat_away", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreatAway_LowHpSlowHuskFourBlocksBehind_SeparationGrowsWithoutBeingHit(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));

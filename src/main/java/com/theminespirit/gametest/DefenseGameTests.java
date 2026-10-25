@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -47,7 +46,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class DefenseGameTests {
     private static final float SWELL_CAP = 0.5F;
 
@@ -108,7 +106,7 @@ public final class DefenseGameTests {
         return true;
     }
 
-    @GameTest(template = "arena", batch = "defense_cover", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void cover_ZombieBetweenSpiritAndSkeleton_SpiritFightsFromBehindZombie(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -175,7 +173,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_creeper", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void creeper_StrikeAndRetreat_ArmoredEngagesNakedHolds(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -306,7 +304,7 @@ public final class DefenseGameTests {
                 "Дух возвращается для нового удара: «ударь и беги» — цикл, а не бесконечный отход; " + duel);
     }
 
-    @GameTest(template = "arena", batch = "defense_redistribute", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void redistribute_TwoSidedThreat_WeightFollowsStrength(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -374,7 +372,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_specialization", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void specialization_ArcherAndMelee_PrioritiesHold(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -426,7 +424,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_specialization_noarcher", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void specialization_NoArcher_MeleeRushesSkeleton(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -450,7 +448,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_health", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void health_WoundedWithdraws_AllyTakesTarget(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -516,7 +514,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_charged", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void charged_MeleeWithdraws_ChargedCreeperSurvives(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -547,7 +545,7 @@ public final class DefenseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "defense_probe", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void probe_BlocksOnLine_AreCandidatesWithinBudget(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         helper.setBlock(6, 1, 2, Blocks.STONE);
@@ -588,7 +586,7 @@ public final class DefenseGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "defense_busy_task", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void busy_SpiritWithRunningTask_NoDefenseOrder(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));

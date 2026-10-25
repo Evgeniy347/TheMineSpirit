@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
@@ -23,7 +22,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class CombatRallyGameTests {
     private static final BlockPos HOME = new BlockPos(1, 1, 1);
     private static final BlockPos CALLER_AT = new BlockPos(3, 1, 5);
@@ -36,7 +34,7 @@ public final class CombatRallyGameTests {
 
     private CombatRallyGameTests() {}
 
-    @GameTest(template = "arena", batch = "combat_rally", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void rally_LowHpBesideTwoZombies_RunsToAllyAndAllyJoinsFight(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity caller = TacticsScene.spirit(helper, CALLER_AT);
@@ -100,7 +98,7 @@ public final class CombatRallyGameTests {
 
     // [флак] зов повторяется не раньше 200 тиков: первый и второй разнесены на интервал, наблюдение
     // занимает ~300 тиков со сдвигом набора игрока — потолок 500 держит двукратный запас.
-    @GameTest(template = "arena", batch = "combat_rally_call", timeoutTicks = 500)
+    @SceneStep(template = "arena", timeoutTicks = 500, coordinator = true)
     public static void call_PlayerNearAndTwoZombies_WrittenNotMoreOftenThanInterval(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         List<Component> messages = new ArrayList<>();

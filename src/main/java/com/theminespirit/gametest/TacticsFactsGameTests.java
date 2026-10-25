@@ -14,7 +14,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
@@ -53,7 +52,7 @@ public final class TacticsFactsGameTests {
                 CombatMode.DEFENSIVE, Optional.empty(), Optional.empty(), 1_000_000, 1_000_000, Optional.empty());
     }
 
-    @GameTest(template = "arena", batch = "tactics_facts_visibility", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void collect_HuskInViewAndHuskBehindWall_VisibilityOnlyForTheFirst(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -81,7 +80,7 @@ public final class TacticsFactsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "tactics_facts_self", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void collect_SpiritWithSwordBowBlocks_SelfFactsFromInventory(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -111,7 +110,7 @@ public final class TacticsFactsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "tactics_facts_budget", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void collect_ManyHusks_ReadsAtMostBudgetAndOneEntityQuery(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
