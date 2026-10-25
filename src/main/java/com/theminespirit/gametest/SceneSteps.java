@@ -7,8 +7,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import org.slf4j.Logger;
 
 /**
@@ -22,13 +25,17 @@ import org.slf4j.Logger;
  */
 final class SceneSteps {
     private static final int CLEAR_HEIGHT = 24;
+    private static final int TICKING_MARGIN = 40;
+    private static final int TICKING_SPAN = 16;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final GameTestHelper helper;
     private final List<Step> steps;
     private int index = -1;
     private int stepTick;
+    private long stepStartNanos;
     private final List<String> failures = new ArrayList<>();
+    private final List<ChunkPos> forced = new ArrayList<>();
     private StepHelper current;
 
     private SceneSteps(GameTestHelper helper, List<Step> steps) {
@@ -53,6 +60,7 @@ final class SceneSteps {
                         + ": последние шаги упали бы по чужому тайм-ауту; поставь timeoutTicks = " + total);
         GameTestFixtures.forgetChests(helper.getLevel());
         SceneSteps scene = new SceneSteps(helper, steps);
+        scene.forceTickingAround();
         scene.startNext();
         helper.onEachTick(scene::tick);
     }
@@ -113,17 +121,51 @@ final class SceneSteps {
 
     private void finishCurrent() {
         current.end();
+        LOGGER.info(
+                "шаг «{}»: {} тиков, {} мс",
+                steps.get(index).name(),
+                stepTick,
+                (System.nanoTime() - stepStartNanos) / 1_000_000);
         GameTestFilter.setBoardEnabled(false);
         GameTestFilter.setCoordinatorEnabled(false);
         GameTestFilter.setMobsTargetSpirits(true);
         GameTestFixtures.clearStage(helper, CLEAR_HEIGHT);
     }
 
+    private void forceTickingAround() {
+        ServerLevel level = helper.getLevel();
+        BlockPos low = helper.absolutePos(new BlockPos(-TICKING_MARGIN, 0, -TICKING_MARGIN));
+        BlockPos high =
+                helper.absolutePos(new BlockPos(TICKING_SPAN + TICKING_MARGIN, 0, TICKING_SPAN + TICKING_MARGIN));
+        int minX = Math.min(low.getX(), high.getX()) >> 4;
+        int maxX = Math.max(low.getX(), high.getX()) >> 4;
+        int minZ = Math.min(low.getZ(), high.getZ()) >> 4;
+        int maxZ = Math.max(low.getZ(), high.getZ()) >> 4;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                ChunkPos chunk = new ChunkPos(x, z);
+                if (!level.getForcedChunks().contains(chunk.toLong()) && level.setChunkForced(x, z, true)) {
+                    forced.add(chunk);
+                }
+            }
+        }
+    }
+
+    private void releaseTicking() {
+        ServerLevel level = helper.getLevel();
+        for (ChunkPos chunk : forced) {
+            level.setChunkForced(chunk.x, chunk.z, false);
+        }
+        forced.clear();
+    }
+
     private void startNext() {
         index++;
         stepTick = 0;
+        stepStartNanos = System.nanoTime();
         if (index >= steps.size()) {
             GameTestFixtures.finish(helper, CLEAR_HEIGHT);
+            releaseTicking();
             LOGGER.info(
                     "укрупнённая сцена: {} шагов за {} тиков, упало {}",
                     steps.size(),

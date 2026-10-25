@@ -64,10 +64,10 @@ public final class FirstToolsGameTests {
                     "Без верстака в сцене дух обязан скрафтить его сам и поставить в мир: в мире "
                             + FullCycleScene.countBlocks(helper, Blocks.CRAFTING_TABLE));
             helper.assertTrue(
-                    FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) == 2,
-                    "Цепочка трёх деревянных инструментов берёт ровно 7 брёвен из трёх деревьев по 3 "
-                            + "(1 на верстак, 2 на кирку, по 2 на топор и лопату), остаток 2, а не "
-                            + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
+                    FullCycleScene.countBlocks(helper, Blocks.OAK_LOG) >= 2,
+                    "Цепочка трёх деревянных инструментов берёт не больше 7 брёвен из трёх деревьев по 3 (остаток "
+                            + "досок и палок идёт в следующий инструмент): лишняя рубка — лишнее время духа, остаток 2 "
+                            + "и больше, а не " + FullCycleScene.countBlocks(helper, Blocks.OAK_LOG));
             cleanup(helper, spirit);
         });
     }
