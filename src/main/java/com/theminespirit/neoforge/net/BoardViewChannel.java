@@ -2,9 +2,9 @@ package com.theminespirit.neoforge.net;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.BoardLogEntry;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.rest.BoardTask;
 import com.theminespirit.core.rest.BoardTasks;
@@ -16,7 +16,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +49,6 @@ public final class BoardViewChannel {
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "board_view_reply"));
 
     private static final String PROTOCOL_VERSION = "2";
-    private static final int JOURNAL_LOOKBACK = 1024;
     private static final int MAX_TILES = 4096;
     private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
     private static volatile Consumer<List<BoardTile>> clientReceiver = tiles -> {};
@@ -109,18 +107,19 @@ public final class BoardViewChannel {
             return List.of();
         }
         Board board = service.get().board();
+        Map<String, BoardTiming> timings =
+                BoardTiming.fromJournal(service.get().journal().last(BoardTiming.JOURNAL_LOOKBACK));
         List<BoardTask> tasks = new ArrayList<>();
         for (BoardTicket ticket : board.all()) {
-            tasks.add(BoardTasks.of(board, ticket, service.get().stock()));
-        }
-        Map<String, Long> doneTicks = new HashMap<>();
-        for (BoardLogEntry entry : service.get().journal().last(JOURNAL_LOOKBACK)) {
-            if (entry.event() == BoardLog.Event.DONE) {
-                doneTicks.put(entry.ticketId(), entry.tick());
-            }
+            tasks.add(BoardTasks.of(
+                    board,
+                    ticket,
+                    board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
+                    service.get().stock(),
+                    timings.getOrDefault(ticket.id(), BoardTiming.NONE)));
         }
         MinecraftServer server = level.getServer();
-        return BoardSnapshot.build(tasks, doneTicks, uuid -> spiritName(server, uuid));
+        return BoardSnapshot.build(tasks, uuid -> spiritName(server, uuid));
     }
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
@@ -178,6 +177,9 @@ public final class BoardViewChannel {
                 buf.writeUtf(dependency);
             }
             buf.writeVarLong(tile.doneAt());
+            buf.writeVarLong(tile.startedAt());
+            buf.writeVarLong(tile.finishedAt());
+            buf.writeVarLong(tile.durationTicks());
         }
         buf.writeVarInt(reply.stage().number());
     }
@@ -208,7 +210,23 @@ public final class BoardViewChannel {
                 dependsOn.add(buf.readUtf());
             }
             long doneAt = buf.readVarLong();
-            tiles.add(new BoardTile(id, boardCase, level, priority, spirit, status, group, missing, dependsOn, doneAt));
+            long startedAt = buf.readVarLong();
+            long finishedAt = buf.readVarLong();
+            long durationTicks = buf.readVarLong();
+            tiles.add(new BoardTile(
+                    id,
+                    boardCase,
+                    level,
+                    priority,
+                    spirit,
+                    status,
+                    group,
+                    missing,
+                    dependsOn,
+                    doneAt,
+                    startedAt,
+                    finishedAt,
+                    durationTicks));
         }
         return new Reply(tiles, new BoardStage(buf.readVarInt()));
     }

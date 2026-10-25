@@ -14,7 +14,7 @@ class BoardWaitReasonsTests {
             BoardTileGroup group,
             Map<String, Integer> missing,
             List<String> dependsOn) {
-        return new BoardTile(id, "BUILD_HOUSE", 1, 10, spirit, status, group, missing, dependsOn, 0);
+        return new BoardTile(id, "BUILD_HOUSE", 1, 10, spirit, status, group, missing, dependsOn, 0, 0, 0, 0);
     }
 
     @Test

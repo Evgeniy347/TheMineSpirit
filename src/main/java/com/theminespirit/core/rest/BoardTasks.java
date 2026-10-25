@@ -3,6 +3,7 @@ package com.theminespirit.core.rest;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.BoardWhy;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
@@ -20,10 +21,15 @@ public final class BoardTasks {
 
     public static BoardTask of(Board board, BoardTicket ticket, StockView stock) {
         BoardStatus status = board.statusOf(ticket.id()).orElse(BoardStatus.PENDING);
-        return of(board, ticket, status, stock);
+        return of(board, ticket, status, stock, BoardTiming.NONE);
     }
 
     public static BoardTask of(Board board, BoardTicket ticket, BoardStatus status, StockView stock) {
+        return of(board, ticket, status, stock, BoardTiming.NONE);
+    }
+
+    public static BoardTask of(
+            Board board, BoardTicket ticket, BoardStatus status, StockView stock, BoardTiming timing) {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         Optional<UUID> holder = board.holderOf(ticket.id());
         // Задание в очереди или в работе — не «сделано», даже если такой кейс уже закрывался раньше (INC-47:
@@ -48,6 +54,9 @@ public final class BoardTasks {
                 ticket.priority(),
                 ticket.modifiers(),
                 done,
+                timing.startedAt(),
+                timing.finishedAt(),
+                timing.durationTicks(board.now()),
                 BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null));
     }
 }
