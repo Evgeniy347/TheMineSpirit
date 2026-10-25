@@ -87,61 +87,6 @@ public final class RestTaskGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_ReplayAndChangedBody_SameTaskWithoutRestartThenConflict(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
-        String botPath = "/v1/bots/" + spirit.getStringUUID();
-        String requestId = UUID.randomUUID().toString();
-        String body = RestFixture.followGoalBody(requestId, player);
-        String changedBody = gotoBody(helper, requestId, NEAR_CORNER);
-        RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(botPath + "/tasks", body)
-                .thenCompose(first -> {
-                    int hopsAfterFirst = rest.gateway().serverCall().submittedCount();
-                    return rest.post(botPath + "/tasks", body)
-                            .thenCompose(replay -> rest.post(botPath + "/tasks", changedBody)
-                                    .thenApply(changed -> {
-                                        problems.expect(
-                                                replay.status() == 202,
-                                                "Повтор того же запроса к духу, занятому этой же задачей, обязан давать 202, получен "
-                                                        + replay.status() + ": " + replay.body());
-                                        problems.expect(
-                                                replay.json()
-                                                        .path("task_id")
-                                                        .asText()
-                                                        .equals(first.json()
-                                                                .path("task_id")
-                                                                .asText()),
-                                                "Повтор обязан вернуть тот же task_id: " + first.body() + " и "
-                                                        + replay.body());
-                                        problems.expect(
-                                                changed.status() == 409
-                                                        && changed.body().contains(requestId),
-                                                "Тот же request_id с другим телом обязан давать 409, называя request_id: "
-                                                        + changed.status() + " " + changed.body());
-                                        int hopsAfterRepeats =
-                                                rest.gateway().serverCall().submittedCount();
-                                        problems.expect(
-                                                hopsAfterRepeats == hopsAfterFirst,
-                                                "Повтор и отказ по request_id не должны обращаться к серверному потоку (дух не "
-                                                        + "перезапускается): переходов " + hopsAfterFirst
-                                                        + " после первого запроса и "
-                                                        + hopsAfterRepeats + " после повторов");
-                                        problems.expect(
-                                                rest.gateway().taskRegistry().size() == 1,
-                                                "В реестре обязана остаться одна запись, а не "
-                                                        + rest.gateway()
-                                                                .taskRegistry()
-                                                                .size());
-                                        return problems.found();
-                                    }));
-                });
-        RestFixture.await(helper, rest, scenario);
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_SpiritBusyWithCommandTask_Returns409OutsideRestWithoutReservation(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

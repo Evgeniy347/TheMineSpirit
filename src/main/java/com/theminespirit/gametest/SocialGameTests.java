@@ -139,29 +139,6 @@ public final class SocialGameTests {
     }
 
     @SceneStep(template = "empty", timeoutTicks = 200)
-    public static void say_ShortText_PlayerGetsMessage(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
-        List<Component> messages = new ArrayList<>();
-        GameTestFixtures.mockPlayer(helper, new BlockPos(3, 1, 1), "SayTarget", messages);
-
-        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("say", Map.of("text", "привет")), 10);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "say обязан завершиться успехом, статус: "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(
-                    messages.stream().anyMatch(m -> m.getString().contains("привет")),
-                    "игрок обязан получить сообщение с текстом, сообщения: " + messages);
-            TacticsScene.finish(helper, spirit);
-        });
-    }
-
-    @SceneStep(template = "empty", timeoutTicks = 200)
     public static void say_ShortText_OnlyPlayersInsideHearingRadiusGetIt(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));

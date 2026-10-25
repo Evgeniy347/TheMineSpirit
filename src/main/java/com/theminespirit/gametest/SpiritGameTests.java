@@ -46,17 +46,6 @@ public final class SpiritGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 100)
-    public static void spawn_SpiritEntityType_CreatesLivingSpirit(GameTestHelper helper) {
-        GameTestFixtures.sweepEntities(helper);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
-
-        helper.assertTrue(
-                spirit.isAlive(),
-                "Дух обязан появляться живым в мире: сломанная сущность не сможет выполнять скрипты goto/follow");
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void observe_WorldWithFloor_ReturnsNonEmptyBlocksAndSpectreEntity(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);

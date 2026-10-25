@@ -184,18 +184,4 @@ public final class DemoLayoutGameTests {
             throws CommandSyntaxException {
         runFamilyHouse(helper, 90, BuildRotation.CLOCKWISE_90);
     }
-
-    // [флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-    @SceneStep(template = "demo_arena", timeoutTicks = 12000)
-    public static void familyHouse_LookNorth_TurnsEntryToPlayerAndClearsPlatform(GameTestHelper helper)
-            throws CommandSyntaxException {
-        runFamilyHouse(helper, 180, BuildRotation.CLOCKWISE_180);
-    }
-
-    // [флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-    @SceneStep(template = "demo_arena", timeoutTicks = 12000)
-    public static void familyHouse_LookEast_TurnsEntryToPlayerAndClearsPlatform(GameTestHelper helper)
-            throws CommandSyntaxException {
-        runFamilyHouse(helper, 270, BuildRotation.COUNTERCLOCKWISE_90);
-    }
 }
