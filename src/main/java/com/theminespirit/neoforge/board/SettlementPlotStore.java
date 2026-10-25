@@ -20,10 +20,12 @@ public final class SettlementPlotStore extends SavedData {
     private static final String MAX = "Max";
     private static final String COLUMNS = "Columns";
     private static final String WOOD = "Wood";
+    private static final String LEVELED = "Leveled";
     private static final SavedData.Factory<SettlementPlotStore> FACTORY =
             new SavedData.Factory<>(SettlementPlotStore::new, SettlementPlotStore::load);
 
     private @Nullable SettlementPlot plot;
+    private boolean leveled;
 
     private SettlementPlotStore() {}
 
@@ -36,17 +38,37 @@ public final class SettlementPlotStore extends SavedData {
     }
 
     public void fix(SettlementPlot next) {
-        plot = Objects.requireNonNull(next, "Участок не может быть null: фиксируется обмеренный участок");
+        Objects.requireNonNull(next, "Участок не может быть null: фиксируется обмеренный участок");
+        SettlementPlot before = plot;
+        if (before == null
+                || before.anchor().x() != next.anchor().x()
+                || before.anchor().z() != next.anchor().z()) {
+            leveled = false;
+        }
+        plot = next;
         setDirty();
+    }
+
+    public boolean leveled() {
+        return leveled;
+    }
+
+    public void markLeveled() {
+        if (!leveled) {
+            leveled = true;
+            setDirty();
+        }
     }
 
     public void clear() {
         plot = null;
+        leveled = false;
         setDirty();
     }
 
     private static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementPlotStore store = new SettlementPlotStore();
+        store.leveled = tag.getBoolean(LEVELED);
         if (tag.contains(COLUMNS)) {
             store.plot = new SettlementPlot(
                     new BlockCoord(tag.getInt(X), tag.getInt(Y), tag.getInt(Z)),
@@ -61,6 +83,7 @@ public final class SettlementPlotStore extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         SettlementPlot current = plot;
+        tag.putBoolean(LEVELED, leveled);
         if (current != null) {
             tag.putInt(X, current.anchor().x());
             tag.putInt(Y, current.anchor().y());

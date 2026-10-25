@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 
 final class PlotAudit {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final long COOLDOWN = 6000;
+    private static final long COOLDOWN = 600;
     private static final Set<BoardCase> WORKS = EnumSet.of(
             BoardCase.CLEAR_GROUNDS,
             BoardCase.BUILD_MINE,

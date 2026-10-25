@@ -182,34 +182,6 @@ class FirstStepsPlanTests {
     }
 
     @Test
-    void next_ClearDoneInJournalButPlotUneven_ClearBeforeFence() {
-        int clear = chain().indexOf(BoardCase.CLEAR_GROUNDS);
-        SettlementFacts level = factsAt(clear);
-        SettlementFacts facts = new SettlementFacts(
-                true,
-                true,
-                false,
-                level.chests(),
-                level.craftingStation(),
-                level.tools(),
-                level.mineEntrance(),
-                level.furnace(),
-                false,
-                false,
-                false,
-                false,
-                false,
-                EnumSet.of(BoardCase.BUILD_MINE, BoardCase.CLEAR_GROUNDS),
-                level.blocked());
-
-        assertEquals(
-                Optional.of(BoardCase.CLEAR_GROUNDS),
-                FirstStepsPlan.next(facts),
-                "Расчистка закрыта в журнале, но участок с полосой за оградой не ровный: ограда не ставится, пока "
-                        + "уступ у забора даёт перелезть — сначала снова выравнивание (INC-53)");
-    }
-
-    @Test
     void chain_Order_LevelingBeforeYard() {
         List<BoardCase> chain = FirstStepsPlan.chain();
         int leveling = chain.indexOf(BoardCase.CLEAR_GROUNDS);
@@ -380,5 +352,18 @@ class FirstStepsPlanTests {
                 List.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE),
                 FirstStepsPlan.blockedStageOne(facts),
                 "Заблокированные шаги этапа 1 видны снабжению: по ним ставится добыча недостающего (INC-79)");
+    }
+
+    @Test
+    void next_LeveledThenHoleDug_LevelingNotReopened() {
+        List<BoardCase> chain = chain();
+        Set<BoardCase> world = EnumSet.copyOf(chain.subList(0, chain.indexOf(BoardCase.CLEAR_GROUNDS)));
+        world.add(BoardCase.BUILD_FENCE);
+        SettlementFacts facts = facts(world, EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_FENCE), Set.of());
+        assertEquals(
+                Optional.of(BoardCase.STOCK_CHESTS),
+                FirstStepsPlan.next(facts),
+                "Участок выровнен и огорожен, потом в нём дыра — выравнивание не открывается заново: дыру засыпает "
+                        + "аудит ровности, повторная расчистка под готовыми постройками не идёт (INC-78)");
     }
 }

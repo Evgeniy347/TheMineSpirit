@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.SettlementLayout;
@@ -35,6 +36,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
@@ -49,6 +51,8 @@ import org.slf4j.Logger;
 public final class FirstStageGameTests {
     static final String BATCH = "first_stage";
     private static final int STUCK_LIMIT = 600;
+    private static final int STARTING_LOGS = 32;
+    private static final int PIT_DEPTH = 3;
     private static final long NOON = 6000;
     private static final int SPIRITS = 3;
     private static final int REPORT_EVERY = 500;
@@ -183,7 +187,7 @@ public final class FirstStageGameTests {
         spirit.getInventory().setItem(1, new ItemStack(Items.STONE_AXE));
         spirit.getInventory().setItem(2, new ItemStack(Items.STONE_SHOVEL));
         spirit.getInventory().setItem(3, new ItemStack(Items.STONE_SWORD));
-        spirit.getInventory().setItem(4, new ItemStack(log, 64));
+        spirit.getInventory().setItem(4, new ItemStack(log, STARTING_LOGS));
         spirit.getInventory().setItem(5, new ItemStack(Items.COAL, 16));
         return spirit;
     }
@@ -196,6 +200,7 @@ public final class FirstStageGameTests {
         private final Map<UUID, Integer> idle = new HashMap<>();
         private final List<String> stuck = new ArrayList<>();
         private final List<String> fell = new ArrayList<>();
+        private boolean pitDug;
         private final ScenePlan scene;
         private final Map<String, Integer> spent = new TreeMap<>();
 
@@ -212,6 +217,7 @@ public final class FirstStageGameTests {
             }
             Optional<SettlementPlot> plot =
                     SettlementPlotStore.get(helper.getLevel()).plot();
+            plot.ifPresent(p -> digPitAfterLeveling(p.anchor()));
             for (SpiritEntity spirit : spirits) {
                 spent.merge(spirit.currentTaskScript().orElse("-"), 1, Integer::sum);
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
@@ -225,6 +231,25 @@ public final class FirstStageGameTests {
                         below,
                         "ниже плана в " + spirit.blockPosition().toShortString());
             }
+        }
+
+        private void digPitAfterLeveling(BlockCoord anchor) {
+            boolean leveling = board.board().all().stream()
+                    .filter(ticket -> ticket.boardCase() == BoardCase.CLEAR_GROUNDS)
+                    .anyMatch(
+                            ticket -> board.board().statusOf(ticket.id()).orElse(BoardStatus.DONE) != BoardStatus.DONE);
+            if (pitDug || leveling || !board.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
+                return;
+            }
+            pitDug = true;
+            BlockPos top = new BlockPos(anchor.x() - SettlementLayout.HALF + 2, anchor.y() - 1, anchor.z() + 6);
+            for (int depth = 0; depth < PIT_DEPTH; depth++) {
+                helper.getLevel().setBlockAndUpdate(top.below(depth), Blocks.AIR.defaultBlockState());
+            }
+            LOGGER.info(
+                    "[scene] яма {} на {} у двора после выравнивания: аудит ровности должен её засыпать",
+                    top,
+                    PIT_DEPTH);
         }
 
         private void inPit(SpiritEntity spirit, BlockCoord anchor) {
