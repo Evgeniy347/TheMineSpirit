@@ -313,7 +313,6 @@ class GameTestTimeoutGuardTests {
                 "Сторож ослеп: константа по полному имени без метки [флак] должна попадать в нарушители");
     }
 
-    // Разрешённая константа: значение и место её объявления (для проверки метки [флак] у самой константы).
     private record Constant(int value, String text, int declarationOffset) {}
 
     private record ClassSource(String text, Map<String, Constant> constants) {}

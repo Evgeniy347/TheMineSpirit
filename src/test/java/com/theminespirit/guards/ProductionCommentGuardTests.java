@@ -1,6 +1,7 @@
 package com.theminespirit.guards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 class ProductionCommentGuardTests {
     private static final Path BASELINE = Path.of("config/comment-baseline.txt");
+    private static final int BASELINE_LIMIT = 235;
     private static final Set<String> SKIPPED_DIRECTORIES = Set.of(
             ".git", ".gradle", ".idea", ".vs", ".codegraph", "build", "TestResults", "temp-scripts", "run", "run-data");
     private static final Pattern RESTRICTION_LABEL = Pattern.compile("^(?:mc|lib)\\s*:");
@@ -57,6 +59,19 @@ class ProductionCommentGuardTests {
                 "Список исключений config/comment-baseline.txt содержит записи, которых в коде уже нет: "
                         + "он только уменьшается. Удали названные строки — иначе исключение прикрывает будущий "
                         + "комментарий с тем же текстом. Остаток списка");
+    }
+
+    @Test
+    void baseline_EntryCount_DoesNotGrow() {
+        int entries =
+                readBaseline().values().stream().mapToInt(Integer::intValue).sum();
+
+        assertTrue(
+                entries <= BASELINE_LIMIT,
+                "Список исключений config/comment-baseline.txt только уменьшается, сейчас записей " + entries
+                        + " при потолке " + BASELINE_LIMIT + " (docs/CONVENTIONS.md → «Комментарии»). "
+                        + "Новый комментарий добавлением строки в список не легализуется: напиши поясняющий "
+                        + "быстрый тест, а комментарий удали. Список стал меньше — уменьши BASELINE_LIMIT.");
     }
 
     @Test

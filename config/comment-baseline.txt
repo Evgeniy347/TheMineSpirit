@@ -233,4 +233,3 @@ src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	иначе те
 src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] заплыв через глубокий пруд: всплытия и подход за плавание под нагрузкой дольше
 src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] заплыв через канал в пять блоков плюс переход: под нагрузкой полного прогона заплыв тянется
 src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] четыре клетки моста и переход: запас под нагрузкой соседних сцен полного прогона
-src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	Разрешённая константа: значение и место её объявления (для проверки метки [флак] у самой константы).
