@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -219,8 +218,6 @@ public final class AcquireGameTests {
                 """, SpiritScripts.catalog()));
 
         helper.runAfterDelay(5, () -> {
-            CompoundTag tag = new CompoundTag();
-            spirit.saveWithoutId(tag);
             SpiritEntity reloaded = CraftTestSupport.reload(helper, spirit);
             helper.runAfterDelay(2, () -> {
                 helper.assertTrue(

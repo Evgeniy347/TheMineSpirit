@@ -13,6 +13,16 @@ class ToolChoiceTests {
     private static final ToolReserve RESERVE = ToolReserve.defaults();
 
     @Test
+    void slots_HandAndMainHand_AreMinusOneAndMinusTwo() {
+        assertEquals(-1, ToolChoice.HAND, "Слот «рука» в выборе инструмента равен -1: на нём держится разбор выбора");
+        assertEquals(
+                -2,
+                ToolChoice.MAIN_HAND,
+                "Слот основной руки равен -2 (рядом с рукой -1): при смене значения ломка путает основную руку "
+                        + "с инвентарём, и разбор выбора нужно пересмотреть");
+    }
+
+    @Test
     void best_PickaxeAndAxeOnStone_ChoosesPickaxe() {
         Choice choice = ToolChoice.best(List.of(ToolOption.of(3, 4.0, false), ToolOption.of(5, 6.0, true)));
 

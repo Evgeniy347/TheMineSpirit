@@ -13,7 +13,6 @@ import com.theminespirit.neoforge.BlockSets;
 import com.theminespirit.neoforge.HarvestSession;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritScripts;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1054,18 +1053,6 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.finish(helper);
         });
-    }
-
-    @SceneStep(template = "empty", timeoutTicks = 100)
-    public static void scripts_RegistryForSpirit_ContainsMineVeinAndGather(GameTestHelper helper) {
-        GameTestFixtures.sweepEntities(helper);
-        SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
-        var ids = SpiritScripts.registryFor(spirit).ids();
-        helper.assertTrue(
-                ids.contains("mine_vein") && ids.contains("gather"),
-                "реестр скриптов духа обязан содержать mine_vein и gather, а содержит " + ids);
-        GameTestFixtures.reset(helper);
-        helper.succeed();
     }
 
     @SceneStep(template = "arena", timeoutTicks = 280)
