@@ -705,7 +705,7 @@ public final class TicketPlans {
         // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
         // его берёт следующий обмер, когда соседние ряды срезаны.
         List<PlotLeveling.Box> cuts = leveling.cutTopDown();
-        List<Integer> cutPart = cutParts(cuts, leveling.fill(), center);
+        List<Integer> cutPart = balancedParts(cuts, center);
         for (int index = 0; index < cuts.size(); index++) {
             PlotLeveling.Box box = cuts.get(index);
             if (!single || cutPart.get(index) == quarter) {
@@ -715,9 +715,9 @@ public final class TicketPlans {
             }
         }
         steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
-        List<PlotLeveling.Box> fills = leveling.fill().stream()
-                .filter(box -> !single || partOf(box, center) == quarter)
-                .toList();
+        // Ряды подсыпки — тоже по частям поровну: яма низины целиком в части 1 держала её духа ~4700 тиков, пока
+        // остальные части были готовы к ~3600 (сцена 56). Своей срезки части хватает на свою долю ям.
+        List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), center, quarter) : leveling.fill();
         // Ямы подсыпки — сперва от того, что в них стоит (ствол дерева в низине, кусты): высота ног их не видит, а
         // подсыпка в занятую клетку не встаёт — яма с деревом оставалась, выравнивание шло по кругу (сцена 56).
         // Воду и пустые клетки расчистка пропускает быстро.
@@ -823,13 +823,19 @@ public final class TicketPlans {
     // Часть каждого ящика срезки — по объёму поровну (с допуском CUT_SLACK к ближайшей части): холм в середине
     // участка целиком доставался части 5, её дух срезал его ~4700 тиков, пока двое других ждали (сцена 56).
     // Порядок «сверху вниз» сохраняется внутри каждой части.
-    // Части с ямами получают срезки сверх прочих на объём своей подсыпки: земля срезки идёт в их яму, а не добывается
-    // за оградой (сцена 56: добыча земли за оградой — ~1000 тиков духов, при том что срезка давала втрое больше).
-    static List<Integer> cutParts(List<PlotLeveling.Box> cuts, List<PlotLeveling.Box> fills, BlockCoord center) {
-        int[] load = new int[CLEAR_PARTS + 1];
-        for (PlotLeveling.Box fill : fills) {
-            load[partOf(fill, center)] -= fill.volume();
+    private static List<PlotLeveling.Box> ofPart(List<PlotLeveling.Box> boxes, BlockCoord center, int part) {
+        List<Integer> parts = balancedParts(boxes, center);
+        List<PlotLeveling.Box> mine = new ArrayList<>();
+        for (int index = 0; index < boxes.size(); index++) {
+            if (parts.get(index) == part) {
+                mine.add(boxes.get(index));
+            }
         }
+        return mine;
+    }
+
+    static List<Integer> balancedParts(List<PlotLeveling.Box> cuts, BlockCoord center) {
+        int[] load = new int[CLEAR_PARTS + 1];
         List<Integer> parts = new ArrayList<>(cuts.size());
         for (PlotLeveling.Box box : cuts) {
             int home = partOf(box, center);

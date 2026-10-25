@@ -20,10 +20,12 @@ import net.minecraft.world.item.ShovelItem;
 import org.jspecify.annotations.Nullable;
 
 final class ClearAreaScript implements ScriptInstance {
+    private static final int MAX_RESTOCKS = 2;
     private final ClearAreaSession session;
     private final @Nullable SpiritEntity spirit;
     private @Nullable TaskRunner restock;
     private boolean restockChecked;
+    private int restockAttempts;
 
     ClearAreaScript(SpiritEntity spirit, ClearAreaParams params) {
         this.spirit = spirit;
@@ -40,9 +42,14 @@ final class ClearAreaScript implements ScriptInstance {
 
     @Override
     public ScriptStatus tick() {
-        if (!restockChecked) {
+        // Лопата проверяется в начале ящика и между клетками: в большом ящике (сотни блоков) она кончалась на середине,
+        // и остаток копался рукой (сцена 56). Не вышло — больше в этом ящике не пробует.
+        if (restock == null && restockAttempts < MAX_RESTOCKS && (!restockChecked || session.picking())) {
             restockChecked = true;
             restock = shovelRestock();
+            if (restock != null) {
+                restockAttempts++;
+            }
         }
         if (restock != null) {
             if (restock.isSuspended()) {

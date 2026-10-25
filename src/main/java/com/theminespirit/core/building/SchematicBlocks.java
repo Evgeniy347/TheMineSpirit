@@ -21,6 +21,10 @@ public final class SchematicBlocks {
             "cobblestone",
             "mossy_cobblestone",
             "dirt",
+            // Трава — та же земля сверху: строитель шахты её оставляет полом, а аудит считал спуск недостроенным, и
+            // шахта переоткрывалась по кругу (сцена 56).
+            "grass_block",
+            "podzol",
             "coarse_dirt",
             "rooted_dirt",
             "deepslate",

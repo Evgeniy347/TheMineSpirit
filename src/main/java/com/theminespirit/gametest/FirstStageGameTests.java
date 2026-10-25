@@ -138,6 +138,21 @@ public final class FirstStageGameTests {
                         + ", дух " + loaded.spirit() + " — сцену из живого мира в тест не загрузить");
     }
 
+    // Дерево у духа (брёвна/доски/палки) — видно, почему ограда и хижина ждут материалов.
+    private static String woodHeld(SpiritEntity spirit) {
+        int logs = 0;
+        int planks = 0;
+        int sticks = 0;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
+            logs += id.endsWith("_log") ? stack.getCount() : 0;
+            planks += id.endsWith("_planks") ? stack.getCount() : 0;
+            sticks += "stick".equals(id) ? stack.getCount() : 0;
+        }
+        return "log" + logs + "/pl" + planks + "/st" + sticks;
+    }
+
     private static int countItems(SpiritEntity spirit) {
         int count = 0;
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
@@ -217,7 +232,7 @@ public final class FirstStageGameTests {
             List<String> spiritsNow = spirits.stream()
                     .map(spirit ->
                             spirit.displayName() + "@" + spirit.blockPosition().toShortString() + "="
-                                    + spirit.currentTaskScript().orElse("-"))
+                                    + spirit.currentTaskScript().orElse("-") + " " + woodHeld(spirit))
                     .toList();
             List<String> open = board.board().all().stream()
                     .filter(ticket -> board.board()

@@ -146,6 +146,11 @@ public class ClearAreaSession {
         }
     }
 
+    // Между клетками (выбор следующей): здесь можно прерваться на смену инструмента, не бросая ломку на полпути.
+    public boolean picking() {
+        return state == State.PICK && outcome == Outcome.RUNNING;
+    }
+
     public Outcome outcome() {
         return outcome;
     }
