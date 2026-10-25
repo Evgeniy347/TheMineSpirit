@@ -7,11 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -35,21 +31,10 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class SimplificationGameTests {
     private static final BlockPos SPIRIT_AT = new BlockPos(4, 1, 4);
-    private static final String MAGNET_BATCH = "simplify_magnet";
 
     private SimplificationGameTests() {}
 
-    @BeforeBatch(batch = MAGNET_BATCH)
-    public static void stopMobsTargetingSpirits(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = MAGNET_BATCH)
-    public static void restoreMobTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = MAGNET_BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, calmMobs = true)
     public static void magnet_FreeDropNearbyAndYoungPlayerDrop_OnlyFreeDropPulled(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT_AT);
@@ -76,7 +61,7 @@ public final class SimplificationGameTests {
     }
 
     // [флак] открытие сундука и перенос пяти блоков с места: запас под нагрузкой полного прогона.
-    @GameTest(template = "arena", batch = "simplify_chest_reach", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void reach_ChestThreeBlocksAway_WithdrawsWithoutWalking(GameTestHelper helper) {
         MovementScene.prepare(helper);
         BlockPos chestAt = new BlockPos(7, 1, 4);
@@ -110,7 +95,7 @@ public final class SimplificationGameTests {
     }
 
     // [флак] две руды за стеной и дроп в инвентарь: ломка деревянной киркой с запасом.
-    @GameTest(template = "arena", batch = "simplify_vein_reach", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void vein_OreBehindStoneWithinReach_MinedFromPlaceIntoInventory(GameTestHelper helper) {
         MovementScene.prepare(helper);
         for (int y = 1; y <= 3; y++) {
@@ -154,7 +139,7 @@ public final class SimplificationGameTests {
     }
 
     // [флак] застревание детектируется за 40 тиков, затем перенос и спуск к цели.
-    @GameTest(template = "arena", batch = "simplify_unstuck", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unstuck_SpiritInTwoHighRing_TeleportsOverWallAndReachesTarget(GameTestHelper helper) {
         MovementScene.prepare(helper);
         for (int x = 3; x <= 5; x++) {
@@ -184,7 +169,7 @@ public final class SimplificationGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "simplify_unstuck_wall", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void unstuck_SealedCell_NeverTeleportsThroughWalls(GameTestHelper helper) {
         MovementScene.prepare(helper);
         for (int x = 3; x <= 5; x++) {
@@ -219,7 +204,7 @@ public final class SimplificationGameTests {
     }
 
     // [флак] три зрелые клетки пшеницы с места и подбор урожая в инвентарь.
-    @GameTest(template = "arena", batch = "simplify_farm_reach", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void farm_MatureWheatWithinReach_HarvestedFromPlace(GameTestHelper helper) {
         MovementScene.prepare(helper);
         List<BlockPos> cells = List.of(new BlockPos(6, 0, 4), new BlockPos(6, 0, 5), new BlockPos(4, 0, 6));
