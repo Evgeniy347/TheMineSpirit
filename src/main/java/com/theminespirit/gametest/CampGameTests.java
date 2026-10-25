@@ -19,7 +19,6 @@ import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -37,10 +36,6 @@ public final class CampGameTests {
     // интеллект выдаёт работу (рубка), а исходная задача «wait» терялась — отход оставался без приказа
     // (флак 17.10: дух не доходил за 100 тиков). По умолчанию в GameTest координатор и доска выключены,
     // поэтому пачкам отхода ничего не нужно, а обороне лагеря — явная разметка ниже.
-    private static final String RETREAT_CAMP_BATCH = "camp_retreat_camp";
-    private static final String RETREAT_HOME_BATCH = "camp_retreat_home";
-    private static final String RETREAT_SCRIPT_BATCH = "camp_retreat_script";
-    private static final String RETREAT_NONE_BATCH = "camp_retreat_none";
 
     private CampGameTests() {}
 
@@ -57,7 +52,7 @@ public final class CampGameTests {
         spirit.setHome(MovementScene.coord(helper, relative));
     }
 
-    @GameTest(template = "arena", batch = "camp_persist")
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void camp_SavedAndLoaded_SurvivesRoundTripAndRejectsFutureVersion(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity saved = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -92,7 +87,7 @@ public final class CampGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = RETREAT_CAMP_BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void retreat_CampNearerThanHome_RunsToCamp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -135,7 +130,7 @@ public final class CampGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = RETREAT_HOME_BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void retreat_HomeNearerThanCamp_RunsHome(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -185,7 +180,7 @@ public final class CampGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = RETREAT_SCRIPT_BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void retreatScript_CampNearerThanHome_RunsToCamp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -214,7 +209,7 @@ public final class CampGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = RETREAT_NONE_BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void retreat_NoHomeNoCamp_FailsWithNoRetreatPoint(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 1));
@@ -235,8 +230,7 @@ public final class CampGameTests {
         });
     }
 
-    @SettlementSystems(coordinator = true)
-    @GameTest(template = "arena", batch = "camp_defense_camp", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void defendedPoint_CampNearerThanHome_PointsAtCamp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(7, 1, 5));
@@ -262,8 +256,7 @@ public final class CampGameTests {
         });
     }
 
-    @SettlementSystems(coordinator = true)
-    @GameTest(template = "arena", batch = "camp_defense_home", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void defendedPoint_NoCamp_PointsAtHome(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(7, 1, 5));
