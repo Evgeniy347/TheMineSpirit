@@ -15,6 +15,7 @@ import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.ProgressWatchdog;
+import com.theminespirit.core.mining.SoilLayer;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
@@ -109,6 +110,7 @@ public final class HarvestSession {
 
     private int entityQueries;
     private final int surfaceY;
+    private final SoilCells soil;
 
     private HarvestSession(SpiritEntity spirit, Spec spec) {
         this.spirit = spirit;
@@ -124,6 +126,7 @@ public final class HarvestSession {
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.surfaceY = spirit.blockPosition().getY();
+        this.soil = new SoilCells(level);
     }
 
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
@@ -148,7 +151,7 @@ public final class HarvestSession {
                                 spirit.level(),
                                 spirit.blockPosition(),
                                 radius,
-                                IdFilter.of(List.of(block)),
+                                IdFilter.of(SoilLayer.dirt(block) ? SoilLayer.TURF_BLOCKS : List.of(block)),
                                 spirit.home().isPresent()),
                         WorkKind.GATHER,
                         block,
@@ -350,14 +353,14 @@ public final class HarvestSession {
         state = State.APPROACH;
     }
 
-    // Земля, песок и гравий берутся слоем не глубже блока под ногами на старте: добыча вглубь рыла траншею в 3
-    // блока, из которой дух не выбирался (сцена 56, сид 519074267563303498: земля на подсыпку за оградой).
     private List<BlockCoord> shallow(List<BlockCoord> candidates) {
         List<BlockCoord> kept = new ArrayList<>();
         for (BlockCoord candidate : candidates) {
             BlockState state = level.getBlockState(toPos(candidate));
-            boolean soil = state.is(BlockTags.DIRT) || state.is(BlockTags.SAND) || state.is(Blocks.GRAVEL);
-            if (soil && candidate.y() < surfaceY - 1) {
+            boolean loose = state.is(BlockTags.SAND) || state.is(Blocks.GRAVEL);
+            boolean refused =
+                    state.is(BlockTags.DIRT) ? !soil.takeable(candidate) : loose && candidate.y() < surfaceY - 1;
+            if (refused) {
                 buffer.remove(candidate);
             } else {
                 kept.add(candidate);

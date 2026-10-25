@@ -134,6 +134,7 @@ public final class FirstStepsRunner {
         }
         // Якорь участка — один на поселение, зафиксирован в мире: от него выравнивание и все постройки раскладки.
         BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
+        PlotAudit.tick(level, service, anchor, now);
         BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
@@ -1098,24 +1099,13 @@ public final class FirstStepsRunner {
         Optional<SettlementPlot> stored = store.plot();
         BlockCoord center = SettlementPlot.center(homes);
         if (stored.isPresent() && stored.orElseThrow().covers(center)) {
-            return checkedWood(level, service, store, stored.orElseThrow(), now);
+            SettlementPlot kept = PlotHeights.rechecked(
+                    service, store, stored.orElseThrow(), (x, z) -> feetAt(level, x, z, center.y()), now);
+            return checkedWood(level, service, store, kept, now);
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
-        SettlementPlot plot =
-                SettlementPlot.survey(center, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, center.y()), wood);
-        store.fix(plot);
-        LOGGER.info(
-                "[plot] высота {}: медиана по {} колонкам, мин {} макс {}, центр ({}, {}) по {} домам духов, порода {}",
-                plot.anchor().y(),
-                plot.columns(),
-                plot.min(),
-                plot.max(),
-                plot.anchor().x(),
-                plot.anchor().z(),
-                homes.size(),
-                wood);
-        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current()));
-        return plot;
+        return PlotHeights.surveyed(
+                service, store, center, homes.size(), wood, (x, z) -> feetAt(level, x, z, center.y()), now);
     }
 
     // Порода плана, нарушающая правило «запас < 16 — решает биом» (закреплена старой сборкой, INC-62), пересчитывается

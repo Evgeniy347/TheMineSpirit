@@ -79,6 +79,17 @@ class AcquireScriptTests {
     }
 
     @Test
+    void gatherAtLeast_SmallShortfall_TripBringsMinimum() {
+        AcquireScript script = script(4, new StubSupplies(1, Map.of()), alwaysGatherable(), new AtomicInteger())
+                .gatherAt(new BlockCoord(30, 64, 30))
+                .gatherAtLeast(32);
+
+        assertTrue(
+                script.buildSubplan().orElseThrow().toString().contains("count=32"),
+                "Не хватает 3 — ходка за ограду приносит не меньше 32: ходок по 2–3 блока нет (INC-73)");
+    }
+
+    @Test
     void shortfallExists_ChestCoversRemainder_PlanStartsWithWithdraw() {
         AcquireScript script =
                 script(3, new StubSupplies(1, Map.of("chestA", 10)), alwaysGatherable(), new AtomicInteger());

@@ -750,46 +750,44 @@ public final class TicketPlans {
         }
         boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
         BlockCoord source = dirtSource(center, single ? quarter : 1);
-        for (PlotLeveling.Box layer : layers(fills)) {
-            if (dirt) {
-                // Земля под слой (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
-                // добычей за оградой, а не из земли участка; сундука до выравнивания нет. Нехватка — не провал
-                // задания: слой досыплется следующей попыткой выравнивания.
-                // Хватает в инвентаре — добор не ходит за ограду (acquire идёт к месту добычи только при нехватке).
-                steps.add(new FallbackNode(List.of(
-                        new ScriptCall(
-                                "acquire_at",
-                                Map.of(
-                                        ITEM,
-                                        MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
-                                        COUNT,
-                                        Math.min(layer.volume(), CatalogLimits.COUNT_MAX),
-                                        "x",
-                                        source.x(),
-                                        "y",
-                                        source.y(),
-                                        "z",
-                                        source.z())),
-                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-            }
-            steps.add(new FallbackNode(List.of(
-                    new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-        }
-        // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
-        // карман духу не достать, это не повод валить выравнивание (INC-67).
         List<PlotLeveling.Box> voids = leveling.voids().stream()
                 .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
-        for (PlotLeveling.Box layer : layers(voids)) {
-            steps.add(new FallbackNode(List.of(
-                    new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+        List<PlotLeveling.Box> pits = new ArrayList<>(layers(fills));
+        pits.addAll(layers(voids));
+        int batch = Math.min(DataTables.INSTANCE.leveling().current().batch(), CatalogLimits.COUNT_MAX);
+        for (List<PlotLeveling.Box> group : FillBatches.of(pits, dirt ? batch : Integer.MAX_VALUE)) {
+            if (dirt) {
+                steps.add(dirtFor(FillBatches.volume(group), source));
+            }
+            for (PlotLeveling.Box layer : group) {
+                steps.add(new FallbackNode(List.of(
+                        new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+            }
         }
         // Расчистка своей части (растения, деревья, старые постройки) — после срезки и подсыпки: до них она срезала
         // заодно холм своей части, доли срезки по объёму теряли смысл, и части 1–3 шли по 2000+ тиков (сцена 56).
         steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         return withLeftovers(new SequenceNode(steps), target);
+    }
+
+    private static TaskNode dirtFor(int volume, BlockCoord source) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        "acquire_at",
+                        Map.of(
+                                ITEM,
+                                MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
+                                COUNT,
+                                Math.min(volume, CatalogLimits.COUNT_MAX),
+                                "x",
+                                source.x(),
+                                "y",
+                                source.y(),
+                                "z",
+                                source.z())),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     // Подсыпка — слоями снизу вверх по всей яме, а не рядами на всю глубину (INC-66): засыпав свой ряд, дух поднимался
@@ -927,6 +925,9 @@ public final class TicketPlans {
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {
+        if (target.schemeFile() == null && target.leveling() != null) {
+            return LevelRepair.plan(target);
+        }
         String scheme = target.schemeFile() == null ? "repair" : target.schemeFile();
         return sequence(gotoTarget(target), schematic(scheme, target));
     }
