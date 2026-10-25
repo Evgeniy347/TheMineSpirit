@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -26,7 +25,7 @@ public final class BlockBreakerGameTests {
 
     private BlockBreakerGameTests() {}
 
-    @GameTest(template = "arena", batch = "breaker_hand", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_HandOnDirt_BreaksInVanillaTimeAndDropsDirt(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.DIRT);
         BlockBreaker breaker = new BlockBreaker(spirit);
@@ -56,7 +55,7 @@ public final class BlockBreakerGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "breaker_pickaxe", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_IronPickaxeOnStone_ChoosesToolDropsCobblestoneAndWearsTool(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
@@ -92,7 +91,7 @@ public final class BlockBreakerGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "breaker_nopick", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_HandOnStone_BreaksSlowlyWithoutDrop(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         BlockBreaker breaker = new BlockBreaker(spirit);
@@ -116,7 +115,7 @@ public final class BlockBreakerGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "breaker_wear", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_ToolOnLastDurability_RefusedAsNeedTool(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         ItemStack pickaxe = new ItemStack(Items.WOODEN_PICKAXE);
@@ -143,7 +142,7 @@ public final class BlockBreakerGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "breaker_refuse", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_ImpossibleTargets_AreRefusedWithReason(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.BEDROCK);
         BlockBreaker breaker = new BlockBreaker(spirit);
@@ -175,7 +174,7 @@ public final class BlockBreakerGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "breaker_crack", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_CrackStage_IsShownWhileBreakingAndClearedOnCancelAndGone(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         BlockBreaker breaker = new BlockBreaker(spirit);

@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -74,7 +73,7 @@ public final class ClearGameTests {
                 hit);
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_WallOfCobble_ClearsAndCollectsDrops(GameTestHelper helper) {
         prepare(helper);
         for (int y = 1; y <= 3; y++) {
@@ -110,7 +109,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_AlreadyEmptyArea_Succeeds(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
@@ -129,7 +128,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_OnlyProtectedTorch_SucceedsAndKeepsIt(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(5, 1, 5), Blocks.TORCH);
@@ -150,7 +149,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear_pocket", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_DirtBlockAroundSealedPocket_FailsFastWithUnreachableCount(GameTestHelper helper) {
         prepare(helper);
         for (int x = 3; x <= 5; x++) {
@@ -221,7 +220,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_BedrockAndLavaNeighbour_SkipsWithoutFailing(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(4, 1, 4), Blocks.COBBLESTONE);
@@ -261,7 +260,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_BlockUnderFeet_VetoSkipsAndSpiritStays(GameTestHelper helper) {
         prepare(helper);
         helper.assertTrue(
@@ -292,7 +291,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_OwnWall_RemovedBySpirit(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithPick(helper, new BlockPos(1, 1, 1));
@@ -327,7 +326,7 @@ public final class ClearGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "clear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_PlayerWall_RefusedAsProtected(GameTestHelper helper) {
         prepare(helper);
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 4), "Строитель");

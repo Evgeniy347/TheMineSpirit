@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
@@ -46,7 +45,7 @@ public final class AcquireGameTests {
 
     private AcquireGameTests() {}
 
-    @GameTest(template = "arena", batch = "acquire_wood", timeoutTicks = WOOD_TICKS_LIMIT)
+    @SceneStep(template = "arena", timeoutTicks = WOOD_TICKS_LIMIT)
     public static void acquireWoodenPickaxe_FromScratch_PickaxeInInventory(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
@@ -69,7 +68,7 @@ public final class AcquireGameTests {
     }
 
     // [флак] добыча руды, крафт печи и плавка; замерено ~340 тиков духа, запас 2×
-    @GameTest(template = "arena", batch = "acquire_stone", timeoutTicks = 500)
+    @SceneStep(template = "arena", timeoutTicks = 500)
     public static void acquireStonePickaxe_FromScratch_PickaxeInInventory(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
@@ -97,7 +96,7 @@ public final class AcquireGameTests {
     // [флак] добыча железа с нуля без дерева: верстак и печь в мире, каменная кирка снабжается
     // заранее (резолвер не планирует крафт инструментов — RequiredTier вне ResourceKnowledge),
     // остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
-    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = 700)
+    @SceneStep(template = "arena", timeoutTicks = 700)
     public static void acquireIronIngot_FromScratch_IngotInInventory(GameTestHelper helper) {
         field(helper);
         placeIronOreRow(helper);
@@ -124,7 +123,7 @@ public final class AcquireGameTests {
     }
 
     // [флак] deepslate_iron_ore: тот же цикл добычи и плавки, запас 2×
-    @GameTest(template = "arena", batch = "acquire_iron", timeoutTicks = 700)
+    @SceneStep(template = "arena", timeoutTicks = 700)
     public static void acquireIronIngot_DeepslateNearby_GathersIronOre(GameTestHelper helper) {
         field(helper);
         placeIronOreRow(helper);
@@ -149,7 +148,7 @@ public final class AcquireGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "acquire_have", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void acquireWoodenPickaxe_AlreadyInInventory_SucceedsWithoutWorld(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
@@ -173,7 +172,7 @@ public final class AcquireGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "acquire_chest", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void acquireWoodenPickaxe_InNearChest_WithdrawsWithoutGathering(GameTestHelper helper) {
         field(helper);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
@@ -192,7 +191,7 @@ public final class AcquireGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "acquire_fail", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void acquireWoodenPickaxe_NoSource_FailedWithNumbers(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper);
@@ -209,7 +208,7 @@ public final class AcquireGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "acquire_restart", timeoutTicks = WOOD_TICKS_LIMIT)
+    @SceneStep(template = "arena", timeoutTicks = WOOD_TICKS_LIMIT)
     public static void acquireWoodenPickaxe_RestartedMidway_DoesNotGatherTwice(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
@@ -249,7 +248,7 @@ public final class AcquireGameTests {
 
     // [флак] REST: HTTP ходит другим потоком, предел берём из общего шаблона (ResultGameTests),
     // где 20_000 — потолок на медленной машине
-    @GameTest(template = "arena", batch = "acquire_rest", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void acquireWoodenPickaxe_SucceededTask_RestResultHoldsNumbers(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);

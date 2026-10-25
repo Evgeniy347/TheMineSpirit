@@ -10,7 +10,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -22,7 +21,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class GatherIronOreGameTests {
     private GatherIronOreGameTests() {}
 
-    @GameTest(template = "arena", batch = "gather_iron_ore", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void gatherIronOre_StonePickaxeNearby_Succeeds(GameTestHelper helper) {
         field(helper);
         helper.setBlock(3, 1, 3, Blocks.IRON_ORE);
