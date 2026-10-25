@@ -39,7 +39,7 @@ public final class MoveScenesGameTests {
                 WaterCrossGameTests.class);
     }
 
-    @GameTest(template = "big_arena", batch = "scene_move_big_arena", timeoutTicks = 19208)
+    @GameTest(template = "big_arena", batch = "scene_move_big_arena", timeoutTicks = 19229)
     public static void moveScene_BigArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(helper, List.of("big_arena"), HouseMovementGameTests.class);
     }
