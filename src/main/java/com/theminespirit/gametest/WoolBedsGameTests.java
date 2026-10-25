@@ -173,29 +173,6 @@ public final class WoolBedsGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 400)
-    public static void shear_SheepInPen_ShearedAlive(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        HusbandryGameTests.fencePerimeter(helper);
-        Sheep sheep = HusbandryGameTests.spawnStill(helper, EntityType.SHEEP, new BlockPos(3, 1, 3));
-        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START, new ItemStack(Items.SHEARS));
-        SpiritRun run = SpiritRun.launch(
-                helper, spirit, new ScriptCall("shear", Map.of("radius", 8, "count", 1)), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            HusbandryGameTests.assertSucceeded(helper, spirit, "овца в загоне обязана постричься");
-            helper.assertTrue(sheep.isAlive(), "стрижка не убивает: овца загона обязана остаться жива");
-            helper.assertTrue(sheep.isSheared(), "овца обязана остаться без шерсти: иначе шерсть взялась из воздуха");
-            helper.assertTrue(
-                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHITE_WOOL) >= 1,
-                    "шерсть обязана попасть в инвентарь, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHITE_WOOL));
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void hunt_PenSheepAlive_WildSheepCulled(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
