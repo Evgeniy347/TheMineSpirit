@@ -12,6 +12,7 @@ import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
@@ -499,8 +500,26 @@ public final class FirstStepsRunner {
     }
 
     // Высоты колонок участка для выравнивания: спуск в шахту — на уровне участка, его не засыпают (INC-50).
+    private static int descentEnd(BlockCoord anchor) {
+        try {
+            return MineDescentBottom.standOf(anchor).map(BlockCoord::z).orElse(Integer.MAX_VALUE);
+        } catch (IllegalStateException | IllegalArgumentException unbuildable) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
     private static IntBinaryOperator plotFeet(ServerLevel level, BlockCoord anchor) {
-        return (x, z) -> SettlementLayout.mineColumn(anchor, x, z) ? anchor.y() : feetAt(level, x, z, anchor.y());
+        // Колонки стенок спуска: яма засыпается (иначе у спуска оставалась яма, и строители ограды падали в неё по
+        // 1000+ тиков, сцена 56), бугор (стенка над землёй у входа) не срезается. Проход — на уровне участка.
+        // Проход за низом спуска — обычная земля участка: колонка спуска до края участка длиннее самого спуска.
+        int passageEnd = descentEnd(anchor);
+        return (x, z) -> {
+            if (SettlementLayout.minePassage(anchor, x, z) && z <= passageEnd) {
+                return anchor.y();
+            }
+            int feet = feetAt(level, x, z, anchor.y());
+            return SettlementLayout.mineColumn(anchor, x, z) ? Math.min(feet, anchor.y()) : feet;
+        };
     }
 
     // Уровень ног колонки — над верхним блоком земли; постройки, станции, деревья и растения землёй не считаются.

@@ -17,6 +17,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
 public final class FillSession {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int NO_STAND_LOGGED = 4;
+    private static final int MAX_DEFERRALS = 2;
+    private static final int LONG_STATE_TICKS = 200;
 
     public enum Outcome {
         RUNNING,
@@ -56,6 +59,10 @@ public final class FillSession {
     private final String blockId;
     private final BlockState wanted;
     private final Set<BlockCoord> region;
+    private int stateTicks;
+    private @Nullable State lastState;
+    private @Nullable BlockCoord currentStand;
+    private final Map<BlockCoord, Integer> deferred = new HashMap<>();
     private final List<BlockCoord> order;
     private final LevelSafetyView safety;
     private final BlockPlacer placer;
@@ -98,7 +105,7 @@ public final class FillSession {
         this.reservations = BuildReservationHub.forLevel(level);
         Set<BlockCoord> occupied = spiritCells();
         this.spiritCells = Set.copyOf(occupied);
-        this.order = BuildOrder.placement(List.copyOf(cells), occupied);
+        this.order = new ArrayList<>(BuildOrder.placement(List.copyOf(cells), occupied));
         // Дух в яме, которую засыпает, не выходит из неё (выход уводил его на край, откуда дно не достать, INC-66):
         // засыпает вокруг себя слой за слоем, а свою клетку — под себя столбом.
         if (insideBox(spirit.blockPosition()) && !occupied.isEmpty() && !onFloor()) {
@@ -112,6 +119,21 @@ public final class FillSession {
         }
         if (spirit.isRemoved()) {
             return fail("дух исчез во время стройки");
+        }
+        stateTicks = state == lastState ? stateTicks + 1 : 0;
+        lastState = state;
+        if (stateTicks > 0 && stateTicks % LONG_STATE_TICKS == 0) {
+            // Долго в одном состоянии — в лог, где и с чем: подсыпка, стоящая сотни тиков в пруду, без строки не
+            // разобрать (сцена 56).
+            LOGGER.info(
+                    "[fill] {}: {} тиков в {} у {} (стоянка {}, дух в {}, в воде {})",
+                    spirit.getName().getString(),
+                    stateTicks,
+                    state,
+                    current,
+                    currentStand,
+                    spirit.blockPosition().toShortString(),
+                    spirit.isInWater());
         }
         switch (state) {
             case EXIT -> exitTick();
@@ -228,6 +250,9 @@ public final class FillSession {
             }
             reservations.reserve(cell, spirit.getUUID());
             this.current = cell;
+            if (deferOwnWater(cell)) {
+                continue;
+            }
             if (cell.equals(spiritCoord())) {
                 // Своя клетка — под себя: прыжок и блок под ноги, дух поднимается на слой (INC-66).
                 pillar = pillarHere(cell);
@@ -276,6 +301,7 @@ public final class FillSession {
                 continue;
             }
             BlockCoord stand = stands.get(0);
+            currentStand = stand;
             approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
             state = State.APPROACH;
             return;
@@ -320,6 +346,22 @@ public final class FillSession {
         return true;
     }
 
+    // Своя клетка в воде пруда — после соседних: из воды дух ставит их с места, потом выходит на них и засыпает свою
+    // с соседней стоянки (столб в воде не выходит, дух всплывает, сцена 56).
+    private boolean deferOwnWater(BlockCoord cell) {
+        if (!cell.equals(spiritCoord()) || !floatingIn(cell) || deferred.merge(cell, 1, Integer::sum) > MAX_DEFERRALS) {
+            return false;
+        }
+        order.add(cell);
+        release(cell);
+        cursor++;
+        return true;
+    }
+
+    private boolean floatingIn(BlockCoord cell) {
+        return level.getBlockState(toPos(cell)).getFluidState().is(FluidTags.WATER);
+    }
+
     private PillarColumn pillarHere(BlockCoord cell) {
         return level.getBlockState(toPos(cell)).getFluidState().is(FluidTags.WATER)
                 ? PillarColumn.throughWater(spirit, blockId)
@@ -329,7 +371,7 @@ public final class FillSession {
     private boolean inReach(BlockCoord cell) {
         BlockPos feet = spirit.blockPosition();
         BlockPos pos = toPos(cell);
-        return spirit.onGround()
+        return (spirit.onGround() || spirit.isInWater())
                 && !pos.equals(feet)
                 && !pos.equals(feet.above())
                 && SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), cell);
@@ -366,6 +408,25 @@ public final class FillSession {
     }
 
     private void approachTick() {
+        BlockPos feet = spirit.blockPosition();
+        if (currentStand != null
+                && feet.getX() == currentStand.x()
+                && feet.getZ() == currentStand.z()
+                && Math.abs(feet.getY() - currentStand.y()) <= 1
+                && (spirit.onGround() || spirit.isInWater())) {
+            // Уже в клетке стоянки (в воде пруда дух всплывает на блок выше неё): подход к центру с допуском не
+            // заканчивался до тайм-аута, и дух сотни тиков стоял в пруду (сцена 56).
+            approach.cancel();
+            placeCurrent();
+            return;
+        }
+        if (current != null && inReach(current)) {
+            // По дороге к стоянке клетка оказалась в досягаемости — ставится с места: подход к стоянке в соседней
+            // клетке воды не заканчивался, и дух сотни тиков плавал в пруду (сцена 56).
+            approach.cancel();
+            placeCurrent();
+            return;
+        }
         switch (approach.tick()) {
             case MOVING -> {}
             case ARRIVED -> placeCurrent();
@@ -416,7 +477,29 @@ public final class FillSession {
                 fail("не хватило материала '" + blockId + "': нужно " + order.size() + ", есть " + have
                         + "; поставлено " + placed + " из " + order.size());
             }
-            case OCCUPIED, NO_SUPPORT, CHUNK_NOT_LOADED -> {
+            case OCCUPIED, NO_SUPPORT -> {
+                if (deferred.merge(current, 1, Integer::sum) <= MAX_DEFERRALS) {
+                    // Клетку занял дух соседней части или под ней ещё не засыпано: в конец очереди, а не в пропуск —
+                    // пропуск оставлял яму на следующий круг выравнивания (сцена 56).
+                    order.add(current);
+                    releaseAndAdvance();
+                    state = State.PICK;
+                    return;
+                }
+                if (skipped < NO_STAND_LOGGED) {
+                    LOGGER.info(
+                            "[fill] {}: {} не поставить: {} (дух в {})",
+                            spirit.getName().getString(),
+                            current,
+                            refused.message(),
+                            spirit.blockPosition().toShortString());
+                }
+                skipped++;
+                tally.skipped();
+                releaseAndAdvance();
+                state = State.PICK;
+            }
+            case CHUNK_NOT_LOADED -> {
                 if (skipped < NO_STAND_LOGGED) {
                     LOGGER.info(
                             "[fill] {}: {} не поставить: {} (дух в {})",

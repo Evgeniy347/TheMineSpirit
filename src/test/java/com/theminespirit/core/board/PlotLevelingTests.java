@@ -61,6 +61,18 @@ class PlotLevelingTests {
     }
 
     @Test
+    void minePassage_MiddleOfThree_OnlyPassageNotWalls() {
+        BlockCoord entrance = SettlementLayout.mineEntrance(ANCHOR);
+
+        assertTrue(
+                SettlementLayout.minePassage(ANCHOR, entrance.x() + 1, entrance.z() + 2),
+                "Проход спуска (средняя колонка) не засыпается выравниванием: иначе спуск завален");
+        assertFalse(
+                SettlementLayout.minePassage(ANCHOR, entrance.x(), entrance.z() + 2),
+                "Стенка спуска — не проход: яму в ней засыпают, иначе строители ограды падали в неё (сцена 56)");
+    }
+
+    @Test
     void voids_CaveUnderPlot_OnlyWithinDepth() {
         // Колонка (0,0): поверхность 64, пещера 58..62 под ней — засыпается только 60..62 (4 под уровнем), глубже нет.
         List<PlotLeveling.Box> voids = PlotLeveling.voids(ANCHOR, 0, (x, z) -> 64, (x, y, z) -> y >= 58 && y <= 62);

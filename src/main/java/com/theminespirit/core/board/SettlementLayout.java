@@ -69,6 +69,11 @@ public final class SettlementLayout {
         return x >= entrance.x() && x <= entrance.x() + 2 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
     }
 
+    // Проход спуска (средняя колонка из трёх): его не засыпают; стенки по бокам — засыпают ямы до уровня участка.
+    public static boolean minePassage(BlockCoord anchor, int x, int z) {
+        return mineColumn(anchor, x, z) && x == mineEntrance(anchor).x() + 1;
+    }
+
     // Добыча (gather земли, камня) не берёт блоки участка и пещер под поселением (INC-69: 4-й раз тот же карман под
     // участком). Участок — его площадь с полосой выравнивания на любой высоте; пещера — глубже CAVE_DEPTH под
     // поверхностью колонки в двух участках от центра. Спуск в шахту плана — исключение.

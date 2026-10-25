@@ -79,6 +79,8 @@ import org.slf4j.Logger;
 public final class BoardService {
     // Задание на деревянную кирку, когда её нет ни у одного духа (гейт ToolGate, INC-67).
     static final String PICKAXE_TICKET = "tool:wooden_pickaxe";
+    // Не чаще раза в столько тиков — досрочная выдача заданий, когда дух освободился.
+    private static final long EARLY_DISPATCH_TICKS = 20;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
     private static final long DIG_OUT_PAUSE_TICKS = 1200;
@@ -104,6 +106,8 @@ public final class BoardService {
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
+    private boolean freshTickets;
+    private long lastDispatch;
     private int claims;
     private int retains;
     private long stockBlockReads;
@@ -198,13 +202,35 @@ public final class BoardService {
 
     public void tick(ServerLevel level, long now) {
         journal.flush(JournalService.FLUSH_BUDGET);
-        if (now - lastRebuild < BoardTuning.boardIntervalTicks()) {
+        long since = now - lastRebuild;
+        if (since >= BoardTuning.boardIntervalTicks()) {
+            rebuild(level, now);
             return;
         }
-        rebuild(level, now);
+        // Между циклами — только выдача уже стоящих заданий освободившемуся духу (не пересборка): дух ждал выдачи
+        // следующей части по ~50 тиков после каждой, ~1200 тиков простоя на трёх духах (сцена 56).
+        if (now - lastDispatch >= EARLY_DISPATCH_TICKS && (freshTickets || holderFreed(level))) {
+            lastDispatch = now;
+            freshTickets = false;
+            issue(level, census(level), now);
+        }
+    }
+
+    // Дух с заданием доски закончил задачу: следующий цикл — сразу, а не через до 100 тиков. На этапе 1 дух ждал
+    // выдачи следующей части по ~50 тиков после каждой, ~1200 тиков простоя на трёх духах (сцена 56).
+    private boolean holderFreed(ServerLevel level) {
+        for (UUID holder : board.assignedCounts().keySet()) {
+            if (level.getEntity(holder) instanceof SpiritEntity spirit
+                    && spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void rebuild(ServerLevel level, long now) {
+        // Задания, поставленные этим циклом (шаг первых шагов открыт после выдачи), выдаются следующим — досрочно.
+        freshTickets = false;
         board.prune(now);
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
@@ -382,6 +408,7 @@ public final class BoardService {
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
+            freshTickets = true;
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persist();
