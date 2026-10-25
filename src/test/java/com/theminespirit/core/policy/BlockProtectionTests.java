@@ -313,6 +313,19 @@ class BlockProtectionTests {
     }
 
     @Test
+    void checkSettlement_OldFenceOnPlot_AllowedChestKept() {
+        assertEquals(
+                new BlockProtection.Allowed(),
+                protection.checkSettlement("minecraft:jungle_fence", false),
+                "Старая ограда на участке поселения убирается выравниванием: чёрный список заборов её держал, и ящик "
+                        + "проваливался «защищено: 22» (INC-71)");
+        assertInstanceOf(
+                BlockProtection.Refused.class,
+                protection.checkSettlement("minecraft:chest", false),
+                "Сундук на участке по-прежнему не ломают: в нём запас поселения");
+    }
+
+    @Test
     void file_Loaded_ThresholdIsSixAndGatherPolicyIsNotDuplicated() {
         assertEquals(
                 6,

@@ -8,6 +8,7 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.PlanBudget;
 import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.PlanValidator;
@@ -50,6 +51,7 @@ public final class AcquireScript implements ScriptInstance {
     private @Nullable String failureReason;
     private @Nullable String lastStepFailure;
     private boolean suspendedBeforeStart;
+    private @Nullable BlockCoord gatherAt;
 
     public AcquireScript(
             String item,
@@ -133,6 +135,13 @@ public final class AcquireScript implements ScriptInstance {
         };
     }
 
+    // Место добычи (INC-68): не хватает после инвентаря и сундуков — сначала идти сюда (земля на подсыпку — за
+    // оградой). Хватает — шаг пропускается, дух никуда не ходит.
+    public AcquireScript gatherAt(@Nullable BlockCoord place) {
+        this.gatherAt = place;
+        return this;
+    }
+
     Optional<TaskNode> buildSubplan() {
         if (attempts == 0) {
             // Фиксируем стартовые числа только на первой попытке: итог описывает
@@ -153,6 +162,10 @@ public final class AcquireScript implements ScriptInstance {
         int need = count - startInventory - chestPlanned;
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {
+            BlockCoord place = gatherAt;
+            if (place != null) {
+                nodes.add(new ScriptCall("goto", Map.of("x", place.x(), "y", place.y(), "z", place.z())));
+            }
             nodes.add(ResourceResolver.resolve(item, need, knowledge, catalog, conditions, supplies));
         }
         TaskNode plan = new SequenceNode(nodes);

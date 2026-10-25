@@ -865,7 +865,7 @@ public final class BoardService {
         }
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now, awaited);
-            noteToolGate(ticket, spirits);
+            noteWhy(ticket, spirits, spirit, now);
             if (spirit == null) {
                 LOGGER.debug(
                         "Задание {} ждёт свободного духа: {}",
@@ -1059,11 +1059,28 @@ public final class BoardService {
                 && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
     }
 
-    // Гейт по инструменту виден на доске (waitReason, экран J): ни у кого нет кирки — «нет духа с киркой».
-    private void noteToolGate(BoardTicket ticket, List<SpiritEntity> spirits) {
-        boolean gated = ToolGate.required(ticket.boardCase()).isPresent()
-                && spirits.stream().noneMatch(candidate -> ToolGate.allows(ticket.boardCase(), itemIds(candidate)));
-        board.noteWait(ticket.id(), gated ? "нет духа с киркой: ждёт кирку (задание " + PICKAXE_TICKET + ")" : null);
+    // Почему задание не выдано — на доске (waitReason, экран J), а не null при свободных духах (INC-70): ни у кого
+    // нет кирки; все годные духи на паузе кейса после провалов; все заняты.
+    private void noteWhy(BoardTicket ticket, List<SpiritEntity> spirits, @Nullable SpiritEntity chosen, long now) {
+        if (chosen != null) {
+            board.noteWait(ticket.id(), null);
+            return;
+        }
+        BoardCase boardCase = ticket.boardCase();
+        List<SpiritEntity> tooled = spirits.stream()
+                .filter(candidate -> ToolGate.allows(boardCase, itemIds(candidate)))
+                .toList();
+        String reason;
+        if (tooled.isEmpty()) {
+            reason = ToolGate.required(boardCase).isPresent()
+                    ? "нет духа с киркой: ждёт кирку (задание " + PICKAXE_TICKET + ")"
+                    : "нет духов";
+        } else if (tooled.stream().noneMatch(candidate -> board.availableTo(candidate.getUUID(), boardCase, now))) {
+            reason = "все годные духи (" + tooled.size() + ") на паузе кейса " + boardCase + " после провалов";
+        } else {
+            reason = "годные духи заняты или ждут свои задания";
+        }
+        board.noteWait(ticket.id(), reason);
     }
 
     static List<String> itemIds(SpiritEntity spirit) {
