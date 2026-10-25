@@ -25,6 +25,14 @@ public record TownPlan(
         return region.count();
     }
 
+    public List<Placement> upToStage(int stage) {
+        return placements.stream().filter(place -> place.stage() <= stage).toList();
+    }
+
+    public List<Placement> ofStage(int stage) {
+        return placements.stream().filter(place -> place.stage() == stage).toList();
+    }
+
     public Optional<Placement> placement(String id) {
         Objects.requireNonNull(id, "id постройки не может быть null");
         return placements.stream().filter(place -> place.id().equals(id)).findFirst();

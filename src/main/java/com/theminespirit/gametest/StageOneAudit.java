@@ -2,7 +2,6 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.PlotLeveling;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.BuildRotation;
@@ -16,7 +15,13 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SchematicResources;
+import com.theminespirit.neoforge.board.FirstStepsRunner;
+import com.theminespirit.neoforge.board.GroundProbe;
+import com.theminespirit.neoforge.board.StageBlocks;
+import com.theminespirit.neoforge.board.StrayBlocks;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,71 +35,76 @@ import net.minecraft.world.level.block.state.BlockState;
 final class StageOneAudit {
     private static final int SHOWN = 6;
     private static final int SCAN = 12;
+    private static final List<BoardCase> STEPS = List.of(
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.LIGHTING,
+            BoardCase.STOCK_CHESTS,
+            BoardCase.CRAFT_FURNACE);
 
     private StageOneAudit() {}
 
-    static List<String> problems(ServerLevel level, BlockCoord anchor, String wood) {
+    static List<String> problems(ServerLevel level, StageSite site, ColumnMask region, String wood) {
         List<String> problems = new ArrayList<>();
-        level(level, anchor, problems);
-        building(level, BoardCase.BUILD_FENCE, anchor, wood, problems);
-        fenceSides(level, anchor, problems);
-        building(level, BoardCase.BUILD_HOUSE, anchor, wood, problems);
-        mine(level, anchor, problems);
-        torches(level, anchor, problems);
+        level(level, site, problems);
+        for (BoardCase step : STEPS) {
+            building(level, step, site, wood, problems);
+        }
+        ring(level, site, problems);
+        mine(level, site, problems);
+        List<String> stray = StrayBlocks.find(level, site, region).stream()
+                .map(cell -> cell + " "
+                        + BuiltInRegistries.BLOCK
+                                .getKey(level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
+                                        .getBlock())
+                                .getPath())
+                .toList();
+        report("постройки духов вне плана — их снос не сделан", stray, problems);
         return problems;
     }
 
-    private static void level(ServerLevel level, BlockCoord anchor, List<String> problems) {
+    private static void level(ServerLevel level, StageSite site, List<String> problems) {
         List<String> off = new ArrayList<>();
-        int half = SettlementLayout.LEVEL_HALF;
-        for (int x = anchor.x() - half; x <= anchor.x() + half; x++) {
-            for (int z = anchor.z() - half; z <= anchor.z() + half; z++) {
-                int feet = feet(level, anchor, x, z);
-                if (!SettlementLayout.mineColumn(anchor, x, z)
-                        && Math.abs(feet - anchor.y()) > PlotLeveling.TOLERANCE) {
-                    BlockPos top = new BlockPos(x, feet - 1, z);
-                    off.add("(" + x + ", " + z + ") ноги " + feet + " на "
-                            + BuiltInRegistries.BLOCK
-                                    .getKey(level.getBlockState(top).getBlock())
-                                    .getPath());
-                }
+        BlockCoord anchor = site.anchor();
+        for (ColumnMask.Cell cell : site.level().cells()) {
+            int feet = feet(level, anchor, cell.x(), cell.z());
+            if (site.levelColumn(cell.x(), cell.z()) && Math.abs(feet - anchor.y()) > PlotLeveling.TOLERANCE) {
+                BlockPos top = new BlockPos(cell.x(), feet - 1, cell.z());
+                off.add("(" + cell.x() + ", " + cell.z() + ") ноги " + feet + " на "
+                        + BuiltInRegistries.BLOCK
+                                .getKey(level.getBlockState(top).getBlock())
+                                .getPath());
             }
         }
-        report("участок не ровный на y=" + anchor.y(), off, problems);
+        report("площадки этапа не ровные на y=" + anchor.y(), off, problems);
     }
 
-    private static void fenceSides(ServerLevel level, BlockCoord anchor, List<String> problems) {
+    private static void ring(ServerLevel level, StageSite site, List<String> problems) {
         List<String> steps = new ArrayList<>();
-        int ring = SettlementLayout.HALF;
-        for (int offset : new int[] {ring - 1, ring + 1}) {
-            for (int along = -offset; along <= offset; along++) {
-                int[][] cells = {{along, -offset}, {along, offset}, {-offset, along}, {offset, along}};
-                for (int[] cell : cells) {
-                    int x = anchor.x() + cell[0];
-                    int z = anchor.z() + cell[1];
-                    int feet = feet(level, anchor, x, z);
-                    if (!SettlementLayout.mineColumn(anchor, x, z) && feet > anchor.y()) {
-                        steps.add("(" + x + ", " + z + ") ноги " + feet);
-                    }
+        int[][] sides = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (ColumnMask.Cell post : site.ring().posts()) {
+            int base = StageBlocks.postY(level, site, post);
+            for (int[] side : sides) {
+                int x = post.x() + side[0];
+                int z = post.z() + side[1];
+                if (!site.inside(x, z) && GroundProbe.feet(level, x, z, base) > base) {
+                    steps.add("(" + x + ", " + z + ") выше столба " + post + " на y=" + base);
                 }
             }
         }
-        report("уступ у ограды — забор перешагивается", steps, problems);
+        report("уступ у ограды снаружи — забор перешагивается", steps, problems);
     }
 
     private static void building(
-            ServerLevel level, BoardCase step, BlockCoord anchor, String wood, List<String> problems) {
-        TicketTarget target = TicketTarget.at(anchor);
-        if (!WoodSpecies.OAK.equals(wood)) {
-            target = target.withWood(wood);
-        }
+            ServerLevel level, BoardCase step, StageSite site, String wood, List<String> problems) {
+        TicketTarget target = FirstStepsRunner.targetFor(level, step, site, wood);
         List<String> missing = new ArrayList<>();
         int[] total = {0};
         collect(level, TicketPlans.plan(step, 1, target), wood, missing, total);
         if (total[0] == 0) {
             problems.add(step + ": в плане нет ни одного блока — сверять нечего");
         }
-        report(step + " не по схеме: нет " + missing.size() + " из " + total[0], missing, problems);
+        report(step + " не по плану: нет " + missing.size() + " из " + total[0], missing, problems);
     }
 
     private static void collect(ServerLevel level, TaskNode plan, String wood, List<String> missing, int[] total) {
@@ -130,12 +140,13 @@ final class StageOneAudit {
                 .getKey(level.getBlockState(pos).getBlock())
                 .toString());
         boolean torch = "torch".equals(want) && "wall_torch".equals(actual);
-        if (!actual.equals(want) && !torch && !WoodSpecies.sameRole(actual, want)) {
+        boolean grown = want.endsWith("_sapling") && actual.equals(want.replace("_sapling", "_log"));
+        if (!actual.equals(want) && !torch && !grown && !WoodSpecies.sameRole(actual, want)) {
             missing.add(pos.toShortString() + " " + want + "≠" + actual);
         }
     }
 
-    private static void mine(ServerLevel level, BlockCoord anchor, List<String> problems) {
+    private static void mine(ServerLevel level, StageSite site, List<String> problems) {
         Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
         if (preset.isEmpty()) {
             problems.add("схема спуска " + TicketPlans.MINE_DESCENT_SCHEME + " не загружена");
@@ -144,7 +155,7 @@ final class StageOneAudit {
         MineLayout layout = MineLayout.place(
                 preset.get().schematic(),
                 preset.get().entry(),
-                TicketPlans.mineDescentOrigin(anchor),
+                site.mineEntrance(),
                 BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
                 MineLayout.Extent.NONE);
         List<String> wrong = new ArrayList<>();
@@ -162,17 +173,6 @@ final class StageOneAudit {
             }
         }
         report("спуск в шахту не по схеме", wrong, problems);
-    }
-
-    private static void torches(ServerLevel level, BlockCoord anchor, List<String> problems) {
-        List<String> dark = new ArrayList<>();
-        for (BlockCoord cell : SettlementLayout.lighting(anchor)) {
-            BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
-            if (!state.is(Blocks.TORCH) && !state.is(Blocks.WALL_TORCH)) {
-                dark.add(cell + " " + state.getBlock());
-            }
-        }
-        report("факелов освещения нет", dark, problems);
     }
 
     static int feet(ServerLevel level, BlockCoord anchor, int x, int z) {
@@ -197,6 +197,8 @@ final class StageOneAudit {
     }
 
     private static String bare(String id) {
-        return id.startsWith("minecraft:") ? id.substring("minecraft:".length()) : id;
+        int state = id.indexOf('[');
+        String block = state < 0 ? id : id.substring(0, state);
+        return block.startsWith("minecraft:") ? block.substring("minecraft:".length()) : block;
     }
 }

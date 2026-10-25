@@ -35,6 +35,7 @@ class BoardConfigTests {
                 Map.entry("LIGHTING", 50),
                 Map.entry("BUILD_HOUSE", 50),
                 Map.entry("PLACE_BEEHIVE", 50),
+                Map.entry("PLANT_GROVE", 50),
                 Map.entry("BUILD_MINE", 50),
                 Map.entry("ENCHANT_ROOM", 50),
                 Map.entry("CRAFT_ANVIL", 50),

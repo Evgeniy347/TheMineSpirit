@@ -1,9 +1,8 @@
 package com.theminespirit.neoforge.crafting;
 
-import com.theminespirit.core.board.SettlementLayout;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.crafting.WorkCorner;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.ReachApproach;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
@@ -25,6 +24,7 @@ final class StationAccess {
 
     private static final Supply NO_SUPPLY = spirit -> false;
     private static final int SETTLEMENT_REACH = 48;
+    private static final int SETTLEMENT_SEARCH = 23;
 
     private final SpiritEntity spirit;
     private final StationType type;
@@ -94,7 +94,7 @@ final class StationAccess {
             Optional<BlockPos> center = settlementCenter()
                     .filter(at -> at.distSqr(spirit.blockPosition()) <= SETTLEMENT_REACH * SETTLEMENT_REACH);
             if (center.isPresent()) {
-                settlementFinder = new StationFinder(spirit.level(), center.get(), SettlementLayout.PLOT, type);
+                settlementFinder = new StationFinder(spirit.level(), center.get(), SETTLEMENT_SEARCH, type);
             } else {
                 settlementSearched = true;
             }
@@ -128,10 +128,10 @@ final class StationAccess {
 
     private Optional<BlockPos> settlementCenter() {
         if (spirit.level() instanceof ServerLevel level) {
-            Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
-            if (plot.isPresent()) {
-                BlockCoord anchor = plot.get().anchor();
-                return Optional.of(new BlockPos(anchor.x(), anchor.y(), anchor.z()));
+            Optional<StageSite> site = SettlementPlotStore.get(level).site();
+            if (site.isPresent()) {
+                BlockCoord yard = site.get().workYard();
+                return Optional.of(new BlockPos(yard.x(), yard.y(), yard.z()));
             }
         }
         return Optional.empty();

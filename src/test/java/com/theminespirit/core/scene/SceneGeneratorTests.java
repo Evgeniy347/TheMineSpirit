@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.SettlementLayout;
 import java.util.List;
 import java.util.stream.LongStream;
 import net.jqwik.api.ForAll;
@@ -12,7 +11,7 @@ import net.jqwik.api.Property;
 import org.junit.jupiter.api.Test;
 
 class SceneGeneratorTests {
-    private static final int PLOT = SettlementLayout.HALF;
+    private static final int PLOT = 11;
 
     @Property
     void generate_SameSeed_SameScene(@ForAll long seed) {

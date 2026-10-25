@@ -6,6 +6,7 @@ import com.theminespirit.core.movement.network.NetworkAreas;
 import com.theminespirit.core.movement.network.NetworkBuilder;
 import com.theminespirit.core.movement.network.NetworkRoute;
 import com.theminespirit.core.movement.network.PathNetwork;
+import com.theminespirit.core.movement.network.PathSegment;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,6 +41,13 @@ public final class PathNetworkService {
 
     public static Optional<List<BlockCoord>> route(ServerLevel level, BlockCoord feet, BlockCoord target) {
         return BY_LEVEL.computeIfAbsent(level, key -> new LevelNetwork()).route(level, feet, target);
+    }
+
+    public static List<List<BlockCoord>> segments(ServerLevel level) {
+        LevelNetwork network = BY_LEVEL.get(level);
+        return network == null
+                ? List.of()
+                : network.network.segments().stream().map(PathSegment::cells).toList();
     }
 
     public static void legFailed(ServerLevel level, BlockCoord from, BlockCoord to) {

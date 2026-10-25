@@ -36,6 +36,7 @@
     "LIGHTING": 50,
     "BUILD_HOUSE": 50,
     "PLACE_BEEHIVE": 50,
+    "PLANT_GROVE": 50,
     "BUILD_MINE": 50,
     "ENCHANT_ROOM": 50,
     "GATHER_MATERIALS": 45,

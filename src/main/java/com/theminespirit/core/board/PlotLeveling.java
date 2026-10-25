@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -51,24 +52,25 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return topLayer(y, level) ? DEFAULT_BLOCK : deep;
     }
 
-    public static List<Box> voids(BlockCoord anchor, int half, IntBinaryOperator feet, AirProbe probe) {
+    public static List<Box> voids(BlockCoord anchor, ColumnMask area, IntBinaryOperator feet, AirProbe probe) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: пустоты ищутся под ним");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: пустота — воздух под поверхностью");
         Objects.requireNonNull(probe, "Проба воздуха не может быть null: без неё пустот не найти");
         List<Box> found = new ArrayList<>();
         int bottom = anchor.y() - VOID_DEPTH;
-        for (int x = anchor.x() - half; x <= anchor.x() + half; x++) {
-            for (int z = anchor.z() - half; z <= anchor.z() + half; z++) {
-                int surface = Math.min(feet.applyAsInt(x, z), anchor.y());
-                Integer start = null;
-                for (int y = bottom; y <= surface; y++) {
-                    boolean hole = y < surface && probe.air(x, y, z);
-                    if (hole && start == null) {
-                        start = y;
-                    } else if (!hole && start != null) {
-                        found.add(new Box(x, start, z, x, y - 1, z));
-                        start = null;
-                    }
+        Objects.requireNonNull(area, "Площадки не могут быть null: пустоты ищутся под ними");
+        for (ColumnMask.Cell column : area.cells()) {
+            int x = column.x();
+            int z = column.z();
+            int surface = Math.min(feet.applyAsInt(x, z), anchor.y());
+            Integer start = null;
+            for (int y = bottom; y <= surface; y++) {
+                boolean hole = y < surface && probe.air(x, y, z);
+                if (hole && start == null) {
+                    start = y;
+                } else if (!hole && start != null) {
+                    found.add(new Box(x, start, z, x, y - 1, z));
+                    start = null;
                 }
             }
         }
@@ -98,14 +100,13 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return heights[heights.length / 2];
     }
 
-    public static boolean isLevel(BlockCoord anchor, int half, IntBinaryOperator feet) {
-        Objects.requireNonNull(anchor, "Якорь участка не может быть null: ровность читается вокруг него");
+    public static boolean isLevel(BlockCoord anchor, ColumnMask area, IntBinaryOperator feet) {
+        Objects.requireNonNull(anchor, "Якорь участка не может быть null: ровность читается от его высоты");
+        Objects.requireNonNull(area, "Площадки не могут быть null: ровность проверяется на них");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них ровность не проверить");
-        for (int dx = -half; dx <= half; dx++) {
-            for (int dz = -half; dz <= half; dz++) {
-                if (Math.abs(feet.applyAsInt(anchor.x() + dx, anchor.z() + dz) - anchor.y()) > TOLERANCE) {
-                    return false;
-                }
+        for (ColumnMask.Cell cell : area.cells()) {
+            if (Math.abs(feet.applyAsInt(cell.x(), cell.z()) - anchor.y()) > TOLERANCE) {
+                return false;
             }
         }
         return true;
@@ -148,17 +149,18 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return List.copyOf(out);
     }
 
-    public static PlotLeveling plan(BlockCoord anchor, int half, IntBinaryOperator feet) {
+    public static PlotLeveling plan(BlockCoord anchor, ColumnMask area, IntBinaryOperator feet) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него выравнивается участок");
+        Objects.requireNonNull(area, "Площадки не могут быть null: выравниваются только они");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них нечего выравнивать");
         int level = anchor.y();
         List<Box> cut = new ArrayList<>();
         List<Box> fill = new ArrayList<>();
-        for (int z = anchor.z() - half; z <= anchor.z() + half; z++) {
+        for (int z = area.minZ(); z < area.minZ() + area.depth(); z++) {
             @Nullable Run cutRun = null;
             @Nullable Run fillRun = null;
-            for (int x = anchor.x() - half; x <= anchor.x() + half + 1; x++) {
-                boolean inside = x <= anchor.x() + half;
+            for (int x = area.minX(); x <= area.minX() + area.width(); x++) {
+                boolean inside = area.contains(x, z);
                 int height = inside ? feet.applyAsInt(x, z) : level;
                 @Nullable
                 Run cutHere = height > level ? new Run(x, level, Math.min(height, level + MAX_SHIFT) - 1) : null;

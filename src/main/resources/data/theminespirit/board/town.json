@@ -1,11 +1,11 @@
 {
   "ground": {"area": 10000, "probeRadius": 64, "cliffStep": 2, "slopeWeight": 4, "slopeMax": 6},
   "streets": {"main": 7, "side": 5, "ring": 5, "ringInset": 2, "blockSize": 40},
-  "spacing": {"gap": 2, "stageMargin": 2, "chestFreePercent": 20},
+  "spacing": {"gap": 2, "stageMargin": 1, "chestFreePercent": 20},
   "buildings": [
     {"id": "hut", "name": "Хижина с палисадником", "width": 7, "depth": 9, "quarter": "nw", "level": true, "rotate": false},
     {"id": "yard", "name": "Двор", "width": 7, "depth": 5, "quarter": "any", "level": true, "rotate": false},
-    {"id": "mine", "name": "Спуск в шахту", "width": 5, "depth": 8, "quarter": "any", "level": true, "rotate": false},
+    {"id": "mine", "name": "Спуск в шахту", "width": 5, "depth": 15, "quarter": "any", "level": true, "rotate": false},
     {"id": "grove", "name": "Роща", "width": 9, "depth": 9, "quarter": "any", "level": false, "rotate": false},
     {"id": "plaza", "name": "Площадь", "width": 27, "depth": 27, "quarter": "center", "level": true, "rotate": false},
     {"id": "family_house_a", "name": "Дом семьи", "width": 24, "depth": 23, "quarter": "nw", "level": true, "rotate": true},

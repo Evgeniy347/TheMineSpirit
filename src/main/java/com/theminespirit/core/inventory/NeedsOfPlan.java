@@ -71,7 +71,8 @@ public final class NeedsOfPlan {
         if (BLOCK_SCRIPTS.contains(call.script())) {
             String block = text(call, BLOCK_PARAM);
             if (block != null) {
-                add(needs, block);
+                int state = block.indexOf('[');
+                add(needs, state < 0 ? block : block.substring(0, state));
             }
         }
     }

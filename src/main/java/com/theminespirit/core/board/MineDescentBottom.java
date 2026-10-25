@@ -12,8 +12,8 @@ import java.util.Optional;
 public final class MineDescentBottom {
     private MineDescentBottom() {}
 
-    public static Optional<BlockCoord> standOf(BlockCoord home) {
-        Objects.requireNonNull(home, "Дом не может быть null: спуск ставится от дома");
+    public static Optional<BlockCoord> standOf(BlockCoord entrance) {
+        Objects.requireNonNull(entrance, "Вход в шахту не может быть null: низ спуска считается от него");
         Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
         if (preset.isEmpty()) {
             return Optional.empty();
@@ -21,7 +21,7 @@ public final class MineDescentBottom {
         MineLayout layout = MineLayout.place(
                 preset.get().schematic(),
                 preset.get().entry(),
-                TicketPlans.mineDescentOrigin(home),
+                entrance,
                 BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
                 MineLayout.Extent.NONE);
         if (layout.air().isEmpty()) {

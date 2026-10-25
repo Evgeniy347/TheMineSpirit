@@ -19,6 +19,8 @@ import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.script.CatalogLimits;
@@ -114,10 +116,11 @@ public final class TransferWatch {
                 }
             }
         }
-        if (gather && ownWoodCovers(crafter, need)) {
+        if (ownWoodCovers(crafter, need)) {
             return false;
         }
-        if (needsTable(level, recipes, craftItem.orElseThrow(), service.targetPoint(craftTicket.id(), spirits))) {
+        if (needsTable(level, recipes, craftItem.orElseThrow(), service.targetPoint(craftTicket.id(), spirits))
+                && !placesOwnTable(craftTicket, target)) {
             ingredients.add(new Ingredient(ItemIds.normalize(TABLE_ITEM), 1));
         }
         StackMapper mapper = new StackMapper();
@@ -339,6 +342,23 @@ public final class TransferWatch {
         recipes.ingredientsFor(item)
                 .forEach(ingredient -> single.merge(ingredient.item(), ingredient.count(), Integer::sum));
         return single;
+    }
+
+    private static boolean placesOwnTable(BoardTicket craftTicket, TicketTarget target) {
+        if (target.work() == null) {
+            return false;
+        }
+        return placesTable(TicketPlans.plan(craftTicket.boardCase(), craftTicket.level(), target));
+    }
+
+    private static boolean placesTable(TaskNode plan) {
+        return switch (plan) {
+            case SequenceNode sequence -> sequence.steps().stream().anyMatch(TransferWatch::placesTable);
+            case ScriptCall call ->
+                "place_block".equals(call.script())
+                        && TABLE_ITEM.equals(call.params().get("block"));
+            default -> false;
+        };
     }
 
     private static boolean needsTable(ServerLevel level, RecipeKnowledge recipes, String item, BlockCoord craftAt) {

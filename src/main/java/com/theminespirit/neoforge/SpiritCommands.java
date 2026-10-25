@@ -5,6 +5,7 @@ import static net.minecraft.commands.Commands.literal;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.theminespirit.neoforge.board.SpiritPlanCommand;
 import com.theminespirit.neoforge.crater.CraterCommand;
 import java.util.function.Predicate;
 import net.minecraft.commands.CommandSourceStack;
@@ -36,6 +37,7 @@ public final class SpiritCommands {
         SpiritInviteCommand.register(operatorOnly);
         SpiritUnprotectCommand.register(operatorOnly);
         SpiritDemoCommand.register(operatorOnly);
+        SpiritPlanCommand.register(operatorOnly);
 
         dispatcher.register(spirit);
         dispatcher.register(operatorOnly);

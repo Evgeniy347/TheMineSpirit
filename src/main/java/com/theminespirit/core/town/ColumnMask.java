@@ -76,6 +76,10 @@ public final class ColumnMask {
         return combine(other, true);
     }
 
+    public ColumnMask intersect(ColumnMask other) {
+        return combine(other, false);
+    }
+
     public ColumnMask minus(ColumnMask other) {
         Objects.requireNonNull(other, "Вычитаемая маска не может быть null");
         BitSet out = (BitSet) bits.clone();

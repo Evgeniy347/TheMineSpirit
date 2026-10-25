@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildOrder;
 import com.theminespirit.core.building.BuildReservations;
@@ -385,8 +384,8 @@ public final class FillSession {
         }
         boolean sky = openAbove(stand);
         return SettlementPlotStore.get(server)
-                .plot()
-                .map(plot -> SettlementLayout.fillStandAllowed(plot.anchor(), stand, sky))
+                .site()
+                .map(site -> site.fillStandAllowed(stand, sky))
                 .orElse(true);
     }
 

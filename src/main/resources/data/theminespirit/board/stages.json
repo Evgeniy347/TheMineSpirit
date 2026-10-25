@@ -1,6 +1,7 @@
 {
   "stages": [
-    {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_FENCE": 1, "BUILD_HOUSE": 1},
+    {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_FENCE": 1, "BUILD_HOUSE": 1,
+                              "STOCK_CHESTS": 1, "CRAFT_FURNACE": 1, "LIGHTING": 1},
      "plan": ["hut", "yard", "mine", "grove", "fence", "torches"]},
     {"stage": 2, "buildings": {"BUILD_MINE": 2, "BUILD_WAREHOUSE": 2},
      "plan": ["plaza", "family_house_a", "family_house_b", "family_house_c", "storage", "barn", "field_a", "field_b",

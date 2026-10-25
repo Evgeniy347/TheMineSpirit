@@ -11,6 +11,8 @@ import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.Placement;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashMap;
@@ -22,6 +24,8 @@ import java.util.TreeSet;
 import net.minecraft.server.level.ServerLevel;
 
 public final class WarehouseWatch {
+    private static final String STORAGE = "storage";
+
     private WarehouseWatch() {}
 
     public static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
@@ -31,7 +35,11 @@ public final class WarehouseWatch {
         if (!houseBuilt(service) || FirstStepsRunner.stageOneBuilding(service)) {
             return;
         }
-        BlockCoord home = homeOf(spirits);
+        Optional<BlockCoord> lot = storageLot(level);
+        if (lot.isEmpty()) {
+            return;
+        }
+        BlockCoord home = lot.orElseThrow();
         Set<Integer> standing = doneLevels(service);
         submitRelocations(service, home, standing, now);
         int next = WarehouseRules.nextLevel(standing);
@@ -130,13 +138,14 @@ public final class WarehouseWatch {
         return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BlockCoord> home = spirit.home();
-            if (home.isPresent()) {
-                return home.orElseThrow();
-            }
+    private static Optional<BlockCoord> storageLot(ServerLevel level) {
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        Optional<Placement> storage = store.town().flatMap(town -> town.placement(STORAGE));
+        Optional<StageSite> site = store.site();
+        if (storage.isEmpty() || site.isEmpty()) {
+            return Optional.empty();
         }
-        return new BlockCoord(0, 64, 0);
+        Placement place = storage.orElseThrow();
+        return Optional.of(new BlockCoord(place.x(), site.orElseThrow().anchor().y(), place.z()));
     }
 }

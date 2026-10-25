@@ -19,8 +19,12 @@ import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
 
 class FirstStepsPlanTests {
-    private static final Set<BoardCase> LAYOUT =
-            EnumSet.of(BoardCase.BUILD_MINE, BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+    private static final Set<BoardCase> LAYOUT = EnumSet.of(
+            BoardCase.BUILD_MINE,
+            BoardCase.LIGHTING,
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.PLANT_GROVE);
 
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
@@ -36,6 +40,7 @@ class FirstStepsPlanTests {
         chain.add(BoardCase.BUILD_HOUSE);
         chain.add(BoardCase.CRAFT_SMITHING_TABLE);
         chain.add(BoardCase.CRAFT_ANVIL);
+        chain.add(BoardCase.PLANT_GROVE);
         return chain;
     }
 

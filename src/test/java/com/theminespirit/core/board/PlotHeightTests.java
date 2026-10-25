@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import java.util.Optional;
 import java.util.function.IntBinaryOperator;
 import org.junit.jupiter.api.Test;
@@ -16,8 +17,8 @@ class PlotHeightTests {
 
     @Test
     void choose_HillOnFlat_MedianKeptCutCoversNoFill() {
-        PlotHeight height =
-                PlotHeight.choose(CENTER, HALF, (x, z) -> Math.abs(x) <= 1 && Math.abs(z) <= 1 ? 68 : 64, RULES);
+        PlotHeight height = PlotHeight.choose(
+                square(CENTER, HALF), (x, z) -> Math.abs(x) <= 1 && Math.abs(z) <= 1 ? 68 : 64, RULES);
         assertEquals(
                 new PlotHeight(64, 36, 0, 25),
                 height,
@@ -27,8 +28,8 @@ class PlotHeightTests {
 
     @Test
     void choose_PitInFlat_LevelDropsUntilCutFeedsFill() {
-        PlotHeight height =
-                PlotHeight.choose(CENTER, HALF, (x, z) -> Math.abs(x) <= 1 && Math.abs(z) <= 1 ? 60 : 64, RULES);
+        PlotHeight height = PlotHeight.choose(
+                square(CENTER, HALF), (x, z) -> Math.abs(x) <= 1 && Math.abs(z) <= 1 ? 60 : 64, RULES);
         assertEquals(
                 new PlotHeight(63, 112, 27, 25),
                 height,
@@ -38,7 +39,7 @@ class PlotHeightTests {
 
     @Test
     void choose_MixedSlope_MedianWithoutSurplusRejected() {
-        PlotHeight height = PlotHeight.choose(CENTER, HALF, SLOPE, RULES);
+        PlotHeight height = PlotHeight.choose(square(CENTER, HALF), SLOPE, RULES);
         assertEquals(
                 63,
                 height.level(),
@@ -52,7 +53,7 @@ class PlotHeightTests {
     void describe_Height_LineForLogAndJournal() {
         assertEquals(
                 "[plot] высота 63: срезка 176, подсыпка 55, запас 25%",
-                PlotHeight.choose(CENTER, HALF, SLOPE, RULES).describe(),
+                PlotHeight.choose(square(CENTER, HALF), SLOPE, RULES).describe(),
                 "Строка [plot] в логе и журнале доски называет высоту, срезку, подсыпку и запас — по ней видно, "
                         + "почему выбрана высота");
     }
@@ -60,7 +61,7 @@ class PlotHeightTests {
     @Test
     void recheck_StoredMedianBreaksRule_PlanRecalculated() {
         SettlementPlot stored = new SettlementPlot(CENTER, 62, 66, 121, "oak");
-        Optional<PlotHeight> better = PlotHeight.recheck(stored, HALF, SLOPE, RULES);
+        Optional<PlotHeight> better = PlotHeight.recheck(stored, square(stored.anchor(), HALF), SLOPE, RULES);
         assertEquals(
                 Optional.of(63),
                 better.map(PlotHeight::level),
@@ -73,7 +74,11 @@ class PlotHeightTests {
         SettlementPlot stored = new SettlementPlot(CENTER, 64, 64, 121, "oak");
         assertEquals(
                 Optional.empty(),
-                PlotHeight.recheck(stored, HALF, (x, z) -> 64, RULES),
+                PlotHeight.recheck(stored, square(stored.anchor(), HALF), (x, z) -> 64, RULES),
                 "Выровненный участок не пересчитывается: высота с постройками на нём не плывёт");
+    }
+
+    private static ColumnMask square(BlockCoord center, int half) {
+        return ColumnMask.rect(center.x() - half, center.z() - half, center.x() + half, center.z() + half);
     }
 }

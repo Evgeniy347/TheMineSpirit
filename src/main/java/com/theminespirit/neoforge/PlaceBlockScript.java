@@ -9,6 +9,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.PlaceBlockParams;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,9 +38,10 @@ final class PlaceBlockScript implements ScriptInstance {
     PlaceBlockScript(SpiritEntity spirit, PlaceBlockParams params) {
         this.spirit = spirit;
         this.level = spirit.level();
-        this.blockId = params.block();
+        int state = params.block().indexOf('[');
+        this.blockId = state < 0 ? params.block() : params.block().substring(0, state);
         this.target = new BlockCoord(params.x(), params.y(), params.z());
-        this.wanted = BlockStates.stateFor(params.block());
+        this.wanted = BlockStates.stateFor(blockId, properties(params.block(), state));
         this.safety = new LevelSafetyView(level);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
@@ -114,6 +116,27 @@ final class PlaceBlockScript implements ScriptInstance {
             case CHUNK_NOT_LOADED ->
                 fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
         };
+    }
+
+    private static Map<String, String> properties(String block, int start) {
+        Map<String, String> properties = new LinkedHashMap<>();
+        if (start < 0) {
+            return properties;
+        }
+        if (!block.endsWith("]")) {
+            throw new IllegalArgumentException(
+                    "Состояние блока '" + block + "' без закрывающей скобки: ожидалось " + "id[свойство=значение,…]");
+        }
+        for (String pair : block.substring(start + 1, block.length() - 1).split(",", -1)) {
+            int equals = pair.indexOf('=');
+            if (equals <= 0) {
+                throw new IllegalArgumentException("Свойство '" + pair + "' блока '" + block
+                        + "' не в виде имя=значение: состояние блока не прочитать");
+            }
+            properties.put(
+                    pair.substring(0, equals).trim(), pair.substring(equals + 1).trim());
+        }
+        return properties;
     }
 
     private ScriptStatus fail(String reason) {

@@ -11,9 +11,11 @@ import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.PlotCells;
 import com.theminespirit.core.board.PlotLeveling;
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -42,7 +44,8 @@ final class PlotAudit {
 
     private PlotAudit() {}
 
-    static void tick(ServerLevel level, BoardService service, BlockCoord anchor, long now) {
+    static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
+        BlockCoord anchor = site.anchor();
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)
                 || open(service, EXCLUSIVE)
                 || recent(service, now)) {
@@ -51,25 +54,24 @@ final class PlotAudit {
         boolean building = open(service, WORKS);
         List<BlockCoord> holes = new ArrayList<>();
         List<BlockCoord> extras = new ArrayList<>();
-        int half = SettlementLayout.LEVEL_HALF;
-        for (int x = anchor.x() - half; x <= anchor.x() + half; x++) {
-            for (int z = anchor.z() - half; z <= anchor.z() + half; z++) {
-                boolean mine = SettlementLayout.mineColumn(anchor, x, z) || SettlementLayout.minePassage(anchor, x, z);
-                boolean planned = SettlementLayout.houseColumn(anchor, x, z) || fence(anchor, x, z);
-                for (int dy = -1; dy < PlotCells.FREE_HEIGHT; dy++) {
-                    BlockCoord cell = new BlockCoord(x, anchor.y() + dy, z);
-                    Optional<PlotCells.Defect> defect = PlotCells.defect(
-                            new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))));
-                    defect.filter(PlotCells.Defect.HOLE::equals).ifPresent(hole -> holes.addAll(down(level, cell)));
-                    defect.filter(PlotCells.Defect.EXTRA::equals)
-                            .filter(extra -> !building)
-                            .ifPresent(extra -> {
-                                extras.add(cell);
-                                if (cell.y() == anchor.y() - 1) {
-                                    holes.add(cell);
-                                }
-                            });
-                }
+        for (ColumnMask.Cell column : site.level().cells()) {
+            int x = column.x();
+            int z = column.z();
+            boolean mine = site.mineColumn(x, z);
+            boolean planned = site.houseColumn(x, z);
+            for (int dy = -1; dy < PlotCells.FREE_HEIGHT; dy++) {
+                BlockCoord cell = new BlockCoord(x, anchor.y() + dy, z);
+                Optional<PlotCells.Defect> defect =
+                        PlotCells.defect(new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))));
+                defect.filter(PlotCells.Defect.HOLE::equals).ifPresent(hole -> holes.addAll(down(level, cell)));
+                defect.filter(PlotCells.Defect.EXTRA::equals)
+                        .filter(extra -> !building)
+                        .ifPresent(extra -> {
+                            extras.add(cell);
+                            if (cell.y() == anchor.y() - 1) {
+                                holes.add(cell);
+                            }
+                        });
             }
         }
         if (holes.isEmpty() && extras.isEmpty()) {
@@ -87,7 +89,9 @@ final class PlotAudit {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of()),
-                TicketTarget.at(anchor).withLeveling(LevelRepair.leveling(holes, extras)));
+                TicketTarget.at(site.workYard())
+                        .withWork(new StageWork(site, List.of()))
+                        .withLeveling(LevelRepair.leveling(holes, extras)));
         if (outcome != BoardOutcome.ACCEPTED) {
             return;
         }
@@ -128,13 +132,6 @@ final class PlotAudit {
                 .filter(id -> id.startsWith(prefix))
                 .mapToLong(id -> Long.parseLong(id.substring(prefix.length())))
                 .anyMatch(tick -> now - tick < COOLDOWN);
-    }
-
-    private static boolean fence(BlockCoord anchor, int x, int z) {
-        int dx = Math.abs(x - anchor.x());
-        int dz = Math.abs(z - anchor.z());
-        int half = SettlementLayout.HALF;
-        return (dx == half && dz <= half) || (dz == half && dx <= half);
     }
 
     private static boolean open(BoardService service, Set<BoardCase> cases) {

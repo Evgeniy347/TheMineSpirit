@@ -1,11 +1,10 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.board.SettlementLayout;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.mining.StoneSource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,16 +24,15 @@ final class GatherTargets implements HarvestTargets {
     private final boolean settled;
     private int surfaceStone;
 
-    private final @Nullable BlockCoord settlement;
+    private final @Nullable StageSite settlement;
     private int settlementSkipped;
 
     GatherTargets(Level level, BlockPos center, int radius, IdFilter filter, boolean settled) {
         this.level = level;
         this.settlement = level instanceof ServerLevel server && settled
                 ? SettlementPlotStore.get(server)
-                        .plot()
-                        .filter(plot -> plot.contains(new BlockCoord(center.getX(), center.getY(), center.getZ())))
-                        .map(SettlementPlot::anchor)
+                        .site()
+                        .filter(site -> site.near(center.getX(), center.getZ()))
                         .orElse(null)
                 : null;
         this.settled = settled;
@@ -94,13 +92,12 @@ final class GatherTargets implements HarvestTargets {
     }
 
     private boolean forbiddenBySettlement(BlockPos pos) {
-        BlockCoord anchor = settlement;
-        if (anchor == null) {
+        StageSite site = settlement;
+        if (site == null) {
             return false;
         }
         int surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - 1;
-        return SettlementLayout.gatherForbidden(
-                anchor, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), surface - pos.getY());
+        return site.gatherForbidden(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), surface - pos.getY());
     }
 
     private String blockId(BlockPos pos) {

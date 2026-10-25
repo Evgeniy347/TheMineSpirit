@@ -32,8 +32,11 @@ public final class SettlementWood {
 
     public static String of(ServerLevel level, BlockCoord home, Map<String, Integer> stock) {
         Objects.requireNonNull(home, "Порода без места не определяется: деревья ищутся вокруг дома");
-        Optional<SettlementPlot> plot = SettlementPlotStore.get(level).plot();
-        if (plot.isPresent() && plot.orElseThrow().contains(home)) {
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        Optional<SettlementPlot> plot = store.plot();
+        boolean settled =
+                store.site().map(site -> site.near(home.x(), home.z())).orElse(false);
+        if (plot.isPresent() && settled) {
             return plot.orElseThrow().wood();
         }
         return survey(level, home, stock);

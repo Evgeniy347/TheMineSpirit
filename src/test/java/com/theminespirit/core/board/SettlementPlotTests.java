@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -43,7 +45,8 @@ class SettlementPlotTests {
 
     @Test
     void survey_SlopedPlot_MedianWithMinMax() {
-        SettlementPlot plot = SettlementPlot.survey(new BlockCoord(0, 64, 0), 1, (x, z) -> 64 + x, "oak");
+        SettlementPlot plot = SettlementPlot.survey(
+                new BlockCoord(0, 64, 0), ColumnMask.rect(-1, -1, 1, 1), (x, z) -> 64 + x, "oak", OptionalInt.empty());
 
         assertEquals(64, plot.anchor().y(), "Высота участка — медиана ног колонок, а не высота дома (INC-55)");
         assertEquals(63, plot.min(), "Минимум колонок пишется в лог и журнал для разбора");

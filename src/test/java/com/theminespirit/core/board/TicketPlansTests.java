@@ -19,6 +19,11 @@ import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlannedBlock;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StageWork;
+import com.theminespirit.core.town.TownFixtures;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -37,6 +42,7 @@ import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
 
 class TicketPlansTests {
+    private static final int LEGACY_FENCE_HALF = 13;
 
     private static final Map<BoardCase, String> CASE_SCRIPTS = Map.ofEntries(
             Map.entry(BoardCase.FILL_CRATER, "fill"),
@@ -229,30 +235,27 @@ class TicketPlansTests {
     }
 
     @Test
-    void plan_Lighting_TorchesInsideFenceOffHouse() {
-        TicketTarget home = target();
-        BlockCoord house = SettlementLayout.houseOrigin(home.target());
+    void plan_LightingOnPlan_EveryPlannedTorchOffHouse() {
+        StageSite site = TownFixtures.flatSite();
+        List<PlannedBlock> torches = new ArrayList<>();
+        site.torchPosts()
+                .forEach(post -> torches.add(new PlannedBlock(
+                        new BlockCoord(post.x(), TownFixtures.LEVEL + 1, post.z()), StagePlans.TORCH)));
+        site.groundTorches().forEach(cell -> torches.add(new PlannedBlock(cell, StagePlans.TORCH)));
+        TicketTarget target = TicketTarget.at(site.workYard()).withWork(new StageWork(site, torches));
 
-        List<String> wrong = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, home), "place_block").stream()
-                .filter(call -> {
-                    int x = (Integer) call.params().get("x");
-                    int z = (Integer) call.params().get("z");
-                    boolean onFenceOrOut = Math.abs(x - home.target().x()) >= SettlementLayout.HALF
-                            || Math.abs(z - home.target().z()) >= SettlementLayout.HALF;
-                    boolean inHouse = x >= house.x()
-                            && x < house.x() + SettlementLayout.HOUSE_WIDTH
-                            && z >= house.z()
-                            && z < house.z() + SettlementLayout.HOUSE_DEPTH;
-                    return onFenceOrOut || inHouse;
-                })
-                .map(call -> call.params().get("x") + "," + call.params().get("z"))
-                .toList();
+        List<ScriptCall> placed = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, target), "place_block");
 
         assertEquals(
-                List.of(),
-                wrong,
-                "Факел освещения на линии ограды или в габарите хижины ломал их сверку: факелы — внутри участка, "
-                        + "вне построек (приёмка «джунгли»)");
+                torches.size(),
+                placed.size(),
+                "Свет этапа ставит каждый факел плана: у калиток и на площадках, без пропусков");
+        assertTrue(
+                placed.stream()
+                        .noneMatch(
+                                call -> site.houseColumn((Integer) call.params().get("x"), (Integer)
+                                        call.params().get("z"))),
+                "Факел в габарите хижины ломал её сверку (приёмка «джунгли»)");
     }
 
     @Test
@@ -898,7 +901,7 @@ class TicketPlansTests {
     @Test
     void plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround() {
         BlockCoord anchor = new BlockCoord(0, 70, 0);
-        PlotLeveling leveling = PlotLeveling.plan(anchor, 4, (x, z) -> x < 0 ? 64 : x > 2 ? 73 : 70);
+        PlotLeveling leveling = PlotLeveling.plan(anchor, square(anchor, 4), (x, z) -> x < 0 ? 64 : x > 2 ? 73 : 70);
         TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
 
         List<ScriptCall> clears = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole)).stream()
@@ -929,7 +932,7 @@ class TicketPlansTests {
                         new PlotLeveling.Box(0, 64, 0, 2, 64, 0),
                         new PlotLeveling.Box(0, 65, 0, 2, 65, 1),
                         new PlotLeveling.Box(0, 66, 0, 2, 66, 1)),
-                TicketPlans.layers(rows),
+                LevelLayers.layers(rows),
                 "Подсыпка — слоями снизу вверх по всей яме, ряды слоя слиты: рядами на всю глубину дух выбирался на "
                         + "край, и соседний ряд оставался траншеей без стоянки (INC-66)");
     }
@@ -960,16 +963,16 @@ class TicketPlansTests {
                         + "есть 0» (INC-68)");
         assertTrue(
                 Math.max(
-                                Math.abs(TicketPlans.dirtSource(anchor, 5).x()),
-                                Math.abs(TicketPlans.dirtSource(anchor, 5).z()))
-                        > SettlementLayout.LEVEL_HALF,
+                                Math.abs(GroundsPlan.dirtSource(quarter, 5).x()),
+                                Math.abs(GroundsPlan.dirtSource(quarter, 5).z()))
+                        > LEGACY_FENCE_HALF,
                 "Землю добывают за оградой, а не из земли участка");
         assertTrue(
                 calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
                         .noneMatch(call -> "goto".equals(call.script())
                                 && call.params()
                                         .get("x")
-                                        .equals(TicketPlans.dirtSource(anchor, 4)
+                                        .equals(GroundsPlan.dirtSource(quarter, 4)
                                                 .x())),
                 "Отдельного выхода за ограду в плане нет: acquire идёт туда сам и только при нехватке");
     }
@@ -1149,7 +1152,7 @@ class TicketPlansTests {
                 collectCalls(quarter, "clear_area").size(),
                 "Часть расчистки — одна часть 3×3: духи чистят участок параллельно, а не один всё");
         assertEquals(
-                TicketPlans.CLEAR_PARTS,
+                GroundsPlan.CLEAR_PARTS,
                 collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target()), "clear_area")
                         .size(),
                 "Без номера четверти — вся расчистка одним заданием");
@@ -1163,7 +1166,7 @@ class TicketPlansTests {
                 List.of(),
                 "dirt");
         Set<Integer> layers = new TreeSet<>();
-        for (int part = 1; part <= TicketPlans.CLEAR_PARTS; part++) {
+        for (int part = 1; part <= GroundsPlan.CLEAR_PARTS; part++) {
             TaskNode plan = TicketPlans.plan(
                     BoardCase.CLEAR_GROUNDS,
                     TicketTarget.at(anchor).withLeveling(leveling).withCount(part));
@@ -1178,5 +1181,9 @@ class TicketPlansTests {
                 layers,
                 "Каждый слой срезки остатка выравнивания — в плане какой-то части: иначе холмик в пару колонок "
                         + "остаётся и выравнивание идёт по кругу (сцена 56)");
+    }
+
+    private static ColumnMask square(BlockCoord center, int half) {
+        return ColumnMask.rect(center.x() - half, center.z() - half, center.x() + half, center.z() + half);
     }
 }

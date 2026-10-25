@@ -1,6 +1,5 @@
 package com.theminespirit.core.scene;
 
-import com.theminespirit.core.board.SettlementLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,13 +8,14 @@ import java.util.Set;
 import java.util.SplittableRandom;
 
 public final class SceneGenerator {
-    public static final int RADIUS = 30;
+    public static final int RADIUS = 62;
     public static final int RELIEF = 4;
     public static final int BOTTOM = -7;
     public static final int SPAWN_FREE = 3;
     public static final List<String> WOODS = List.of("jungle", "oak");
-    private static final int PLOT = SettlementLayout.HALF;
-    private static final int TREE_REACH = RADIUS - 4;
+    private static final int PLOT = 11;
+    private static final int TREE_REACH = 26;
+    private static final int HILL_REACH = 24;
     private static final int MIN_TREES_ON_PLOT = 4;
     private static final int MIN_TREES_OUTSIDE = 8;
     private static final int CAVE_TOP = -4;
@@ -61,7 +61,7 @@ public final class SceneGenerator {
         double lowRadius = 7 + random.nextInt(3);
         int hills = 3 + random.nextInt(2);
         for (int hill = 0; hill < hills; hill++) {
-            int reach = hill == 0 ? PLOT - 3 : RADIUS - 6;
+            int reach = hill == 0 ? PLOT - 3 : HILL_REACH;
             int cx = random.nextInt(-reach, reach + 1);
             int cz = random.nextInt(-reach, reach + 1);
             double radius = 6 + random.nextInt(5);

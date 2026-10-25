@@ -5,6 +5,7 @@ import static com.theminespirit.core.Lookup.present;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -107,6 +108,14 @@ public final class PlacedBlockSet {
 
     public int size() {
         return size;
+    }
+
+    public List<BlockCoord> inChunk(int chunkX, int chunkZ) {
+        Chunk chunk = chunks.get(chunkKey(chunkX, chunkZ));
+        if (chunk == null) {
+            return List.of();
+        }
+        return chunk.positions.stream().map(PlacedBlockSet::unpack).toList();
     }
 
     Set<Map.Entry<Long, Chunk>> chunkEntries() {

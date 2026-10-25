@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.town.StageWork;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -27,7 +28,8 @@ public record TicketTarget(
         @Nullable String craftItem,
         int count,
         @Nullable String wood,
-        @Nullable PlotLeveling leveling) {
+        @Nullable PlotLeveling leveling,
+        @Nullable StageWork work) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -36,331 +38,177 @@ public record TicketTarget(
     }
 
     public static TicketTarget at(BlockCoord target) {
-        return new TicketTarget(
-                target, null, null, null, null, 0, 0, 0, null, null, null, null, List.of(), null, null, null, 0, null,
-                null);
+        return new Builder(target).build();
     }
 
     public TicketTarget withScheme(String scheme) {
-        return new TicketTarget(
-                target,
-                scheme,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.schemeFile = scheme;
+        return builder.build();
     }
 
     public TicketTarget withFenceBlock(String fence) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fence,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.fenceBlock = fence;
+        return builder.build();
     }
 
     public TicketTarget withLureItem(String lure) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lure,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.lureItem = lure;
+        return builder.build();
     }
 
     public TicketTarget withSupply(String item, int supply) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                item,
-                supply,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.supplyItem = item;
+        builder.supplyCount = supply;
+        return builder.build();
     }
 
     public TicketTarget withCraterBlocks(int blocks) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                blocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.craterBlocks = blocks;
+        return builder.build();
     }
 
     public TicketTarget withToolCount(int tools) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                tools,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.toolCount = tools;
+        return builder.build();
     }
 
     public TicketTarget withSpecies(Species animal) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                animal,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.species = animal;
+        return builder.build();
     }
 
     public TicketTarget withRelocate(BlockCoord source, BlockCoord destination) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                source,
-                destination,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.from = source;
+        builder.to = destination;
+        return builder.build();
     }
 
     public TicketTarget withDrops(List<String> items) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                items,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.dropItems = items;
+        return builder.build();
     }
 
     public TicketTarget withTransfer(UUID source, UUID recipient, String item, int amount) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                item,
-                amount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                source,
-                recipient,
-                craftItem,
-                count,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.supplyItem = item;
+        builder.supplyCount = amount;
+        builder.transferFrom = source;
+        builder.transferTo = recipient;
+        return builder.build();
     }
 
     public TicketTarget withCraft(String item, int amount) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                item,
-                amount,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.craftItem = item;
+        builder.count = amount;
+        return builder.build();
     }
 
     public TicketTarget withCount(int amount) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                amount,
-                wood,
-                leveling);
+        Builder builder = new Builder(this);
+        builder.count = amount;
+        return builder.build();
     }
 
     public TicketTarget withWood(String woodSpecies) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                Objects.requireNonNull(woodSpecies, "Порода дерева не может быть null: без неё строят по схеме"),
-                leveling);
+        Builder builder = new Builder(this);
+        builder.wood = Objects.requireNonNull(woodSpecies, "Порода дерева не может быть null: без неё строят по схеме");
+        return builder.build();
     }
 
     public TicketTarget withLeveling(PlotLeveling plan) {
-        return new TicketTarget(
-                target,
-                schemeFile,
-                fenceBlock,
-                lureItem,
-                supplyItem,
-                supplyCount,
-                craterBlocks,
-                toolCount,
-                species,
-                from,
-                to,
-                knowledge,
-                dropItems,
-                transferFrom,
-                transferTo,
-                craftItem,
-                count,
-                wood,
-                Objects.requireNonNull(
-                        plan, "План выравнивания не может быть null: ровный участок задают пустым планом"));
+        Builder builder = new Builder(this);
+        builder.leveling = Objects.requireNonNull(
+                plan, "План выравнивания не может быть null: ровный участок задают пустым планом");
+        return builder.build();
+    }
+
+    public TicketTarget withWork(StageWork stage) {
+        Builder builder = new Builder(this);
+        builder.work = Objects.requireNonNull(stage, "Работа этапа не может быть null: без плана задают at()");
+        return builder.build();
+    }
+
+    private static final class Builder {
+        private BlockCoord target;
+        private @Nullable String schemeFile;
+        private @Nullable String fenceBlock;
+        private @Nullable String lureItem;
+        private @Nullable String supplyItem;
+        private int supplyCount;
+        private int craterBlocks;
+        private int toolCount;
+        private @Nullable Species species;
+        private @Nullable BlockCoord from;
+        private @Nullable BlockCoord to;
+        private @Nullable ResourceKnowledge knowledge;
+        private List<String> dropItems = List.of();
+        private @Nullable UUID transferFrom;
+        private @Nullable UUID transferTo;
+        private @Nullable String craftItem;
+        private int count;
+        private @Nullable String wood;
+        private @Nullable PlotLeveling leveling;
+        private @Nullable StageWork work;
+
+        Builder(BlockCoord target) {
+            this.target = Objects.requireNonNull(target, "Цель задания не может быть null: от неё строится план");
+        }
+
+        Builder(TicketTarget source) {
+            target = source.target;
+            schemeFile = source.schemeFile;
+            fenceBlock = source.fenceBlock;
+            lureItem = source.lureItem;
+            supplyItem = source.supplyItem;
+            supplyCount = source.supplyCount;
+            craterBlocks = source.craterBlocks;
+            toolCount = source.toolCount;
+            species = source.species;
+            from = source.from;
+            to = source.to;
+            knowledge = source.knowledge;
+            dropItems = source.dropItems;
+            transferFrom = source.transferFrom;
+            transferTo = source.transferTo;
+            craftItem = source.craftItem;
+            count = source.count;
+            wood = source.wood;
+            leveling = source.leveling;
+            work = source.work;
+        }
+
+        TicketTarget build() {
+            return new TicketTarget(
+                    target,
+                    schemeFile,
+                    fenceBlock,
+                    lureItem,
+                    supplyItem,
+                    supplyCount,
+                    craterBlocks,
+                    toolCount,
+                    species,
+                    from,
+                    to,
+                    knowledge,
+                    dropItems,
+                    transferFrom,
+                    transferTo,
+                    craftItem,
+                    count,
+                    wood,
+                    leveling,
+                    work);
+        }
     }
 }

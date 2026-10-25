@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -57,16 +56,15 @@ public final class ProtectionGate {
 
     private static boolean inPlan(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
-                .plot()
-                .map(plot -> SettlementLayout.planCell(plot.anchor(), coord.x(), coord.y(), coord.z()))
+                .site()
+                .map(site -> site.planCell(coord.x(), coord.y(), coord.z()))
                 .orElse(false);
     }
 
     private static boolean onSettlementPlot(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
-                .plot()
-                .map(plot -> Math.abs(coord.x() - plot.anchor().x()) <= SettlementLayout.LEVEL_HALF
-                        && Math.abs(coord.z() - plot.anchor().z()) <= SettlementLayout.LEVEL_HALF)
+                .site()
+                .map(site -> site.inside(coord.x(), coord.z()))
                 .orElse(false);
     }
 
