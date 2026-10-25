@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
@@ -39,7 +38,7 @@ public final class HusbandryGameTests {
 
     private HusbandryGameTests() {}
 
-    @GameTest(template = "arena", batch = "husbandry_breed", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void breed_TwoCowsWithWheat_GivesCalfWithin200Ticks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -72,7 +71,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_feed", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void feed_ChickensSeedsBabiesFirst_FeedsDistantChicksBeforeNearHens(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -112,7 +111,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_feed_live", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void feed_TwoLiveCowsInSmallPen_BothFedWithin300SpiritTicks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -149,7 +148,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_breed_no_feed", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void breed_WithoutFeed_FailsAndLeavesHerdUntouched(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -174,7 +173,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_breed_calf", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void breed_AdultAndCalf_CalfIsNotPaired(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -202,7 +201,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_breed_wrong_feed", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void breed_PigsWithWheat_AsksForCarrots(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -228,7 +227,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_breed_persist", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void breed_SessionRestoredMidWork_KeepsDoneAndFinishes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -297,7 +296,7 @@ public final class HusbandryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_suspend", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void feed_SuspendedMidApproach_StopsNavigationAtOnce(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
