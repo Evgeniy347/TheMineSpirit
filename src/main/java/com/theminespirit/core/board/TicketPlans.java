@@ -185,7 +185,15 @@ public final class TicketPlans {
                     CRAFT_STONE_PICKAXE,
                     CRAFT_STONE_AXE,
                     CRAFT_STONE_SHOVEL,
-                    CRAFT_STONE_SWORD -> craftTool(boardCase, target);
+                    CRAFT_STONE_SWORD,
+                    CRAFT_IRON_PICKAXE,
+                    CRAFT_IRON_AXE,
+                    CRAFT_IRON_SHOVEL,
+                    CRAFT_IRON_SWORD,
+                    CRAFT_DIAMOND_PICKAXE,
+                    CRAFT_DIAMOND_AXE,
+                    CRAFT_DIAMOND_SHOVEL,
+                    CRAFT_DIAMOND_SWORD -> craftTool(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
             case CRAFT_BED -> craft(bedItem(target), target.count() > 0 ? target.count() : 1, target);
             case WEAVE_WOOL ->

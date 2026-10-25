@@ -46,6 +46,14 @@
     "CRAFT_STONE_PICKAXE": 40,
     "CRAFT_STONE_SHOVEL": 40,
     "CRAFT_STONE_SWORD": 40,
+    "CRAFT_IRON_PICKAXE": 40,
+    "CRAFT_IRON_AXE": 40,
+    "CRAFT_IRON_SHOVEL": 40,
+    "CRAFT_IRON_SWORD": 40,
+    "CRAFT_DIAMOND_PICKAXE": 40,
+    "CRAFT_DIAMOND_AXE": 40,
+    "CRAFT_DIAMOND_SHOVEL": 40,
+    "CRAFT_DIAMOND_SWORD": 40,
     "CRAFT_WOODEN_AXE": 40,
     "CRAFT_WOODEN_PICKAXE": 40,
     "CRAFT_WOODEN_SHOVEL": 40,
@@ -117,8 +125,16 @@
     "minBreed": 2
   },
   "tools": {
-    "perSpirit": 1,
-    "minSets": 1
+    "set": [
+      "pickaxe",
+      "axe",
+      "shovel"
+    ],
+    "tier": "stone",
+    "repairTiers": [
+      "iron",
+      "diamond"
+    ]
   },
   "wool": {
     "min_pen_sheep": 4,

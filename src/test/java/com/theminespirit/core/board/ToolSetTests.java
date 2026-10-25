@@ -15,7 +15,6 @@ import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
-import net.jqwik.api.constraints.IntRange;
 import org.junit.jupiter.api.Test;
 
 class ToolSetTests {
@@ -77,18 +76,6 @@ class ToolSetTests {
     }
 
     @Test
-    void replacedNotRepaired_WoodenAndStone_ReplacedIronRepaired() {
-        for (String item : List.of("minecraft:wooden_pickaxe", "minecraft:stone_axe", "stone_shovel")) {
-            assertTrue(
-                    ToolSet.replacedNotRepaired(item),
-                    item + " не чинится, а крафтится заново (владелец 23.10): ремонт дороже нового");
-        }
-        for (String item : List.of("minecraft:iron_pickaxe", "minecraft:diamond_sword", "minecraft:shears")) {
-            assertFalse(ToolSet.replacedNotRepaired(item), item + " чинится: новый дороже ремонта");
-        }
-    }
-
-    @Test
     void covered_StonePickaxe_CoversWooden() {
         assertTrue(
                 ToolSet.covered(BoardCase.CRAFT_WOODEN_PICKAXE, Set.of("stone_pickaxe")),
@@ -107,42 +94,6 @@ class ToolSetTests {
         assertFalse(
                 ToolSet.covered(BoardCase.CRAFT_WOODEN_AXE, Set.of("wooden_pickaxe", "stone_pickaxe")),
                 "Кирка (pickaxe) не закрывает топор (axe): совпадение суффикса не делает её топором");
-    }
-
-    @Test
-    void count_PerSpirit_MultipliesBySpirits() {
-        assertEquals(
-                3,
-                ToolSet.count(Map.of("perSpirit", 1, "minSets", 1), 3),
-                "По умолчанию один комплект на духа: три духа поселения — три комплекта");
-        assertEquals(
-                1,
-                ToolSet.count(Map.of("perSpirit", 1, "minSets", 1), 0),
-                "Поселение без духов всё равно собирает минимум один комплект");
-    }
-
-    @Test
-    void count_Fixed_IgnoresSpirits() {
-        assertEquals(
-                5,
-                ToolSet.count(Map.of("perSpirit", 0, "minSets", 5), 3),
-                "Фиксированный набор: perSpirit 0 при minSets 5 даёт 5 комплектов на любое число духов");
-    }
-
-    @Test
-    void count_Default_IsPerSpiritFloorOne() {
-        assertEquals(
-                4,
-                ToolSet.count(Map.of(), 4),
-                "Пустая таблица — значения по умолчанию: комплект на духа, но не меньше одного");
-    }
-
-    @Test
-    void count_NegativeSpirits_Rejected() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ToolSet.count(Map.of(), -1),
-                "Отрицательное число духов обязано отвергаться: комплектов не может быть отрицательно");
     }
 
     @Test
@@ -189,11 +140,85 @@ class ToolSetTests {
                 "Ключ запаса — короткий вид: гейт сравнивает его со снимком склада один в один");
     }
 
-    @Property
-    void count_AnySpirits_AtLeastOne(@ForAll @IntRange(min = 0, max = 64) int spirits) {
-        assertTrue(
-                ToolSet.count(Map.of("perSpirit", 1, "minSets", 1), spirits) >= 1,
-                "Комплектов всегда не меньше одного: ноль комплектов оставил бы поселение без инструментов");
+    @Test
+    void missing_AbsentTool_CraftsLowestAvailableStep() {
+        ToolsConfig config = new ToolsConfig(List.of("pickaxe"), "stone", List.of("iron", "diamond"));
+
+        assertEquals(
+                List.of("minecraft:stone_pickaxe"),
+                ToolSet.missing(config, Map.of(), Set.of("minecraft:wooden_pickaxe", "minecraft:stone_pickaxe")),
+                "Дух без кирки берёт старшую ступень, на которую есть материалы: камень при булыжнике, "
+                        + "а не дерево");
+    }
+
+    @Test
+    void missing_NoMaterials_CraftsBaseTool() {
+        ToolsConfig config = new ToolsConfig(List.of("pickaxe"), "iron", List.of("iron", "diamond"));
+
+        assertEquals(
+                List.of("minecraft:wooden_pickaxe"),
+                ToolSet.missing(config, Map.of(), Set.of()),
+                "Без материалов дух всё равно получает задание на базовую кирку: гейт доски ждёт дерево, "
+                        + "а не оставляет духа без инструмента навсегда");
+    }
+
+    @Test
+    void missing_BelowTier_UpgradesOnlyWithMaterials() {
+        ToolsConfig config = new ToolsConfig(List.of("pickaxe"), "iron", List.of("iron", "diamond"));
+
+        assertEquals(
+                List.of("minecraft:iron_pickaxe"),
+                ToolSet.missing(config, Map.of("stone_pickaxe", 1), Set.of("minecraft:iron_pickaxe")),
+                "Каменная кирка ниже уровня набора: при железе дух делает железную");
+        assertEquals(
+                List.of(),
+                ToolSet.missing(config, Map.of("stone_pickaxe", 1), Set.of()),
+                "Без материалов дух остаётся с каменной киркой: задание, которое нельзя выполнить, " + "не ставится");
+    }
+
+    @Test
+    void missing_TierReached_NoTask() {
+        ToolsConfig config = new ToolsConfig(List.of("pickaxe", "axe"), "stone", List.of("iron", "diamond"));
+
+        assertEquals(
+                List.of(),
+                ToolSet.missing(
+                        config,
+                        Map.of("stone_pickaxe", 1, "iron_axe", 1),
+                        Set.of("minecraft:diamond_pickaxe", "minecraft:diamond_axe")),
+                "Инструмент не ниже уровня набора закрывает вид: дух алмазную кирку при каменном наборе "
+                        + "не крафтит");
+    }
+
+    @Test
+    void missing_EveryKindIndependent_OnlyOwnKindCrafted() {
+        ToolsConfig config = new ToolsConfig(List.of("pickaxe", "axe", "shovel"), "stone", List.of("iron"));
+
+        assertEquals(
+                List.of("minecraft:stone_axe", "minecraft:stone_shovel"),
+                ToolSet.missing(
+                        config, Map.of("stone_pickaxe", 1), Set.of("minecraft:stone_axe", "minecraft:stone_shovel")),
+                "Кирка закрывает только свой вид: топор и лопата ждут крафта, а не чужого инструмента");
+    }
+
+    @Test
+    void missing_RepeatedKind_ConfigRejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ToolsConfig(List.of("pickaxe", "pickaxe"), "stone", List.of("iron")),
+                "Повтор вида в наборе обязан отвергаться: два одинаковых задания на один инструмент");
+    }
+
+    @Test
+    void missing_UnknownKindOrTier_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ToolsConfig(List.of("hoe"), "stone", List.of("iron")),
+                "Неизвестный вид инструмента обязан отвергаться: кейса крафта у него нет");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ToolsConfig(List.of("pickaxe"), "wooden", List.of("iron")),
+                "Целевой уровень ниже камня обязан отвергаться: набор начинается с камня");
     }
 
     private static Map<String, Integer> needFor(BoardCase boardCase, int toolCount) {
