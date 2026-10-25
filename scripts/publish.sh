@@ -62,7 +62,7 @@ fi
 # --- Режим dry-run: только план --------------------------------------------
 if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
-    echo "  1. сборка мода: ./gradlew --quiet build"
+    echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
     echo "  2. поиск build/libs/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
     echo "  3. снимок мира: $SERVER_DIR/scripts/snapshot.sh (если есть)"
     echo "  4. удаление старых $SERVER_DIR/mods/theminespirit-*.jar"
@@ -81,7 +81,7 @@ fi
 # --- Сборка ----------------------------------------------------------------
 cd "$MOD_DIR"
 echo "Сборка мода..."
-./gradlew --quiet build
+./gradlew --quiet assemble
 
 # --- Поиск jar мода по шаблону ---------------------------------------------
 # Имя содержит версию, поэтому старые jar остаются в build/libs; свежесобранный — самый новый.
