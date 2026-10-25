@@ -51,16 +51,18 @@
 `CollectDrops`, `Dig*`, `Clear`, `Acquire*`…; REST-мост — `Rest*`; стройка — `Build*`, `PresetBuild`, `Schematic`, `Demo{Build,City,Layout,Spirit}`;
 этап 1 (`JungleSettlement`, `BoardFirstSteps*`, `BoardSettlementStart*`) — ветка `opus/scenes`, здесь не трогается.
 
-## Пункт 3: ход (24.10, остановка по выключению ПК)
+## Пункт 3: ход (25.10)
 
 - Инструмент: `SceneSteps` + `StepHelper` + `@SceneStep` — бывшие сцены идут шагами одной сцены, проверки не
   переписываются; упавший шаг не прячет остальные, сцена падает в конце со списком.
-- Сделано и закоммичено: рубка (38 → 2 сцены), плавка (17 → 1).
-- Остальные механики сконвертированы в рабочем дереве `wt-testcut` (не закоммичены): все сцены прогнаны по
-  отдельности. Падают шаги: чужие и на main — `firstTools_WoodOnly`, `relocate_PenMoved`, `setCombatMode_Passive`,
-  `passive_HuskAttacks`, `move_MansionBalcony`; разобрать (утечка между шагами или чужое) — `plantCrop_WheatOnNine`,
-  `clear_PlayerWall`, `gather_SettledSpiritStone`, `lake_GotoWithoutBypass`, `creeper_FourBlocksAway`,
-  `creeper_StrikeAndRetreat`, `leash_PostUnreachable`, `retreat_LowHpWithBlocks`, `defendedPoint_*` (Camp),
-  `schematic_Shortage`, `schematic_NeedSeventeen`.
-- Осталось: разбор этих шагов, коммиты по механикам, перенос логики в unit, сторож числа сцен (шаг 3).
-- PMD на main не грузит набор (`AvoidAccessibilityAlteration` нет в PMD 7.28) — задача прошла «зелёной» без проверки.
+- Все механики укрупнены и закоммичены по механике за коммит: 848 сцен общего прогона → 49 (28 сцен механик +
+  21 этапа 1 и поселения; демо-аудиты 110 — ручные). Число держит `SceneCountGuardTests` (≤ 3 на механику, потолок).
+- Утечки между шагами исправлены: реестр сундуков поселения чистится перед шагом (`forgetChests`), флаг
+  координатора шагов Camp — в `@SceneStep`.
+- Чужие шаги (падают и до объединения или на main, не чинились): `firstTools_WoodOnly`, `relocate_PenMoved`,
+  `setCombatMode_Passive`, `passive_HuskAttacks`, `move_MansionBalcony`, `leash_PostUnreachable`,
+  `lake_GotoWithoutBypass` (флак). Флак под нагрузкой, в одиночку 4/4 зелёный: `creeper_FourBlocksAway`.
+- Время: сцены механик идут 5–25 с каждая; общий прогон всё ещё упирается в 200 с — шард с `jungle_settlement`
+  (этап 1, ~2 мин) не успевает; вес пачки в раскладке по шардам ограничен 100 и сцену не отличает от короткой.
+- Осталось: перенос логики без мира в unit (шаги-таблицы реестров и констант), раскладка шардов по весу сцен.
+- PMD на main не грузит набор (`AvoidAccessibilityAlteration` нет в PMD 7.28) — чинит соседняя ветка.
