@@ -54,9 +54,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -89,12 +86,8 @@ import org.slf4j.Logger;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardV2GameTests {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String BATCH = "board_v2";
-    private static final String EVERGREEN_BATCH = "board_v2_evergreen";
-    private static final String FOOD_BATCH = "board_v2_food";
 
     private static final long NIGHT_TIME = 18_000L;
     private static final int NOON_TIME = 6_000;
@@ -103,27 +96,7 @@ public final class BoardV2GameTests {
 
     private BoardV2GameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void prepareBatch(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreBatch(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @BeforeBatch(batch = EVERGREEN_BATCH)
-    public static void prepareEvergreenBatch(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = EVERGREEN_BATCH)
-    public static void restoreEvergreenBatch(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = EVERGREEN_BATCH, timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, board = true, calmMobs = true)
     public static void evergreen_HungryAndFull_TakesOnlyByNeed(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NIGHT_TIME);
         GameTestFixtures.reset(helper);
@@ -182,7 +155,7 @@ public final class BoardV2GameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = FOOD_BATCH, timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, board = true)
     public static void food_HungryWithoutFood_WithdrawsFromStorehouse(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -211,7 +184,7 @@ public final class BoardV2GameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true, calmMobs = true)
     public static void stage_FirstStageUnfinished_MineLevelTwoLocked(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -235,7 +208,7 @@ public final class BoardV2GameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true, calmMobs = true)
     public static void relevance_CraterBury_DetachesAndLevelTwoWithoutStoneGate(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -343,7 +316,7 @@ public final class BoardV2GameTests {
         board.cancel(level, "mine_level_2");
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true, calmMobs = true)
     public static void herd_TwoSpeciesParallel_PenLevelOneLureAndBreedLimit(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -484,7 +457,7 @@ public final class BoardV2GameTests {
 
     // [флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
     // машины 400 тиков мало, запас двойной.
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 800)
+    @SceneStep(template = "arena", timeoutTicks = 800, board = true, calmMobs = true)
     public static void relocate_PenMoved_OldClearedNewStandsAndMineRefused(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -560,7 +533,7 @@ public final class BoardV2GameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true, calmMobs = true)
     public static void enchant_LevelOneNeedsResources_LevelTwoWaitsShelves(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
@@ -642,7 +615,7 @@ public final class BoardV2GameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300, board = true, calmMobs = true)
     public static void journal_DoneAndReload_KeepsHashAndLedger(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -15,7 +15,6 @@ import com.theminespirit.neoforge.board.BoardService;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -25,14 +24,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class OverflowBoardGameTests {
     private static final int SETTLE_TICKS = 20;
     private static final int WAIT_TICKS = 6000;
 
     private OverflowBoardGameTests() {}
 
-    @GameTest(template = "arena", batch = "overflow_board_take", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, board = true)
     public static void overflowDrop_AfterSwap_BoardTaskTakenByAnotherSpirit(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

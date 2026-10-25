@@ -30,9 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -50,25 +47,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardAnimalGameTests {
-    private static final String BATCH = "board_animal";
     private static final Set<BoardCase> LIFECYCLE = EnumSet.of(
             BoardCase.CAPTURE_ANIMAL, BoardCase.BUILD_PEN, BoardCase.LURE_ANIMAL, BoardCase.DISMANTLE_SHELTER);
 
     private BoardAnimalGameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void stopMobsTargetingSpirits(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreMobTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true, calmMobs = true)
     public static void animal_NearBase_LifecycleThroughGateWithoutShelter(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

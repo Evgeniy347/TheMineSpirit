@@ -26,7 +26,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -39,13 +38,12 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /** Постоянный запас деревянного набора: сломанный инструмент доска восполняет сама. */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardToolStockGameTests {
     private static final Map<String, Integer> WOOD = Map.of("oak_planks", 64, "stick", 64, "oak_log", 16);
 
     private BoardToolStockGameTests() {}
 
-    @GameTest(template = "arena", batch = "board_tool_stock_broke", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void toolStock_PickaxeBrokeAfterFirstSteps_RecraftPosted(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = settlement(helper);
@@ -65,7 +63,7 @@ public final class BoardToolStockGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_tool_stock_stone", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void toolStock_StonePickaxeInStock_NoRecraft(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = settlement(helper);
@@ -85,7 +83,7 @@ public final class BoardToolStockGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_tool_stock_early", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void toolStock_BeforeFirstStep_LeavesToFirstSteps(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = settlement(helper);
@@ -103,7 +101,7 @@ public final class BoardToolStockGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_tool_stock_nowood", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void toolStock_NoWood_NotPosted(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = settlement(helper);
@@ -122,7 +120,7 @@ public final class BoardToolStockGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_tool_stock_own", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void toolStock_NeighbourHasPickaxe_OwnSetRecraftedForSpiritWithout(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity armed = settlement(helper);

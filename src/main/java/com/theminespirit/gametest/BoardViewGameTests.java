@@ -13,7 +13,6 @@ import io.netty.buffer.Unpooled;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -26,7 +25,7 @@ public final class BoardViewGameTests {
 
     private BoardViewGameTests() {}
 
-    @GameTest(template = "empty")
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void snapshot_TicketWithoutResources_ReachesClientAsUnfinishedTile(GameTestHelper helper) {
         BoardService service = BoardRegistry.get(helper.getLevel());
         service.submit(new BoardTicket(
