@@ -16,12 +16,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
-/**
- * Постановка сгенерированной по сиду сцены ({@link SceneGenerator}) на шаблон {@code settlement_arena}: центр
- * участка — середина шаблона, базовая поверхность — {@link #SURFACE} блоков над полом шаблона. Сид — из
- * {@code -Dtheminespirit.gametest.seed} ({@code scripts/test.sh gametest --seed N}) или новый случайный; строка
- * {@code [scene]} в логе называет сид и команду повтора.
- */
 final class GeneratedScene {
     static final int CENTER = 64;
     static final int SURFACE = 7;
@@ -68,7 +62,6 @@ final class GeneratedScene {
         return plan;
     }
 
-    // Клетка сцены (от центра участка и базовой поверхности) — в координаты шаблона.
     static BlockPos at(int x, int y, int z) {
         return new BlockPos(CENTER + x, SURFACE + y, CENTER + z);
     }

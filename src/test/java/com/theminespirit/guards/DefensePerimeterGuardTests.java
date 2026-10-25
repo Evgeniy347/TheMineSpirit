@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/**
- * Сторож оборонных схем ({@code type: defense}): в нижнем слое линии периметра — только забор, калитка или стена
- * (высота 1,5). Блок высотой 1 (бревно-столб) перепрыгивается, и ограда проходима (INC-53).
- */
 class DefensePerimeterGuardTests {
     private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 

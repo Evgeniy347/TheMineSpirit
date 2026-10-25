@@ -22,10 +22,6 @@ final class MovementScene {
     static final double REACH = 4.5;
     static final double EYE_HEIGHT = 1.62;
 
-    // helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow/keep_distance/come
-    // берут первого игрока с таким именем: чужой (в т.ч. протёкший из соседней сцены) игрок уводит духа к
-    // чужой цели, скрипт не доходит и висит RUNNING до тайм-аута. Уникальное имя теста и снятие игрока при
-    // любом исходе даёт GameTestFixtures.mockPlayer (образец — RestFixture.mockPlayer).
     private static final AtomicInteger PLAYER_COUNTER = new AtomicInteger();
 
     private MovementScene() {}
@@ -67,10 +63,6 @@ final class MovementScene {
         return eye.distanceTo(Vec3.atCenterOf(helper.absolutePos(relative)));
     }
 
-    // Факты для разбора флака: время дня общее у всех сцен, поэтому печатаем и мир, и то, что сцена
-    // выставляла (sceneDayTime). Иначе падение «статус RUNNING» не отличить от отказа поводка или
-    // заморозки тактикой. Вечер и принадлежность поселению считает сам NightLeash — вторая формула
-    // разошлась бы с production. Формат — одна строка, пригодная для grep в логе сервера.
     static String facts(GameTestHelper helper, SpiritEntity spirit, long sceneDayTime) {
         NightLeash leash = NightLeash.withDefaultRules();
         long worldDayTime = helper.getLevel().getDayTime();

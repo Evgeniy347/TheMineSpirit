@@ -39,12 +39,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Жизненный цикл животного на доске: животное рядом с базой → CAPTURE_ANIMAL один раз;
- * отлов → BUILD_PEN; загон → LURE_ANIMAL с гейтом по приманке; укрытия из блоков нет (упрощение 44.4),
- * поэтому разбирать нечего; гибель → «приманить» снято. Всё синхронно: доска — чистая очередь,
- * succeedWhen здесь не нужен (он завершает тест при первом нормальном выходе).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardAnimalGameTests {

@@ -19,21 +19,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/**
- * Сторож: каждый json-файл в data/theminespirit зарегистрирован в DataTables (или в исключениях с причиной),
- * и каждая зарегистрированная таблица существует как файл.
- *
- * <p>Правило: таблица без регистрации не перечитается на лету по /reload.
- * Цена нарушения: изменение файла в датапаке мира игнорируется, сервер работает со старой версией без уведомления.
- * Как исправить: зарегистрировать таблицу в DataTables через TableRegistry.registerLazy или добавить в исключения
- * внутри сторожа с явной причиной (например, схемы построек, если они грузятся иначе).
- */
 class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
-    /**
-     * Не таблицы /reload — путь и причина. Схемы доски зарегистрированы в DataTables, тела пресетов сторож берёт
-     * сам (presetBodies), исключения сторожей схем живут в самих файлах построек.
-     */
+
     private static final Map<String, String> EXCLUDED = Map.of(
             "data/theminespirit/schematics/buildings.json",
             "каталог семей построек читается один раз при регистрации команд /spirit demo: подкоманды по /reload "

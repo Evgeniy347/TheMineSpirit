@@ -13,10 +13,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Правило владельца 21.10: пока на сервере есть игрок (в любом мире), чанки поселения тикают,
- * а без игроков выгружаются.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SettlementChunkGameTests {

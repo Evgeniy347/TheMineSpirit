@@ -31,7 +31,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/** Задание доски вытесняет фоновое занятие интеллекта, но не чужую задачу (REST, стратег, игрок). */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardPreemptGameTests {

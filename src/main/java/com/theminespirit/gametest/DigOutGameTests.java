@@ -17,10 +17,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Самовыход замурованного духа (INC-45, требование владельца): дух в каменном кармане на 7 блоков ниже поверхности, с
- * деревянной киркой и булыжником, сам копает лестницу вверх и выходит под открытое небо.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DigOutGameTests {
@@ -35,8 +31,6 @@ public final class DigOutGameTests {
         pocket(helper, List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)));
     }
 
-    // Форма живого кармана INC-59: клетка духа, над ней воздух и проём сбоку на уровне головы — (x,y), (x,y+1),
-    // (x-1,y+1); выше — сплошной камень.
     // [флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
     @SceneStep(template = "mine_arena", timeoutTicks = 2400, board = true)
     public static void digOut_PocketWithSideGap_ReachesSurface(GameTestHelper helper) {

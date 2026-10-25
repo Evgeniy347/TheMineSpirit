@@ -57,8 +57,6 @@ public final class ExploreGameTests {
         });
     }
 
-    // Потолок как у соседнего explore_survey (400): планировщик обходит загруженные чанки, и в полном
-    // прогоне (уровень держит структуры соседних сцен) план строится дольше, чем за 100 тиков; проверки не тронуты.
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void explore_NightRouteOutsideSettlement_FailsBeforeLeaving(GameTestHelper helper) {
         MovementScene.prepare(helper);

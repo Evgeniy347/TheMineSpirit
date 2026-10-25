@@ -9,7 +9,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/** Рефлекс «выйти из блока» (INC-61): дух с головой в камне шагает в соседнюю свободную клетку, а не задыхается. */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class WallEscapeGameTests {

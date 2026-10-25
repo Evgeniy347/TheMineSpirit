@@ -73,8 +73,6 @@ public final class CollectDropsGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
         GameTestFixtures.dropAt(helper, Items.OAK_LOG, 4, 2.5, 1, 2.5);
         GameTestFixtures.dropAt(helper, Items.BIRCH_LOG, 2, 6.5, 1, 2.5);
-        // Булыжник в 6 блоках от старта и от пути к брёвнам — дальше радиуса магнита (5), но внутри radius 6:
-        // фильтр collect_drops решает сам, магнит его не подбирает.
         ItemEntity cobblestone = GameTestFixtures.dropAt(helper, Items.COBBLESTONE, 3, 4.5, 1, 10.5);
         SpiritRun run = SpiritRun.launch(
                 helper,

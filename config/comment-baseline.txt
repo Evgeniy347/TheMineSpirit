@@ -572,142 +572,31 @@ src/main/java/com/theminespirit/gametest/AcquireGameTests.java	[флак] доб
 src/main/java/com/theminespirit/gametest/AcquireGameTests.java	где 20_000 — потолок на медленной машине
 src/main/java/com/theminespirit/gametest/AcquireGameTests.java	заранее (резолвер не планирует крафт инструментов — RequiredTier вне ResourceKnowledge),
 src/main/java/com/theminespirit/gametest/AcquireGameTests.java	остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
-src/main/java/com/theminespirit/gametest/AnimalScenesGameTests.java	Укрупнённые сцены механики «животные»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/BoardAnimalGameTests.java	Жизненный цикл животного на доске: животное рядом с базой → CAPTURE_ANIMAL один раз; отлов → BUILD_PEN; загон → LURE_ANIMAL с гейтом по приманке; укрытия из блоков нет (упрощение 44.4), поэтому разбирать нечего; гибель → «приманить» снято. Всё синхронно: доска — чистая очередь, succeedWhen здесь не нужен (он завершает тест при первом нормальном выходе).
-src/main/java/com/theminespirit/gametest/BoardBackoffGameTests.java	Откат задания доски в мире: задание, которое всегда проваливается, не возвращается тому же духу раньше паузы. Ошибка 17.10 — дух 112 раз подряд брал first:stock_chests и стоял на месте.
 src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	[флак] заделка 3×3: путь к яме, добыча из инвентаря и 9 постановок плюс ожидание двух
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	supply:dirt до конца прогона и доска уводит свободных духов чужих сцен.
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	Воронка от крипера на доске: взрыв за территорией → FILL_CRATER с числом блоков земли; взрыв не крипера → задания нет; с землёй — ровная заделка, без — ожидание и добыча. Проводка события синхронна (пост идёт прямо на шину); заделка ждёт духа через succeedWhen только конечным состоянием — без фаз (лямбда succeedWhen завершает тест при первом нормальном выходе, фазы после первого прохода не выполняются никогда).
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	Ждущее невыполнимое и его добычу снимаем с доски: иначе вечное WAITING плодит
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	Тесты пачки стартуют в один тик и делят доску: снимаем только задания вне сцен (первые шаги и т. п.), а
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	Флак полного прогона 18.10 (crater_dirtgate_fillsflat): задание «добыть доски» без адресата выдавалось
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	ближайшему духу — тому, кого ждала адресная заделка воронки; дух уходил за досками, а воронка ждала.
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	задания соседней сцены с префиксом board_test_ не трогаем — иначе сцена, стартовавшая позже, отменяла
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	заделку соседней (флак crater_dirtgate_fillsflat 18.10).
 src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	пересборок (выдача и учёт): под нагрузкой машины в 400 тиков не укладывается, запас двойной.
-src/main/java/com/theminespirit/gametest/BoardDispatchGameTests.java	Блокеры живого прогона 2: выдача доски при паузе своего задания (INC-23), ремонт без наковальни и причина провала чужой задачи (INC-24), верстак у соседа для крафта печи (INC-26).
-src/main/java/com/theminespirit/gametest/BoardDispatchGameTests.java	Держатель верстака провалил передачу (застрял в шахте, INC-43): пауза кейса TRANSFER_ITEM.
-src/main/java/com/theminespirit/gametest/BoardDispatchGameTests.java	Рестарт: задание восстановлено из сохранения доски, а точки исполнения (предмет ремонта) живут в памяти.
-src/main/java/com/theminespirit/gametest/BoardFenceGameTests.java	Ремонт и стройку снимаем с доски: иначе стройка без гейта уйдёт свободному духу
-src/main/java/com/theminespirit/gametest/BoardFenceGameTests.java	Сломанный забор на доске: поломка ограждения рядом с поселением → REPAIR_FENCE с высшим приоритетом; стройка при этом ждёт, чинит один дух. Природный камень — не кейс. Всё синхронно: событие идёт прямо на шину, тело теста атомарно.
-src/main/java/com/theminespirit/gametest/BoardFenceGameTests.java	чужой сцены, а ремонт вечно держит счётчик занятости тестового духа.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Гейт по инструменту (INC-67): расчистка ждёт кирку, а кирки нет ни у кого — доска ставит задание на кирку.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Деревья соседних сцен попадают в обзор 16 блоков: расчистка отмечена сделанной по журналу, как после неё.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Журнал доски — в папке мира (54b п.4): из config/ новый мир на том же сервере наследовал «построено».
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Первые шаги на доске: новое поселение → CLEAR_GROUNDS; дальше задания идут строго по цепочке, каждое следующее — после выполнения предыдущего; выполненная цепочка новых заданий не плодит. Всё синхронно: генератор — чистая функция от фактов мира, тело теста атомарно. Каждый сценарий — своя пачка и своя доска: генератор обходит мир радиусом 16, а структуры GameTest стоят в 16 блоках друг от друга — в общей пачке сосед ставит сундук или верстак, и факты чужой сцены подменяют шаг цепочки. Общая доска уровня вдобавок приносит чужие билеты (mine_level_*), которые держат шаг первыми шагами.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	После выравнивания шаги до хижины идут параллельно на разных духов (решение владельца 25.10), до него и после
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Постройки плана (шахта, выравнивание 27×27) на арене не поставить: маркеры и журнал (PlanWorld.JOURNAL).
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Тень DONE мешает переизданию того же шага: снимаем напрямую.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Факты не продвинулись: переустанавливаем маркеры идемпотентно и пробуем ещё.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Чужие деревья в обзоре держат землю не зачищенной вечно:
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	Шахта, свет, ограда и дом плана готовы только по журналу и миру: сцены наковальни идут с PlanWorld.JOURNAL —
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	генератор прав, дальше цепочке идти некуда — выходим через
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	зафиксированный факт, а не через пропуск шагов.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	иначе диагностика «чужие деревья» увидит не то, что видит генератор.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	участок 23×23 и спуск шахты на арене не поставить, проверяется гейт железа, а не постройки.
-src/main/java/com/theminespirit/gametest/BoardFirstStepsGameTests.java	хижины — по одному.
 src/main/java/com/theminespirit/gametest/BoardGameTests.java	[флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
-src/main/java/com/theminespirit/gametest/BoardGameTests.java	Дух без дома: иначе FirstStepsRunner откроет расчистку и займёт единственного духа —
 src/main/java/com/theminespirit/gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
-src/main/java/com/theminespirit/gametest/BoardGameTests.java	сцена проверяет снабжение стройки, а не первые шаги поселения.
-src/main/java/com/theminespirit/gametest/BoardLeftOreGameTests.java	Оставленная в шахте руда — задание на доске: висит без кирки с Удачей, открывается держателю такой кирки.
-src/main/java/com/theminespirit/gametest/BoardPreemptGameTests.java	Задание доски вытесняет фоновое занятие интеллекта, но не чужую задачу (REST, стратег, игрок).
-src/main/java/com/theminespirit/gametest/BoardResetGameTests.java	Задача по заданию — как восстановленная из сохранения после выкладки: долгая и без связи с новой доской.
-src/main/java/com/theminespirit/gametest/BoardResetGameTests.java	Освобождённый дух в той же пересборке может получить новую работу (занятие) — старая задача снята,
-src/main/java/com/theminespirit/gametest/BoardResetGameTests.java	Сброс заданий при смене сборки (INC-40): снятое задание доски отменяет и задачу духа, запущенную по нему. На живом сервере v0.1.2053 spirit-5 50+ мин копал dig_area бывшего mine_level_3 и числился внешним занятием, а first:stock_chests некому было выдать.
-src/main/java/com/theminespirit/gametest/BoardResetGameTests.java	если сменилось поколение задачи или задачи нет.
 src/main/java/com/theminespirit/gametest/BoardScaleGameTests.java	[флак] наблюдение 1000 тиков (откат провала 200 + период пересборки 100): запас 2×
-src/main/java/com/theminespirit/gametest/BoardScaleGameTests.java	Масштаб доски: двадцать духов и шесть заявок за 1000 тиков. Доска обязана работать раз в период, читать склад бюджетом и выдавать не больше, чем свободных духов, — иначе снимок запасов грузит чанки на главном потоке и полный GameTest идёт 41 минуту вместо 3–5.
-src/main/java/com/theminespirit/gametest/BoardScenesGameTests.java	Укрупнённые сцены механики «доска»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
 src/main/java/com/theminespirit/gametest/BoardSettlementStartGameTests.java	[флак] два духа рубят пять деревьев и крафтят верстак, сундуки (16 досок) и деревянные наборы через доску; запас
 src/main/java/com/theminespirit/gametest/BoardSettlementStartGameTests.java	~2× к замеру
-src/main/java/com/theminespirit/gametest/BoardSettlementStartGameTests.java	Развитие поселения с нуля через доску: порядок первых шагов в настоящем мире, провал шага и путь «уголь → факел».
-src/main/java/com/theminespirit/gametest/BoardSupplyGateGameTests.java	Постоянные запасы доски — только на своём этапе: книги/бумага ждут шахты, полки — первого уровня чаровальни. На старте поселения доска не просит книги, а повторная пересборка не плодит вторую постановку того же тикета.
-src/main/java/com/theminespirit/gametest/BoardToolStockGameTests.java	Постоянный запас деревянного набора: сломанный инструмент доска восполняет сама.
 src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
-src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	Доска v2 в мире: постоянная еда, актуальность воронки, уровни шахты и чаровальни, загоны по видам, перенос постройки и журнал с версией конфигурации. Каждая сцена работает на собственной доске с временным журналом: общий ledger прошлых прогонов не должен решать, какой уровень шахты уже стоит.
 src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
 src/main/java/com/theminespirit/gametest/BoardV2ScaleGameTests.java	[флак] наблюдение 400 тиков (пересборки по 100, скан стада по 200) плюс старт сцены:
-src/main/java/com/theminespirit/gametest/BoardV2ScaleGameTests.java	Масштаб доски v2: двадцать духов, три вида животных, воронки и перенос за {@link #OBSERVED_TICKS} тиков. Тест считает операции, а не время: пересборки идут по интервалу, склад читается бюджетом, журнал пишет по строке на переход, проверка актуальности — один вызов на пересборку, а не на тик.
 src/main/java/com/theminespirit/gametest/BoardV2ScaleGameTests.java	под нагрузкой машины 400 тиков тайм-аута мало, запас 2,5×.
-src/main/java/com/theminespirit/gametest/BuildAudit.java	Сверка стройки по схеме: мир в клетках схемы, отсутствие лишних блоков в районе стройки, ровно одна постановка на клетку и ноль пропусков. Возвращает список расхождений; assert'ов внутри нет.
 src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] 17 блоков плиты и одна очистка клетки от земли: с запасом на подходы.
 src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] Восемь блоков с поворотом: дух подходит к каждой клетке с запасом.
 src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] Дом из 17 блоков с одной занятой клеткой: перебор стоянок и повторный проход перед провалом.
 src/main/java/com/theminespirit/gametest/BuildPaceGameTests.java	[флак] 17 блоков по 10 тиков = 170 тиков стройки плюс подход; потолок ≈ 2× замера.
-src/main/java/com/theminespirit/gametest/BuildPaceGameTests.java	Темп стройки по схеме из таблицы building/build.json (решение владельца 18.10: около 2 блоков в секунду, взмах руки обязателен).
-src/main/java/com/theminespirit/gametest/BuildRestartGameTests.java	HTTP ходит другим потоком: предел берём из общего REST-шаблона, как ResultGameTests.
 src/main/java/com/theminespirit/gametest/BuildRetreatGameTests.java	[флак] 18 блоков ниши и выход наружу перед последним — ≈ 300 тиков, запас под нагрузкой полного прогона.
-src/main/java/com/theminespirit/gametest/BuildRetreatGameTests.java	Правило отхода (владелец 20.10): дух в нише не ставит пробку проёма изнутри — сперва выходит, потом ставит.
-src/main/java/com/theminespirit/gametest/BuildRetreatGameTests.java	Правило отхода (владелец 20.10, постоянное): дух не ставит блок, после которого ему не выйти из постройки, — сперва переходит на стоянку снаружи. Сцена — ниша 1×1 в стене высотой 2 ({@code retreat_nook}), дух стоит внутри.
-src/main/java/com/theminespirit/gametest/BuildScenesGameTests.java	Укрупнённые сцены механики «стройка»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/BuildingGameTests.java	Замечание владельца 21.10: у духов в руках ничего не было. Поставленный блок виден в руке (синхронизируемое поле
-src/main/java/com/theminespirit/gametest/BuildingGameTests.java	для клиента), настоящая рука и инвентарь не трогаются; у сундука рука снова пустая.
-src/main/java/com/theminespirit/gametest/CampGameTests.java	(флак 17.10: дух не доходил за 100 тиков). По умолчанию в GameTest координатор и доска выключены,
-src/main/java/com/theminespirit/gametest/CampGameTests.java	Лагерь без дома делает духа поселением координатора: тот ставит ему оборону GUARD_AREA и через
-src/main/java/com/theminespirit/gametest/CampGameTests.java	Отход camp_retreat_* проверяет выбор цели между домом и лагерем и не испытывает поселение.
-src/main/java/com/theminespirit/gametest/CampGameTests.java	интеллект выдаёт работу (рубка), а исходная задача «wait» терялась — отход оставался без приказа
-src/main/java/com/theminespirit/gametest/CampGameTests.java	поэтому пачкам отхода ничего не нужно, а обороне лагеря — явная разметка ниже.
 src/main/java/com/theminespirit/gametest/CaptureGameTests.java	[флак] овца идёт за кормом шагом ванильной навигации; потолок ≈ 2× замера ~300 тиков.
-src/main/java/com/theminespirit/gametest/ChopScenesGameTests.java	Укрупнённые сцены механики «рубка»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	(1620) такое чтение ещё пропускает.
 src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	[флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
 src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
 src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Акация: ни один другой тест не строит акации. Палитра секции не сжимается после удаления блока,
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Граница — замер x 1.5 = 838: запас на флаки и на лишнее чтение при изменении обхода.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Дроп с брёвен за стеной не достать: он уходит «в пропасть», иначе подбор падал бы не на
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Замер (936425f): разбор дерева из 60 брёвен читает 559 клеток — все различные клетки 3x3x62
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Крона на высоте 3, а не 2: листья вплотную к земле закрывают духу ростом 1.4 вход в клетку ствола,
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Лист кроны под первым бревном ветки удержал бы его дроп на высоте, куда не дотянуться.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Прежняя граница была посажена на замер ровно (559) и красила тест на одном лишнем чтении;
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Стена игрока поперёк платформы: клетки досадки вплотную к ней не засаживаются.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	Стена от земли до уровня ниже брёвен ветки: дух остаётся перед ней, но дотягивается через неё.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	а поиск пропускает секцию по палитре, поэтому следы дубов из соседних тестов в тех же чанках
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	арены дали бы лишние прочитанные секции.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	вокруг ствола плюс повторное чтение почвы под основанием после обхода.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	и дроп оказывается физически недосягаем.
 src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	потолок с запасом на флаки полного прогона
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	проверяемом (рубка через стену), а на предметах, которые и так нельзя подобрать.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	чтение вдвое больше замера (1118) обязано быть красным — бюджет «27 клеток на бревно»
-src/main/java/com/theminespirit/gametest/ChunkLoadingGameTests.java	succeedWhen, а не succeedAfter: дух может быть удалён чужим reset структуры
-src/main/java/com/theminespirit/gametest/ChunkLoadingGameTests.java	Движок выгружает сущность через setRemoved(UNLOADED_TO_CHUNK), минуя remove(): тест идёт тем же путём.
-src/main/java/com/theminespirit/gametest/ClearGameTests.java	Защищённые клетки пропускаются и ящик не валят (INC-71): задача завершается, стенка игрока цела.
-src/main/java/com/theminespirit/gametest/ClearGameTests.java	Постройки поселения прошлых версий на участке (старая ограда, дом) — не «постройка игрока» по искусственным
-src/main/java/com/theminespirit/gametest/ClearGameTests.java	соседям: выравнивание их убирает (INC-70: «защищено: 19, убрано 0 из 1088»).
-src/main/java/com/theminespirit/gametest/CollectDropsGameTests.java	Булыжник в 6 блоках от старта и от пути к брёвнам — дальше радиуса магнита (5), но внутри radius 6:
-src/main/java/com/theminespirit/gametest/CollectDropsGameTests.java	фильтр collect_drops решает сам, магнит его не подбирает.
 src/main/java/com/theminespirit/gametest/CombatGameTests.java	[флак] тайм-аут скрипта FLEE_SAFE/FLEE_TIMEOUT_TICKS=600 тиков: ловушка честно ждёт отказ по тайм-ауту
 src/main/java/com/theminespirit/gametest/CombatRallyGameTests.java	[флак] зов повторяется не раньше 200 тиков: первый и второй разнесены на интервал, наблюдение
 src/main/java/com/theminespirit/gametest/CombatRallyGameTests.java	занимает ~300 тиков со сдвигом набора игрока — потолок 500 держит двукратный запас.
-src/main/java/com/theminespirit/gametest/CoordinatorGameTests.java	Деревья разнесены дальше радиуса подбора дропа (ChopTuning.COLLECT_RADIUS = 6) по обеим осям:
-src/main/java/com/theminespirit/gametest/CoordinatorGameTests.java	рубка (5 брёвен своего дерева) делится 4/6 под таймингом полного прогона, хотя брони корректны.
-src/main/java/com/theminespirit/gametest/CoordinatorGameTests.java	у соседних деревьев кубические области подбора пересекаются, и дух забирает брёвна соседа —
-src/main/java/com/theminespirit/gametest/CoordinatorScaleGameTests.java	keep_distance стартует сразу, а не через SETTLE_TICKS: пока дух простаивает, тактический
-src/main/java/com/theminespirit/gametest/CoordinatorScaleGameTests.java	встречает наблюдение уже FAILED. Скрипт на духе интеллект не перебивает (TaskStarter).
-src/main/java/com/theminespirit/gametest/CoordinatorScaleGameTests.java	интеллект поселения (32) успевает выдать ему занятие (ферма без грядок падает), и дух
-src/main/java/com/theminespirit/gametest/CoordinatorScenesGameTests.java	Укрупнённые сцены механики «координатор»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	(приёмка «джунгли» 24.10: «нужна печь: рядом (16) нет, в инвентаре нет»).
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	Верстак — часть тесного двора: станция крафта стоит, место есть только дальше.
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	Вплотную к духу места нет (двор занят) — печь ставится в шаге досягаемости, а не остаётся в инвентаре: иначе
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	Печь первых шагов ставится сразу после крафта (place): в инвентаре крафтера её не видела плавка других духов
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	Станции поселения общие (INC-51): верстак на участке дальше радиуса поиска — дух идёт к нему, а свой из
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	Сундуки склада первых шагов ставятся сразу после крафта (place): в инвентаре крафтера склада не было, сдача
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	добытого не находила сундук (приёмка «джунгли» 24.10). Два сундука — один двойной, как у игрока (INC-52).
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	инвентаря не ставит (вторая печь и второй верстак на живом сервере).
-src/main/java/com/theminespirit/gametest/CraftGameTests.java	шаг печи падал, запас «с печью» закрывал CRAFT_FURNACE без записи в журнале (приёмка «джунгли» 24.10).
-src/main/java/com/theminespirit/gametest/CraftScenesGameTests.java	Укрупнённые сцены механики «крафт»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/CraftTestSupport.java	Диагностика флака «RUNNING» на плавке: печатаем станции рядом с духом и их содержимое —
-src/main/java/com/theminespirit/gametest/CraftTestSupport.java	своя ускоренная скорость готовки не даёт, а чужая станция соседней сцены не ускоряется.
-src/main/java/com/theminespirit/gametest/DefenseGameTests.java	Ванильная цель мобов берёт БЛИЖАЙШЕГО духа: стоит бронированному отойти на радиус
-src/main/java/com/theminespirit/gametest/DefenseGameTests.java	в PROTECT, и «ударь и беги» разваливается (флак). Сцена — дуэль с бронированным, поэтому
-src/main/java/com/theminespirit/gametest/DefenseGameTests.java	взрыва, крипер перекидывается на держащего без брони, оборона переводит бронированного
-src/main/java/com/theminespirit/gametest/DefenseGameTests.java	духа погоней. Запал держим ниже порога детонации (SWELL_CAP): взрыв — не предмет
-src/main/java/com/theminespirit/gametest/DefenseGameTests.java	крипер целится в него постоянно, а не переизбирает цель; и он медленный, чтобы не ловил
-src/main/java/com/theminespirit/gametest/DefenseGameTests.java	проверки, а источник флака — дух с равной скоростью не всегда успевает выйти за запал.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	21.10 — усадьба ждала 50 минут на каждый поворот).
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	36 слотов) — лежат в сундуках, и дух ходит за ними заходами.
+src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
@@ -732,7 +621,6 @@ src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] до
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] заходы к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
@@ -753,7 +641,7 @@ src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] пл
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] семь заходов к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
+src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] полный инвентарь: заход к сундуку и обратно с освобождением слотов — запас тиков на подходы
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
@@ -818,34 +706,9 @@ src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фо
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	freeSlots < 36 — инвентарь духа занят чужим, свободно freeSlots: стройка обязана идти порциями из сундуков.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Блоки без предмета (вода колодца) — после стройки, как в демо (DemoSession): поставленная до бортика
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Высокая постройка (дом семьи 1 — 10 слоёв с крышей) оставила бы конёк соседнему тесту: чистим на её высоту.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Дух появляется прямо перед дверью, за крыльцом: оттуда первый подход к стоянке короче, чем с края пола.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Замер для запаса на движение: число в момент успеха, до повторов succeedWhen.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Заходов за материалами, как в демо (DemoSession.MAX_ROUNDS): больше — значит, стройка не продвигается.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Заходы за материалами: дом отступает от края пола на кольцо с обеих сторон, чтобы дух обходил его кругом к
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Каждая постройка демо-каталога в четырёх поворотах: BuildAudit обязан не найти ни одного расхождения — ни по клеткам схемы, ни по лишним блокам, ни по числу постановок, — а дух обязан строить с места: число построений пути ограничено (решение владельца 18.10: «не бегает — ставит всё, до чего дотягивается»). Четыре поворота одной постройки — одна пачка: четыре арены строятся параллельно.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Материалы всей постройки влезают в инвентарь — выдаются сразу; не влезают (дом семьи 3 — ~56 стопок на
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Подходы аудита (решение владельца 20.10, ночь): стройка идёт по плану BuildPlanner, и подходов (стоянки + заходы)
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Пол — с запасом в 4 клетки сверх большей стороны постройки: духу нужно место появиться снаружи.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	При заходах дух появляется у сундуков перед входом: путь от тыла вокруг большого дома длиннее поиска пути.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Провал стройки и итог аудита окончательны: падать сразу, а не ждать предела тиков (полный прогон,
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Решение владельца 20.10: в инвентаре два свободных слота — дух берёт порцию, ставит всё, что ею можно, и идёт
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Решение владельца 20.10: инвентарь забит посторонним (мусор, дроп мобов), свободных слотов нет — демо-дом всё
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Решение владельца 20.10: материалы, не влезающие в инвентарь, — в двойных сундуках у края пола; дух сам
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Стройка шла по плану: подходов (стоянки + заходы) не больше плана с запасом на движение.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	Сундуки — у главного входа, как в демо: за ступенью, в стороне от линии подхода.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	У чаровальни вход с любой стороны после поворота: пол держим с запасом по всем сторонам, иначе за
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	видела.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	вода растекалась по полу и стекала за край арены лишним блоком (plaza_1 cw180, 20.10).
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	гравия под стоянками плана: запасные стоянки отмечали их недоступными, и после плана обычная стройка их не
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	за следующей; склад-хижина из 11 материалов строится заходами до конца.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	западной/северной дверью нет земли и дух идёт к ней кругом через весь дом (долгий подход — не свойство
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	клетками
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	мире не дотянуться (тело духа, неровный край). Запас — замер по каталогу, см. MOVEMENT_MARGIN_*.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	не больше, чем в плане, плюс запас на движение — срывы подхода и запасные стоянки, когда со стоянки плана в
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	равно достраивается: лишнее освобождает слоты под порцию. Без правила заход не берёт порцию и стройка падает.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
@@ -862,296 +725,79 @@ src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результ�
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	сундукам и к дверям и не сходил с пола за край.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	схемы).
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	ходит за ними порциями (BuildSupplyTrip), как в демо и в обычной стройке.
 src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	[флак] 82 блока склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
 src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	[флак] Загон строится двумя уровнями: дух проходит подход к 4+7 клеткам забора с лесами; потолок с запасом,
-src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	Демо-стройка /spirit demo в креативе: объём очищается, сундук и дух появляются, постройка совпадает со схемой, а после «Готово» дух пропадает. Отдельно проверяется улучшение загона 1→2 на месте.
 src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/DemoCityGameTests.java	Витрина {@code /spirit demo city N} (решение владельца 12): по команде одновременно появляется по духу на каждую постройку этапа, и {@code /spirit demo stop} убирает их всех. Раскладка улицы проверяется в DemoCityTests.
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	Материалы — в двойных сундуках (владелец 20.10): вторая половина стоит вплотную к клетке сундука.
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	Раскладка демо-стройки, увиденная из мира: площадка вокруг дома расчищена и выровнена до стройки, вход без явного поворота смотрит на игрока в любую сторону, а после стройки на площадке нет ни одного блока мимо схемы, сундука и таблички с названием. Проверяется на каменном доме: у него есть крыша, окна и мебель.
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/DemoSpiritGameTests.java	Демо-дух защищён: мобы не берут его целью, он неуязвим и не пускает в ход тактику (отход/бой), пока строит. Проверяется на живом духе, поднятом командой {@code /spirit demo}.
-src/main/java/com/theminespirit/gametest/DigOutGameTests.java	(x-1,y+1); выше — сплошной камень.
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
-src/main/java/com/theminespirit/gametest/DigOutGameTests.java	Самовыход замурованного духа (INC-45, требование владельца): дух в каменном кармане на 7 блоков ниже поверхности, с деревянной киркой и булыжником, сам копает лестницу вверх и выходит под открытое небо.
-src/main/java/com/theminespirit/gametest/DigOutGameTests.java	Форма живого кармана INC-59: клетка духа, над ней воздух и проём сбоку на уровне головы — (x,y), (x,y+1),
-src/main/java/com/theminespirit/gametest/ExploreGameTests.java	Потолок как у соседнего explore_survey (400): планировщик обходит загруженные чанки, и в полном
-src/main/java/com/theminespirit/gametest/ExploreGameTests.java	прогоне (уровень держит структуры соседних сцен) план строится дольше, чем за 100 тиков; проверки не тронуты.
 src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
 src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
 src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
-src/main/java/com/theminespirit/gametest/FarmScenesGameTests.java	Укрупнённые сцены механики «ферма»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/FillPitGameTests.java	Подсыпка ямы участка (INC-66): яма 3×3 глубиной 4 засыпается слоями снизу вверх, дух в яме засыпает вокруг себя и поднимается столбом под себя, в конце наверху, а не «без стоянки» и не застрял в яме.
-src/main/java/com/theminespirit/gametest/FillPitGameTests.java	Слои снизу вверх, как подсыпку раскладывает TicketPlans.layers (ряды одного слоя слиты в ящик).
-src/main/java/com/theminespirit/gametest/FillPitGameTests.java	Яма 1×1 глубиной 3 под кроной: с края до дна не дотянуться, стоянок у дна нет, а «неба» из-за листвы не видно —
-src/main/java/com/theminespirit/gametest/FillPitGameTests.java	Яма — на участке поселения: там подсыпка не встаёт в «пещеру без неба» (INC-72), и крона над ямой не небо.
-src/main/java/com/theminespirit/gametest/FillPitGameTests.java	дух спускается в саму клетку и засыпает столбом под себя (сцена 56: такая яма оставалась, выравнивание шло по
-src/main/java/com/theminespirit/gametest/FillPitGameTests.java	кругу). Верх ямы — с места, без подхода.
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	[флак] этап 1 целиком — выравнивание участка 27×27, шахта, ограда 23×23 и хижина тремя духами: тысячи тиков по
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	Блок в блок по виду: соединения забора и стен зависят от соседей за краем снимка, а не от снимка.
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	Дерево у духа (брёвна/доски/палки) — видно, почему ограда и хижина ждут материалов.
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	Застревание по миру: дух ниже уровня участка вне спуска в шахту или без задания дольше STUCK_LIMIT подряд.
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	Сквозная сцена этапа 1 (не сокращать): три духа на неплоском мире по сиду ({@link GeneratedScene}) с доской и координатором по обычным механикам доводят участок до плана — ровно, ограда цела и непроходима, хижина, спуск в шахту и факелы по раскладке ({@link StageOneAudit}); ни один дух не застревает ниже плана и не стоит без задания дольше {@link #STUCK_LIMIT} тиков. Упала — повтор на той же сцене: {@code scripts/test.sh gametest --seed N first_stage}, сид — в строке {@code [scene]} лога и в сообщении.
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	Снимок инцидента грузится сценой: окрестность ±12 первого духа в файл, файл — копией в угол шаблона вне
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	Тики духов по сценариям — куда ушло время этапа (предел 6000 тиков).
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	решению владельца (≤ 6000); простой и застревание меряет STUCK_LIMIT, предел — потолок всего этапа.
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	сцены, блок в блок, и дух из снимка — с тем же инвентарём; потом угол возвращается как был.
-src/main/java/com/theminespirit/gametest/FirstStepsRemainderGameTests.java	Повтор проваленной стройки первых шагов просит только непоставленное: после провала ограды на 91/94 доска снова заказывала забор ×72 на всю схему — 1800 тиков лишней добычи (приёмка «джунгли» 24.10).
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] три acquire подряд (кирка, топор, лопата), запас 2× к замеру цепочки
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] четыре acquire подряд (кирка, топор, лопата, меч), запас 2× к замеру цепочки
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	С y=0: дух иногда ставит печь на уровень пола (диагностика флака firsttools_fromscratch
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	видела печь в мире, а поиск с y=1 её пропускал).
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
 src/main/java/com/theminespirit/gametest/FishingGameTests.java	[флак] поклёвка случайна (ванильное ожидание до ~380 тиков), плюс подход к берегу — потолок с запасом
-src/main/java/com/theminespirit/gametest/FishingWatchGameTests.java	Постоянные задания рыболовства: коптильня встаёт на доску при улове не меньше порога, рыбалка — при нехватке еды и найденной рабочей точке у воды. Доска своя, изолированная: общая доска уровня приносит чужие билеты соседних сцен.
-src/main/java/com/theminespirit/gametest/FoodScenesGameTests.java	Укрупнённые сцены механики «еда и рыбалка»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
 src/main/java/com/theminespirit/gametest/FullCycleGameTests.java	[флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
 src/main/java/com/theminespirit/gametest/FullCycleGameTests.java	[флак] три добычи брёвен голыми руками и пять крафтов подряд; замерено 270 тиков духа, запас 2×
-src/main/java/com/theminespirit/gametest/FullCycleScenesGameTests.java	Укрупнённые сцены механики «полный цикл»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	timeoutTicks с потолком 100: без потолка тест с окном 24000 весил как сотни коротких, хотя идёт 30 с,
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	Демо-аудиты построек ручные: в общий набор (и --full) не входят, только явный фильтр.
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	Доска и координатор тикают глобально и раздают задачи/приказы любому свободному духу,
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	По умолчанию в GameTest обе системы выключены; включает их только размеченная пачка.
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	Раскладка по шардам — жадный LPT: тяжёлые пачки первыми на самый свободный шард. Вес пачки — сумма
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	Свой у каждого шарда gameDirectory, поэтому общий файл аргументов JVM здесь не годится.
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	а поиск пути на 400 — 12 с. Все серверы считают одинаково; хуки @BeforeBatch и @AfterBatch
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	включая духов чужих сцен: пачка chop_tree_* стояла в RUNNING с чужой задачей (флак 17.10).
-src/main/java/com/theminespirit/gametest/GameTestFilter.java	держат пачку целиком в одном шарде.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Отдельная сцена стояла на новом месте мира, а шаг — на месте прошлого шага: память мира, привязанная к
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Реестр сундуков поселения общий на мир, а план стройки берёт материал из любого сундука реестра: сундук прошлого
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	С отдельным слушателем на каждый вызов время утекало — GameTestInfo.testPassed зовёт слушателей в
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Структура ещё не размещена: регистрации нет, остаётся фильтр возраста.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Сцена может просить время несколько раз (сон: ночь на старте, утро при засыпании). Слушатель у сцены
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Тесты пачки стартуют одновременно: сетапы идут подряд, соседи в этот момент
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Узкая чистка между шагами укрупнённой сцены: своя площадка, сцена остаётся зарегистрированной.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	Участок поселения хранится в мире: сцена не наследует якорь и породу прошлой сцены (INC-55).
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	внутри активной структуры не трогаются в любом возрасте.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	клеткам (метки поставленных блоков, оставленная руда, координатор поселения по дому), обнуляется здесь.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	новорождённые (возраст 0), а leftovers прошлых пачек прожили свои тесты. Живые
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	один и помнит первое значение: вторая просьба только двигает часы, а не подменяет точку возврата.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	порядке добавления, и последний возвращал не исходное время, а сохранённое перед своим вызовом (ночь
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	после сна падала на следующие пачки; порядок пачек в прогоне неупорядочен).
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	своей пачке, пачки идут по очереди — шаг начинает с пустым реестром, свои сундуки он ставит сам.
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	сцены пачки дополнительно прикрыты реестром границ: чужой дух, моб и дроп
-src/main/java/com/theminespirit/gametest/GameTestFixtures.java	шага или прошлой сцены (её площадка осталась в мире) уводил духа за чужим материалом. Укрупнённая сцена одна в
-src/main/java/com/theminespirit/gametest/GatherScenesGameTests.java	Укрупнённые сцены механики «добыча и сбор»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/GeneratedScene.java	Клетка сцены (от центра участка и базовой поверхности) — в координаты шаблона.
-src/main/java/com/theminespirit/gametest/GeneratedScene.java	Постановка сгенерированной по сиду сцены ({@link SceneGenerator}) на шаблон {@code settlement_arena}: центр участка — середина шаблона, базовая поверхность — {@link #SURFACE} блоков над полом шаблона. Сид — из {@code -Dtheminespirit.gametest.seed} ({@code scripts/test.sh gametest --seed N}) или новый случайный; строка {@code [scene]} в логе называет сид и команду повтора.
-src/main/java/com/theminespirit/gametest/HarvestProbe.java	Диагностика флаков добычи: провал «куча не уложилась в тики» или «дроп потерян» по одному
-src/main/java/com/theminespirit/gametest/HarvestProbe.java	где дроп и что осталось в мире. Проба копит сплит рабочих и паузных тиков, переходы заморозки
-src/main/java/com/theminespirit/gametest/HarvestProbe.java	с причиной, состояние духа, тактику и ближайшую угрозу, остатки блоков и позиции дропа,
-src/main/java/com/theminespirit/gametest/HarvestProbe.java	сообщению не говорит, стоял ли дух замороженным (тактика/политика из-за моба соседней сцены),
-src/main/java/com/theminespirit/gametest/HarvestProbe.java	чтобы провал объяснял себя фактами, а не гаданием.
-src/main/java/com/theminespirit/gametest/HiveGameTests.java	Флак полного прогона 18.10: пчела влетала в клетку будущего костра, BlockPlacer отказывал OCCUPIED, и сбор
-src/main/java/com/theminespirit/gametest/HiveGameTests.java	проваливался сразу. Существо в клетке костра уходит — дух обязан дождаться и поставить костёр.
-src/main/java/com/theminespirit/gametest/HotReloadGameTests.java	Датапак меняет порог «почти сломанной» брони: при worn_fraction 0.99 слегка потёртая железная кираса
-src/main/java/com/theminespirit/gametest/HotReloadGameTests.java	Перезагрузка через настоящий серверный ресурс-менеджер: берём текущие выбранные паки сервера и добавляем
-src/main/java/com/theminespirit/gametest/HotReloadGameTests.java	поверх датапак теста. Так тот же слушатель AddReloadListenerEvent читает датапак, что и при /reload.
-src/main/java/com/theminespirit/gametest/HotReloadGameTests.java	считается сломанной и уступает целой кожаной. Без перезагрузки дух надел бы железную (по защите).
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	1,5), — ловушка, а не стоянка; старт из неё мерил бы схему, а не движение.
 src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	[флак] путь из глубины дома — до 60 шагов по лестнице (≈ 600 тиков), под нагрузкой полного прогона запас 4×.
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	Готовый дом целиком: без обновлений соседей (факел у ещё не поставленной стены не осыпается), затем формы
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	Ковёр (1/16 блока) — пол под ногами, а не преграда: ноги стоят в его клетке.
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	Маршрут обхода от старта к входу: шаг, который поиск пути игры не проходит, или первый отрезок от старта, до
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	Разбор движения (решение владельца 20.10): дух в глубине готового большого дома — на втором этаже, в дальней комнате первого этажа, на балконе — обязан дойти до сундука у входа. Сцена отделена от стройки: дом ставится целиком сразу, двери открыты (как во время стройки — двери ставятся последним шагом), дух берёт один предмет. Точка старта выбирается обходом в ширину от сундука: самая дальняя клетка своего вида, до которой тело 1×2 доходит шагами вверх на 1 и спусками до 3, — значит, путь к ней по постройке есть.
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	Фасад больших домов — ряд 2 схемы (ряд 1 — крыльцо, ряд 0 — перила балкона): балкон — перед ним, над землёй.
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	Шаг в обе стороны: клетка, куда тело спрыгнуло, но откуда не выбраться (полублок у полного блока — подъём
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	конца которого путь игры не доходит (так нашлась дальность пути: 32 шага, а не 32 блока по прямой).
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	ступенек, панелей и заборов по соседям. Двери открыты: так проём во время стройки, до последнего шага.
 src/main/java/com/theminespirit/gametest/HungerGameTests.java	[флак] сцена длиннее прочих сцен голода: сперва бой под тактикой, затем обед после него
 src/main/java/com/theminespirit/gametest/HusbandryProduceGameTests.java	[флак] овца может выйти из загона после первого возврата и приманка повторится (каждая укладка
 src/main/java/com/theminespirit/gametest/HusbandryProduceGameTests.java	ограничена 150 тиками): замер 395 тиков работы духа, потолок 500 с запасом, сам тест 800 ≈ 2×
-src/main/java/com/theminespirit/gametest/IncidentScene.java	Сцена из снимка инцидента ({@link IncidentSnapshots}): окрестность духа с живого сервера ставится в мир теста углом в {@code corner} (координаты шаблона), дух инцидента — с его инвентарём, задачей и домом — в центр снимка, где он стоял. Снимок кладётся в тест файлом из {@code <мир>/theminespirit/incidents/}.
 src/main/java/com/theminespirit/gametest/IntellectForageGameTests.java	[флак] охота длиннее прочих сцен интеллекта: подход к дикой корове вне домашнего загона и добивание
 src/main/java/com/theminespirit/gametest/IntellectScaleGameTests.java	[флак] замер 1150 тиков наблюдения: окно отката 200 и фаза пересчёта 100 видны только на дистанции
 src/main/java/com/theminespirit/gametest/IntellectScaleGameTests.java	[флак] замер ~410 тиков: провал, окно отката 200 и фаза пересчёта 100
-src/main/java/com/theminespirit/gametest/IntellectScenesGameTests.java	Укрупнённые сцены механики «интеллект»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/InventoryGameTests.java	INC-12: equip вынимает инструмент из инвентаря в настоящую руку, а тактика (SpiritGear.holdNothing) освобождает
-src/main/java/com/theminespirit/gametest/InventoryGameTests.java	Постоянная часть держит 24 факела (base_kit.json): 52 = 24 постоянных + 28 излишка из шахты.
-src/main/java/com/theminespirit/gametest/InventoryGameTests.java	Постоянная часть держит 24 факела: 52 = 24 постоянных + 28 излишка, который и разгружается.
-src/main/java/com/theminespirit/gametest/InventoryGameTests.java	прогона: craft → equip → gather → equip другого.
-src/main/java/com/theminespirit/gametest/InventoryGameTests.java	руку как витрину — предмет обязан вернуться в инвентарь, иначе он исчезает из обоих мест. Цепочка из живого
-src/main/java/com/theminespirit/gametest/InventoryScenesGameTests.java	Укрупнённые сцены механики «инвентарь и сундуки»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/LifeScenesGameTests.java	Укрупнённые сцены механики «жизнь духа и сохранение»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/LightAreaGameTests.java	Тёмная комната 7×7 (клетки 1..7) с потолком и стенами: внешний свет тестового мира внутрь не проходит.
-src/main/java/com/theminespirit/gametest/MemoryGameTests.java	Селектор по расстоянию видит и духов соседних тестов пачки (структуры стоят в 8 клетках друг от друга),
-src/main/java/com/theminespirit/gametest/MemoryGameTests.java	и команда ложится на чужого духа; тег уникален на запуск и выбирает только духа своего теста.
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] 27 блоков камня железной киркой, 9 ступеней вниз и выход назад пешком; замерено ~700 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск 9 ступеней, добыча камня поселением ×12 и возврат домой наверх; запас 2× к ~900 тиков
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск 9 ступеней, затем возврат тактики (Approach) со дна к якорю наверху; запас 2× к ~900 тиков
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с обходом руды: 9 ступеней + 3 колонки обхода и выход наверх; замерено ~850 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	Дух у дна спуска, как живые духи в шахте (INC-43): оттуда — к якорю наверху.
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	Строитель шахты по схеме владельца mine_descent_v1: спуск 1×3, шаг вперёд — на блок ниже. Порода — камень до y=12,
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	вход — над поверхностью в x=1; спуск идёт по +x до пола y=4 (9 ступеней, x=1..9).
 src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] 1200 тиков HARVEST_NO_PROGRESS_TICKS: отказ обязан прийти не позже предела простоя
 src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
 src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
 src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
 src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
-src/main/java/com/theminespirit/gametest/MineGameTests.java	gather_stoneheap: «не дотянулся до 1 предметов» у y=-61). Землю gather "stone" не трогает.
-src/main/java/com/theminespirit/gametest/MineGameTests.java	Запечатанная стоянка (4,1,4): воздух с каменным полом, с четырёх сторон блоки земли,
-src/main/java/com/theminespirit/gametest/MineGameTests.java	Камень в замурованной стеклянной комнате: стоянки внутри есть, пути к ним нет,
-src/main/java/com/theminespirit/gametest/MineGameTests.java	Под полом — слой земли: в мире под полом не пустота, а если дух всё же сломает клетку пола,
-src/main/java/com/theminespirit/gametest/MineGameTests.java	Радиус 4 — только своя арена: иначе поиск читает землю соседних сцен и отказ по запечатанной
-src/main/java/com/theminespirit/gametest/MineGameTests.java	Радиус 4 — только своя арена: куб радиуса 16 захватывает блоки соседних сцен, и полный поиск
-src/main/java/com/theminespirit/gametest/MineGameTests.java	а снаружи до камня не дотянуться (4 блока по горизонтали и 4 вниз).
-src/main/java/com/theminespirit/gametest/MineGameTests.java	выпавший дроп осядет на землю в пределах сцены, а не провалится в пустоту (флак
-src/main/java/com/theminespirit/gametest/MineGameTests.java	по диагоналям и снаружи камень, сверху запечатанный колпак (4,2,4): планировщик видит
 src/main/java/com/theminespirit/gametest/MineGameTests.java	потолок 1000 ≈ 1.7× замера
-src/main/java/com/theminespirit/gametest/MineGameTests.java	стоянке ждёт конца чужого поиска вместо fail-fast (флак полного прогона 18.10).
-src/main/java/com/theminespirit/gametest/MineGameTests.java	стоянку, а навигация пути к ней не находит.
-src/main/java/com/theminespirit/gametest/MineGameTests.java	чужой земли затягивал и без того долгую кучу за предел теста (флак полного прогона 18.10).
 src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	[флак] три задачи подряд (спуск, расширение 60+ клеток, 8 ступенек): подход к каждой клетке,
 src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	замер духа на порядок больше базового; запас 2× к ожидаемым тикам.
-src/main/java/com/theminespirit/gametest/MineScenesGameTests.java	Укрупнённые сцены механики «шахта»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/MobTargetsGameTests.java	ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
-src/main/java/com/theminespirit/gametest/MoveScenesGameTests.java	Укрупнённые сцены механики «движение»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/MovementCarefulGameTests.java	mob.getMaxFallDistance() (у духа DropPolicy.MAX_DROP = 2), поэтому и goto, и walk_careful обходят пропасть
-src/main/java/com/theminespirit/gametest/MovementCarefulGameTests.java	Регрессионный: подлог walk_careful -> goto тест НЕ красит. Ванильный WalkNodeEvaluator ограничивает спуск
-src/main/java/com/theminespirit/gametest/MovementCarefulGameTests.java	Тест сторожит «дух идёт вдоль пропасти и не срывается» (общий путь для обоих режимов), а различие режимов
-src/main/java/com/theminespirit/gametest/MovementCarefulGameTests.java	и никогда не строят путь с падением глубже MAX_SAFE_DROP: CarefulPath.refusal на реальных путях всегда null.
-src/main/java/com/theminespirit/gametest/MovementCarefulGameTests.java	покрывает синтетический carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing.
-src/main/java/com/theminespirit/gametest/MovementScene.java	helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow/keep_distance/come
-src/main/java/com/theminespirit/gametest/MovementScene.java	Факты для разбора флака: время дня общее у всех сцен, поэтому печатаем и мир, и то, что сцена
-src/main/java/com/theminespirit/gametest/MovementScene.java	берут первого игрока с таким именем: чужой (в т.ч. протёкший из соседней сцены) игрок уводит духа к
-src/main/java/com/theminespirit/gametest/MovementScene.java	выставляла (sceneDayTime). Иначе падение «статус RUNNING» не отличить от отказа поводка или
-src/main/java/com/theminespirit/gametest/MovementScene.java	заморозки тактикой. Вечер и принадлежность поселению считает сам NightLeash — вторая формула
-src/main/java/com/theminespirit/gametest/MovementScene.java	любом исходе даёт GameTestFixtures.mockPlayer (образец — RestFixture.mockPlayer).
-src/main/java/com/theminespirit/gametest/MovementScene.java	разошлась бы с production. Формат — одна строка, пригодная для grep в логе сервера.
-src/main/java/com/theminespirit/gametest/MovementScene.java	чужой цели, скрипт не доходит и висит RUNNING до тайм-аута. Уникальное имя теста и снятие игрока при
-src/main/java/com/theminespirit/gametest/NightLeashGameTests.java	У каждого теста своё имя мок-игрока: с общим именем findPlayer/come берёт первого игрока с таким
-src/main/java/com/theminespirit/gametest/NightLeashGameTests.java	именем, и соседняя сцена (или протёкший игрок) уводит духа к чужой цели — скрипт висит RUNNING.
-src/main/java/com/theminespirit/gametest/PerceptionScenesGameTests.java	Укрупнённые сцены механики «восприятие и память»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
 src/main/java/com/theminespirit/gametest/PersonalSpaceGameTests.java	[флак] 17 блоков по 10 тиков плюс шаги в сторону; потолок ≈ 2× замера.
-src/main/java/com/theminespirit/gametest/PersonalSpaceGameTests.java	Личное пространство игрока (владелец 19.10): дух не стоит вплотную к игроку — отходит на 1–2 клетки и продолжает работу, в том числе посреди стройки.
 src/main/java/com/theminespirit/gametest/PillarGameTests.java	5-й блок»). Столб обязан возвращать духа в центр клетки, а не оставлять его у ствола.
 src/main/java/com/theminespirit/gametest/PillarGameTests.java	[флак] Клетка столба прижата к стволу: тело духа 0.6 шириной, сдвиг к стволу больше 0.2 задевает
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	Дух стартует сдвинутым к стволу — как после случайного сноса при подъёме.
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	Потолок в двух клетках над ногами проходит проверку клетки и головы, но не даёт духу
 src/main/java/com/theminespirit/gametest/PillarGameTests.java	бревно на прыжке (CellCentering.TOLERANCE) и подъём встаёт (флак chop_tree_tall: «не поднялся на
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	в RUNNING вечно (флак chop_tree_tall 17.10). Счётчик обязан идти и на земле.
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	подпрыгнуть: раньше каждый тик на земле сбрасывал счётчик застоя, и pillar_up висел
 src/main/java/com/theminespirit/gametest/PolicyLayerGameTests.java	[флак] слои и приостановка: сценарий в сотни тиков духа, запас под нагрузкой
-src/main/java/com/theminespirit/gametest/PolicyProtectionGameTests.java	Селектор по расстоянию видит и духов соседних тестов пачки (структуры стоят в 8 клетках друг от друга),
-src/main/java/com/theminespirit/gametest/PolicyProtectionGameTests.java	и команда ложится на чужого духа; тег уникален на запуск и выбирает только духа своего теста.
-src/main/java/com/theminespirit/gametest/PolicyScenesGameTests.java	Укрупнённые сцены механики «политики безопасности»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
 src/main/java/com/theminespirit/gametest/PolicySuspendGameTests.java	[флак] ломка блока с приостановкой: сотни тиков духа, запас под нагрузкой
 src/main/java/com/theminespirit/gametest/PolicyWaterGameTests.java	[флак] переправа через озеро вброд: goto до 480 тиков духа, запас под нагрузкой
 src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] каменный дом с места, с запасом на подходы; тест меряет результат, а не скорость.
 src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] склад-хижина с места, с запасом на подходы; тест меряет результат, а не скорость.
 src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] чаровальня уровня 1 дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
-src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	Дух строит постройку по пресету из своей библиотеки: материалы выданы в инвентарь, тело пресета читается тем же {@code build_schematic}, а итог сверяется с телом схемы. Проверяются склад-хижина (этап 1) с крышей и сундуками внутри, простой каменный дом (этап 2) с крышей и палисад-секция (этап 0).
 src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/RestFixture.java	[флак] Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа
-src/main/java/com/theminespirit/gametest/RestFixture.java	helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow берёт первого игрока
-src/main/java/com/theminespirit/gametest/RestFixture.java	даёт уникальное имя теста и снимает игрока при любом исходе через слушателя (образец — 65406d0, 3130b96).
-src/main/java/com/theminespirit/gametest/RestFixture.java	с таким именем: протёкший из упавшего соседнего теста игрок уводит духа к чужой цели. GameTestFixtures.mockPlayer
 src/main/java/com/theminespirit/gametest/RestFixture.java	считается в секундах (REPLY_DEADLINE = 30 с), потолок тиков только запасной и заведомо больше любого
 src/main/java/com/theminespirit/gametest/RestFixture.java	честного ожидания. Потолок не тиковый, поэтому правило «timeoutTicks ≈ 2× тиков духа» к нему не применимо.
-src/main/java/com/theminespirit/gametest/RestScenesGameTests.java	Укрупнённые сцены механики «REST-мост»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
 src/main/java/com/theminespirit/gametest/SafeMineGameTests.java	[флак] восемь ступеней (14 блоков), подход и сбор дропа на каждой ступени: запас 2× к ожидаемым тикам.
-src/main/java/com/theminespirit/gametest/SceneStep.java	Шаг укрупнённой сцены ({@link SceneSteps}): бывшая отдельная сцена. {@code template} — шаблон сцены-хозяина, {@code timeoutTicks} — бюджет шага; {@code board}/{@code coordinator} — бывшая {@code @SettlementSystems} пачки, {@code calmMobs} — бывший хук пачки «мобы не берут духов целью». Сторожа сцен читают шаг как {@code @GameTest}.
-src/main/java/com/theminespirit/gametest/SceneSteps.java	Укрупнённая сцена механики (1–3 сцены на механику): шаги — методы {@link SceneStep} классов механики, идут подряд на одной площадке. Тело шага получает {@link StepHelper}: его {@code succeed}/{@code succeedWhen} завершают шаг, а не сцену. Шаг не прошёл за свой бюджет — причина с именем шага запоминается, сцена идёт дальше и в конце падает со списком упавших шагов. Между шагами площадка чистится узко, доска, координатор и мобы возвращаются к умолчанию GameTest-сервера. <p>Тайм-аут сцены не меньше суммы бюджетов шагов (+1 тик на переход), это проверяется при запуске.
-src/main/java/com/theminespirit/gametest/SceneSteps.java	Упавший шаг не прячет остальные: сцена идёт дальше и падает в конце со списком всех упавших шагов.
-src/main/java/com/theminespirit/gametest/SchematicGameTests.java	«клетку занимает живое существо», приёмка «джунгли» 24.10).
-src/main/java/com/theminespirit/gametest/SchematicGameTests.java	Свободный дух стоит в клетке схемы: строитель отводит его за габарит и ставит блок (хижина вставала 100 из 101
 src/main/java/com/theminespirit/gametest/ScriptProgressGameTests.java	[флак] дух рубит два дуба, сценарий в сотни тиков духа; запас под нагрузкой
-src/main/java/com/theminespirit/gametest/ScriptScenesGameTests.java	Укрупнённые сцены механики «скрипты, команды, итоги»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
 src/main/java/com/theminespirit/gametest/SettlementChestGameTests.java	[флак] дух идёт 60 блоков до склада и обратно: замер ~600 тиков, запас 2× на движение и заходы.
-src/main/java/com/theminespirit/gametest/SettlementChestGameTests.java	Сцена одна в пачке: реестр — общий на уровень, чужие сундуки из прошлых пачек не должны подменять склад.
-src/main/java/com/theminespirit/gametest/SettlementChunkGameTests.java	Правило владельца 21.10: пока на сервере есть игрок (в любом мире), чанки поселения тикают, а без игроков выгружаются.
-src/main/java/com/theminespirit/gametest/SettlementSystems.java	Включает системы поселения на время пачки GameTest. На GameTest-сервере доска и координатор по умолчанию выключены: их глобальные тики раздают задачи и приказы духам соседних сцен (флак 17.10 — чужая задача доски удерживала духа рубки в RUNNING). Размечать нужно только ту пачку, которая эти системы испытывает; после пачки обе выключаются снова. <p>Аннотация на методе перекрывает аннотацию класса: так пачки одного класса получают разные наборы систем (например, отход лагеря без координатора, а оборона лагеря с ним).
-src/main/java/com/theminespirit/gametest/SettlementWoodBoardGameTests.java	Добыча первых шагов под другую породу снимается, когда порода поселения — jungle: gather:oak_fence, поставленный до смены породы, висел PENDING рядом с выбранной jungle (INC-42, живой сервер 24.10).
 src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	[флак] полная схема 6×6: расчистка 36 клеток земли, план, 130 блоков корпуса, полублок и факел;
 src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	запас на подходы полного прогона
 src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] две руды за стеной и дроп в инвентарь: ломка деревянной киркой с запасом.
 src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] застревание детектируется за 40 тиков, затем перенос и спуск к цели.
 src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] открытие сундука и перенос пяти блоков с места: запас под нагрузкой полного прогона.
 src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] три зрелые клетки пшеницы с места и подбор урожая в инвентарь.
-src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	Упрощения механик «читом» (согласованы владельцем 18.10): магнит дропа, контейнер в досягаемости, жила с места с дропом прямо в инвентарь, телепорт при застревании не сквозь стены, ферма со стоянки. Каждое упрощение ограничено целью: чужие предметы, блоки вне цели и стены не трогаются.
-src/main/java/com/theminespirit/gametest/SleepScenesGameTests.java	Укрупнённые сцены механики «сон и лагерь»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/SmeltCharcoalPlanGameTests.java	Плавка угля из своих брёвен: дух с 13 брёвнами джунглей добывал ещё 8 («×21») и падал на недостижимом верху дерева (INC-44, живой сервер 24.10).
-src/main/java/com/theminespirit/gametest/SmeltScenesGameTests.java	Укрупнённые сцены механики «плавка»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/SocialScenesGameTests.java	Укрупнённые сцены механики «игроки и общение»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/SpiritCommandGameTests.java	Селектор по расстоянию видит и духов соседних тестов пачки (структуры стоят в 8 клетках друг от друга),
-src/main/java/com/theminespirit/gametest/SpiritCommandGameTests.java	Тег уникален на запуск: мир переживает прогоны, и духи с прошлым тегом попали бы в селектор.
-src/main/java/com/theminespirit/gametest/SpiritCommandGameTests.java	Цель, под которую нет правила в FallbackPlanner и нет скрипта в каталоге: тест отказа не должен
-src/main/java/com/theminespirit/gametest/SpiritCommandGameTests.java	и команда ложится на чужого духа; тег уникален на запуск и выбирает только духов своего теста.
-src/main/java/com/theminespirit/gametest/SpiritCommandGameTests.java	ломаться, когда очередной скрипт начнёт реализовывать «сруби дерево» или «добудь руду».
-src/main/java/com/theminespirit/gametest/SpiritDespawnGameTests.java	Дух не исчезает, когда игрок далеко (игра 21.10: духи дальних построек витрины city 5 пропадали, пока владелец стоял на другом конце улицы): проверка самой игровой проверки исчезновения с игроком в 300 блоках.
-src/main/java/com/theminespirit/gametest/SpiritDespawnGameTests.java	Как /spirit spawn и демо (create + addFreshEntity): helper.spawn ставит мобу PersistenceRequired и прячет
-src/main/java/com/theminespirit/gametest/SpiritDespawnGameTests.java	исчезновение.
 src/main/java/com/theminespirit/gametest/SpiritGameTests.java	[флак] дух идёт к недостижимой цели, ждём тайм-аут задачи
-src/main/java/com/theminespirit/gametest/SpiritGameTests.java	Центр ставится так, чтобы крайний восточный чанк радиуса совпал с найденным незагруженным: тогда
-src/main/java/com/theminespirit/gametest/SpiritGameTests.java	в окно попадают и загруженные чанки, и гарантированно незагруженный.
-src/main/java/com/theminespirit/gametest/SpiritGestureGameTests.java	Жест работы (замечание владельца 19.10): дух смотрит на блок, который ставит или ломает, и машет рукой, а рука действительно опускается (swingTime растёт) — иначе клиент не показывает анимацию.
-src/main/java/com/theminespirit/gametest/SpiritRun.java	Условие ready — для состояния мира, которое готовится не за тики, а в другом потоке (свет): число тиков
-src/main/java/com/theminespirit/gametest/SpiritRun.java	ожидания там не гарантия, а гонка.
-src/main/java/com/theminespirit/gametest/SpiritSuppliesGameTests.java	Снабжение для acquire: счёт инвентаря духа и шаги withdraw по ближним контейнерам — ближний первым, пустые и недоступные пропускаются, радиус соблюдён.
 src/main/java/com/theminespirit/gametest/SpiritTickingGameTests.java	[флак] дух идёт за габариты структуры, ждём тики духа и сдвиг чанков
-src/main/java/com/theminespirit/gametest/StageFixture.java	Этап поселения для сцен, которые проверяют уровни построек выше первого: отмечает в журнале доски постройки прежних этапов (stages.json), кроме тех, что сцена строит сама.
-src/main/java/com/theminespirit/gametest/StageOneAudit.java	Ограда непроходима: земля вплотную к ней изнутри и снаружи не выше уровня участка — с уступа в блок забор
-src/main/java/com/theminespirit/gametest/StageOneAudit.java	Приёмка этапа 1 по миру, а не по журналу доски: участок ровный, ограда по схеме и непроходима, хижина, спуск в шахту и факелы по плану раскладки. Каждая проверка возвращает список расхождений с координатами.
-src/main/java/com/theminespirit/gametest/StageOneAudit.java	Уровень ног колонки: над верхним блоком земли (постройки, деревья, факелы землёй не считаются).
-src/main/java/com/theminespirit/gametest/StageOneAudit.java	Что стоит под ногами — сразу видно, листва это, верстак или земля (сцена 56).
-src/main/java/com/theminespirit/gametest/StageOneAudit.java	высотой 1,5 перешагивается прыжком.
-src/main/java/com/theminespirit/gametest/StepHelper.java	Возвращает true, когда шаг прошёл. Исключение задачи роняет сцену сразу, как и в отдельной сцене;
-src/main/java/com/theminespirit/gametest/StepHelper.java	Помощник шага укрупнённой сцены ({@link SceneSteps}): та же площадка и тот же {@code GameTestInfo}, что у сцены, но завершение и расписание — свои. {@code succeed}/{@code succeedWhen} завершают шаг, а не сцену; задачи {@code onEachTick}/{@code runAfterDelay} живут до конца шага; {@code getTick} считает тики от начала шага. Так тело бывшей отдельной сцены идёт шагом без переписывания.
-src/main/java/com/theminespirit/gametest/StepHelper.java	Тик шага в порядке ванильного {@code GameTestInfo}: сначала задачи этого тика, затем итоговая проверка.
-src/main/java/com/theminespirit/gametest/StepHelper.java	Уборка, которую отдельная сцена делала слушателем конца теста (игрок-заглушка, время суток).
-src/main/java/com/theminespirit/gametest/StepHelper.java	непрошедшая итоговая проверка — только запоминается до конца бюджета шага.
-src/main/java/com/theminespirit/gametest/TacticsCalmGameTests.java	Тактика без врагов (живой прогон 2, INC-27): режим духа у дома не дёргается DEFENSIVE↔GUARD_AREA каждым циклом координатора, пока интеллект то даёт, то снимает фоновое занятие.
-src/main/java/com/theminespirit/gametest/TacticsJournalGameTests.java	Оператор читает журнал в чате: без перехвата сообщений команда не проверяет, что именно ушло игроку.
-src/main/java/com/theminespirit/gametest/TacticsRetreatGameTests.java	Отход без стройки (решение владельца 18.10): с блоками в инвентаре и врагом в четырёх блоках (раньше — сцена
-src/main/java/com/theminespirit/gametest/TacticsRetreatGameTests.java	баррикады) дух не строит ни баррикаду, ни столб — только уходит; блоки остаются в инвентаре.
-src/main/java/com/theminespirit/gametest/TacticsScenesGameTests.java	Укрупнённые сцены механики «тактика и бой»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики.
-src/main/java/com/theminespirit/gametest/WallEscapeGameTests.java	Рефлекс «выйти из блока» (INC-61): дух с головой в камне шагает в соседнюю свободную клетку, а не задыхается.
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	[флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
-src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	Журнал теста во временном каталоге мира: его удалит очистка прогона.
-src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	Пол схемы (dy=0) ложится на землю, как у DemoPlacement: якорь в слое пола арены занял бы клетки
-src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	Склады в мире: уровень 1 строится духом и все сундуки открываются, табличка уровня 2 несёт категорию, переход 1→2 ставит задачу переноса и сноса, а автосдача кладёт руду в сундук «руда».
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	пола камнем, и строгая стройка считает их непостроенными.
 src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] заплыв через глубокий пруд: всплытия и подход за плавание под нагрузкой дольше
 src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] заплыв через канал в пять блоков плюс переход: под нагрузкой полного прогона заплыв тянется
 src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] четыре клетки моста и переход: запас под нагрузкой соседних сцен полного прогона
-src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	Канал глубиной 2 в каменной чаше: вода не растекается за арену, а переправа идёт вплавь.
-src/test/java/com/theminespirit/guards/DataTablesGuardTests.java	Не таблицы /reload — путь и причина. Схемы доски зарегистрированы в DataTables, тела пресетов сторож берёт сам (presetBodies), исключения сторожей схем живут в самих файлах построек.
-src/test/java/com/theminespirit/guards/DataTablesGuardTests.java	Сторож: каждый json-файл в data/theminespirit зарегистрирован в DataTables (или в исключениях с причиной), и каждая зарегистрированная таблица существует как файл. <p>Правило: таблица без регистрации не перечитается на лету по /reload. Цена нарушения: изменение файла в датапаке мира игнорируется, сервер работает со старой версией без уведомления. Как исправить: зарегистрировать таблицу в DataTables через TableRegistry.registerLazy или добавить в исключения внутри сторожа с явной причиной (например, схемы построек, если они грузятся иначе).
-src/test/java/com/theminespirit/guards/DefensePerimeterGuardTests.java	Сторож оборонных схем ({@code type: defense}): в нижнем слое линии периметра — только забор, калитка или стена (высота 1,5). Блок высотой 1 (бревно-столб) перепрыгивается, и ограда проходима (INC-53).
-src/test/java/com/theminespirit/guards/GameTestTemplateGuardTests.java	Сторож правила проекта: GameTest, который спавнит духа или ставит блоки, не должен использовать шаблон {@code "empty"} (площадка 3×3×3). Сцена такого теста вылезает за площадку в соседний неактивный чанк, и дух/блок не делает первого тика — отсюда флеки примерно 1 из 8. Для таких тестов нужен шаблон {@code "arena"} (11×8×11), где сцена целиком помещается на активной площадке.
-src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	Все классы файла и их static final int: каждый класс видит свои константы до следующего класса.
 src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	Разрешённая константа: значение и место её объявления (для проверки метки [флак] у самой константы).
-src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	Укрупнённая сцена (SceneSteps.run) ждёт сумму бюджетов шагов: её тайм-аут сверяет SceneSteps при запуске, а
-src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	правило «> 400 — с [флак]» действует на бюджет каждого шага (@SceneStep).
-src/test/java/com/theminespirit/guards/ModVersionWiringGuardTests.java	Версия 0.1.N собирается из минора в gradle.properties и числа коммитов, а не подставляется вручную.
-src/test/java/com/theminespirit/guards/SceneCountGuardTests.java	FirstStageGameTests — сквозная сцена этапа 1 (заменила JungleSettlementGameTests). Новой записи сюда не
-src/test/java/com/theminespirit/guards/SceneCountGuardTests.java	Классы вне схемы «механика → *ScenesGameTests» и их потолок: демо-аудиты — ручные, вне общего прогона;
-src/test/java/com/theminespirit/guards/SceneCountGuardTests.java	Потолок сцен общего прогона (без ручных демо-аудитов) после сокращения 25.10: было 848, стало 49.
-src/test/java/com/theminespirit/guards/SceneCountGuardTests.java	Сторож числа сцен GameTest (чеклист 56, п.3): сцена механики — класс {@code *ScenesGameTests} с 1–3 сценами, бывшие сцены идут в нём шагами {@code @SceneStep}; общее число сцен не растёт.
-src/test/java/com/theminespirit/guards/SceneCountGuardTests.java	добавлять: новая сцена — шаг сцены механики.
-src/test/java/com/theminespirit/guards/TestHygieneGuardTests.java	Единственное разрешённое изменяемое static-состояние: кэш прочитанных исходников наполняется один раз,
-src/test/java/com/theminespirit/guards/TestHygieneGuardTests.java	дальше только читается. Запись под другим ключом: ключ — «путь#имяПоля», адресно, чтобы переименование
-src/test/java/com/theminespirit/guards/TestHygieneGuardTests.java	поля или отказ от кэша валили сторож устаревшим исключением.
-src/test/java/com/theminespirit/guards/TestTimeLimitGuardTests.java	(в общий набор, включая --full, не входят), поэтому предел --full пересчитан по замеру общего набора;
-src/test/java/com/theminespirit/guards/TestTimeLimitGuardTests.java	Пределы времени scripts/test.sh поднимались без согласия владельца (unit 360 → 900 с, gametest 600 → 1500 с):
-src/test/java/com/theminespirit/guards/TestTimeLimitGuardTests.java	Цель владельца 23.10 — весь прогон (unit + GameTest) не дольше 200 с. Демо-аудиты построек — ручные
-src/test/java/com/theminespirit/guards/TestTimeLimitGuardTests.java	отдельный, более высокий предел оставлен на запас под чужую нагрузку. Поднять — только с согласия владельца.
-src/test/java/com/theminespirit/guards/TestTimeLimitGuardTests.java	правило было только текстом. Согласованные значения живут здесь, в одном месте; поднять предел можно только правкой
-src/test/java/com/theminespirit/guards/TestTimeLimitGuardTests.java	этой таблицы с причиной в комментарии, ревью её видит.
-src/test/java/com/theminespirit/testing/TestCostListener.java	synchronized: быстрый тир гоняет классы параллельно (build.gradle), строки CSV не должны перемешиваться.
-src/test/java/com/theminespirit/testing/TestCostListener.java	класс или метод недоступны — считаем обычным JUnit-тестом
-src/test/java/com/theminespirit/testing/TestCostReporter.java	битая строка CSV в отчёт не идёт

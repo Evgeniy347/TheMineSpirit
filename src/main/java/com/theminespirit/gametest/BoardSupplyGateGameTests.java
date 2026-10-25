@@ -26,11 +26,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Постоянные запасы доски — только на своём этапе: книги/бумага ждут шахты, полки — первого
- * уровня чаровальни. На старте поселения доска не просит книги, а повторная пересборка не
- * плодит вторую постановку того же тикета.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardSupplyGateGameTests {

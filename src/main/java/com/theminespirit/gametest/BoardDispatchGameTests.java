@@ -41,10 +41,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Блокеры живого прогона 2: выдача доски при паузе своего задания (INC-23), ремонт без наковальни и
- * причина провала чужой задачи (INC-24), верстак у соседа для крафта печи (INC-26).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardDispatchGameTests {
@@ -219,7 +215,6 @@ public final class BoardDispatchGameTests {
         ServerLevel level = helper.getLevel();
         BoardService board = isolatedBoard(level, "gametest-dispatch-stuck-giver.jsonl");
         long now = board.board().now();
-        // Держатель верстака провалил передачу (застрял в шахте, INC-43): пауза кейса TRANSFER_ITEM.
         String failed = "dispatch:failed_transfer";
         board.submit(ticket(failed, BoardCase.TRANSFER_ITEM, Optional.empty(), now), at(helper));
         board.board().claim(failed, holder.getUUID(), now);
@@ -325,7 +320,6 @@ public final class BoardDispatchGameTests {
         helper.setBlock(new BlockPos(6, 1, 4), Blocks.ANVIL);
         ServerLevel level = helper.getLevel();
         String repair = "repair_tool:" + spirit.getUUID();
-        // Рестарт: задание восстановлено из сохранения доски, а точки исполнения (предмет ремонта) живут в памяти.
         BoardService restarted = isolatedBoard(level, "gametest-dispatch-repair-restart.jsonl");
         restarted
                 .board()

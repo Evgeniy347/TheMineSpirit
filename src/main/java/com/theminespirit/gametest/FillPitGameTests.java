@@ -22,10 +22,6 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Подсыпка ямы участка (INC-66): яма 3×3 глубиной 4 засыпается слоями снизу вверх, дух в яме засыпает вокруг себя и
- * поднимается столбом под себя, в конце наверху, а не «без стоянки» и не застрял в яме.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class FillPitGameTests {
@@ -44,9 +40,6 @@ public final class FillPitGameTests {
         run(helper, new BlockPos(5, 1, 5));
     }
 
-    // Яма 1×1 глубиной 3 под кроной: с края до дна не дотянуться, стоянок у дна нет, а «неба» из-за листвы не видно —
-    // дух спускается в саму клетку и засыпает столбом под себя (сцена 56: такая яма оставалась, выравнивание шло по
-    // кругу). Верх ямы — с места, без подхода.
     @SceneStep(template = "mine_arena", timeoutTicks = 400)
     public static void fill_NarrowPitUnderLeaves_FilledToTop(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -67,7 +60,6 @@ public final class FillPitGameTests {
                         Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true));
             }
         }
-        // Яма — на участке поселения: там подсыпка не встаёт в «пещеру без неба» (INC-72), и крона над ямой не небо.
         BlockPos anchor = helper.absolutePos(new BlockPos(NARROW, NARROW_TOP + 1, NARROW));
         SettlementPlotStore.get(helper.getLevel())
                 .fix(new SettlementPlot(
@@ -132,7 +124,6 @@ public final class FillPitGameTests {
         }
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), start);
         spirit.getInventory().setItem(0, new ItemStack(Items.DIRT, 64));
-        // Слои снизу вверх, как подсыпку раскладывает TicketPlans.layers (ряды одного слоя слиты в ящик).
         List<TaskNode> rows = new ArrayList<>();
         for (int y = 1; y <= GROUND; y++) {
             BlockPos from = helper.absolutePos(new BlockPos(PIT_FROM, y, PIT_FROM));

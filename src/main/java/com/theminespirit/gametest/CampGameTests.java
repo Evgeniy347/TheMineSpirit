@@ -31,12 +31,6 @@ public final class CampGameTests {
     private static final int ARRIVE_LIMIT_TICKS = 100;
     private static final double ARRIVE_DISTANCE = RetreatPlanner.HOME_ARRIVAL;
 
-    // Отход camp_retreat_* проверяет выбор цели между домом и лагерем и не испытывает поселение.
-    // Лагерь без дома делает духа поселением координатора: тот ставит ему оборону GUARD_AREA и через
-    // интеллект выдаёт работу (рубка), а исходная задача «wait» терялась — отход оставался без приказа
-    // (флак 17.10: дух не доходил за 100 тиков). По умолчанию в GameTest координатор и доска выключены,
-    // поэтому пачкам отхода ничего не нужно, а обороне лагеря — явная разметка ниже.
-
     private CampGameTests() {}
 
     private static Camp campAt(GameTestHelper helper, BlockPos relative, double radius) {

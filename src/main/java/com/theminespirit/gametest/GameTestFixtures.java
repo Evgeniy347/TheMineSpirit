@@ -76,7 +76,6 @@ final class GameTestFixtures {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
         sweepEntities(helper);
-        // Участок поселения хранится в мире: сцена не наследует якорь и породу прошлой сцены (INC-55).
         SettlementPlotStore.get(helper.getLevel()).clear();
         SpiritRespawnStore.get(helper.getLevel()).clear();
     }
@@ -92,9 +91,6 @@ final class GameTestFixtures {
         unregisterScene(helper);
     }
 
-    // Узкая чистка между шагами укрупнённой сцены: своя площадка, сцена остаётся зарегистрированной.
-    // Отдельная сцена стояла на новом месте мира, а шаг — на месте прошлого шага: память мира, привязанная к
-    // клеткам (метки поставленных блоков, оставленная руда, координатор поселения по дому), обнуляется здесь.
     static void clearStage(GameTestHelper helper, int clearHeight) {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
@@ -117,9 +113,6 @@ final class GameTestFixtures {
         });
     }
 
-    // Реестр сундуков поселения общий на мир, а план стройки берёт материал из любого сундука реестра: сундук прошлого
-    // шага или прошлой сцены (её площадка осталась в мире) уводил духа за чужим материалом. Укрупнённая сцена одна в
-    // своей пачке, пачки идут по очереди — шаг начинает с пустым реестром, свои сундуки он ставит сам.
     static void forgetChests(ServerLevel level) {
         SettlementChestStore store = SettlementChestStore.get(level);
         for (BlockCoord chest : store.chests().all()) {
@@ -148,10 +141,6 @@ final class GameTestFixtures {
     }
 
     static void sweepEntities(GameTestHelper helper) {
-        // Тесты пачки стартуют одновременно: сетапы идут подряд, соседи в этот момент
-        // новорождённые (возраст 0), а leftovers прошлых пачек прожили свои тесты. Живые
-        // сцены пачки дополнительно прикрыты реестром границ: чужой дух, моб и дроп
-        // внутри активной структуры не трогаются в любом возрасте.
         registerScene(helper);
         for (Entity entity : helper.getLevel()
                 .getEntities(
@@ -190,7 +179,7 @@ final class GameTestFixtures {
         try {
             ACTIVE_SCENES.put(helper.testInfo, helper.getBounds());
         } catch (IllegalStateException structureNotPlaced) {
-            // Структура ещё не размещена: регистрации нет, остаётся фильтр возраста.
+            // mc: структура ещё не размещена — регистрации нет, остаётся фильтр возраста
         }
     }
 
@@ -213,11 +202,6 @@ final class GameTestFixtures {
         return true;
     }
 
-    // Сцена может просить время несколько раз (сон: ночь на старте, утро при засыпании). Слушатель у сцены
-    // один и помнит первое значение: вторая просьба только двигает часы, а не подменяет точку возврата.
-    // С отдельным слушателем на каждый вызов время утекало — GameTestInfo.testPassed зовёт слушателей в
-    // порядке добавления, и последний возвращал не исходное время, а сохранённое перед своим вызовом (ночь
-    // после сна падала на следующие пачки; порядок пачек в прогоне неупорядочен).
     static void holdDayTime(GameTestHelper helper, long dayTime) {
         ServerLevel level = helper.getLevel();
         if (TIME_HOLDS.get(helper.testInfo) == null) {

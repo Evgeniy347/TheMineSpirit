@@ -67,7 +67,6 @@ public final class TacticsJournalGameTests {
         return Optional.empty();
     }
 
-    // Оператор читает журнал в чате: без перехвата сообщений команда не проверяет, что именно ушло игроку.
     private static CommandSourceStack capturingSource(GameTestHelper helper, List<String> chat) {
         CommandSourceStack base = helper.getLevel()
                 .getServer()

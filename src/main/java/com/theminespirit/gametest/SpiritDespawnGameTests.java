@@ -10,10 +10,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Дух не исчезает, когда игрок далеко (игра 21.10: духи дальних построек витрины city 5 пропадали, пока владелец стоял
- * на другом конце улицы): проверка самой игровой проверки исчезновения с игроком в 300 блоках.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritDespawnGameTests {
@@ -26,8 +22,6 @@ public final class SpiritDespawnGameTests {
     public static void checkDespawn_PlayerFarAway_SpiritStays(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        // Как /spirit spawn и демо (create + addFreshEntity): helper.spawn ставит мобу PersistenceRequired и прячет
-        // исчезновение.
         SpiritEntity spirit = ModEntities.SPIRIT.get().create(helper.getLevel());
         helper.assertTrue(spirit != null, "тип духа обязан создавать сущность");
         BlockPos feet = helper.absolutePos(new BlockPos(2, 1, 2));

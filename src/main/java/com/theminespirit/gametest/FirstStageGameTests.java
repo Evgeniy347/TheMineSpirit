@@ -43,13 +43,6 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.slf4j.Logger;
 
-/**
- * Сквозная сцена этапа 1 (не сокращать): три духа на неплоском мире по сиду ({@link GeneratedScene}) с
- * доской и координатором по обычным механикам доводят участок до плана — ровно, ограда цела и непроходима, хижина,
- * спуск в шахту и факелы по раскладке ({@link StageOneAudit}); ни один дух не застревает ниже плана и не стоит без
- * задания дольше {@link #STUCK_LIMIT} тиков. Упала — повтор на той же сцене: {@code scripts/test.sh gametest --seed N
- * first_stage}, сид — в строке {@code [scene]} лога и в сообщении.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 @SettlementSystems(board = true, coordinator = true)
@@ -99,8 +92,6 @@ public final class FirstStageGameTests {
         });
     }
 
-    // Снимок инцидента грузится сценой: окрестность ±12 первого духа в файл, файл — копией в угол шаблона вне
-    // сцены, блок в блок, и дух из снимка — с тем же инвентарём; потом угол возвращается как был.
     private static void incidentRoundTrip(GameTestHelper helper, SpiritEntity source, long seed) {
         ServerLevel level = helper.getLevel();
         IncidentNote note = IncidentSnapshots.note(source, "проверка снимка сцены");
@@ -120,7 +111,6 @@ public final class FirstStageGameTests {
         List<String> differ = new ArrayList<>();
         for (BlockPos cell : BlockPos.betweenClosed(BlockPos.ZERO, new BlockPos(size - 1, size - 1, size - 1))) {
             BlockState original = level.getBlockState(from.offset(cell));
-            // Блок в блок по виду: соединения забора и стен зависят от соседей за краем снимка, а не от снимка.
             if (!original.is(
                     level.getBlockState(helper.absolutePos(corner.offset(cell))).getBlock())) {
                 differ.add(cell.toShortString() + " " + original.getBlock());
@@ -140,7 +130,6 @@ public final class FirstStageGameTests {
                         + ", дух " + loaded.spirit() + " — сцену из живого мира в тест не загрузить");
     }
 
-    // Дерево у духа (брёвна/доски/палки) — видно, почему ограда и хижина ждут материалов.
     private static String woodHeld(SpiritEntity spirit) {
         int logs = 0;
         int planks = 0;
@@ -177,7 +166,6 @@ public final class FirstStageGameTests {
         return spirit;
     }
 
-    // Застревание по миру: дух ниже уровня участка вне спуска в шахту или без задания дольше STUCK_LIMIT подряд.
     private static final class Watch {
         private final GameTestHelper helper;
         private final BoardService board;
@@ -185,7 +173,6 @@ public final class FirstStageGameTests {
         private final Map<UUID, Integer> low = new HashMap<>();
         private final Map<UUID, Integer> idle = new HashMap<>();
         private final List<String> stuck = new ArrayList<>();
-        // Тики духов по сценариям — куда ушло время этапа (предел 6000 тиков).
         private final Map<String, Integer> spent = new TreeMap<>();
 
         Watch(GameTestHelper helper, BoardService board, List<SpiritEntity> spirits) {

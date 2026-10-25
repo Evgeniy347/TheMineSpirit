@@ -48,15 +48,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Первые шаги на доске: новое поселение → CLEAR_GROUNDS; дальше задания идут строго по цепочке,
- * каждое следующее — после выполнения предыдущего; выполненная цепочка новых заданий не плодит.
- * Всё синхронно: генератор — чистая функция от фактов мира, тело теста атомарно.
- * Каждый сценарий — своя пачка и своя доска: генератор обходит мир радиусом 16, а структуры
- * GameTest стоят в 16 блоках друг от друга — в общей пачке сосед ставит сундук или верстак,
- * и факты чужой сцены подменяют шаг цепочки. Общая доска уровня вдобавок приносит чужие
- * билеты (mine_level_*), которые держат шаг первыми шагами.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 @SettlementSystems(board = true)
@@ -68,8 +59,6 @@ public final class BoardFirstStepsGameTests {
     private static final String SMITHY_IRON_BATCH = "board_first_steps_smithy_iron";
     private static final String RESTART_BATCH = "board_first_steps_restart";
     private static final String CLEAN_BATCH = "board_first_steps_clean";
-    // Геометрия обзора FirstStepsRunner.buildFacts: радиус и высоты обязаны совпадать,
-    // иначе диагностика «чужие деревья» увидит не то, что видит генератор.
     private static final int SCAN_RADIUS = 16;
 
     private BoardFirstStepsGameTests() {}
@@ -124,7 +113,6 @@ public final class BoardFirstStepsGameTests {
         GameTestFilter.setMobsTargetSpirits(true);
     }
 
-    // Журнал доски — в папке мира (54b п.4): из config/ новый мир на том же сервере наследовал «построено».
     @GameTest(template = "arena", batch = BATCH, timeoutTicks = 20)
     public static void journal_BoardJournal_InWorldFolderNotConfig(GameTestHelper helper) {
         MinecraftServer server = helper.getLevel().getServer();
@@ -153,7 +141,6 @@ public final class BoardFirstStepsGameTests {
 
         for (int step = 0; step < 40 && !foreignTrees; step++) {
             long now = level.getGameTime();
-            // Постройки плана (шахта, выравнивание 27×27) на арене не поставить: маркеры и журнал (PlanWorld.JOURNAL).
             FirstStepsRunner.tick(
                     level, board, List.of(spirit), stockOf(board), now, FirstStepsRunner.PlanWorld.JOURNAL);
             List<BoardTicket> active = board.board().all().stream()
@@ -178,7 +165,6 @@ public final class BoardFirstStepsGameTests {
                                         .statusOf("first:" + lastCase.name().toLowerCase(Locale.ROOT))
                                         .orElse(null)
                                 == BoardStatus.DONE) {
-                    // Тень DONE мешает переизданию того же шага: снимаем напрямую.
                     board.board().prune(board.board().now());
                     continue;
                 }
@@ -187,14 +173,10 @@ public final class BoardFirstStepsGameTests {
             BoardTicket head = active.get(0);
             if (head.boardCase() == lastCase) {
                 streak++;
-                // Факты не продвинулись: переустанавливаем маркеры идемпотентно и пробуем ещё.
                 satisfy(helper, board, spirit, head.boardCase());
                 board.board().prune(board.board().now());
                 if (streak >= 2) {
                     if (head.boardCase() == BoardCase.CLEAR_GROUNDS && foreignTreesPresent(helper)) {
-                        // Чужие деревья в обзоре держат землю не зачищенной вечно:
-                        // генератор прав, дальше цепочке идти некуда — выходим через
-                        // зафиксированный факт, а не через пропуск шагов.
                         foreignTrees = true;
                         break;
                     }
@@ -511,9 +493,6 @@ public final class BoardFirstStepsGameTests {
         helper.succeed();
     }
 
-    // Деревья соседних сцен попадают в обзор 16 блоков: расчистка отмечена сделанной по журналу, как после неё.
-    // Шахта, свет, ограда и дом плана готовы только по журналу и миру: сцены наковальни идут с PlanWorld.JOURNAL —
-    // участок 23×23 и спуск шахты на арене не поставить, проверяется гейт железа, а не постройки.
     private static void groundsCleared(BoardService board, SpiritEntity spirit) {
         for (BoardCase step : List.of(
                 BoardCase.BUILD_MINE,
@@ -665,7 +644,6 @@ public final class BoardFirstStepsGameTests {
         return new StockView(items);
     }
 
-    // Гейт по инструменту (INC-67): расчистка ждёт кирку, а кирки нет ни у кого — доска ставит задание на кирку.
     @GameTest(template = "arena", batch = "board_first_steps_pickaxe", timeoutTicks = 100)
     public static void firstSteps_ClearWithoutAnyPickaxe_PickaxeTicketPosted(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -827,8 +805,6 @@ public final class BoardFirstStepsGameTests {
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    // После выравнивания шаги до хижины идут параллельно на разных духов (решение владельца 25.10), до него и после
-    // хижины — по одному.
     private static boolean parallelStep(BoardCase step) {
         int index = FirstStepsPlan.chain().indexOf(step);
         return index > FirstStepsPlan.chain().indexOf(BoardCase.CLEAR_GROUNDS)

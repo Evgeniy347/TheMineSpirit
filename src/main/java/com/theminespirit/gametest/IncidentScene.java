@@ -11,11 +11,6 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 
-/**
- * Сцена из снимка инцидента ({@link IncidentSnapshots}): окрестность духа с живого сервера ставится в мир теста
- * углом в {@code corner} (координаты шаблона), дух инцидента — с его инвентарём, задачей и домом — в центр снимка,
- * где он стоял. Снимок кладётся в тест файлом из {@code <мир>/theminespirit/incidents/}.
- */
 final class IncidentScene {
     private IncidentScene() {}
 

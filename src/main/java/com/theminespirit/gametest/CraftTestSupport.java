@@ -65,8 +65,6 @@ final class CraftTestSupport {
         }
     }
 
-    // Диагностика флака «RUNNING» на плавке: печатаем станции рядом с духом и их содержимое —
-    // своя ускоренная скорость готовки не даёт, а чужая станция соседней сцены не ускоряется.
     static String stationsNear(GameTestHelper helper, SpiritEntity spirit) {
         BlockPos center = spirit.blockPosition();
         StringBuilder report = new StringBuilder();

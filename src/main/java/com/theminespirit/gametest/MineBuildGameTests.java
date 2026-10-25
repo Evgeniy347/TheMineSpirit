@@ -24,8 +24,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-// Строитель шахты по схеме владельца mine_descent_v1: спуск 1×3, шаг вперёд — на блок ниже. Порода — камень до y=12,
-// вход — над поверхностью в x=1; спуск идёт по +x до пола y=4 (9 ступеней, x=1..9).
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class MineBuildGameTests {
@@ -179,7 +177,6 @@ public final class MineBuildGameTests {
                 return;
             }
             if ("-".equals(state.get())) {
-                // Дух у дна спуска, как живые духи в шахте (INC-43): оттуда — к якорю наверху.
                 spirit.teleportTo(bottom.getX() + 0.5, bottom.getY(), bottom.getZ() + 0.5);
                 approach.begin(new Vec3(top.getX() + 0.5, top.getY(), top.getZ() + 0.5), RETURN_ARRIVAL);
                 state.set("MOVING");

@@ -21,7 +21,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class LightAreaGameTests {
     private static final int SETTLE_TICKS = 5;
-    // Тёмная комната 7×7 (клетки 1..7) с потолком и стенами: внешний свет тестового мира внутрь не проходит.
     private static final int ROOM_MIN = 1;
     private static final int ROOM_MAX = 7;
     private static final BlockPos CENTER = new BlockPos(4, 1, 4);

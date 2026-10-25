@@ -21,11 +21,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Дух строит постройку по пресету из своей библиотеки: материалы выданы в инвентарь, тело пресета читается
- * тем же {@code build_schematic}, а итог сверяется с телом схемы. Проверяются склад-хижина (этап 1) с крышей
- * и сундуками внутри, простой каменный дом (этап 2) с крышей и палисад-секция (этап 0).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class PresetBuildGameTests {

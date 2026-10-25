@@ -26,11 +26,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Постоянные задания рыболовства: коптильня встаёт на доску при улове не меньше порога,
- * рыбалка — при нехватке еды и найденной рабочей точке у воды. Доска своя, изолированная:
- * общая доска уровня приносит чужие билеты соседних сцен.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class FishingWatchGameTests {

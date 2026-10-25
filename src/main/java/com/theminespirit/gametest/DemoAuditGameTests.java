@@ -47,12 +47,6 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.slf4j.Logger;
 
-/**
- * Каждая постройка демо-каталога в четырёх поворотах: BuildAudit обязан не найти ни одного расхождения — ни по
- * клеткам схемы, ни по лишним блокам, ни по числу постановок, — а дух обязан строить с места: число построений пути
- * ограничено (решение владельца 18.10: «не бегает — ставит всё, до чего дотягивается»). Четыре поворота одной
- * постройки — одна пачка: четыре арены строятся параллельно.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoAuditGameTests {
@@ -64,22 +58,16 @@ public final class DemoAuditGameTests {
     private static final int FLOOR_SIZE = 11;
     private static final int FLOOR_MARGIN = 4;
     private static final int DOUBLE_CHEST_ROWS = 6;
-    // Заходов за материалами, как в демо (DemoSession.MAX_ROUNDS): больше — значит, стройка не продвигается.
     private static final int SPIRIT_SLOTS = 36;
-    // Подходы аудита (решение владельца 20.10, ночь): стройка идёт по плану BuildPlanner, и подходов (стоянки + заходы)
-    // не больше, чем в плане, плюс запас на движение — срывы подхода и запасные стоянки, когда со стоянки плана в
-    // мире не дотянуться (тело духа, неровный край). Запас — замер по каталогу, см. MOVEMENT_MARGIN_*.
     private static final int MOVEMENT_MARGIN_MIN = 3;
     private static final int MOVEMENT_MARGIN_PERCENT = 10;
 
     private DemoAuditGameTests() {}
 
-    // Высокая постройка (дом семьи 1 — 10 слоёв с крышей) оставила бы конёк соседнему тесту: чистим на её высоту.
     static int clearHeight(Schematic schematic) {
         return Math.max(MIN_CLEAR_HEIGHT, schematic.sizeY() + 2);
     }
 
-    // Пол — с запасом в 4 клетки сверх большей стороны постройки: духу нужно место появиться снаружи.
     static int floorSize(Schematic schematic) {
         return Math.max(FLOOR_SIZE, Math.max(schematic.sizeX(), schematic.sizeZ()) + FLOOR_MARGIN);
     }
@@ -103,8 +91,6 @@ public final class DemoAuditGameTests {
         }
     }
 
-    // Материалы всей постройки влезают в инвентарь — выдаются сразу; не влезают (дом семьи 3 — ~56 стопок на
-    // 36 слотов) — лежат в сундуках, и дух ходит за ними заходами.
     private static boolean fitsAtOnce(Schematic schematic) {
         int stacks = 0;
         for (Map.Entry<String, Integer> material :
@@ -137,11 +123,8 @@ public final class DemoAuditGameTests {
         }
     }
 
-    // Решение владельца 20.10: материалы, не влезающие в инвентарь, — в двойных сундуках у края пола; дух сам
-    // ходит за ними порциями (BuildSupplyTrip), как в демо и в обычной стройке.
     record SupplyPoint(BlockPos base, Direction partner) {}
 
-    // При заходах дух появляется у сундуков перед входом: путь от тыла вокруг большого дома длиннее поиска пути.
     private static BlockPos spawnFor(
             boolean doorOnAnySide,
             String scheme,
@@ -158,7 +141,6 @@ public final class DemoAuditGameTests {
                 : supply.base().relative(supply.partner().getOpposite(), SUPPLY_SIDE_OFFSET - 1);
     }
 
-    // Дух появляется прямо перед дверью, за крыльцом: оттуда первый подход к стоянке короче, чем с края пола.
     static BlockPos entranceSpawn(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
         Preset preset = DataTables.INSTANCE.presets().current().byId(scheme).orElseThrow();
         DemoPlacement.Door door = DemoPlacement.Door.of(preset);
@@ -169,7 +151,6 @@ public final class DemoAuditGameTests {
                 ring + cell.x() + out.dx() * (door.porch() + 1), 1, ring + cell.z() + out.dz() * (door.porch() + 1));
     }
 
-    // Сундуки — у главного входа, как в демо: за ступенью, в стороне от линии подхода.
     static SupplyPoint supplyPoint(String scheme, Schematic schematic, BuildRotation rotation, int ring) {
         Preset preset = DataTables.INSTANCE.presets().current().byId(scheme).orElseThrow();
         DemoPlacement.Door door = DemoPlacement.Door.of(preset);
@@ -258,7 +239,6 @@ public final class DemoAuditGameTests {
         audit(helper, building, level, rotation, after, SPIRIT_SLOTS);
     }
 
-    // freeSlots < 36 — инвентарь духа занят чужим, свободно freeSlots: стройка обязана идти порциями из сундуков.
     private static void audit(
             GameTestHelper helper,
             String building,
@@ -270,12 +250,7 @@ public final class DemoAuditGameTests {
         Schematic schematic = SchematicResources.load(scheme);
         int clearHeight = clearHeight(schematic);
         GameTestFixtures.reset(helper, clearHeight);
-        // Заходы за материалами: дом отступает от края пола на кольцо с обеих сторон, чтобы дух обходил его кругом к
-        // сундукам и к дверям и не сходил с пола за край.
         boolean atOnce = freeSlots >= SPIRIT_SLOTS && fitsAtOnce(schematic);
-        // У чаровальни вход с любой стороны после поворота: пол держим с запасом по всем сторонам, иначе за
-        // западной/северной дверью нет земли и дух идёт к ней кругом через весь дом (долгий подход — не свойство
-        // схемы).
         boolean doorOnAnySide = "enchant_room".equals(building);
         int ring = atOnce && !doorOnAnySide ? 0 : SUPPLY_RING;
         int floorSize = floorSize(schematic) + 2 * ring;
@@ -323,8 +298,6 @@ public final class DemoAuditGameTests {
                     + ", построений пути " + spirit.pathBuilds() + ", тиков духа " + spirit.tickCount
                     + ", удалён " + spirit.getRemovalReason() + ", задача "
                     + GameTestFixtures.taskSnapshot(spirit).orElse("нет");
-            // Провал стройки и итог аудита окончательны: падать сразу, а не ждать предела тиков (полный прогон,
-            // 21.10 — усадьба ждала 50 минут на каждый поворот).
             if (status == RunStatus.FAILED) {
                 helper.testInfo.fail(new GameTestAssertException(outcome));
                 throw new GameTestAssertException(outcome);
@@ -332,8 +305,6 @@ public final class DemoAuditGameTests {
             helper.assertTrue(status == RunStatus.SUCCEEDED, outcome);
             Map<String, Object> data = data(helper, spirit);
             int skipped = ((Number) data.get("skipped")).intValue();
-            // Блоки без предмета (вода колодца) — после стройки, как в демо (DemoSession): поставленная до бортика
-            // вода растекалась по полу и стекала за край арены лишним блоком (plaza_1 cw180, 20.10).
             if (!preplaced.getAndSet(true)) {
                 placeWithoutItem(helper, schematic, origin, rotation);
             }
@@ -355,13 +326,11 @@ public final class DemoAuditGameTests {
         });
     }
 
-    // Стройка шла по плану: подходов (стоянки + заходы) не больше плана с запасом на движение.
     private static void assertFollowedPlan(
             GameTestHelper helper, String scheme, BuildRotation rotation, SpiritEntity spirit, AtomicBoolean measured) {
         BuildStats stats = spirit.buildStats().orElse(null);
         helper.assertTrue(stats != null, "Стройка '" + scheme + "' не оставила итога плана: аудит подходов не на чем");
         if (!measured.getAndSet(true)) {
-            // Замер для запаса на движение: число в момент успеха, до повторов succeedWhen.
             LOGGER.info(
                     "Аудит '{}' ({}): подходов {} (план {}), стоянок {} (план {}), заходов {} (план {}), клеток плана "
                             + "на обычную стройку {}, построений пути {}",
@@ -835,17 +804,13 @@ public final class DemoAuditGameTests {
         audit(helper, "family_house", 3, BuildRotation.COUNTERCLOCKWISE_90);
     }
 
-    // Решение владельца 20.10: в инвентаре два свободных слота — дух берёт порцию, ставит всё, что ею можно, и идёт
-    // за следующей; склад-хижина из 11 материалов строится заходами до конца.
-    // [флак] семь заходов к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
+    // [флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
     @GameTest(template = "big_arena", batch = "demo_audit_trips", timeoutTicks = 8000)
     public static void demo_StorageHutTwoFreeSlots_BuildsInPortions(GameTestHelper helper) {
         audit(helper, "storage_hut", 0, BuildRotation.NONE, (h, s, o, r) -> {}, 2);
     }
 
-    // Решение владельца 20.10: инвентарь забит посторонним (мусор, дроп мобов), свободных слотов нет — демо-дом всё
-    // равно достраивается: лишнее освобождает слоты под порцию. Без правила заход не берёт порцию и стройка падает.
-    // [флак] заходы к сундуку и обратно: запас тиков на подходы, тест меряет результат и число подходов.
+    // [флак] полный инвентарь: заход к сундуку и обратно с освобождением слотов — запас тиков на подходы
     @GameTest(template = "big_arena", batch = "demo_audit_clutter", timeoutTicks = 8000)
     public static void demo_StorageHutInventoryFullOfJunk_StillCompletes(GameTestHelper helper) {
         audit(helper, "storage_hut", 0, BuildRotation.NONE, (h, s, o, r) -> {}, 0);

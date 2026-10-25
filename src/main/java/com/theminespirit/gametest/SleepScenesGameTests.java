@@ -7,7 +7,6 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/** Укрупнённые сцены механики «сон и лагерь»: по сцене на шаблон, шаги — методы {@link SceneStep} классов механики. */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SleepScenesGameTests {

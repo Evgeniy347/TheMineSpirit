@@ -350,7 +350,6 @@ public final class ClearGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            // Защищённые клетки пропускаются и ящик не валят (INC-71): задача завершается, стенка игрока цела.
             helper.assertTrue(
                     spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "защищённая стенка игрока пропускается, ящик не проваливается: статус "
@@ -364,8 +363,6 @@ public final class ClearGameTests {
         });
     }
 
-    // Постройки поселения прошлых версий на участке (старая ограда, дом) — не «постройка игрока» по искусственным
-    // соседям: выравнивание их убирает (INC-70: «защищено: 19, убрано 0 из 1088»).
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void clear_OldSettlementWallOnPlot_Removed(GameTestHelper helper) {
         prepare(helper);

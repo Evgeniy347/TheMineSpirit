@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
-/** Версия 0.1.N собирается из минора в gradle.properties и числа коммитов, а не подставляется вручную. */
 class ModVersionWiringGuardTests {
     private static final Path BUILD = Path.of("build.gradle");
     private static final Path PROPERTIES = Path.of("gradle.properties");

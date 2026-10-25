@@ -362,8 +362,6 @@ class GameTestTimeoutGuardTests {
         return names;
     }
 
-    // Укрупнённая сцена (SceneSteps.run) ждёт сумму бюджетов шагов: её тайм-аут сверяет SceneSteps при запуске, а
-    // правило «> 400 — с [флак]» действует на бюджет каждого шага (@SceneStep).
     private static boolean isSceneOfSteps(String text, int annotationEnd) {
         Matcher next = NEXT_TEST.matcher(text);
         int end = next.find(annotationEnd) ? next.start() : text.length();
@@ -441,7 +439,6 @@ class GameTestTimeoutGuardTests {
         return found;
     }
 
-    // Все классы файла и их static final int: каждый класс видит свои константы до следующего класса.
     private static Map<String, ClassSource> classSourcesOf(String text) {
         List<String> names = new ArrayList<>();
         List<Integer> starts = new ArrayList<>();

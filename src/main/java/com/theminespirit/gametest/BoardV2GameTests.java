@@ -78,12 +78,6 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.slf4j.Logger;
 
-/**
- * Доска v2 в мире: постоянная еда, актуальность воронки, уровни шахты и чаровальни,
- * загоны по видам, перенос постройки и журнал с версией конфигурации. Каждая сцена
- * работает на собственной доске с временным журналом: общий ledger прошлых прогонов
- * не должен решать, какой уровень шахты уже стоит.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardV2GameTests {

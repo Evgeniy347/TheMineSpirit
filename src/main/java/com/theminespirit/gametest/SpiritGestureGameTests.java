@@ -16,10 +16,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Жест работы (замечание владельца 19.10): дух смотрит на блок, который ставит или ломает, и машет рукой, а рука
- * действительно опускается (swingTime растёт) — иначе клиент не показывает анимацию.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritGestureGameTests {

@@ -8,12 +8,6 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestSequence;
 import net.minecraft.world.entity.Mob;
 
-/**
- * Помощник шага укрупнённой сцены ({@link SceneSteps}): та же площадка и тот же {@code GameTestInfo}, что у сцены,
- * но завершение и расписание — свои. {@code succeed}/{@code succeedWhen} завершают шаг, а не сцену; задачи
- * {@code onEachTick}/{@code runAfterDelay} живут до конца шага; {@code getTick} считает тики от начала шага.
- * Так тело бывшей отдельной сцены идёт шагом без переписывания.
- */
 final class StepHelper extends GameTestHelper {
     private final long startTick;
     private final List<Runnable> eachTick = new ArrayList<>();
@@ -28,7 +22,6 @@ final class StepHelper extends GameTestHelper {
         this.startTick = scene.getTick();
     }
 
-    // Уборка, которую отдельная сцена делала слушателем конца теста (игрок-заглушка, время суток).
     void atStepEnd(Runnable cleanup) {
         stepEnd.add(cleanup);
     }
@@ -96,9 +89,6 @@ final class StepHelper extends GameTestHelper {
         return super.getTick() - startTick;
     }
 
-    // Тик шага в порядке ванильного {@code GameTestInfo}: сначала задачи этого тика, затем итоговая проверка.
-    // Возвращает true, когда шаг прошёл. Исключение задачи роняет сцену сразу, как и в отдельной сцене;
-    // непрошедшая итоговая проверка — только запоминается до конца бюджета шага.
     boolean tick() {
         long now = getTick();
         for (Runnable task : List.copyOf(eachTick)) {

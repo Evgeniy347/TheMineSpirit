@@ -386,8 +386,6 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(
                 helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.IRON_PICKAXE);
-        // Радиус 4 — только своя арена: куб радиуса 16 захватывает блоки соседних сцен, и полный поиск
-        // чужой земли затягивал и без того долгую кучу за предел теста (флак полного прогона 18.10).
         SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18, 4), SETTLE_TICKS);
         HarvestProbe probe = HarvestProbe.attach(
                 helper,
@@ -434,9 +432,6 @@ public final class MineGameTests {
     public static void gather_DirtRingAroundSealedPocket_MinedFromOutsideWithinReach(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
-        // Запечатанная стоянка (4,1,4): воздух с каменным полом, с четырёх сторон блоки земли,
-        // по диагоналям и снаружи камень, сверху запечатанный колпак (4,2,4): планировщик видит
-        // стоянку, а навигация пути к ней не находит.
         int[][] dirt = {{4, 1, 3}, {5, 1, 4}, {4, 1, 5}, {3, 1, 4}, {4, 2, 3}, {5, 2, 4}, {4, 2, 5}, {3, 2, 4}};
         for (int[] cell : dirt) {
             helper.setBlock(cell[0], cell[1], cell[2], Blocks.DIRT);
@@ -455,8 +450,6 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(
                 helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.IRON_PICKAXE);
-        // Радиус 4 — только своя арена: иначе поиск читает землю соседних сцен и отказ по запечатанной
-        // стоянке ждёт конца чужого поиска вместо fail-fast (флак полного прогона 18.10).
         SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8, 4), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
@@ -505,8 +498,6 @@ public final class MineGameTests {
                 }
             }
         }
-        // Камень в замурованной стеклянной комнате: стоянки внутри есть, пути к ним нет,
-        // а снаружи до камня не дотянуться (4 блока по горизонтали и 4 вниз).
         helper.setBlock(6, 1, 6, Blocks.STONE);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(2, 1, 2), Items.IRON_PICKAXE);
         AtomicReference<HarvestSession> session = new AtomicReference<>();
@@ -1285,9 +1276,6 @@ public final class MineGameTests {
                 helper.setBlock(x, 0, z, Blocks.STONE);
             }
         }
-        // Под полом — слой земли: в мире под полом не пустота, а если дух всё же сломает клетку пола,
-        // выпавший дроп осядет на землю в пределах сцены, а не провалится в пустоту (флак
-        // gather_stoneheap: «не дотянулся до 1 предметов» у y=-61). Землю gather "stone" не трогает.
         for (int x = SHELL_MIN + shift; x <= SHELL_MAX + shift; x++) {
             for (int z = SHELL_MIN + shift; z <= SHELL_MAX + shift; z++) {
                 helper.setBlock(x, -1, z, Blocks.DIRT);

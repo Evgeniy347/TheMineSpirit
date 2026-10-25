@@ -19,10 +19,6 @@ import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Плавка угля из своих брёвен: дух с 13 брёвнами джунглей добывал ещё 8 («×21») и падал на недостижимом верху
- * дерева (INC-44, живой сервер 24.10).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SmeltCharcoalPlanGameTests {

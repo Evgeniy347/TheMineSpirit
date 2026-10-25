@@ -10,12 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-/**
- * Сторож правила проекта: GameTest, который спавнит духа или ставит блоки, не должен использовать шаблон
- * {@code "empty"} (площадка 3×3×3). Сцена такого теста вылезает за площадку в соседний неактивный чанк, и
- * дух/блок не делает первого тика — отсюда флеки примерно 1 из 8. Для таких тестов нужен шаблон
- * {@code "arena"} (11×8×11), где сцена целиком помещается на активной площадке.
- */
 class GameTestTemplateGuardTests {
     private static final Pattern GAMETEST_ANNOTATION =
             Pattern.compile("@(?:GameTest|SceneStep)\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);

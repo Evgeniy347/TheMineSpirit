@@ -17,10 +17,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Личное пространство игрока (владелец 19.10): дух не стоит вплотную к игроку — отходит на 1–2 клетки и продолжает
- * работу, в том числе посреди стройки.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class PersonalSpaceGameTests {

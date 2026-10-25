@@ -442,8 +442,6 @@ public final class BuildingGameTests {
         helper.succeed();
     }
 
-    // Замечание владельца 21.10: у духов в руках ничего не было. Поставленный блок виден в руке (синхронизируемое поле
-    // для клиента), настоящая рука и инвентарь не трогаются; у сундука рука снова пустая.
     @SceneStep(template = "arena", timeoutTicks = 100)
     public static void placer_PlacedCobblestone_ShownInHandRealHandEmpty(GameTestHelper helper) {
         prepare(helper);

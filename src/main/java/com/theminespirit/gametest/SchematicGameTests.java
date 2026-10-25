@@ -107,8 +107,6 @@ public final class SchematicGameTests {
         });
     }
 
-    // Свободный дух стоит в клетке схемы: строитель отводит его за габарит и ставит блок (хижина вставала 100 из 101
-    // «клетку занимает живое существо», приёмка «джунгли» 24.10).
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void schematic_IdleSpiritInCell_MovedAsideAndHouseDone(GameTestHelper helper) {
         prepare(helper);

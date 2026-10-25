@@ -19,10 +19,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Откат задания доски в мире: задание, которое всегда проваливается, не возвращается тому же
- * духу раньше паузы. Ошибка 17.10 — дух 112 раз подряд брал first:stock_chests и стоял на месте.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardBackoffGameTests {

@@ -5,10 +5,6 @@ import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.StageRules;
 import java.util.Set;
 
-/**
- * Этап поселения для сцен, которые проверяют уровни построек выше первого: отмечает в журнале доски постройки
- * прежних этапов (stages.json), кроме тех, что сцена строит сама.
- */
 final class StageFixture {
     private StageFixture() {}
 

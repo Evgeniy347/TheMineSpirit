@@ -11,15 +11,6 @@ import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import org.slf4j.Logger;
 
-/**
- * Укрупнённая сцена механики (1–3 сцены на механику): шаги — методы {@link SceneStep} классов механики, идут подряд
- * на одной площадке. Тело шага получает {@link StepHelper}: его {@code succeed}/{@code succeedWhen} завершают шаг, а
- * не сцену. Шаг не прошёл за свой бюджет — причина с именем шага запоминается, сцена идёт дальше и в конце падает
- * со списком упавших шагов. Между шагами площадка чистится узко, доска, координатор и мобы возвращаются к умолчанию
- * GameTest-сервера.
- *
- * <p>Тайм-аут сцены не меньше суммы бюджетов шагов (+1 тик на переход), это проверяется при запуске.
- */
 final class SceneSteps {
     private static final int CLEAR_HEIGHT = 24;
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -102,7 +93,6 @@ final class SceneSteps {
         }
     }
 
-    // Упавший шаг не прячет остальные: сцена идёт дальше и падает в конце со списком всех упавших шагов.
     private void failStep(Step step, String reason) {
         String failure = "шаг «" + step.name() + "»: " + reason;
         LOGGER.error("укрупнённая сцена: {}", failure);

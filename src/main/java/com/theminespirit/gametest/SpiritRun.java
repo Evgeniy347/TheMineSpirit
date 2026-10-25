@@ -26,8 +26,6 @@ final class SpiritRun {
         return launch(helper, spirit, call, settleTicks, () -> true);
     }
 
-    // Условие ready — для состояния мира, которое готовится не за тики, а в другом потоке (свет): число тиков
-    // ожидания там не гарантия, а гонка.
     static SpiritRun launch(
             GameTestHelper helper, SpiritEntity spirit, TaskNode call, int settleTicks, BooleanSupplier ready) {
         SpiritRun run = new SpiritRun(helper, spirit, call, settleTicks, ready);

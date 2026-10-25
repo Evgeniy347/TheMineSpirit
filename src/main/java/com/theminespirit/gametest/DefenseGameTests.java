@@ -184,12 +184,6 @@ public final class DefenseGameTests {
         SpiritEntity naked = swordsman(helper, new BlockPos(6, 1, 4), home, false);
         Creeper creeper = helper.spawn(EntityType.CREEPER, new BlockPos(4, 1, 5));
         creeper.setPersistenceRequired();
-        // Ванильная цель мобов берёт БЛИЖАЙШЕГО духа: стоит бронированному отойти на радиус
-        // взрыва, крипер перекидывается на держащего без брони, оборона переводит бронированного
-        // в PROTECT, и «ударь и беги» разваливается (флак). Сцена — дуэль с бронированным, поэтому
-        // крипер целится в него постоянно, а не переизбирает цель; и он медленный, чтобы не ловил
-        // духа погоней. Запал держим ниже порога детонации (SWELL_CAP): взрыв — не предмет
-        // проверки, а источник флака — дух с равной скоростью не всегда успевает выйти за запал.
         creeper.targetSelector.removeAllGoals(goal -> true);
         creeper.setTarget(armored);
         TacticsScene.slowDown(creeper, 0.04);

@@ -33,13 +33,6 @@ import net.neoforged.neoforge.event.level.ExplosionEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Воронка от крипера на доске: взрыв за территорией → FILL_CRATER с числом блоков земли;
- * взрыв не крипера → задания нет; с землёй — ровная заделка, без — ожидание и добыча.
- * Проводка события синхронна (пост идёт прямо на шину); заделка ждёт духа через succeedWhen
- * только конечным состоянием — без фаз (лямбда succeedWhen завершает тест при первом
- * нормальном выходе, фазы после первого прохода не выполняются никогда).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardCraterGameTests {
@@ -208,8 +201,6 @@ public final class BoardCraterGameTests {
         });
     }
 
-    // Флак полного прогона 18.10 (crater_dirtgate_fillsflat): задание «добыть доски» без адресата выдавалось
-    // ближайшему духу — тому, кого ждала адресная заделка воронки; дух уходил за досками, а воронка ждала.
     @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void issue_AddressedTicketWaiting_GenericTicketGoesToOtherSpirit(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -309,8 +300,6 @@ public final class BoardCraterGameTests {
                             || board.board().recentlyFailed("supply:dirt", now),
                     "При нехватке доска ставит добычу supply:dirt: без неё ждущее задание "
                             + "зависнет навсегда (добыча видна как задание, либо как свежий провал)");
-            // Ждущее невыполнимое и его добычу снимаем с доски: иначе вечное WAITING плодит
-            // supply:dirt до конца прогона и доска уводит свободных духов чужих сцен.
             board.board().cancel("board_test_crater_wait");
             board.board().cancel("supply:dirt");
             GameTestFixtures.finish(helper);
@@ -334,9 +323,6 @@ public final class BoardCraterGameTests {
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    // Тесты пачки стартуют в один тик и делят доску: снимаем только задания вне сцен (первые шаги и т. п.), а
-    // задания соседней сцены с префиксом board_test_ не трогаем — иначе сцена, стартовавшая позже, отменяла
-    // заделку соседней (флак crater_dirtgate_fillsflat 18.10).
     private static void drainForeignTickets(BoardService board) {
         for (BoardTicket ticket : board.board().all()) {
             if (!ticket.id().startsWith(SCENE_TICKET_PREFIX)) {

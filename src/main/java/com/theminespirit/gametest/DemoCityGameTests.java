@@ -16,10 +16,6 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Витрина {@code /spirit demo city N} (решение владельца 12): по команде одновременно появляется по духу на каждую
- * постройку этапа, и {@code /spirit demo stop} убирает их всех. Раскладка улицы проверяется в DemoCityTests.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoCityGameTests {

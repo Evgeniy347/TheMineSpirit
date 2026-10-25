@@ -18,10 +18,6 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Демо-стройка /spirit demo в креативе: объём очищается, сундук и дух появляются, постройка совпадает
- * со схемой, а после «Готово» дух пропадает. Отдельно проверяется улучшение загона 1→2 на месте.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoBuildGameTests {
