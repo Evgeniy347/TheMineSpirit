@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -22,7 +21,7 @@ public final class ChopTargetGameTests {
 
     private ChopTargetGameTests() {}
 
-    @GameTest(template = FIELD, batch = "chop_target_basic", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTarget_OakByCoordinate_ChoppedCompletely(GameTestHelper helper) {
         ChopTreeGameTests.prepareField(helper);
         ChopTreeGameTests.buildOakTree(helper, 4, 4, 5);
@@ -60,7 +59,7 @@ public final class ChopTargetGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_target_neighbour", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTarget_OakWithBirchNextToIt_LeavesNeighbourUntouched(GameTestHelper helper) {
         ChopTreeGameTests.prepareField(helper);
         ChopTreeGameTests.buildOakTree(helper, 4, 4, 5);
@@ -94,7 +93,7 @@ public final class ChopTargetGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_target_no_tree", timeoutTicks = 200)
+    @SceneStep(template = FIELD, timeoutTicks = 200)
     public static void chopTarget_CoordinateWithoutTree_FailsWithReason(GameTestHelper helper) {
         ChopTreeGameTests.prepareField(helper);
         SpiritEntity spirit = ChopTreeGameTests.spawnChopper(helper);
@@ -117,7 +116,7 @@ public final class ChopTargetGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_target_protected", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTarget_TreeInProtectedZone_RefusesToChop(GameTestHelper helper) {
         ChopTreeGameTests.prepareField(helper);
         ChopTreeGameTests.buildOakTree(helper, 4, 4, 5);

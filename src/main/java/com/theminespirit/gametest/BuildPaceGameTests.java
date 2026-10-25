@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -25,14 +24,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BuildPaceGameTests {
-    private static final String BATCH = "build_pace";
     private static final int SETTLE_TICKS = 5;
     private static final int PLATE_BLOCKS = 17;
 
     private BuildPaceGameTests() {}
 
     // [флак] 17 блоков по 10 тиков = 170 тиков стройки плюс подход; потолок ≈ 2× замера.
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void pace_FixturePlate_PlacesNoFasterThanTableAndSwingsArm(GameTestHelper helper) {
         int interval = DataTables.INSTANCE.building().current().intervalTicks(false);
         Pace pace = Pace.start(helper, false);
@@ -51,7 +49,7 @@ public final class BuildPaceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void pace_DemoSpirit_PlacesAtDemoPace(GameTestHelper helper) {
         int demoInterval = DataTables.INSTANCE.building().current().intervalTicks(true);
         int normalInterval = DataTables.INSTANCE.building().current().intervalTicks(false);

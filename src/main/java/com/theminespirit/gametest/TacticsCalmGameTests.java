@@ -5,7 +5,6 @@ import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -18,7 +17,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class TacticsCalmGameTests {
     private static final int WATCH_TICKS = 300;
     private static final int TIMEOUT_TICKS = 400;
@@ -26,7 +24,7 @@ public final class TacticsCalmGameTests {
 
     private TacticsCalmGameTests() {}
 
-    @GameTest(template = "arena", batch = "tactics_calm_mode", timeoutTicks = TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TIMEOUT_TICKS, coordinator = true)
     public static void calm_NoEnemies_ModeDoesNotFlip(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(4, 1, 4));

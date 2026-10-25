@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -28,7 +27,7 @@ public final class NoDropGameTests {
 
     private NoDropGameTests() {}
 
-    @GameTest(template = "arena", batch = "no_drop_almost_full", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_AlmostFullInventory_MinesWithoutDropping(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -64,7 +63,7 @@ public final class NoDropGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "no_drop_warehouse", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_FullInventoryWithWarehouse_DepositsSurplusMinesAndKeepsPickaxe(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -112,7 +111,7 @@ public final class NoDropGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "no_drop_full", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_FullInventory_FailsWithoutDropping(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

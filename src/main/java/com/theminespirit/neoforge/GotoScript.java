@@ -106,18 +106,19 @@ public final class GotoScript implements ScriptInstance {
     }
 
     private String failedToArriveReason() {
-        return "не дошёл до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + ") за " + approach.timeoutTicks()
-                + " тиков";
+        return "не дошёл до " + point(target) + " за " + approach.timeoutTicks() + " тиков";
     }
 
     private String stuckReason() {
         if (mode == PathMode.CAREFUL && approach.refusal() != null) {
-            return "недостижимо осторожным шагом до (x=" + target.x + ", y=" + target.y + ", z=" + target.z + "): "
-                    + approach.refusal();
+            return "недостижимо осторожным шагом до " + point(target) + ": " + approach.refusal();
         }
         // Цель и причина отказа — в сообщении: без них провал «застрял» из лога не повторить (сцена 56).
         String why = approach.refusal() == null ? "" : ": " + approach.refusal();
-        return "застрял в (x=" + spirit.getX() + ", y=" + spirit.getY() + ", z=" + spirit.getZ() + ") по пути к (x="
-                + target.x + ", y=" + target.y + ", z=" + target.z + ")" + why;
+        return "застрял в " + point(spirit.position()) + " по пути к " + point(target) + why;
+    }
+
+    private static String point(Vec3 at) {
+        return "(x=" + at.x + ", y=" + at.y + ", z=" + at.z + ")";
     }
 }

@@ -6,7 +6,6 @@ import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
@@ -31,7 +30,7 @@ public final class TacticsModesGameTests {
         return husk.isDeadOrDying() || husk.isRemoved();
     }
 
-    @GameTest(template = "arena", batch = "tactics_mode_passive", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void passive_HuskAttacksArmedSpirit_SpiritNeverStrikesAndRunsAway(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -66,7 +65,7 @@ public final class TacticsModesGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_mode_defensive", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void defensive_TwoHusksOnlyFarOneAttacks_SpiritKillsAttackerAndLeavesPeacefulOne(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);
@@ -99,7 +98,7 @@ public final class TacticsModesGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_mode_protect", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void protect_HuskAttacksWardSpirit_ProtectorKillsItAndWardLives(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity ward = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -130,7 +129,7 @@ public final class TacticsModesGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_mode_guard", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void guardArea_HuskInsideZoneAndHuskFarOutside_SpiritKillsInsideOneAndStaysOnPost(
             GameTestHelper helper) {
         TacticsScene.prepare(helper);
@@ -162,7 +161,7 @@ public final class TacticsModesGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_mode_aggressive", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void aggressive_PeacefulHuskAtElevenBlocks_SpiritGoesAndKillsIt(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));

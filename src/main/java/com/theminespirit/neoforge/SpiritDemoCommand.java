@@ -26,6 +26,7 @@ import net.minecraft.network.chat.Component;
 final class SpiritDemoCommand {
     private static final List<String> ROTATIONS =
             List.of("none", "clockwise_90", "clockwise_180", "counterclockwise_90");
+    private static final String POS = "pos";
 
     private SpiritDemoCommand() {}
 
@@ -42,11 +43,11 @@ final class SpiritDemoCommand {
                         .executes(context -> city(context, DemoCity.MIN_LEVEL, null))
                         .then(argument("stage", IntegerArgumentType.integer(DemoCity.MIN_LEVEL, DemoCity.MAX_LEVEL))
                                 .executes(context -> city(context, integer(context, "stage"), null))
-                                .then(argument("pos", BlockPosArgument.blockPos())
+                                .then(argument(POS, BlockPosArgument.blockPos())
                                         .executes(context -> city(
                                                 context,
                                                 integer(context, "stage"),
-                                                BlockPosArgument.getBlockPos(context, "pos")))))));
+                                                BlockPosArgument.getBlockPos(context, POS)))))));
         for (CommandNode<CommandSourceStack> demo : spirit.getArguments()) {
             if ("demo".equals(demo.getName())) {
                 for (DemoBuildings.Building building : DemoBuildings.all()) {
@@ -94,8 +95,8 @@ final class SpiritDemoCommand {
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, Coordinates> posAndRotation(Starter starter) {
-        return argument("pos", BlockPosArgument.blockPos())
-                .executes(context -> starter.run(context, BlockPosArgument.getBlockPos(context, "pos"), null))
+        return argument(POS, BlockPosArgument.blockPos())
+                .executes(context -> starter.run(context, BlockPosArgument.getBlockPos(context, POS), null))
                 .then(argument("rotation", StringArgumentType.word())
                         .suggests((context, builder) -> SharedSuggestionProvider.suggest(ROTATIONS, builder))
                         .executes(context -> {
@@ -106,7 +107,7 @@ final class SpiritDemoCommand {
                                 context.getSource().sendFailure(Component.literal(refused.getMessage()));
                                 return 0;
                             }
-                            return starter.run(context, BlockPosArgument.getBlockPos(context, "pos"), rotation);
+                            return starter.run(context, BlockPosArgument.getBlockPos(context, POS), rotation);
                         }));
     }
 

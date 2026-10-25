@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.board.BoardRegistry;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -24,7 +23,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class DigOutGameTests {
     private static final int TOP = 12;
     private static final int POCKET = TOP - 7;
@@ -32,7 +30,7 @@ public final class DigOutGameTests {
     private DigOutGameTests() {}
 
     // [флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
-    @GameTest(template = "mine_arena", batch = "dig_out_pocket", timeoutTicks = 2400)
+    @SceneStep(template = "mine_arena", timeoutTicks = 2400, board = true)
     public static void digOut_SealedPocketSevenDeep_ReachesSurface(GameTestHelper helper) {
         pocket(helper, List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)));
     }
@@ -40,7 +38,7 @@ public final class DigOutGameTests {
     // Форма живого кармана INC-59: клетка духа, над ней воздух и проём сбоку на уровне головы — (x,y), (x,y+1),
     // (x-1,y+1); выше — сплошной камень.
     // [флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
-    @GameTest(template = "mine_arena", batch = "dig_out_side_gap", timeoutTicks = 2400)
+    @SceneStep(template = "mine_arena", timeoutTicks = 2400, board = true)
     public static void digOut_PocketWithSideGap_ReachesSurface(GameTestHelper helper) {
         pocket(
                 helper,

@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -57,7 +56,7 @@ public final class MineLevelsGameTests {
 
     // [флак] три задачи подряд (спуск, расширение 60+ клеток, 8 ступенек): подход к каждой клетке,
     // замер духа на порядок больше базового; запас 2× к ожидаемым тикам.
-    @GameTest(template = "mine_arena", batch = "mine_levels", timeoutTicks = 2400)
+    @SceneStep(template = "mine_arena", timeoutTicks = 2400)
     public static void levels_DescentWidenStairs_BuildsThreeBySixShaftWithStairs(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithKit(helper);

@@ -16,20 +16,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardGameTests {
-    private static final String BATCH = "board_supply";
     private static final String BUILD_ID = "build_house";
     private static final String SUPPLY_ID = "supply:oak_log";
     private static final int GATE_LOGS = 1;
@@ -37,19 +31,9 @@ public final class BoardGameTests {
 
     private BoardGameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void stopMobsTargetingSpirits(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreMobTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
     // [флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
     // машины не укладывается в 400 тиков, запас двойной.
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 800)
+    @SceneStep(template = "arena", timeoutTicks = 800, board = true, calmMobs = true)
     public static void supply_BuildNeedsWood_WaitsThenIssuesAfterGather(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

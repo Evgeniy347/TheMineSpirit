@@ -77,7 +77,7 @@ final class SettlementAnchorStore extends SavedData {
         setDirty();
     }
 
-    private static SettlementAnchorStore load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static SettlementAnchorStore load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementAnchorStore store = new SettlementAnchorStore();
         ListTag entries = tag.getList(ENTRIES, Tag.TAG_COMPOUND);
         for (int i = 0; i < entries.size(); i++) {

@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,7 +36,7 @@ public final class RestTaskGameTests {
 
     private RestTaskGameTests() {}
 
-    @GameTest(batch = "rest_tasks_accept", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_PlanGoto_Accepts202AndBotReportsCurrentTaskAndRefusesSecondTask(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -87,7 +86,7 @@ public final class RestTaskGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_tasks_replay", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_ReplayAndChangedBody_SameTaskWithoutRestartThenConflict(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -142,7 +141,7 @@ public final class RestTaskGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_tasks_command", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_SpiritBusyWithCommandTask_Returns409OutsideRestWithoutReservation(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -169,7 +168,7 @@ public final class RestTaskGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_tasks_watch", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_PlanGoto_WatcherMovesAcceptedToRunningThenSucceededKeepingProgress(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -210,7 +209,7 @@ public final class RestTaskGameTests {
         });
     }
 
-    @GameTest(batch = "rest_tasks_reload", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_SpiritReloadedWithinGrace_TaskStaysRunningAndSucceeds(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -262,7 +261,7 @@ public final class RestTaskGameTests {
         });
     }
 
-    @GameTest(batch = "rest_tasks_gone", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_SpiritGoneForever_FailsAfterAboutHundredTicksWithSpiritGoneReason(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -305,7 +304,7 @@ public final class RestTaskGameTests {
         });
     }
 
-    @GameTest(batch = "rest_tasks_displaced", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_CommandReplacesRestTask_RestTaskClosedAsCancelledOutsideRest(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

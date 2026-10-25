@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -35,14 +34,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /** Задание доски вытесняет фоновое занятие интеллекта, но не чужую задачу (REST, стратег, игрок). */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardPreemptGameTests {
     private static final String TICKET = "preempt:station";
     private static final int LONG_WAIT = 2000;
 
     private BoardPreemptGameTests() {}
 
-    @GameTest(template = "arena", batch = "board_preempt_background", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void preempt_BackgroundWait_BoardTicketTakesSpirit(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -66,7 +64,7 @@ public final class BoardPreemptGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_preempt_foreign", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void preempt_ForeignTask_NotInterrupted(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -19,7 +19,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -60,7 +59,7 @@ public final class BuildRestartGameTests {
         return reloaded;
     }
 
-    @GameTest(template = "arena", batch = "build_restart", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_SavedMidway_ResumesWithoutDoubleSpending(GameTestHelper helper) {
         prepare(helper);
         BlockPos first = new BlockPos(4, 1, 4);
@@ -171,7 +170,7 @@ public final class BuildRestartGameTests {
     }
 
     // HTTP ходит другим потоком: предел берём из общего REST-шаблона, как ResultGameTests.
-    @GameTest(batch = "build_rest_result", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void fill_SucceededTask_RestProgressAndResultHoldCounts(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, new BlockPos(1, 1, 1));

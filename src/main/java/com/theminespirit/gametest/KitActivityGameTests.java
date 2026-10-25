@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
@@ -26,7 +25,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class KitActivityGameTests {
     private KitActivityGameTests() {}
 
-    @GameTest(template = "arena", batch = "kit_activity_miner", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unload_MinerActivity_KeepsPickaxeAndTorchesDropsPlanks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -69,7 +68,7 @@ public final class KitActivityGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "kit_activity_idle", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unload_NoActivity_DropsPickaxeKeepsConstant(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -110,7 +109,7 @@ public final class KitActivityGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "kit_activity_child", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unload_Child_DropsEverythingExceptFood(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

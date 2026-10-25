@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -29,7 +28,7 @@ public final class BuildRetreatGameTests {
     private BuildRetreatGameTests() {}
 
     // Правило отхода (владелец 20.10): дух в нише не ставит пробку проёма изнутри — сперва выходит, потом ставит.
-    @GameTest(template = "arena", batch = "build_retreat", timeoutTicks = TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TIMEOUT_TICKS)
     public static void build_SpiritInNook_PlugsOpeningFromOutside(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -19,12 +18,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RecipeKnowledgeGameTests {
     private static final String FIELD = "arena";
-    private static final String BATCH = "recipe_knowledge";
     private static final int TIMEOUT = 20;
 
     private RecipeKnowledgeGameTests() {}
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void stick_ServerRecipes_CraftableFourPerCraftFromTwoPlanks(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -43,7 +41,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void woodenPickaxe_ServerRecipes_NeedsCraftingTableAndThreePlanksTwoSticks(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -64,7 +62,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void ironIngot_ServerRecipes_SmeltedNotCraftedFromNuggets(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -87,7 +85,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void burnTicks_ServerFuel_TakenFromGame(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -115,7 +113,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void writtenBook_DynamicRecipe_IsNotCraftable(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -126,7 +124,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craftRecipe_EmptyInventory_CheapestPlanksForSticks(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -139,7 +137,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void rawIron_DropKnowledge_GatherableFromIronOre(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 
@@ -158,7 +156,7 @@ public final class RecipeKnowledgeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void resolve_RawIron_GatherPlanBreaksIronOreBlocks(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 

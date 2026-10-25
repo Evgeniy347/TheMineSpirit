@@ -7,7 +7,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.net.BuildFingerprint;
 import com.theminespirit.neoforge.net.ModProtocolHandshake;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -18,7 +17,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ModLoadingGameTests {
     private ModLoadingGameTests() {}
 
-    @GameTest(template = "empty")
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void modList_ServerStarted_ContainsTheMineSpirit(GameTestHelper helper) {
         helper.assertTrue(
                 ModList.get().isLoaded(ModIdentity.MOD_ID),
@@ -26,7 +25,7 @@ public final class ModLoadingGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void protocol_Registration_HasVersion(GameTestHelper helper) {
         helper.assertTrue(
                 ModProtocolHandshake.registered(),
@@ -37,7 +36,7 @@ public final class ModLoadingGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void command_Version_AvailableWithoutOperatorRights(GameTestHelper helper)
             throws CommandSyntaxException {
         CommandDispatcher<CommandSourceStack> dispatcher =

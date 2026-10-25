@@ -3,7 +3,6 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -37,7 +36,7 @@ public final class DoorsGameTests {
 
     private DoorsGameTests() {}
 
-    @GameTest(template = "arena", batch = "doors_player_left", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void door_PlayerGone_ClosesAfterTimeout(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildWallWithTwoDoors(helper);
@@ -59,7 +58,7 @@ public final class DoorsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "doors_player_in_opening", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void door_PlayerInOpening_StaysOpen(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildWallWithTwoDoors(helper);
@@ -81,7 +80,7 @@ public final class DoorsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "doors_evening", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void evening_TwoOpenDoors_ClosedByTwoSpirits(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildWallWithTwoDoors(helper);

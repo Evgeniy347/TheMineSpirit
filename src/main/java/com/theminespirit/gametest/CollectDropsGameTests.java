@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -40,7 +39,7 @@ public final class CollectDropsGameTests {
 
     private CollectDropsGameTests() {}
 
-    @GameTest(template = "arena", batch = "drops_cobblestone", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_ThreeHeapsInRadius_PicksUpAllNine(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -67,7 +66,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_filter", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_LogFilter_PicksLogsAndLeavesCobblestone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -103,7 +102,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_full", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_InventoryFullOfOtherStacks_FailsWithoutLosingItems(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -137,7 +136,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_pillar", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_HeapOnTallPillar_PicksRestAndFailsUnreachable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -177,7 +176,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_pit", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_ItemAtBottomOfFourDeepPit_PulledByMagnetWithoutDescending(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -210,7 +209,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_corner", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_PreyInWebSealedNearestStand_ReachesItFromAnotherStand(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -243,7 +242,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_endless_delay", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_HeapWithEndlessPickupDelay_IsSkippedAfterBoundedWait(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -278,7 +277,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_foreign_target", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_HeapAddressedToAnotherPlayer_IsLeftUntouched(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -305,7 +304,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_nothing", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_NothingToPickUp_SucceedsWithinTwoTicks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -327,7 +326,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_radius", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_HeapBeyondRadius_IsLeftUntouched(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -354,7 +353,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void dropCollector_ThreeHeaps_QueriesEntitiesOncePerRefreshPeriod(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -404,7 +403,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_overflow_take", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_FullOfCobblestoneByValue_SwapsInDiamond(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -457,7 +456,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_overflow_cheap", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_FullOfIronByValue_RefusesCobblestone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -491,7 +490,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_overflow_kit", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_InventoryOfKitAndShulkersByValue_RefusesDiamonds(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -535,7 +534,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_overflow_plan", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_PlanNeedsPlanksByValue_PlanMaterialKept(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -580,7 +579,7 @@ public final class CollectDropsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "drops_overflow_cache", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectDrops_FullOfCobblestoneByValue_CachesOverflowDecision(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

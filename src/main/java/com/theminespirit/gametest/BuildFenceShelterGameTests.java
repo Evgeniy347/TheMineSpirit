@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -46,7 +45,7 @@ public final class BuildFenceShelterGameTests {
                         + spirit.taskFailureReason().orElse("нет"));
     }
 
-    @GameTest(template = "arena", batch = "build_fence_script", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void buildFence_RectangleWithGate_PlacesFenceAroundAndGateInOpening(GameTestHelper helper) {
         prepare(helper);
         List<BlockPos> corners = List.of(

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -33,7 +32,7 @@ public final class FillPitGameTests {
 
     private FillPitGameTests() {}
 
-    @GameTest(template = "arena", batch = "fill_pit_inside", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_SpiritAtPitBottom_FillsUnderItselfAndClimbs(GameTestHelper helper) {
         run(helper, new BlockPos(5, 1, 5));
     }

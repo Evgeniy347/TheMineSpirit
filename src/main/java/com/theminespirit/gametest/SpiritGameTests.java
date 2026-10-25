@@ -15,7 +15,6 @@ import com.theminespirit.neoforge.SpiritScripts;
 import com.theminespirit.neoforge.WorldScanner;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -27,7 +26,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SpiritGameTests {
     private SpiritGameTests() {}
 
-    @GameTest(batch = "spirit_adapterRegistry", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void adapterRegistry_EveryScriptId_IsDescribedInCatalog(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -46,7 +45,7 @@ public final class SpiritGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "spirit_spawn", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void spawn_SpiritEntityType_CreatesLivingSpirit(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -57,7 +56,7 @@ public final class SpiritGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "spirit_observe", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void observe_WorldWithFloor_ReturnsNonEmptyBlocksAndSpectreEntity(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -88,7 +87,7 @@ public final class SpiritGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "scan_legacy_unloaded", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void scan_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -136,7 +135,7 @@ public final class SpiritGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "spirit_gotoScript", template = "arena", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void gotoScript_SpiritOnFloor_ReachesTargetWithinTolerance(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -161,7 +160,7 @@ public final class SpiritGameTests {
     }
 
     // [флак] дух идёт к недостижимой цели, ждём тайм-аут задачи
-    @GameTest(batch = "spirit_gotoScript", template = "arena", timeoutTicks = 500)
+    @SceneStep(template = "arena", timeoutTicks = 500)
     public static void gotoScript_UnreachableTarget_KeepsFailureStatusAndReason(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);

@@ -3,12 +3,18 @@ package com.theminespirit.gametest;
 import com.mojang.authlib.GameProfile;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ItemCount;
 import com.theminespirit.core.observation.WorldObservation;
+import com.theminespirit.neoforge.MineOreLedger;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.respawn.SpiritRespawnStore;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +51,7 @@ final class GameTestFixtures {
 
     private static final int CLEAR_MARGIN = 2;
     private static final int CLEAR_HEIGHT = 8;
+    private static final int STAGE_BELOW = 16;
     private static final int SWEEP_MARGIN = 48;
     private static final int SWEEP_BELOW = 16;
     private static final int SWEEP_ABOVE = 40;
@@ -71,6 +78,7 @@ final class GameTestFixtures {
         sweepEntities(helper);
         // Участок поселения хранится в мире: сцена не наследует якорь и породу прошлой сцены (INC-55).
         SettlementPlotStore.get(helper.getLevel()).clear();
+        SpiritRespawnStore.get(helper.getLevel()).clear();
     }
 
     static void finish(GameTestHelper helper) {
@@ -80,7 +88,43 @@ final class GameTestFixtures {
     static void finish(GameTestHelper helper, int clearHeight) {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
+        SpiritRespawnStore.get(helper.getLevel()).clear();
         unregisterScene(helper);
+    }
+
+    // Узкая чистка между шагами укрупнённой сцены: своя площадка, сцена остаётся зарегистрированной.
+    // Отдельная сцена стояла на новом месте мира, а шаг — на месте прошлого шага: память мира, привязанная к
+    // клеткам (метки поставленных блоков, оставленная руда, координатор поселения по дому), обнуляется здесь.
+    static void clearStage(GameTestHelper helper, int clearHeight) {
+        clearBlocks(helper, clearHeight);
+        clearEntities(helper, clearHeight);
+        ServerLevel level = helper.getLevel();
+        SettlementPlotStore.get(level).clear();
+        CoordinatorRegistry.clear();
+        forgetChests(level);
+        SpiritRespawnStore.get(level).clear();
+        PlacedBlocksData placed = PlacedBlocksData.get(level);
+        MineOreLedger ores = MineOreLedger.get(level);
+        AABB box = area(helper, clearHeight).inflate(0, STAGE_BELOW, 0);
+        for (BlockCoord ore : List.copyOf(ores.ores().keySet())) {
+            if (box.contains(ore.x() + 0.5, ore.y() + 0.5, ore.z() + 0.5)) {
+                ores.forget(ore);
+            }
+        }
+        BlockPos.betweenClosedStream(box.contract(1.0E-3, 1.0E-3, 1.0E-3)).forEach(pos -> {
+            placed.unmark(pos);
+            placed.unmarkSpirit(pos);
+        });
+    }
+
+    // Реестр сундуков поселения общий на мир, а план стройки берёт материал из любого сундука реестра: сундук прошлого
+    // шага или прошлой сцены (её площадка осталась в мире) уводил духа за чужим материалом. Укрупнённая сцена одна в
+    // своей пачке, пачки идут по очереди — шаг начинает с пустым реестром, свои сундуки он ставит сам.
+    static void forgetChests(ServerLevel level) {
+        SettlementChestStore store = SettlementChestStore.get(level);
+        for (BlockCoord chest : store.chests().all()) {
+            store.forget(new BlockPos(chest.x(), chest.y(), chest.z()));
+        }
     }
 
     private static void clearBlocks(GameTestHelper helper, int clearHeight) {
@@ -181,6 +225,10 @@ final class GameTestFixtures {
             TIME_HOLDS.put(helper.testInfo, hold);
             helper.testInfo.addListener(hold);
         }
+        if (helper instanceof StepHelper step) {
+            long before = level.getDayTime();
+            step.atStepEnd(() -> level.setDayTime(before));
+        }
         level.setDayTime(dayTime);
     }
 
@@ -245,7 +293,7 @@ final class GameTestFixtures {
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
         BlockPos absolute = helper.absolutePos(relative);
         player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        helper.testInfo.addListener(new PlayerCleanup(server, player));
+        removeAtEnd(helper, server, player);
         return player;
     }
 
@@ -266,8 +314,16 @@ final class GameTestFixtures {
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
         BlockPos absolute = helper.absolutePos(relative);
         player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        helper.testInfo.addListener(new PlayerCleanup(server, player));
+        removeAtEnd(helper, server, player);
         return player;
+    }
+
+    private static void removeAtEnd(GameTestHelper helper, MinecraftServer server, ServerPlayer player) {
+        if (helper instanceof StepHelper step) {
+            step.atStepEnd(() -> server.getPlayerList().remove(player));
+            return;
+        }
+        helper.testInfo.addListener(new PlayerCleanup(server, player));
     }
 
     static BlockPos firstUnloadedChunkEast(GameTestHelper helper, BlockPos base) {

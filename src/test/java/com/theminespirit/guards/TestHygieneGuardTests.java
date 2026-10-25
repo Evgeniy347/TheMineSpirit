@@ -186,7 +186,7 @@ class TestHygieneGuardTests {
     private static Map<Path, String> testSources() {
         Map<Path, String> sources = new LinkedHashMap<>(SourceFiles.javaUnder(SourceFiles.TEST));
         SourceFiles.javaUnder(SourceFiles.GAME_TESTS).forEach((file, text) -> {
-            if (text.contains("@GameTest")) {
+            if (text.contains("@GameTest") || text.contains("@SceneStep")) {
                 sources.put(file, text);
             }
         });

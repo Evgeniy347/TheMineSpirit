@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -50,7 +49,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class IntellectGameTests {
     private IntellectGameTests() {}
 
@@ -102,7 +100,7 @@ public final class IntellectGameTests {
                 1.0);
     }
 
-    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void outside_OneMinerAtHomeWithMineNeed_NoMineTask(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -136,7 +134,7 @@ public final class IntellectGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void outside_TwoMinersAtHomeWithMineNeed_MineTaskStarted(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -178,7 +176,7 @@ public final class IntellectGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void outside_MineExpeditionWithoutKit_NotDispatched(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -222,7 +220,7 @@ public final class IntellectGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "outside_party", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, coordinator = true)
     public static void outside_MineExpeditionWithKit_LeaderMinesPartnerFollows(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -297,7 +295,7 @@ public final class IntellectGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "intellect_activities", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void activities_ThreeSpiritsStarving_DifferentJobsAndNoFlicker(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         List<SpiritEntity> spirits = new ArrayList<>();
@@ -371,7 +369,7 @@ public final class IntellectGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_settlement", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void stocks_ChestWithBreadAndIron_ViewSeesThem(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -413,7 +411,7 @@ public final class IntellectGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_strength", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void strength_OneHuskThreeSpirits_WoundedHealsUnarmedArms(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         List<SpiritEntity> spirits = new ArrayList<>();
@@ -491,7 +489,7 @@ public final class IntellectGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void expedition_NoOreAndTwoMiners_InviteOpensTeamGoesAlone(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -559,7 +557,7 @@ public final class IntellectGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void expedition_PlayerComesClose_TeamFollowsHim(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -609,7 +607,7 @@ public final class IntellectGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void expedition_AnswerWait_TeamWaitsThenGoesAlone(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);
@@ -674,7 +672,7 @@ public final class IntellectGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "intellect_expedition", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void expedition_Silence_TeamGoesAlone(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         layIronVein(helper);

@@ -4,7 +4,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -23,7 +22,7 @@ public final class SpiritDespawnGameTests {
 
     private SpiritDespawnGameTests() {}
 
-    @GameTest(template = "arena", batch = "spirit_despawn", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void checkDespawn_PlayerFarAway_SpiritStays(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

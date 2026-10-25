@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.SpiritScripts;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -21,7 +20,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SpiritScriptsGameTests {
     private SpiritScriptsGameTests() {}
 
-    @GameTest(batch = "spirit_catalog_static", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void catalog_Static_ListsExactlyRegistryScriptsInDefaultCatalogOrder(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -50,7 +49,7 @@ public final class SpiritScriptsGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "spirit_acquire_catalog", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void acquire_InCatalogAndRegistry_ListedAsImplemented(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -67,7 +66,7 @@ public final class SpiritScriptsGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void observeFlag_LivesOnFactory_ForCombatScripts(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));

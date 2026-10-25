@@ -55,6 +55,18 @@ public final class TicketPlans {
     private static final String NEAREST = "nearest";
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
+    private static final String TORCH = "minecraft:torch";
+    private static final String BUILD_SCHEMATIC = "build_schematic";
+    private static final String FILE = "file";
+    private static final String FILL = "fill";
+    private static final String ACQUIRE = "acquire";
+    private static final String CRAFT = "craft";
+    private static final String PLACE = "place";
+    private static final String WAIT = "wait";
+    private static final String TICKS = "ticks";
+    private static final String CLEAR_AREA = "clear_area";
+    private static final String WITHDRAW = "withdraw";
+    private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
@@ -77,7 +89,7 @@ public final class TicketPlans {
             "minecraft:cobblestone",
             "minecraft:charcoal",
             "minecraft:coal",
-            "minecraft:torch");
+            TORCH);
 
     private static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_STEPS_SIZE = 3;
@@ -97,7 +109,7 @@ public final class TicketPlans {
             case CRAFT_SMITHING_TABLE -> Optional.of("minecraft:smithing_table");
             case CRAFT_SMOKER -> Optional.of("minecraft:smoker");
             case CRAFT_FURNACE -> Optional.of("minecraft:furnace");
-            case CRAFT_TORCHES -> Optional.of("minecraft:torch");
+            case CRAFT_TORCHES -> Optional.of(TORCH);
             case STOCK_CHESTS -> Optional.of("minecraft:chest");
             case ENCHANT_SHELVES -> Optional.of("minecraft:bookshelf");
             case PLACE_BEEHIVE -> Optional.of(HiveRules.CRAFTED_BEEHIVE);
@@ -154,9 +166,7 @@ public final class TicketPlans {
             // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
             // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
             case CRAFT_TORCHES ->
-                sequence(
-                        craft("minecraft:torch", torchCount(target), target),
-                        store(target, LEFTOVERS.toArray(String[]::new)));
+                sequence(craft(TORCH, torchCount(target), target), store(target, LEFTOVERS.toArray(String[]::new)));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
@@ -211,11 +221,11 @@ public final class TicketPlans {
         return sequence(
                 gotoPoint(new BlockCoord(x, target.target().y(), z)),
                 takeFloor("minecraft:cobblestone"),
-                takeFloor("minecraft:" + PlotLeveling.DEFAULT_BLOCK),
+                takeFloor(MINECRAFT + PlotLeveling.DEFAULT_BLOCK),
                 new ScriptCall(
-                        "build_schematic",
+                        BUILD_SCHEMATIC,
                         Map.of(
-                                "file",
+                                FILE,
                                 MINE_DESCENT_SCHEME,
                                 "x",
                                 x,
@@ -230,7 +240,7 @@ public final class TicketPlans {
     private static TaskNode takeFloor(String item) {
         return new FallbackNode(List.of(
                 new ScriptCall(
-                        "withdraw",
+                        WITHDRAW,
                         Map.of(
                                 CONTAINER,
                                 NEAREST,
@@ -240,7 +250,7 @@ public final class TicketPlans {
                                 MINE_FLOOR_TAKE,
                                 RADIUS,
                                 SUPPLY_CONTAINER_RADIUS)),
-                new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN))));
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode buildMineLevel(int level, TicketTarget target) {
@@ -272,7 +282,7 @@ public final class TicketPlans {
                                         "size",
                                         MINE_STEPS_SIZE)),
                         new ScriptCall(
-                                "fill",
+                                FILL,
                                 Map.of(
                                         BLOCK,
                                         "minecraft:cobblestone",
@@ -314,9 +324,9 @@ public final class TicketPlans {
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(
-                        "build_schematic",
+                        BUILD_SCHEMATIC,
                         Map.of(
-                                "file",
+                                FILE,
                                 scheme,
                                 "x",
                                 target.target().x(),
@@ -345,7 +355,7 @@ public final class TicketPlans {
                 : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
         return sequence(
                 gotoTarget(target),
-                new ScriptCall("acquire", Map.of(ITEM, "dirt", COUNT, Math.min(blocks, CatalogLimits.COUNT_MAX))),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, "dirt", COUNT, Math.min(blocks, CatalogLimits.COUNT_MAX))),
                 fillArea(target, "dirt", CRATER_FILL_RADIUS));
     }
 
@@ -372,7 +382,7 @@ public final class TicketPlans {
     private static TaskNode luredCapture(Species species, String feed) {
         return sequence(
                 new ScriptCall(
-                        "withdraw",
+                        WITHDRAW,
                         Map.of(
                                 CONTAINER,
                                 NEAREST,
@@ -408,7 +418,7 @@ public final class TicketPlans {
                 sequence(
                         gotoPoint(SettlementLayout.workYard(target.target())),
                         new ScriptCall(
-                                "craft",
+                                CRAFT,
                                 Map.of(
                                         ITEM,
                                         item,
@@ -416,7 +426,7 @@ public final class TicketPlans {
                                         count,
                                         RADIUS,
                                         CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        "place",
+                                        PLACE,
                                         true))),
                 target);
     }
@@ -426,7 +436,7 @@ public final class TicketPlans {
     private static TaskNode tableNearSpirit(TicketTarget target) {
         return withLeftovers(
                 new ScriptCall(
-                        "craft",
+                        CRAFT,
                         Map.of(
                                 ITEM,
                                 "minecraft:crafting_table",
@@ -434,7 +444,7 @@ public final class TicketPlans {
                                 1,
                                 RADIUS,
                                 CatalogLimits.STATION_RADIUS_DEFAULT,
-                                "place",
+                                PLACE,
                                 true)),
                 target);
     }
@@ -446,7 +456,7 @@ public final class TicketPlans {
                 sequence(
                         gotoPoint(SettlementLayout.workYard(target.target())),
                         new ScriptCall(
-                                "craft",
+                                CRAFT,
                                 Map.of(
                                         ITEM,
                                         "minecraft:chest",
@@ -454,18 +464,17 @@ public final class TicketPlans {
                                         2,
                                         RADIUS,
                                         CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        "place",
+                                        PLACE,
                                         true)),
                         new ScriptCall(
-                                "craft", Map.of(ITEM, "minecraft:crafting_table", COUNT, 1, RADIUS, 1, "place", true))),
+                                CRAFT, Map.of(ITEM, "minecraft:crafting_table", COUNT, 1, RADIUS, 1, PLACE, true))),
                 target);
     }
 
     private static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(
                 gotoTarget(target),
-                new ScriptCall(
-                        "craft", Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+                new ScriptCall(CRAFT, Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
     private static TaskNode fishWorkPoint(TicketTarget target) {
@@ -493,7 +502,7 @@ public final class TicketPlans {
         int charcoal = target.count() > 0 ? target.count() : TorchRules.CHARCOAL_BATCH;
         return sequence(
                 gotoTarget(target),
-                new ScriptCall("acquire", Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
                 new ScriptCall(
                         "smelt",
                         Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)),
@@ -519,7 +528,7 @@ public final class TicketPlans {
                                     SUPPLY_CONTAINER_RADIUS,
                                     "leftover",
                                     true)),
-                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         return new SequenceNode(steps);
     }
@@ -542,17 +551,17 @@ public final class TicketPlans {
         List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
         steps.add(gotoTarget(target));
         // Факелы могут лежать в сундуке или у соседа: acquire берёт их до расстановки, иначе «нет материала torch».
-        steps.add(new ScriptCall("acquire", Map.of(ITEM, "minecraft:torch", COUNT, torches.size())));
+        steps.add(new ScriptCall(ACQUIRE, Map.of(ITEM, TORCH, COUNT, torches.size())));
         for (BlockCoord torch : torches) {
             steps.add(new ScriptCall(
-                    "place_block", Map.of(BLOCK, "minecraft:torch", "x", torch.x(), "y", torch.y(), "z", torch.z())));
+                    "place_block", Map.of(BLOCK, TORCH, "x", torch.x(), "y", torch.y(), "z", torch.z())));
         }
         return new SequenceNode(steps);
     }
 
     private static TaskNode dismantleShelter(TicketTarget target) {
         return new ScriptCall(
-                "clear_area",
+                CLEAR_AREA,
                 Map.of(
                         "x1",
                         target.target().x() - DISMANTLE_RADIUS,
@@ -574,7 +583,7 @@ public final class TicketPlans {
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
         return sequence(
                 gotoTarget(target),
-                new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch)),
                 // Добыча уводит духа от места, а сдача ищет сундук рядом с духом (INC-30).
                 gotoTarget(target),
                 new ScriptCall(
@@ -602,7 +611,7 @@ public final class TicketPlans {
                         new ScriptCall(
                                 "deposit",
                                 Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)),
-                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                 store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
@@ -633,7 +642,7 @@ public final class TicketPlans {
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
         // fresh: добыть ещё, а не взять из сундука, куда добыча же сдаёт (запас не рос).
-        ScriptCall acquire = new ScriptCall("acquire", Map.of(ITEM, item, COUNT, batch, "fresh", true));
+        ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         Optional<TreeSpecies> tree = treeOf(item);
         if (tree.isPresent()) {
             // Брёвна — рубкой деревьев (INC-64): chop_tree выбирает дерево с доступной стоянкой и пропускает
@@ -660,7 +669,7 @@ public final class TicketPlans {
     }
 
     private static Optional<TreeSpecies> treeOf(String item) {
-        String full = item.startsWith("minecraft:") ? item : "minecraft:" + item;
+        String full = item.startsWith("minecraft:") ? item : MINECRAFT + item;
         return TreeSpecies.ALL.stream()
                 .filter(tree -> tree.logId().equals(full))
                 .findFirst();
@@ -697,8 +706,8 @@ public final class TicketPlans {
             PlotLeveling.Box box = cuts.get(index);
             if (!single || cutPart.get(index) == quarter) {
                 steps.add(new FallbackNode(List.of(
-                        new ScriptCall("clear_area", boxParams(box, Map.of())),
-                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                        new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
             }
         }
         steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
@@ -710,16 +719,16 @@ public final class TicketPlans {
         // Воду и пустые клетки расчистка пропускает быстро.
         for (PlotLeveling.Box box : fills) {
             steps.add(new FallbackNode(List.of(
-                    new ScriptCall("clear_area", boxParams(box, Map.of())),
-                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
         if (volume > 0 && !PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
             // Булыжник на подсыпку — из запаса поселения (сундуки, свой инвентарь): духу четверти его никто не нёс, и
             // подсыпка падала «не хватило cobblestone: нужно 2, есть 0» (сцена 56).
             steps.add(new ScriptCall(
-                    "acquire",
-                    Map.of(ITEM, "minecraft:" + leveling.block(), COUNT, Math.min(volume, CatalogLimits.COUNT_MAX))));
+                    ACQUIRE,
+                    Map.of(ITEM, MINECRAFT + leveling.block(), COUNT, Math.min(volume, CatalogLimits.COUNT_MAX))));
         }
         boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
         BlockCoord source = dirtSource(center, single ? quarter : 1);
@@ -734,7 +743,7 @@ public final class TicketPlans {
                                 "acquire_at",
                                 Map.of(
                                         ITEM,
-                                        "minecraft:" + PlotLeveling.DEFAULT_BLOCK,
+                                        MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
                                         COUNT,
                                         Math.min(layer.volume(), CatalogLimits.COUNT_MAX),
                                         "x",
@@ -743,11 +752,11 @@ public final class TicketPlans {
                                         source.y(),
                                         "z",
                                         source.z())),
-                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
             }
             steps.add(new FallbackNode(List.of(
-                    new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                    new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
         // карман духу не достать, это не повод валить выравнивание (INC-67).
@@ -756,8 +765,8 @@ public final class TicketPlans {
                 .toList();
         for (PlotLeveling.Box layer : layers(voids)) {
             steps.add(new FallbackNode(List.of(
-                    new ScriptCall("fill", boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                    new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         return withLeftovers(new SequenceNode(steps), target);
     }
@@ -853,7 +862,7 @@ public final class TicketPlans {
 
     private static ScriptCall clearGroundsChunk(TicketTarget target, int dx1, int dz1, int dx2, int dz2) {
         return new ScriptCall(
-                "clear_area",
+                CLEAR_AREA,
                 Map.of(
                         "x1",
                         target.target().x() + dx1,
@@ -986,9 +995,9 @@ public final class TicketPlans {
                 demolishBox(target.from(), RELOCATE_CLEAR_RADIUS),
                 gotoPoint(target.to()),
                 new ScriptCall(
-                        "build_schematic",
+                        BUILD_SCHEMATIC,
                         Map.of(
-                                "file",
+                                FILE,
                                 target.schemeFile(),
                                 "x",
                                 target.to().x(),
@@ -1068,7 +1077,7 @@ public final class TicketPlans {
                 gotoTarget(target),
                 new FallbackNode(List.of(
                         new ScriptCall(
-                                "withdraw",
+                                WITHDRAW,
                                 Map.of(
                                         CONTAINER,
                                         "auto",
@@ -1078,7 +1087,7 @@ public final class TicketPlans {
                                         count,
                                         RADIUS,
                                         CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
-                        new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
     }
 
     private static TaskNode restockFood(TicketTarget target) {
@@ -1087,7 +1096,7 @@ public final class TicketPlans {
                     + "конкретный продукт, без имени предмета withdraw нечего взять");
         }
         return new ScriptCall(
-                "withdraw",
+                WITHDRAW,
                 Map.of(
                         CONTAINER,
                         NEAREST,
@@ -1105,19 +1114,19 @@ public final class TicketPlans {
 
     private static ScriptCall schematic(String scheme, BlockCoord origin, TicketTarget target) {
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("file", scheme);
+        params.put(FILE, scheme);
         params.put("x", origin.x());
         params.put("y", origin.y());
         params.put("z", origin.z());
         if (target.wood() != null) {
             params.put(BuildSchematicParams.WOOD, target.wood());
         }
-        return new ScriptCall("build_schematic", Map.copyOf(params));
+        return new ScriptCall(BUILD_SCHEMATIC, Map.copyOf(params));
     }
 
     private static TaskNode fillArea(TicketTarget target, String block, int radius) {
         return new ScriptCall(
-                "fill",
+                FILL,
                 Map.of(
                         BLOCK,
                         block,
@@ -1145,7 +1154,7 @@ public final class TicketPlans {
 
     private static ScriptCall demolishBox(BlockCoord center, int radius) {
         return new ScriptCall(
-                "clear_area",
+                CLEAR_AREA,
                 Map.of(
                         "x1",
                         center.x() - radius,

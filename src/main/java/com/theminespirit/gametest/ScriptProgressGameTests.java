@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -34,7 +33,7 @@ public final class ScriptProgressGameTests {
 
     private ScriptProgressGameTests() {}
 
-    @GameTest(template = "arena", batch = "progress_gather", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gatherProgress_CobblestoneHeap_DoneGrowsMonotonicallyTowardTarget(GameTestHelper helper) {
         heap(helper, Blocks.COBBLESTONE, 1, 3, 4, 6);
         SpiritEntity spirit = spiritWithPickaxe(helper);
@@ -56,7 +55,7 @@ public final class ScriptProgressGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "progress_mine_vein", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVeinProgress_ThreeIronOre_DoneGrowsMonotonicallyTowardTarget(GameTestHelper helper) {
         heap(helper, Blocks.IRON_ORE, 1, 3, 6, 6);
         SpiritEntity spirit = spiritWithPickaxe(helper);
@@ -79,7 +78,7 @@ public final class ScriptProgressGameTests {
     }
 
     // [флак] дух рубит два дуба, сценарий в сотни тиков духа; запас под нагрузкой
-    @GameTest(template = "arena", batch = "progress_chop", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void chopTreeProgress_TwoOaks_DoneGrowsMonotonicallyTowardTarget(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.DIRT);
@@ -106,7 +105,7 @@ public final class ScriptProgressGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "progress_goto", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void gotoProgress_WalkingToCorner_HasStepButNoCounters(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

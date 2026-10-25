@@ -7,7 +7,6 @@ import com.theminespirit.core.tactics.TacticalAction;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Witch;
@@ -42,7 +41,7 @@ public final class TacticsWitchGameTests {
         return spirit;
     }
 
-    @GameTest(template = "arena", batch = "tactics_witch_sword", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void witch_TenBlocksCoverFourFullHpSword_SpiritFightsAndNeverRetreats(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         coverWallNorthWest(helper);
@@ -89,7 +88,7 @@ public final class TacticsWitchGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_witch_bow", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void witch_TenBlocksCoverFourFullHpBowAndSword_SpiritShootsAndNeverRetreats(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         coverWallNorthWest(helper);

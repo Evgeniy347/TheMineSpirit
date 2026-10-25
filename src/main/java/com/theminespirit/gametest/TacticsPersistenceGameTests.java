@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.tactics.SpiritTacticsStore;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
@@ -32,7 +31,7 @@ public final class TacticsPersistenceGameTests {
         return reloaded;
     }
 
-    @GameTest(template = "arena", batch = "tactics_persist_roundtrip", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void save_SpiritWithOrdersAndMemory_ReloadedKeepsModeZoneWardAndMemory(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -78,7 +77,7 @@ public final class TacticsPersistenceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tactics_persist_corrupt", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void load_CorruptTacticsState_ReportsFailureAndStartsWithDefaults(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));

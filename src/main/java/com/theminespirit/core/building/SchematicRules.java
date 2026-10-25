@@ -100,6 +100,7 @@ public final class SchematicRules {
         }
     }
 
+    private static final String ANY_Y = ",*,";
     private static final int ROOFED_HEIGHT = 3;
     private static final int OPEN_HEIGHT = 2;
 
@@ -334,7 +335,7 @@ public final class SchematicRules {
                 }
                 violations.add(new Violation(
                         RuleId.ROOF,
-                        "крыша не закрывает внутреннюю клетку [" + x + ",*," + z
+                        "крыша не закрывает внутреннюю клетку [" + x + ANY_Y + z
                                 + "]: сверху над ней нет ни крыши, ни потолка — льёт дождь и светит солнце"));
                 return;
             }
@@ -359,7 +360,7 @@ public final class SchematicRules {
                 if (floor < 0) {
                     violations.add(new Violation(
                             RuleId.INNER_HEIGHT,
-                            "у внутренней клетки [" + x + ",*," + z + "] нет пола: внутреннюю высоту не с чем мерить"));
+                            "у внутренней клетки [" + x + ANY_Y + z + "] нет пола: внутреннюю высоту не с чем мерить"));
                     return;
                 }
                 if (occupied(grid, x, floor, z)) {
@@ -372,7 +373,7 @@ public final class SchematicRules {
                     violations.add(
                             new Violation(
                                     RuleId.INNER_HEIGHT,
-                                    "внутренняя высота " + height + " в клетке [" + x + ",*," + z + "] меньше "
+                                    "внутренняя высота " + height + " в клетке [" + x + ANY_Y + z + "] меньше "
                                             + required
                                             + ": под крышей ниже 3 блоков тесно (владелец 19.10), без крыши ниже 2 — не пройти"));
                     return;
@@ -396,7 +397,7 @@ public final class SchematicRules {
                 if (ceiling >= 0 && height < required) {
                     violations.add(new Violation(
                             RuleId.LEVEL_CEILING,
-                            "высота внутри " + height + " в клетке [" + x + ",*," + z + "] меньше " + required
+                            "высота внутри " + height + " в клетке [" + x + ANY_Y + z + "] меньше " + required
                                     + " для жилья уровня " + level
                                     + ": чем выше уровень, тем выше потолок (владелец 19.10)"));
                     return;

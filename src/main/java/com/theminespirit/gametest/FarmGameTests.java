@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
@@ -67,13 +66,9 @@ public final class FarmGameTests {
     private static final BlockPos TILL_SPIRIT = new BlockPos(5, 1, 7);
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
-    private static final String MELON_BATCH = "farm_fruit_melon";
-    private static final String PUMPKIN_BATCH = "farm_fruit_pumpkin";
-    private static final String COCOA_BATCH = "farm_cocoa";
-
     private FarmGameTests() {}
 
-    @GameTest(template = "empty", batch = "farm_reach_guard", timeoutTicks = 20)
+    @SceneStep(template = "empty", timeoutTicks = 20)
     public static void farmTuningReach_ExceedingBlockBreakerReach_IsRejected(GameTestHelper helper) {
         helper.assertTrue(
                 FarmTuning.REACH <= BlockBreaker.REACH,
@@ -83,7 +78,7 @@ public final class FarmGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "farm_registry", timeoutTicks = 20)
+    @SceneStep(template = "empty", timeoutTicks = 20)
     public static void cropKinds_ExactIds_ExistInRegistries(GameTestHelper helper) {
         for (CropKind kind : CropKind.values()) {
             if (kind == CropKind.ANY) {
@@ -114,7 +109,7 @@ public final class FarmGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "farm_view", timeoutTicks = 20)
+    @SceneStep(template = "arena", timeoutTicks = 20)
     public static void levelFarmView_TileTable_ReadsExpectedTiles(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         List<TileCase> table = tileTable();
@@ -142,7 +137,7 @@ public final class FarmGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "farm_targets_harvest", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void farmTargets_HarvestWheat_ListsGroundsOfWheatOnly(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -184,7 +179,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_targets_till", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void farmTargets_TillNearWater_WaterCountsOnlyWithinFour(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -226,7 +221,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_session_till", timeoutTicks = 110)
+    @SceneStep(template = "arena", timeoutTicks = 110)
     public static void farmSession_TillFiveByFiveNearWater_TillsTwelveWearsHoeAndKeepsRest(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -264,7 +259,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_session_harvest", timeoutTicks = 250)
+    @SceneStep(template = "arena", timeoutTicks = 250)
     public static void farmSession_HarvestMixedWheat_CollectsAndReplantsOnlyMature(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -307,7 +302,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_script_till", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void till_FiveByFiveWithWater_TillsTwelveWithinFourOfWaterAndWearsHoe(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -352,7 +347,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_script_till_water", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void till_DirtFiveBlocksFromWater_IsLeftUntilled(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -379,7 +374,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_till_no_hoe", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void till_WithoutHoe_FailsWithinTwoTicksAndLeavesWorldUnchanged(GameTestHelper helper) {
         arenaFloor(helper);
         fillGround(helper, Blocks.DIRT);
@@ -402,7 +397,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_till_hoe_breaks", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void till_HoeOnLastUse_FailsBeforeTillingWithoutWear(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -434,7 +429,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_till_weed", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void till_WeedAboveDirt_CutsWeedAndTills(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -460,7 +455,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_till_stone", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void till_StoneAboveDirt_SkipsCellAndCountsIt(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -482,7 +477,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_plant_wheat", timeoutTicks = 120)
+    @SceneStep(template = "arena", timeoutTicks = 120)
     public static void plantCrop_WheatOnNineFarmland_PlantsNineAndKeepsOneSeed(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -508,7 +503,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_plant_no_seeds", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void plantCrop_WithoutSeeds_FailsFastAndLeavesWorldUnchanged(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -533,7 +528,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_plant_seeds_run_out", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void plantCrop_SeedsRunOutAfterTwoCells_FailsNamingPlantedProgress(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -564,7 +559,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_plant_dark", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void plantCrop_CellWithoutLight_IsNotPlantedAndCounted(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(new BlockPos(4, FLOOR_Y, 6), Blocks.WATER);
@@ -611,27 +606,27 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_wheat", timeoutTicks = 260)
+    @SceneStep(template = "arena", timeoutTicks = 260)
     public static void harvestCrop_MixedWheat_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.WHEAT);
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_carrot", timeoutTicks = 260)
+    @SceneStep(template = "arena", timeoutTicks = 260)
     public static void harvestCrop_MixedCarrots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.CARROT);
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_potato", timeoutTicks = 250)
+    @SceneStep(template = "arena", timeoutTicks = 250)
     public static void harvestCrop_MixedPotatoes_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.POTATO);
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_beetroot", timeoutTicks = 270)
+    @SceneStep(template = "arena", timeoutTicks = 270)
     public static void harvestCrop_MixedBeetroots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.BEETROOT);
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_filter", timeoutTicks = 50)
+    @SceneStep(template = "arena", timeoutTicks = 50)
     public static void harvestCrop_WheatFilter_LeavesMatureCarrotsAlone(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -657,7 +652,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_no_replant", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_ReplantFalse_LeavesCellsEmptyAndFarmlandIntact(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -688,7 +683,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_bone_meal_grow", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void boneMeal_ImmatureAndMatureWheat_GrowsOnlyImmature(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -713,7 +708,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_bone_meal_one", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void boneMeal_CountOne_SpendsExactlyOneUnit(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -732,7 +727,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_bone_meal_none", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void boneMeal_WithoutMeal_FailsFastAndLeavesWorldUnchanged(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -754,7 +749,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_bone_meal_mature", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void boneMeal_OnlyMatureCrops_FailsAndSpendsNothing(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -776,7 +771,7 @@ public final class FarmGameTests {
     }
 
     // [флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
-    @GameTest(template = "arena", batch = "farm_cycle", timeoutTicks = 1950)
+    @SceneStep(template = "arena", timeoutTicks = 1950)
     public static void farmCycle_PlantGrowHarvestThreeTimes_KeepsFarmlandAndSeeds(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -827,7 +822,7 @@ public final class FarmGameTests {
     }
 
     // [флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
-    @GameTest(template = "arena", batch = "farm_trample", timeoutTicks = 420)
+    @SceneStep(template = "arena", timeoutTicks = 420)
     public static void harvestCrop_SpiritFallsOntoBed_DoesNotTrampleFarmland(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -852,7 +847,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_trample_repeat", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void farmland_SpiritDropsOntoFarmlandFiveTimes_StaysFarmland(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -909,7 +904,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_cancel", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void harvestCrop_CancelledMidWork_StopsWorldAndNavigation(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -962,7 +957,7 @@ public final class FarmGameTests {
     }
 
     // [флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
-    @GameTest(template = "arena", batch = "farm_full_inventory", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void harvestCrop_InventoryFullNearChest_DepositsAndContinues(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1000,7 +995,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_deposit_harvest", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_NearChest_DepositsHarvestAndKeepsSeedReserve(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1029,7 +1024,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_persist", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_SpiritReloadedMidWork_KeepsDoneAndFinishes(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1081,7 +1076,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_scale_harvest", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void farmSession_FullHarvestWithReplant_StaysWithinReadAndTickBudgets(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1104,7 +1099,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_scale_till", timeoutTicks = 130)
+    @SceneStep(template = "arena", timeoutTicks = 130)
     public static void farmSession_TillWithWeeds_StaysWithinPerTickBudgets(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1127,7 +1122,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_harvest_sweetberry", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void harvestCrop_MixedSweetBerry_PicksWithoutBreakingAndKeepsBush(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1167,7 +1162,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_session_sweetberry", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void farmSession_HarvestSweetBerry_PicksAndCollectsWithoutBreaking(GameTestHelper helper) {
         arenaFloor(helper);
         helper.setBlock(WATER, Blocks.WATER);
@@ -1198,22 +1193,22 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_column_sugarcane", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_SugarCaneColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
         columnHarvest(helper, CropKind.parse("sugar_cane"), Blocks.SUGAR_CANE, Blocks.SAND);
     }
 
-    @GameTest(template = "arena", batch = "farm_column_bamboo", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_BambooColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
         columnHarvest(helper, CropKind.parse("bamboo"), Blocks.BAMBOO, Blocks.DIRT);
     }
 
-    @GameTest(template = "arena", batch = "farm_column_cactus", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_CactusColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
         columnHarvest(helper, CropKind.parse("cactus"), Blocks.CACTUS, Blocks.SAND);
     }
 
-    @GameTest(template = "arena", batch = "farm_column_cactus", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_TallCactusColumn_KeepsAllDropsAboveBase(GameTestHelper helper) {
         arenaFloor(helper);
         BlockPos base = new BlockPos(4, FLOOR_Y, 4);
@@ -1244,7 +1239,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "farm_column_single", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void harvestCrop_SingleCane_IsIgnoredAndBaseStays(GameTestHelper helper) {
         arenaFloor(helper);
         BlockPos ground = new BlockPos(4, FLOOR_Y, 4);
@@ -1270,7 +1265,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = MELON_BATCH, timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void harvestCrop_MelonStemWithFruit_BreaksFruitKeepsStemAndFarmland(GameTestHelper helper) {
         fruitHarvest(
                 helper,
@@ -1282,7 +1277,7 @@ public final class FarmGameTests {
                 "плод арбуза даёт 3–7 ломтиков");
     }
 
-    @GameTest(template = "arena", batch = PUMPKIN_BATCH, timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void harvestCrop_PumpkinStemWithFruit_BreaksFruitKeepsStemAndFarmland(GameTestHelper helper) {
         fruitHarvest(
                 helper,
@@ -1331,7 +1326,7 @@ public final class FarmGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = COCOA_BATCH, timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void harvestCrop_CocoaOnJungleLog_CollectsAndReplantsOnSameSide(GameTestHelper helper) {
         arenaFloor(helper);
         BlockPos log = new BlockPos(4, FLOOR_Y + 1, 4);
@@ -1579,7 +1574,7 @@ public final class FarmGameTests {
         return new ScriptCall("till", Map.of("radius", radius, "count", count));
     }
 
-    @GameTest(template = "arena", batch = "farm_walled", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void harvestCrop_SpiritWalledInWithinReach_BreaksCropFromWhereItStands(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

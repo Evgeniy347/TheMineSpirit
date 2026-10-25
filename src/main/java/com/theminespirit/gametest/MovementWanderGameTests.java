@@ -5,7 +5,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -22,7 +21,7 @@ public final class MovementWanderGameTests {
 
     private MovementWanderGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_wander", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void wander_TwoHundredTicksRadiusFour_MovesAwayStaysOnFloorAndSucceedsAtExpiry(
             GameTestHelper helper) {
         MovementScene.prepare(helper);

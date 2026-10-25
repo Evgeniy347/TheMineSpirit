@@ -5,7 +5,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -21,7 +20,7 @@ public final class EscortGameTests {
 
     private EscortGameTests() {}
 
-    @GameTest(template = "arena", batch = "escort_follow", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void escort_MovingPlayer_FollowsAndHoldsRadiusAtEachStop(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 4));

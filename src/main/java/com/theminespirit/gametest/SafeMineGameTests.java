@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -72,7 +71,7 @@ public final class SafeMineGameTests {
     }
 
     // [флак] восемь ступеней (14 блоков), подход и сбор дропа на каждой ступени: запас 2× к ожидаемым тикам.
-    @GameTest(template = "mine_arena", batch = "safe_mine", timeoutTicks = 800)
+    @SceneStep(template = "mine_arena", timeoutTicks = 800)
     public static void staircase_EightSteps_ReachesTargetYLitByTorches(GameTestHelper helper) {
         GameTestFixtures.reset(helper, 16);
         fillStone(helper, 3, 0, 2, 10, 15, 6);
@@ -123,7 +122,7 @@ public final class SafeMineGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "safe_mine", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void tunnel_LavaBeside_IsFilledAndSpiritSurvives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         fillStone(helper, 0, 0, 0, 10, 0, 8);
@@ -154,7 +153,7 @@ public final class SafeMineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "safe_mine", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void tunnel_GravelAbove_DoesNotKillAndPassageStaysClear(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         fillStone(helper, 0, 0, 0, 10, 0, 8);

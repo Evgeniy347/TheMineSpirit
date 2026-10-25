@@ -49,6 +49,9 @@ public final class SchematicTextParser {
     private static final Pattern STATE_PAIR = Pattern.compile("^([a-z0-9_]+)=([a-z0-9_]+)$");
     private static final Pattern STEP = Pattern.compile("^\\[\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*]$");
     private static final Pattern TARGET_Y = Pattern.compile("^y\\s*=\\s*(-?\\d+)$");
+    private static final String STEP_PREFIX = "step:";
+    private static final String UNTIL_PREFIX = "until:";
+    private static final String TIMES_PREFIX = "times:";
 
     record LegendEntry(String block, Map<String, String> state, String text, int line, boolean optional) {}
 
@@ -246,23 +249,24 @@ public final class SchematicTextParser {
                 continue;
             }
             String trimmed = line.trim();
-            if (trimmed.startsWith("step:")) {
+            if (trimmed.startsWith(STEP_PREFIX)) {
                 if (step != null) {
                     throw error(index, "шаг повтора задан дважды: вторая строка молча перекрыла бы первую");
                 }
-                step = step(stripComment(trimmed.substring("step:".length()).trim()), index);
+                step = step(stripComment(trimmed.substring(STEP_PREFIX.length()).trim()), index);
                 stepLine = index;
-            } else if (trimmed.startsWith("until:")) {
+            } else if (trimmed.startsWith(UNTIL_PREFIX)) {
                 if (until != null) {
                     throw error(index, "условие повтора задано дважды: until и times исключают друг друга");
                 }
-                until = until(stripComment(trimmed.substring("until:".length()).trim()), index);
-            } else if (trimmed.startsWith("times:")) {
+                until = until(
+                        stripComment(trimmed.substring(UNTIL_PREFIX.length()).trim()), index);
+            } else if (trimmed.startsWith(TIMES_PREFIX)) {
                 if (until != null) {
                     throw error(index, "условие повтора задано дважды: until и times исключают друг друга");
                 }
                 until = new Schematic.Repeat.Times(integer(
-                        stripComment(trimmed.substring("times:".length()).trim()), index, "times"));
+                        stripComment(trimmed.substring(TIMES_PREFIX.length()).trim()), index, "times"));
             } else {
                 throw error(index, "в repeat ожидается «step: [dx, dy, dz]» и «until: y=50» или «times: N»");
             }
@@ -290,13 +294,13 @@ public final class SchematicTextParser {
         Schematic.Repeat.Until until = null;
         for (String part : splitTopLevel(body)) {
             String pair = part.trim();
-            if (pair.startsWith("step:")) {
-                step = step(pair.substring("step:".length()).trim(), line);
-            } else if (pair.startsWith("until:")) {
-                until = until(pair.substring("until:".length()).trim(), line);
-            } else if (pair.startsWith("times:")) {
+            if (pair.startsWith(STEP_PREFIX)) {
+                step = step(pair.substring(STEP_PREFIX.length()).trim(), line);
+            } else if (pair.startsWith(UNTIL_PREFIX)) {
+                until = until(pair.substring(UNTIL_PREFIX.length()).trim(), line);
+            } else if (pair.startsWith(TIMES_PREFIX)) {
                 until = new Schematic.Repeat.Times(
-                        integer(pair.substring("times:".length()).trim(), line, "times"));
+                        integer(pair.substring(TIMES_PREFIX.length()).trim(), line, "times"));
             } else {
                 throw error(line, "в repeat ожидается step, until или times, а не '" + pair + "'");
             }

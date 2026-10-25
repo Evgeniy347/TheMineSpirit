@@ -13,13 +13,13 @@ import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -75,42 +75,42 @@ public final class HouseMovementGameTests {
 
     private HouseMovementGameTests() {}
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_MansionUpperFloor_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "player_house", 4, Spot.UPPER_FLOOR);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_MansionGroundFar_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "player_house", 4, Spot.GROUND_FAR);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_MansionBalcony_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "player_house", 4, Spot.BALCONY);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_ManorUpperFloor_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "family_house", 4, Spot.UPPER_FLOOR);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_ManorGroundFar_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "family_house", 4, Spot.GROUND_FAR);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_ManorBalcony_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "family_house", 4, Spot.BALCONY);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_PlayerHouse3UpperFloor_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "player_house", 3, Spot.UPPER_FLOOR);
     }
 
-    @GameTest(template = "big_arena", batch = "house_movement", timeoutTicks = SCENE_TIMEOUT_TICKS)
+    @SceneStep(template = "big_arena", timeoutTicks = SCENE_TIMEOUT_TICKS)
     public static void move_PlayerHouse3Balcony_ReachesEntranceChest(GameTestHelper helper) {
         scene(helper, "player_house", 3, Spot.BALCONY);
     }
@@ -241,7 +241,7 @@ public final class HouseMovementGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos min = helper.absolutePos(BlockPos.ZERO);
         Map<BlockPos, Integer> distance = new HashMap<>();
-        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
         distance.put(front, 0);
         queue.add(front);
         while (!queue.isEmpty()) {

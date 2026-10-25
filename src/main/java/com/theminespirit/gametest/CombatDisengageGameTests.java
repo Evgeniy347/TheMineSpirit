@@ -5,7 +5,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -25,7 +24,7 @@ public final class CombatDisengageGameTests {
 
     private CombatDisengageGameTests() {}
 
-    @GameTest(template = "arena", batch = "combat_disengage", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void disengage_FightingZombie_BacksOffAndStopsAttacking(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, SPIRIT_AT);

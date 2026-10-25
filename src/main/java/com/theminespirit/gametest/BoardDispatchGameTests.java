@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +47,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardDispatchGameTests {
     private static final String OWN = "dispatch:own";
     private static final String FREE = "dispatch:free";
@@ -56,7 +54,7 @@ public final class BoardDispatchGameTests {
 
     private BoardDispatchGameTests() {}
 
-    @GameTest(template = "arena", batch = "board_dispatch_paused_holder", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void dispatch_OwnTicketPaused_SpiritTakesFreeTicket(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -88,7 +86,7 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_repair_anvil", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void repair_NoAnvilAtHome_TicketOnlyAfterAnvil(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -120,7 +118,7 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_repair_stone", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void repair_WornStonePickaxeWithAnvil_NotRepaired(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -147,7 +145,7 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_foreign_failure", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true)
     public static void starter_ForeignTaskFails_NotBlamedOnOwnScript(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -175,7 +173,7 @@ public final class BoardDispatchGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_table_transfer", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void furnace_TableAtNeighbour_TransferredToCrafter(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -210,7 +208,7 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_stuck_giver", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void furnace_TableAtPausedGiver_NoTransferFromIt(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -244,7 +242,7 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_displaced", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true)
     public static void displaced_ForeignTaskFinished_TicketStaysWithSpiritAndResumes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -288,7 +286,7 @@ public final class BoardDispatchGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_reflex", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void reflex_ArmVerdict_VisibleOnBoard(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -313,7 +311,7 @@ public final class BoardDispatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "board_dispatch_repair_restart", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void repair_RestoredTicketWithoutTarget_TargetRefreshedAndIssued(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

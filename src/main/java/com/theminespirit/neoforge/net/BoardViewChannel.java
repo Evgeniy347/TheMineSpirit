@@ -132,7 +132,7 @@ public final class BoardViewChannel {
         });
     }
 
-    private static void handleRequest(Request request, IPayloadContext context) {
+    private static void handleRequest(Request ignoredRequest, IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
             context.reply(new Reply(snapshot(player.serverLevel()), stage(player.serverLevel())));
         }

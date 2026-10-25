@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -28,7 +27,7 @@ public final class FollowGameTests {
 
     private FollowGameTests() {}
 
-    @GameTest(template = "arena", batch = "follow_hold", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void followScript_StationaryMockPlayer_HoldsRadiusWithFewRebuilds(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildFloor(helper);
@@ -57,7 +56,7 @@ public final class FollowGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "follow_drop", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void followScript_FullInventoryNearPlayer_DropsCheapestAndPicksDiamond(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildFloor(helper);

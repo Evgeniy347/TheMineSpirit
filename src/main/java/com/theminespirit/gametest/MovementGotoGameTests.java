@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.movement.GotoBlockSession;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -33,7 +32,7 @@ public final class MovementGotoGameTests {
 
     private MovementGotoGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_goto_block_nearest", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void gotoBlock_ThreeHayBlocks_StopsInReachOfNearestWithoutWalkingToFarOnes(GameTestHelper helper) {
         MovementScene.prepare(helper);
         helper.setBlock(NEAR_HAY, Blocks.HAY_BLOCK);
@@ -84,7 +83,7 @@ public final class MovementGotoGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_goto_block_none", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void gotoBlock_NoSuchBlockInRadius_FailsFastAndStands(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
@@ -126,7 +125,7 @@ public final class MovementGotoGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_goto_block_scale", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void gotoBlockSession_RadiusSixteenSearch_TakesAtMostFourSlicesPerTickAndStillFindsHay(
             GameTestHelper helper) {
         MovementScene.prepare(helper);

@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
 import com.theminespirit.neoforge.intellect.SettlementIntellect;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Cow;
@@ -24,7 +23,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class IntellectForageGameTests {
     private static final BlockPos START = new BlockPos(1, 1, 1);
 
@@ -54,7 +52,7 @@ public final class IntellectForageGameTests {
                 .anyMatch(assignment -> assignment.activity() == activity);
     }
 
-    @GameTest(template = "arena", batch = "intellect_food_norm_empty", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void foodNorm_EmptyStock_ForageAssigned(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -83,7 +81,7 @@ public final class IntellectForageGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_food_norm_full", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void foodNorm_FullStock_ForageNotAssigned(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -122,7 +120,7 @@ public final class IntellectForageGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "intellect_forage_withdraw", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void forage_HungryChestWithFood_WithdrawsIt(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -159,7 +157,7 @@ public final class IntellectForageGameTests {
     }
 
     // [флак] охота длиннее прочих сцен интеллекта: подход к дикой корове вне домашнего загона и добивание
-    @GameTest(template = "arena", batch = "intellect_forage_hunt", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600, coordinator = true)
     public static void forage_NoFoodWildCowWithSword_Hunts(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, START);

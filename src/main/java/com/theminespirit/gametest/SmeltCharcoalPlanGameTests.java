@@ -13,7 +13,6 @@ import com.theminespirit.neoforge.intellect.ActivityTaskFactory;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -29,7 +28,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SmeltCharcoalPlanGameTests {
     private SmeltCharcoalPlanGameTests() {}
 
-    @GameTest(template = "arena", batch = "smelt_charcoal_plan", timeoutTicks = 20)
+    @SceneStep(template = "arena", timeoutTicks = 20)
     public static void charcoal_ThirteenLogsHeld_SmeltsWithoutAcquire(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));

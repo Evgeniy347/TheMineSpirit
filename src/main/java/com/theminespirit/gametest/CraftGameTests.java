@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -46,7 +45,7 @@ public final class CraftGameTests {
 
     private CraftGameTests() {}
 
-    @GameTest(template = FIELD, batch = "craft_planks", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_TwoLogsEightPlanks_ConsumesLogsExactly(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_LOG, 2));
@@ -60,7 +59,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_sticks", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_FourSticksFromTwoPlanks_NoStationNeeded(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 2));
@@ -74,7 +73,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_pickaxe_table_near", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_PickaxeWithTableFourBlocksAway_SpiritWalksUpAndCrafts(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
@@ -103,7 +102,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_table_in_inventory", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_TableOnlyInInventory_PlacedOnFloorAndUsed(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit =
@@ -123,7 +122,7 @@ public final class CraftGameTests {
 
     // Печь первых шагов ставится сразу после крафта (place): в инвентаре крафтера её не видела плавка других духов
     // (приёмка «джунгли» 24.10: «нужна печь: рядом (16) нет, в инвентаре нет»).
-    @GameTest(template = FIELD, batch = "craft_furnace_place", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_FurnaceWithPlace_FurnaceStandsOnField(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.COBBLESTONE, 8));
@@ -147,7 +146,7 @@ public final class CraftGameTests {
 
     // Вплотную к духу места нет (двор занят) — печь ставится в шаге досягаемости, а не остаётся в инвентаре: иначе
     // шаг печи падал, запас «с печью» закрывал CRAFT_FURNACE без записи в журнале (приёмка «джунгли» 24.10).
-    @GameTest(template = FIELD, batch = "craft_furnace_place_crowded", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_FurnaceWithPlaceCrowded_FurnacePlacedFurther(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.COBBLESTONE, 8));
@@ -188,7 +187,7 @@ public final class CraftGameTests {
 
     // Сундуки склада первых шагов ставятся сразу после крафта (place): в инвентаре крафтера склада не было, сдача
     // добытого не находила сундук (приёмка «джунгли» 24.10). Два сундука — один двойной, как у игрока (INC-52).
-    @GameTest(template = FIELD, batch = "craft_chest_place", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_ChestsWithPlace_OneDoubleChestOnField(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.CRAFTING_TABLE, 1), stack(Items.OAK_PLANKS, 16));
@@ -215,7 +214,7 @@ public final class CraftGameTests {
 
     // Станции поселения общие (INC-51): верстак на участке дальше радиуса поиска — дух идёт к нему, а свой из
     // инвентаря не ставит (вторая печь и второй верстак на живом сервере).
-    @GameTest(template = FIELD, batch = "craft_settlement_table", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_TableOnPlotBeyondRadius_UsesItNoNewTable(GameTestHelper helper) {
         field(helper);
         helper.setBlock(new BlockPos(8, 1, 8), Blocks.CRAFTING_TABLE);
@@ -245,7 +244,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_no_table", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_NoTableAnywhere_FailsBeforeSpendingMaterials(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 3), stack(Items.STICK, 2));
@@ -261,7 +260,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_shortage", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_NotEnoughPlanks_FailsNamingShortageWithoutSpending(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
@@ -277,7 +276,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_mixed_planks", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_MixedPlanks_PickaxeFromBirchAndOak(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
@@ -294,7 +293,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_many_sticks", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_SixtyFourSticks_AtMostOneCraftPerTwoTicks(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 32));
@@ -327,7 +326,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_reload", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_SpiritReloadedMidway_ContinuesWithRemainingCount(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_PLANKS, 32));
@@ -355,7 +354,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_cake", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_Cake_EmptyBucketsReturnToInventory(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE_FAR, Blocks.CRAFTING_TABLE);
@@ -372,7 +371,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_full_inventory", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_NoRoomForResult_FailsWithoutSpending(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.OAK_LOG, 2));
@@ -390,7 +389,7 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_dynamic", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_WrittenBook_FailsNoRecipe(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.BOOK, 1), stack(Items.INK_SAC, 1));
@@ -404,32 +403,32 @@ public final class CraftGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "craft_jungle_logs", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_JungleLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.JUNGLE_LOG, 2), Items.JUNGLE_LOG);
     }
 
-    @GameTest(template = FIELD, batch = "craft_acacia_logs", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_AcaciaLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.ACACIA_LOG, 2), Items.ACACIA_LOG);
     }
 
-    @GameTest(template = FIELD, batch = "craft_dark_oak_logs", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_DarkOakLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.DARK_OAK_LOG, 2), Items.DARK_OAK_LOG);
     }
 
-    @GameTest(template = FIELD, batch = "craft_mangrove_logs", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_MangroveLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.MANGROVE_LOG, 2), Items.MANGROVE_LOG);
     }
 
-    @GameTest(template = FIELD, batch = "craft_cherry_logs", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_CherryLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.CHERRY_LOG, 2), Items.CHERRY_LOG);
     }
 
-    @GameTest(template = FIELD, batch = "craft_bamboo_blocks", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_BambooBlocksToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.BAMBOO_BLOCK, 3), Items.BAMBOO_BLOCK);
     }

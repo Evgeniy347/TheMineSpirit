@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -40,11 +39,10 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 // Оставленная в шахте руда — задание на доске: висит без кирки с Удачей, открывается держателю такой кирки.
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardLeftOreGameTests {
     private BoardLeftOreGameTests() {}
 
-    @GameTest(template = "arena", batch = "board_left_ore", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void leftOre_DiamondWaitsForFortunePick_ThenGoesToItsHolder(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

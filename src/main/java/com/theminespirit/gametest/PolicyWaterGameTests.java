@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
@@ -38,7 +37,7 @@ public final class PolicyWaterGameTests {
         return new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ()));
     }
 
-    @GameTest(template = "arena", batch = "policy_lake_bypass", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void lake_GotoWithDryBypass_ArrivesWithoutTouchingWater(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -91,7 +90,7 @@ public final class PolicyWaterGameTests {
     }
 
     // [флак] переправа через озеро вброд: goto до 480 тиков духа, запас под нагрузкой
-    @GameTest(template = "arena", batch = "policy_lake_ford", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void lake_GotoWithoutBypass_CrossesTheWaterAndArrives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -117,7 +116,7 @@ public final class PolicyWaterGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_idle_in_water", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void lake_IdleSpiritAtTheEdge_ClimbsOutWithin60Ticks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -135,7 +134,7 @@ public final class PolicyWaterGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_air_pond", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void pond_SpiritOnTheBottomWithLowAir_SurfacesBeforeDrowning(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

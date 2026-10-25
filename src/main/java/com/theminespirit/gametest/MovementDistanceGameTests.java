@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +31,7 @@ public final class MovementDistanceGameTests {
 
     private MovementDistanceGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_keep_close", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void keepDistance_TargetTwoBlocksAway_BacksOffToFiveAndHoldsForFortyTicks(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(5, 1, 4));
@@ -75,7 +74,7 @@ public final class MovementDistanceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_keep_far", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void keepDistance_TargetSevenBlocksAway_ApproachesToFivePlusMinusOneAndHolds(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 4));
@@ -118,7 +117,7 @@ public final class MovementDistanceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_keep_scale", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void keepDistance_TwentySpiritsHundredTicks_AskTheWorldOncePerDecisionPeriod(GameTestHelper helper) {
         MovementScene.prepare(helper);
         ServerPlayer player = MovementScene.mockPlayer(helper, new BlockPos(4, 1, 4));

@@ -18,9 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -37,9 +34,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardV2ScaleGameTests {
-    private static final String BATCH = "board_v2_scale";
     private static final int SPIRITS = 20;
     private static final int OBSERVED_TICKS = 400;
     private static final int TIMEOUT_TICKS = 1000;
@@ -47,19 +42,9 @@ public final class BoardV2ScaleGameTests {
 
     private BoardV2ScaleGameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void prepareBatch(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreBatch(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
     // [флак] наблюдение 400 тиков (пересборки по 100, скан стада по 200) плюс старт сцены:
     // под нагрузкой машины 400 тиков тайм-аута мало, запас 2,5×.
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TIMEOUT_TICKS, board = true, calmMobs = true)
     public static void scale_TwentySpiritsThreeSpecies_CountersStayWithinPeriod(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

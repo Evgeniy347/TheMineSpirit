@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.policy.SpiritNavigation;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -59,7 +58,7 @@ public final class PolicyHazardGameTests {
         return new ScriptCall("goto", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ()));
     }
 
-    @GameTest(template = "arena", batch = "policy_lava_beside", timeoutTicks = 80)
+    @SceneStep(template = "arena", timeoutTicks = 80)
     public static void lavaBeside_SpiritNextToLava_StepsAwayWithoutDamage(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);
@@ -83,7 +82,7 @@ public final class PolicyHazardGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_lava_puddle", timeoutTicks = 80)
+    @SceneStep(template = "arena", timeoutTicks = 80)
     public static void lavaPuddle_SpiritStandingInLava_ClimbsOutAlive(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(CENTER, Blocks.LAVA);
@@ -103,7 +102,7 @@ public final class PolicyHazardGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_burning_water", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void burning_SpiritWithWaterFourBlocksAway_WalksIntoWaterAndStopsBurning(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(8, 1, 4, Blocks.WATER);
@@ -127,7 +126,7 @@ public final class PolicyHazardGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_lava_moat", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gotoAcrossLavaMoat_NoWayAround_FailsWithoutTouchingLava(GameTestHelper helper) {
         prepare(helper);
         for (int z = 0; z <= 8; z++) {
@@ -210,27 +209,27 @@ public final class PolicyHazardGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_path_cactus", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void pathPastCactus_GotoAcrossFloor_GoesAroundWithoutDamage(GameTestHelper helper) {
         hazardOnTheWay(helper, Blocks.CACTUS, Blocks.SAND, false);
     }
 
-    @GameTest(template = "arena", batch = "policy_path_magma", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void pathPastMagma_GotoAcrossFloor_GoesAroundWithoutDamage(GameTestHelper helper) {
         hazardOnTheWay(helper, Blocks.MAGMA_BLOCK, null, true);
     }
 
-    @GameTest(template = "arena", batch = "policy_path_cobweb", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void pathPastCobweb_GotoAcrossFloor_GoesAroundWithoutStepping(GameTestHelper helper) {
         hazardOnTheWay(helper, Blocks.COBWEB, null, false);
     }
 
-    @GameTest(template = "arena", batch = "policy_path_berries", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void pathPastBerries_GotoAcrossFloor_GoesAroundWithoutDamage(GameTestHelper helper) {
         hazardOnTheWay(helper, Blocks.SWEET_BERRY_BUSH, Blocks.DIRT, false);
     }
 
-    @GameTest(template = "arena", batch = "policy_path_snow", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void pathPastPowderSnow_GotoAcrossFloor_GoesAroundWithoutStepping(GameTestHelper helper) {
         hazardOnTheWay(helper, Blocks.POWDER_SNOW, null, false);
     }
@@ -275,17 +274,17 @@ public final class PolicyHazardGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_cliff_three", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void cliffOfThreeBlocks_GotoDownward_FailsWithoutFalling(GameTestHelper helper) {
         cliff(helper, 3, RunStatus.FAILED);
     }
 
-    @GameTest(template = "arena", batch = "policy_cliff_two", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void cliffOfTwoBlocks_GotoDownward_DescendsAndArrives(GameTestHelper helper) {
         cliff(helper, 2, RunStatus.SUCCEEDED);
     }
 
-    @GameTest(template = "arena", batch = "policy_path_table", timeoutTicks = 20)
+    @SceneStep(template = "arena", timeoutTicks = 20)
     public static void pathTable_RealSpirit_BlocksEveryHazardPathType(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);
@@ -310,7 +309,7 @@ public final class PolicyHazardGameTests {
 
     private record HazardRow(Block block, Block floor, int classifyAbove, PathType expected) {}
 
-    @GameTest(template = "arena", batch = "policy_path_types", timeoutTicks = 20)
+    @SceneStep(template = "arena", timeoutTicks = 20)
     public static void pathTypes_HazardBlocks_AreClassifiedAndClosedByTheSpiritsOwnPlanner(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), CENTER);

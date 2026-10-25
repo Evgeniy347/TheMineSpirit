@@ -5,7 +5,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -25,7 +24,7 @@ public final class MovementStepGameTests {
 
     private MovementStepGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_step_up", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void stepOver_OneBlockStepAhead_StandsOnItWithinFortyTicks(GameTestHelper helper) {
         MovementScene.prepare(helper);
         helper.setBlock(STEP_BLOCK, Blocks.STONE);
@@ -51,7 +50,7 @@ public final class MovementStepGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_step_wall", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void stepOver_TwoBlockWallAhead_FailsAtOnceWithoutMoving(GameTestHelper helper) {
         MovementScene.prepare(helper);
         helper.setBlock(STEP_BLOCK, Blocks.STONE);

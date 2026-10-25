@@ -19,7 +19,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -42,7 +41,7 @@ public final class SmeltGameTests {
 
     private SmeltGameTests() {}
 
-    @GameTest(template = FIELD, batch = "smelt_basic", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_ThreeRawIronTwoCoal_ThreeIngotsOneCoalLeftFurnaceEmpty(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -65,7 +64,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_planks", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_ThreeRawIronTwoOakPlanks_ThreeIngotsBothPlanksBurned(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -89,7 +88,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_furnace_in_inventory", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_FurnaceOnlyInInventory_PlacedAndUsed(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.FURNACE, 1), stack(Items.RAW_IRON, 1), stack(Items.COAL, 1));
@@ -107,7 +106,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_no_furnace", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_NoFurnaceAnywhere_FailsBeforeSpending(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(helper, stack(Items.RAW_IRON, 3), stack(Items.COAL, 2));
@@ -122,7 +121,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_no_fuel", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_NoFuel_FailsLeavingInputInInventory(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -138,7 +137,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_short_fuel", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_OneStickForThreeItems_FailsFuelRanOutAndReturnsInput(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -156,7 +155,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_cancel", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_CancelledInTheMiddle_ReturnsEverythingToSpirit(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -187,7 +186,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_reload", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_SpiritReloadedMidway_AdoptsItsFurnaceAndFinishesExactly(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -223,7 +222,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_ore_input", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_IronOreInsteadOfRawIron_IsAccepted(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -239,7 +238,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_beef", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_BeefToCookedBeef_ProductNamedNotInput(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -255,7 +254,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_campfire", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_BeefOnCampfire_CookedWithoutFuel(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.CAMPFIRE);
@@ -272,7 +271,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_campfire_materials", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_NoCampfireWithMaterials_BuildsItAndCooks(GameTestHelper helper) {
         field(helper);
         SpiritEntity spirit = prepare(
@@ -294,7 +293,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_smoker_beef", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_BeefInSmoker_CookedBeefInChest(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.SMOKER);
@@ -310,7 +309,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_charcoal", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_LogsInFurnace_Charcoal(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -326,7 +325,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_furnace_destroyed", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_FurnaceDestroyedInTheMiddle_FailsAndNothingIsLost(GameTestHelper helper) {
         field(helper);
         helper.setBlock(FURNACE_CELL, Blocks.FURNACE);
@@ -354,7 +353,7 @@ public final class SmeltGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "smelt_experience", timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void smelt_FourRawIronWithPlayerOnline_AwardsExperienceToPlayerWithoutOrbs(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

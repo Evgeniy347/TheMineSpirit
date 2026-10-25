@@ -13,7 +13,6 @@ import java.util.function.Function;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -49,7 +48,7 @@ public final class SpiritCommandGameTests {
         return spirit;
     }
 
-    @GameTest(template = "arena", batch = "command_follow", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void commandFollow_MockPlayerSource_SpiritApproachesPlayer(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.sweepEntities(helper);
@@ -95,7 +94,7 @@ public final class SpiritCommandGameTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void commandGoalThenCancel_OnSelectedSpirit_StartsAndCancelsTask(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.sweepEntities(helper);
@@ -141,7 +140,7 @@ public final class SpiritCommandGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "cmd_commandGoal", template = "arena", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void commandGoal_OnTwoSpirits_AppliesToAllOrNone(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.sweepEntities(helper);
@@ -178,7 +177,7 @@ public final class SpiritCommandGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "spirit_goal", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void commandGoal_TwoSpiritsOnArena_PlansFromEachOwnObservation(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
@@ -222,7 +221,7 @@ public final class SpiritCommandGameTests {
         }
     }
 
-    @GameTest(template = "empty", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void commandFollow_ServerSource_RefusesWithoutTask(GameTestHelper helper)
             throws CommandSyntaxException {
         String tag = freshTag("server_source");
@@ -276,20 +275,20 @@ public final class SpiritCommandGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "spirit_goal", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void commandGoal_ByFullUuid_FiveSpiritsTargetsOnlyThatSpirit(GameTestHelper helper)
             throws CommandSyntaxException {
         assertGoalTokenSelectsOne(helper, "uuid_full", spirit -> spirit.getStringUUID(), "полный UUID");
     }
 
-    @GameTest(template = "empty", batch = "spirit_goal", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void commandGoal_ByUuidPrefix_FiveSpiritsTargetsOnlyThatSpirit(GameTestHelper helper)
             throws CommandSyntaxException {
         assertGoalTokenSelectsOne(
                 helper, "uuid_prefix", spirit -> spirit.getStringUUID().substring(0, 8), "8-значный UUID из лога");
     }
 
-    @GameTest(template = "empty", batch = "spirit_goal", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void commandGoal_ByDisplayName_FiveSpiritsTargetsOnlyThatSpirit(GameTestHelper helper)
             throws CommandSyntaxException {
         assertGoalTokenSelectsOne(helper, "name", SpiritEntity::displayName, "имя духа");
@@ -341,7 +340,7 @@ public final class SpiritCommandGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "command_spawn", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void commandSpawn_Twice_GivesDifferentNumberedNames(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);

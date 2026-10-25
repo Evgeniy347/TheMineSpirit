@@ -21,7 +21,6 @@ import com.theminespirit.neoforge.SpiritScripts;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import java.util.Collections;
 import java.util.List;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -39,7 +38,7 @@ public final class FullCycleGameTests {
 
     private FullCycleGameTests() {}
 
-    @GameTest(template = "arena", batch = "full_cycle_wood", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fullCycle_ChopCraftPickaxeDeposit_PickaxeInSortedChestNoLogsLeft(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);
@@ -79,7 +78,7 @@ public final class FullCycleGameTests {
     }
 
     // [флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
-    @GameTest(template = "arena", batch = "full_cycle_iron", timeoutTicks = 700)
+    @SceneStep(template = "arena", timeoutTicks = 700)
     public static void fullCycle_GatherCobbleCraftFurnaceSmeltDeposit_IngotInChestFurnaceOnce(GameTestHelper helper) {
         field(helper);
         helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
@@ -120,7 +119,7 @@ public final class FullCycleGameTests {
     }
 
     // [флак] три добычи брёвен голыми руками и пять крафтов подряд; замерено 270 тиков духа, запас 2×
-    @GameTest(template = "arena", batch = "full_cycle_resolver", timeoutTicks = 540)
+    @SceneStep(template = "arena", timeoutTicks = 540)
     public static void fullCycle_ResolverPlanForWoodenPickaxe_PickaxeInInventory(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS + 1);

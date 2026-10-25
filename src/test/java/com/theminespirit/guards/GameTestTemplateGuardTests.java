@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
  */
 class GameTestTemplateGuardTests {
     private static final Pattern GAMETEST_ANNOTATION =
-            Pattern.compile("@GameTest\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
+            Pattern.compile("@(?:GameTest|SceneStep)\\s*\\(([^)]*)\\)", Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern EMPTY_TEMPLATE =
             Pattern.compile("template\\s*=\\s*(?:\"empty\"|EMPTY_TEMPLATE)(?![A-Za-z0-9_])");
     private static final String[] SPAWN_OR_BLOCK_MARKERS = {

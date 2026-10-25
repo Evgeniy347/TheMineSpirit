@@ -46,7 +46,7 @@ public final class TheMineSpiritClient {
         event.register(OPEN_BOARD);
     }
 
-    private static void onClientTick(ClientTickEvent.Post event) {
+    private static void onClientTick(ClientTickEvent.Post ignoredEvent) {
         Minecraft minecraft = Minecraft.getInstance();
         while (OPEN_BOARD.consumeClick()) {
             if (minecraft.screen == null && minecraft.player != null) {

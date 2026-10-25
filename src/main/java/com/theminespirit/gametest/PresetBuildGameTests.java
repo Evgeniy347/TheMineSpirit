@@ -13,7 +13,6 @@ import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -118,13 +117,13 @@ public final class PresetBuildGameTests {
     }
 
     // [флак] склад-хижина с места, с запасом на подходы; тест меряет результат, а не скорость.
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 2400)
+    @SceneStep(template = "arena", timeoutTicks = 2400)
     public static void preset_StorageHutFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
         buildPreset(helper, "storage_hut", "склад-хижина");
     }
 
     // [флак] каменный дом с места, с запасом на подходы; тест меряет результат, а не скорость.
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 2400)
+    @SceneStep(template = "arena", timeoutTicks = 2400)
     public static void preset_StoneHouseFromLibrary_StandsWithRoof(GameTestHelper helper) {
         buildPreset(helper, "stone_house", "каменный дом");
     }
@@ -164,7 +163,7 @@ public final class PresetBuildGameTests {
 
     // [флак] чаровальня уровня 1 дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 24000)
+    @SceneStep(template = "arena", timeoutTicks = 24000)
     public static void preset_EnchantRoomV1FromLibrary_StandsWithFiveShelves(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         wideFloor(helper);
@@ -209,7 +208,7 @@ public final class PresetBuildGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "preset_build", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void preset_PalisadeSectionFromLibrary_StandsBlockForBlock(GameTestHelper helper) {
         prepare(helper);
         BlockPos anchor = new BlockPos(0, 1, 1);

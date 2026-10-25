@@ -19,6 +19,8 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class ResourceResolver {
+    private static final String COUNT = "count";
+
     private ResourceResolver() {}
 
     public static TaskNode resolve(String item, int count, ResourceKnowledge knowledge) {
@@ -233,7 +235,7 @@ public final class ResourceResolver {
         private static ScriptCall gather(String block, int count) {
             int radius =
                     block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
-            return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
+            return new ScriptCall("gather", Map.of("block", block, COUNT, count, "radius", radius));
         }
 
         private ScriptCall single(String script, String item, int count) {
@@ -242,11 +244,11 @@ public final class ResourceResolver {
                 case "craft" ->
                     new ScriptCall(
                             "craft",
-                            Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                            Map.of("item", item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
                 case "smelt" ->
                     new ScriptCall(
                             "smelt",
-                            Map.of("item", item, "count", count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                            Map.of("item", item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
                 default ->
                     throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
                             + "батчинг знает только gather, craft и smelt");
@@ -278,7 +280,7 @@ public final class ResourceResolver {
             List<TaskNode> steps = new ArrayList<>();
             if (left > 0 && chests != null && withdrawn.add(normalize(item))) {
                 for (ScriptCall call : chests.withdraw(item, left)) {
-                    left -= call.params().get("count") instanceof Integer taken ? taken : 0;
+                    left -= call.params().get(COUNT) instanceof Integer taken ? taken : 0;
                     steps.add(call);
                 }
             }
