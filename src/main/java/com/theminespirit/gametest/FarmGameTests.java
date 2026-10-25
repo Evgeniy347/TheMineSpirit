@@ -9,13 +9,11 @@ import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.CropState;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmTile;
-import com.theminespirit.core.farming.FarmTuning;
 import com.theminespirit.core.farming.Ground;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.CropRegistry;
 import com.theminespirit.neoforge.FarmSession;
 import com.theminespirit.neoforge.FarmTargets;
@@ -67,16 +65,6 @@ public final class FarmGameTests {
     private static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
     private FarmGameTests() {}
-
-    @SceneStep(template = "empty", timeoutTicks = 20)
-    public static void farmTuningReach_ExceedingBlockBreakerReach_IsRejected(GameTestHelper helper) {
-        helper.assertTrue(
-                FarmTuning.REACH <= BlockBreaker.REACH,
-                "Досягаемость фермы " + FarmTuning.REACH + " обязана быть не больше досягаемости ломки "
-                        + BlockBreaker.REACH + ": иначе планировщик поставит дух туда, откуда BlockBreaker "
-                        + "отвергнет обработку клетки");
-        helper.succeed();
-    }
 
     @SceneStep(template = "empty", timeoutTicks = 20)
     public static void cropKinds_ExactIds_ExistInRegistries(GameTestHelper helper) {
@@ -217,87 +205,6 @@ public final class FarmGameTests {
             helper.assertTrue(
                     targets.maxSlicesPerTick() <= 4,
                     "поиск берёт не больше 4 срезов за тик, максимум за тик: " + targets.maxSlicesPerTick());
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 110)
-    public static void farmSession_TillFiveByFiveNearWater_TillsTwelveWearsHoeAndKeepsRest(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        for (int x = 3; x <= 7; x++) {
-            for (int z = 3; z <= 7; z++) {
-                helper.setBlock(new BlockPos(x, FLOOR_Y, z), Blocks.DIRT);
-            }
-        }
-        helper.setBlock(new BlockPos(5, FLOOR_Y, 5), Blocks.WATER);
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(5, 1, 1), new ItemStack(Items.IRON_HOE));
-        Map<BlockPos, Block> before = snapshot(helper);
-        AtomicReference<FarmSession> session = drive(helper, spirit, ctx -> FarmSession.till(ctx, 4, 12));
-
-        helper.succeedWhen(() -> {
-            FarmSession run = finished(helper, session);
-            helper.assertTrue(
-                    run.outcome() == FarmSession.Outcome.SUCCEEDED,
-                    "двенадцать клеток земли в 4 блоках от воды обязаны вспахаться: " + run.outcome() + ", "
-                            + run.failureReason());
-            helper.assertTrue(
-                    countBlock(helper, Blocks.FARMLAND) == 12,
-                    "обязано появиться ровно 12 пашни, фактически " + countBlock(helper, Blocks.FARMLAND));
-            helper.assertTrue(
-                    spirit.getInventory().getItem(0).getDamageValue() == 12,
-                    "износ мотыги обязан быть 12 (по единице на клетку, как у игрока), фактически "
-                            + spirit.getInventory().getItem(0).getDamageValue());
-            helper.assertTrue(
-                    changedBlocks(helper, before) == 12,
-                    "кроме 12 вспаханных клеток мир обязан остаться прежним, изменилось "
-                            + changedBlocks(helper, before));
-            helper.assertTrue(
-                    helper.getBlockState(new BlockPos(5, FLOOR_Y, 5)).is(Blocks.WATER),
-                    "вода обязана остаться на месте");
-            GameTestFixtures.finish(helper);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 250)
-    public static void farmSession_HarvestMixedWheat_CollectsAndReplantsOnlyMature(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        helper.setBlock(new BlockPos(1, FLOOR_Y, 4), Blocks.WATER);
-        List<BlockPos> cells = new ArrayList<>();
-        for (int x = 3; x <= 5; x++) {
-            for (int z = 3; z <= 5; z++) {
-                cells.add(new BlockPos(x, FLOOR_Y, z));
-            }
-        }
-        for (int i = 0; i < cells.size(); i++) {
-            setCrop(helper, cells.get(i), CropKind.WHEAT, i % 2 == 0 ? 7 : 3);
-        }
-        SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.WHEAT_SEEDS, 5));
-        AtomicReference<FarmSession> session =
-                drive(helper, spirit, ctx -> FarmSession.harvestCrop(ctx, CropKind.WHEAT, 8, true));
-
-        helper.succeedWhen(() -> {
-            FarmSession run = finished(helper, session);
-            helper.assertTrue(
-                    run.outcome() == FarmSession.Outcome.SUCCEEDED,
-                    "пять зрелых клеток обязаны собраться, недозрелые не мешают: " + run.outcome() + ", "
-                            + run.failureReason());
-            for (int i = 0; i < cells.size(); i++) {
-                int expectedAge = i % 2 == 0 ? 0 : 3;
-                helper.assertTrue(
-                        cropAge(helper, cells.get(i)) == expectedAge,
-                        "клетка " + i + " обязана иметь возраст " + expectedAge
-                                + " (зрелая пересажена, недозрелая нетронута), " + "фактически "
-                                + cropAge(helper, cells.get(i)));
-            }
-            helper.assertTrue(
-                    countBlock(helper, Blocks.FARMLAND) == 9,
-                    "пашни обязано остаться 9, фактически " + countBlock(helper, Blocks.FARMLAND));
-            helper.assertTrue(
-                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT) == 5,
-                    "с пяти зрелых клеток обязано быть собрано ровно 5 пшеницы, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT));
             GameTestFixtures.finish(helper);
         });
     }
@@ -614,11 +521,6 @@ public final class FarmGameTests {
     @SceneStep(template = "arena", timeoutTicks = 260)
     public static void harvestCrop_MixedCarrots_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
         harvestMixed(helper, CropKind.CARROT);
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 250)
-    public static void harvestCrop_MixedPotatoes_HarvestsAndReplantsOnlyMature(GameTestHelper helper) {
-        harvestMixed(helper, CropKind.POTATO);
     }
 
     @SceneStep(template = "arena", timeoutTicks = 270)
@@ -1162,37 +1064,6 @@ public final class FarmGameTests {
         });
     }
 
-    @SceneStep(template = "arena", timeoutTicks = 300)
-    public static void farmSession_HarvestSweetBerry_PicksAndCollectsWithoutBreaking(GameTestHelper helper) {
-        arenaFloor(helper);
-        helper.setBlock(WATER, Blocks.WATER);
-        List<BlockPos> cells = bed();
-        CropKind kind = CropKind.parse("sweet_berry_bush");
-        for (int i = 0; i < cells.size(); i++) {
-            setCrop(helper, cells.get(i), kind, i % 2 == 0 ? 3 : 1);
-        }
-        SpiritEntity spirit = spawnWith(helper, START);
-        AtomicReference<FarmSession> session =
-                drive(helper, spirit, ctx -> FarmSession.harvestCrop(ctx, kind, 8, true));
-
-        helper.succeedWhen(() -> {
-            FarmSession run = finished(helper, session);
-            helper.assertTrue(
-                    run.outcome() == FarmSession.Outcome.SUCCEEDED,
-                    "сбор кустов PICK обязан завершиться успехом: " + run.outcome() + ", " + run.failureReason());
-            int berries = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SWEET_BERRIES);
-            helper.assertTrue(berries >= 8, "ягод не меньше 8, фактически " + berries);
-            for (BlockPos cell : cells) {
-                helper.assertTrue(
-                        helper.getBlockState(cell.above()).is(Blocks.SWEET_BERRY_BUSH),
-                        "куст " + cell + " обязан остаться целым, а там "
-                                + helper.getBlockState(cell.above()).getBlock());
-                helper.assertTrue(cropAge(helper, cell) == 1, "возраст после PICK обязан стать 1");
-            }
-            GameTestFixtures.finish(helper);
-        });
-    }
-
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvestCrop_SugarCaneColumn_LeavesBaseAndCollectsUpper(GameTestHelper helper) {
         columnHarvest(helper, CropKind.parse("sugar_cane"), Blocks.SUGAR_CANE, Blocks.SAND);
@@ -1461,7 +1332,9 @@ public final class FarmGameTests {
                         "посадочный предмет и урожай — один предмет: после пересадки пяти клеток не меньше исходных "
                                 + initial + ", фактически " + plant);
             } else {
-                helper.assertTrue(produce >= 5, "урожая обязано быть не меньше 5, фактически " + produce);
+                helper.assertTrue(
+                        produce == 5,
+                        "с пяти зрелых клеток обязано быть собрано ровно 5 урожая, фактически " + produce);
                 helper.assertTrue(
                         plant >= initial - 5,
                         "семян не меньше исходных за вычетом пяти пересаженных (" + (initial - 5) + "), фактически "

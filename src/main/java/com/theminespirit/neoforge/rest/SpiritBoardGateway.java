@@ -7,6 +7,7 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.RelocatePlan;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StockView;
@@ -68,9 +69,16 @@ public final class SpiritBoardGateway implements BoardGateway {
         BoardService service = BoardRegistry.get(server.overworld());
         Board board = service.board();
         StockView stock = service.stock();
+        Map<String, BoardTiming> timings =
+                BoardTiming.fromJournal(service.journal().last(BoardTiming.JOURNAL_LOOKBACK));
         List<BoardTask> tasks = new ArrayList<>();
         for (BoardTicket ticket : board.all()) {
-            tasks.add(BoardTasks.of(board, ticket, stock));
+            tasks.add(BoardTasks.of(
+                    board,
+                    ticket,
+                    board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
+                    stock,
+                    timings.getOrDefault(ticket.id(), BoardTiming.NONE)));
         }
         return List.copyOf(tasks);
     }

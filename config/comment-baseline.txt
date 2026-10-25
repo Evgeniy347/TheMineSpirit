@@ -164,8 +164,6 @@ src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	иначе те
 src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков

@@ -67,6 +67,26 @@ class BoardLangTests {
     }
 
     @Test
+    void langFiles_TimeTexts_HaveTranslation() throws IOException {
+        List<String> expected = List.of(
+                PREFIX + "time.moment",
+                PREFIX + "time.started",
+                PREFIX + "time.finished",
+                PREFIX + "time.spent",
+                PREFIX + "time.running");
+        for (String lang : List.of("ru_ru", "en_us")) {
+            List<String> missing = new ArrayList<>(expected);
+            missing.removeAll(keys(lang));
+            assertEquals(
+                    List.of(),
+                    missing,
+                    "Текст времени задания доски без перевода в " + lang
+                            + ": игрок увидит на плитке сырой ключ. Добавьте ключ в "
+                            + "src/main/resources/assets/theminespirit/lang/" + lang + ".json");
+        }
+    }
+
+    @Test
     void langFiles_RuAndEn_HaveSameKeys() throws IOException {
         assertEquals(
                 keys("ru_ru"),

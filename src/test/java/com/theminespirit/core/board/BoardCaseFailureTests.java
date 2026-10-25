@@ -169,6 +169,41 @@ class BoardCaseFailureTests {
     }
 
     @Test
+    void fail_EachAttemptBeforeLimit_PauseGrowsUnderCapAndEndsExactly() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        long previousPause = 0;
+        for (int attempt = 1; attempt < BoardTuning.caseFailLimit(); attempt++) {
+            failOnce(board, "fail:" + attempt, SPIRIT_ONE, now[0]);
+            long pause = board.casePauseTicks(SPIRIT_ONE, CASE);
+            assertTrue(pause > 0, "После провала у пары дух+кейс есть пауза, фактически " + pause);
+            assertTrue(
+                    attempt == 1 || pause > previousPause,
+                    "Ступень " + attempt + " длиннее прошлой (" + pause + " > " + previousPause
+                            + "): иначе откат не растёт и дух долбит задание с той же частотой");
+            assertTrue(
+                    pause <= BoardTuning.caseFailPauseCapTicks(),
+                    "Пауза " + pause + " не выше потолка " + BoardTuning.caseFailPauseCapTicks());
+            previousPause = pause;
+
+            String next = "next:" + attempt;
+            board.submit(ticket(next));
+            now[0] += pause - 1;
+            assertEquals(
+                    BoardOutcome.SPIRIT_PAUSED,
+                    board.claim(next, SPIRIT_ONE, now[0]),
+                    "Попытка " + attempt + ": за тик до конца паузы (" + pause + ") тот же дух не получает тот же "
+                            + "кейс: иначе цикл задания повторяется каждой пересборкой");
+            now[0] += 1;
+            assertEquals(
+                    BoardOutcome.CLAIMED,
+                    board.claim(next, SPIRIT_ONE, now[0]),
+                    "Попытка " + attempt + ": ровно через паузу кейс снова доступен этому духу");
+            board.cancel(next);
+        }
+    }
+
+    @Test
     void complete_AfterFailure_ResetsStreak() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

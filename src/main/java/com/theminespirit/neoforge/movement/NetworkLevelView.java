@@ -10,14 +10,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-final class NetworkLevelView implements SafetyView {
+public final class NetworkLevelView implements SafetyView {
     // mc: шаг тела игры — 0,6 блока; блок ниже 3/16 (ковёр 1/16, люк 3/16) поиск пути проходит как пол, без шага вверх.
     private static final double LOW_BLOCK = 0.1875;
+    private static final double FULL_BLOCK = 1.0;
 
     private final Level level;
     private final LevelSafetyView cells;
 
-    NetworkLevelView(Level level) {
+    public NetworkLevelView(Level level) {
         this.level = level;
         this.cells = new LevelSafetyView(level);
     }
@@ -30,9 +31,17 @@ final class NetworkLevelView implements SafetyView {
             return state.getValue(DoorBlock.OPEN) ? Cell.PASSABLE : Cell.SOLID;
         }
         Cell cell = cells.cellAt(coord);
+        if (cell == Cell.PASSABLE && tallBelow(pos)) {
+            return Cell.SOLID;
+        }
         if (cell == Cell.SOLID && state.getCollisionShape(level, pos).max(Direction.Axis.Y) <= LOW_BLOCK) {
             return Cell.PASSABLE;
         }
         return cell;
+    }
+
+    private boolean tallBelow(BlockPos pos) {
+        BlockPos below = pos.below();
+        return level.getBlockState(below).getCollisionShape(level, below).max(Direction.Axis.Y) > FULL_BLOCK;
     }
 }

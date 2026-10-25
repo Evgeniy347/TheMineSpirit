@@ -6,13 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class ToolSet {
-    public static final String PER_SPIRIT_KEY = "perSpirit";
-    public static final String MIN_SETS_KEY = "minSets";
-
     private static final List<BoardCase> WOODEN =
             List.of(BoardCase.CRAFT_WOODEN_PICKAXE, BoardCase.CRAFT_WOODEN_AXE, BoardCase.CRAFT_WOODEN_SHOVEL);
     private static final List<BoardCase> STONE = List.of(
@@ -20,12 +18,9 @@ public final class ToolSet {
             BoardCase.CRAFT_STONE_SHOVEL, BoardCase.CRAFT_STONE_SWORD);
     private static final List<BoardCase> CHAIN = chainOf(WOODEN, STONE);
     private static final Map<BoardCase, String> ITEMS = items();
-    private static final int DEFAULT_PER_SPIRIT = 1;
-    private static final int DEFAULT_MIN_SETS = 1;
+    private static final Map<String, BoardCase> CASES = cases();
     private static final String MINECRAFT_PREFIX = "minecraft:";
-    private static final String WOODEN_PREFIX = "wooden_";
     private static final List<String> RANKED = List.of("wooden", "stone", "iron", "diamond", "netherite");
-    private static final List<String> TIERS = List.of("wooden", "stone", "iron", "golden", "diamond", "netherite");
 
     private ToolSet() {}
 
@@ -41,12 +36,6 @@ public final class ToolSet {
         return STONE;
     }
 
-    public static boolean replacedNotRepaired(String itemId) {
-        Objects.requireNonNull(itemId, "itemId не может быть null: ремонт решается по предмету");
-        String key = itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
-        return key.startsWith(WOODEN_PREFIX) || key.startsWith("stone_");
-    }
-
     public static boolean isTool(@Nullable BoardCase boardCase) {
         return boardCase != null && ITEMS.containsKey(boardCase);
     }
@@ -60,28 +49,13 @@ public final class ToolSet {
         return item;
     }
 
-    public static String stockKey(BoardCase boardCase) {
-        String item = itemId(boardCase);
-        return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
+    public static Optional<BoardCase> caseFor(String itemId) {
+        Objects.requireNonNull(itemId, "Предмет не может быть null: кейс ищется по имени инструмента");
+        return Optional.ofNullable(CASES.get(shortId(itemId)));
     }
 
-    public static Map<BoardCase, Integer> woodenShortages(Map<String, Integer> available, int sets) {
-        Objects.requireNonNull(available, "available не может быть null: пустой запас задают пустой картой");
-        if (sets < 0) {
-            throw new IllegalArgumentException("Комплектов " + sets + ": число не может быть отрицательным");
-        }
-        Map<BoardCase, Integer> shortages = new LinkedHashMap<>();
-        for (BoardCase boardCase : WOODEN) {
-            String kind = stockKey(boardCase).substring(WOODEN_PREFIX.length());
-            int have = 0;
-            for (String tier : TIERS) {
-                have += available.getOrDefault(tier + "_" + kind, 0);
-            }
-            if (have < sets) {
-                shortages.put(boardCase, sets - have);
-            }
-        }
-        return shortages;
+    public static String stockKey(BoardCase boardCase) {
+        return shortId(itemId(boardCase));
     }
 
     public static boolean covered(BoardCase boardCase, Set<String> present) {
@@ -98,30 +72,86 @@ public final class ToolSet {
         return present.contains(key);
     }
 
-    public static int count(Map<String, Integer> tools, int spirits) {
-        Objects.requireNonNull(
-                tools,
-                "tools не может быть null: число комплектов читается из таблицы, "
-                        + "пустую таблицу задают пустой картой");
-        if (spirits < 0) {
-            throw new IllegalArgumentException("Духов " + spirits + ": число не может быть отрицательным");
-        }
-        int perSpirit = tools.getOrDefault(PER_SPIRIT_KEY, DEFAULT_PER_SPIRIT);
-        int minSets = tools.getOrDefault(MIN_SETS_KEY, DEFAULT_MIN_SETS);
-        return Math.max(Math.max(minSets, perSpirit * spirits), 1);
+    public static List<String> missing(Map<String, Integer> own, Set<String> craftable) {
+        return missing(DataTables.INSTANCE.board().current().tools(), own, craftable);
     }
 
-    public static int count(int spirits) {
-        return count(DataTables.INSTANCE.board().current().tools(), spirits);
+    public static List<String> missing(ToolsConfig config, Map<String, Integer> own, Set<String> craftable) {
+        Objects.requireNonNull(config, "Набор инструментов не может быть null: без него нет цели духа");
+        Objects.requireNonNull(own, "Свои инструменты не могут быть null: пустой набор задают пустой картой");
+        Objects.requireNonNull(craftable, "Скрафчиваемые инструменты не могут быть null: пустой — пустым множеством");
+        int target = ToolsConfig.rank(config.tier());
+        List<String> missing = new ArrayList<>();
+        for (String kind : config.set()) {
+            int best = bestRank(own, kind);
+            if (best >= target) {
+                continue;
+            }
+            Optional<String> candidate = affordable(kind, best, target, craftable);
+            if (candidate.isPresent()) {
+                missing.add(candidate.orElseThrow());
+            } else if (best < 0) {
+                lowestCase(kind).ifPresent(missing::add);
+            }
+        }
+        return List.copyOf(missing);
     }
 
-    public static String toolKey(String key) {
-        if (!PER_SPIRIT_KEY.equals(key) && !MIN_SETS_KEY.equals(key)) {
-            throw new IllegalArgumentException("Неизвестный ключ таблицы инструментов '" + key
-                    + "': допустимы " + PER_SPIRIT_KEY + " и " + MIN_SETS_KEY
-                    + ", сверьтесь с таблицей board.json");
+    public static List<String> candidates(ToolsConfig config) {
+        Objects.requireNonNull(config, "Набор инструментов не может быть null: без него нет кандидатов крафта");
+        int target = ToolsConfig.rank(config.tier());
+        List<String> candidates = new ArrayList<>();
+        for (String kind : config.set()) {
+            for (int rank = 0; rank <= target; rank++) {
+                String item = ToolsConfig.itemId(ToolsConfig.TIERS.get(rank), kind);
+                if (caseFor(item).isPresent()) {
+                    candidates.add(item);
+                }
+            }
         }
-        return key;
+        return List.copyOf(candidates);
+    }
+
+    private static Optional<String> affordable(String kind, int best, int target, Set<String> craftable) {
+        for (int rank = target; rank > best; rank--) {
+            String item = ToolsConfig.itemId(ToolsConfig.TIERS.get(rank), kind);
+            if (caseFor(item).isPresent() && craftable.contains(item)) {
+                return Optional.of(item);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> lowestCase(String kind) {
+        for (String tier : ToolsConfig.TIERS) {
+            String item = ToolsConfig.itemId(tier, kind);
+            if (caseFor(item).isPresent()) {
+                return Optional.of(item);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static int bestRank(Map<String, Integer> own, String kind) {
+        int best = -1;
+        for (Map.Entry<String, Integer> entry : own.entrySet()) {
+            if (entry.getValue() == null || entry.getValue() <= 0) {
+                continue;
+            }
+            Optional<String> ownKind = ToolsConfig.kindOf(entry.getKey());
+            if (ownKind.isEmpty() || !kind.equals(ownKind.orElseThrow())) {
+                continue;
+            }
+            Optional<String> ownTier = ToolsConfig.tierOf(entry.getKey());
+            if (ownTier.isPresent()) {
+                best = Math.max(best, ToolsConfig.rank(ownTier.orElseThrow()));
+            }
+        }
+        return best;
+    }
+
+    private static String shortId(String itemId) {
+        return itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
     }
 
     private static List<BoardCase> chainOf(List<BoardCase> wooden, List<BoardCase> stone) {
@@ -140,6 +170,22 @@ public final class ToolSet {
         items.put(BoardCase.CRAFT_STONE_AXE, "minecraft:stone_axe");
         items.put(BoardCase.CRAFT_STONE_SHOVEL, "minecraft:stone_shovel");
         items.put(BoardCase.CRAFT_STONE_SWORD, "minecraft:stone_sword");
+        items.put(BoardCase.CRAFT_IRON_PICKAXE, "minecraft:iron_pickaxe");
+        items.put(BoardCase.CRAFT_IRON_AXE, "minecraft:iron_axe");
+        items.put(BoardCase.CRAFT_IRON_SHOVEL, "minecraft:iron_shovel");
+        items.put(BoardCase.CRAFT_IRON_SWORD, "minecraft:iron_sword");
+        items.put(BoardCase.CRAFT_DIAMOND_PICKAXE, "minecraft:diamond_pickaxe");
+        items.put(BoardCase.CRAFT_DIAMOND_AXE, "minecraft:diamond_axe");
+        items.put(BoardCase.CRAFT_DIAMOND_SHOVEL, "minecraft:diamond_shovel");
+        items.put(BoardCase.CRAFT_DIAMOND_SWORD, "minecraft:diamond_sword");
         return Map.copyOf(items);
+    }
+
+    private static Map<String, BoardCase> cases() {
+        Map<String, BoardCase> cases = new LinkedHashMap<>();
+        for (Map.Entry<BoardCase, String> entry : items().entrySet()) {
+            cases.put(shortId(entry.getValue()), entry.getKey());
+        }
+        return Map.copyOf(cases);
     }
 }

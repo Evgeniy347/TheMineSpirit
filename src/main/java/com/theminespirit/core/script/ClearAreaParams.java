@@ -4,7 +4,7 @@ import com.theminespirit.core.building.BuildBox;
 import java.util.Map;
 import java.util.Objects;
 
-public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2, boolean demolish) {
+public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2, boolean demolish, boolean keepGround) {
     public ClearAreaParams {
         BuildingCoords.checkX(x1);
         BuildingCoords.checkY(y1);
@@ -20,7 +20,11 @@ public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2, bo
     }
 
     public ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2) {
-        this(x1, y1, z1, x2, y2, z2, false);
+        this(x1, y1, z1, x2, y2, z2, false, false);
+    }
+
+    public ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2, boolean demolish) {
+        this(x1, y1, z1, x2, y2, z2, demolish, false);
     }
 
     public static ClearAreaParams from(Map<String, Object> params) {
@@ -32,6 +36,7 @@ public record ClearAreaParams(int x1, int y1, int z1, int x2, int y2, int z2, bo
                 ScriptArgs.requireInt(params, "x2"),
                 ScriptArgs.requireInt(params, "y2"),
                 ScriptArgs.requireInt(params, "z2"),
-                ScriptArgs.optionalBoolean(params, "demolish", false));
+                ScriptArgs.optionalBoolean(params, "demolish", false),
+                ScriptArgs.optionalBoolean(params, "keep_ground", false));
     }
 }

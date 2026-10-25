@@ -17,7 +17,7 @@ public final class BoardLayout {
     public static final int COLUMN_GAP = 4;
     public static final int COLUMN_HEADER = 12;
     public static final int CONTENT_PAD = 2;
-    public static final int TILE_HEIGHT = 32;
+    public static final int TILE_HEIGHT = 56;
     public static final int TILE_GAP = 2;
 
     private final Rect window;

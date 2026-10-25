@@ -55,6 +55,7 @@ public final class TicketPlans {
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
     private static final String CLEAR_AREA = "clear_area";
+    private static final String KEEP_GROUND = "keep_ground";
     private static final String WITHDRAW = "withdraw";
     private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
@@ -164,7 +165,15 @@ public final class TicketPlans {
                     CRAFT_STONE_PICKAXE,
                     CRAFT_STONE_AXE,
                     CRAFT_STONE_SHOVEL,
-                    CRAFT_STONE_SWORD -> craftTool(boardCase, target);
+                    CRAFT_STONE_SWORD,
+                    CRAFT_IRON_PICKAXE,
+                    CRAFT_IRON_AXE,
+                    CRAFT_IRON_SHOVEL,
+                    CRAFT_IRON_SWORD,
+                    CRAFT_DIAMOND_PICKAXE,
+                    CRAFT_DIAMOND_AXE,
+                    CRAFT_DIAMOND_SHOVEL,
+                    CRAFT_DIAMOND_SWORD -> craftTool(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
             case CRAFT_BED -> craft(bedItem(target), target.count() > 0 ? target.count() : 1, target);
             case WEAVE_WOOL ->
@@ -672,7 +681,7 @@ public final class TicketPlans {
         List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), center, quarter) : leveling.fill();
         for (PlotLeveling.Box box : fills) {
             steps.add(new FallbackNode(List.of(
-                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
+                    new ScriptCall(CLEAR_AREA, boxParams(box, Map.of(KEEP_GROUND, true))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
@@ -683,38 +692,42 @@ public final class TicketPlans {
         }
         boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
         BlockCoord source = dirtSource(center, single ? quarter : 1);
-        for (PlotLeveling.Box layer : layers(fills)) {
-            if (dirt) {
-                steps.add(new FallbackNode(List.of(
-                        new ScriptCall(
-                                "acquire_at",
-                                Map.of(
-                                        ITEM,
-                                        MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
-                                        COUNT,
-                                        Math.min(layer.volume(), CatalogLimits.COUNT_MAX),
-                                        "x",
-                                        source.x(),
-                                        "y",
-                                        source.y(),
-                                        "z",
-                                        source.z())),
-                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-            }
-            steps.add(new FallbackNode(List.of(
-                    new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-        }
         List<PlotLeveling.Box> voids = leveling.voids().stream()
                 .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
-        for (PlotLeveling.Box layer : layers(voids)) {
-            steps.add(new FallbackNode(List.of(
-                    new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+        List<PlotLeveling.Box> pits = new ArrayList<>(layers(fills));
+        pits.addAll(layers(voids));
+        int batch = Math.min(DataTables.INSTANCE.leveling().current().batch(), CatalogLimits.COUNT_MAX);
+        for (List<PlotLeveling.Box> group : FillBatches.of(pits, dirt ? batch : Integer.MAX_VALUE)) {
+            if (dirt) {
+                steps.add(dirtFor(FillBatches.volume(group), source));
+            }
+            for (PlotLeveling.Box layer : group) {
+                steps.add(new FallbackNode(List.of(
+                        new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+            }
         }
         steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         return withLeftovers(new SequenceNode(steps), target);
+    }
+
+    private static TaskNode dirtFor(int volume, BlockCoord source) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        "acquire_at",
+                        Map.of(
+                                ITEM,
+                                MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
+                                COUNT,
+                                Math.min(volume, CatalogLimits.COUNT_MAX),
+                                "x",
+                                source.x(),
+                                "y",
+                                source.y(),
+                                "z",
+                                source.z())),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     static List<PlotLeveling.Box> layers(List<PlotLeveling.Box> fills) {
@@ -842,6 +855,9 @@ public final class TicketPlans {
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {
+        if (target.schemeFile() == null && target.leveling() != null) {
+            return LevelRepair.plan(target);
+        }
         String scheme = target.schemeFile() == null ? "repair" : target.schemeFile();
         return sequence(gotoTarget(target), schematic(scheme, target));
     }

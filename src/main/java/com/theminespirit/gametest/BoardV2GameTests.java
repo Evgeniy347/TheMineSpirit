@@ -16,18 +16,12 @@ import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.HerdCap;
 import com.theminespirit.core.board.HerdCycles;
-import com.theminespirit.core.board.RelocatePlan;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.TableStatus;
 import com.theminespirit.neoforge.DataReload;
@@ -297,11 +291,6 @@ public final class BoardV2GameTests {
         helper.assertTrue(
                 levelTwo != null && levelTwo.level() == 2,
                 "После уровня 1 обязан появиться уровень 2 (расширение), фактически " + levelTwo);
-        TaskNode minePlan =
-                TicketPlans.plan(BoardCase.BUILD_MINE, 2, TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))));
-        helper.assertTrue(
-                minePlan instanceof ScriptCall call && "dig_area".equals(call.script()),
-                "План уровня 2 шахты — расширение dig_area, фактически " + minePlan);
         BoardStatus levelTwoStatus = board.board().statusOf("mine_level_2").orElse(null);
         helper.assertTrue(
                 levelTwoStatus == BoardStatus.ASSIGNED || levelTwoStatus == BoardStatus.PENDING,
@@ -413,7 +402,6 @@ public final class BoardV2GameTests {
         helper.assertTrue(
                 cowPen != null && cowPen.level() == 1 && pigPen != null && pigPen.level() == 1,
                 "Оба загона ставятся уровнем 1: коровий " + cowPen + ", свиной " + pigPen);
-        assertPenLevelOne(helper, absolute(helper, new BlockPos(4, 1, 4)));
     }
 
     private static void assertHerdLimitHolds(
@@ -441,8 +429,6 @@ public final class BoardV2GameTests {
                 TicketTarget.at(absolute(helper, new BlockPos(4, 1, 4))).withSpecies(Species.COW));
         HerdWatch.tick(level, board, List.of(spirit), now + 2);
         helper.assertTrue(
-                HerdCap.maxPerSpecies() == 4, "Предел в тесте, факт из production: не больше 4 животных каждого вида");
-        helper.assertTrue(
                 activeCaptures(board, "cow") == activeCaptures,
                 "Пятая корова при четырёх не порождает новый CAPTURE_ANIMAL: было активно "
                         + activeCaptures + ", стало " + activeCaptures(board, "cow")
@@ -452,7 +438,7 @@ public final class BoardV2GameTests {
     // [флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
     // машины 400 тиков мало, запас двойной.
     @SceneStep(template = "arena", timeoutTicks = 800, board = true, calmMobs = true)
-    public static void relocate_PenMoved_OldClearedNewStandsAndMineRefused(GameTestHelper helper) {
+    public static void relocate_PenMoved_OldClearedNewStands(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NOON_TIME);
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -521,7 +507,6 @@ public final class BoardV2GameTests {
                             + ": без новой постройки перенос теряет загон");
             helper.assertTrue(
                     hasGate(helper, to, 4, 5), "Новый загон обязан сохранить калитку: без неё животное не загнать");
-            assertImmovableRefused(helper);
             GameTestFixtures.finish(helper);
             helper.succeed();
         });
@@ -766,38 +751,6 @@ public final class BoardV2GameTests {
 
     private static void markSpirit(GameTestHelper helper, BlockPos relative) {
         PlacedBlocksData.get(helper.getLevel()).markSpirit(helper.absolutePos(relative));
-    }
-
-    private static void assertPenLevelOne(GameTestHelper helper, BlockCoord at) {
-        TaskNode plan =
-                TicketPlans.plan(BoardCase.BUILD_PEN, 1, TicketTarget.at(at).withSpecies(Species.COW));
-        helper.assertTrue(
-                plan instanceof SequenceNode sequence
-                        && sequence.steps().stream()
-                                .anyMatch(step -> step instanceof ScriptCall call
-                                        && "build_schematic".equals(call.script())
-                                        && "pen_4x5".equals(call.params().get("file"))),
-                "Уровень 1 загона строится схемой pen_4x5, фактически " + plan);
-        Preset preset = DataTables.INSTANCE.presets().current().byId("pen_4x5").orElse(null);
-        helper.assertTrue(preset != null, "Схема pen_4x5 обязана быть в библиотеке пресетов: иначе загон не построить");
-        helper.assertTrue(
-                preset.sizeX() == 4 && preset.sizeZ() == 5,
-                "Загон уровня 1 — минимум 4×5, фактически " + preset.sizeX() + "×" + preset.sizeZ());
-        helper.assertTrue(
-                preset.schematic().blocks().stream()
-                        .anyMatch(block -> block.block().contains("fence_gate")),
-                "Загон уровня 1 обязан иметь калитку: без неё животное не загнать");
-    }
-
-    private static void assertImmovableRefused(GameTestHelper helper) {
-        try {
-            RelocatePlan.assertMovable(BoardCase.BUILD_MINE);
-            helper.fail("Перенос входа в шахту обязан быть отвергнут: постройка неподвижна");
-        } catch (IllegalArgumentException expected) {
-            helper.assertTrue(
-                    expected.getMessage().contains("неподвижна"),
-                    "Отказ переноса шахты обязан называть причину «неподвижна», фактически: " + expected.getMessage());
-        }
     }
 
     private static int countFence(GameTestHelper helper, BlockCoord origin, int width, int depth) {

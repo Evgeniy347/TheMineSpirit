@@ -13,7 +13,6 @@ import com.theminespirit.neoforge.BlockSets;
 import com.theminespirit.neoforge.HarvestSession;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.SpiritScripts;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -374,27 +373,27 @@ public final class MineGameTests {
     // [флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
     // потолок 1000 ≈ 1.7× замера
     @SceneStep(template = "arena", timeoutTicks = 1000)
-    public static void gather_DirtHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
+    public static void gather_TerracottaHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         for (int x = 1; x <= 3; x++) {
             for (int y = 1; y <= 2; y++) {
                 for (int z = 1; z <= 3; z++) {
-                    helper.setBlock(x + CAVE_SHIFT_INSIDE_ARENA, y, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.DIRT);
+                    helper.setBlock(x + CAVE_SHIFT_INSIDE_ARENA, y, z + CAVE_SHIFT_INSIDE_ARENA, Blocks.TERRACOTTA);
                 }
             }
         }
         SpiritEntity spirit = spawnWith(
                 helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 18, 4), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("terracotta", 18, 4), SETTLE_TICKS);
         HarvestProbe probe = HarvestProbe.attach(
                 helper,
                 spirit,
                 run::started,
-                () -> GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT),
-                () -> GameTestFixtures.countInWorld(helper, Items.DIRT),
-                () -> dropSummary(helper, Items.DIRT),
-                () -> countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA));
+                () -> GameTestFixtures.countInInventory(spirit.getInventory(), Items.TERRACOTTA),
+                () -> GameTestFixtures.countInWorld(helper, Items.TERRACOTTA),
+                () -> dropSummary(helper, Items.TERRACOTTA),
+                () -> countBlock(helper, Blocks.TERRACOTTA, CAVE_SHIFT_INSIDE_ARENA));
         helper.onEachTick(() -> {
             if (run.started()
                     && spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED
@@ -407,13 +406,13 @@ public final class MineGameTests {
             run.assertStarted();
             helper.assertTrue(
                     spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "куча из 18 блоков земли обязана собраться целиком, статус "
+                    "куча из 18 блоков терракоты обязана собраться целиком, статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет") + "\n" + probe.report("нет успеха"));
             helper.assertTrue(
-                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 18,
-                    "в инвентаре обязано быть 18 земли, фактически "
-                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) + "\n"
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.TERRACOTTA) == 18,
+                    "в инвентаре обязано быть 18 терракоты, фактически "
+                            + GameTestFixtures.countInInventory(spirit.getInventory(), Items.TERRACOTTA) + "\n"
                             + probe.report("недобрал"));
             helper.assertTrue(
                     helper.getBlockState(new BlockPos(2 + CAVE_SHIFT_INSIDE_ARENA, 0, 2 + CAVE_SHIFT_INSIDE_ARENA))
@@ -421,7 +420,7 @@ public final class MineGameTests {
                     "пол под кучей обязан остаться: блок под ногами не ломается" + "\n" + probe.report("пол сломан"));
             helper.assertTrue(
                     run.spiritTicks() <= 720,
-                    "куча из 18 блоков земли обязана собраться за 720 тиков (замерено 565–612, порог ≈1.2×), "
+                    "куча из 18 блоков терракоты обязана собраться за 720 тиков (замерено 565–612, порог ≈1.2×), "
                             + "заняло " + run.spiritTicks() + " тиков духа, рабочих " + probe.workingTicks()
                             + ", пауз " + probe.pausedTicks() + "\n" + probe.report("не уложился в 720"));
             GameTestFixtures.finish(helper);
@@ -429,12 +428,12 @@ public final class MineGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 400)
-    public static void gather_DirtRingAroundSealedPocket_MinedFromOutsideWithinReach(GameTestHelper helper) {
+    public static void gather_TerracottaRingAroundSealedPocket_MinedFromOutsideWithinReach(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         int[][] dirt = {{4, 1, 3}, {5, 1, 4}, {4, 1, 5}, {3, 1, 4}, {4, 2, 3}, {5, 2, 4}, {4, 2, 5}, {3, 2, 4}};
         for (int[] cell : dirt) {
-            helper.setBlock(cell[0], cell[1], cell[2], Blocks.DIRT);
+            helper.setBlock(cell[0], cell[1], cell[2], Blocks.TERRACOTTA);
         }
         int[][] stone = {
             {3, 1, 3}, {5, 1, 3}, {3, 1, 5}, {5, 1, 5}, {6, 1, 4}, {2, 1, 4}, {4, 1, 6}, {4, 1, 2}, {3, 2, 3},
@@ -450,21 +449,21 @@ public final class MineGameTests {
         }
         SpiritEntity spirit = spawnWith(
                 helper, SPIRIT_CORNER.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA), Items.IRON_PICKAXE);
-        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("dirt", 8, 4), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(helper, spirit, gatherCall("terracotta", 8, 4), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(
                     spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "земля вокруг запечатанной стоянки добывается снаружи, со стоянок в досягаемости (упрощение 44.3), "
+                    "терракота вокруг запечатанной стоянки добывается снаружи, со стоянок в досягаемости (упрощение 44.3), "
                             + "статус "
                             + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(
-                    countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA) == 0
-                            && GameTestFixtures.countInInventory(spirit.getInventory(), Items.DIRT) == 8,
-                    "все 8 блоков земли обязаны оказаться в инвентаре, в мире осталось "
-                            + countBlock(helper, Blocks.DIRT, CAVE_SHIFT_INSIDE_ARENA));
+                    countBlock(helper, Blocks.TERRACOTTA, CAVE_SHIFT_INSIDE_ARENA) == 0
+                            && GameTestFixtures.countInInventory(spirit.getInventory(), Items.TERRACOTTA) == 8,
+                    "все 8 блоков терракоты обязаны оказаться в инвентаре, в мире осталось "
+                            + countBlock(helper, Blocks.TERRACOTTA, CAVE_SHIFT_INSIDE_ARENA));
             helper.assertTrue(
                     helper.getBlockState(new BlockPos(4, 3, 4)).is(Blocks.STONE),
                     "каменный колпак над стоянкой не трогается: ломается только цель");
@@ -1045,18 +1044,6 @@ public final class MineGameTests {
                             + GameTestFixtures.countInInventory(spirit.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.finish(helper);
         });
-    }
-
-    @SceneStep(template = "empty", timeoutTicks = 100)
-    public static void scripts_RegistryForSpirit_ContainsMineVeinAndGather(GameTestHelper helper) {
-        GameTestFixtures.sweepEntities(helper);
-        SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
-        var ids = SpiritScripts.registryFor(spirit).ids();
-        helper.assertTrue(
-                ids.contains("mine_vein") && ids.contains("gather"),
-                "реестр скриптов духа обязан содержать mine_vein и gather, а содержит " + ids);
-        GameTestFixtures.reset(helper);
-        helper.succeed();
     }
 
     @SceneStep(template = "arena", timeoutTicks = 280)

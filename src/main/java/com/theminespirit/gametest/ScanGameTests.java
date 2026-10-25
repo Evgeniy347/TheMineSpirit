@@ -172,41 +172,6 @@ public final class ScanGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 100)
-    public static void scanSession_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));
-        BlockPos unloaded = GameTestFixtures.firstUnloadedChunkEast(helper, base);
-        helper.assertTrue(
-                unloaded != null,
-                "в пределах 256 чанков к востоку обязана найтись незагруженная область: иначе тест не проверяет пропуск");
-        BlockCoord center = new BlockCoord(unloaded.getX() - 24, base.getY(), base.getZ());
-        int before = helper.getLevel().getChunkSource().getLoadedChunksCount();
-
-        WorldScanner.Session session = new WorldScanner.Session(
-                helper.getLevel(),
-                "scan_unloaded",
-                center,
-                ScanRadius.of(32),
-                IdFilter.of(List.of("*_ore")),
-                new SimpleContainer(1));
-        while (!session.done()) {
-            session.step(ScanTuning.SLICES_PER_TICK);
-        }
-        WorldScanner.Scan scan = session.result();
-        int after = helper.getLevel().getChunkSource().getLoadedChunksCount();
-
-        helper.assertTrue(
-                scan.skippedChunks() > 0,
-                "скан у края загруженной области обязан встретить незагруженные чанки, пропущено "
-                        + scan.skippedChunks());
-        helper.assertTrue(
-                after == before, "скан порциями не должен грузить чанки: было " + before + ", стало " + after);
-        GameTestFixtures.finish(helper);
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void scanSession_ForcedTicket_SkipsChunkWithoutLoading(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

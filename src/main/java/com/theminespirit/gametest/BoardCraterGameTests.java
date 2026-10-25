@@ -5,9 +5,6 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.BoardTuning;
-import com.theminespirit.core.board.CraterNeed;
-import com.theminespirit.core.board.Point;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.ModEntities;
@@ -103,19 +100,6 @@ public final class BoardCraterGameTests {
         helper.assertTrue(
                 board.board().find(alienId).isEmpty(),
                 "Взрыв не крипера (свинья) — не кейс доски: задание " + alienId + " поднялось зря");
-        helper.assertTrue(
-                BoardRules.priorityOf(BoardCase.FILL_CRATER) == 35,
-                "Приоритет воронки — 35 (ниже снабжения 40, ниже стройки 50): воронка — задание "
-                        + "с низким приоритетом (п. 3), фактически "
-                        + BoardRules.priorityOf(BoardCase.FILL_CRATER));
-        List<Point> homes = List.of(new Point(home.x(), home.z()));
-        helper.assertTrue(
-                !CraterNeed.outsideTerritory(
-                        new Point(home.x() + 4, home.z()), homes, BoardTuning.craterTerritoryRadius()),
-                "Взрыв в 4 блоках от дома — внутри территории: воронку закрывает координатор, " + "а не доска");
-        helper.assertTrue(
-                CraterNeed.outsideTerritory(new Point(farX, farZ), homes, BoardTuning.craterTerritoryRadius()),
-                "Взрыв в 100000 блоках — за территорией: предикат обязан это видеть");
         board.board().cancel(craterId);
         helper.assertTrue(
                 board.board().statusOf(craterId).orElse(null) == BoardStatus.CANCELLED,

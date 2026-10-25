@@ -191,6 +191,9 @@ public final class Approach {
         }
         Path path = spirit.getNavigation().getPath();
         if (legs != null) {
+            if (path == null && !spirit.onGround()) {
+                return;
+            }
             if (unreached(path, legs.current())) {
                 PathNetworkService.legFailed(level, legs.from(), legs.to());
                 legs = null;

@@ -1,0 +1,6 @@
+{
+  "surplusPercent": 25,
+  "batch": 128,
+  "chestKeep": 64,
+  "tripMin": 16
+}

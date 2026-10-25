@@ -10,22 +10,12 @@ public final class CarefulPath {
 
     public static String refusal(Path path) {
         if (path == null) {
-            return "пути к цели нет: осторожный шаг не строит обход через обрыв";
+            return DropProfile.carefulRefusal(false, false, List.of());
         }
-        if (!path.canReach()) {
-            return "путь не доходит до цели: она за обрывом глубже " + DropProfile.MAX_SAFE_DROP
-                    + " блоков или за преградой";
-        }
-        int from = path.getNextNodeIndex();
-        int to = Math.min(path.getNodeCount(), from + DropProfile.LOOKAHEAD_CELLS + 1);
-        List<Integer> heights = new ArrayList<>(to - from);
-        for (int i = from; i < to; i++) {
+        List<Integer> heights = new ArrayList<>();
+        for (int i = path.getNextNodeIndex(); i < path.getNodeCount(); i++) {
             heights.add(path.getNode(i).y);
         }
-        if (DropProfile.blocksCarefulStep(heights)) {
-            return "на пути обрыв глубже " + DropProfile.MAX_SAFE_DROP + " блоков в ближайших "
-                    + DropProfile.LOOKAHEAD_CELLS + " клетках";
-        }
-        return null;
+        return DropProfile.carefulRefusal(true, path.canReach(), heights);
     }
 }

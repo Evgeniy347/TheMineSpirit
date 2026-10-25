@@ -305,6 +305,20 @@ class PresetLibraryTests {
     }
 
     @Test
+    void byId_Pen4x5_FourByFiveWithGate() {
+        Preset pen = loadReal().byId("pen_4x5").orElseThrow();
+
+        assertEquals(
+                List.of(4, 5),
+                List.of(pen.sizeX(), pen.sizeZ()),
+                "Загон уровня 1 — минимум 4×5: меньший загон не вместит пару животных для разведения");
+        assertTrue(
+                pen.schematic().blocks().stream()
+                        .anyMatch(block -> block.block().contains("fence_gate")),
+                "Загон уровня 1 обязан иметь калитку: без неё животное не загнать");
+    }
+
+    @Test
     void entry_WellWaterCenter_IsAboveWater() {
         Preset well = loadReal().byId("well").orElseThrow();
 

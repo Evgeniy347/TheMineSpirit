@@ -20,7 +20,49 @@ public record BoardTask(
         int effectivePriority,
         List<String> modifiers,
         boolean done,
+        long startedAt,
+        long finishedAt,
+        long durationTicks,
         @Nullable String waitReason) {
+
+    public BoardTask(
+            String id,
+            String boardCase,
+            int priority,
+            @Nullable String assignee,
+            String status,
+            Map<String, Integer> requiredItems,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long createdAt,
+            int level,
+            String cause,
+            int effectivePriority,
+            List<String> modifiers,
+            boolean done,
+            long startedAt,
+            long finishedAt,
+            long durationTicks) {
+        this(
+                id,
+                boardCase,
+                priority,
+                assignee,
+                status,
+                requiredItems,
+                missing,
+                dependsOn,
+                createdAt,
+                level,
+                cause,
+                effectivePriority,
+                modifiers,
+                done,
+                startedAt,
+                finishedAt,
+                durationTicks,
+                null);
+    }
 
     public BoardTask(
             String id,
@@ -52,6 +94,9 @@ public record BoardTask(
                 effectivePriority,
                 modifiers,
                 done,
+                0L,
+                0L,
+                0L,
                 null);
     }
 
@@ -81,7 +126,10 @@ public record BoardTask(
                 cause,
                 priority,
                 List.of(),
-                false);
+                false,
+                0L,
+                0L,
+                0L);
     }
 
     public BoardTask {
@@ -102,6 +150,10 @@ public record BoardTask(
         if (createdAt < 0) {
             throw new IllegalArgumentException("createdAt равен " + createdAt + " и отрицателен: время постановки "
                     + "не может быть до начала отсчёта");
+        }
+        if (startedAt < 0 || finishedAt < 0 || durationTicks < 0) {
+            throw new IllegalArgumentException("Время задания " + startedAt + "/" + finishedAt + "/" + durationTicks
+                    + " отрицательно: тики и затрата идут вперёд, а не назад");
         }
         if (level < 1) {
             throw new IllegalArgumentException(

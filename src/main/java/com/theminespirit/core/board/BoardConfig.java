@@ -21,7 +21,7 @@ public record BoardConfig(
         List<String> immovable,
         Map<String, Integer> supplies,
         Map<String, Map<String, Integer>> products,
-        Map<String, Integer> tools,
+        ToolsConfig tools,
         Map<String, Integer> wool,
         Map<String, Integer> hive) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
@@ -57,9 +57,7 @@ public record BoardConfig(
         }
         products = Map.copyOf(checkedProducts);
         Objects.requireNonNull(
-                tools,
-                "Число комплектов инструментов не может быть null: пустую таблицу задают пустой картой, а не null");
-        tools = Map.copyOf(tools);
+                tools, "Набор инструментов не может быть null: пустой набор задают пустым списком, а не null");
         Objects.requireNonNull(
                 wool, "Данные шерсти не могут быть null: пустую таблицу задают пустой картой, а не null");
         wool = Map.copyOf(wool);
@@ -77,7 +75,7 @@ public record BoardConfig(
                 List.of(),
                 Map.of(),
                 Map.of(),
-                Map.of(),
+                ToolsConfig.defaults(),
                 Map.of(),
                 Map.of());
     }
@@ -101,7 +99,7 @@ public record BoardConfig(
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
         List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
         Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
-        Map<String, Integer> tools = integers(root.get("tools"), origin, "tools", ToolSet::toolKey, false);
+        ToolsConfig tools = ToolsConfig.fromJson(root.get("tools"), origin);
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
         return new BoardConfig(

@@ -52,6 +52,14 @@ class BoardConfigTests {
                 Map.entry("CRAFT_STONE_PICKAXE", 40),
                 Map.entry("CRAFT_STONE_SHOVEL", 40),
                 Map.entry("CRAFT_STONE_SWORD", 40),
+                Map.entry("CRAFT_IRON_PICKAXE", 40),
+                Map.entry("CRAFT_IRON_AXE", 40),
+                Map.entry("CRAFT_IRON_SHOVEL", 40),
+                Map.entry("CRAFT_IRON_SWORD", 40),
+                Map.entry("CRAFT_DIAMOND_PICKAXE", 40),
+                Map.entry("CRAFT_DIAMOND_AXE", 40),
+                Map.entry("CRAFT_DIAMOND_SHOVEL", 40),
+                Map.entry("CRAFT_DIAMOND_SWORD", 40),
                 Map.entry("CRAFT_WOODEN_AXE", 40),
                 Map.entry("CRAFT_WOODEN_PICKAXE", 40),
                 Map.entry("CRAFT_WOODEN_SHOVEL", 40),
@@ -174,21 +182,44 @@ class BoardConfigTests {
         BoardConfig config = DataTables.INSTANCE.board().current();
 
         assertEquals(
-                Map.of("perSpirit", 1, "minSets", 1),
+                ToolsConfig.defaults(),
                 config.tools(),
-                "Таблица комплектов инструментов обязана совпадать с литералами: комплект на духа, "
-                        + "но не меньше одного. Лишний ключ в файле без теста и забытый ключ в тесте "
-                        + "красят прогон");
+                "Таблица набора инструментов обязана совпадать с литералами: кирка, топор и лопата "
+                        + "до камня, чинят железо и алмаз. Лишний ключ в файле без теста и забытый "
+                        + "ключ в тесте красят прогон");
         assertEquals(
-                1,
-                config.tools().get("perSpirit"),
-                "Предел в тесте, факт из production: по умолчанию по одному комплекту на духа");
+                List.of("pickaxe", "axe", "shovel"),
+                config.tools().set(),
+                "Предел в тесте, факт из production: набор духа — кирка, топор и лопата");
         assertEquals(
-                3, ToolSet.count(3), "Три духа поселения — три комплекта инструментов: число из горячей таблицы board");
+                List.of("iron", "diamond"),
+                config.tools().repairTiers(),
+                "Предел в тесте, факт из production: чинят только железный и алмазный инструмент");
+    }
+
+    @Test
+    void fromJson_NewTools_ParsesSetTierAndRepairTiers() {
+        BoardConfig config = BoardConfig.fromJson(
+                "{\"tools\":{\"set\":[\"pickaxe\",\"sword\"],\"tier\":\"iron\"," + "\"repairTiers\":[\"diamond\"]}}",
+                "board.json");
+
         assertEquals(
-                5,
-                ToolSet.count(Map.of("perSpirit", 0, "minSets", 5), 3),
-                "Фиксированный набор: perSpirit 0 при minSets 5 даёт 5 комплектов на любое число духов");
+                new ToolsConfig(List.of("pickaxe", "sword"), "iron", List.of("diamond")),
+                config.tools(),
+                "Датапак обязан задавать набор, уровень и уровни ремонта: иначе /reload не поменяет " + "набор духа");
+    }
+
+    @Test
+    void fromJson_OldToolKeys_Fail() {
+        for (String key : List.of("perSpirit", "minSets")) {
+            IllegalStateException failure = assertThrows(
+                    IllegalStateException.class,
+                    () -> BoardConfig.fromJson("{\"tools\":{\"" + key + "\":1}}", "board.json"),
+                    "Старый ключ '" + key + "' обязан падать: общий запас поселения больше не считается");
+            assertTrue(
+                    failure.getMessage().contains(key),
+                    "Сообщение обязано называть неверный ключ: " + failure.getMessage());
+        }
     }
 
     @Test

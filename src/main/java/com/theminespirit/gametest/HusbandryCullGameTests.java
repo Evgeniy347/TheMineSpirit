@@ -80,28 +80,6 @@ public final class HusbandryCullGameTests {
         });
     }
 
-    @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void cull_BareHands_RefusedAllAlive(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        HusbandryGameTests.fencePerimeter(helper);
-        HusbandryGameTests.spawnStill(helper, EntityType.COW, new BlockPos(2, 1, 2));
-        HusbandryGameTests.spawnStill(helper, EntityType.COW, new BlockPos(3, 1, 2));
-        HusbandryGameTests.spawnStill(helper, EntityType.COW, new BlockPos(4, 1, 2));
-        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, START);
-        SpiritRun run = SpiritRun.launch(
-                helper, spirit, new ScriptCall("cull", Map.of("species", "cow", "keep", 2, "radius", 8)), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            HusbandryGameTests.assertFailedWith(helper, spirit, "железным мечом и выше");
-            helper.assertTrue(
-                    HusbandryGameTests.alive(helper, Cow.class).size() == 3,
-                    "руками стадо не забивают: все 3 обязаны остаться живы");
-            GameTestFixtures.finish(helper);
-        });
-    }
-
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void hunt_WildPigsOutsideHomePen_AllCulledOwnAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

@@ -896,6 +896,30 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_ClearWithFillAndCut_NoClearBelowLevelDigsGround() {
+        BlockCoord anchor = new BlockCoord(0, 70, 0);
+        PlotLeveling leveling = PlotLeveling.plan(anchor, 4, (x, z) -> x < 0 ? 64 : x > 2 ? 73 : 70);
+        TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
+
+        List<ScriptCall> clears = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole)).stream()
+                .filter(call -> "clear_area".equals(call.script()))
+                .toList();
+
+        assertTrue(
+                clears.stream().anyMatch(call -> ((Integer) call.params().get("y1")) < anchor.y()),
+                "В плане есть расчистка ям под уровнем (ствол, кусты в яме): без неё проверка ниже ничего не доказывает");
+        for (ScriptCall clear : clears) {
+            boolean below = ((Integer) clear.params().get("y1")) < anchor.y();
+            assertEquals(
+                    below,
+                    Boolean.TRUE.equals(clear.params().get("keep_ground")),
+                    "Расчистка ниже уровня участка " + anchor.y() + " — только яма подсыпки и только с keep_ground: "
+                            + "иначе она снимает уже засыпанную землю, дух роет яму посреди участка и падает в неё "
+                            + "(INC-77); срезка выше уровня землю снимает: " + clear.params());
+        }
+    }
+
+    @Test
     void layers_PitRows_BottomUpLayersMerged() {
         List<PlotLeveling.Box> rows =
                 List.of(new PlotLeveling.Box(0, 64, 0, 2, 66, 0), new PlotLeveling.Box(0, 65, 1, 2, 66, 1));
@@ -916,19 +940,22 @@ class TicketPlansTests {
         PlotLeveling leveling = new PlotLeveling(List.of(), List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)), "dirt");
         TicketTarget quarter = TicketTarget.at(anchor).withLeveling(leveling).withCount(5);
 
-        List<String> scripts = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
-                .map(ScriptCall::script)
-                .filter(script -> List.of("acquire_at", "fill").contains(script))
+        List<ScriptCall> dirt = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, quarter)).stream()
+                .filter(call -> List.of("acquire_at", "fill").contains(call.script()))
                 .toList();
 
         assertEquals(
-                List.of("acquire_at", "fill", "acquire_at", "fill", "acquire_at", "fill", "acquire_at", "fill"),
-                scripts,
-                "Перед каждым слоем подсыпки (ящик 2×4 — четыре слоя) — добор земли под слой ≤64, а не один заход на "
-                        + "всю яму (INC-68)");
+                List.of("acquire_at", "fill", "fill", "fill", "fill"),
+                dirt.stream().map(ScriptCall::script).toList(),
+                "Земля на всю яму (ящик 2×4 — четыре слоя) набирается одной партией до подсыпки, а не ходкой на "
+                        + "каждый слой по 2–3 блока (INC-73)");
+        assertEquals(
+                8,
+                dirt.get(0).params().get("count"),
+                "Партия земли — объём всей ямы части: 8 блоков за один заход (INC-73)");
         assertEquals(
                 "acquire_at",
-                scripts.get(0),
+                dirt.get(0).script(),
                 "Земля на подсыпку добывается до засыпки (своя со срезки или за оградой): иначе «не хватило dirt: нужно 4, "
                         + "есть 0» (INC-68)");
         assertTrue(

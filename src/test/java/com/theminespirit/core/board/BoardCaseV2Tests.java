@@ -20,13 +20,12 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsSixtyThree() {
+    void cases_TotalCount_IsSeventyOne() {
         assertEquals(
-                63,
+                71,
                 BoardCase.values().length,
-                "Кейсов доски — 63: 14 заданий-занятий ACTIVITY_* (BoardActivities, с походом, рефлексом силы и самовыходом) и 49 очереди: 42 прежних (в том числе CRAFT_SMOKER и FISH), два кейса пчёл "
-                        + "(HARVEST_HIVE, PLACE_BEEHIVE), BUILD_WAREHOUSE чеклиста 41 и путь «печь → уголь → факел» "
-                        + "(CRAFT_FURNACE, CRAFT_TORCHES, SMELT_CHARCOAL), оставленная руда шахты MINE_LEFT_ORE. "
+                "Кейсов доски — 71: 63 прежних и восемь крафтов железного и алмазного инструмента "
+                        + "(кирка, топор, лопата, меч): набор духа поднимается до уровня из таблицы board. "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 

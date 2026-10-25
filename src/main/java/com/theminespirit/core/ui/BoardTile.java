@@ -16,7 +16,10 @@ public record BoardTile(
         BoardTileGroup group,
         Map<String, Integer> missing,
         List<String> dependsOn,
-        long doneAt) {
+        long doneAt,
+        long startedAt,
+        long finishedAt,
+        long durationTicks) {
     public BoardTile {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("id плитки пустое: по нему экран отличает задания доски");
@@ -33,6 +36,10 @@ public record BoardTile(
         }
         if (doneAt < 0) {
             throw new IllegalArgumentException("doneAt равен " + doneAt + ": тик завершения не бывает отрицательным");
+        }
+        if (startedAt < 0 || finishedAt < 0 || durationTicks < 0) {
+            throw new IllegalArgumentException("Время плитки " + startedAt + "/" + finishedAt + "/" + durationTicks
+                    + " отрицательно: тики и затрата идут вперёд, а не назад");
         }
     }
 

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class BoardColumnsTests {
     private static BoardTile tile(String id, BoardTileGroup group) {
-        return new BoardTile(id, "FISH", 1, 10, null, "PENDING", group, Map.of(), List.of(), 0);
+        return new BoardTile(id, "FISH", 1, 10, null, "PENDING", group, Map.of(), List.of(), 0, 0, 0, 0);
     }
 
     @Test

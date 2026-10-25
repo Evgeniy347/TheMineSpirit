@@ -41,6 +41,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.OwnWood;
+import com.theminespirit.neoforge.PlotGround;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -121,6 +122,7 @@ public final class FirstStepsRunner {
             return;
         }
         BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
+        PlotAudit.tick(level, service, anchor, now);
         BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
@@ -485,12 +487,7 @@ public final class FirstStepsRunner {
     }
 
     private static boolean isGround(BlockState state) {
-        return state.is(BlockTags.DIRT)
-                || state.is(BlockTags.BASE_STONE_OVERWORLD)
-                || state.is(BlockTags.SAND)
-                || state.is(Blocks.GRAVEL)
-                || state.is(Blocks.COBBLESTONE)
-                || state.is(Blocks.CLAY)
+        return PlotGround.natural(state)
                 || (!state.getFluidState().isEmpty() && !state.getFluidState().is(FluidTags.WATER));
     }
 
@@ -1005,24 +1002,13 @@ public final class FirstStepsRunner {
         Optional<SettlementPlot> stored = store.plot();
         BlockCoord center = SettlementPlot.center(homes);
         if (stored.isPresent() && stored.orElseThrow().covers(center)) {
-            return checkedWood(level, service, store, stored.orElseThrow(), now);
+            SettlementPlot kept = PlotHeights.rechecked(
+                    service, store, stored.orElseThrow(), (x, z) -> feetAt(level, x, z, center.y()), now);
+            return checkedWood(level, service, store, kept, now);
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
-        SettlementPlot plot =
-                SettlementPlot.survey(center, SettlementLayout.HALF, (x, z) -> feetAt(level, x, z, center.y()), wood);
-        store.fix(plot);
-        LOGGER.info(
-                "[plot] высота {}: медиана по {} колонкам, мин {} макс {}, центр ({}, {}) по {} домам духов, порода {}",
-                plot.anchor().y(),
-                plot.columns(),
-                plot.min(),
-                plot.max(),
-                plot.anchor().x(),
-                plot.anchor().z(),
-                homes.size(),
-                wood);
-        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current()));
-        return plot;
+        return PlotHeights.surveyed(
+                service, store, center, homes.size(), wood, (x, z) -> feetAt(level, x, z, center.y()), now);
     }
 
     private static SettlementPlot checkedWood(

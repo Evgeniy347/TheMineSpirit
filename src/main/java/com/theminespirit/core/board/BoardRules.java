@@ -88,6 +88,14 @@ public final class BoardRules {
         priorities.put(BoardCase.CRAFT_STONE_AXE, 40);
         priorities.put(BoardCase.CRAFT_STONE_SHOVEL, 40);
         priorities.put(BoardCase.CRAFT_STONE_SWORD, 40);
+        priorities.put(BoardCase.CRAFT_IRON_PICKAXE, 40);
+        priorities.put(BoardCase.CRAFT_IRON_AXE, 40);
+        priorities.put(BoardCase.CRAFT_IRON_SHOVEL, 40);
+        priorities.put(BoardCase.CRAFT_IRON_SWORD, 40);
+        priorities.put(BoardCase.CRAFT_DIAMOND_PICKAXE, 40);
+        priorities.put(BoardCase.CRAFT_DIAMOND_AXE, 40);
+        priorities.put(BoardCase.CRAFT_DIAMOND_SHOVEL, 40);
+        priorities.put(BoardCase.CRAFT_DIAMOND_SWORD, 40);
         priorities.put(BoardCase.FILL_CRATER, 35);
         priorities.put(BoardCase.ENCHANT_SHELVES, 30);
         return Map.copyOf(priorities);

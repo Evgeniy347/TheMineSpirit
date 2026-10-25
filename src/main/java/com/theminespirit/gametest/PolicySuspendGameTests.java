@@ -23,7 +23,7 @@ public final class PolicySuspendGameTests {
     private static final double MAX_DRIFT = 0.35;
     private static final BlockPos START = new BlockPos(1, 1, 4);
     private static final BlockPos TARGET = new BlockPos(8, 1, 4);
-    private static final BlockPos DIRT = new BlockPos(6, 1, 4);
+    private static final BlockPos PLANKS = new BlockPos(6, 1, 4);
 
     private PolicySuspendGameTests() {}
 
@@ -86,9 +86,9 @@ public final class PolicySuspendGameTests {
     public static void suspend_MidBreak_CrackIsRemovedBlockStaysThenBreakFinishes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        helper.setBlock(DIRT, Blocks.DIRT);
+        helper.setBlock(PLANKS, Blocks.OAK_PLANKS);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 4));
-        HarvestSession session = HarvestSession.gather(spirit, "minecraft:dirt", 1, 6);
+        HarvestSession session = HarvestSession.gather(spirit, "minecraft:oak_planks", 1, 6);
         int[] phase = {0};
         int[] heldSince = {0};
         helper.onEachTick(() -> {
@@ -100,7 +100,8 @@ public final class PolicySuspendGameTests {
                     session.tick();
                     if (session.crackStage() >= 2) {
                         helper.assertTrue(
-                                helper.getBlockState(DIRT).is(Blocks.DIRT), "блок в начале ломки обязан быть цел");
+                                helper.getBlockState(PLANKS).is(Blocks.OAK_PLANKS),
+                                "блок в начале ломки обязан быть цел");
                         session.suspend();
                         helper.assertTrue(
                                 session.crackStage() == -1,
@@ -111,7 +112,7 @@ public final class PolicySuspendGameTests {
                 }
                 case 1 -> {
                     helper.assertTrue(
-                            helper.getBlockState(DIRT).is(Blocks.DIRT),
+                            helper.getBlockState(PLANKS).is(Blocks.OAK_PLANKS),
                             "пока ломка приостановлена, блок обязан стоять целым");
                     helper.assertTrue(session.crackStage() == -1, "трещин на приостановленной ломке быть не должно");
                     if (spirit.tickCount >= heldSince[0] + HOLD_TICKS) {
@@ -129,7 +130,7 @@ public final class PolicySuspendGameTests {
                     "после возобновления ломка обязана завершиться: итог " + session.outcome() + ", причина "
                             + session.failureReason());
             helper.assertTrue(
-                    helper.getBlockState(DIRT).isAir() && session.mined() == 1,
+                    helper.getBlockState(PLANKS).isAir() && session.mined() == 1,
                     "после возобновления блок обязан быть сломан ровно один раз, добыто " + session.mined());
             GameTestFixtures.finish(helper);
         });

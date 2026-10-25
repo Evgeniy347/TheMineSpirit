@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -25,10 +24,8 @@ public final class BoardSnapshot {
 
     private BoardSnapshot() {}
 
-    public static List<BoardTile> build(
-            List<BoardTask> tasks, Map<String, Long> doneTicks, Function<String, @Nullable String> spiritNames) {
+    public static List<BoardTile> build(List<BoardTask> tasks, Function<String, @Nullable String> spiritNames) {
         Objects.requireNonNull(tasks, "tasks не может быть null: пустая доска — пустой список");
-        Objects.requireNonNull(doneTicks, "doneTicks не может быть null: без журнала передают пустую карту");
         Objects.requireNonNull(spiritNames, "spiritNames не может быть null: без него плитка не назовёт духа");
         Set<String> unfinished = new HashSet<>();
         for (BoardTask task : tasks) {
@@ -39,9 +36,10 @@ public final class BoardSnapshot {
         List<Ranked> ranked = new ArrayList<>(tasks.size());
         for (BoardTask task : tasks) {
             BoardTileGroup group = groupOf(task, unfinished);
-            long doneAt = group == BoardTileGroup.DONE && task.done()
-                    ? doneTicks.getOrDefault(task.id(), task.createdAt())
-                    : 0L;
+            long doneAt = 0L;
+            if (group == BoardTileGroup.DONE && task.done()) {
+                doneAt = task.finishedAt() > 0 ? task.finishedAt() : task.createdAt();
+            }
             BoardTile tile = new BoardTile(
                     task.id(),
                     task.boardCase(),
@@ -52,7 +50,10 @@ public final class BoardSnapshot {
                     group,
                     task.missing(),
                     task.dependsOn(),
-                    doneAt);
+                    doneAt,
+                    task.startedAt(),
+                    task.finishedAt(),
+                    task.durationTicks());
             ranked.add(new Ranked(tile, task.createdAt()));
         }
         ranked.sort(ORDER);

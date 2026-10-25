@@ -74,7 +74,7 @@ public final class FirstStageGameTests {
             spirits.add(spirit(helper, home.offset(index - 1, 0, 0), home, scene.wood()));
         }
         incidentRoundTrip(helper, spirits.get(0), seed);
-        Watch watch = new Watch(helper, board, spirits);
+        Watch watch = new Watch(helper, board, spirits, scene);
         helper.onEachTick(watch::tick);
         helper.succeedWhen(() -> {
             String head = "сид " + seed + " (повтор: scripts/test.sh gametest --seed " + seed + " " + BATCH + "): ";
@@ -82,6 +82,10 @@ public final class FirstStageGameTests {
             helper.assertTrue(watch.stuck.isEmpty(), head + "дух застрял: " + watch.stuck + "; " + watch.state());
             helper.assertTrue(plot.isPresent(), head + "участок не обмерен — доска не начала этап 1");
             BlockCoord anchor = plot.orElseThrow().anchor();
+            List<String> pits = pitsOutside(helper, scene, anchor);
+            helper.assertTrue(
+                    pits.isEmpty() && watch.fell.isEmpty(),
+                    head + "за оградой ямы ниже участка " + pits + ", духи в ямах " + watch.fell);
             List<String> problems =
                     StageOneAudit.problems(level, anchor, plot.orElseThrow().wood());
             helper.assertTrue(
@@ -90,6 +94,24 @@ public final class FirstStageGameTests {
             spirits.forEach(SpiritEntity::discard);
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static List<String> pitsOutside(GameTestHelper helper, ScenePlan scene, BlockCoord anchor) {
+        List<String> pits = new ArrayList<>();
+        for (int x = -scene.radius(); x <= scene.radius(); x++) {
+            for (int z = -scene.radius(); z <= scene.radius(); z++) {
+                int top = scene.height(x, z);
+                boolean outside = Math.max(Math.abs(x), Math.abs(z)) > SettlementLayout.LEVEL_HALF;
+                BlockPos under = GeneratedScene.at(x, top - 1, z);
+                if (outside
+                        && helper.absolutePos(under).getY() < anchor.y()
+                        && helper.getBlockState(GeneratedScene.at(x, top, z)).isAir()
+                        && helper.getBlockState(under).isAir()) {
+                    pits.add(x + "," + z);
+                }
+            }
+        }
+        return pits;
     }
 
     private static void incidentRoundTrip(GameTestHelper helper, SpiritEntity source, long seed) {
@@ -173,10 +195,13 @@ public final class FirstStageGameTests {
         private final Map<UUID, Integer> low = new HashMap<>();
         private final Map<UUID, Integer> idle = new HashMap<>();
         private final List<String> stuck = new ArrayList<>();
+        private final List<String> fell = new ArrayList<>();
+        private final ScenePlan scene;
         private final Map<String, Integer> spent = new TreeMap<>();
 
-        Watch(GameTestHelper helper, BoardService board, List<SpiritEntity> spirits) {
+        Watch(GameTestHelper helper, BoardService board, List<SpiritEntity> spirits, ScenePlan scene) {
             this.helper = helper;
+            this.scene = scene;
             this.board = board;
             this.spirits = spirits;
         }
@@ -192,12 +217,28 @@ public final class FirstStageGameTests {
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
                         || !board.board().assignedTo(spirit.getUUID()).isEmpty();
                 boolean below = plot.map(p -> below(spirit, p.anchor())).orElse(false);
+                plot.ifPresent(p -> inPit(spirit, p.anchor()));
                 count(spirit, idle, !busy, "без задания");
                 count(
                         spirit,
                         low,
                         below,
                         "ниже плана в " + spirit.blockPosition().toShortString());
+            }
+        }
+
+        private void inPit(SpiritEntity spirit, BlockCoord anchor) {
+            BlockPos at = helper.relativePos(spirit.blockPosition());
+            int x = at.getX() - GeneratedScene.CENTER;
+            int z = at.getZ() - GeneratedScene.CENTER;
+            int edge = Math.max(Math.abs(x), Math.abs(z));
+            if (edge > SettlementLayout.LEVEL_HALF
+                    && edge <= scene.radius()
+                    && at.getY() - GeneratedScene.SURFACE < scene.height(x, z)
+                    && spirit.blockPosition().getY() < anchor.y()
+                    && fell.size() < SPIRITS) {
+                fell.add(spirit.displayName() + " в " + spirit.blockPosition().toShortString() + " на тике "
+                        + helper.getTick());
             }
         }
 

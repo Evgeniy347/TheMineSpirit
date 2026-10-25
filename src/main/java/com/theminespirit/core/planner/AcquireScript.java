@@ -47,6 +47,7 @@ public final class AcquireScript implements ScriptInstance {
     private @Nullable String lastStepFailure;
     private boolean suspendedBeforeStart;
     private @Nullable BlockCoord gatherAt;
+    private int gatherAtLeast;
 
     public AcquireScript(
             String item,
@@ -133,6 +134,11 @@ public final class AcquireScript implements ScriptInstance {
         return this;
     }
 
+    public AcquireScript gatherAtLeast(int trip) {
+        this.gatherAtLeast = Math.max(0, Math.min(trip, CatalogLimits.COUNT_MAX));
+        return this;
+    }
+
     Optional<TaskNode> buildSubplan() {
         if (attempts == 0) {
             startInventory = supplies.inInventory(item);
@@ -155,7 +161,8 @@ public final class AcquireScript implements ScriptInstance {
             if (place != null) {
                 nodes.add(new ScriptCall("goto", Map.of("x", place.x(), "y", place.y(), "z", place.z())));
             }
-            nodes.add(ResourceResolver.resolve(item, need, knowledge, catalog, conditions, supplies));
+            int trip = place == null ? need : Math.max(need, gatherAtLeast);
+            nodes.add(ResourceResolver.resolve(item, trip, knowledge, catalog, conditions, supplies));
         }
         TaskNode plan = new SequenceNode(nodes);
         plan = PlanValidator.validate(plan, catalog, conditions);

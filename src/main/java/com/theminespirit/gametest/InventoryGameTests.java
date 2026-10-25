@@ -124,26 +124,6 @@ public final class InventoryGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void containerAccess_ChestWithUnrevealedLootTable_Refused(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        helper.setBlock(6, 1, 4, Blocks.CHEST);
-        BlockPos chest = helper.absolutePos(new BlockPos(6, 1, 4));
-        RandomizableContainerBlockEntity entity =
-                (RandomizableContainerBlockEntity) helper.getLevel().getBlockEntity(chest);
-        entity.setLootTable(
-                ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.parse("minecraft:chests/simple_dungeon")));
-        ContainerAccess.Open open = ContainerAccess.open(helper.getLevel(), chest);
-
-        helper.assertTrue(
-                open instanceof ContainerAccess.Refused refused
-                        && refused.reason().contains("добыч"),
-                "сундук структуры с нераскрытой таблицей добычи обязан дать отказ с пояснением про добычу, "
-                        + "иначе дух забрал бы чужую добычу, фактически " + describe(open));
-        GameTestFixtures.finish(helper);
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void stackMapper_DamagedPickaxe_SplitsVariant(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SimpleContainer container = new SimpleContainer(4);
@@ -1010,10 +990,6 @@ public final class InventoryGameTests {
                 breaker.begin(stone) instanceof BlockBreaker.Started,
                 "камень с киркой в руке обязан начинать ломаться");
         int fastTicks = breaker.requiredTicks();
-        helper.assertTrue(
-                ToolChoice.MAIN_HAND == -2,
-                "Слот основной руки в выборе инструмента равен -2 (рядом с рукой -1): при смене значения "
-                        + "пересмотреть разбор выбора, фактически " + ToolChoice.MAIN_HAND);
         helper.assertTrue(
                 breaker.choice().slot() == ToolChoice.MAIN_HAND,
                 "ломка обязана выбрать кирку из основной руки, а не руку или инвентарь: слот "

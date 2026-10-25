@@ -243,6 +243,8 @@ public final class IntellectGameTests {
                 helper.getLevel().getGameTime());
         long openedAt = helper.getLevel().getGameTime();
         intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
+        helper.assertTrue(
+                intellect.expeditions().active().isPresent(), "Приглашение создано: иначе молчанию нечего истекать");
         intellect
                 .expeditions()
                 .update(
@@ -251,6 +253,9 @@ public final class IntellectGameTests {
                         spirits,
                         openedAt + IntellectTuning.loadDefault().inviteTtlTicks() + 100);
 
+        helper.assertTrue(
+                intellect.expeditions().active().isEmpty(),
+                "Молчание три минуты — духи идут сами: иначе экспедиция встанет без ответа");
         helper.assertTrue(
                 intellect
                         .expeditions()
@@ -361,9 +366,6 @@ public final class IntellectGameTests {
                             .map(script -> "wait".equals(script))
                             .orElse(false),
                     "Чужую задачу wait интеллект не отбирает: иначе сцены соседних тестов ломаются");
-            helper.assertTrue(
-                    IntellectTuning.loadDefault().demandIntervalTicks() == 100,
-                    "Пересчёт спроса раз в 100 тиков: чаще — лишние чтения запасов, реже — поздно видит нужду");
             spirits.forEach(SpiritEntity::discard);
             TacticsScene.finish(helper, spirits.get(0));
         });
@@ -397,9 +399,6 @@ public final class IntellectGameTests {
             helper.assertTrue(
                     view.weapons() == 1,
                     "Железный меч — одно оружие: иначе оценка сил шлёт безоружных за оружием, которого нет");
-            helper.assertTrue(
-                    IntellectTuning.loadDefault().demandIntervalTicks() == 100,
-                    "Пересчёт спроса раз в 100 тиков: бюджет чтений считается от этого числа");
             helper.assertTrue(
                     StockReader.STOCK_READ_BUDGET == 4096,
                     "Бюджет чтений запасов 4096 на пересборку: шире — тик читает полмира, уже — не видит сундуки");
@@ -448,9 +447,6 @@ public final class IntellectGameTests {
                 helper.assertTrue(
                         verdicts.size() == 3,
                         "Каждый из трёх духов при угрозе получил вердикт: иначе угроза не вытесняет работу");
-                helper.assertTrue(
-                        IntellectTuning.loadDefault().maxFighters() == 3,
-                        "Предел бойцов 3: больше — поселение бросает работу ради одного зомби");
                 helper.assertTrue(
                         verdicts.stream()
                                         .filter(verdict -> verdict.action() == StrengthAction.FIGHT)
@@ -667,54 +663,6 @@ public final class IntellectGameTests {
                                 && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
                         .orElse(false),
                 "После ожидания команда идёт добывать: диспетч mine_vein на ту же команду");
-        spirits.forEach(SpiritEntity::discard);
-        TacticsScene.finish(helper, spirits.get(0));
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
-    public static void expedition_Silence_TeamGoesAlone(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        layIronVein(helper);
-        GameTestFixtures.mockPlayer(helper, new BlockPos(0, 1, 0), "Silent");
-        List<SpiritEntity> spirits = new ArrayList<>();
-        for (BlockPos at : List.of(new BlockPos(4, 1, 4), new BlockPos(6, 1, 4), new BlockPos(5, 1, 6))) {
-            SpiritEntity spirit = TacticsScene.spirit(helper, at);
-            spirits.add(spirit);
-        }
-        homeOf(helper, spirits.get(0));
-        homeOf(helper, spirits.get(1));
-        homeOf(helper, spirits.get(2));
-        giveMineKit(spirits.get(0));
-        giveMineKit(spirits.get(1));
-        SettlementIntellect intellect = intellectOf(helper, spirits.get(0));
-        BlockPos vein = helper.absolutePos(new BlockPos(8, 1, 5));
-        Expedition planned = new Expedition(
-                List.of(spirits.get(0).getUUID(), spirits.get(1).getUUID()),
-                new Point(vein.getX(), vein.getY(), vein.getZ()),
-                helper.getLevel().getGameTime());
-        long openedAt = helper.getLevel().getGameTime();
-        intellect.expeditions().update(helper.getLevel(), Optional.of(planned), spirits, openedAt);
-        helper.assertTrue(
-                intellect.expeditions().active().isPresent(), "Приглашение создано: иначе молчанию нечего истекать");
-        intellect
-                .expeditions()
-                .update(
-                        helper.getLevel(),
-                        Optional.empty(),
-                        spirits,
-                        openedAt + IntellectTuning.loadDefault().inviteTtlTicks() + 100);
-        helper.assertTrue(
-                intellect.expeditions().active().isEmpty(),
-                "Молчание три минуты — духи идут сами: иначе экспедиция встанет без ответа");
-        helper.assertTrue(
-                intellect
-                        .expeditions()
-                        .lastDispatch()
-                        .map(dispatch -> "mine_vein".equals(dispatch.script())
-                                && new HashSet<>(dispatch.team()).equals(new HashSet<>(planned.team())))
-                        .orElse(false),
-                "Молчащая команда идёт добывать: диспетч mine_vein на ту же команду");
         spirits.forEach(SpiritEntity::discard);
         TacticsScene.finish(helper, spirits.get(0));
         helper.succeed();
