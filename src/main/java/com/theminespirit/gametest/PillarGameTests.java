@@ -138,9 +138,6 @@ public final class PillarGameTests {
         helper.succeed();
     }
 
-    // Потолок в двух клетках над ногами проходит проверку клетки и головы, но не даёт духу
-    // подпрыгнуть: раньше каждый тик на земле сбрасывал счётчик застоя, и pillar_up висел
-    // в RUNNING вечно (флак chop_tree_tall 17.10). Счётчик обязан идти и на земле.
     @SceneStep(template = TEMPLATE, timeoutTicks = 400)
     public static void pillarUp_CeilingAboveHead_FailsInsteadOfRunningForever(GameTestHelper helper) {
         prepare(helper);
@@ -202,7 +199,6 @@ public final class PillarGameTests {
         SpiritEntity spirit = spawnWithDirt(helper, 8);
         double centerX = SPIRIT_START.getX() + 0.5;
         double centerZ = SPIRIT_START.getZ() + 0.5;
-        // Дух стартует сдвинутым к стволу — как после случайного сноса при подъёме.
         spirit.moveTo(centerX + 0.3, spirit.getY(), centerZ);
         PillarUpScript script = new PillarUpScript(spirit, PillarUpParams.from(Map.of("height", 4)));
         ScriptStatus[] status = {ScriptStatus.RUNNING};

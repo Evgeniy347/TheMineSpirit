@@ -74,8 +74,6 @@ final class RandomPlans {
     }
 
     private static String text(Random random) {
-        // Часть сообщений — "fail": свойства с прогоном задачи трактуют его как провал шага и проверяют ветки
-        // fallback/else и итог FAILED, которых иначе не бывает (R5 чеклиста 13).
         if (random.nextInt(4) == 0) {
             return "fail";
         }

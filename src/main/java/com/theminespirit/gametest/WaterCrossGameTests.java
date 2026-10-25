@@ -61,7 +61,6 @@ public final class WaterCrossGameTests {
     @SceneStep(template = "arena", timeoutTicks = 600)
     public static void crossWater_FiveBlockChannelWithDirt_SwimsWithoutBridge(GameTestHelper helper) {
         MovementScene.prepare(helper);
-        // Канал глубиной 2 в каменной чаше: вода не растекается за арену, а переправа идёт вплавь.
         for (int x = CHANNEL_MIN_X - 1; x <= CHANNEL_MAX_X + 1; x++) {
             for (int z = -1; z <= 9; z++) {
                 helper.setBlock(x, -2, z, Blocks.STONE);

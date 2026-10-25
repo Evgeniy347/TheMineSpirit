@@ -10,12 +10,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 
-/**
- * Поверхность воронки в настоящем мире: уровень края из памяти воронок, текущие блоки из уровня.
- *
- * <p>Защищённой клетка считается, если духу запрещено там ставить (защищённая зона, рабочая зона):
- * политика защиты блоков та же, что у обычной стройки.
- */
 final class LevelCraterSurface implements CraterSurface {
     private final Level level;
     private final SpiritEntity spirit;

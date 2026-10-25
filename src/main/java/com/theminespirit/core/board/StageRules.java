@@ -11,12 +11,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Этапы развития поселения: этап N — набор обязательных построек «кейс → уровень» по журналу
- * доски. Когда все постройки этапа N стоят, поселение переходит на этап N+1; постройка уровня L ставится только
- * с этапа L. Текущий этап — первый, чей состав не построен; всё построено — этап за последним. Состав — горячая таблица {@code board/stages.json}, а не решение модели (plan.md «Рост по этапам»); там же
- * схемы уровней построек ({@code schemes}): дом этапа 1 — хижина, дом этапа 2 — каменный (решение 54b п.1).
- */
 public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> schemes) {
     public static final String RESOURCE = "data/theminespirit/board/stages.json";
     private static final Set<String> ROOT_FIELDS = Set.of("stages", "schemes");
@@ -66,7 +60,6 @@ public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> scheme
         return stages.size() + 1;
     }
 
-    // Схема уровня постройки из таблицы (schemes: «кейс → схемы уровней с первого»); нет строки — пусто.
     public Optional<String> scheme(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс постройки не может быть null: без него неизвестна схема уровня");
         List<String> files = schemes.getOrDefault(boardCase, List.of());

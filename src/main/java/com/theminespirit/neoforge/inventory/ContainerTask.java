@@ -20,7 +20,6 @@ abstract class ContainerTask implements ScriptInstance {
         SORT
     }
 
-    // Один шаг раскладки "auto": выбранный контейнер и готовый перенос в него.
     protected record AutoMove(Container container, BlockCoord pos, int snapshotIndex, TransferRunner runner) {}
 
     protected final SpiritEntity spirit;
@@ -53,7 +52,6 @@ abstract class ContainerTask implements ScriptInstance {
 
     protected abstract TransferRunner beginTransfer(Container container);
 
-    // У сундука — пустая рука (кладёт), у забора из сундука — то, что берёт.
     protected ItemStack shownWhileTransferring() {
         return ItemStack.EMPTY;
     }
@@ -72,7 +70,6 @@ abstract class ContainerTask implements ScriptInstance {
         return false;
     }
 
-    // Выбирает контейнер под предмет через ContainerPicker: переопределяют скрипты, умеющие "auto".
     protected AutoMove nextAutoMove(AutoContainerScan scan) {
         return null;
     }

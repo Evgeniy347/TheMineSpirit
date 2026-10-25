@@ -46,13 +46,6 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Разбор движения (решение владельца 20.10): дух в глубине готового большого дома — на втором этаже, в дальней
- * комнате первого этажа, на балконе — обязан дойти до сундука у входа. Сцена отделена от стройки: дом ставится
- * целиком сразу, двери открыты (как во время стройки — двери ставятся последним шагом), дух берёт один предмет.
- * Точка старта выбирается обходом в ширину от сундука: самая дальняя клетка своего вида, до которой тело 1×2
- * доходит шагами вверх на 1 и спусками до 3, — значит, путь к ней по постройке есть.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class HouseMovementGameTests {
@@ -63,7 +56,6 @@ public final class HouseMovementGameTests {
     private static final int UPPER_FLOOR_RISE = 4;
     private static final int BALCONY_RISE = 3;
     private static final int GROUND_FLOOR_RISE = 2;
-    // Фасад больших домов — ряд 2 схемы (ряд 1 — крыльцо, ряд 0 — перила балкона): балкон — перед ним, над землёй.
     private static final int FRONT_WALL_Z = 2;
     private static final double CARPET_HEIGHT = 0.1;
     private static final double STEP_HEIGHT = 0.6;
@@ -214,8 +206,6 @@ public final class HouseMovementGameTests {
         return helper.absolutePos(supply.base());
     }
 
-    // Готовый дом целиком: без обновлений соседей (факел у ещё не поставленной стены не осыпается), затем формы
-    // ступенек, панелей и заборов по соседям. Двери открыты: так проём во время стройки, до последнего шага.
     static void placeWhole(ServerLevel level, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
         Rotation mc = switch (rotation) {
             case NONE -> Rotation.NONE;
@@ -319,8 +309,6 @@ public final class HouseMovementGameTests {
         return best;
     }
 
-    // Маршрут обхода от старта к входу: шаг, который поиск пути игры не проходит, или первый отрезок от старта, до
-    // конца которого путь игры не доходит (так нашлась дальность пути: 32 шага, а не 32 блока по прямой).
     private static String brokenStep(
             GameTestHelper helper, SpiritEntity spirit, BlockPos start, Map<BlockPos, BlockPos> parents) {
         BlockPos zero = helper.absolutePos(BlockPos.ZERO);
@@ -378,8 +366,6 @@ public final class HouseMovementGameTests {
         return false;
     }
 
-    // Шаг в обе стороны: клетка, куда тело спрыгнуло, но откуда не выбраться (полублок у полного блока — подъём
-    // 1,5), — ловушка, а не стоянка; старт из неё мерил бы схему, а не движение.
     private static boolean step(ServerLevel level, BlockPos from, BlockPos to) {
         return oneWay(level, from, to) && oneWay(level, to, from);
     }
@@ -433,7 +419,6 @@ public final class HouseMovementGameTests {
         if (!state.getFluidState().isEmpty()) {
             return false;
         }
-        // Ковёр (1/16 блока) — пол под ногами, а не преграда: ноги стоят в его клетке.
         VoxelShape shape = state.getCollisionShape(level, pos);
         return state.getBlock() instanceof DoorBlock || shape.isEmpty() || shape.max(Direction.Axis.Y) <= CARPET_HEIGHT;
     }

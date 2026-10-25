@@ -11,10 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
 
-/**
- * Разрешения на снятие защиты построек игрока для REST: список, выдача и снятие.
- * Данные мира читаются и меняются только в серверном потоке через {@link ServerThreadCall}.
- */
 public final class SpiritPolicyGateway implements PolicyGateway {
     private final MinecraftServer server;
     private final ServerThreadCall serverCall;

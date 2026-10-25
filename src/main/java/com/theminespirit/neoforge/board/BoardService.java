@@ -70,16 +70,8 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-/**
- * Доска одного уровня: пересборка раз в {@code BOARD_INTERVAL_TICKS}, опрос духов-владельцев,
- * выдача свободным, снимок запасов с бюджетом. Мир читает только здесь — ядро
- * ({@code Board}) остаётся чистым. Точки исполнения хранит отдельно от билета: мир из
- * ядра не читает, а план собирается из них при выдаче.
- */
 public final class BoardService {
-    // Задание на деревянную кирку, когда её нет ни у одного духа (гейт ToolGate, INC-67).
     static final String PICKAXE_TICKET = "tool:wooden_pickaxe";
-    // Не чаще раза в столько тиков — досрочная выдача заданий, когда дух освободился.
     private static final long EARLY_DISPATCH_TICKS = 20;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
@@ -99,8 +91,6 @@ public final class BoardService {
     private final TaskStall stall = new TaskStall();
     private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
-    // Духи, чьё задание снял сброс при смене сборки: их задача по снятому заданию (восстановлена из сохранения)
-    // ещё идёт и держит духа «внешним занятием» — spirit-5 50+ мин копал dig_area бывшего mine_level_3 (INC-40).
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private StockView stock = new StockView(Map.of());
@@ -207,8 +197,6 @@ public final class BoardService {
             rebuild(level, now);
             return;
         }
-        // Между циклами — только выдача уже стоящих заданий освободившемуся духу (не пересборка): дух ждал выдачи
-        // следующей части по ~50 тиков после каждой, ~1200 тиков простоя на трёх духах (сцена 56).
         if (now - lastDispatch >= EARLY_DISPATCH_TICKS && (freshTickets || holderFreed(level))) {
             lastDispatch = now;
             freshTickets = false;
@@ -216,8 +204,6 @@ public final class BoardService {
         }
     }
 
-    // Дух с заданием доски закончил задачу: следующий цикл — сразу, а не через до 100 тиков. На этапе 1 дух ждал
-    // выдачи следующей части по ~50 тиков после каждой, ~1200 тиков простоя на трёх духах (сцена 56).
     private boolean holderFreed(ServerLevel level) {
         for (UUID holder : board.assignedCounts().keySet()) {
             if (level.getEntity(holder) instanceof SpiritEntity spirit
@@ -229,7 +215,6 @@ public final class BoardService {
     }
 
     public void rebuild(ServerLevel level, long now) {
-        // Задания, поставленные этим циклом (шаг первых шагов открыт после выдачи), выдаются следующим — досрочно.
         freshTickets = false;
         board.prune(now);
         Set<String> alive = new HashSet<>();
@@ -243,8 +228,6 @@ public final class BoardService {
         settleOwners(spirits);
         refreshStock(level, spirits);
         ensureSupply(spirits, stock, now);
-        // Источники заданий видят запас за вычетом брони открытых заданий (решение 54b п.5): уголь для факелов не
-        // пережигает брёвна, взятые под забор, и новый шаг не открывается на чужих материалах.
         StockView unreserved = BoardReserve.unreserved(stock, board);
         Set<String> liveCauses = sources.tick(level, this, spirits, unreserved, now);
         liveCauses.addAll(liveHerdCauses(level));
@@ -413,8 +396,6 @@ public final class BoardService {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persist();
         } else if (outcome == BoardOutcome.DUPLICATE) {
-            // Точки исполнения живут в памяти, а задания — в сохранении доски: после рестарта источник
-            // возвращает точку уже стоящему заданию, иначе его план не собрать (INC-29).
             targets.putIfAbsent(ticket.id(), target);
         }
         return outcome;
@@ -429,7 +410,6 @@ public final class BoardService {
         return outcome;
     }
 
-    // Сделанное задание снова в работе (мир с ним разошёлся, INC-50): снимается с доски и из отметок построек.
     public boolean reopen(String ticketId) {
         boolean reopened = board.reopen(ticketId);
         if (reopened) {
@@ -480,7 +460,6 @@ public final class BoardService {
     }
 
     public void offerActivities(List<ActivityOffer> offers, ActivityOffer.Launcher launcher, long now) {
-        // Дух с заданием доски занятия не получает: задание выше любого занятия, его итог закроет settleOwners.
         Objects.requireNonNull(offers, "Предложения не могут быть null: пустой набор — пустой список");
         Objects.requireNonNull(launcher, "Запуск занятий не может быть null: занятие выдаёт доска через него");
         List<SpiritEntity> offered = new ArrayList<>();
@@ -509,8 +488,6 @@ public final class BoardService {
             TaskNode task,
             ActivityOffer.Launcher launcher,
             long now) {
-        // Поход и рефлексы силы идут через доску: дух на них виден занятием, задание доски (если есть) остаётся
-        // за ним и продолжается после (TicketRun).
         Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
         if (!BoardActivities.isActivity(activity)) {
             throw new IllegalArgumentException(
@@ -530,7 +507,6 @@ public final class BoardService {
             present.add(spirit.getUUID());
             Optional<BoardCase> occupation = occupationOf(spirit);
             if (occupation.isPresent()) {
-                // Любая задача духа (доска, REST, команда, интеллект) видна занятием со своим скриптом (INC-48).
                 board.occupy(
                         spirit.getUUID(),
                         occupation.get(),
@@ -552,8 +528,6 @@ public final class BoardService {
         }
     }
 
-    // Замурованный дух (воздуха к поверхности нет) сам копает лестницу вверх к дому: всю ночь стоял в каменном
-    // кармане, а доска показывала «Бой» (INC-45, живой 24.10). Задание доски у такого духа всё равно бы «застряло».
     private void digOut(ServerLevel level, List<SpiritEntity> spirits) {
         long now = level.getGameTime();
         for (SpiritEntity spirit : spirits) {
@@ -565,8 +539,6 @@ public final class BoardService {
                     && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
             boolean paused = now < digOutAfter.getOrDefault(spirit.getUUID(), 0L);
             boolean sealed = !digging && !paused && DigOutScript.sealed(level, feet);
-            // Без своего дома — к дому поселения: живой карман INC-59 не дал ни одной строки dig_out, причину
-            // триггера теперь видно в логе.
             BlockCoord home = spirit.home().orElseGet(() -> homeOf(spirits));
             if (now >= digOutChecked.getOrDefault(spirit.getUUID(), 0L)) {
                 digOutChecked.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
@@ -584,7 +556,6 @@ public final class BoardService {
             if (!sealed) {
                 continue;
             }
-            // Сорвавшийся выход не перезапускается каждую пересборку: пауза, чтобы доска успела выдать другое.
             digOutAfter.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
             LOGGER.warn(
                     "[incident] дух {} замурован в {}: воздуха к поверхности нет — копает лестницу вверх к дому {}",
@@ -605,8 +576,6 @@ public final class BoardService {
                 && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
             return Optional.of(BoardCase.ACTIVITY_ESCAPE);
         }
-        // Дух с заданием доски занятием не подписывается: «Бой» при script=clear_area путал (INC-67); задание видно
-        // само. Бой — только у духа без задания доски.
         if (spirit.tactics().wantsControl() && board.assignedTo(id).isEmpty()) {
             return Optional.of(BoardCase.ACTIVITY_COMBAT);
         }
@@ -693,7 +662,6 @@ public final class BoardService {
         }
         for (SpiritEntity spirit : spirits) {
             String ticket = orphans.remove(spirit.getUUID());
-            // Занятие (activity:<дух>, внешняя задача) — не задание: оно и есть след снятой задачи.
             boolean holdsTicket = board.assignedTo(spirit.getUUID()).stream()
                     .anyMatch(held -> !BoardActivities.isActivity(held.boardCase()));
             if (ticket == null || spirit.isRemoved() || holdsTicket) {
@@ -711,8 +679,6 @@ public final class BoardService {
         }
     }
 
-    // Сброс заданий старых правил (смена сборки); держатели снятых заданий запоминаются — их задачи отменит
-    // cancelOrphans при ближайшей пересборке. Публичен для GameTest: сброс без перезапуска сервера.
     public List<String> resetForNewRules() {
         Map<String, UUID> holders = new HashMap<>();
         for (BoardTicket ticket : board.all()) {
@@ -739,8 +705,6 @@ public final class BoardService {
             if (held.isEmpty()) {
                 continue;
             }
-            // Дух исполняет одно задание за раз (MAX_ACTIVE_PER_SPIRIT): закрываем первое
-            // по очереди, а остальные — следующими пересборками.
             BoardTicket ticket = held.get(0);
             TicketRun run = TicketRun.decide(
                     issuedGenerations.getOrDefault(ticket.id(), SpiritReading.UNKNOWN_GENERATION),
@@ -756,7 +720,6 @@ public final class BoardService {
         }
     }
 
-    // Задание стоит (INC-65): скрипта нет или подход не двигается минуту — провал с причиной и строкой в логе.
     private void checkStall(SpiritEntity spirit, BoardTicket ticket) {
         BlockPos feet = spirit.blockPosition();
         String script = spirit.currentTaskScript().orElse(null);
@@ -788,7 +751,6 @@ public final class BoardService {
         board.fail(ticket.id(), stock, reason);
     }
 
-    // Всё для повтора провала в тесте: дух, задание с целью, позиция, инвентарь и снимок окрестности в папке мира.
     private String incident(SpiritEntity spirit, BoardTicket ticket, String reason) {
         TicketTarget target = targets.get(ticket.id());
         String aim = target == null ? "-" : target.target() + " часть " + target.count();
@@ -896,8 +858,6 @@ public final class BoardService {
         Map<UUID, Integer> held = board.assignedCounts();
         List<BoardTicket> claimable = board.claimable(stock, now);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
-        // Дух ждёт своё задание, только если может его взять сейчас: держатель на паузе по кейсу (провалы)
-        // или не годный к своему заданию иначе простаивал бы, не получая и чужих (INC-23).
         Set<UUID> awaited = new HashSet<>();
         for (BoardTicket ticket : claimable) {
             ticket.assignee()
@@ -973,8 +933,6 @@ public final class BoardService {
         }
     }
 
-    // acquire добывает «до N в инвентаре»: дух, у которого уже лежит N, завершал gather:jungle_planks ×4 сразу, запас
-    // не рос, и STOCK_CHESTS ждал «не хватает jungle_planks=4» весь день (приёмка «джунгли»). Цель — сверх своего.
     private static TicketTarget gatherOnTop(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
         String item = target.supplyItem();
         if (ticket.boardCase() != BoardCase.GATHER_MATERIALS
@@ -1006,9 +964,6 @@ public final class BoardService {
                 "Передача {} снята: у духа {} не осталось {}", ticket.id(), spirit.displayName(), target.supplyItem());
     }
 
-    // Передача планируется по инвентарю на момент заказа, а исполняется позже: отдающий успевал израсходовать
-    // часть, deliver падал «stick: нужно 16, в инвентаре 15», пауза кейса держала все его передачи, крафтеры
-    // ждали их весь день (приёмка «джунгли» 24.10). Отдаём сколько есть; остаток крафт закажет заново.
     private static Optional<TicketTarget> fitTransfer(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
         if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
                 || target.transferFrom() == null
@@ -1072,8 +1027,6 @@ public final class BoardService {
             return null;
         }
         if (crafters.remembered(ticket.id()).filter(awaited::contains).isPresent()) {
-            // Крафтер сейчас отдаёт по своей передаче (секунды): иначе крафт ушёл бы другому и заказал бы
-            // полученное обратно.
             return null;
         }
         List<SpiritEntity> unclaimed = spirits.stream()
@@ -1093,16 +1046,12 @@ public final class BoardService {
         if (busy && !(spirit.runsBackgroundTask() && !spirit.tactics().wantsControl())) {
             return false;
         }
-        // Занятость — только RUNNING (идиома проекта, SpiritBotGateway): SUCCEEDED/FAILED
-        // после закрытия задания духа не держат, иначе доска выдала бы духу одно задание навсегда.
         return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit()
                 && board.availableTo(spirit.getUUID(), ticket.boardCase(), now)
                 && ToolGate.allows(ticket.boardCase(), itemIds(spirit))
                 && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
     }
 
-    // Почему задание не выдано — на доске (waitReason, экран J), а не null при свободных духах (INC-70): ни у кого
-    // нет кирки; все годные духи на паузе кейса после провалов; все заняты.
     private void noteWhy(BoardTicket ticket, List<SpiritEntity> spirits, @Nullable SpiritEntity chosen, long now) {
         if (chosen != null) {
             board.noteWait(ticket.id(), null);
@@ -1212,7 +1161,6 @@ public final class BoardService {
                             Map.of()),
                     target.withSupply(item, count));
         }
-        // Постоянный запас (книги, бумага на полки) — после этапа 1: его добыча уводила духов с ограды (сцена 56).
         if (!FirstStepsRunner.stageOneBuilding(this)) {
             permanentSupplies(spirits, stock, now);
         }

@@ -9,11 +9,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
-/**
- * Причины ожидания задания: чего именно не хватает, чтобы оно началось. Ждут только «ждёт выдачи»,
- * «ждёт ресурсов» и «заблокировано»; выданное, завершённое, проваленное и отменённое не ждут ничего.
- * Причин может быть несколько: сначала незавершённые зависимости, затем недостающие предметы.
- */
 public final class BoardWaitReasons {
     private static final List<String> TOOL_SUFFIXES = List.of("_pickaxe", "_axe", "_shovel", "_hoe", "_sword");
     private static final Set<String> TOOL_ITEMS = Set.of(
@@ -42,10 +37,6 @@ public final class BoardWaitReasons {
         BLOCKED
     }
 
-    /**
-     * Причина ожидания: вид, предмет/дух/id зависимости и недостающее количество. У видов без предмета
-     * {@code subject} — имя духа или id задания, а {@code count} равен нулю.
-     */
     public record Wait(Kind kind, String subject, int count) {
         public Wait {
             Objects.requireNonNull(kind, "Вид причины не может быть null: по нему экран выбирает текст");

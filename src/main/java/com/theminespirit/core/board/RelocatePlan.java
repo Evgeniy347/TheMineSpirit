@@ -5,11 +5,6 @@ import com.theminespirit.core.reload.DataTables;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Задание «перенос»: какие кейсы вообще постройки и какие из них неподвижны.
- * Неподвижный список — данные таблицы board ({@code immovable}); источник и REST
- * проверяют его до постановки RELOCATE_BUILDING, иначе доска снесла бы вход в шахту.
- */
 public final class RelocatePlan {
     public static final Set<BoardCase> BUILDING_CASES = Set.of(
             BoardCase.BUILD_MINE,

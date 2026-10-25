@@ -3,11 +3,6 @@ package com.theminespirit.core.mining;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Пол хода — клетка {@code @floor}: стоит дешёвый твёрдый блок — не трогаем; воздух, жидкость,
- * трава — ставим булыжник; руда — по правилу руды ({@link MineOres}); гравий и песок без опоры под ними — заменить,
- * иначе обвалятся из-под ног.
- */
 public final class MineFloor {
     public enum Action {
         KEEP,
@@ -16,7 +11,6 @@ public final class MineFloor {
         ORE
     }
 
-    /** Что видно в клетке пола: id блока и свойства, которые решают судьбу клетки. */
     public record Seen(String blockId, boolean air, boolean fluid, boolean replaceable, boolean solidBelow) {
         public Seen {
             Objects.requireNonNull(blockId, "Id блока не может быть null: по нему решается, годится ли пол");

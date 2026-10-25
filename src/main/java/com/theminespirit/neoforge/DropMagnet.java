@@ -23,11 +23,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Магнит дропа духа (упрощение 44.1): раз в период из таблицы {@code pickup/magnet.json} свободные предметы в
- * радиусе сами ложатся в инвентарь, если есть место. Пока дух сам отдаёт вещи (deliver, give, drop_to_player,
- * unload), магнит молчит — иначе он подбирал бы только что отданное.
- */
 final class DropMagnet {
     private static final Set<String> GIVING_SCRIPTS = Set.of("deliver", "give", "drop_to_player", "unload", "deposit");
 

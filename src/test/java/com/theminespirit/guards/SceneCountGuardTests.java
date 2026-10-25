@@ -12,21 +12,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-/**
- * Сторож числа сцен GameTest (чеклист 56, п.3): сцена механики — класс {@code *ScenesGameTests} с 1–3 сценами, бывшие
- * сцены идут в нём шагами {@code @SceneStep}; общее число сцен не растёт.
- */
 class SceneCountGuardTests {
     private static final Pattern GAME_TEST = Pattern.compile("^\\s*@GameTest\\s*\\(", Pattern.MULTILINE);
     private static final Pattern SCENES_CLASS = Pattern.compile("[A-Z][A-Za-z0-9]*ScenesGameTests");
     private static final int MAX_SCENES_PER_MECHANIC = 3;
 
-    // Потолок сцен общего прогона (без ручных демо-аудитов) после сокращения 25.10: было 848, стало 49.
     private static final int MAX_SCENES_TOTAL = 49;
 
-    // Классы вне схемы «механика → *ScenesGameTests» и их потолок: демо-аудиты — ручные, вне общего прогона;
-    // FirstStageGameTests — сквозная сцена этапа 1 (заменила JungleSettlementGameTests). Новой записи сюда не
-    // добавлять: новая сцена — шаг сцены механики.
     private static final Map<String, Integer> OUTSIDE_SCENES = Map.of(
             "DemoAuditGameTests", 110,
             "BoardFirstStepsGameTests", 11,

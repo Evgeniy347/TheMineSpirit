@@ -8,10 +8,6 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 
-/**
- * Сундук рядом с одиночным сундуком той же ориентации — вторая половина двойного, как у игрока
- * (ChestBlock.getStateForPlacement): сосед по часовой стороне — LEFT, против — RIGHT (INC-52).
- */
 public final class ChestPairing {
     private ChestPairing() {}
 

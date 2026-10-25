@@ -52,9 +52,6 @@ class TaskRunnerRestoreProperties {
         TaskRunner resumed = TaskRunner.restore(decoded, registryFor(restarted), conditions());
         RunStatus restartedStatus = runToTerminal(resumed, MAX_TICKS).status();
 
-        // Сравниваем в порядке выполнения, без сортировки: переставленные или повторённые шаги обязаны быть видны.
-        // Исход задаёт план (say с текстом "fail" проваливается, limit=0 у проверки — ложь), поэтому список
-        // завершённых скриптов непрерывного и перезапущенного прогона обязан совпадать поэлементно.
         assertEquals(
                 continuous,
                 restarted,
@@ -92,7 +89,6 @@ class TaskRunnerRestoreProperties {
 
     private static ConditionRegistry conditions() {
         Map<String, ConditionEvaluator> checks = new LinkedHashMap<>();
-        // Проверка ложна при limit=0: генератор выдаёт и 0, поэтому свойство проходит обе ветки condition.
         checks.put("seen", params -> {
             Object limit = params.get("limit");
             return limit instanceof Number number && number.intValue() != 0;

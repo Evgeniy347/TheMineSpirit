@@ -15,16 +15,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Библиотека готовых построек (пресетов): метаданные из индекса плюс тела схем, прочитанные заранее.
- * Загрузка проверяет, что габариты в метаданных совпадают с содержимым схемы, что у постройки есть вход
- * и что материалы посчитаны из блоков. Поиск — по типу строения и этапу развития поселения.
- *
- * <p>Индекс — {@code data/theminespirit/schematics/presets.json}: порядок id пресетов; тело и метаданные каждого
- * (название, тип, этап, уровень, требование, вход, исключения сторожей) — в текстовом файле постройки
- * {@code <id>.txt} того же формата, что читает {@code build_schematic}. Тела читаются тем же {@code ContentSource},
- * поэтому датапак мира может переопределить и индекс, и любую постройку; библиотека перезагружается по /reload.
- */
 public final class PresetLibrary {
     public static final String INDEX_ID = "presets";
     public static final String SCHEMATICS_ROOT = "data/theminespirit/schematics/";

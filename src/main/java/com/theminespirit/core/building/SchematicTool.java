@@ -14,11 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * Инструмент текстовых построек вне игры ({@code scripts/schematic.sh}): тот же разбор и те же сторожа, что в моде.
- * {@code show <файл|id> [поворот]} — шапка, материалы, срезы по слоям и нарушения; {@code check [файл|id…]} —
- * разбор и сторожа всех построек (код выхода 1 при ошибке).
- */
 public final class SchematicTool {
     static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 

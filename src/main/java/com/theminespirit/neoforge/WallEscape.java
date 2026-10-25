@@ -10,11 +10,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
-/**
- * Рефлекс «выйти из блока» (INC-61): дух, у которого голова в твёрдом блоке (удушье в стене), шагает в ближайшую
- * свободную клетку — два воздуха над твёрдым полом — в пределах {@link #RADIUS}. Как у застревания: не ждёт, пока
- * задохнётся, и задачу не прерывает.
- */
 final class WallEscape {
     static final int RADIUS = 2;
     private static final Logger LOGGER = LogUtils.getLogger();

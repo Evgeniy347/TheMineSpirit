@@ -26,11 +26,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
-/**
- * Источник доски «сломанный забор»: поломка блока-ограждения рядом с поселением ставит
- * задание {@code REPAIR_FENCE} с высшим приоритетом. Дальняя поломка природная — задание
- * не ставится. Слушатель — O(1) на поломку, мир не обходит.
- */
 public final class FenceWatch {
     private FenceWatch() {}
 

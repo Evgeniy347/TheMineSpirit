@@ -1,10 +1,5 @@
 package com.theminespirit.core.repair;
 
-/**
- * Стоимость способов ремонта в одних единицах: один материал ремонта — {@link #MATERIAL_COST},
- * один уровень опыта — {@code experienceWeight}, целый второй инструмент — {@code toolCost}.
- * Числа решают, что дешевле; значения живут здесь, а не в ветке выбора.
- */
 public record RepairCosts(int anvilXpCost, int experienceWeight, int toolCost) {
     public static final int MATERIAL_COST = 1;
     public static final int ANVIL_XP_COST = 1;

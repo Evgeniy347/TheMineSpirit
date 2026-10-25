@@ -53,8 +53,6 @@ public final class TaskStarter {
         var current = spirit.currentTaskScript();
         long generation = spirit.taskGeneration();
         Issued own = issued.get(id);
-        // Запущенная задача (в т.ч. чужая, ещё не назвавшая скрипт) не перебивается: иначе занятие,
-        // выданное в том же серверном тике, затирает задачу и её итог (флак GameTest 16.10).
         var admission = TaskAdmission.decide(
                 current,
                 status.orElse(null),
@@ -76,14 +74,9 @@ public final class TaskStarter {
             case START -> {
                 RunStatus previous = observed.put(id, status.orElse(null));
                 if (status.isPresent() && status.get() != RunStatus.RUNNING && previous != status.get()) {
-                    // Первый тик терминального исхода: не выдаём новое занятие, иначе итог (успех или
-                    // причина падения, их читает наблюдатель, в т.ч. GameTest) затирается в том же
-                    // серверном тике. Следующий тик — обычный откат.
                     return false;
                 }
                 Issued last = issued.remove(id);
-                // Провал засчитывается своему занятию, только если упало именно оно: доска или REST могли
-                // вытеснить его своей задачей, и её причина приписалась бы чужому скрипту (INC-24).
                 if (status.isPresent()
                         && status.get() == RunStatus.FAILED
                         && last != null

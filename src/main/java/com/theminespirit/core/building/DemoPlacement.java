@@ -7,14 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Раскладка демо-постройки в мире: куда встанет схема, где сундук с материалами, где появляется дух и какой
- * объём площадки очистить и выровнять. Чистая функция от точки-якоря (клетка перед входом) и направления взгляда.
- *
- * <p>Площадка шире схемы на {@link BuildTuning#DEMO_PLATFORM_PADDING} блоков слева, справа, спереди, сзади и
- * вверх (вниз не расширяется): дух обходит дом по краю, а хлам вокруг не мешает. Сундук стоит на площадке в
- * стороне от входа — не вплотную к двери, не на линии подхода и не в клетке схемы.
- */
 public record DemoPlacement(
         BuildRotation rotation,
         BlockCoord origin,
@@ -121,9 +113,6 @@ public record DemoPlacement(
         return BuildRotation.NONE;
     }
 
-    // Замечание владельца 21.10: табличка стояла всегда на +x от сундука и при повороте попадала в клетку ограды
-    // загона. Теперь вся группа «сундук + вторая половина + табличка» лежит рядом вдоль фасада (поперёк взгляда),
-    // табличка — справа от сундука для игрока, что смотрит на его крышку; каждая клетка группы вне схемы.
     private static ChestGroup pickChest(Anchor anchor, Look look, Frame frame) {
         int frontX = anchor.x();
         int frontZ = anchor.z();
@@ -155,7 +144,6 @@ public record DemoPlacement(
                 + " и подход к нему заняли весь запас вокруг постройки");
     }
 
-    // Ширина 3 — двойной сундук и табличка, 2 — одиночный сундук и табличка, 1 — сундук без таблички.
     private static boolean groupFits(int x, int z, int perpX, int perpZ, int width, Entrance entrance, Frame frame) {
         for (int i = 0; i < width; i++) {
             if (!chestFits(x + perpX * i, z + perpZ * i, entrance, frame)) {

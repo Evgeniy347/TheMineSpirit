@@ -26,15 +26,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import org.slf4j.Logger;
 
-/**
- * Снимок запасов поселения для гейта доски: инвентари духов плюс контейнеры вокруг заявок.
- * Мир читается только через {@link StockScan}: обход бюджетирован счётчиком блоков и
- * контейнеров, незагруженные чанки пропускаются (загрузка чанка ждёт генерации и подвесила
- * бы серверный тик — причина 41-минутного GameTest). Центры обхода — цели заявок, а не
- * позиции духов: снимок читает склад там, где идёт работа, и не растёт от числа духов.
- * Идентификаторы предметов приводятся к короткому виду ({@code minecraft:dirt} → {@code dirt}):
- * гейт сравнивает с ключами {@code CraterNeed.estimate} и {@code AnimalLifecycle}.
- */
 public final class StockReader {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int CONTAINER_RADIUS = 8;
@@ -64,8 +55,6 @@ public final class StockReader {
             for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
                 add(available, spirit.getInventory().getItem(slot));
             }
-            // Надетый инструмент (equip) лежит в руке, а не в инвентаре: без него запас «теряет» кирку в руке,
-            // и первые шаги и постоянный запас крафтят инструмент заново.
             if (spirit.mainHandOwned()) {
                 add(available, spirit.getMainHandItem());
             }
@@ -97,10 +86,6 @@ public final class StockReader {
         return new Snapshot(new StockView(available), found.blockReads(), reads);
     }
 
-    /**
-     * Итог снимка: запасы и израсходованные бюджеты — по ним тест масштаба видит, что обход
-     * мира не растёт от числа духов и пересборок.
-     */
     public record Snapshot(StockView view, int blockReads, int containers) {
         public Snapshot {
             if (blockReads < 0 || containers < 0) {
@@ -148,8 +133,6 @@ public final class StockReader {
         }
     }
 
-    // Ключи кирок для заданий оставленной руды (LeftOreRules): ступень кирки и Удача/Шёлковое касание железной и
-    // лучше — склад не различает зачарования по id предмета.
     static List<String> pickaxeKeys(ItemStack stack) {
         List<String> keys = new ArrayList<>();
         if (stack.isCorrectToolForDrops(Blocks.COAL_ORE.defaultBlockState())) {

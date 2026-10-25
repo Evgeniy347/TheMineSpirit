@@ -70,7 +70,6 @@ public final class TestCostListener implements TestExecutionListener {
         }
     }
 
-    // synchronized: быстрый тир гоняет классы параллельно (build.gradle), строки CSV не должны перемешиваться.
     @Override
     public synchronized void executionFinished(TestIdentifier id, TestExecutionResult result) {
         if (!id.isTest() || !startWall.containsKey(id.getUniqueId())) {
@@ -127,7 +126,7 @@ public final class TestCostListener implements TestExecutionListener {
                 }
             }
         } catch (Throwable ignored) {
-            // класс или метод недоступны — считаем обычным JUnit-тестом
+            // lib: класс или метод недоступны — считаем обычным JUnit-тестом
         }
         return "junit";
     }

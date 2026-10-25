@@ -34,28 +34,17 @@ import net.minecraft.world.level.block.state.properties.ChestType;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-/**
- * Заход за материалами посреди стройки по схеме (решение владельца 20.10): дух берёт из сундуков поселения —
- * реестр без предела радиуса, ближайший сундук, где есть нужное, — столько недостающего, сколько влезает в
- * инвентарь, в порядке схемы (снизу вверх), ставит всё, что можно взятым, и идёт за следующей порцией.
- * Одинаково в демо, в аудите и в обычной стройке.
- */
 final class BuildSupplyTrip {
-    // Заходов на одну стройку: дом уровня 4 — ~100 стопок на 36 слотов; больше — стройка не продвигается.
     static final int MAX_TRIPS = 32;
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private BuildSupplyTrip() {}
 
-    // Шаги withdraw следующей порции; пусто — брать нечего (сундуков нет, в них нет нужного или инвентарь полон).
-    // phase — клетки текущего этапа стройки: берётся только их материал, иначе инвентарь забивается материалом
-    // верхних полос и отделки, а нужного сейчас не во что взять.
     static List<ScriptCall> plan(SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
         return fetch(spirit, site, need(spirit, site, phase));
     }
 
-    // Заход плана стройки (BuildPlanner): ровно список плана, но не больше недостающего в мире за вычетом своего.
     static List<ScriptCall> exact(SpiritEntity spirit, SchematicSite site, Map<Item, Integer> wanted) {
         Map<Item, Integer> missing = need(spirit, site, entry -> true);
         Map<Item, Integer> need = new LinkedHashMap<>();
@@ -68,7 +57,6 @@ final class BuildSupplyTrip {
         return fetch(spirit, site, need);
     }
 
-    // Слоты лишнего, которое заход освободит, когда свободных нет: всё не нужное стройке, кроме набора духа.
     static int junkSlots(SpiritEntity spirit, SchematicSite site) {
         Container inventory = spirit.getInventory();
         List<@Nullable String> slots = new ArrayList<>();
@@ -100,11 +88,9 @@ final class BuildSupplyTrip {
                 break;
             }
             BlockPos other = otherHalf(spirit, pos);
-            // Двойной сундук открывается общим содержимым с любой половины: вторую половину не считать дважды.
             if (!seen.add(pos) || (!other.equals(pos) && seen.contains(other))) {
                 continue;
             }
-            // Незагруженный чанк не поднимаем ради осмотра сундука: дух не грузит чанки ради захода.
             if (!spirit.level().isLoaded(pos)) {
                 continue;
             }
@@ -130,9 +116,6 @@ final class BuildSupplyTrip {
         return free;
     }
 
-    // Лишнее (решение владельца 20.10): не нужное стройке освобождает слоты под порцию — в демо выбрасывается сразу
-    // (уничтожается: брошенное магнит духа подобрал бы обратно), в обычной игре идёт в ближний сундук шагами deposit
-    // перед withdraw; набор духа (инструменты, еда) не трогается. Ответ — сколько слотов освободится.
     private static int releaseClutter(
             SpiritEntity spirit,
             SchematicSite site,
@@ -198,7 +181,6 @@ final class BuildSupplyTrip {
         return needed;
     }
 
-    // Набор духа под текущую деятельность: то, что набор не отдаёт (DepositSelection), остаётся при духе.
     private static Set<Integer> kitSlots(SpiritEntity spirit) {
         List<Stack> stacks = new StackMapper().map(spirit.getInventory());
         BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
@@ -215,7 +197,6 @@ final class BuildSupplyTrip {
         return keep;
     }
 
-    // Недостающее в мире минус своё, в порядке клеток схемы: сначала то, что ставится раньше.
     private static Map<Item, Integer> need(
             SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
         Map<Item, Integer> need = new LinkedHashMap<>();
@@ -273,8 +254,6 @@ final class BuildSupplyTrip {
         return free;
     }
 
-    // Сундуки поселения из реестра — без предела радиуса вокруг стройки. Порядок — от ближнего к духу: заход берёт
-    // материал из ближайшего сундука, где он есть.
     static List<BlockPos> containers(SpiritEntity spirit) {
         SettlementChests registry = registry(spirit);
         BlockCoord feet = coord(spirit.blockPosition());

@@ -4,11 +4,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Objects;
 
-/**
- * Досягаемость работы с блоком от ног духа (решение владельца 18.10, «чит» досягаемости): по горизонтали не дальше
- * {@code horizontal} клеток, вверх — {@code up}, вниз — {@code down}; прямая видимость не нужна. Числа — горячая
- * таблица {@code building/build.json}; общее правило для стройки, станций, контейнеров, добычи и фермы.
- */
 public record SpiritReach(int horizontal, int up, int down) {
     public SpiritReach {
         if (horizontal < 1 || up < 0 || down < 0) {

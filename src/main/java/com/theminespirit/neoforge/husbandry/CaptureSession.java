@@ -25,11 +25,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Отлов приманкой (упрощение 44.4, согласовано владельцем 18.10): кольца из блоков нет. Дух с кормом вида в
- * инвентаре подходит к ближайшему животному вне загона и ведёт его в загон у дома — животное идёт к духу, как
- * за игроком с кормом. Успех — животное внутри границы загона.
- */
 public final class CaptureSession {
     public enum Outcome {
         RUNNING,

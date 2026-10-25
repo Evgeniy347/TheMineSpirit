@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Пишет версию и дату установки мода в mod.json страницы «Сервер» сайта gateway.
-# Вызывается из publish.sh после установки jar; вручную — чтобы заполнить страницу без пересборки.
-#
-# Использование: scripts/publish-status.sh <jar> [--pending] [--out <файл>]
 set -euo pipefail
 
 GATEWAY_DIR="${GATEWAY_DIR:-/opt/gateway}"

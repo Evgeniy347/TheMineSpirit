@@ -4,7 +4,6 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BreedingRules;
 import com.theminespirit.core.board.HerdCap;
 import com.theminespirit.core.board.PriorityContext;
@@ -24,12 +23,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Источник доски «стадо»: раз в {@link BoardTuning#herdScanIntervalTicks()} ищет диких
- * животных рядом с поселением. Циклы идут по видам независимо: у каждого вида свой отлов,
- * загон, приманка и лимит четырёх голов. Пойманное животное остаётся живой причиной цикла
- * ({@code animal:capture:<вид>:<uuid>}), пока сущность жива.
- */
 public final class HerdWatch {
     private static final int HERD_RADIUS = 32;
 

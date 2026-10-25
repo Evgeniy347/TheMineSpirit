@@ -9,11 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Сторожа подземной постройки: пол под каждой воздушной колонкой, высота прохода не меньше 3 и шаг между
- * соседними ступенями не больше 1. Свет в шахте необязателен: факелы — мягкие клетки, их может не быть.
- * Вход — верхняя клетка спуска для схемы с повтором вниз.
- */
 public final class SchematicUndergroundRules {
     private static final int PASSAGE_HEIGHT = 3;
 
@@ -26,7 +21,6 @@ public final class SchematicUndergroundRules {
         Set<BlockCoord> air = new HashSet<>();
         for (Schematic.Entry entry : schematic.blocks()) {
             BlockCoord cell = new BlockCoord(entry.dx(), entry.dy(), entry.dz());
-            // Необязательный факел в клетке прохода сквозной: дух проходит сквозь него, строитель копает клетку.
             if (entry.optional()) {
                 air.add(cell);
             } else {

@@ -1,24 +1,4 @@
 #!/usr/bin/env bash
-# Надзор за агентом-стратегом духов (agents/strategist, docs/STRATEGIST.md).
-#
-# Использование:
-#   scripts/strategist.sh start            запустить цикл в tmux-сессии mc-strategist (вывод — STRATEGIST_HOME/strategist.log)
-#   scripts/strategist.sh stop             корректно остановить (SIGTERM); поставленные задачи не отменяются
-#   scripts/strategist.sh status           жив ли, режим, модель, последний цикл, счётчики за час, активные задачи, последний сбой
-#   scripts/strategist.sh pause|resume     создать/убрать STRATEGIST_HOME/PAUSE: новых задач нет, отслеживание идёт
-#   scripts/strategist.sh once             один цикл в этом терминале и выход
-#   scripts/strategist.sh sandbox-check    проверить, что модель не может выполнить инструмент (ls) в песочнице opencode
-#   scripts/strategist.sh smoke [модель]   живая проба качества модели на записанных наблюдениях (в цикл не входит)
-#   scripts/strategist.sh logs [N]         последние N строк strategist.log (по умолчанию 50)
-#
-# Переменные: SPIRIT_API, STRATEGIST_HOME (/opt/minecraft/strategist), STRATEGIST_MODE (dry по умолчанию), STRATEGIST_MODEL,
-# STRATEGIST_MODEL_FALLBACK, STRATEGIST_INTERVAL и остальные из docs/STRATEGIST.md. Режим live только с согласия пользователя:
-# нужен STRATEGIST_CONFIRM_LIVE=1. STRATEGIST_SESSION — имя tmux-сессии (mc-strategist; не oc-*, чтобы opencode-status-notify.sh
-# не принял её за исполнителя), STRATEGIST_ARGS — дополнительные аргументы агента (например, --fixtures для проверок).
-#
-# Коды выхода: 0 — готово (status: работает, sandbox-check: отказ подтверждён); 1 — не запущен, не удалось запуститься
-# или sandbox-check не подтвердил отказ; 2 — неверное использование или конфигурация;
-# 3 — второй экземпляр отказался; 4 — остановка не завершилась за STRATEGIST_STOP_WAIT секунд.
 set -uo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -74,7 +54,6 @@ cmd_start() {
     mkdir -p "$HOME_DIR"
     local -a vars
     mapfile -t vars < <(agent_env)
-    # shellcheck disable=SC2086
     tmux new-session -d -s "$SESSION" -c "$APP_DIR" env "${vars[@]}" bash -c \
         'exec "$1" -u strategist.py run ${STRATEGIST_ARGS:-} >>"$2" 2>&1' _ "$PYTHON" "$LOG"
     sleep "$START_WAIT"
@@ -137,7 +116,6 @@ cmd_once() {
     require_tools
     check_live_confirmation
     cd "$APP_DIR" || exit "$EXIT_USAGE"
-    # shellcheck disable=SC2086
     exec "$PYTHON" -u strategist.py once ${STRATEGIST_ARGS:-}
 }
 

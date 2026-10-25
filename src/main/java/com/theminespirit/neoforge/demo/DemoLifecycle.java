@@ -5,7 +5,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-/** Демо-стройки на шине событий: каждый серверный тик ведут свои сессии, при остановке забываются. */
 public final class DemoLifecycle {
     private DemoLifecycle() {}
 

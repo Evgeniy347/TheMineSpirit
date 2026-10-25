@@ -104,8 +104,6 @@ public final class HiveGameTests {
         });
     }
 
-    // Флак полного прогона 18.10: пчела влетала в клетку будущего костра, BlockPlacer отказывал OCCUPIED, и сбор
-    // проваливался сразу. Существо в клетке костра уходит — дух обязан дождаться и поставить костёр.
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvest_BeeInCampfireCellLeaves_SpiritWaitsAndPlacesCampfire(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

@@ -8,10 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Аварийный подъём (INC-19: дух утонул в затопленной шахте, прыжок на месте не спас): ближайшая
- * по воде клетка, где голова над водой. Поиск в ширину через воду и воздух, вверх — раньше, чем вбок и вниз.
- */
 public final class BreathSearch {
     public static final int MAX_CELLS = 512;
     private static final int[][] STEPS = {{0, 1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {0, -1, 0}};

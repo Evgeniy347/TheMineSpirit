@@ -15,10 +15,6 @@ import java.util.HexFormat;
 import java.util.Optional;
 import net.neoforged.fml.ModList;
 
-/**
- * Версия сборки для сверки сетевого протокола: номер мода плюс короткий SHA-256 файла jar.
- * В dev-запуске вместо jar стоит метка dev — обе стороны dev-клиента и dev-сервера совпадают.
- */
 public final class BuildFingerprint {
     private static final int HASH_CHARS = 16;
     private static volatile String cached;

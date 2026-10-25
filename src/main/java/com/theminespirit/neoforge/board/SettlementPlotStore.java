@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jspecify.annotations.Nullable;
 
-/** Якорь участка поселения в мире (INC-55, INC-56): центр и высота фиксируются один раз и переживают рестарт. */
 public final class SettlementPlotStore extends SavedData {
     private static final String DATA_NAME = ModIdentity.MOD_ID + "_settlement_plot";
     private static final String X = "X";
@@ -41,7 +40,6 @@ public final class SettlementPlotStore extends SavedData {
         setDirty();
     }
 
-    // Участок забыт (сцена GameTest начинается с чистого места): следующий шаг первых шагов обмерит его заново.
     public void clear() {
         plot = null;
         setDirty();

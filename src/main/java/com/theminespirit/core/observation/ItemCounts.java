@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Сводит повторы одного предмета в одну запись и сортирует по id: одинаковый набор даёт одинаковый список. */
 public final class ItemCounts {
     private ItemCounts() {}
 

@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * REST-контроллер разрешений на снятие защиты построек игрока: список (GET), выдача (POST) и снятие (DELETE).
- * Выдача идемпотентна по {@code request_id}: повтор возвращает прежнее разрешение, а не создаёт второе.
- */
 public final class PolicyRoutes {
     private final PolicyGateway gateway;
     private final IdempotencyCache idempotency;

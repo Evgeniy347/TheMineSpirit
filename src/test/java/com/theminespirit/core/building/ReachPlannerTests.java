@@ -82,8 +82,6 @@ class ReachPlannerTests {
                         + "стройки");
     }
 
-    // Решение владельца 21.10 «ближайшая полезная стоянка»: дух идёт волной по слою, а не скачет через дом к стоянке
-    // с наибольшим охватом.
     @Test
     void nextStand_NearUsefulAndFarBiggerGroups_PicksNearUseful() {
         List<BlockCoord> cells = new ArrayList<>();

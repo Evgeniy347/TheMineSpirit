@@ -44,7 +44,6 @@ public final class SettlementChestGameTests {
         GameTestFixtures.reset(helper);
         floor(helper);
         ServerLevel level = helper.getLevel();
-        // Сцена одна в пачке: реестр — общий на уровень, чужие сундуки из прошлых пачек не должны подменять склад.
         clearRegistry(level);
         BlockPos chest = new BlockPos(BUILD_X + SUPPLY_DISTANCE, 1, BUILD_Z);
         helper.setBlock(chest, Blocks.CHEST);

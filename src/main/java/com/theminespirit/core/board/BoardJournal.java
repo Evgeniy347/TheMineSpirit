@@ -13,12 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Журнал заданий на диске: append-only JSONL, одна запись на строку. Запись идёт через
- * очередь и сбрасывается бюджетом (не больше N строк за вызов), поэтому переходы тика
- * не пишут файл синхронно. При загрузке «выполнено» возвращается в ledger; оборванная
- * хвостовая строка отрезается с ошибкой в результате, а не тихо.
- */
 public final class BoardJournal {
     private final Path path;
     private final Deque<String> pending = new ArrayDeque<>();

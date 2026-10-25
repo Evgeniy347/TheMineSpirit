@@ -11,10 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * План освещения территории факелами: по карте блочного света выбирает клетки под факелы так, чтобы на земле
- * не осталось тёмных клеток (блочный свет не выше порога спавна враждебных мобов).
- */
 public final class LightPlan {
     public static final int MOB_SPAWN_LIGHT = 0;
     public static final int TORCH_LIGHT_LEVEL = 14;

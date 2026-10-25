@@ -4,11 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Запись журнала заданий: событие доски и состояние задания на момент перехода.
- * Неизменяема: строка журнала пишется один раз и читается после перезапуска без правок.
- * {@code configHash} обязателен — по нему отличают правила, по которым задание жило.
- */
 public record BoardLogEntry(
         BoardLog.Event event,
         long tick,

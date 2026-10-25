@@ -193,9 +193,6 @@ final class SpiritTaskCommands {
         return spirits;
     }
 
-    // Игрок и лог называют духа коротко: «spirit-1» или первые 8 знаков UUID (INC-8). Ванильный
-    // селектор такие строки не находит и команда падала, а оператор затем бил по всем духам сразу.
-    // Находим ровно одного духа по имени или префиксу UUID; неоднозначность — отказ, а не «все».
     private static List<SpiritEntity> selectedSpirits(CommandContext<CommandSourceStack> ctx)
             throws CommandSyntaxException {
         try {

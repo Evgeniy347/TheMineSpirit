@@ -51,14 +51,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-/**
- * Единственный держатель данных мода: таблицы ценностей, коэффициентов и правил. Читатели (core и neoforge)
- * берут текущие версии отсюда, а не читают classpath сами. NeoForge-адаптер на {@code AddReloadListenerEvent}
- * вызывает {@link #reload(ContentSource)} — так ванильная {@code /reload} и датапак мира переопределяют любой файл.
- *
- * <p>Таблицы, которых нет в ресурс-менеджере (нет ни в моде, ни в датапаке), не перезагружаются и продолжают
- * работать в classpath-версии: отсутствие файла — не ошибка, ошибкой считается только нечитаемый/битый json.
- */
 public final class DataTables {
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 

@@ -18,10 +18,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/**
- * Дома и лагеря духов, сохранённые отдельно от сущностей: после перезапуска сервера без игроков духи
- * выгружены и своих координат не отдают, а чанки поселения по ним надо поднять при входе первого игрока.
- */
 final class SettlementAnchorStore extends SavedData {
     private static final String DATA_NAME = ModIdentity.MOD_ID + "_settlement_anchors";
     private static final String ENTRIES = "Entries";

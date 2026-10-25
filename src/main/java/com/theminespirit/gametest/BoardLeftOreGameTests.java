@@ -36,7 +36,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-// Оставленная в шахте руда — задание на доске: висит без кирки с Удачей, открывается держателю такой кирки.
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardLeftOreGameTests {

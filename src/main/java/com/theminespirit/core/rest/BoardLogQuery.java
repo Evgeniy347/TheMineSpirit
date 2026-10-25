@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/** Параметры GET /v1/board/log: только {@code limit}, по умолчанию 5, от 1 до 64. */
 public record BoardLogQuery(int limit) {
     public static final int DEFAULT_LIMIT = 5;
     public static final int MAX_LIMIT = 64;

@@ -5,7 +5,6 @@ import com.theminespirit.neoforge.net.BuildFingerprint;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
-/** {@code /spirit version}: версия мода без прав оператора — игроку нужно знать, какую сборку он запустил. */
 final class SpiritVersionCommand {
     private SpiritVersionCommand() {}
 

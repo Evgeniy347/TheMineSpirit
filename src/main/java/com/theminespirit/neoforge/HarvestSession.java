@@ -639,8 +639,6 @@ public final class HarvestSession {
                 fail("не удалось подобрать дроп у " + currentTarget + ": " + reason);
                 return;
             }
-            // Пока есть недобытые блоки, провал сбора не смертелен: следующий сломанный блок может освободить
-            // предмет (накрывающий блок, тесная ниша). Место запоминается и повторяется после всей добычи.
             dropRetries.failed(currentTarget);
             collector = null;
             currentTarget = null;

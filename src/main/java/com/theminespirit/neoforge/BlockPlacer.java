@@ -57,8 +57,6 @@ public final class BlockPlacer {
         return begin(target, state, blockId, true);
     }
 
-    // Пол и стенки шахты над пустотой ставятся без опоры (решение владельца 23.10): пещера под
-    // спуском не останавливает проходку.
     public Begin beginWithoutSupport(BlockPos target, BlockState state, String blockId) {
         return begin(target, state, blockId, false);
     }

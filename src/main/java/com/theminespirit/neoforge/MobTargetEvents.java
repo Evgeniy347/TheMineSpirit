@@ -64,7 +64,8 @@ public final class MobTargetEvents {
             return condition.holds(lightMagicValue(mob), mob.level().isDay(), spirit.isInWater());
         }
 
-        @SuppressWarnings("deprecation") // ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
+        // mc: ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
+        @SuppressWarnings("deprecation")
         private static float lightMagicValue(Mob mob) {
             return mob.getLightLevelDependentMagicValue();
         }

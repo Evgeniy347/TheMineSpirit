@@ -27,7 +27,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ChunkLoadingGameTests {
     private ChunkLoadingGameTests() {}
 
-    // succeedWhen, а не succeedAfter: дух может быть удалён чужим reset структуры
     @SceneStep(template = "arena", timeoutTicks = 200)
     public static void chunkLoading_SpiritSpawnedMovedAndDiscarded_KeepsTickingSquare(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
@@ -100,7 +99,6 @@ public final class ChunkLoadingGameTests {
         helper.runAfterDelay(3, () -> {
             long ticketsBeforeUnload = ticketCount(level);
 
-            // Движок выгружает сущность через setRemoved(UNLOADED_TO_CHUNK), минуя remove(): тест идёт тем же путём.
             spirit.setRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK);
 
             helper.assertTrue(

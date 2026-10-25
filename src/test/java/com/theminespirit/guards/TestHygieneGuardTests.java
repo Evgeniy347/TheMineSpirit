@@ -27,9 +27,6 @@ class TestHygieneGuardTests {
                     + "HashSet|LinkedHashSet|TreeSet|CopyOnWriteArraySet|ConcurrentSkipListMap|ConcurrentSkipListSet|"
                     + "ArrayDeque|ConcurrentLinkedQueue|PriorityQueue)\\b");
 
-    // Единственное разрешённое изменяемое static-состояние: кэш прочитанных исходников наполняется один раз,
-    // дальше только читается. Запись под другим ключом: ключ — «путь#имяПоля», адресно, чтобы переименование
-    // поля или отказ от кэша валили сторож устаревшим исключением.
     private static final Map<String, String> STATIC_EXCEPTIONS = Map.of(
             "guards/SourceFiles.java#CACHE",
             "единственный общий кэш исходников: наполняется один раз, дальше чтение — не переносит состояние между тестами");

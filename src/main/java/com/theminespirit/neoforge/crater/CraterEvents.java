@@ -19,12 +19,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 import org.slf4j.Logger;
 
-/**
- * Запоминает воронки от криперов рядом с поселением: центр, радиус и уровень края.
- *
- * <p>Запись идёт по событию Detonate, пока блоки ещё не осыпались: по краю воронки снимается
- * уровень окружающей земли, по которому потом засыпают.
- */
 public final class CraterEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int RIM_SAMPLES = 16;

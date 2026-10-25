@@ -1,13 +1,8 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.fishing.FishingData;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Параметры ловли рыбы ведром: сколько рыб взять за заход и в каком радиусе искать.
- * Итоговый предел дополнительно режет {@link FishingData#bucketCount()}.
- */
 public record BucketFishParams(int count, int radius) {
     public BucketFishParams {
         if (count < CatalogLimits.COUNT_MIN || count > CatalogLimits.COUNT_MAX) {

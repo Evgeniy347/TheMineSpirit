@@ -17,15 +17,11 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Сторож раскладки участка этапа 1 (решение 54b п.2): ничто не пересекается, всё внутри ограды. */
 class SettlementLayoutTests {
     private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
     private static final BlockCoord ANCHOR = new BlockCoord(100, 64, -40);
-    // Решение 54b п.2: вход в шахту — вне габарита дома с отступом не меньше 3.
     private static final int MINE_GAP = 3;
-    // Спуск mine_descent_v1 выходит к поверхности первыми тремя ступенями (проход высотой 3).
     private static final int MINE_SURFACE_STEPS = 3;
-    // Станции встают вокруг духа на дворе не дальше этого (поиск клетки StationPlacer).
     private static final int YARD_RADIUS = 2;
 
     @Test

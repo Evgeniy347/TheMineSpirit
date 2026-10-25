@@ -19,11 +19,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Начало плана стройки из мира: что из схемы уже стоит, сколько материала при духе и в сундуках у площадки, сколько
- * слотов под материал и лишнего, где дух стоит после захода. Ключи материала — {@link BuildPlanner#item}; обратно в
- * предмет — {@link Prepared#items()}.
- */
 final class BuildPlanStart {
     record Prepared(BlockCoord supply, BuildPlanner.Start start, Map<String, Item> items) {}
 
@@ -45,8 +40,6 @@ final class BuildPlanStart {
                 required.merge(key, 1, Integer::sum);
             }
         }
-        // Блоки без предмета (вода колодца) дух не ставит: стоят в мире — для плана они готовы, нет — их нет совсем
-        // (ставятся после стройки; без этого план вставал на воду, которой ещё нет).
         Set<BlockCoord> skip = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.schematic().entries(origin, site.rotation())) {
             if (!BlockItems.hasBlockItem(entry.block())) {
@@ -74,8 +67,6 @@ final class BuildPlanStart {
         List<BlockPos> chests = BuildSupplyTrip.containers(spirit);
         Map<String, Integer> chest = new TreeMap<>();
         Set<BlockPos> seen = new HashSet<>();
-        // Стоянка захода — у сундука, где действительно есть материал схемы: ближний пустой сундук (чужой склад,
-        // соседняя стройка) не должен уводить духа с материала.
         BlockPos supplyChest = null;
         for (BlockPos pos : chests) {
             BlockPos other = BuildSupplyTrip.otherHalf(spirit, pos);
@@ -110,8 +101,6 @@ final class BuildPlanStart {
         return new Prepared(supply, start, Map.copyOf(items));
     }
 
-    // Откуда план начинает заход: при духе хватает материала — его ноги; иначе клетка у сундука, где материал есть.
-    // Чужой сундук без нужды (соседняя стройка, соседний тест) не должен давать плану лишние подходы к складу.
     private static BlockCoord supplyPoint(
             SpiritEntity spirit,
             SchematicSite site,
@@ -133,8 +122,6 @@ final class BuildPlanStart {
         return supplyPos == null ? feet : supplyFeet(site, supplyPos).orElse(feet);
     }
 
-    // Клетка у ближнего сундука вне габарита стройки, ближайшая к середине площадки, на уровне земли: там дух после
-    // захода.
     private static Optional<BlockCoord> supplyFeet(SchematicSite site, BlockPos chest) {
         BlockCoord origin = site.origin();
         @Nullable BlockCoord best = null;
@@ -144,7 +131,6 @@ final class BuildPlanStart {
         for (Direction side : Direction.Plane.HORIZONTAL) {
             BlockPos cell = chest.relative(side);
             BlockCoord coord = new BlockCoord(cell.getX(), cell.getY(), cell.getZ());
-            // Клетка схемы (крыльцо, ступень) потом застроится — после захода дух стоял бы в стене (дом игрока 3 cw90).
             if (cell.getY() != origin.y()
                     || !site.standable(coord)
                     || site.schemeCells().contains(coord)

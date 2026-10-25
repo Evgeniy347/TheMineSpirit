@@ -4,11 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.Set;
 
-/**
- * Время рыбалки без поплавка (упрощение 44.8): дух ждёт поклёвку случайно от {@code waitMinTicks} до
- * {@code waitMaxTicks} (минус скорость приманки удочки) и ещё {@code hookedMinTicks}…{@code hookedMaxTicks}, затем
- * получает улов по ванильной таблице лута. Числа — горячая таблица {@code fishing/wait.json}.
- */
 public record FishingWait(int waitMinTicks, int waitMaxTicks, int hookedMinTicks, int hookedMaxTicks) {
     public static final String RESOURCE = "data/theminespirit/fishing/wait.json";
     private static final Set<String> FIELDS =

@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.TreeMap;
 
-/** Строка задания доски для чата {@code /spirit board}: кейс, приоритет, владелец, статус, нехватка. */
 public final class BoardText {
     private BoardText() {}
 

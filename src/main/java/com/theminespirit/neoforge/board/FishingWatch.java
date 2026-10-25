@@ -33,12 +33,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import org.slf4j.Logger;
 
-/**
- * Два постоянных задания рыболовства: коптильня под накопленный улов ({@code fish:smoker})
- * и рыбалка на запомненной рабочей точке у воды ({@code fish:work}). Мир читает только этот
- * адаптер; решения о выдаче — чистые функции {@link FishingNeeds}, место выбирает
- * {@link FishingWorkPointPicker}. Число-порог рыбы и размер рабочей точки — из fishing.json.
- */
 final class FishingWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int STATION_RADIUS = 8;

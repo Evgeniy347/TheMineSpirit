@@ -47,14 +47,12 @@ public class ClearAreaSession {
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
-    // Строка прогресса — через столько срезанных блоков (INC-67: расчистка шла без единой строки).
     private static final int PROGRESS_EVERY = 16;
     private static final int PROTECTED_LOGGED = 10;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int COLLECT_RADIUS = 4;
     private static final int LEFTOVER_SHOWN = 4;
     private static final int LONG_APPROACH = 60;
-    // Досягаемость ломки с места — с запасом от BlockBreaker.REACH на сдвиг духа за время ломки.
     private static final double REACH_FROM_PLACE = BlockBreaker.REACH - 0.5;
 
     protected final SpiritEntity spirit;
@@ -84,7 +82,6 @@ public class ClearAreaSession {
     protected int restoredSkipped;
 
     private final BuildResult tally = new BuildResult();
-    // Тики по фазам (подход, лом, подбор) — в итог ящика: куда уходит время расчистки (сцена 56).
     private int approachFailed;
     private int approachSpent;
     private int approaches;
@@ -153,7 +150,6 @@ public class ClearAreaSession {
         }
     }
 
-    // Между клетками (выбор следующей): здесь можно прерваться на смену инструмента, не бросая ломку на полпути.
     public boolean picking() {
         return state == State.PICK && outcome == Outcome.RUNNING;
     }
@@ -230,8 +226,6 @@ public class ClearAreaSession {
         }
         MiningPlanner.Outcome result = MiningPlanner.next(from, top, safety, approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted) {
-            // Только непустые клетки: по всему остатку планировщик выбирал воздух ящика (вершины колонок без стоянки),
-            // и дух шёл к пустой клетке — 237 подходов впустую на ящик (сцена 56).
             List<BlockCoord> solid =
                     remaining.stream().filter(cell -> !clear(cell)).toList();
             result = MiningPlanner.next(from, solid, safety, approachFailures.excludedStands());
@@ -285,8 +279,6 @@ public class ClearAreaSession {
                 && feet.getX() == currentStand.x()
                 && feet.getY() == currentStand.y()
                 && feet.getZ() == currentStand.z()) {
-            // Дух уже в клетке стоянки: подход к её центру с допуском 0.6 срывался «без причины», когда дух стоял у
-            // края клетки, прижатый к стенке (сцена 56), и клетка уходила в повтор.
             approach.cancel();
             arrived();
             return;
@@ -321,8 +313,6 @@ public class ClearAreaSession {
         }
     }
 
-    // Ближайшая видимая клетка в досягаемости (как у игрока, BlockBreaker.REACH) — ломается с места, без подхода к
-    // соседней стоянке: подход к каждой клетке съедал половину времени выравнивания (сцена 56). Не под ногами.
     private @Nullable BlockCoord inReach(List<BlockCoord> top, BlockPos feet) {
         if (!spirit.onGround()) {
             return null;
@@ -370,9 +360,7 @@ public class ClearAreaSession {
     }
 
     private void prepareBreak() {
-        // Снос (перенос постройки) убирает именно поставленное поселением — запрет по плану к нему не относится.
         if (!demolish && PlanCells.keep(level, toPos(currentTarget))) {
-            // Постройка плана поселения (ограда, хижина, двор, факелы, шахта) — не цель расчистки (запрет по плану).
             protectedSkipped++;
             if (protectedSkipped <= PROTECTED_LOGGED) {
                 LOGGER.info(
@@ -396,7 +384,6 @@ public class ClearAreaSession {
         if (begin instanceof BlockBreaker.Protected kept) {
             protectedSkipped++;
             if (protectedSkipped <= PROTECTED_LOGGED) {
-                // Что именно защищено и почему (INC-71: «защищено: 22» на участке без имён клеток).
                 LOGGER.info(
                         "[clear] {}: защищено {} — {}: {} ({})",
                         spirit.getName().getString(),
@@ -416,7 +403,6 @@ public class ClearAreaSession {
             return;
         }
         if (begin instanceof BlockBreaker.Refused refused && refused.reason() == BlockBreaker.RefuseReason.AIR) {
-            // Блок исчез сам (листва опала, его сломал другой): клетка чиста, это не пропуск.
             vanished++;
             if (vanished <= PROTECTED_LOGGED) {
                 LOGGER.info(
@@ -494,10 +480,6 @@ public class ClearAreaSession {
         if (outcome != Outcome.RUNNING) {
             return;
         }
-        // Провал — только если ломать было что, но ничего не сломано; чистый участок — выполненная расчистка.
-        // Блоки под защитой (верстак, факелы, чёрный список) участок и должен сохранить — это не провал.
-        // Защищённые клетки пропускаются и ящик не валят: провал — только если не убрано ничего из доступного
-        // (непрочное, без стоянки, недостижимое), INC-71: «убрано 0 из 1156; защищено: 22; FAILED».
         if (removed == 0 && skippedTotal() - protectedSkipped > 0) {
             fail(summary() + "; не убран ни один блок");
             return;

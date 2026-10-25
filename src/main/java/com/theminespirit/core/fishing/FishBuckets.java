@@ -6,11 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Какая рыба идёт в ведро: вид сущности → предмет ведра. Список закрыт ванилью:
- * ведром ловят только треску, лосося, иглобрюха и тропическую рыбу, остальное в ведро
- * не садится. Порядок видов задан явно — обход обязан быть детерминирован.
- */
 public final class FishBuckets {
     private static final Map<String, String> ENTITY_TO_BUCKET = build();
 

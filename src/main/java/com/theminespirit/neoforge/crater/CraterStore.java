@@ -14,11 +14,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/**
- * Память воронок от взрывов на уровне: центр, радиус и уровень края каждой.
- *
- * <p>Запись переживает перезапуск сервера, чтобы незакрытая воронка не потерялась.
- */
 public final class CraterStore extends SavedData {
     public static final String NAME = "theminespirit_craters";
     public static final int MAX_CRATERS = 256;

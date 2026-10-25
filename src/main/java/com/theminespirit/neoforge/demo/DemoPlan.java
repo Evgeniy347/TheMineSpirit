@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Готовая к постановке демо-постройка: имя, схема, раскладка, содержимое сундука и блоки без предмета. */
 record DemoPlan(
         String name,
         String scheme,

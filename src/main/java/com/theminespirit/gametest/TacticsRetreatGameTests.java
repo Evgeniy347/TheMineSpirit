@@ -301,8 +301,6 @@ public final class TacticsRetreatGameTests {
         });
     }
 
-    // Отход без стройки (решение владельца 18.10): с блоками в инвентаре и врагом в четырёх блоках (раньше — сцена
-    // баррикады) дух не строит ни баррикаду, ни столб — только уходит; блоки остаются в инвентаре.
     @SceneStep(template = "arena", timeoutTicks = 300)
     public static void retreat_LowHpWithBlocksHuskFourAway_PlacesNoBlocks(GameTestHelper helper) {
         TacticsScene.prepare(helper);

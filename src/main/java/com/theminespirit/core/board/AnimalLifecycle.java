@@ -8,13 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Жизненный цикл животного одного вида на доске: отлов приманкой → загон → привести в загон. Укрытия из блоков
- * нет (упрощение 44.4, решение владельца 18.10), разбирать после отлова нечего. Переходы — чистые функции
- * состояния, адаптер вызывает: captured (capture выполнен), penBuilt (загон стоит), lured (животное в загоне),
- * animalDied (гибель: «приманить» снимается). Повторные вызовы не плодят дублей.
- * Префикс id делает цикл независимым: реестр {@link HerdCycles} держит по циклу на вид.
- */
 public final class AnimalLifecycle {
     private static final String DEFAULT_PREFIX = "animal";
 

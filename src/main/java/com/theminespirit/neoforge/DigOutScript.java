@@ -20,12 +20,6 @@ import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
-/**
- * Самовыход замурованного духа (требование владельца, INC-45): лестница вверх в сторону точки — ступень 1, проход 2 высоты.
- * Шаг: расчистить голову над собой и две клетки впереди-выше, подложить пол ступени, если там пусто, шагнуть.
- * Конец — дух под открытым небом или на высоте точки. Ломка и постановка — обычные (BlockBreaker/BlockPlacer):
- * охраняемые блоки и неломаемые (бедрок) — смена направления, затем отказ.
- */
 public final class DigOutScript implements ScriptInstance {
     private static final int MAX_STEPS = 96;
     private static final int STEP_TICKS = 60;
@@ -54,8 +48,6 @@ public final class DigOutScript implements ScriptInstance {
         this.placer = new BlockPlacer(spirit);
     }
 
-    // Замурован: из клетки духа по проходимым клеткам не дойти ни до одной под открытым небом (обход ограничен —
-    // большая пещера замурованной не считается).
     public static boolean sealed(Level level, BlockPos feet) {
         Set<BlockPos> seen = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
@@ -79,14 +71,10 @@ public final class DigOutScript implements ScriptInstance {
         return true;
     }
 
-    // Под открытым небом — над клеткой нет твёрдых блоков (карта высот). Не canSeeSky: тот смотрит на небесный свет,
-    // а он в засыпанной яме бывает устаревшим — живой карман INC-59 не считался замурованным.
     public static boolean open(Level level, BlockPos cell) {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
     }
 
-    // Дверь, калитка и люк — проход: закрытая хижина с духами внутри считалась замурованной, и дух рыл стену
-    // хижины (приёмка «джунгли» 24.10).
     private static boolean walkable(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (state.getBlock() instanceof DoorBlock
@@ -191,7 +179,6 @@ public final class DigOutScript implements ScriptInstance {
         };
     }
 
-    // Направление — к точке по большей разнице; упёрлись — следующее по кругу, четыре отказа подряд — провал.
     private ScriptStatus turnOrFail(String reason) {
         turns++;
         if (turns >= Direction.Plane.HORIZONTAL.length()) {

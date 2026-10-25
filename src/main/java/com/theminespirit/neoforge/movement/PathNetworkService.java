@@ -26,11 +26,6 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import org.slf4j.Logger;
 
-/**
- * Сеть тропинок уровня (решение владельца 20.10, QUESTIONS-3: отрезки из мира, хранение в памяти уровня). Участок
- * строится лениво, когда путь игры в пределах 32 до цели не дошёл; изменение блока — O(задетых отрезков) по индексу
- * сети, пересчёт задетых — перед следующим маршрутом, без обхода мира в тике. После перезапуска строится заново.
- */
 public final class PathNetworkService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<ServerLevel, LevelNetwork> BY_LEVEL = new ConcurrentHashMap<>();
@@ -54,7 +49,6 @@ public final class PathNetworkService {
         }
     }
 
-    // Площадка стройки (QUESTIONS-3, ответ 2): одна на постройку, сколько бы духов её ни строили.
     public static void beginSite(ServerLevel level, Object building, BuildBox box, List<BlockCoord> entrances) {
         LevelNetwork network = BY_LEVEL.computeIfAbsent(level, key -> new LevelNetwork());
         network.sites.computeIfAbsent(building, key -> network.areas.beginSite(box, entrances));
@@ -113,8 +107,6 @@ public final class PathNetworkService {
             areas.blockPlaced(block);
         }
 
-        // Отрезок, который не прошёлся путём игры, убирается: пересчёт обходом тела нашёл бы его снова. Участок
-        // строится заново не раньше паузы.
         void legFailed(BlockCoord from, BlockCoord to) {
             Set<Integer> shared = new HashSet<>(network.segmentsAt(from));
             shared.retainAll(network.segmentsAt(to));

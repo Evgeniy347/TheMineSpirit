@@ -43,7 +43,6 @@ class FirstStepsPlanTests {
         List<BoardCase> chain = chain();
         Set<BoardCase> passed = EnumSet.noneOf(BoardCase.class);
         passed.addAll(chain.subList(0, Math.min(step, chain.size())));
-        // Постройки плана (шахта, свет, ограда, дом) готовы только по журналу и миру: пройденные — закрыты в нём.
         Set<BoardCase> done = EnumSet.noneOf(BoardCase.class);
         passed.stream().filter(LAYOUT::contains).forEach(done::add);
         return facts(passed, done, Set.of());

@@ -103,8 +103,6 @@ final class PlaceBlockScript implements ScriptInstance {
                 fail("клетка " + toPos(target).toShortString() + " занята: место занято; поставлено 0 из 1");
             case NO_SUPPORT -> fail(refused.message() + "; поставлено 0 из 1");
             case OUT_OF_REACH -> {
-                // Близко по прямой, но не достать (дух в шахте под клеткой): один раз — подойти к стоянке, а не
-                // провалить свет «стоянка недостижима» (приёмка «джунгли» 24.10).
                 if (!standRequired) {
                     standRequired = true;
                     approached = false;

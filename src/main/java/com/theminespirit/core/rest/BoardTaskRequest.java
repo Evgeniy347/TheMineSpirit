@@ -23,12 +23,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Тело POST /v1/board/tasks: кейс доски, владелец, гейт, зависимости, уровень и причина.
- * Id задания доска назначает сама — стратег ссылается на него из {@code dependsOn} после
- * постановки. Неизвестный кейс отклоняется со списком допустимых: опечатка в имени кейса
- * не должна тихо ставить задание-сироту.
- */
 public record BoardTaskRequest(
         UUID requestId,
         BoardCase boardCase,

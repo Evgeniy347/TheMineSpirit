@@ -41,8 +41,6 @@ public final class BoardGameTests {
         drainForeignTickets(board);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
-        // Дух без дома: иначе FirstStepsRunner откроет расчистку и займёт единственного духа —
-        // сцена проверяет снабжение стройки, а не первые шаги поселения.
         for (int tree = 0; tree < 2; tree++) {
             for (int height = 1; height <= 4; height++) {
                 helper.setBlock(new BlockPos(6 + tree * 2, height, 6), Blocks.OAK_LOG);

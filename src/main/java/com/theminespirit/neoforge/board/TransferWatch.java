@@ -56,7 +56,6 @@ public final class TransferWatch {
     private static final int CHEST_RADIUS = 16;
     private static final int CHEST_PROBES = 4;
     private static final int TORCHES_PER_COAL = 4;
-    // Факелы освещения — тоже материал стройки: без передачи дух шёл ставить их пустым («нет материала torch»).
     private static final Set<BoardCase> BUILDS =
             Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.REPAIR_BUILDING);
 
@@ -77,8 +76,6 @@ public final class TransferWatch {
         }
         Optional<String> craftItem = TicketPlans.craftItem(craftTicket.boardCase());
         TicketTarget target = service.targetOf(craftTicket.id(), spirits);
-        // Добыча крафтового (забор ×72) — тот же крафт: брёвна после расчистки лежат у расчищавшего, а добытчик
-        // падал «не удалось добыть jungle_fence: в инвентаре 0» (приёмка «джунгли» 23.10).
         boolean gather = craftItem.isEmpty()
                 && craftTicket.boardCase() == BoardCase.GATHER_MATERIALS
                 && target.supplyItem() != null;
@@ -88,7 +85,6 @@ public final class TransferWatch {
         if (craftItem.isEmpty()) {
             return false;
         }
-        // Доски — той породы, что есть в запасе поселения, а не первая из рецепта (в джунглях сундук ждал дубовые).
         BlockCoord place = crafter.home().orElseGet(() -> at(crafter));
         RecipeKnowledge recipes = RecipeKnowledge.of(level)
                 .preferring(stock.available(), SettlementWood.of(level, place, stock.available()));
@@ -101,7 +97,6 @@ public final class TransferWatch {
             return false;
         }
         if (craftTicket.boardCase() == BoardCase.CRAFT_TORCHES) {
-            // Палки факелам крафтер берёт из своих брёвен сам (шаг acquire в плане) — их не ждём передачей.
             Map<String, Integer> sticks = new HashMap<>();
             need.forEach((item, count) -> {
                 if (OwnWood.stick(item)) {
@@ -120,23 +115,13 @@ public final class TransferWatch {
             }
         }
         if (gather && ownWoodCovers(crafter, need)) {
-            // Доски и палки добыча крафтит сама из своих брёвен: крафтер ограды с 60 брёвнами ждал передачу досок от
-            // соседа, ингредиент за ингредиентом, а двое стояли (сцена 56).
             return false;
         }
         if (needsTable(level, recipes, craftItem.orElseThrow(), service.targetPoint(craftTicket.id(), spirits))) {
-            // Верстак у места крафта не стоит — он сам ингредиент: его несёт дух, у которого он в инвентаре.
-            // Иначе крафтер проваливал «нужен верстак: рядом (16) нет», пока верстак лежал у соседа (INC-26).
             ingredients.add(new Ingredient(ItemIds.normalize(TABLE_ITEM), 1));
         }
         StackMapper mapper = new StackMapper();
         BlockCoord crafterAt = at(crafter);
-        // Добыча сама рубит и крафтит («acquire»): ждать передачу от занятого стройкой духа незачем — свободный
-        // дух простаивал 1845 тиков, пока строитель ограды держал доски и брёвна (приёмка «джунгли» 24.10).
-        // Есть сундук поселения — передачи только со склада и от свободных духов: остатки каждый дух сдаёт в сундук
-        // по окончании шага (TicketPlans.LEFTOVERS), а передача от занятого духа висела до 10000 тиков (приёмка
-        // «джунгли» 24.10). Свободный дух шага не кончает и не сдаёт: взятое со склада под крафт, отданный
-        // другому духу, без передачи от него застревало, крафт падал «не хватает» (settlement_EmptyTwoSpirits).
         boolean chest = hasSettlementChest(level, place);
         List<SpiritEntity> donors = chest || gather
                 ? spirits.stream().filter(spirit -> !busy(spirit)).toList()
@@ -149,8 +134,6 @@ public final class TransferWatch {
                 stacks(crafter.getInventory(), mapper),
                 ingredients,
                 sources,
-                // Без сундука склада нет: снимок запаса считал складом устаревшие инвентари, передача «со склада»
-                // ничего не брала, а крафт падал «не хватает» (settlement_EmptyTwoSpirits 24.10).
                 chest ? chestStock(level, service, place, craftTicket.id()) : Map.of(),
                 InventoryTables.values(),
                 BoardTuning.transferRadiusBlocks(),
@@ -158,9 +141,6 @@ public final class TransferWatch {
         if (submitOrders(service, spirits, craftTicket, orders, now)) {
             return true;
         }
-        // Ингредиент только у занятого духа: по окончании шага он сдаст его в сундук (или отдаст излишек передачей,
-        // если сундука нет) — крафт ждёт, а не падает «не хватает: cobblestone» (приёмка «джунгли» 24.10) или
-        // «не хватает: oak_planks 1 из 9» у сундуков склада (settlement_EmptyTwoSpirits).
         return heldByBusy(ingredients, crafter, orders, Map.of(), spirits, mapper);
     }
 
@@ -203,9 +183,6 @@ public final class TransferWatch {
         return total;
     }
 
-    // Стройка первых шагов: материалы, собранные другими духами, лежат у них в инвентаре — строитель брал из
-    // сундуков и падал «не хватило материала 'jungle_fence': нужно 25, есть 0» (приёмка «джунгли»). Сундуки
-    // строитель обходит сам (заходы за материалами), поэтому здесь — только передачи от духов.
     private static boolean ensureBuildTransfers(
             ServerLevel level,
             BoardService service,
@@ -228,8 +205,6 @@ public final class TransferWatch {
             }
         });
         if (!wood.isEmpty() && ownWoodCovers(builder, wood)) {
-            // Деревянное стройки строитель крафтит сам из своих брёвен (заход стройки за материалом): передача
-            // забора куску ограды ждала, пока сосед достроит свой кусок, куски шли по одному (сцена 56).
             need = new HashMap<>(need);
             need.keySet().removeAll(wood.keySet());
         }
@@ -237,8 +212,6 @@ public final class TransferWatch {
         int coal = builder.getInventory().countItem(Items.COAL)
                 + builder.getInventory().countItem(Items.CHARCOAL);
         if (torches > 0 && coal * TORCHES_PER_COAL >= torches) {
-            // Факелы строитель крафтит сам из своего угля (заход стройки, acquire света): передача факелов ждала
-            // соседа, и куски ограды стояли (сцена 56).
             need = new HashMap<>(need);
             need.remove("torch");
             need.remove("minecraft:torch");
@@ -270,9 +243,6 @@ public final class TransferWatch {
         if (submitOrders(service, spirits, build, orders, level.getGameTime())) {
             return true;
         }
-        // Материал стройки ещё у занятого духа (добытчик не сдал брёвна в сундук) — стройка ждёт, а не падает
-        // «не хватило материала 'jungle_log': поставлено 7 из 94, есть 0» (приёмка «джунгли» 24.10). Сундуки
-        // строитель обходит сам — их содержимое считается имеющимся.
         Map<String, Integer> stored = chest ? chestStock(level, service, home, build.id()) : Map.of();
         return heldByBusy(materials, builder, orders, stored, spirits, mapper);
     }
@@ -316,7 +286,6 @@ public final class TransferWatch {
                             List.of(),
                             Map.of(),
                             modifiers),
-                    // Со склада — к дому получателя (сундуки поселения у дома), от духа — к получателю.
                     TicketTarget.at(
                                     order.from().isPresent()
                                             ? at(recipient.orElseThrow())
@@ -325,14 +294,11 @@ public final class TransferWatch {
                                                     .home()
                                                     .orElseGet(() -> at(recipient.orElseThrow())))
                             .withTransfer(order.from().orElse(null), order.to(), order.item(), order.count()));
-            // Проваленная передача остаётся FAILED, повторная подача — DUPLICATE: крафт «ждал передачу» без
-            // открытой передачи до конца приёмки (gather:jungle_fence после «stick: нужно 16, в инвентаре 15»).
             submitted |= outcome == BoardOutcome.ACCEPTED || active(service, id);
         }
         return submitted || active;
     }
 
-    // Ингредиенты на все крафты добычи: ×72 забора — 24 крафта по 3, а не один.
     private static Map<String, Integer> gatherNeed(RecipeKnowledge recipes, String item, int count) {
         int output = Math.max(recipes.outputCount(item), 1);
         int crafts = (Math.max(count, 1) + output - 1) / output;
@@ -342,7 +308,6 @@ public final class TransferWatch {
         return need;
     }
 
-    // Ингредиенты на все крафты задания (torch ×8 — два крафта), а не на один.
     private static Map<String, Integer> craftNeed(
             RecipeKnowledge recipes, BoardTicket craftTicket, TicketTarget target, String item) {
         MaterialSource source = new MaterialSource() {
@@ -417,9 +382,6 @@ public final class TransferWatch {
         return sources;
     }
 
-    // Склад — то, что сейчас лежит в сундуках у дома (досягаемость withdraw), за вычетом открытых передач со склада:
-    // снимок запаса устаревает между пересборками, и одни и те же палки заказывались дважды — передача падала
-    // «в сундуках рядом только 0 из 3 'jungle_planks'» (приёмка «джунгли» 24.10).
     private static Map<String, Integer> chestStock(
             ServerLevel level, BoardService service, BlockCoord home, String craftId) {
         Map<String, Integer> containers = new HashMap<>();
@@ -456,8 +418,6 @@ public final class TransferWatch {
         return Map.copyOf(containers);
     }
 
-    // Отдающий снят с передач после серии провалов или на паузе по ним (застрял в шахте) — не источник: его передачи
-    // висели PENDING «держатель снят с кейса TRANSFER_ITEM», а крафт и добыча ждали их вечно (INC-43, живой 24.10).
     private static List<SpiritEntity> givers(
             BoardService service, List<SpiritEntity> spirits, SpiritEntity crafter, long now) {
         return spirits.stream()
@@ -466,7 +426,6 @@ public final class TransferWatch {
                 .toList();
     }
 
-    // Открытые передачи этого крафта от такого духа снимаются: планировщик переназначит их складу или другому духу.
     private static void dropStuckGivers(ServerLevel level, BoardService service, String craftId, long now) {
         for (BoardTicket ticket : List.copyOf(service.board().all())) {
             String from = modifier(ticket, "from=");
@@ -508,7 +467,6 @@ public final class TransferWatch {
         return normalized;
     }
 
-    // Сундук поселения рядом с домом (реестр сундуков, блок на месте проверяется: запись могла устареть).
     static boolean hasSettlementChest(ServerLevel level, BlockCoord home) {
         for (BlockCoord pos : SettlementChestStore.get(level).chests().nearest(home, CHEST_PROBES)) {
             int dx = pos.x() - home.x();
@@ -534,7 +492,6 @@ public final class TransferWatch {
         return false;
     }
 
-    // Хватает ли своих досок и брёвен на деревянное из need (доски, палки, забор…): его дух крафтит сам.
     private static boolean ownWoodCovers(SpiritEntity crafter, Map<String, Integer> need) {
         String species = need.keySet().stream()
                 .map(OwnWood::species)
@@ -555,8 +512,6 @@ public final class TransferWatch {
         return spirit.taskStatus().orElse(null) == RunStatus.RUNNING && !spirit.runsBackgroundTask();
     }
 
-    // Отдающий ждёт свою передачу: в том же цикле доска отдавала ему стройку ограды, передача палок стояла
-    // PENDING, а крафтер факелов простаивал 1630 тиков (приёмка «джунгли» 24.10).
     static Set<UUID> donors(BoardService service, String craftId) {
         Set<UUID> donors = new HashSet<>();
         for (BoardTicket ticket : service.board().all()) {

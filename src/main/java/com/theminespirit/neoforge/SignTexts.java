@@ -8,7 +8,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 
-/** Надпись на табличке из схемы: категория склада ставится и на лицевую, и на обратную сторону. */
 public final class SignTexts {
     private SignTexts() {}
 

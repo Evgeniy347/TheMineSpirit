@@ -13,7 +13,6 @@ public record ContainerSnapshot(
         Objects.requireNonNull(pos, "Позиция контейнера не может быть null: по ней выбирают ближайший");
         Objects.requireNonNull(
                 slots, "Содержимое контейнера не может быть null: пустой контейнер — список null-слотов");
-        // Пустой слот — это null, поэтому List.copyOf (он запрещает null) здесь не подходит.
         slots = Collections.unmodifiableList(new ArrayList<>(slots));
         category = category == null ? "" : category;
     }

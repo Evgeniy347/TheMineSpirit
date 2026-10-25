@@ -3,11 +3,6 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
-/**
- * Числа доски: значения по умолчанию. Источник истины для работающего мода — JSON-таблица
- * через DataTables (горячая перезагрузка /reload); здесь живут только значения, которые
- * используются, когда таблицы нет, и проверки их осмысленности.
- */
 public final class BoardTuning {
     public static final long BOARD_INTERVAL_TICKS = 100;
 
@@ -28,8 +23,6 @@ public final class BoardTuning {
     public static final int STOCK_BLOCK_BUDGET = 4096;
 
     public static final long FAIL_BACKOFF_TICKS = 200;
-    // Заблокированное задание не стоит вечно: через 5 минут — новая попытка (материал и способ к этому времени
-    // могли смениться), провал снова блокирует.
     public static final long BLOCKED_RETRY_TICKS = 6000;
 
     public static final long CASE_FAIL_PAUSE_TICKS = 1200;

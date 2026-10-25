@@ -13,7 +13,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Кирки духа для правила руды {@link MineOres}: слот, годится ли для дропа, Удача и Шёлковое касание. */
 final class PickOptions {
     private PickOptions() {}
 

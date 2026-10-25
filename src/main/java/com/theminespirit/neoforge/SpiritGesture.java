@@ -4,10 +4,6 @@ import com.theminespirit.core.movement.LookAngles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 
-/**
- * Жест работы с блоком: дух поворачивает голову к блоку (тело следует за головой ванильным BodyRotationControl) и машет рукой — как игрок при постановке и ломании.
- * Общий для стройки, шахты, рубки, копки и посадки: игрок видит, кто и над чем работает.
- */
 public final class SpiritGesture {
     private static final double CENTER = 0.5;
 

@@ -9,11 +9,6 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Низ спуска в шахту: клетка, где стоит дух на нижней ступени спуска первого уровня (та же развёртка схемы, что у
- * стройки). Уровни шахты 2–3 расширяются отсюда, а не у дома на поверхности (владелец 23.10: выработка у дома
- * могла снести верстак).
- */
 public final class MineDescentBottom {
     private MineDescentBottom() {}
 

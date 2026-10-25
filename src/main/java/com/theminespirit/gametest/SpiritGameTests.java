@@ -95,8 +95,6 @@ public final class SpiritGameTests {
                 firstUnloaded != Integer.MIN_VALUE,
                 "В пределах 256 чанков к востоку обязана найтись незагруженная область: иначе мир загружен "
                         + "целиком и тест не может проверить пропуск незагруженных чанков");
-        // Центр ставится так, чтобы крайний восточный чанк радиуса совпал с найденным незагруженным: тогда
-        // в окно попадают и загруженные чанки, и гарантированно незагруженный.
         int centerX = firstUnloaded * 16 - 24;
         BlockPos center = new BlockPos(centerX, base.getY(), base.getZ());
         int before = helper.getLevel().getChunkSource().getLoadedChunksCount();

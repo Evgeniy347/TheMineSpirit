@@ -61,7 +61,7 @@ public final class TestCostReporter {
                         Long.parseLong(parts[5]),
                         Boolean.parseBoolean(parts[6])));
             } catch (NumberFormatException ignored) {
-                // битая строка CSV в отчёт не идёт
+                // lib: Integer.parseInt бросает NumberFormatException — битая строка CSV в отчёт не идёт
             }
         }
         return lines;

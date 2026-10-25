@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Фальшивая доска для тестов REST-контроллера: хранит задания в памяти, считает вызовы. */
 final class FakeBoardGateway implements BoardGateway {
     private static final String ID_PREFIX = "board-";
 

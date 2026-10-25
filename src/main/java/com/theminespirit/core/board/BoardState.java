@@ -8,14 +8,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Снимок доски для сохранения в мире: билеты со статусами, держателями и счётчиками провалов,
- * плюс отметки ledger. Журнал переходов лежит отдельно (append-only JSONL), здесь только
- * состояние, из которого доска поднимается после перезапуска сервера.
- */
 public record BoardState(List<Entry> entries, Set<String> ledger) {
 
-    /** Один билет и всё, что доска знает о его судьбе на момент снимка. */
     public record Entry(
             BoardTicket ticket,
             BoardStatus status,

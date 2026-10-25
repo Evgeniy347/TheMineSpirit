@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import java.util.Map;
 import java.util.Objects;
 
-/** Нужда задания: сколько каких предметов требуется, чтобы задание могло взяться в работу. */
 public record StockNeed(Map<String, Integer> items) {
 
     public StockNeed {

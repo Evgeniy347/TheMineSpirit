@@ -79,8 +79,6 @@ public final class ResourceResolver {
         return resolve(item, count, knowledge, scripts, conditions, new Holdings(inventory, presentStations, null));
     }
 
-    // Снабжение acquire: инвентарь, станции и снятие ингредиентов из сундуков рядом — acquire забора с 81 бревном
-    // и 59 досками на складе рубил деревья в радиусе 16 и падал «подходящих блоков не осталось» (приёмка «джунгли»).
     public static TaskNode resolve(
             String item,
             int count,
@@ -230,8 +228,6 @@ public final class ResourceResolver {
             return new SequenceNode(batches);
         }
 
-        // Брёвна — в радиусе 32: расчистка участка вырубает деревья в 16 от дома, и забор с хижиной ждали
-        // «подходящих блоков в радиусе 16 не осталось» (приёмка «джунгли» 23.10). Как булыжник и уголь.
         private static ScriptCall gather(String block, int count) {
             int radius =
                     block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
@@ -274,7 +270,6 @@ public final class ResourceResolver {
             return new SequenceNode(steps);
         }
 
-        // Ингредиент — сперва из инвентаря, затем из сундуков рядом (один раз на предмет), остаток — добычей.
         private Optional<TaskNode> ingredient(String item, int count) {
             int left = count - takeFromInventory(item, count);
             List<TaskNode> steps = new ArrayList<>();

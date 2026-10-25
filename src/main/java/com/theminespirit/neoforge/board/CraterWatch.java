@@ -22,11 +22,6 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
 
-/**
- * Источник доски «воронка от крипера»: взрыв крипера за территорией поселения ставит
- * задание {@code FILL_CRATER} с гейтом по земле. Внутри территории воронку закрывает
- * координатор (31), задание доски не ставится. Слушатель — O(1) на взрыв, мир не сканирует.
- */
 public final class CraterWatch {
     private CraterWatch() {}
 

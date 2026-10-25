@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Выбор дешёвого материала укрытия из инвентаря духа: булыжник и доски (INC-21). */
 public final class ShelterMaterial {
     private ShelterMaterial() {}
 

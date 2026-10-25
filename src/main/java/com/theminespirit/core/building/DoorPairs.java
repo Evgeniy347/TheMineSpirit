@@ -9,12 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Двойная дверь (владелец 20.10): петли створок — по краям проёма, ручки — посередине рядом. Иначе открытые створки
- * встают посреди прохода. Ряд створок вдоль стены делится на пары с начала ряда (портал на четыре створки — две пары).
- * Петля {@code hinge=left} — со стороны {@code facing} против часовой, {@code right} — по часовой: так игра ставит
- * петли, когда вторую створку ставят рядом с первой.
- */
 public final class DoorPairs {
     private DoorPairs() {}
 
@@ -83,7 +77,6 @@ public final class DoorPairs {
         return Optional.empty();
     }
 
-    // Пара створок двойной двери, в которую входит клетка; пусто — не дверь или пара собрана неверно.
     public static Optional<List<BlockCoord>> pairAt(Schematic schematic, BlockCoord cell) {
         Map<BlockCoord, Schematic.Entry> doors = doors(schematic);
         Schematic.Entry door = doors.get(cell);

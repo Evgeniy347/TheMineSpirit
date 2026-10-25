@@ -3,12 +3,6 @@ package com.theminespirit.core.scene;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * План сцены по сиду: высоты рельефа (верхний твёрдый блок колонки, от базового уровня) в квадрате
- * {@code [-radius, radius]²} вокруг центра участка и блоки поверх рельефа в порядке постановки — пещера, вода,
- * деревья, остатки старых построек. Колонка до верха — камень, под
- * верхом земля, верх — трава.
- */
 public record ScenePlan(
         long seed, String wood, int radius, int bottom, List<Integer> heights, List<SceneBlock> blocks) {
     public ScenePlan {

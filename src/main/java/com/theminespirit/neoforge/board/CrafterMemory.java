@@ -9,11 +9,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-/**
- * Крафтер, которому доска уже заказала передачу ингредиентов. Без памяти доска каждый цикл брала ближайшего
- * свободного духа: отдавший булыжник оказывался ближе, становился крафтером и заказывал передачу обратно —
- * {@code transfer:first:craft_furnace:cobblestone} шла по кругу до конца приёмки (простой 48590 тиков, 24.10).
- */
 final class CrafterMemory {
     private final Map<String, UUID> crafters = new HashMap<>();
 

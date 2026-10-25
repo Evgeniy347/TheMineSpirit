@@ -106,8 +106,6 @@ public final class FillSession {
         Set<BlockCoord> occupied = spiritCells();
         this.spiritCells = Set.copyOf(occupied);
         this.order = new ArrayList<>(BuildOrder.placement(List.copyOf(cells), occupied));
-        // Дух в яме, которую засыпает, не выходит из неё (выход уводил его на край, откуда дно не достать, INC-66):
-        // засыпает вокруг себя слой за слоем, а свою клетку — под себя столбом.
         if (insideBox(spirit.blockPosition()) && !occupied.isEmpty() && !onFloor()) {
             state = State.EXIT;
         }
@@ -123,8 +121,6 @@ public final class FillSession {
         stateTicks = state == lastState ? stateTicks + 1 : 0;
         lastState = state;
         if (stateTicks > 0 && stateTicks % LONG_STATE_TICKS == 0) {
-            // Долго в одном состоянии — в лог, где и с чем: подсыпка, стоящая сотни тиков в пруду, без строки не
-            // разобрать (сцена 56).
             LOGGER.info(
                     "[fill] {}: {} тиков в {} у {} (стоянка {}, дух в {}, в воде {})",
                     spirit.getName().getString(),
@@ -254,21 +250,16 @@ public final class FillSession {
                 continue;
             }
             if (cell.equals(spiritCoord())) {
-                // Своя клетка — под себя: прыжок и блок под ноги, дух поднимается на слой (INC-66).
                 pillar = pillarHere(cell);
                 state = State.PILLAR;
                 return;
             }
             if (inReach(cell)) {
-                // Клетка в досягаемости — ставится с места, без подхода к соседней стоянке: подход к каждой клетке
-                // ямы съедал большую часть подсыпки (сцена 56).
                 placeCurrent();
                 return;
             }
             List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
             if (stands.isEmpty() && floorUnder(cell) && allowedStand(cell)) {
-                // Дно ямы в блок шириной: с края до него не дотянуться, соседей-стоянок нет — дух спускается в саму
-                // клетку и засыпает столбом под себя (сцена 56: яма 1×1×3 оставалась, выравнивание шло по кругу).
                 stands = List.of(cell);
             }
 
@@ -333,7 +324,6 @@ public final class FillSession {
         }
     }
 
-    // Над стоянкой до верха колонки — только воздух, вода и листва: пруд в низине и яма под кроной — не пещера.
     private boolean openAbove(BlockCoord stand) {
         int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, stand.x(), stand.z());
         for (int y = stand.y() + 1; y < top; y++) {
@@ -346,8 +336,6 @@ public final class FillSession {
         return true;
     }
 
-    // Своя клетка в воде пруда — после соседних: из воды дух ставит их с места, потом выходит на них и засыпает свою
-    // с соседней стоянки (столб в воде не выходит, дух всплывает, сцена 56).
     private boolean deferOwnWater(BlockCoord cell) {
         if (!cell.equals(spiritCoord()) || !floatingIn(cell) || deferred.merge(cell, 1, Integer::sum) > MAX_DEFERRALS) {
             return false;
@@ -377,7 +365,6 @@ public final class FillSession {
                 && SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), cell);
     }
 
-    // В клетке можно стоять: твёрдый пол под ней, она и клетка над ней свободны.
     private boolean floorUnder(BlockCoord cell) {
         BlockPos pos = toPos(cell);
         return level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)
@@ -387,19 +374,15 @@ public final class FillSession {
                         .isEmpty();
     }
 
-    // Под ногами духа твёрдый пол: столбом под себя он поднимется, выходить из ямы не нужно.
     private boolean onFloor() {
         BlockPos below = spirit.blockPosition().below();
         return level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
     }
 
-    // На участке поселения подсыпка не встаёт в пещеру без неба (INC-72: засыпка пустот под участком уводила духа в
-    // карман (-165,64,-489) в 5-й раз): закрытую пустоту не засыпать, а не лезть в неё. Шахта и ямы с небом — можно.
     private boolean allowedStand(BlockCoord stand) {
         if (!(level instanceof ServerLevel server)) {
             return true;
         }
-        // Небо — без листвы: яма под кроной дерева — не пещера (сцена 56: яма 1×1 под листвой не засыпалась).
         boolean sky = openAbove(stand);
         return SettlementPlotStore.get(server)
                 .plot()
@@ -414,15 +397,11 @@ public final class FillSession {
                 && feet.getZ() == currentStand.z()
                 && Math.abs(feet.getY() - currentStand.y()) <= 1
                 && (spirit.onGround() || spirit.isInWater())) {
-            // Уже в клетке стоянки (в воде пруда дух всплывает на блок выше неё): подход к центру с допуском не
-            // заканчивался до тайм-аута, и дух сотни тиков стоял в пруду (сцена 56).
             approach.cancel();
             placeCurrent();
             return;
         }
         if (current != null && inReach(current)) {
-            // По дороге к стоянке клетка оказалась в досягаемости — ставится с места: подход к стоянке в соседней
-            // клетке воды не заканчивался, и дух сотни тиков плавал в пруду (сцена 56).
             approach.cancel();
             placeCurrent();
             return;
@@ -479,8 +458,6 @@ public final class FillSession {
             }
             case OCCUPIED, NO_SUPPORT -> {
                 if (deferred.merge(current, 1, Integer::sum) <= MAX_DEFERRALS) {
-                    // Клетку занял дух соседней части или под ней ещё не засыпано: в конец очереди, а не в пропуск —
-                    // пропуск оставлял яму на следующий круг выравнивания (сцена 56).
                     order.add(current);
                     releaseAndAdvance();
                     state = State.PICK;
@@ -540,8 +517,6 @@ public final class FillSession {
     }
 
     private Outcome fail(String reason) {
-        // Провал подсыпки — в лог с клетками: подсыпка внутри fallback не валит задание, и без строки повтор по кругу
-        // «подсыпка 3 блоков» не разобрать (сцена 56).
         LOGGER.info(
                 "[fill] {}: {} клеток {} от {} не засыпаны: {}",
                 spirit.getName().getString(),

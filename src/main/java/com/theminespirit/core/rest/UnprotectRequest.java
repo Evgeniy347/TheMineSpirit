@@ -15,11 +15,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Тело POST /v1/policy/unprotect: куб мира, причина, кто попросил и срок жизни.
- * Id разрешения назначает мод; повтор с тем же {@code request_id} возвращает прежний ответ,
- * а не создаёт второе разрешение.
- */
 public record UnprotectRequest(
         UUID requestId,
         String dimension,

@@ -19,11 +19,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import org.slf4j.Logger;
 
-/**
- * Единственное место регистрации данных мода в ресурс-менеджере сервера: на каждый {@code /reload} (и загрузку
- * сервера) таблицы читаются заново из мода и датапаков мира, а ошибка в любом файле оставляет прежнюю версию
- * таблицы в силе и попадает в лог. Пустой список ошибок после {@link #lastReload} — всё прочитано.
- */
 public final class DataReload {
     private static final Logger LOGGER = LogUtils.getLogger();
 

@@ -11,11 +11,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Подход «на досягаемость» к блоку (упрощение 44.2): сундук, верстак, печь, наковальня и другие блоки работы
- * считаются достигнутыми, как только блок в досягаемости духа ({@link SpiritReach}: 3 по горизонтали, 15 вверх),
- * без прямой видимости и точного подхода. Если не дотянуться — дух идёт к ближайшей стоянке, откуда дотянется.
- */
 public final class ReachApproach {
     private static final int MAX_STANDS = 4;
     private static final double STAND_ARRIVAL = 0.8;

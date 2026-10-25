@@ -16,12 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Источник доски «чаровальня»: уровень 1 — деревянная изба со столом и пятью полками, уровень 2 — каменный
- * зал на десять полок, уровень 3 — большой зал на пятнадцать полок (максимум стола).
- * Уровень не прыгает: следующий ставится после выполненного предыдущего и ждёт свои полки гейтом.
- * Постоянные запасы (полки, книги, бумага) держит {@link BoardService}, а не этот источник.
- */
 public final class EnchantRoomWatch {
     private static final int LEVEL_ONE_LAPIS = 4;
     private static final int LEVEL_ONE_BOOK = 1;

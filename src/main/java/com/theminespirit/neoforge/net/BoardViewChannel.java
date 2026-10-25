@@ -37,11 +37,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Снимок доски для экрана игрока: клиент шлёт запрос при открытии экрана, сервер отвечает плитками. Живого
- * обновления нет. Формат пакета не версионируется отдельно: сборки клиента и сервера уже сверены
- * {@link ModProtocolHandshake}, поэтому обе стороны читают один и тот же кодек.
- */
 public final class BoardViewChannel {
     public static final CustomPacketPayload.Type<Request> REQUEST = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "board_view_request"));

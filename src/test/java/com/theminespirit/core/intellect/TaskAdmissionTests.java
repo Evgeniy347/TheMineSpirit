@@ -15,9 +15,6 @@ class TaskAdmissionTests {
 
     @Test
     void decide_RunningTaskWithoutNamedScript_Skips() {
-        // Дух только что получил задачу (статус RUNNING), но тело скрипта ещё не создано, и currentScript
-        // пуст. Интеллект в том же серверном тике выдаёт занятие: без запрета оно перебивает задачу, и
-        // наблюдатель видит чужой провал. Запущенная задача обязана оставаться неприкосновенной.
         assertEquals(
                 TaskAdmission.Verdict.SKIP_BUSY,
                 TaskAdmission.decide(
@@ -62,9 +59,6 @@ class TaskAdmissionTests {
 
     @Test
     void decide_SameScriptButForeignGeneration_Skips() {
-        // Скрипт/игрок/тест запустил задачу с тем же именем, что планировщик выдавал раньше.
-        // Поколение задачи другое: это не наша задача, и отменять её нельзя — иначе чужой итог
-        // (провал, причина, прогресс) пропадает, а wait-задача теста снимается.
         assertEquals(
                 TaskAdmission.Verdict.SKIP_FOREIGN,
                 TaskAdmission.decide(

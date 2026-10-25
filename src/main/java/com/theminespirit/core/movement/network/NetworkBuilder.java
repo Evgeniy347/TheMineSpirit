@@ -18,13 +18,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-/**
- * Отрезки сети из мира (решение владельца 20.10, QUESTIONS-3 1А): обход тела духа в ширину от первой двери (начала
- * сети) по габариту; ветви дерева кратчайших путей — к каждой другой двери и к самой дальней клетке пола каждого этажа
- * (этаж — высота ног, где стоят хотя бы {@link #MIN_FLOOR_CELLS} клеток, чтобы ступени лестницы не были этажами).
- * Ветви режутся в развилках и по длине {@link PathSegment#MAX_LENGTH}. Двери, до которых от первой не дойти, —
- * начала своих деревьев.
- */
 public final class NetworkBuilder {
     public static final int MAX_NODES = 32_768;
     static final int MIN_FLOOR_CELLS = 4;
@@ -50,9 +43,7 @@ public final class NetworkBuilder {
         }
         Set<BlockCoord> tree = new LinkedHashSet<>();
         for (BlockCoord target : targets) {
-            for (BlockCoord cell = target; cell != null && tree.add(cell); cell = parent.get(cell)) {
-                // ветвь от цели к началу; на уже отмеченной клетке ветвь влилась в дерево
-            }
+            for (BlockCoord cell = target; cell != null && tree.add(cell); cell = parent.get(cell)) {}
         }
         Map<BlockCoord, Integer> children = new HashMap<>();
         for (BlockCoord cell : tree) {
@@ -127,7 +118,6 @@ public final class NetworkBuilder {
         return order;
     }
 
-    // Обход в ширину идёт по удалению: последняя клетка высоты в порядке обхода — самая дальняя на этом этаже.
     private static List<BlockCoord> floorEnds(List<BlockCoord> order) {
         Map<Integer, BlockCoord> last = new TreeMap<>();
         Map<Integer, Integer> count = new HashMap<>();

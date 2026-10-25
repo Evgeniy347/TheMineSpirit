@@ -16,12 +16,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
-/**
- * Журнал доски в папке мира: {@code <мир>/theminespirit/board-log.jsonl}. Не в {@code config/}: новый мир на том же
- * сервере унаследовал бы «построено» прошлого мира (решение 54b п.4).
- * Запись идёт очередью и сбрасывается бюджетом за тик; при старте {@code DONE}-записи
- * возвращаются в ledger, поэтому «постройка стоит» переживает перезапуск, а «ждёт выдачи» — нет.
- */
 public final class JournalService {
     public static final int FLUSH_BUDGET = 16;
 

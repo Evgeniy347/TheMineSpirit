@@ -7,11 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Материал ремонта по типу инструмента и брони: дерево — доски, камень — булыжник,
- * железо — слиток, алмаз — алмаз. Таблица — код (как {@code ToolSet}): это структура
- * «какой тип каким материалом», а не число; порог и стоимости живут данными.
- */
 public final class RepairMaterials {
     private static final Map<String, String> BY_PREFIX = Map.ofEntries(
             Map.entry("wooden_", "minecraft:oak_planks"),

@@ -40,8 +40,6 @@ public final class HotReloadGameTests {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String PACK = "theminespirit_hotreload";
 
-    // Датапак меняет порог «почти сломанной» брони: при worn_fraction 0.99 слегка потёртая железная кираса
-    // считается сломанной и уступает целой кожаной. Без перезагрузки дух надел бы железную (по защите).
     private static final String OVERRIDE = """
             {
               "worn_fraction": 0.99,
@@ -111,8 +109,6 @@ public final class HotReloadGameTests {
         }
     }
 
-    // Перезагрузка через настоящий серверный ресурс-менеджер: берём текущие выбранные паки сервера и добавляем
-    // поверх датапак теста. Так тот же слушатель AddReloadListenerEvent читает датапак, что и при /reload.
     private static void reloadFromDatapack(GameTestHelper helper, String armorJson) {
         MinecraftServer server = helper.getLevel().getServer();
         writeDatapack(helper, armorJson);

@@ -18,7 +18,6 @@ public final class SpiritCommands {
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         LiteralArgumentBuilder<CommandSourceStack> spirit = literal("spirit");
-        // Версия открыта всем: игроку не нужны права оператора, чтобы узнать сборку.
         spirit.then(literal("version").executes(SpiritVersionCommand::version));
 
         LiteralArgumentBuilder<CommandSourceStack> operatorOnly = new OperatorSubtree();
@@ -38,8 +37,6 @@ public final class SpiritCommands {
         SpiritUnprotectCommand.register(operatorOnly);
         SpiritDemoCommand.register(operatorOnly);
 
-        // Brigadier сольёт две ветки /spirit в одну; requires стоит на каждом литерале дерева оператора,
-        // поэтому открытым остаётся только version.
         dispatcher.register(spirit);
         dispatcher.register(operatorOnly);
     }

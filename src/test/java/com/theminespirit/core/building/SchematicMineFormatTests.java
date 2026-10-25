@@ -10,10 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/**
- * Формат шахты: класс пола @floor, повтор сегмента до условия, мягкие (необязательные) клетки и сторожа
- * подземной постройки. Без этих правил шахта строится по точному блоку и не разворачивается до y=50.
- */
 class SchematicMineFormatTests {
     private static final String DESCENT = """
             type: underground

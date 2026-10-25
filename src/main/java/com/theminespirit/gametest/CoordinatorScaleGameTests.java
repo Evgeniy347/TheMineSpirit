@@ -109,9 +109,6 @@ public final class CoordinatorScaleGameTests {
                     ModEntities.SPIRIT.get(),
                     new Vec3(4.5 + RING_RADIUS * Math.cos(angle), 1, 4.5 + RING_RADIUS * Math.sin(angle)));
             spirit.setHome(new BlockCoord(absoluteHome.getX(), absoluteHome.getY(), absoluteHome.getZ()));
-            // keep_distance стартует сразу, а не через SETTLE_TICKS: пока дух простаивает, тактический
-            // интеллект поселения (32) успевает выдать ему занятие (ферма без грядок падает), и дух
-            // встречает наблюдение уже FAILED. Скрипт на духе интеллект не перебивает (TaskStarter).
             spirit.startTask(MovementScene.call(
                     "keep_distance", Map.of("target", player.getName().getString(), "distance", SCALE_DISTANCE)));
             spirits.add(spirit);

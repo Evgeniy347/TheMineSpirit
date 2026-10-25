@@ -24,11 +24,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.PickaxeItem;
 import org.slf4j.Logger;
 
-/**
- * Оставленная в шахте руда (MineOreLedger) — задание на доске (решение владельца 23.10): висит, пока нет нужной
- * кирки (гейт ресурсов по ключу LeftOreRules), и открывается, как только кирка появилась у духов или на складе.
- * Руда добыта или исчезла — запись забыта, задание уходит с доски вместе со своей причиной.
- */
 public final class LeftOreWatch {
     static final String PREFIX = "left_ore:";
     static final int MAX_TICKETS = 16;
@@ -55,8 +50,6 @@ public final class LeftOreWatch {
             }
             String tool = LeftOreRules.requiredTool(ore.getValue().block());
             Optional<UUID> holder = holder(spirits, tool);
-            // Кирка нашлась у духа — задание выдаётся держателю (своим id), ничьё снимается: иначе руду возьмёт
-            // дух без Удачи и потеряет её.
             String id = holder.map(uuid -> id(pos) + "@" + uuid).orElse(id(pos));
             live.add(id);
             if (!active(service, id)) {

@@ -7,10 +7,6 @@ import java.util.List;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-/**
- * Стекает опыт духов реальным игрокам: делит поровну между всеми, кто сейчас в сети, независимо от
- * расстояния и измерения. Если игроков нет — опыт уходит в пул поселения {@link SettlementExperience}.
- */
 public final class ExperienceAwards {
     private ExperienceAwards() {}
 

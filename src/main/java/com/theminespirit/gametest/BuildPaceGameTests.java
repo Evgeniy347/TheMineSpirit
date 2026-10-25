@@ -17,10 +17,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Темп стройки по схеме из таблицы building/build.json (решение владельца 18.10: около 2 блоков в секунду, взмах руки
- * обязателен).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BuildPaceGameTests {

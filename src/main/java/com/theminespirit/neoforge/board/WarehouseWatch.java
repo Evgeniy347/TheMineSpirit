@@ -21,11 +21,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Источник доски «склад»: следующий уровень ставится на новом месте, а после постройки старший
- * уровень порождает задачу переноса вещей и сноса прежнего. Не больше трёх складов не последнего
- * уровня — правило {@link WarehouseRules}; последний уровень не ограничен.
- */
 public final class WarehouseWatch {
     private WarehouseWatch() {}
 
@@ -33,8 +28,6 @@ public final class WarehouseWatch {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        // Склад — этап 2: пока строится этап 1 (куски ограды, части расчистки), он не открывается — его материалы
-        // (книги, бумага) уводили духов с ограды (сцена 56).
         if (!houseBuilt(service) || FirstStepsRunner.stageOneBuilding(service)) {
             return;
         }

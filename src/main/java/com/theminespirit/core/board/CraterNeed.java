@@ -4,10 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Оценка воронки от крипера: сколько блоков земли нужно заделать ровной землёй,
- * и за территорией ли взрыв (дальше радиуса от любого дома — кейс доски).
- */
 public final class CraterNeed {
     private static final String DIRT = "dirt";
 

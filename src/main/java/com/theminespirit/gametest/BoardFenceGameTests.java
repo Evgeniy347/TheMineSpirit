@@ -28,11 +28,6 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Сломанный забор на доске: поломка ограждения рядом с поселением → REPAIR_FENCE с высшим
- * приоритетом; стройка при этом ждёт, чинит один дух. Природный камень — не кейс.
- * Всё синхронно: событие идёт прямо на шину, тело теста атомарно.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardFenceGameTests {
@@ -109,8 +104,6 @@ public final class BoardFenceGameTests {
                 board.board().statusOf("board_test_build_low").orElse(null) == BoardStatus.PENDING,
                 "Пока ремонт не закрыт, стройка ждёт: статус "
                         + board.board().statusOf("board_test_build_low").orElse(null));
-        // Ремонт и стройку снимаем с доски: иначе стройка без гейта уйдёт свободному духу
-        // чужой сцены, а ремонт вечно держит счётчик занятости тестового духа.
         board.board().cancel(repairId);
         board.board().cancel("board_test_build_low");
         GameTestFixtures.finish(helper);

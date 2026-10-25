@@ -20,10 +20,6 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
-/**
- * Сверка стройки по схеме: мир в клетках схемы, отсутствие лишних блоков в районе стройки,
- * ровно одна постановка на клетку и ноль пропусков. Возвращает список расхождений; assert'ов внутри нет.
- */
 public final class BuildAudit {
     public record Before(Map<BlockCoord, BlockState> states) {
         public Before {

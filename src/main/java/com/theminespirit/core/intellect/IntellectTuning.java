@@ -5,11 +5,6 @@ import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
-/**
- * Коэффициенты тактического интеллекта поселения. Числа — данные, а не константы кода: они лежат в
- * {@code data/theminespirit/tactics/intellect.json} и перечитываются по {@code /reload} из датапака мира.
- * Потребители берут текущую версию через {@link #loadDefault()} и не кэшируют её между операциями.
- */
 public record IntellectTuning(
         long demandIntervalTicks,
         long minSwitchTicks,
@@ -158,8 +153,6 @@ public record IntellectTuning(
     public static IntellectTuning loadDefault() {
         DataTables tables = DataTables.INSTANCE;
         if (tables == null) {
-            // Bootstrap: DataTables ещё строится в этом же потоке, и один из его seed'ов уже спрашивает
-            // коэффициенты (BoardConfig → ProcessingRules). До первого /reload действуют значения по умолчанию.
             return DEFAULTS;
         }
         return tables.intellect().current();

@@ -8,11 +8,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
-/**
- * Обновление реестра сундуков поселения по событиям мира: установка сундука добавляет его, снятие — убирает.
- * Слушатель — O(1) на блок, мир не обходится. Постановки и поломки духа идут через {@link BlockPlacer} и
- * {@link BlockBreaker}, которые событий не дают, поэтому там реестр правится явно.
- */
 public final class SettlementChestWatch {
     private SettlementChestWatch() {}
 

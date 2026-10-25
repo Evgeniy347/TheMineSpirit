@@ -30,13 +30,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.AnvilBlock;
 
-/**
- * Источник доски «починить инструмент»: духу с изношенным инструментом и материалом
- * ремонта (или вторым таким же повреждённым) ставится задание {@code REPAIR_TOOL},
- * адресованное этому духу. Задание держится на доске до ремонта (причина постоянная)
- * и снимается, когда изношенного инструмента больше нет. Ремонт материалом ставится, только если у дома
- * стоит наковальня: иначе задание невыполнимо и крутилось бы FAILED→POSTED (INC-24).
- */
 final class RepairWatch {
     private RepairWatch() {}
 

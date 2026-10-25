@@ -1,9 +1,5 @@
 package com.theminespirit.core.intellect;
 
-/**
- * Стойла и станции, без которых автозадача невыполнима: свободные кровати, места плавки,
- * верстак и запас на печь. Пустое поселение задают {@link #NONE}.
- */
 public record WorkStations(int freeBeds, int smeltStations, int craftingTables, int furnaceItems, int cobblestone) {
     public static final WorkStations NONE = new WorkStations(0, 0, 0, 0, 0);
     public static final int FURNACE_COST = 8;

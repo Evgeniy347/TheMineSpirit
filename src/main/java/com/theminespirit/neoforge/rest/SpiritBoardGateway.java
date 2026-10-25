@@ -29,12 +29,6 @@ import java.util.Objects;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Доска уровня для REST: наблюдение очереди поселения, постановка задания стратегом и отмена.
- * Мир читается только в серверном потоке через {@link ServerThreadCall}; id задания доска
- * назначает от {@code request_id} — повтор запроса с тем же UUID возвращает то же задание,
- * а не плодит второе.
- */
 public final class SpiritBoardGateway implements BoardGateway {
     private static final String ID_PREFIX = "board-";
 

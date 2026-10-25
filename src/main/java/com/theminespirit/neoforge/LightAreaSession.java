@@ -243,8 +243,6 @@ public final class LightAreaSession {
         return cells;
     }
 
-    // Поверхность ищется вниз от уровня точки: высотная карта мира берёт верхний блок (крышу постройки
-    // или рельеф над шахтой), а духу нужна клетка прямо над полом области.
     private BlockPos surface(int x, int z, int centerY, int radius) {
         for (int y = centerY + 1; y >= centerY - radius; y--) {
             BlockPos pos = new BlockPos(x, y, z);

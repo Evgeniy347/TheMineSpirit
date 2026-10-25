@@ -28,11 +28,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
-/**
- * «Добыть предмет любым способом»: владеет вложенным подпланом — инвентарь, ближние сундуки,
- * затем ResourceResolver (gather/craft/smelt). Провал шага перечитывает мир и пересобирает
- * подплан не больше {@link CatalogLimits#ACQUIRE_MAX_ATTEMPTS} раз.
- */
 public final class AcquireScript implements ScriptInstance {
     private final String item;
     private final int count;
@@ -126,8 +121,6 @@ public final class AcquireScript implements ScriptInstance {
             case FAILED -> {
                 lastStepFailure = runner.failureReason().orElse("причина шага не указана");
                 if (attempts < CatalogLimits.ACQUIRE_MAX_ATTEMPTS) {
-                    // Пересборка на следующем тике: один перечит мира на провал шага,
-                    // не чаще одного внутреннего тика на внешний.
                     runner = null;
                     yield ScriptStatus.RUNNING;
                 }
@@ -136,8 +129,6 @@ public final class AcquireScript implements ScriptInstance {
         };
     }
 
-    // Место добычи (INC-68): не хватает после инвентаря и сундуков — сначала идти сюда (земля на подсыпку — за
-    // оградой). Хватает — шаг пропускается, дух никуда не ходит.
     public AcquireScript gatherAt(@Nullable BlockCoord place) {
         this.gatherAt = place;
         return this;
@@ -150,8 +141,6 @@ public final class AcquireScript implements ScriptInstance {
 
     Optional<TaskNode> buildSubplan() {
         if (attempts == 0) {
-            // Фиксируем стартовые числа только на первой попытке: итог описывает
-            // исходную ситуацию, а не последнюю пересборку.
             startInventory = supplies.inInventory(item);
         }
         attempts++;

@@ -26,7 +26,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.slf4j.Logger;
 
-/** Демо-стройка одного уровня: список активных сессий, подготовка площадки и уборка духов. */
 public final class DemoService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double PICK_REACH = 32.0;
@@ -88,8 +87,6 @@ public final class DemoService {
         return 1;
     }
 
-    // Витрина /spirit demo city N: постройки этапа N - 1 вдоль улицы от точки старта по взгляду игрока, по духу на
-    // постройку, все строят одновременно.
     public int startCity(CommandSourceStack source, int cityLevel, BlockPos explicit) {
         ServerPlayer player = source.getPlayer();
         if (player != null) {
@@ -163,7 +160,6 @@ public final class DemoService {
                 .orElse(Integer.MAX_VALUE);
     }
 
-    // Дух на одну сессию; null — начато, иначе причина отказа для чата.
     private String launch(List<DemoPlan> plans, UUID owner) {
         SpiritEntity spirit = ModEntities.SPIRIT.get().create(level);
         if (spirit == null) {
@@ -230,7 +226,6 @@ public final class DemoService {
                 throw new IllegalArgumentException("Улучшение задано 'с " + upgradeFrom + " на " + upgradeTo
                         + "': нужен старший уровень выше младшего (например, 1 2)");
             }
-            // Улучшение показывает каждый шаг: upgrade 1 4 — уровни 1, 2, 3, 4 по очереди (уровни из каталога).
             List<DemoPlan> steps = new ArrayList<>();
             steps.add(DemoPlanner.plan(building, upgradeFrom, anchor, lookDx, lookDz, rotation));
             for (DemoBuildings.Level step : building.levels()) {

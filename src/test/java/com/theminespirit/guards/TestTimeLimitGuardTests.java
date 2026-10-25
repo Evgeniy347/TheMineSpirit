@@ -13,17 +13,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-// Пределы времени scripts/test.sh поднимались без согласия владельца (unit 360 → 900 с, gametest 600 → 1500 с):
-// правило было только текстом. Согласованные значения живут здесь, в одном месте; поднять предел можно только правкой
-// этой таблицы с причиной в комментарии, ревью её видит.
 class TestTimeLimitGuardTests {
     private static final Path SCRIPT = Path.of("scripts/test.sh");
     private static final Pattern DEFAULT = Pattern.compile(
             "^([A-Z_]+_(?:WARN|STOP))=\"\\$\\{THEMINESPIRIT_[A-Z_]+_SECONDS:-(\\d+)}\"", Pattern.MULTILINE);
 
-    // Цель владельца 23.10 — весь прогон (unit + GameTest) не дольше 200 с. Демо-аудиты построек — ручные
-    // (в общий набор, включая --full, не входят), поэтому предел --full пересчитан по замеру общего набора;
-    // отдельный, более высокий предел оставлен на запас под чужую нагрузку. Поднять — только с согласия владельца.
     private static final Map<String, Integer> AGREED = Map.of(
             "UNIT_WARN", 90,
             "UNIT_STOP", 200,

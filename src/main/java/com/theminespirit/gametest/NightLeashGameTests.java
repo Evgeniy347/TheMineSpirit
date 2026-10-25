@@ -27,8 +27,6 @@ public final class NightLeashGameTests {
     private static final long NOON = 6000L;
     private static final int SETTLEMENT_RADIUS = 32;
     private static final int OBSERVE_TICKS = 40;
-    // У каждого теста своё имя мок-игрока: с общим именем findPlayer/come берёт первого игрока с таким
-    // именем, и соседняя сцена (или протёкший игрок) уводит духа к чужой цели — скрипт висит RUNNING.
     private static final String FOLLOW_PLAYER_NAME = "gt_night_leash_follow_player";
     private static final String COME_PLAYER_NAME = "gt_night_leash_come_player";
 

@@ -22,11 +22,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Сброс заданий при смене сборки (INC-40): снятое задание доски отменяет и задачу духа, запущенную по нему.
- * На живом сервере v0.1.2053 spirit-5 50+ мин копал dig_area бывшего mine_level_3 и числился внешним занятием,
- * а first:stock_chests некому было выдать.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardResetGameTests {
@@ -59,7 +54,6 @@ public final class BoardResetGameTests {
         helper.assertTrue(submitted == BoardOutcome.ACCEPTED, "Задание сцены не принято доской: " + submitted);
         BoardOutcome claimed = service.board().claim(TICKET, spirit.getUUID(), now);
         helper.assertTrue(claimed == BoardOutcome.CLAIMED, "Задание сцены не выдано духу: " + claimed);
-        // Задача по заданию — как восстановленная из сохранения после выкладки: долгая и без связи с новой доской.
         spirit.startTask(new ScriptCall("wait", Map.of("ticks", LONG_WAIT_TICKS)));
         helper.runAfterDelay(2, () -> {
             helper.assertTrue(
@@ -70,8 +64,6 @@ public final class BoardResetGameTests {
             helper.assertTrue(
                     reset.contains(TICKET), "Сброс при смене сборки обязан снять выданное задание источника: " + reset);
             service.rebuild(level, level.getGameTime());
-            // Освобождённый дух в той же пересборке может получить новую работу (занятие) — старая задача снята,
-            // если сменилось поколение задачи или задачи нет.
             helper.assertTrue(
                     spirit.taskStatus().orElse(null) != RunStatus.RUNNING || spirit.taskGeneration() != generation,
                     "Задание " + TICKET + " снято сбросом, а его задача у духа идёт дальше ("

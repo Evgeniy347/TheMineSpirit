@@ -65,8 +65,6 @@ public final class WithdrawScript extends ContainerTask {
         };
     }
 
-    // auto: ближайший сундук, где предмет есть, затем следующий — пока не набрано. Ближайший вообще (NEAREST)
-    // часто пуст: склад — два сундука во дворе, передача падала «в контейнере только 0 из 2 'stick'» (24.10).
     @Override
     protected AutoMove nextAutoMove(AutoContainerScan scan) {
         int remaining = params.count() - movedTotal();

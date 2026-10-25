@@ -25,11 +25,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/**
- * Живой прогон 21.10: духи без задачи стояли в {@code wait}, хотя брёвна были, а досок не было. Свободный дух без
- * плана классифицируется ролью {@link SpiritRole#DEFENDER}; работа поселения обязана доставаться и ему, пока рядом
- * нет угроз, иначе ему годен только отдых.
- */
 class IdleSpiritWorkTests {
     private static final UUID SPIRIT = UUID.fromString("11111111-1111-1111-1111-111111111111");
 

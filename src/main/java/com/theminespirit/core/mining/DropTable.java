@@ -10,10 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Таблица «предмет-дроп ← блоки-источники» для acquire: из чего добывается предмет,
- * который сам по себе не является блоком (raw_iron из iron_ore, cobblestone из stone).
- */
 public final class DropTable {
     public static final String RESOURCE = "data/theminespirit/acquire/drops.json";
 

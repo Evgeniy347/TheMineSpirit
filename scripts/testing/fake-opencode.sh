@@ -1,18 +1,4 @@
 #!/usr/bin/env bash
-# Подделка opencode для проверки scripts/opencode-task.sh.
-# FAKE_FAILURES=N   — первые N запусков сообщают о сбое провайдера и висят без дочерних процессов (как opencode в retry);
-#                     FAKE_ERROR_CHANNEL=json (по умолчанию) — событием error в stdout, stderr — строкой лога level=ERROR.
-# FAKE_NETWORK=N    — первые N запусков сообщают о сетевом сбое: json — «Cannot connect», stderr — «Endpoint is unavailable».
-# FAKE_SILENT=N     — первые N запусков молча ждут модель (без вывода и без дочерних процессов).
-# FAKE_BUSY_TOOL=S  — «команда» работает S секунд без вывода (дочерний процесс), это не сбой.
-# FAKE_TOOL_READ=1  — модель «читает» файл, где упомянута ошибка квоты; это не сбой.
-# FAKE_INFO_LOG=1   — в логе INFO команда со словами «rate limit»; это не сбой.
-# FAKE_PROBE_FAILURES=N — первые N проб ожидания (запуск с текстом «ответь OK») сообщают о сбое провайдера и висят
-#                     до тайм-аута; пробы считаются отдельно от запусков в $FAKE_STATE.probes.
-# FAKE_UNFINISHED=N — первые N запусков заканчивают ход оборванной фразой «Теперь посмотрю тесты:».
-# FAKE_HEARTBEAT=S — S секунд без вывода, но с пульсом scripts/test.sh (TestResults/test-running в --dir): не молчание.
-# FAKE_LOOP=N      — первые N запусков повторяют одну команду 30 раз и висят (зацикливание модели).
-# FAKE_COMPACTION=N — первые N запусков сжимают контекст (лог agent=compaction и синтетическое «Continue…») и работают дальше.
 state="${FAKE_STATE:?}"
 case "$*" in
     *"ответь OK"*)

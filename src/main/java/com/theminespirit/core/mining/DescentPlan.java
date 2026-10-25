@@ -15,8 +15,6 @@ public record DescentPlan(
         DescentStop stop,
         String dangerReason) {
 
-    // Границы мира дублируются здесь потому, что core.mining не зависит от core/script:
-    // тест DescentPlanTests скрепляет их с CatalogLimits.WORLD_Y_MIN/MAX
     public static final int WORLD_MIN_Y = -64;
     public static final int WORLD_MAX_Y = 319;
 

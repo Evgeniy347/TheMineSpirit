@@ -950,7 +950,6 @@ public final class CoreScripts {
                                 ParamSpec.text(ITEM, true),
                                 ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
                                 containerRadius(),
-                                // leftover: сдача остатков после шага — не нужда плана (иначе дух не отдаёт их)
                                 ParamSpec.bool("leftover", false, false)),
                         List.of("контейнер доступен"),
                         List.of("предметы в контейнере", "контейнер отсортирован")),
@@ -996,7 +995,6 @@ public final class CoreScripts {
                         List.of("предмет есть в инвентаре")));
     }
 
-    // Добор с местом добычи (INC-68): земля на подсыпку участка — за оградой, не из земли участка.
     private static ScriptSpec acquireAtSpec() {
         return spec(
                 "acquire_at",

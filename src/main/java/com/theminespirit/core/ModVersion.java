@@ -3,10 +3,6 @@ package com.theminespirit.core;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-/**
- * Версия мода вида {@code <минор>.<N>}: минор (например 0.1) поднимается вручную, N — номер сборки
- * (число коммитов HEAD). Один формат на сборку, лог, команду и экран доски.
- */
 public final class ModVersion {
     private static final Pattern MINOR = Pattern.compile("\\d+\\.\\d+");
     private static final Pattern BUILD = Pattern.compile("[1-9][0-9]*");

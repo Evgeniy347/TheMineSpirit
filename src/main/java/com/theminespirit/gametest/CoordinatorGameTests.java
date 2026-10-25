@@ -414,9 +414,6 @@ public final class CoordinatorGameTests {
     @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void workFree_TwoSpiritsTwoTrees_EachReservesOwnTree(GameTestHelper helper) {
         TacticsScene.prepare(helper);
-        // Деревья разнесены дальше радиуса подбора дропа (ChopTuning.COLLECT_RADIUS = 6) по обеим осям:
-        // у соседних деревьев кубические области подбора пересекаются, и дух забирает брёвна соседа —
-        // рубка (5 брёвен своего дерева) делится 4/6 под таймингом полного прогона, хотя брони корректны.
         helper.setBlock(1, 0, 1, Blocks.DIRT);
         helper.setBlock(9, 0, 9, Blocks.DIRT);
         ChopTreeGameTests.buildBirchTree(helper, 1, 1, 5);

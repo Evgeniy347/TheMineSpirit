@@ -144,7 +144,6 @@ public final class BuildRestartGameTests {
         return RestFixture.start(helper.getLevel().getServer());
     }
 
-    // HTTP ходит другим потоком: предел берём из общего REST-шаблона, как ResultGameTests.
     @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void fill_SucceededTask_RestProgressAndResultHoldCounts(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);

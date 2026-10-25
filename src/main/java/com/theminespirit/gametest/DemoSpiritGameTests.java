@@ -21,10 +21,6 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Демо-дух защищён: мобы не берут его целью, он неуязвим и не пускает в ход тактику (отход/бой),
- * пока строит. Проверяется на живом духе, поднятом командой {@code /spirit demo}.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoSpiritGameTests {

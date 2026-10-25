@@ -11,7 +11,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SchematicPartTests {
-    // Периметр 9×9 со столбами и факелами на углах — как ограда участка, только меньше.
     private static Schematic ring() {
         List<Schematic.Entry> blocks = new ArrayList<>();
         for (int x = 0; x < 9; x++) {

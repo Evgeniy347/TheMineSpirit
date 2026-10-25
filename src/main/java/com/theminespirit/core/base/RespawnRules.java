@@ -5,10 +5,6 @@ import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
-/**
- * Числа возрождения духа: задержка после смерти. Значения по умолчанию — для случая, когда таблицы нет; работающий
- * мод берёт версию из {@link DataTables} (горячая перезагрузка /reload), поэтому 600 тиков живут в json, а не в коде.
- */
 public record RespawnRules(int delayTicks) {
     public static final String RESOURCE = "data/theminespirit/base/respawn.json";
     public static final int DEFAULT_DELAY_TICKS = 600;

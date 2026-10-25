@@ -5,11 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * REST-контроллер доски заданий: наблюдение (GET), постановка стратегом (POST) и отмена (DELETE).
- * Постановка идемпотентна по {@code request_id}, как у задач духа: повтор возвращает прежнее задание,
- * а не плодит второе.
- */
 public final class BoardRoutes {
     private final BoardGateway gateway;
     private final IdempotencyCache idempotency;

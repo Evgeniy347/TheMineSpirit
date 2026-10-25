@@ -6,15 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Плитка экрана доски: что передаёт сервер клиенту про одно задание. {@code boardCase} — имя кейса
- * доски (клиент переводит его ключом языка), {@code spirit} — имя духа-исполнителя или null, когда
- * задание ещё никому не выдано; {@code dependsOn} — id заданий, без завершения которых задание не
- * начнётся; {@code doneAt} — тик завершения (0, если задание не завершено); {@code startedAt} и
- * {@code finishedAt} — тики выдачи и закрытия из журнала, {@code durationTicks} — затраченное время
- * на момент снимка. Плитка колонки завершённых либо успешно завершена ({@link #completed()}), либо не
- * удалась ({@link #unfinished()}).
- */
 public record BoardTile(
         String id,
         String boardCase,

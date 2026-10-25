@@ -8,12 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Шерсть и кровати: числа и гейты по снимку запасов. Порог отары, радиус и суточный
- * лимит диких овец, порог и запас нитей, цена ножниц и кровати — данные таблицы board
- * ({@code wool}); здесь только значения по умолчанию и проверки их осмысленности.
- * Овца загона не цель забоя: это правило живёт в {@link BreedingRules} и CullPolicy.
- */
 public final class WoolRules {
     public static final Set<String> WOOL_KEYS = Set.of(
             "min_pen_sheep",

@@ -18,7 +18,6 @@ class ContainerPickerProperties {
     private static final int MAX_STACK = 64;
     private static final BlockCoord ORIGIN = new BlockCoord(0, 64, 0);
 
-    // Инвариант 1: предмет никогда не попадает в контейнер, который не может его принять.
     @Property
     void choose_AnyContainers_NeverPicksFullOne(
             @ForAll("containers") List<ContainerSnapshot> containers, @ForAll("incoming") Stack incoming) {
@@ -33,7 +32,6 @@ class ContainerPickerProperties {
         }
     }
 
-    // Инвариант 2: при наличии неполного стака того же предмета выбирается контейнер с ним.
     @Property
     void choose_PartialStackExists_PicksContainerWithPartial(
             @ForAll("containersWithPartial") List<ContainerSnapshot> containers,
@@ -64,7 +62,6 @@ class ContainerPickerProperties {
     @Provide
     Arbitrary<List<ContainerSnapshot>> containersWithPartial() {
         Arbitrary<Stack> partial = partialOf(COBBLE);
-        // Контейнер с неполной стопкой бывает и без свободного слота: докладывать всё равно надо к стопке.
         Arbitrary<ContainerSnapshot> withPartial = partial.map(stack -> {
             List<Stack> slots = new ArrayList<>();
             slots.add(stack);

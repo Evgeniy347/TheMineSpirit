@@ -8,12 +8,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
-/**
- * Решение о раздаче еды духу с личной едой ниже нормы: что взять со склада и не сырьё ли это.
- * Сытная (готовая) еда приоритетнее сырья; если готовой нет, а станция готовки есть, сырьё
- * сначала идёт на готовку и раздаче не подлежит. Мир из ядра не читается: запас и наличие
- * станции приносит адаптер.
- */
 public final class FoodRation {
     private static final String DEFAULT_NAMESPACE = "minecraft:";
 

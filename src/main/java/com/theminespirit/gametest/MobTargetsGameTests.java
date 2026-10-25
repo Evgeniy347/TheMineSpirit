@@ -65,7 +65,7 @@ public final class MobTargetsGameTests {
                 + targetingSelf;
     }
 
-    @SuppressWarnings("deprecation") // ванильный SpiderTargetGoal в 1.21.1 читает свет этим методом; замены нет
+    @SuppressWarnings("deprecation")
     private static String spiderLight(GameTestHelper helper, Spider spider) {
         ServerLevel level = helper.getLevel();
         return "свет_магия=" + spider.getLightLevelDependentMagicValue()

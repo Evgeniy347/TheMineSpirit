@@ -89,7 +89,6 @@ class PathNetworkTests {
                 "блок выше головы над отрезком на ходьбу не влияет — отрезок не трогается");
     }
 
-    // Тест на масштаб (CONVENTIONS «Производительность»): изменение блока стоит O(задетых отрезков), а не O(сети).
     @Test
     void blockChanged_OneBlockInHugeNetwork_CostsAsInSmallOne() {
         assertEquals(

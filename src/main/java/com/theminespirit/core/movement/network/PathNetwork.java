@@ -16,13 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Сеть тропинок (решение владельца 20.10): граф отрезков, узлы — концы отрезков. Изменение блока находит задетые
- * отрезки по индексу «блок → отрезки» за O(задетых), без обхода сети; задетые помечаются к пересчёту, и маршрут их
- * обходит, пока их не пересчитают. Счётчик {@link #operations()} — для теста на масштаб.
- */
 public final class PathNetwork {
-    // Отрезок зависит от пола под ногами, ног, головы и клетки над головой (над ней проходит голова на шаге вверх).
     private static final int BELOW_FEET = -1;
     private static final int ABOVE_HEAD = 2;
 
@@ -101,8 +95,6 @@ public final class PathNetwork {
         return operations;
     }
 
-    // Отрезок, по которому от клетки входа до клетки выхода короче всего идти; оба — клетки сети. Ответ — точки,
-    // между соседними не больше длины отрезка: вход, концы пройденных отрезков, выход.
     public Optional<List<BlockCoord>> route(BlockCoord entry, BlockCoord exit) {
         Objects.requireNonNull(entry, "Вход в сеть не может быть null: от него ищется маршрут");
         Objects.requireNonNull(exit, "Выход из сети не может быть null: к нему ищется маршрут");

@@ -68,7 +68,6 @@ class NetworkRouteTests {
                 "проход заложен — отрезок не пересчитать, его убирают из сети");
     }
 
-    // Тест на масштаб: пересчёт отрезка читает только мир вокруг него, а не всё здание.
     @Test
     void repair_SegmentInHugeHall_ReadsAsInSmallRoom() {
         GridWorld room = new GridWorld().slab(0, 0, -5, 8, 7);

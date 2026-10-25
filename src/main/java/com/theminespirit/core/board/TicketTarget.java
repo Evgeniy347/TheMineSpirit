@@ -8,12 +8,6 @@ import java.util.Objects;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Точка и параметры задания для сборки плана: куда идти, какая схема, какая приманка,
- * сколько комплектов инструментов, от кого и кому передать предмет, какой предмет крафтить
- * и сколько голов или предметов обработать, как выровнять участок. Неизменяемый: план собирается из этих данных,
- * подмена после сборки сломала бы выдачу.
- */
 public record TicketTarget(
         BlockCoord target,
         @Nullable String schemeFile,

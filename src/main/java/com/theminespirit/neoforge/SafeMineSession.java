@@ -29,13 +29,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Исполнение {@link SafeMinePlan} в мире: копает проход 1×2, закладывает опасные клетки блоком из
- * инвентаря, ждёт осыпания сыпучего блока над головой и копает его, ставит факелы через интервал.
- *
- * <p>Дух копает шаг со предыдущей ступени и заходит в проход только после того, как тот выкопан и
- * сыпучее осыпано: падающий гравий не засыпает духа.
- */
 public final class SafeMineSession {
     public enum Outcome {
         RUNNING,

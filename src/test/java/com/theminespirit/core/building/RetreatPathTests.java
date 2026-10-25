@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class RetreatPathTests {
-    // Ниша 1×1 в стене высотой 2: стены x=0 и x=2 при z=0..2, задняя стена z=2; проём — x=1, z=0; пол — y=-1.
     private static final BlockCoord NOOK = cell(1, 0, 1);
     private static final BlockCoord OPENING_LOW = cell(1, 0, 0);
     private static final BlockCoord OPENING_HIGH = cell(1, 1, 0);

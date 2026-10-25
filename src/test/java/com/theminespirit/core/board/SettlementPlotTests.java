@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class SettlementPlotTests {
-    // Дома духов живого сервера INC-56: у каждого свой SpiritHome.
     private static final List<BlockCoord> HOMES = List.of(
             new BlockCoord(-171, 71, -489),
             new BlockCoord(-171, 71, -487),

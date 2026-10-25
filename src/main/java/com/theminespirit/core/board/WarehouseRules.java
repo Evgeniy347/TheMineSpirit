@@ -8,11 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
 
-/**
- * Правило развития склада: уровни 1–4, следующий уровень строится на новом месте, а прежний после
- * переноса вещей сносится. Складов не последнего уровня — не больше трёх; складов последнего уровня —
- * сколько угодно. Решение чистое: адаптер читает доску и кладёт задания.
- */
 public final class WarehouseRules {
     public static final int MAX_LEVEL = 4;
     public static final int LAST_LEVEL = 4;

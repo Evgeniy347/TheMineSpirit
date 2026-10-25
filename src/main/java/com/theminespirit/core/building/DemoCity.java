@@ -5,14 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
 
-/**
- * Витрина {@code /spirit demo city N} (решение владельца 12): постройки этапа поселения {@code N - 1} стоят вдоль
- * улицы по обе стороны, двери — к улице, каждая — на своей площадке без наложений. Чистые функции: выбор построек
- * по этапу и раскладка участков; мир и духи — в {@code DemoService}.
- *
- * <p>Улица идёт от точки старта по направлению взгляда; её ось свободна, площадки слева и справа начинаются в
- * клетке от оси и идут вдоль улицы впритык, каждая сторона — своим курсором.
- */
 public final class DemoCity {
     public static final int MIN_LEVEL = 1;
     public static final int MAX_LEVEL = Preset.STAGE_MAX + 1;
@@ -33,8 +25,6 @@ public final class DemoCity {
 
     private DemoCity() {}
 
-    // Для каждой семьи с уровнями — старший уровень, доступный к этапу cityLevel - 1; семьи без уровней (старые
-    // схемы) и семьи, ни один уровень которых ещё не доступен, в витрину не входят.
     public static List<Pick> pick(List<DemoBuildings.Building> catalog, ToIntFunction<String> stageOf, int cityLevel) {
         if (cityLevel < MIN_LEVEL || cityLevel > MAX_LEVEL) {
             throw new IllegalArgumentException("Уровень витрины " + cityLevel + " вне " + MIN_LEVEL + ".." + MAX_LEVEL
@@ -58,7 +48,6 @@ public final class DemoCity {
         return List.copyOf(picks);
     }
 
-    // Раскладка участков: чётные — слева от улицы, нечётные — справа; дверь каждой постройки смотрит на улицу.
     public static List<DemoPlacement> layout(DemoPlacement.Anchor start, DemoPlacement.Look look, List<Plot> plots) {
         Objects.requireNonNull(start, "Точка старта улицы не может быть null: неизвестно, откуда раскладывать");
         if (Math.abs(look.dx()) + Math.abs(look.dz()) != 1) {

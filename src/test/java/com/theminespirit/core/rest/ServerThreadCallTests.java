@@ -21,9 +21,6 @@ import org.junit.jupiter.api.Test;
 
 class ServerThreadCallTests {
     private static final Duration LONG_ENOUGH = Duration.ofSeconds(10);
-    // Таймаут, который не наступит сам: само-пробуждение wait по истечении срока исключено,
-    // поэтому проснувшийся ожидальец разбужен только stop() — скорость реакции проверяется
-    // условием (поток мёртв, ошибка называет остановку), а не замером миллисекунд.
     private static final Duration WITHOUT_TIMEOUT = Duration.ofDays(3650);
     private static final Duration SHORT = Duration.ofMillis(100);
     private static final String SERVER_THREAD_NAME = "test-server-thread";
@@ -199,9 +196,6 @@ class ServerThreadCallTests {
         waiter.setDaemon(true);
         waiter.start();
 
-        // Ждём условием, а не сном: ожидальец обязан встать в ожидание задачи.
-        // Граница — число итераций, а не миллисекунды: под нагрузкой планировщик
-        // отдаёт поток позже, итерации со счётчиком это переживают, а sleep — нет.
         int spins = 0;
         Thread.State state = waiter.getState();
         while (state != Thread.State.TIMED_WAITING && state != Thread.State.WAITING) {

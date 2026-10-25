@@ -41,7 +41,6 @@ public final class StockReader {
         return read(level, members, home, Map.of());
     }
 
-    // Запас за вычетом брони доски: фоновые занятия не трогают материалы её заданий.
     public static Stocks read(
             ServerLevel level, List<SpiritEntity> members, Optional<Point> home, Map<String, Integer> reserved) {
         if (level == null) {

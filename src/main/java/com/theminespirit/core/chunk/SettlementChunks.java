@@ -8,10 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * Чанки поселения: дома духов с их участками и лагеря. Набор один на поселение, поэтому число тикетов
- * не зависит от числа духов: дубликаты якорей схлопываются до расчёта.
- */
 public final class SettlementChunks {
     public static final int WORK_RADIUS_BLOCKS = 16;
 

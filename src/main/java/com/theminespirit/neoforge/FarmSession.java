@@ -26,7 +26,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 public final class FarmSession {
-    // Дух на пашне (высота 15/16) стоит в клетке самой пашни: земля грядки — блок под точкой чуть ниже ног.
     private static final double GROUND_PROBE = 0.2;
 
     public enum Outcome {

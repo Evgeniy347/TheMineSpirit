@@ -26,12 +26,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Масштаб доски v2: двадцать духов, три вида животных, воронки и перенос за
- * {@link #OBSERVED_TICKS} тиков. Тест считает операции, а не время: пересборки идут
- * по интервалу, склад читается бюджетом, журнал пишет по строке на переход,
- * проверка актуальности — один вызов на пересборку, а не на тик.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardV2ScaleGameTests {

@@ -458,7 +458,6 @@ class AcquireScriptTests {
                 new AcquireScript.Registries(
                         () -> {
                             buildCount.incrementAndGet();
-                            // Первая попытка добила 1 предмет и упала; вторая добывает 2.
                             return ScriptRegistry.of(Map.of(
                                     "gather",
                                     params -> buildCount.get() == 1

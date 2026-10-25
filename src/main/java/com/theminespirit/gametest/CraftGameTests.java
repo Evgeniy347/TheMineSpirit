@@ -120,8 +120,6 @@ public final class CraftGameTests {
         });
     }
 
-    // Печь первых шагов ставится сразу после крафта (place): в инвентаре крафтера её не видела плавка других духов
-    // (приёмка «джунгли» 24.10: «нужна печь: рядом (16) нет, в инвентаре нет»).
     @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_FurnaceWithPlace_FurnaceStandsOnField(GameTestHelper helper) {
         field(helper);
@@ -144,8 +142,6 @@ public final class CraftGameTests {
         });
     }
 
-    // Вплотную к духу места нет (двор занят) — печь ставится в шаге досягаемости, а не остаётся в инвентаре: иначе
-    // шаг печи падал, запас «с печью» закрывал CRAFT_FURNACE без записи в журнале (приёмка «джунгли» 24.10).
     @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_FurnaceWithPlaceCrowded_FurnacePlacedFurther(GameTestHelper helper) {
         field(helper);
@@ -159,7 +155,6 @@ public final class CraftGameTests {
                 }
             }
         }
-        // Верстак — часть тесного двора: станция крафта стоит, место есть только дальше.
         helper.getLevel().setBlockAndUpdate(feet.offset(1, 0, 0), Blocks.CRAFTING_TABLE.defaultBlockState());
         SpiritRun run = SpiritRun.launch(
                 helper,
@@ -185,8 +180,6 @@ public final class CraftGameTests {
         });
     }
 
-    // Сундуки склада первых шагов ставятся сразу после крафта (place): в инвентаре крафтера склада не было, сдача
-    // добытого не находила сундук (приёмка «джунгли» 24.10). Два сундука — один двойной, как у игрока (INC-52).
     @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_ChestsWithPlace_OneDoubleChestOnField(GameTestHelper helper) {
         field(helper);
@@ -212,8 +205,6 @@ public final class CraftGameTests {
         });
     }
 
-    // Станции поселения общие (INC-51): верстак на участке дальше радиуса поиска — дух идёт к нему, а свой из
-    // инвентаря не ставит (вторая печь и второй верстак на живом сервере).
     @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_TableOnPlotBeyondRadius_UsesItNoNewTable(GameTestHelper helper) {
         field(helper);

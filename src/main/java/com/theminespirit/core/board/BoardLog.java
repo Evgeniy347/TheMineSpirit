@@ -12,11 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Журнал выполненных заданий на диске: одна строка JSONL на событие. Ядро даёт чистые
- * функции записи и разбора; адаптер пишет их в файл (п. 20). Формат фиксирован: порядок
- * полей и имена — контракт, по нему после перезапуска восстанавливается «выполнено».
- */
 public final class BoardLog {
     public enum Event {
         SUBMITTED,
@@ -28,10 +23,7 @@ public final class BoardLog {
         UNBLOCKED,
         CANCELLED,
         DETACHED,
-        // Сделанный шаг снова в работе: мир с ним разошёлся (INC-50) — отметка постройки снимается и при чтении
-        // журнала.
         REOPENED,
-        // Заметка без перехода задания: высота участка, сверка постройки с миром, задача духа вне доски.
         NOTE
     }
 
@@ -40,7 +32,6 @@ public final class BoardLog {
 
     private BoardLog() {}
 
-    // Установка блока духом вне плана стройки (станция, сундук): кто, в какой задаче, где и зачем (INC-54).
     public static BoardLogEntry placement(
             String spirit, String task, String block, BlockCoord pos, String reason, long tick, String hash) {
         return note(
@@ -52,7 +43,6 @@ public final class BoardLog {
                 hash);
     }
 
-    // Заметка журнала без перехода задания (NOTE): id и кейс — к чему относится, details — «ключ=значение».
     public static BoardLogEntry note(
             String id, BoardCase boardCase, long tick, List<String> details, @Nullable String spirit, String hash) {
         int priority = BoardRules.priorityOf(boardCase);

@@ -5,13 +5,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
 
-/**
- * Очередь мест, где дроп не удалось подобрать с первого раза. Пока в куче есть
- * недобытые блоки, такой отказ не валит задачу: следующие добытые блоки могут
- * освободить предмет (например, снять накрывающий блок), а в конце очередь
- * повторяется. Места ближе радиуса сбора считаются одним: один обход накрывает
- * дроп обеих точек.
- */
 public final class DropRetries {
     private final int radius;
     private final Deque<BlockCoord> pending = new ArrayDeque<>();

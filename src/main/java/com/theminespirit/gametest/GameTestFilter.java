@@ -40,7 +40,6 @@ public final class GameTestFilter {
     private static final String FILTER_PROPERTY = "theminespirit.gametest.filter";
     private static final String EXCLUDE_PROPERTY = "theminespirit.gametest.exclude";
     private static final String SHARD_PROPERTY = "theminespirit.gametest.shard";
-    // Свой у каждого шарда gameDirectory, поэтому общий файл аргументов JVM здесь не годится.
     private static final String RUN_OPTIONS_FILE = "theminespirit-gametest.properties";
 
     private GameTestFilter() {}
@@ -50,9 +49,6 @@ public final class GameTestFilter {
         if (!(event.getServer() instanceof GameTestServer server)) {
             return;
         }
-        // Доска и координатор тикают глобально и раздают задачи/приказы любому свободному духу,
-        // включая духов чужих сцен: пачка chop_tree_* стояла в RUNNING с чужой задачей (флак 17.10).
-        // По умолчанию в GameTest обе системы выключены; включает их только размеченная пачка.
         setBoardEnabled(false);
         setCoordinatorEnabled(false);
         installSettlementBatches();
@@ -225,7 +221,6 @@ public final class GameTestFilter {
                         + "классом или тестом — проверьте имя: прогон не состоится");
             }
         } else if (!excludes.isEmpty()) {
-            // Демо-аудиты построек ручные: в общий набор (и --full) не входят, только явный фильтр.
             functions.removeIf(function -> excluded(function.batchName(), excludes));
         }
         if (shard != null) {
@@ -252,10 +247,6 @@ public final class GameTestFilter {
         return excludes.stream().anyMatch(lower::startsWith);
     }
 
-    // Раскладка по шардам — жадный LPT: тяжёлые пачки первыми на самый свободный шард. Вес пачки — сумма
-    // timeoutTicks с потолком 100: без потолка тест с окном 24000 весил как сотни коротких, хотя идёт 30 с,
-    // а поиск пути на 400 — 12 с. Все серверы считают одинаково; хуки @BeforeBatch и @AfterBatch
-    // держат пачку целиком в одном шарде.
     private static Map<String, Integer> shardAssignment(List<TestFunction> functions, int shards) {
         Map<String, Long> weights = new HashMap<>();
         for (TestFunction function : functions) {

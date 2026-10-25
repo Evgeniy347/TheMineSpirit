@@ -3,11 +3,6 @@ package com.theminespirit.core.building;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Запланированный, но ещё не сделанный уровень постройки: только метаданные (уровень, имя, требование
- * предыдущего уровня), без тела схемы. Так финальный уровень чаровальни описан в индексе пресетов до того,
- * как появится его схема; строить его библиотека не даёт.
- */
 public record PlannedLevel(int level, String name, Optional<String> requires) {
     public PlannedLevel {
         if (level < 1) {

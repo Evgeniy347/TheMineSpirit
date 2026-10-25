@@ -4,11 +4,6 @@ import com.theminespirit.core.reload.DataTables;
 import java.util.Objects;
 import java.util.OptionalInt;
 
-/**
- * Уровни построек: сколько уровней у кейса и какой следующий доступен. Максимум —
- * данные таблицы board ({@code levels}); кейс без строки имеет ровно один уровень.
- * Следующий уровень — первый неотмеченный, поэтому уровень не прыгает через непостроенный.
- */
 public final class BuildingLevels {
     private BuildingLevels() {}
 

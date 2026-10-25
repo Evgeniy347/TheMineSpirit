@@ -4,13 +4,6 @@ import com.theminespirit.core.reload.DataTables;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Приоритеты кейсов — таблица данных, а не ветка в коде: порядок «важнее» читается
- * из одной строки на кейс. Источник истины для работающего мода — JSON-таблица
- * через DataTables (правится датапаком и перезагружается по /reload); здесь значения
- * по умолчанию. Кейс без строки — сирота: доска не решит, что важнее, поэтому
- * обращение падает, а не проваливается молча.
- */
 public final class BoardRules {
     private static final Map<BoardCase, Integer> PRIORITIES = buildPriorities();
 
@@ -35,8 +28,6 @@ public final class BoardRules {
     private static Map<BoardCase, Integer> buildPriorities() {
         Map<BoardCase, Integer> priorities = new EnumMap<>(BoardCase.class);
         priorities.put(BoardCase.REPAIR_FENCE, 100);
-        // Занятия вне очереди (BoardActivities): бой и задачи REST/стратега — поверх всего, фоновые занятия
-        // интеллекта — ниже любого задания доски, задание доски их вытесняет.
         priorities.put(BoardCase.ACTIVITY_COMBAT, 100);
         priorities.put(BoardCase.ACTIVITY_ARM, 100);
         priorities.put(BoardCase.ACTIVITY_EXTERNAL, 95);

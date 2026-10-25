@@ -3,11 +3,6 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
-/**
- * Пчёлы: числа и гейты по снимку запасов и миру. Радиус поиска ульев, глубина дыма,
- * радиус цветов и их минимум, цена улья — данные таблицы board ({@code hive}).
- * Пчёл не убивают: скрипт берёт соты или мёд и не трогает обитателей улья.
- */
 public final class HiveRules {
     public static final Set<String> HIVE_KEYS = Set.of(
             "hive_radius",

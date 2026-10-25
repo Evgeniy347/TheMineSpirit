@@ -8,11 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Ограждение у края пола над обрывом (владелец 20.10): если с клетки ног выше первого этажа можно шагнуть в пустоту
- * глубже одного блока, эта клетка должна быть ограждением (забор, стена, решётка). Углы ограждения замыкаются: клетка
- * между двумя краями и наискось от обрыва тоже становится ограждением, иначе в перилах остаётся щель.
- */
 final class SchematicRailing {
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final int[][] DIAGONALS = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
@@ -116,7 +111,6 @@ final class SchematicRailing {
         return path.endsWith("_fence") || path.endsWith("_wall") || "iron_bars".equals(path);
     }
 
-    // Проём в стене (дверь, люк, калитка, окно): это не край пола, ограждение туда не ставят.
     private static boolean isOpening(@Nullable String block) {
         if (block == null) {
             return false;

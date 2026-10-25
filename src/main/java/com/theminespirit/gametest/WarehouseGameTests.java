@@ -50,10 +50,6 @@ import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Склады в мире: уровень 1 строится духом и все сундуки открываются, табличка уровня 2 несёт категорию,
- * переход 1→2 ставит задачу переноса и сноса, а автосдача кладёт руду в сундук «руда».
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class WarehouseGameTests {
@@ -112,8 +108,6 @@ public final class WarehouseGameTests {
                 new ItemStack(Items.CHEST, 18),
                 new ItemStack(Items.OAK_STAIRS, 1),
                 new ItemStack(Items.TORCH, 1));
-        // Пол схемы (dy=0) ложится на землю, как у DemoPlacement: якорь в слое пола арены занял бы клетки
-        // пола камнем, и строгая стройка считает их непостроенными.
         BlockPos anchor = new BlockPos(1, 1, 1);
         SpiritRun run = SpiritRun.launch(helper, spirit, build(helper, "storage_v1", anchor), SETTLE_TICKS);
 
@@ -336,7 +330,7 @@ public final class WarehouseGameTests {
         try {
             Files.deleteIfExists(log);
         } catch (IOException ignored) {
-            // Журнал теста во временном каталоге мира: его удалит очистка прогона.
+            // lib: журнал теста во временном каталоге мира — его удалит очистка прогона
         }
         GameTestFixtures.finish(helper);
     }

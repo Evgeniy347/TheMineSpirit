@@ -6,13 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Поверхность воронки для тестов: уровень земли по столбцу, заполненные клетки и ямы.
- *
- * <p>По умолчанию столбец считают сплошным до уровня земли. {@link #hole} выкапывает яму заданной
- * глубины: клетки от {@code level - depth + 1} до {@code level} становятся воздухом, а под ними лежит
- * твёрдый пол. {@link #air} перекрывает любой блок, {@link #protect} помечает клетку защищённой.
- */
 final class TestCraterSurface implements CraterSurface {
     private final BlockCoord center;
     private final int radius;

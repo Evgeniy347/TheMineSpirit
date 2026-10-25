@@ -177,7 +177,6 @@ public final class SpiritScripts {
         return table;
     }
 
-    // Подземная схема (спуск, ход) копается в породе, а не ставится на площадке: свой строитель (MineBuildScript).
     private static ScriptInstance buildSchematic(SpiritEntity spirit, BuildSchematicParams params) {
         Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(params.file());
         BuildRotation rotation = Objects.requireNonNullElse(params.rotation(), BuildRotation.NONE);
@@ -381,8 +380,6 @@ public final class SpiritScripts {
     }
 
     public static ConditionCatalog conditionCatalog() {
-        // Зеркало conditions(): у каждой проверки в реестре обязано быть описание в каталоге, иначе
-        // PlanValidator отклонит условие, которое движок умеет исполнять. Пока проверок нет — каталог пуст.
         return ConditionCatalog.empty();
     }
 
@@ -394,7 +391,6 @@ public final class SpiritScripts {
         return catalog();
     }
 
-    // Вариант рецепта — по запасу духа и породе поселения: в джунглях палки брали дубовые доски (приёмка «джунгли»).
     private static RecipeKnowledge acquireKnowledge(SpiritEntity spirit, Map<String, Integer> inventory) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(spirit.level());
         if (!(spirit.level() instanceof ServerLevel level)) {

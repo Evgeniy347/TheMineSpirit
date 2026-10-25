@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import net.minecraft.world.phys.Vec3;
 
-// Маршрут по сети тропинок, пройденный по точкам: каждая следующая — не дальше отрезка сети (≤ пути игры 32).
 final class NetworkLegs {
     private static final double POINT_ARRIVAL = 1.2;
 
@@ -20,7 +19,6 @@ final class NetworkLegs {
         this.points = List.copyOf(points);
     }
 
-    // Текущая точка — только пока не done(): пройдены все — дальше путь к самой цели.
     Vec3 current() {
         return center(points.get(index));
     }

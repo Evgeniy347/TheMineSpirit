@@ -63,13 +63,7 @@ public final class ChopTreeGameTests {
 
     private static final int HUT_POST_LOGS = 12;
     private static final int TALL_TREE_LOGS = 60;
-    // Замер (936425f): разбор дерева из 60 брёвен читает 559 клеток — все различные клетки 3x3x62
-    // вокруг ствола плюс повторное чтение почвы под основанием после обхода.
     private static final long MEASURED_TREE_READS = 559;
-    // Граница — замер x 1.5 = 838: запас на флаки и на лишнее чтение при изменении обхода.
-    // Прежняя граница была посажена на замер ровно (559) и красила тест на одном лишнем чтении;
-    // чтение вдвое больше замера (1118) обязано быть красным — бюджет «27 клеток на бревно»
-    // (1620) такое чтение ещё пропускает.
     private static final long MAX_TREE_READS = 838;
     private static final int SECTION_POSITIONS = 16 * 16 * 16;
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -442,8 +436,6 @@ public final class ChopTreeGameTests {
     public static void chopTree_WithoutAxeTwoLogs_SucceedsByHand(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
-        // Крона на высоте 3, а не 2: листья вплотную к земле закрывают духу ростом 1.4 вход в клетку ствола,
-        // и дроп оказывается физически недосягаем.
         buildLogPillar(helper, 4, 4, 2);
         addLeavesCrown(helper, 4, 4, 3, Blocks.OAK_LEAVES);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_START);
@@ -764,9 +756,6 @@ public final class ChopTreeGameTests {
     @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick(GameTestHelper helper) {
         prepareField(helper);
-        // Акация: ни один другой тест не строит акации. Палитра секции не сжимается после удаления блока,
-        // а поиск пропускает секцию по палитре, поэтому следы дубов из соседних тестов в тех же чанках
-        // арены дали бы лишние прочитанные секции.
         buildTree(helper, 4, 4, 5, Blocks.ACACIA_LOG, Blocks.ACACIA_LEAVES);
         SpiritEntity spirit = spawnChopper(helper);
         BlockPos center = spirit.blockPosition();
@@ -1018,7 +1007,6 @@ public final class ChopTreeGameTests {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
-        // Стена игрока поперёк платформы: клетки досадки вплотную к ней не засаживаются.
         for (int z = 0; z < PLATFORM; z++) {
             for (int y = 1; y <= 3; y++) {
                 helper.setBlock(8, y, z, Blocks.COBBLESTONE);
@@ -1147,9 +1135,7 @@ public final class ChopTreeGameTests {
         for (int x = 5; x <= 10; x++) {
             helper.setBlock(x, 6, 4, Blocks.OAK_LOG);
         }
-        // Лист кроны под первым бревном ветки удержал бы его дроп на высоте, куда не дотянуться.
         helper.setBlock(5, 5, 4, Blocks.AIR);
-        // Стена от земли до уровня ниже брёвен ветки: дух остаётся перед ней, но дотягивается через неё.
         for (int z = -2; z <= 12; z++) {
             for (int y = 1; y <= 5; y++) {
                 helper.setBlock(8, y, z, Blocks.STONE);
@@ -1159,8 +1145,6 @@ public final class ChopTreeGameTests {
         ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1));
         ScriptStatus[] status = driveScript(helper, spirit, script);
 
-        // Дроп с брёвен за стеной не достать: он уходит «в пропасть», иначе подбор падал бы не на
-        // проверяемом (рубка через стену), а на предметах, которые и так нельзя подобрать.
         BlockPos beyond = helper.absolutePos(new BlockPos(8, 0, -2));
         AABB beyondWall = new AABB(
                 beyond.getX(),

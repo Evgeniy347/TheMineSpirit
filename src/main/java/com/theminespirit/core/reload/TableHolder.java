@@ -8,12 +8,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Держатель текущей версии одной таблицы. Читатели берут {@link #current()}; загрузчик заменяет версию целиком
- * ({@link #replace}) одной атомарной записью ссылки. Неудачная загрузка ({@link #failed}) оставляет прежнюю версию
- * в силе и лишь помечает статус ошибкой — «тихий fallback» запрещён (docs/CONVENTIONS.md → «Ошибки»), поэтому
- * ошибка видна в статусе и логе.
- */
 public final class TableHolder<T> {
     private final String id;
     private final AtomicReference<Entry<T>> current;

@@ -45,9 +45,6 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Развитие поселения с нуля через доску: порядок первых шагов в настоящем мире, провал шага и путь «уголь → факел».
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 @SettlementSystems(board = true)

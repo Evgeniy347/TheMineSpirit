@@ -10,15 +10,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Единственный реестр держателей таблиц: одно место регистрации (адаптер добавляет определения один раз),
- * одна точка перезагрузки ({@link #reload}). Каждая таблица грузится независимо: ошибка в одной не мешает
- * остальным и не подменяет её содержимое пустым.
- *
- * <p>Начальная версия таблицы берётся лениво ({@code seed}): пока таблицу никто не спросил, её файл не читается.
- * Так сохраняется прежнее поведение «файлы читаются один раз за процесс», а загрузчик вправе заменить версию
- * до первого чтения (тогда classpath-значение и не понадобится).
- */
 public final class TableRegistry {
     private final Map<String, Registered<?>> byId = new LinkedHashMap<>();
     private final Clock clock;
@@ -156,7 +147,6 @@ public final class TableRegistry {
         }
     }
 
-    /** Итог перезагрузки одной таблицы: обновлена ли версия и текст ошибки, если загрузка не удалась. */
     public record Report(
             String id, boolean updated, @Nullable String error) {
         public boolean failed() {

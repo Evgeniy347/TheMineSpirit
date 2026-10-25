@@ -5,11 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Время работы духа над заданием по журналу доски: тик выдачи (ASSIGNED) и тик закрытия
- * (DONE, FAILED, CANCELLED). Повторная выдача начинает отсчёт заново, поэтому закрытие раньше
- * последней выдачи не считается завершением. Тик 0 — «события не было».
- */
 public record BoardTiming(long startedAt, long finishedAt) {
     public static final BoardTiming NONE = new BoardTiming(0, 0);
     public static final int JOURNAL_LOOKBACK = 1024;

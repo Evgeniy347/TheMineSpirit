@@ -5,24 +5,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Описание таблицы для перезагрузки: id (для /spirit tables), путь(и) ресурсов (data/theminespirit/...) и парсер
- * «json → T». Парсер — чистая функция ядра, поэтому и загрузка, и её ошибки тестируются без игры.
- *
- * <p>У таблицы один файл ({@link #single}) или несколько ({@link #composite}, как четыре файла тактики): для
- * составной таблицы парсер получает содержимое всех файлов, а сама таблица в реестре — одна строка.
- */
 public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T> parser, Expander expander) {
     @FunctionalInterface
     public interface Parser<T> {
         T parse(List<LoadedContent> contents);
     }
 
-    /**
-     * Дочитывает пути, которые названы в уже прочитанном файле. Нужен таблице-индексу (пресеты построек):
-     * индекс перечисляет файлы тел, и они читаются тем же источником, что и сам индекс, — тогда /reload
-     * и датапак мира переопределяют и индекс, и любое тело.
-     */
     @FunctionalInterface
     public interface Expander {
         List<String> extraPaths(LoadedContent index);

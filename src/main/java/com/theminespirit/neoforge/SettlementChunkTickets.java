@@ -17,11 +17,6 @@ import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.common.world.chunk.TicketController;
 import net.neoforged.neoforge.common.world.chunk.TicketHelper;
 
-/**
- * Тикеты поселения. Владелец один на весь мод, поэтому число билетов зависит от площади поселения,
- * а не от числа духов. NeoForge ставит билет как ENTITY_TICKING ({@code ForcedChunkManager}) и
- * проверяет его в {@code reinstatePersistentChunks} до восстановления чанков.
- */
 public final class SettlementChunkTickets {
     public static final ResourceLocation CONTROLLER_ID =
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "settlement");

@@ -4,11 +4,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.task.SpiritReading;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Итог задания доски по задаче духа: закрывает задание только задача, которую доска выдала по нему (её поколение).
- * Чужая задача (бой, рефлекс силы, дверь, REST) вытесняет задание временно: оно остаётся за этим духом, другие его
- * не забирают, а когда дух свободен — доска перезапускает его план. Итог чужой задачи заданию не приписывается.
- */
 public enum TicketRun {
     RUNNING,
     SUCCEEDED,

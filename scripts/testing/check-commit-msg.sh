@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Регрессионная проверка хука scripts/git-hooks/commit-msg на пустом временном репозитории (секунды, без Gradle).
-# Каждая строка вывода начинается с OK или FAIL; код выхода 1, если есть FAIL.
 cd "$(dirname "$0")/../.." || exit 2
 hook="$PWD/scripts/git-hooks/commit-msg"
 work="$PWD/TestResults/commit-msg-check"
@@ -10,7 +8,6 @@ cd "$work/repo" || exit 2
 git init -q .
 failed=0
 
-# check <имя> <ожидаемый код хука> <сообщение> <файл в индексе…>
 check() {
     local name="$1" want="$2" message="$3"
     shift 3

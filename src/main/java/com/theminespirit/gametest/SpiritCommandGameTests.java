@@ -26,8 +26,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritCommandGameTests {
-    // Цель, под которую нет правила в FallbackPlanner и нет скрипта в каталоге: тест отказа не должен
-    // ломаться, когда очередной скрипт начнёт реализовывать «сруби дерево» или «добудь руду».
     private static final String UNPLANNABLE_GOAL = "построй дом";
 
     private SpiritCommandGameTests() {}
@@ -36,8 +34,6 @@ public final class SpiritCommandGameTests {
         return "@e[type=" + ModIdentity.MOD_ID + ":spirit,tag=" + tag + "]";
     }
 
-    // Селектор по расстоянию видит и духов соседних тестов пачки (структуры стоят в 8 клетках друг от друга),
-    // и команда ложится на чужого духа; тег уникален на запуск и выбирает только духов своего теста.
     private static String freshTag(String prefix) {
         return prefix + "_" + UUID.randomUUID();
     }

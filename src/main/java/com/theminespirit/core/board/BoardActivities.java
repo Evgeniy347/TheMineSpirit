@@ -14,13 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Задания-занятия доски: всё, что дух делает не по заданию доски (фоновое занятие интеллекта, бой тактики,
- * поход, рефлекс силы «вооружиться», задача REST/стратега), видно на доске одним заданием {@code activity:<дух>} в статусе ASSIGNED. Занятие
- * выдаёт доска (интеллект только предлагает), а снимает — сверка с фактом: дух бросил занятие или его
- * вытеснило задание доски. Занятие не считается в занятости духа для выдачи заданий и не хранится на диске:
- * это живой факт, а не очередь.
- */
 public final class BoardActivities {
     public static final String ID_PREFIX = "activity:";
     public static final String SCRIPT_KEY = "script=";
@@ -67,8 +60,6 @@ public final class BoardActivities {
         };
     }
 
-    // Название задачи духа по её плану: скрипт верхнего вызова, у цепочки — первый вызов не «goto» (подход к месту
-    // работы — не работа): «chop_tree», а не «ACTIVITY_UNLOAD» (INC-48).
     public static @Nullable String scriptOf(TaskNode plan) {
         Objects.requireNonNull(plan, "План задачи не может быть null: название берётся из него");
         if (plan instanceof ScriptCall call) {

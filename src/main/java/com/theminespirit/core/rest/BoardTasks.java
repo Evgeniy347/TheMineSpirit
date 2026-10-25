@@ -12,10 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Сборка наблюдаемого задания доски из билета, статуса, держателя и снимка запасов.
- * Одна на REST и команду {@code /spirit board}: и мост, и чат показывают одно и то же.
- */
 public final class BoardTasks {
     private BoardTasks() {}
 
@@ -32,8 +28,6 @@ public final class BoardTasks {
             Board board, BoardTicket ticket, BoardStatus status, StockView stock, BoardTiming timing) {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         Optional<UUID> holder = board.holderOf(ticket.id());
-        // Задание в очереди или в работе — не «сделано», даже если такой кейс уже закрывался раньше (INC-47:
-        // gather PENDING с done:true).
         boolean queued = status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;

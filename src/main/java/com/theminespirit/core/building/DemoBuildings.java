@@ -10,12 +10,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Каталог семей построек (данные {@code schematics/buildings.json}): id подкоманды демо, название, тип и уровни
- * с файлами схем; тело схемы и материалы берутся из библиотеки пресетов по имени файла.
- *
- * <p>У постройки без уровней один уровень {@code 0}; у загона уровни 1–3, у чаровальни 1–3.
- */
 public final class DemoBuildings {
     public record Level(int level, String scheme) {
         public Level {
@@ -60,7 +54,6 @@ public final class DemoBuildings {
     public static final String CATALOG = PresetLibrary.SCHEMATICS_ROOT + "buildings.json";
     private static final Set<String> BUILDING_FIELDS = Set.of("id", "name", "type", "levels");
     private static final Set<String> LEVEL_FIELDS = Set.of("level", "scheme");
-    // Подкоманды /spirit demo, не являющиеся постройками.
     private static final Set<String> RESERVED_IDS = Set.of("list", "stop", "city");
 
     private static final List<Building> ALL = parse(JsonResource.readClasspath(CATALOG), CATALOG);

@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# scripts/lead/chkq.sh <id> <ждать-id|-> <ветка>... — приёмка: worktree chk-<n> от <ветка> + merge main + unit + GameTest
-# Пути параметризованы для проверяемости (scripts/testing/check-chkq.sh); умолчания — серверные.
 id=$1; wait=$2; shift 2
 repo="${THEMINESPIRIT_CHKQ_REPO:-/opt/minecraft/the-mine-spirit}"
 wt="${THEMINESPIRIT_CHKQ_WT:-/opt/minecraft/wt}"

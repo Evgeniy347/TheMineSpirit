@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Фальшивый платформенный шлюз для тестов обработчиков задач.
- */
 final class FakeTaskGateway implements TaskGateway {
     private final List<String> starts = new ArrayList<>();
     private final List<String> cancels = new ArrayList<>();

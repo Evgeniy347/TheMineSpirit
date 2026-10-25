@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Сторож укрытия первого дня: размер, высота, вход и свет из схемы, а не из кода. */
 class ShelterSchematicTests {
     private static final Path FILE = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT + "shelter.txt");
 

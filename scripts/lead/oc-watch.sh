@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-# Слежение главного агента за исполнителями opencode (docs/LEAD-AGENT.md → «Старт сессии»).
-# Каждую минуту — новые завершения (EXIT=, ключ — имя .out и время его изменения); каждые 10 минут — зависшие
-# (процесс жив, а логи сессии не пишутся дольше STALE_MIN минут), ресурсы ПК и domovoy (res-pc.ps1, нагрузка/память)
-# и сироты исполнителей (res-pc.ps1, orphan-sweep.sh на сервере). Печатает только события.
-# Запуск: инструмент Monitor (живёт 30 мин) → bash scripts/lead/oc-watch.sh; скрипт сам выходит за минуту до срока.
-# OC_QUIET_LOAD=1 — не сообщать о нагрузке domovoy (например, во время записи видео владельца).
-# Состояние «уже сообщено» — в $OC_SEEN (вне репозитория), переживает перезапуски.
 seenf="${OC_SEEN:-/f/repos/minecraft/oc-results/oc-seen.txt}"
 STALE_MIN=30
 touch "$seenf"
@@ -26,8 +19,6 @@ res() {
   powershell -NoProfile -ExecutionPolicy Bypass -File "$(dirname "$0")/res-pc.ps1" 2>/dev/null
   ssh -o ConnectTimeout=10 domovoy@192.168.0.147 'f=$(free | awk "/Mem:/{print int(\$7*100/\$2)}"); [ "$f" -lt 15 ] && echo "domovoy: свободно памяти $f %"; l=$(cut -d" " -f1 /proc/loadavg); n=$(nproc); awk -v l=$l -v n=$n "BEGIN{if (l>n*2) print \"domovoy: нагрузка \" l \" на \" n \" ядер\"}"; oc=$(pgrep -c -f "opencode run" || true); ps -eo pid,etimes,pcpu,comm --no-headers | awk -v oc=$oc "\$3>50 && (\$4==\"bash\"||\$4==\"sh\"||\$4==\"python3\"||\$4==\"java\") && (\$2>7200 || oc==0) {print \"domovoy: \" \$4 \" pid=\" \$1 \" ест \" \$3 \" % ядра, живёт \" int(\$2/60) \" мин (opencode: \" oc \")\"}"' 2>/dev/null | { if [ -n "${OC_QUIET_LOAD:-}" ]; then grep -v 'нагрузка' || true; else cat; fi; } || true
 }
-# Монитор живёт 30 мин и не всегда убивает скрипт: выходим сами за минуту до срока, иначе осиротевшие копии
-# молча забирают события себе (они уже записаны в seen).
 deadline=$(( $(date +%s) + 1740 ))
 tick=0
 while [ "$(date +%s)" -lt "$deadline" ]; do

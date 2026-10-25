@@ -8,10 +8,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-/**
- * Правило владельца 21.10: без игроков на сервере чанки поселения и духи выгружены; как только игрок
- * подключён (в любом мире), поселение загружено целиком, а духи разбужены по сохранённым координатам.
- */
 public final class SettlementChunkLifecycle {
     private static final Map<ServerLevel, Boolean> ONLINE = new ConcurrentHashMap<>();
 

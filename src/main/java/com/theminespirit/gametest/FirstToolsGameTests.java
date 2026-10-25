@@ -211,8 +211,6 @@ public final class FirstToolsGameTests {
 
     private static BlockPos findBlock(GameTestHelper helper, Block block) {
         for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
-            // С y=0: дух иногда ставит печь на уровень пола (диагностика флака firsttools_fromscratch
-            // видела печь в мире, а поиск с y=1 её пропускал).
             for (int y = 0; y < SCENE_HEIGHT; y++) {
                 for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
                     BlockPos pos = new BlockPos(x, y, z);

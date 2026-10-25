@@ -18,10 +18,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/**
- * Очередь возрождений погибших духов, сохранённая в мире: перезапуск сервера не отменяет обещанное возрождение.
- * Запись знает, кем был дух (UUID и имя), где база, где и от чего он погиб и когда его возвращать.
- */
 public final class SpiritRespawnStore extends SavedData {
     private static final String DATA_NAME = ModIdentity.MOD_ID + "_spirit_respawns";
     private static final String ENTRIES = "Entries";

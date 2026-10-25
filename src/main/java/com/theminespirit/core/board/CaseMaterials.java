@@ -17,12 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Материалы кейса по его плану: проход по шагам собирает предметы, которые должны лежать
- * в запасах до выдачи. Крафт считается из рецепта (ингредиенты на число крафтов), схема —
- * из блоков схемы, постановка блока и добыча — по самому шагу. Имена приводятся к короткому
- * виду, как ключи снимка запасов: гейт сравнивает их со складом один в один.
- */
 public final class CaseMaterials {
     private static final String MINECRAFT_PREFIX = "minecraft:";
 
@@ -32,8 +26,6 @@ public final class CaseMaterials {
         return walk(plan, source, null);
     }
 
-    // Ингредиенты всех крафтов предмета в плане (ингредиент × число крафтов): передача несла крафтеру набор на
-    // один крафт, и «craft torch ×8» падал «coal 1 из 2» (приёмка «джунгли»).
     public static Map<String, Integer> craftNeed(TaskNode plan, MaterialSource source, String item) {
         Objects.requireNonNull(item, "Предмет крафта не может быть null: без него не выбрать шаг плана");
         return walk(plan, source, normalize(item));
@@ -43,8 +35,6 @@ public final class CaseMaterials {
         Objects.requireNonNull(plan, "План кейса не может быть null: без него неизвестно, что нужно собрать");
         Objects.requireNonNull(source, "Источник материалов не может быть null: без него рецепт не прочитать");
         Map<String, Integer> need = new HashMap<>();
-        // acquire — «иметь столько», а не расход: тот же предмет, поставленный следом (факелы освещения), не
-        // удваивает нужду.
         Map<String, Integer> acquired = new HashMap<>();
         Deque<TaskNode> queue = new ArrayDeque<>();
         queue.add(plan);

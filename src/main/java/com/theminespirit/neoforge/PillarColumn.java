@@ -21,8 +21,6 @@ final class PillarColumn {
     }
 
     private static final double PILLAR_CLEARANCE = 1.0;
-    // Запас на настоящий застой, а не на цикл прыжка: дух может сорваться со столба и повторить
-    // подъём; 60 тиков обрывали нормальную стройку пятого блока (флак chop_tree_tall 17.10).
     private static final int MAX_STALL_TICKS = 200;
 
     private final SpiritEntity spirit;
@@ -63,7 +61,6 @@ final class PillarColumn {
         this.placer = new BlockPlacer(spirit);
     }
 
-    // Засыпка пруда в яме: столб из воды (не лавы) — дух всплывает и ставит блок в воду под собой (сцена 56).
     static PillarColumn throughWater(SpiritEntity spirit, String blockId) {
         PillarColumn pillar = new PillarColumn(spirit, blockId, 1);
         pillar.waterOk = true;
@@ -105,9 +102,6 @@ final class PillarColumn {
             stallTicks = 0;
             return place(target);
         }
-        // Счётчик идёт и на земле: прыжок может быть заблокирован потолком в двух клетках над
-        // ногами, и тогда onGround остаётся истинным каждый тик. Раньше сброс на земле держал
-        // pillar_up в RUNNING вечно (флак chop_tree_tall 17.10).
         if (++stallTicks > MAX_STALL_TICKS) {
             return fail("дух не поднялся на " + (target.getY() - baseY + 1) + "-й блок за " + MAX_STALL_TICKS
                     + " тиков (дух на " + spirit.blockPosition().toShortString() + ", y=" + spirit.getY()

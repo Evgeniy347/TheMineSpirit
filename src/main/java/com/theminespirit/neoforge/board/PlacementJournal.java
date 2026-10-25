@@ -10,10 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
-/**
- * Установка блока духом вне плана стройки (станция, сундук склада) — строка в логе и заметка в журнале доски: кто,
- * в какой задаче, где и зачем (INC-54: три пустых сундука вне участка, кто поставил — не видно).
- */
 public final class PlacementJournal {
     private static final Logger LOGGER = LogUtils.getLogger();
 

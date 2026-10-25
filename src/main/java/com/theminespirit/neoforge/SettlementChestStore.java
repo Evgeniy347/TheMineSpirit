@@ -12,10 +12,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/**
- * Сундуки поселения в данных мира: реестр переживает перезапуск сервера, а установка и снятие сундука меняют его
- * без обхода мира. Начальный реестр пуст; дальше его пополняют события установки и снятия блока.
- */
 public final class SettlementChestStore extends SavedData {
     public static final String NAME = ModIdentity.MOD_ID + "_settlement_chests";
 

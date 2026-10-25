@@ -48,10 +48,6 @@ import net.minecraft.world.level.block.state.properties.RotationSegment;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-/**
- * Одна демо-стройка: убирает площадку, ставит сундук с материалами, ведёт духа по уровням и убирает его,
- * когда всё готово (или называет причину отказа). Уровни идут по очереди: загон сначала младший, потом старший.
- */
 final class DemoSession {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int DEMO_WAIT_TICKS = 100;
@@ -131,9 +127,6 @@ final class DemoSession {
                 return true;
             }
         }
-        // Заход сессии считает свободные слоты до похода к сундуку; по дороге дух подбирает выпавшее, и последний
-        // слот занят (игра 21.10: «инвентарь духа полон: перенесено 0 из 64»). Это не конец стройки: стройка сама
-        // берёт порции и в демо выбрасывает лишнее (BuildSupplyTrip) — продолжить её без захода сессии.
         if (reason.contains(INVENTORY_FULL) && round < MAX_ROUNDS) {
             round++;
             LOGGER.info(
@@ -166,8 +159,6 @@ final class DemoSession {
         return new SequenceNode(steps);
     }
 
-    // Игра 21.10: на витрине city 5 владелец стоял на другом конце улицы — чанки дальних участков выгружались, дух
-    // уходил в чанк (isRemoved), и сессия кончалась без стройки. Сессия держит чанки своих площадок до конца.
     private void holdChunks() {
         for (DemoPlan plan : plans) {
             var platform = plan.placement().platform();
@@ -211,7 +202,6 @@ final class DemoSession {
         Map<String, Object> params = new HashMap<>();
         params.put("file", plan.scheme());
         params.put("x", plan.placement().origin().x());
-        // Подземная схема копается в породе: пол первой ступени — сам грунт под якорем, а не блок поверх него.
         params.put("y", plan.placement().origin().y() - (underground(plan) ? 1 : 0));
         params.put("z", plan.placement().origin().z());
         params.put("rotation", plan.placement().rotation().id());
@@ -238,8 +228,6 @@ final class DemoSession {
                 .orElse(false);
     }
 
-    // Демо шахты показывает проходку: дух получает железную кирку (обычная руда добывается, руда на удачу
-    // остаётся с обходом) и факелы — их расставит по схеме.
     private void giveMiningKit() {
         spirit.getInventory().addItem(new ItemStack(Items.IRON_PICKAXE));
         spirit.getInventory().addItem(new ItemStack(Items.TORCH, MINE_TORCHES));
@@ -273,8 +261,6 @@ final class DemoSession {
 
     private record Withdrawal(BlockPos chest, String item, int count) {}
 
-    // Решение владельца 20.10: материалы — в двойных сундуках (столбиком пар), сколько нужно; одиночный сундук —
-    // только если рядом с точкой сундука нет места под вторую половину.
     private List<BlockPos> fillChests(DemoPlan plan) {
         BlockCoord base = plan.placement().chest();
         Direction partner = partnerSide(plan);
@@ -301,7 +287,6 @@ final class DemoSession {
         return List.copyOf(filled);
     }
 
-    // Половины идут парами: нижняя пара — у точки сундука, следующая — над ней. Крышка смотрит от постройки.
     private ChestBlockEntity nextChest(
             DemoPlan plan, BlockCoord base, @Nullable Direction partner, List<BlockPos> filled) {
         int index = filled.size();
@@ -336,7 +321,6 @@ final class DemoSession {
         return second;
     }
 
-    // Сторону второй половины выбрала раскладка (DemoPlacement): вдоль фасада, вне схемы, при любом повороте.
     private static @Nullable Direction partnerSide(DemoPlan plan) {
         BlockCoord base = plan.placement().chest();
         BlockCoord partner = plan.placement().chestPartner();
@@ -356,7 +340,6 @@ final class DemoSession {
         return chest;
     }
 
-    // Табличка — справа от сундука вдоль фасада (клетку выбрала раскладка), лицом туда же, куда крышка.
     private void placeSign(DemoPlan plan) {
         BlockCoord cell = plan.placement().sign();
         if (cell == null) {
@@ -379,7 +362,6 @@ final class DemoSession {
         }
     }
 
-    // Духу хватает слотов не на всё: каждый заход берёт то, чего в мире ещё нет, сколько влезет в инвентарь.
     private List<Withdrawal> withdrawals(DemoPlan plan) {
         Map<Item, Integer> need = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : plan.entries()) {

@@ -19,10 +19,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-// Снапшот плана стройки (решение владельца 20.10): на каждую постройку каталога × 4 поворота — текстовый план заходов и
-// стоянок. Тест краснеет только при изменении плана; обновление — флагом -Dtheminespirit.updateSnapshots=true, дифф
-// снапшотов идёт в коммит и читается при ревью.
-// Постройка — отдельный запуск, запуски идут параллельно: план считается долго, а постройки независимы.
 @Execution(ExecutionMode.CONCURRENT)
 class BuildPlanSnapshotTests {
     static final Path DIR = Path.of("src/test/resources/build-plans");
@@ -30,7 +26,6 @@ class BuildPlanSnapshotTests {
     private static final int SUPPLY_RING = 2;
     private static final int SUPPLY_SIDE_OFFSET = 3;
     private static final SpiritReach REACH = new SpiritReach(3, 15, 3);
-    // Схема с repeat до мирового y снимается от номинальной поверхности: иначе у плана нет высоты входа.
     private static final int PLAN_TOP_Y = 64;
 
     static Preset planned(Preset preset) {
@@ -80,7 +75,6 @@ class BuildPlanSnapshotTests {
         return schemes;
     }
 
-    // Сундук — как в аудите стройки: перед дверью за крыльцом и кольцом, сбоку на SUPPLY_SIDE_OFFSET; дух — между.
     static BlockCoord supplyFeet(Preset preset, BuildRotation rotation) {
         Preset buildable = planned(preset);
         Schematic schematic = buildable.schematic();

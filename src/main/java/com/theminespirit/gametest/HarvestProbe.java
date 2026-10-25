@@ -13,11 +13,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-// Диагностика флаков добычи: провал «куча не уложилась в тики» или «дроп потерян» по одному
-// сообщению не говорит, стоял ли дух замороженным (тактика/политика из-за моба соседней сцены),
-// где дроп и что осталось в мире. Проба копит сплит рабочих и паузных тиков, переходы заморозки
-// с причиной, состояние духа, тактику и ближайшую угрозу, остатки блоков и позиции дропа,
-// чтобы провал объяснял себя фактами, а не гаданием.
 final class HarvestProbe {
     private static final int SAMPLE_EVERY_TICKS = 10;
     private static final int MAX_TRANSITIONS = 60;

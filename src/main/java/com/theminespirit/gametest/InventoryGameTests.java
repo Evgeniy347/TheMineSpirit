@@ -854,9 +854,6 @@ public final class InventoryGameTests {
         });
     }
 
-    // INC-12: equip вынимает инструмент из инвентаря в настоящую руку, а тактика (SpiritGear.holdNothing) освобождает
-    // руку как витрину — предмет обязан вернуться в инвентарь, иначе он исчезает из обоих мест. Цепочка из живого
-    // прогона: craft → equip → gather → equip другого.
     @SceneStep(template = "arena", timeoutTicks = 400)
     public static void equip_CraftEquipGatherSwap_KeepsEveryTool(GameTestHelper helper) {
         TacticsScene.prepare(helper);
@@ -1031,7 +1028,6 @@ public final class InventoryGameTests {
         far.setItem(0, new ItemStack(Items.TORCH, 10));
         near.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        // Постоянная часть держит 24 факела (base_kit.json): 52 = 24 постоянных + 28 излишка из шахты.
         spirit.getInventory().setItem(0, new ItemStack(Items.TORCH, 52));
         SpiritRun run = SpiritRun.launch(
                 helper, spirit, new ScriptCall("unload", Map.of("container", "auto", "radius", 8, "force", true)), 1);
@@ -1104,7 +1100,6 @@ public final class InventoryGameTests {
         }
         near.setItem(0, new ItemStack(Items.OAK_PLANKS, 64));
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        // Постоянная часть держит 24 факела: 52 = 24 постоянных + 28 излишка, который и разгружается.
         spirit.getInventory().setItem(0, new ItemStack(Items.TORCH, 52));
         SpiritRun run = SpiritRun.launch(
                 helper, spirit, new ScriptCall("unload", Map.of("container", "auto", "radius", 8, "force", true)), 1);

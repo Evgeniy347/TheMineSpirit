@@ -8,11 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Выбор рабочей точки у воды в мире: строит вид воды вокруг духа, читает колонки и отдаёт
- * решение ядру {@link FishingSpots#findWorkPoint}. Мир читает только этот адаптер, выбор
- * места — чистая функция; точки чужих построек приходят списком и лишь сужают выбор.
- */
 public final class FishingWorkPointPicker {
     private FishingWorkPointPicker() {}
 

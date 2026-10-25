@@ -5,10 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Колонка подземного хода: клетка пола и воздух над ней снизу вверх. Дух стоит на полу колонки, ходит между
- * соседними колонками, если их полы отличаются не больше чем на блок.
- */
 public record MineColumn(BlockCoord floor, int height) {
     public static final int PASSAGE_HEIGHT = 3;
     public static final int MAX_STEP = 1;
@@ -40,7 +36,6 @@ public record MineColumn(BlockCoord floor, int height) {
         return cell.x() == floor.x() && cell.z() == floor.z() && cell.y() > floor.y() && cell.y() <= floor.y() + height;
     }
 
-    // Соседи по горизонтали с перепадом пола не больше блока: дух переходит пешком без прыжка выше блока.
     public boolean walksTo(MineColumn other) {
         int dx = Math.abs(other.floor.x() - floor.x());
         int dz = Math.abs(other.floor.z() - floor.z());

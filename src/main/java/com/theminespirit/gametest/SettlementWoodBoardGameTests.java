@@ -21,10 +21,6 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Добыча первых шагов под другую породу снимается, когда порода поселения — jungle: gather:oak_fence, поставленный
- * до смены породы, висел PENDING рядом с выбранной jungle (INC-42, живой сервер 24.10).
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 @SettlementSystems(board = true)

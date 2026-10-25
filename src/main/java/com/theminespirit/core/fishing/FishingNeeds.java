@@ -9,10 +9,6 @@ import com.theminespirit.core.processing.CookableFoods;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Гейты рыболовства: когда доска заказывает коптильню и когда дух идёт на рабочую точку.
- * Числа порогов приходят из {@link FishingData}, а не из кода.
- */
 public final class FishingNeeds {
     private FishingNeeds() {}
 

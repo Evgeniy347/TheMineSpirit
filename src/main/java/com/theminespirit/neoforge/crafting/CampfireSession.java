@@ -68,10 +68,6 @@ public final class CampfireSession {
             takeBack(campfire.get());
             return fail("костёр не успел за " + timeoutTicks + " тиков: приготовлено " + collected + " из " + wanted);
         }
-        // Подбор готового — каждый тик, а не раз в POLL_TICKS: при ускоренной готовке (GameTest-помпа)
-        // несколько предметов вызревают в один тик и падают одним местом; подбор раз в 10 тиков терял
-        // часть выхода, и сессия висела в RUNNING с пустым костром (флак 18.10). Постановка сырья —
-        // по-прежнему раз в POLL_TICKS, чтобы не дёргать слоты каждый тик.
         collectDrops();
         if (collected >= wanted) {
             takeBack(campfire.get());

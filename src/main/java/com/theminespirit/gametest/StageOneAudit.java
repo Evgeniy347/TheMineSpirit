@@ -27,10 +27,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-/**
- * Приёмка этапа 1 по миру, а не по журналу доски: участок ровный, ограда по схеме и непроходима, хижина, спуск в
- * шахту и факелы по плану раскладки. Каждая проверка возвращает список расхождений с координатами.
- */
 final class StageOneAudit {
     private static final int SHOWN = 6;
     private static final int SCAN = 12;
@@ -56,7 +52,6 @@ final class StageOneAudit {
                 int feet = feet(level, anchor, x, z);
                 if (!SettlementLayout.mineColumn(anchor, x, z)
                         && Math.abs(feet - anchor.y()) > PlotLeveling.TOLERANCE) {
-                    // Что стоит под ногами — сразу видно, листва это, верстак или земля (сцена 56).
                     BlockPos top = new BlockPos(x, feet - 1, z);
                     off.add("(" + x + ", " + z + ") ноги " + feet + " на "
                             + BuiltInRegistries.BLOCK
@@ -68,8 +63,6 @@ final class StageOneAudit {
         report("участок не ровный на y=" + anchor.y(), off, problems);
     }
 
-    // Ограда непроходима: земля вплотную к ней изнутри и снаружи не выше уровня участка — с уступа в блок забор
-    // высотой 1,5 перешагивается прыжком.
     private static void fenceSides(ServerLevel level, BlockCoord anchor, List<String> problems) {
         List<String> steps = new ArrayList<>();
         int ring = SettlementLayout.HALF;
@@ -182,7 +175,6 @@ final class StageOneAudit {
         report("факелов освещения нет", dark, problems);
     }
 
-    // Уровень ног колонки: над верхним блоком земли (постройки, деревья, факелы землёй не считаются).
     static int feet(ServerLevel level, BlockCoord anchor, int x, int z) {
         for (int y = anchor.y() + SCAN; y > anchor.y() - SCAN; y--) {
             BlockState state = level.getBlockState(new BlockPos(x, y, z));

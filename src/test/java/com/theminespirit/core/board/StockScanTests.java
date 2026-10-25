@@ -14,7 +14,6 @@ class StockScanTests {
 
     private static final BlockCoord CENTER = new BlockCoord(0, 64, 0);
 
-    /** Мир-заглушка: контейнеры в заданных клетках, часть чанков «не загружена». */
     private static final class FakeBlocks implements StockScan.Blocks {
         private final Set<BlockCoord> containers = new HashSet<>();
         private final Set<BlockCoord> unloaded = new HashSet<>();

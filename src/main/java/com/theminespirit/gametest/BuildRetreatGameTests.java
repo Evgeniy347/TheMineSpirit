@@ -14,10 +14,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Правило отхода (владелец 20.10, постоянное): дух не ставит блок, после которого ему не выйти из постройки, — сперва
- * переходит на стоянку снаружи. Сцена — ниша 1×1 в стене высотой 2 ({@code retreat_nook}), дух стоит внутри.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BuildRetreatGameTests {
@@ -27,7 +23,6 @@ public final class BuildRetreatGameTests {
 
     private BuildRetreatGameTests() {}
 
-    // Правило отхода (владелец 20.10): дух в нише не ставит пробку проёма изнутри — сперва выходит, потом ставит.
     @SceneStep(template = "arena", timeoutTicks = TIMEOUT_TICKS)
     public static void build_SpiritInNook_PlugsOpeningFromOutside(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

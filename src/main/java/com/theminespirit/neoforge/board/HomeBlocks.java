@@ -6,13 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 
-/**
- * Есть ли у точки (дом, место задания) нужный блок — станция, на которой скрипт будет работать. Гейт до выдачи:
- * задание без станции рядом невыполнимо (INC-24, INC-26). Обход — круг радиуса по горизонтали и полоса по высоте,
- * только загруженные чанки; вызывается редко (когда гейт вообще нужен), не каждый тик.
- */
 final class HomeBlocks {
-    // Станции стоят на уровне дома; ниже и выше — шахта и крыши.
     static final int STATION_DY = 4;
 
     private HomeBlocks() {}

@@ -23,16 +23,8 @@ import java.util.OptionalInt;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
-/**
- * Уровни шахты: следующий выдаётся после выполненного предыдущего и держится гейтом
- * материалов. Первый уровень ставит цепочка первых шагов; здесь — расширение, ступеньки
- * и рельсы, чтобы уровень не прыгал через непостроенный.
- */
 final class MineLevels {
     private static final Logger LOGGER = LogUtils.getLogger();
-    // Уровень 2 — только выработка (dig_area): материал не расходует, булыжник даёт сам. Гейт «stone ×32»
-    // ставил supply:stone, а камень (не булыжник) добычей не получить — цикл FAILED→POSTED (INC-28).
-    // Уровень 3 кладёт пол из булыжника 7×7 (fill в TicketPlans) — гейт на то, что он тратит.
     private static final Map<Integer, Map<String, Integer>> LEVEL_MATERIALS = Map.of(
             3, Map.of("cobblestone", 49),
             4, Map.of("iron_ingot", 16));
@@ -53,8 +45,6 @@ final class MineLevels {
                 BoardCase.BUILD_MINE, levelValue, service.board().ledger())) {
             return;
         }
-        // Этап 1 ещё строится (куски ограды, части расчистки): отметку журнала ставит первый кусок, и выработка
-        // уровня 2 начиналась посреди этапа 1 и рыла яму у спуска в участке (сцена 56).
         boolean stageOneBusy = FirstStepsRunner.stageOneBuilding(service);
         if (stageOneBusy) {
             return;
@@ -63,8 +53,6 @@ final class MineLevels {
         if (active(service, id)) {
             return;
         }
-        // Спуск стоит от якоря участка (FirstStepsRunner), а не от дома духа: дом на прежней вершине холма на 4 выше
-        // участка, низ спуска считался выше настоящего, и выработка уровня 2 рыла яму в участке (сцена 56).
         BlockCoord home = SettlementPlotStore.get(level)
                 .plot()
                 .map(SettlementPlot::anchor)

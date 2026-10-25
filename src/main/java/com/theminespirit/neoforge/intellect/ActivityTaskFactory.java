@@ -17,7 +17,6 @@ import java.util.Optional;
 import net.minecraft.world.item.ItemStack;
 
 public final class ActivityTaskFactory {
-    // Со своими брёвнами от 5 дух плавит из них: вход c и топливо ~2c/3 (бревно горит полторы плавки).
     private static final int MIN_OWN_LOGS = 5;
     private static final int FUEL_SHARE_NUM = 2;
     private static final int FUEL_SHARE_DEN = 3;
@@ -60,8 +59,6 @@ public final class ActivityTaskFactory {
         int held = heldLogs(spirit, log);
         int count = smelt.get(COUNT) instanceof Integer wanted ? wanted : 1;
         if (held >= MIN_OWN_LOGS) {
-            // Плавка из своих брёвен (вход + топливо ~2/3 входа): дух с 13 брёвнами добывал ещё 8 («×21») и падал на
-            // недостижимом верху джунглевого дерева (INC-44, живой 24.10).
             smelt.put(COUNT, Math.min(count, held * FUEL_SHARE_DEN / (FUEL_SHARE_DEN + FUEL_SHARE_NUM)));
         } else {
             steps.add(new ScriptCall(
@@ -93,8 +90,6 @@ public final class ActivityTaskFactory {
         return count;
     }
 
-    // Плавка — у дома: печь стоит во дворе станций, а дух с расчистки угла участка или из шахты искал её в 16 вокруг
-    // себя и падал «нужна печь: рядом (16) нет, в инвентаре нет» (приёмка «джунгли» 24.10).
     private static List<TaskNode> withHome(SpiritEntity spirit, TaskNode smelt) {
         if (spirit == null || spirit.home().isEmpty()) {
             return List.of(smelt);

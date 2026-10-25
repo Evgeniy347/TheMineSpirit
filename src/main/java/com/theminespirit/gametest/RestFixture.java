@@ -294,9 +294,6 @@ final class RestFixture {
         return spirit;
     }
 
-    // helper.makeMockServerPlayerInLevel() называет всех игроков test-mock-player, а follow берёт первого игрока
-    // с таким именем: протёкший из упавшего соседнего теста игрок уводит духа к чужой цели. GameTestFixtures.mockPlayer
-    // даёт уникальное имя теста и снимает игрока при любом исходе через слушателя (образец — 65406d0, 3130b96).
     ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, relative, "gt_rest_player_" + playerCounter++);
         players.add(player);

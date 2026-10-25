@@ -65,8 +65,6 @@ final class ReflexExecutor {
         }
     }
 
-    // Аварийный подъём (INC-19): в затопленной шахте прыжок на месте не выносит к воздуху — дух плывёт к ближайшей
-    // по воде клетке, где голова над водой.
     private void surface(SpiritEntity spirit) {
         if (++breathAge >= BREATH_REFRESH_TICKS) {
             breathAge = 0;

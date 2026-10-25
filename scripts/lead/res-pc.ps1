@@ -1,5 +1,3 @@
-# Ресурсы ПК: печатает строки только при проблеме — мало свободной памяти, перегруз CPU,
-# долгоживущий процесс bash/sh/python/java, который ест CPU, когда исполнителей opencode нет.
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $os = Get-CimInstance Win32_OperatingSystem
 $freePct = [math]::Round(100 * $os.FreePhysicalMemory / $os.TotalVisibleMemorySize)
@@ -8,7 +6,6 @@ $cores = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
 $perf = Get-CimInstance Win32_PerfFormattedData_PerfProc_Process | Where-Object { $_.Name -notin '_Total','Idle' }
 $total = ($perf | Measure-Object PercentProcessorTime -Sum).Sum / $cores
 $opencode = @(Get-Process opencode -ErrorAction SilentlyContinue).Count
-# Высокая загрузка при работающих исполнителях — норма (сборки с низким приоритетом); тревога — когда их нет.
 if ($total -gt 90 -and $opencode -eq 0) { "ПК: CPU занят на $([math]::Round($total)) %, исполнителей нет" }
 $now = Get-Date
 foreach ($p in $perf) {
@@ -22,10 +19,6 @@ foreach ($p in $perf) {
         "ПК: $name pid=$($p.IDProcess) ест $($p.PercentProcessorTime) % ядра, живёт $ageMin мин (opencode запущено: $opencode)"
     }
 }
-# Сироты исполнителей. У процессов Git Bash (MSYS) Windows часто показывает «мёртвого» родителя, хотя логически он жив
-# (16.10 так убиты чужой tail -F и рабочий запуск opencode deepseek-web), поэтому по родителю не судим. Убиваем только:
-# 1) find.exe с поиском по всему диску (find / …) старше 15 мин; 2) java сервера GameTest (fml.modFolders=…wt-<имя>)
-# старше 15 мин, если в этом worktree не работает ни один opencode. Демон Gradle не трогаем.
 $all = Get-CimInstance Win32_Process
 $opencodeDirs = @($all | Where-Object { $_.Name -eq 'opencode.exe' } | ForEach-Object {
     if ($_.CommandLine -match '--dir\s+(\S+)') { $Matches[1].ToLower() } })

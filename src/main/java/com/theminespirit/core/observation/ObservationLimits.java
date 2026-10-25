@@ -5,10 +5,6 @@ import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
-/**
- * Пределы размера наблюдения: сколько выпавших предметов, сколько контейнеров и сколько записей
- * в каждом контейнере попадает в ответ {@code observe}. Числа — данные: правятся через /reload.
- */
 public record ObservationLimits(int maxGroundItems, int maxContainers, int maxContainerItems, int maxOpenBlocks) {
     public static final String RESOURCE = "data/theminespirit/observation/observation.json";
 

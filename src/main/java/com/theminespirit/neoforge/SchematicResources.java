@@ -23,7 +23,6 @@ public final class SchematicResources {
         if (file.isBlank()) {
             throw new IllegalArgumentException("Имя схемы пусто: по пустому имени схему не найти");
         }
-        // Часть схемы (ограда кусками на разных духов): та же схема, только колонны своего сектора.
         Optional<SchematicPart.Ref> part = SchematicPart.parse(file);
         if (part.isPresent()) {
             SchematicPart.Ref ref = part.orElseThrow();

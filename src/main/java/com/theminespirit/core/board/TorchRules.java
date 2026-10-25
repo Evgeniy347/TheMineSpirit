@@ -6,12 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Путь «уголь → факел»: есть уголь или древесный уголь — сразу задание «сделать факелы» до запаса; угля нет, а печь
- * стоит (или лежит у духа) — «пережечь пару брёвен в древесный уголь», топливо — брёвна/доски; пережечь нечего, а
- * шахта уже есть — «добыть уголь» в шахте (порядок владельца 21.10: уголь в шахте → факелы; INC-25: без этого шага
- * свет первых шагов ждал факелы вечно). Решение — по снимку запасов; числа — константы правила.
- */
 public final class TorchRules {
     public static final String TORCH = "torch";
     public static final int TORCH_TARGET = 16;
@@ -42,13 +36,10 @@ public final class TorchRules {
         return next(stock, furnace, mine, TORCH_TARGET);
     }
 
-    // target — сколько факелов держать: обычный запас или больше, когда их ждёт шаг (ограда с факелами на столбах).
     public static Optional<TorchStep> next(Map<String, Integer> stock, boolean furnace, boolean mine, int target) {
         return next(stock, furnace, mine, target, null);
     }
 
-    // log — бревно породы поселения: при печи и без свободных брёвен добываются брёвна на уголь, а не уголь из
-    // жилы — жила кончается, и провалы «добыто 0 из 2» запирали духам добычу (простой 6547 тиков, «джунгли»).
     public static Optional<TorchStep> next(
             Map<String, Integer> stock, boolean furnace, boolean mine, int target, @Nullable String log) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
@@ -77,8 +68,6 @@ public final class TorchRules {
         if (furnace && mine && log != null) {
             return Optional.of(new TorchStep(BoardCase.GATHER_MATERIALS, log, CHARCOAL_LOGS));
         }
-        // Порода известна, а печи ещё нет — ждать печь (она в цепочке до света): уголь из жилы кончается, и провал
-        // «добыто 2 из 4» ставил духу паузу добычи — простой 2622 тика в начале этапа (приёмка «джунгли» 24.10).
         if (!mine || log != null) {
             return charcoalStep;
         }

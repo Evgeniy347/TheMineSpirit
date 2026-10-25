@@ -21,11 +21,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Масштаб доски: двадцать духов и шесть заявок за 1000 тиков. Доска обязана работать раз в
- * период, читать склад бюджетом и выдавать не больше, чем свободных духов, — иначе снимок
- * запасов грузит чанки на главном потоке и полный GameTest идёт 41 минуту вместо 3–5.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardScaleGameTests {

@@ -30,8 +30,6 @@ final class GatherTargets implements HarvestTargets {
 
     GatherTargets(Level level, BlockPos center, int radius, IdFilter filter, boolean settled) {
         this.level = level;
-        // Запрет добычи на участке и в пещерах под ним — только духу этого поселения (дом есть, сам у участка): сцены
-        // GameTest в стороне от чужого участка не теряют свою землю.
         this.settlement = level instanceof ServerLevel server && settled
                 ? SettlementPlotStore.get(server)
                         .plot()

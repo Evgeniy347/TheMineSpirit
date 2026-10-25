@@ -27,11 +27,6 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Раскладка демо-стройки, увиденная из мира: площадка вокруг дома расчищена и выровнена до стройки,
- * вход без явного поворота смотрит на игрока в любую сторону, а после стройки на площадке нет ни одного
- * блока мимо схемы, сундука и таблички с названием. Проверяется на каменном доме: у него есть крыша, окна и мебель.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DemoLayoutGameTests {
@@ -78,7 +73,6 @@ public final class DemoLayoutGameTests {
                         "Рядом с сундуком обязана стоять табличка с названием постройки (владелец 19.10): " + cell);
                 continue;
             }
-            // Материалы — в двойных сундуках (владелец 20.10): вторая половина стоит вплотную к клетке сундука.
             boolean besideChest =
                     Math.abs(cell.x() - chest.x()) + Math.abs(cell.z() - chest.z()) == 1 && cell.y() == chest.y();
             if (isChest) {

@@ -2,10 +2,6 @@ package com.theminespirit.core;
 
 import java.util.Objects;
 
-/**
- * Сборка мода, которой принадлежит сетевой протокол. Клиент и сервер обязаны совпасть:
- * иначе индексы синхронизированных полей сущности разъезжаются и клиент падает на set_entity_data.
- */
 public record ModProtocol(String build) {
     public ModProtocol {
         Objects.requireNonNull(build, "Сборка мода не может быть null: протокол сверяется по её имени");

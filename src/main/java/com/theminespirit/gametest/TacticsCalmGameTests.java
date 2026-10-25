@@ -11,10 +11,6 @@ import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Тактика без врагов (живой прогон 2, INC-27): режим духа у дома не дёргается DEFENSIVE↔GUARD_AREA каждым циклом
- * координатора, пока интеллект то даёт, то снимает фоновое занятие.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class TacticsCalmGameTests {

@@ -13,10 +13,6 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.common.NeoForge;
 
-/**
- * Клиентская часть мода: клавиша экрана поселения (J по умолчанию, переназначается в настройках управления)
- * и приём снимка доски. Снимок запрашивается один раз при открытии экрана.
- */
 @Mod(value = ModIdentity.MOD_ID, dist = Dist.CLIENT)
 public final class TheMineSpiritClient {
     static final String CATEGORY = "key.categories." + ModIdentity.MOD_ID;

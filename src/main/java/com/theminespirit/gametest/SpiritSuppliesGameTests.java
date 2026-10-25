@@ -21,10 +21,6 @@ import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Снабжение для acquire: счёт инвентаря духа и шаги withdraw по ближним контейнерам —
- * ближний первым, пустые и недоступные пропускаются, радиус соблюдён.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritSuppliesGameTests {

@@ -56,8 +56,6 @@ public final class MiningSafety {
         return ringSafe(cell, view) && ringSafe(floor, view);
     }
 
-    // Одна функция для плана стройки и исполнителя: годный пол — твёрдый блок и сыпучий (гравий, песок), как в игре.
-    // Сыпучее опасно только над головой (это ловят StandSpots и шахтные проверки), а не под ногами.
     public static boolean canStandOn(Cell floor) {
         Objects.requireNonNull(floor, "Клетка пола не может быть null: без неё неизвестно, на чём стоять");
         return floor == Cell.SOLID || floor == Cell.FALLING;

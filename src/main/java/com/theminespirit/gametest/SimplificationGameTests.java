@@ -22,11 +22,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-/**
- * Упрощения механик «читом» (согласованы владельцем 18.10): магнит дропа, контейнер в досягаемости,
- * жила с места с дропом прямо в инвентарь, телепорт при застревании не сквозь стены, ферма со стоянки.
- * Каждое упрощение ограничено целью: чужие предметы, блоки вне цели и стены не трогаются.
- */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SimplificationGameTests {
