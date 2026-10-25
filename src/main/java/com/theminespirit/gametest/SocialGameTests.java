@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -35,7 +34,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SocialGameTests {
     private SocialGameTests() {}
 
-    @GameTest(template = "arena", batch = "social_deliver", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void deliver_ThreeCobbleToPlayer_PlayerGetsAll(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -65,7 +64,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_deliver_missing", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void deliver_NoItem_FailsWithNumbers(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -93,7 +92,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_meet", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void meet_PlayerNearby_SpiritArrives(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(9, 1, 5));
@@ -118,7 +117,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_meet_missing", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void meet_TargetMissing_FailsWithText(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -139,7 +138,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "social_say_wait", timeoutTicks = 200)
+    @SceneStep(template = "empty", timeoutTicks = 200)
     public static void say_ShortText_PlayerGetsMessage(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
@@ -162,7 +161,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "social_say_radius", timeoutTicks = 200)
+    @SceneStep(template = "empty", timeoutTicks = 200)
     public static void say_ShortText_OnlyPlayersInsideHearingRadiusGetIt(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
@@ -192,7 +191,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "social_say_spam", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void say_SecondSayImmediately_FailsWithAntiSpam(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
@@ -218,7 +217,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "social_wait", timeoutTicks = 200)
+    @SceneStep(template = "empty", timeoutTicks = 200)
     public static void wait_FortyTicks_SucceedsAfterSpiritTicks(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
@@ -250,7 +249,7 @@ public final class SocialGameTests {
         return reloaded;
     }
 
-    @GameTest(template = "empty", batch = "social_restart_wait", timeoutTicks = 300)
+    @SceneStep(template = "empty", timeoutTicks = 300)
     public static void wait_SavedMidTask_ResumesFromRemainingTicks(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(1, 1, 1));
@@ -297,7 +296,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_restart_deliver", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deliver_SavedMidRoute_DeliversExactlyOnce(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -349,7 +348,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_restart_deliver_remainder", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void deliver_RestoredWithPartialDelivery_TakesOnlyRemainder(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -389,7 +388,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_deliver_leftover", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void deliver_AddresseeInventoryFull_LeftoverDroppedBySpirit(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -434,7 +433,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_drop_player", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void dropToPlayer_SpiritHasCobble_ItemLandsNearPlayer(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -473,7 +472,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_give_spirit", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void give_SpiritAddressee_ReceivesItems(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity giver = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -502,7 +501,7 @@ public final class SocialGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "social_report", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void report_PlayerAddressee_GetsStateLine(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
