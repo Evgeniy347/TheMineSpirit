@@ -320,7 +320,9 @@ class ScriptCatalogTests {
                                 "length",
                                 new long[] {CatalogLimits.BRIDGE_LENGTH_MIN, CatalogLimits.BRIDGE_LENGTH_MAX})),
                 spec("flee", List.of(), Map.of()),
-                spec("chop_tree", List.of(), Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 32})),
+                spec("chop_tree", List.of(), Map.of("count", new long[] {1, 256}, "radius", new long[] {
+                    1, CatalogLimits.CHOP_RADIUS_MAX
+                })),
                 spec(
                         "chop_target",
                         List.of("x", "y", "z"),

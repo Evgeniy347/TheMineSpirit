@@ -51,7 +51,7 @@ import org.slf4j.Logger;
 public final class FirstStageGameTests {
     static final String BATCH = "first_stage";
     private static final int STUCK_LIMIT = 600;
-    private static final int STARTING_LOGS = 32;
+    private static final int STARTING_LOGS = 40;
     private static final int PIT_DEPTH = 3;
     private static final long NOON = 6000;
     private static final int SPIRITS = 3;

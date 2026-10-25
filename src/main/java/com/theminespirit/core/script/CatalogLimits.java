@@ -39,7 +39,7 @@ public final class CatalogLimits {
     public static final int EXPLORE_BUDGET_DEFAULT = 16;
 
     public static final int CHOP_RADIUS_MIN = 1;
-    public static final int CHOP_RADIUS_MAX = 32;
+    public static final int CHOP_RADIUS_MAX = 64;
 
     public static final int WORLD_Y_MIN = -64;
     public static final int WORLD_Y_MAX = 319;

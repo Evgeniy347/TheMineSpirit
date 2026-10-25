@@ -563,6 +563,9 @@ public final class TicketPlans {
     }
 
     private static TaskNode supplySite(TicketTarget target) {
+        if (ChestMove.applies(target)) {
+            return ChestMove.plan(target);
+        }
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : DEFAULT_SUPPLY_COUNT;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
