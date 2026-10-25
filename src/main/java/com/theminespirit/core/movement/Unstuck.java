@@ -8,12 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Выход из застревания телепортом (упрощение 44.6, согласовано владельцем 18.10): дух, который не сдвинулся к цели,
- * переносится на клетку в пределах {@code maxDistance} ближе к цели, где можно стоять и куда виден путь — не сквозь
- * стены. Не больше {@code teleportsPerApproach} переносов на один подход, дальше — обычный отказ «застрял».
- * Числа — горячая таблица {@code movement/unstuck.json}.
- */
 public record Unstuck(int maxDistance, int teleportsPerApproach) {
     public static final String RESOURCE = "data/theminespirit/movement/unstuck.json";
     private static final Set<String> FIELDS = Set.of("maxDistance", "teleportsPerApproach");

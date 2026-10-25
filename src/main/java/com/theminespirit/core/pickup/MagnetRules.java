@@ -5,12 +5,6 @@ import com.theminespirit.core.inventory.JsonResource;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Магнит дропа (упрощение 44.1, согласовано владельцем 18.10): раз в {@code intervalTicks} свободные предметы в
- * радиусе {@code radius} сами попадают в инвентарь духа. Чужое не берётся: предмет, брошенный игроком недавно,
- * адресованный другому, забронированный другим духом, свой выброшенный и ещё не подбираемый по ванили.
- * Числа — горячая таблица {@code pickup/magnet.json}.
- */
 public record MagnetRules(double radius, int intervalTicks, int playerDropDelayTicks) {
     public static final String RESOURCE = "data/theminespirit/pickup/magnet.json";
     private static final Set<String> FIELDS = Set.of("radius", "intervalTicks", "playerDropDelayTicks");

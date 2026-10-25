@@ -74,7 +74,6 @@ class PlotLevelingTests {
 
     @Test
     void voids_CaveUnderPlot_OnlyWithinDepth() {
-        // Колонка (0,0): поверхность 64, пещера 58..62 под ней — засыпается только 60..62 (4 под уровнем), глубже нет.
         List<PlotLeveling.Box> voids = PlotLeveling.voids(ANCHOR, 0, (x, z) -> 64, (x, y, z) -> y >= 58 && y <= 62);
 
         assertEquals(

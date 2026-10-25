@@ -8,15 +8,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.IntBinaryOperator;
 
-/**
- * Якорь участка поселения: центр и высота ног участка, считаются один раз до расчистки и хранятся в мире
- * (INC-55, INC-56). Центр — покомпонентная медиана домов духов: не зависит от порядка духов в списке; высота —
- * медиана уровней ног колонок участка {@code SettlementLayout.PLOT}², с минимумом и максимумом для разбора.
- */
 public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, String wood) {
     public static final String JOURNAL_ID = "plot";
-    // Сдвиг центра домов — для участка: дом духа переехал на пару блоков — участок тот же; центр ушёл дальше
-    // четверти участка — это другое поселение, его обмеряют заново.
     public static final int DRIFT = SettlementLayout.HALF / 2;
 
     public SettlementPlot {
@@ -28,7 +21,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
         }
     }
 
-    // Центр участка — медиана домов по x, y и z (нижняя при чётном числе): один и тот же при любом порядке духов.
     public static BlockCoord center(Collection<BlockCoord> homes) {
         Objects.requireNonNull(homes, "Дома духов не могут быть null: без них центра поселения нет");
         if (homes.isEmpty()) {
@@ -40,8 +32,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
                 median(homes.stream().mapToInt(BlockCoord::z).toArray()));
     }
 
-    // Обмер участка {@code half} вокруг центра: высота — медиана уровней ног колонок, плюс минимум и максимум.
-    // Порода поселения фиксируется в плане вместе с высотой: расход запаса брёвен её больше не меняет (INC-47, INC-58).
     public static SettlementPlot survey(BlockCoord center, int half, IntBinaryOperator feet, String wood) {
         Objects.requireNonNull(center, "Центр участка не может быть null: обмер идёт вокруг него");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них высоты участка нет");
@@ -63,7 +53,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
                 wood);
     }
 
-    // Место лежит на участке (с полосой в участок вокруг): здесь действует порода поселения из плана.
     public boolean contains(BlockCoord place) {
         Objects.requireNonNull(place, "Место не может быть null: проверяется, лежит ли оно на участке");
         return Math.abs(place.x() - anchor.x()) <= SettlementLayout.PLOT
@@ -79,7 +68,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
         return new SettlementPlot(anchor, min, max, columns, species);
     }
 
-    // Запись журнала доски: кто и когда зафиксировал высоту участка (INC-55).
     public BoardLogEntry journalEntry(long tick, String configHash) {
         return BoardLog.note(
                 JOURNAL_ID,

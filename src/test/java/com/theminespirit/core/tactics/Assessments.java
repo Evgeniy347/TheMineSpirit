@@ -4,8 +4,6 @@ final class Assessments {
     static final ArmorModel ARMOR = new ArmorModel(0.04, 0.8);
     private static final EnemyProfiles PROFILES =
             EnemyProfilesParser.parse(ConfigNode.root("enemies.json", TacticsTexts.read("enemies.json")));
-    // Худший настоящий способ отхода — бег прочь AWAY с полезностью 0.2 из rules.json:
-    // раз способ есть, а настоящий подсчёт дал 0, оценка идёт по минимальной реальной полезности.
     private static final double MIN_REAL_ESCAPE = 0.2;
 
     private Assessments() {}

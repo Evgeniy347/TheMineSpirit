@@ -1,10 +1,5 @@
 package com.theminespirit.core.mining;
 
-/**
- * Сторож прогресса добычи: считает тики без нового добытого блока и объявляет
- * застой, когда их набирается {@code limitTicks}. Добыча без прогресса не висит
- * до общего тайм-аута — она падает с причиной.
- */
 public final class ProgressWatchdog {
     private final int limitTicks;
     private int idleTicks;

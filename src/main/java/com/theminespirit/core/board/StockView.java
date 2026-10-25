@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import java.util.Map;
 import java.util.Objects;
 
-/** Снимок запасов поселения: сколько каких предметов есть в наличии (инвентари духов + контейнеры). */
 public record StockView(Map<String, Integer> available) {
 
     public StockView {

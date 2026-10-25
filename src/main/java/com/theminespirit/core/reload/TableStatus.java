@@ -4,10 +4,6 @@ import java.time.Instant;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Состояние версии таблицы: откуда загружена, когда, по какому содержимому (хэш) и не было ли ошибки последней загрузки.
- * Источник {@code mod} — файл из jar мода, {@code datapack} — файл, переопределённый датапаком мира.
- */
 public record TableStatus(
         String id,
         Source source,

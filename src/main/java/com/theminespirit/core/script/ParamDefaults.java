@@ -4,11 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Подставляет умолчания каталога в параметры скрипта. Нужно вызовам мимо валидатора плана
- * (доска, снабжение, вложенные раннеры): без него необязательный параметр с умолчанием
- * доходит до скрипта отсутствующим и падает «Не задан обязательный параметр».
- */
 public final class ParamDefaults {
     private ParamDefaults() {}
 

@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Снабжение acquire «добыть ещё» (fresh): сам предмет из сундуков не берётся — добыча поселения сдаёт его туда же, и
- * взятое оттуда не увеличивало запас. Ингредиенты (брёвна на доски) из сундуков берутся как обычно.
- */
 public final class FreshSupplies implements AcquireSupplies {
     private static final String NAMESPACE = "minecraft:";
 

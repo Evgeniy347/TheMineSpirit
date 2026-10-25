@@ -4,11 +4,6 @@ import com.theminespirit.core.reload.DataTables;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Этап развития поселения: состав этапов — таблица {@code board/stages.json} ({@link StageRules}),
- * этап N сменяется N+1, когда по журналу доски стоят все постройки этапа N. Постройка уровня L (новая или улучшение)
- * ставится только с этапа L. Предел брёвен — 64 на первом этапе и вдвое больше на каждом следующем.
- */
 public final class SettlementStage {
     public static final int FIRST_STAGE_LOGS = 64;
     private static final int MAX_SHIFT = 16;

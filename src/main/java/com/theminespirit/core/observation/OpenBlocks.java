@@ -4,10 +4,6 @@ import java.util.Comparator;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Отбор ближайших открытых важных блоков для наблюдения: руды, камень и брёвна.
- * Числа сюда не входят — только правило «что важно», порядок и предел списка.
- */
 public final class OpenBlocks {
     public static final Comparator<OpenBlock> ORDER = Comparator.comparingDouble(OpenBlock::distance)
             .thenComparing(OpenBlock::item)

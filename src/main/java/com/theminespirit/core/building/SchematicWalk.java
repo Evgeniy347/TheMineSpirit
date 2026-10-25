@@ -9,11 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Пеший обход схемы от клетки входа: где может стоять дух (клетка ног), если ходить по полу, подниматься только
- * по ступенькам и полублокам (без прыжков на полный блок и без приставных лестниц) и спускаться на 1. Снаружи
- * схемы — ровная земля. По обходу проверяются достижимость мебели и этажей и ширина парадной лестницы.
- */
 final class SchematicWalk {
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final List<String> PASSABLE_SUFFIXES = List.of(
@@ -126,7 +121,6 @@ final class SchematicWalk {
         return passable(grid.get(new BlockCoord(x, y, z)));
     }
 
-    // На блоке можно стоять: не проходимый и не столб (забор, стена, панель — их высота 1,5, на них не запрыгнуть).
     static boolean standsOn(@Nullable String block) {
         if (block == null || passable(block)) {
             return false;
@@ -173,7 +167,6 @@ final class SchematicWalk {
                 && walk.standable(feet.x(), feet.y() - 1, feet.z());
     }
 
-    // Куда можно шагнуть из клетки ног по тем же правилам, что и обход: ровно, на ступеньку и вниз на 1.
     static Set<BlockCoord> steps(Map<BlockCoord, String> grid, Schematic schematic, BlockCoord from) {
         SchematicWalk walk = new SchematicWalk(grid, schematic);
         Set<BlockCoord> next = new LinkedHashSet<>();
@@ -186,7 +179,6 @@ final class SchematicWalk {
         return next;
     }
 
-    // Опирается ли блок так, что на нём можно стоять: пол, ступенька, полублок; забор и стекло — нет.
     static boolean standableAt(Map<BlockCoord, String> grid, Schematic schematic, BlockCoord cell) {
         return new SchematicWalk(grid, schematic).standable(cell.x(), cell.y(), cell.z());
     }

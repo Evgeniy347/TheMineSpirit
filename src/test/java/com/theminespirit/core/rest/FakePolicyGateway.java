@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Фальшивое хранилище разрешений для тестов REST-контроллера: память и счётчик выдач. */
 final class FakePolicyGateway implements PolicyGateway {
     private static final String ID_PREFIX = "unprotect-";
 

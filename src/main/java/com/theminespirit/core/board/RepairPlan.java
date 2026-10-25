@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Восстановление постройки плана поселения (INC-60): построенная (DONE) постройка, разошедшаяся с миром, — задание
- * REPAIR_BUILDING по её единственной схеме без поворота (ограда, хижина). Без такой схемы (свет, шахта) — пусто:
- * её шаг ставится заново.
- */
 public final class RepairPlan {
     public static final String PREFIX = "repair:";
 

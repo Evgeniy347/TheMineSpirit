@@ -5,10 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Текстовый файл постройки целиком: тело схемы, шапка (метаданные пресета) и исключения сторожей с причинами.
- * Один файл — единственный источник правды о постройке: габариты, вход и материалы выводятся из него же.
- */
 public record SchematicDocument(Schematic schematic, Header header, List<Exemption> exemptions) {
     public record Header(
             Optional<String> name,

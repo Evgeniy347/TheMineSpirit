@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Колонки экрана доски: одна колонка на группу, каждая со своим списком плиток. */
 public final class BoardColumns {
     private BoardColumns() {}
 

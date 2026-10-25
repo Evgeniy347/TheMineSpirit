@@ -4,11 +4,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 
-/**
- * Текущая цель работы духа из набора его броней — то, чем дух занят прямо сейчас.
- * Снимок духа несёт одну цель, а броней у него может быть несколько (клетка стройки, дерево, жила):
- * берётся меньшая по виду и якорю, чтобы выбор не зависел от порядка в реестре.
- */
 public final class WorkTargets {
     private static final Comparator<WorkTarget> ORDER =
             Comparator.comparing((WorkTarget target) -> target.kind()).thenComparing(WorkTarget::anchor);

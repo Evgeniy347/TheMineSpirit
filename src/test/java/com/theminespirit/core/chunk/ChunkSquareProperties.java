@@ -50,9 +50,6 @@ class ChunkSquareProperties {
         Statistics.coverage(coverage -> coverage.check(true).percentage(p -> p >= 30.0));
     }
 
-    // Центры почти всегда рядом (на один-два квадрата), а не случайные: diff проверяет пересечение квадратов,
-    // а независимые центры ±1000 почти никогда не пересекаются и тривиальны. ~10 % — любой центр, чтобы
-    // остался и далёкий переход. Генератор — docs/research/test-performance.md → рек. 5.
     @Provide
     Arbitrary<Tuple.Tuple3<ChunkCoord, ChunkCoord, Integer>> diffCases() {
         return Arbitraries.integers().between(0, 16).flatMap(radius -> {

@@ -2,7 +2,6 @@ package com.theminespirit.core.observation;
 
 import java.util.Objects;
 
-/** Открытая позиция важного блока (руда, камень, бревно) с расстоянием от духа. */
 public record OpenBlock(String item, BlockCoord pos, double distance) {
     public OpenBlock {
         Objects.requireNonNull(item, "item не может быть null: запись называет блок");

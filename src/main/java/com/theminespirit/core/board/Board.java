@@ -13,16 +13,9 @@ import java.util.UUID;
 import java.util.function.LongSupplier;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Доска заданий поселения: очередь с гейтом по ресурсам и зависимостями.
- * Хранит задания, сортирует по приоритету, держит гейт и зависимости, выдаёт духу.
- * Мир из ядра не читает: запасы приходят снимком StockView, тики — поставщиком now.
- */
 public final class Board {
     private static final String FIRST_STEPS_PREFIX = "first:";
-    // Каменный шаг, открытый вместе с текущим шагом первых шагов (FirstStepsRunner), — так же одноразовый.
     private static final String STONE_PART_PREFIX = "stone:";
-    // Кусок ограды (FirstStepsRunner) — тоже одноразовый: сделанный кусок не строится заново при повторе шага.
     private static final String FENCE_PART_PREFIX = "fence:";
     private static final List<String> SOURCE_PREFIXES = List.of(
             FIRST_STEPS_PREFIX,
@@ -128,8 +121,6 @@ public final class Board {
                     && (ticket.id().startsWith(FIRST_STEPS_PREFIX)
                             || ticket.id().startsWith(STONE_PART_PREFIX)
                             || ticket.id().startsWith(FENCE_PART_PREFIX))) {
-                // Шаг первых шагов одноразовый: DONE — это факт «сделано», а не тень для
-                // переиздания. Иначе пересборка возвращала бы выполненный кейс в очередь.
                 return BoardOutcome.DUPLICATE;
             }
             if (current == BoardStatus.DONE
@@ -184,8 +175,6 @@ public final class Board {
         return List.copyOf(ready);
     }
 
-    // Причина ожидания, которую видит только адаптер (гейт по инструменту: «нет духа с киркой», INC-67): доска
-    // показывает её в waitReason, пока задание не выдано.
     public void noteWait(String ticketId, @Nullable String reason) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания пишется на задание");
         if (reason == null) {
@@ -264,8 +253,6 @@ public final class Board {
         return fail(ticketId, stock, null);
     }
 
-    // reason — причина провала: тот же провал подряд у разных духов («застрял в той же точке») — дело места, а не
-    // духа: задание блокируется сразу, а не сжигает весь предел попыток (INC-63).
     public boolean fail(String ticketId, StockView stock, @Nullable String reason) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: провал идёт по id задания");
         Objects.requireNonNull(stock, "stock не может быть null: по нему фиксируются условия блокировки");
@@ -358,8 +345,6 @@ public final class Board {
         return true;
     }
 
-    // Сделанное задание снимается с доски вместе с отметкой постройки, чтобы его можно было поставить заново:
-    // DONE шага раскладки, с которым разошёлся мир (факелов нет, ограды нет — INC-50), иначе вечен.
     public boolean reopen(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: переоткрытие идёт по id задания");
         BoardTicket ticket = tickets.get(ticketId);
@@ -388,7 +373,6 @@ public final class Board {
         occupy(spirit, activity, null, now);
     }
 
-    // script — скрипт задачи духа (chop_tree): занятие на доске и в журнале называет, что дух делает (INC-48).
     public void occupy(UUID spirit, BoardCase activity, @Nullable String script, long now) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие показывается на конкретного духа");
         requireNow(now);
@@ -405,7 +389,6 @@ public final class Board {
         tickets.put(id, ticket);
         statuses.put(id, BoardStatus.ASSIGNED);
         claimAssignees.put(id, spirit);
-        // Смена занятия видна в журнале доски (INC-35): бой, стража и отдых — тоже работа духа.
         events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
     }
 
@@ -452,10 +435,6 @@ public final class Board {
     }
 
     public List<String> resetForNewRules() {
-        // Новая сборка мода — новые правила: задания, заблокированные или поставленные источниками по старым
-        // правилам (gather:oak_* в джунглях), сбрасываются, источники ставят их заново; сделанное остаётся,
-        // паузы и счётчики провалов обнуляются. Выданные задания источников тоже сбрасываются (INC-39): после
-        // выкладки gather:oak_fence в джунглях жил ASSIGNED дальше; задания игрока и занятия не трогаются.
         List<String> removed = new ArrayList<>();
         for (BoardTicket ticket : List.copyOf(tickets.values())) {
             BoardStatus status = statuses.get(ticket.id());
@@ -734,7 +713,6 @@ public final class Board {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);
-            // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
             claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
             lastFailReasons.remove(ticket.id());
@@ -766,7 +744,6 @@ public final class Board {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);
-            // Снова в очереди — без держателя прошлой попытки (INC-47: PENDING с assignee).
             claimAssignees.remove(ticket.id());
             ticketFailures.remove(ticket.id());
             lastFailReasons.remove(ticket.id());

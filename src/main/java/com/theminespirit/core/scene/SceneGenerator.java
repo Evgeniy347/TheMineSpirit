@@ -8,12 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SplittableRandom;
 
-/**
- * Генератор неплоской сцены этапа 1 по сиду — тот же сид даёт ту же сцену на любой машине. Вокруг центра участка
- * поселения: холмы до {@link #RELIEF} над базой, низина до {@link #RELIEF} под базой у края участка с прудом на дне,
- * пещера под участком, деревья одной породы (джунгли или дуб) на участке и за ним, остатки старых построек
- * поселения на участке (ограда, стенка, подсыпка) — их блоки помечены {@code settlement}.
- */
 public final class SceneGenerator {
     public static final int RADIUS = 30;
     public static final int RELIEF = 4;

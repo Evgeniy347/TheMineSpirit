@@ -13,11 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Правила качества схем: стены, вход и ступенька к нему, крыша, высота, окна, дверь, опора, сундуки (открываются,
- * пары двойные) и свет. Чистая проверка
- * по блокам схемы без мира; применяется сторожем данных и тестами на фикстурах.
- */
 public final class SchematicRules {
     public enum RuleId {
         CLOSED_WALLS("closed_walls"),
@@ -148,7 +143,6 @@ public final class SchematicRules {
         SchematicWalk.Result fullWalk = SchematicWalk.walk(full, structure.schematic(), structure.entry());
         SchematicWideApproach.check(structure, full, fullWalk, violations);
         SchematicRailing.check(structure, full, fullWalk, violations);
-        // Балкон и крыльцо лежат вне тела постройки: проход через двери — по обходу всей схемы.
         DoorPassage.problem(structure.schematic(), SchematicWalk.walk(full, structure.schematic(), structure.entry()))
                 .ifPresent(problem -> violations.add(new Violation(RuleId.PASSAGE, problem)));
         checkSupport(structure.schematic(), full, violations);
@@ -305,7 +299,6 @@ public final class SchematicRules {
         return null;
     }
 
-    // Владелец 20.10: костёр камина в линии наружной стены виден снаружи — камин ставится внутрь на 1 блок.
     private static void checkFireplace(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
         Schematic schematic = structure.schematic();
         for (Map.Entry<BlockCoord, String> cell : grid.entrySet()) {
@@ -504,8 +497,6 @@ public final class SchematicRules {
                         || SchematicBlocks.path(neighbor).endsWith("_pane"));
     }
 
-    // Опора блока в клетке по уже стоящим блокам grid (полный блок крепок со всех граней, висящее — на держателе
-    // сверху, фонарь и горшок — на столбе забора): одно правило для проверки схем и для плана стройки.
     static boolean supportedIn(Map<BlockCoord, String> grid, BlockCoord cell, String block, Map<String, String> state) {
         BlockSupport.World world = (x, y, z, face) -> {
             if (y < 0) {
@@ -519,7 +510,6 @@ public final class SchematicRules {
         return supportedIn(grid, world, cell, block, state);
     }
 
-    // То же с крепостью граней от вызывающего (план стройки знает грани ступеней и плит).
     static boolean supportedIn(
             Map<BlockCoord, String> grid,
             BlockSupport.World world,
@@ -575,7 +565,6 @@ public final class SchematicRules {
         return mountOf(entry.block(), entry.state(), cell);
     }
 
-    // Клетка, к которой крепится факел или табличка; null — блок ни к чему не крепится.
     static @Nullable BlockCoord mountOf(String block, Map<String, String> state, BlockCoord cell) {
         if (SchematicBlocks.isWallMounted(block)) {
             return switch (state.getOrDefault("facing", "")) {
@@ -608,7 +597,6 @@ public final class SchematicRules {
             }
             BlockCoord cell = entry.getKey();
             String above = grid.get(new BlockCoord(cell.x(), cell.y() + 1, cell.z()));
-            // Как в ванили: крышку держит только блок, проводящий редстоун; сундук над сундуком (стопка) не мешает.
             if (above != null && SchematicBlocks.isFullBlock(above) && !SchematicBlocks.isChest(above)) {
                 violations.add(new Violation(
                         RuleId.CHEST_OPENABLE,

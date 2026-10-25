@@ -5,12 +5,6 @@ import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
-/**
- * Числа рыбалки: требования к открытой воде для разовой ловли удочкой ({@code minWidth},
- * {@code minDepth}), требования к рабочей точке у воды ({@code workWidth}, {@code workDepth}),
- * предел рыбы в вёдрах за один заход ({@code bucketCount}) и порог рыбы для коптильни
- * ({@code smokerFish}). Читается из {@code fishing.json} датапака мира и перечитывается по /reload.
- */
 public record FishingData(int minWidth, int minDepth, int workWidth, int workDepth, int bucketCount, int smokerFish) {
     public static final String RESOURCE = "data/theminespirit/fishing/fishing.json";
 

@@ -9,11 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/**
- * Откат провала: проваленное задание не переиздаётся до {@link BoardTuning#FAIL_BACKOFF_TICKS}.
- * Метка держится по id задания, а не по духу (урок ветки 32): одна метка на духа вытесняла бы
- * провал другого задания, и доска выдавала бы проваленное заново.
- */
 class BoardBackoffTests {
 
     private static final UUID SPIRIT_ONE = UUID.fromString("11111111-2222-3333-4444-555555555555");

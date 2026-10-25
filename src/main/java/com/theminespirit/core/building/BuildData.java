@@ -4,12 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.Set;
 
-/**
- * Числа стройки из горячей таблицы {@code building/build.json}: досягаемость духа и темп постановки
- * (решение владельца 18.10: «примерно 2 блока в секунду, взмах руки и звук обязательны»). Демо-стройка
- * ({@code /spirit demo}) идёт своим темпом {@code demoPlaceIntervalTicks} (владелец 19.10: 10 блоков в секунду),
- * темп обычной игры от него не зависит.
- */
 public record BuildData(SpiritReach reach, int placeIntervalTicks, int demoPlaceIntervalTicks) {
     public static final String RESOURCE = "data/theminespirit/building/build.json";
     private static final Set<String> FIELDS =

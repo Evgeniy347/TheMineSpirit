@@ -9,27 +9,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Поиск контейнеров склада вокруг центров заявок — чистый обход, без мира. Мир даёт
- * {@link Blocks}: загружен ли чанк и стоит ли в клетке контейнер. Обход бюджетирован
- * счётчиком прочитанных блоков: без предела снимок запасов перебирал бы куб вокруг
- * каждого духа и грузил чанки на главном потоке (причина 41-минутного GameTest).
- * Незагруженный чанк пропускается, а не подгружается: чтение чанка ждёт генерации
- * и останавливает серверный тик.
- */
 public final class StockScan {
 
-    /** Источник блоков мира: адаптер решает, загружен ли чанк и контейнер ли блок. */
     public interface Blocks {
         boolean isLoaded(BlockCoord pos);
 
         boolean isContainer(BlockCoord pos);
     }
 
-    /**
-     * Итог обхода: найденные контейнеры и число прочитанных блоков — по нему видно,
-     * уложился ли снимок в бюджет.
-     */
     public record Result(List<BlockCoord> containers, int blockReads) {
         public Result {
             Objects.requireNonNull(containers, "containers не может быть null: пустой список задают пустым");

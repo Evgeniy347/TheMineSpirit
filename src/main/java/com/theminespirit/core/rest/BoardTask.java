@@ -5,11 +5,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Задание доски глазами наблюдателя REST: кейс, приоритет, владелец, статус, гейт и зависимости.
- * Собирается адаптером доски, отдаётся стратегу и игроку; {@code assignee} пуст, когда задание
- * ждёт любого свободного духа.
- */
 public record BoardTask(
         String id,
         String boardCase,

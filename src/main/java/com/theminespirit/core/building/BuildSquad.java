@@ -5,11 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Отряд духов, строящих одну схему в одном месте. Каждый вошедший получает место в порядке входа; место
- * определяет его долю клеток в {@link CellPartition}. Уход духа сдвигает доли остальных, поэтому версия
- * растёт на каждом входе и уходе — по ней стройка понимает, что доли нужно пересчитать.
- */
 public final class BuildSquad {
     private final List<UUID> members = new ArrayList<>();
     private long version;

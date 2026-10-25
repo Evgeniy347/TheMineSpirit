@@ -18,8 +18,6 @@ public record ChopPlan(List<BlockCoord> order) {
         return new ChopPlan(ordered);
     }
 
-    // Правило владельца (INC-49): с самого высокого бревна вниз; на одной высоте — дальнее первым. «Дальнее первым»
-    // без высоты рубило у джунглей сначала нижнюю дальнюю ветку.
     private static Comparator<BlockCoord> topFirst(BlockCoord from) {
         return Comparator.comparingInt(BlockCoord::y)
                 .reversed()

@@ -4,11 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Делит упорядоченный список клеток схемы между духами стройки. Порядок берётся от вызывающего: у схемы он
- * снизу вверх по слоям, поэтому чередование {@code index % parts} даёт каждому духу клетки во всех слоях, а
- * внутри доли порядок остаётся снизу вверх. Доли не пересекаются и вместе покрывают весь список.
- */
 public final class CellPartition {
     private CellPartition() {}
 

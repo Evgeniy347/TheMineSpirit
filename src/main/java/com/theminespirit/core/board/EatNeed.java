@@ -1,9 +1,5 @@
 package com.theminespirit.core.board;
 
-/**
- * Сытость и здоровье духа: текущие и предельные значения. Нужда в еде — причина
- * постоянного задания EAT_TO_FULL: дух ест, пока не дойдёт до предела.
- */
 public record EatNeed(int food, int health, int maxFood, int maxHealth) {
 
     public EatNeed {

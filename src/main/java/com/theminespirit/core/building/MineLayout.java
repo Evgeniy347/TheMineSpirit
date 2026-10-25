@@ -8,11 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Подземная схема в мире: сегмент файла, повторённый по {@code repeat}, и повёрнутый вокруг первого
- * сегмента. Первый сегмент стоит там же, где стоял бы без повтора: якорь стройки — угол первого сегмента, а не угол
- * развёрнутой схемы, поэтому вход не зависит от того, до какой глубины спуск.
- */
 public record MineLayout(
         List<BlockCoord> floors, List<BlockCoord> air, List<Schematic.PlacedEntry> optional, BlockCoord entrance) {
     public MineLayout {
@@ -22,7 +17,6 @@ public record MineLayout(
         Objects.requireNonNull(entrance, "Вход не может быть null: проходка начинается от него");
     }
 
-    /** Переопределение повтора стройкой: целевой y спуска или число сегментов хода; null — как в файле. */
     public record Extent(@Nullable Integer untilY, @Nullable Integer segments) {
         public static final Extent NONE = new Extent(null, null);
     }

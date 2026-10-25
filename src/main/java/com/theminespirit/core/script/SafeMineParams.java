@@ -8,10 +8,6 @@ import com.theminespirit.core.mining.SafeMineMode;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Параметры скрипта {@code safe_mine}: форма шахты, направление, цель лесенки или длина штольни
- * и интервал факелов из данных.
- */
 public record SafeMineParams(SafeMineMode mode, DescentDirection direction, int y, int length, int torchInterval) {
 
     public SafeMineParams {

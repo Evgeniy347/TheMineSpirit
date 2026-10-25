@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** JSON-представление разрешений /v1/policy/unprotect: имена полей — контракт v1. */
 public final class PolicyJson {
     private PolicyJson() {}
 

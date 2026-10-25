@@ -2,13 +2,7 @@ package com.theminespirit.core.board;
 
 import java.util.List;
 
-/**
- * Партия добычи: недостача округляется вверх до целых крафтов материала, чтобы acquire
- * не дробил рецепт. Выход рецепта — данные игры, а не число в коде.
- */
 public final class GatherBatch {
-    // Большая партия — две доли на двух духов (целыми крафтами): один дух добывал всё, остальные стояли (приёмка
-    // «джунгли» 24.10). Меньше SPLIT_MIN или один способный дух — одна доля.
     public static final int SPLIT_MIN = 6;
 
     private GatherBatch() {}

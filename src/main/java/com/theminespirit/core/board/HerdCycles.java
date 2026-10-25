@@ -6,11 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Реестр циклов животных по видам: у каждого вида свой цикл capture → pen → lure → dismantle,
- * свои id заданий, свой загон и своя приманка. Циклы не мешают друг другу: гибель коровы
- * снимает «приманить» коровы, а не свиньи.
- */
 public final class HerdCycles {
     private final Board board;
     private final Map<Species, AnimalLifecycle> cycles = new EnumMap<>(Species.class);

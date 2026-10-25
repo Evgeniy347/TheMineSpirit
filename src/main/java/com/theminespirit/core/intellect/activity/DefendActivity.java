@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class DefendActivity implements Activity {
-    // Без угроз (ночная стража) караулят 1–2 духа, остальные свободны для заданий доски (INC-36); при угрозе бойцов
-    // ограничивает maxFighters распределителя.
     public static final int IDLE_GUARDS = 2;
 
     @Override

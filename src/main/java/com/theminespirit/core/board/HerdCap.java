@@ -5,12 +5,6 @@ import com.theminespirit.core.reload.DataTables;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Лимит поголовья по видам: не больше четырёх животных каждого вида (ответ владельца 16.10).
- * Считается «в загоне + пойманные в укрытии» одного вида: пойманное ещё не в загоне, но уже
- * заняло место вида. Лимит — данные таблицы board ({@code herd}); срабатывает модификатор
- * {@code pen_species_full} и фильтр CAPTURE_ANIMAL.
- */
 public final class HerdCap {
     public static final Set<String> HERD_KEYS = Set.of("maxPerSpecies", "minBreed");
     public static final int DEFAULT_MAX_PER_SPECIES = 4;

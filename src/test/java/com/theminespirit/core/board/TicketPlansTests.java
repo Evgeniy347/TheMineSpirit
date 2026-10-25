@@ -947,7 +947,6 @@ class TicketPlansTests {
                 "Отдельного выхода за ограду в плане нет: acquire идёт туда сам и только при нехватке");
     }
 
-    // Вызовы плана в порядке исполнения (обход в глубину).
     private static List<ScriptCall> calls(TaskNode root) {
         List<ScriptCall> found = new ArrayList<>();
         collect(root, found);

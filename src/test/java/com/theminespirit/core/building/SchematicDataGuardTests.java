@@ -14,10 +14,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/**
- * Сторож построек: каждый текстовый файл в {@code schematics/} разбирается, каждая постройка с типом проходит
- * правила качества или прощена исключением с причиной в своём же файле, и ни одно исключение не устарело.
- */
 class SchematicDataGuardTests {
     private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 

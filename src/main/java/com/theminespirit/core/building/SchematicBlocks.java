@@ -5,11 +5,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Свойства блоков схем по id: полный блок (даёт опору), окно, дверь, кровать, проём, сундук, источник света,
- * настенный блок и предмет, которым блок ставится. Сторожа работают без игры, поэтому свойства решаются правилами
- * по имени блока, а половина двери и часть кровати — по состоянию.
- */
 public final class SchematicBlocks {
     public static final String FLOOR = "@floor";
 
@@ -21,8 +16,6 @@ public final class SchematicBlocks {
             "cobblestone",
             "mossy_cobblestone",
             "dirt",
-            // Трава — та же земля сверху: строитель шахты её оставляет полом, а аудит считал спуск недостроенным, и
-            // шахта переоткрывалась по кругу (сцена 56).
             "grass_block",
             "podzol",
             "coarse_dirt",
@@ -192,12 +185,10 @@ public final class SchematicBlocks {
         return FLOOR.equals(blockId);
     }
 
-    // Клетка @floor принимает любой дешёвый твёрдый блок, а не только тот, что записан в легенде.
     public static boolean isFloorClass(String blockId) {
         return FLOOR.equals(blockId) || FLOOR_CLASS.contains(path(blockId));
     }
 
-    // Материал, которым @floor ставится, когда в клетке нет подходящего блока.
     public static String placementBlock(String blockId) {
         return FLOOR.equals(blockId) ? FLOOR_BLOCK : blockId;
     }
@@ -220,8 +211,6 @@ public final class SchematicBlocks {
         return "glass".equals(path) || path.endsWith("_glass") || path.endsWith("_pane");
     }
 
-    // Сыпучий блок без опоры падает: гравий, песок, порошковый бетон, наковальня, яйцо дракона. В плане это
-    // отдельный вид пола; правило стоянки на нём — общее с исполнителем (MiningSafety.canStandOn).
     public static boolean isFalling(String blockId) {
         String path = path(blockId);
         return path.endsWith("_concrete_powder")

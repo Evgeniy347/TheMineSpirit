@@ -10,11 +10,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Цепочка крафтов до целевого предмета: недостающие доски и палки делаются из того, что лежит
- * в инвентаре, а не требуются готовыми. Порядок шагов — снизу вверх по рецептам, чтобы каждая
- * промежуточная вещь была на месте к моменту расхода.
- */
 public final class CraftAssembly {
     private static final int MAX_DEPTH = RecipeSpec.GRID_SLOTS + 8;
 

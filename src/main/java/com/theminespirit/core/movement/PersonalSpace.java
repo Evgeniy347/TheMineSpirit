@@ -9,12 +9,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Личное пространство игрока (владелец 19.10): дух не стоит вплотную к игроку. Подошёл игрок ближе
- * {@code minDistance} — дух отходит на клетку в пределах {@code maxStep} по горизонтали, где до каждого игрока не
- * меньше {@code keepDistance}, и продолжает работу; проверка — раз в {@code checkIntervalTicks}. Числа — горячая
- * таблица {@code movement/personal_space.json}.
- */
 public record PersonalSpace(double minDistance, double keepDistance, int maxStep, int checkIntervalTicks) {
     public static final String RESOURCE = "data/theminespirit/movement/personal_space.json";
     private static final Set<String> FIELDS = Set.of("minDistance", "keepDistance", "maxStep", "checkIntervalTicks");

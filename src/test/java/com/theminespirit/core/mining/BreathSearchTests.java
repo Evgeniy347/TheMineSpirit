@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class BreathSearchTests {
-    // Затопленная шахта 1×1 в камне: вода с y=0 по y=5, над ней воздух; соседние колонки — камень.
     private static CellWorld floodedShaft() {
         CellWorld world = new CellWorld();
         for (int y = -1; y <= 8; y++) {

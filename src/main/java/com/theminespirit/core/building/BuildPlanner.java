@@ -21,26 +21,15 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 
-/**
- * План стройки с заходами к сундуку (решение владельца 20.10): схема, поворот, сундук с материалами схемы и пустой
- * инвентарь → детерминированная последовательность заходов (что взято) и стоянок (что поставлено с каждой) при
- * идеальном движении: стоянка годится, если до неё есть пеший путь по уже поставленному. Повторяет решения стройки
- * духа (полосы по 4 слоя, порции, двери последним шагом снаружи, правило отхода), но без физики и поиска пути игры —
- * поэтому план не плавает и снимается снапшотом.
- */
 public final class BuildPlanner {
     public static final int SLOTS = 36;
     public static final int STACK = 64;
     static final int RING = 6;
     static final int MAX_TRIPS = 32;
-    // Ниже — пол первого этажа, площади и крыльцо: поверхность, но не крыша.
     static final int ROOF_MIN_HEIGHT = 3;
     private static final int MAX_ROUNDS = 20_000;
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
-    // Что брать в заход: ALL — недостающее всей постройки по порядку схемы (стройка до 20.10), PHASE — только клетки
-    // текущего этапа, FILL — черновые текущей и следующих полос по порядку схемы (снизу вверх), декор и отделка — на
-    // этапе отделки.
     public enum Portion {
         ALL,
         PHASE,
@@ -51,10 +40,8 @@ public final class BuildPlanner {
 
     public sealed interface Step permits Trip, Work, Stuck {}
 
-    // slotsNow — слоты с материалом текущего этапа после захода, slotsLater — с материалом будущих этапов.
     public record Trip(int number, List<Taken> taken, int slotsNow, int slotsLater) implements Step {}
 
-    // cells — клетки, поставленные с этой стоянки, в порядке постановки (от угла схемы): по ним идёт исполнитель.
     public record Work(
             BlockCoord stand, String floor, int placed, int retreatRefusals, boolean onRoof, List<BlockCoord> cells)
             implements Step {
@@ -63,13 +50,6 @@ public final class BuildPlanner {
         }
     }
 
-    /**
-     * С чего начинается стройка: клетки схемы, что уже стоят (от угла схемы), материал в инвентаре и в сундуках
-     * (ключи — {@link #item}), слоты под материал (пустые и занятые материалом) и слоты лишнего, которое заход
-     * освобождает, когда свободных нет (решение владельца 20.10, QUESTIONS-3 п. 5 А); stacks — размер стопки
-     * предмета, если не 64 (табличка — 16, кровать — 1); skip — клетки, которые дух не ставит и которых в мире нет
-     * (вода колодца ставится после стройки): для плана их нет совсем.
-     */
     public record Start(
             Set<BlockCoord> done,
             Set<BlockCoord> skip,
@@ -287,7 +267,6 @@ public final class BuildPlanner {
         return plan(schematic, rotation, supply, reach, portion, null);
     }
 
-    // start == null — пустая площадка, пустой инвентарь, весь материал схемы в сундуке, 36 слотов.
     public static Plan plan(
             Schematic schematic,
             BuildRotation rotation,
@@ -317,7 +296,6 @@ public final class BuildPlanner {
         throw new IllegalStateException("план стройки не сошёлся за " + MAX_ROUNDS + " шагов: зацикливание стоянок");
     }
 
-    // Один шаг стройки, как planTick духа; false — стройка кончилась (всё стоит или дальше не продвинуться).
     private boolean round() {
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
         List<Schematic.PlacedEntry> unsupplied = new ArrayList<>();
@@ -359,7 +337,6 @@ public final class BuildPlanner {
         return true;
     }
 
-    // Полоса выше прежних — заново и отложенные клетки нижних (как на стройке): отказ мог быть временным.
     private Set<Schematic.PlacedEntry> currentPhase(
             List<Schematic.PlacedEntry> missing, List<Schematic.PlacedEntry> unsupplied) {
         List<Schematic.PlacedEntry> now = phase(missing, unsupplied);
@@ -433,7 +410,6 @@ public final class BuildPlanner {
         if (stand.isEmpty() && !lastStep) {
             stand = ReachPlanner.nextStandFromAfar(reach, feet, cells, world, excluded, schemeCells);
         }
-        // Вокруг клетки только будущие ковры и пороги (устланный зал, чулан усадьбы) — стоянка и в них.
         if (stand.isEmpty()) {
             stand = ReachPlanner.nextStandFromAfar(reach, feet, cells, world, excluded, standBlockers);
         }
@@ -558,7 +534,6 @@ public final class BuildPlanner {
         }
     }
 
-    // Клетки у поставленного блока получают опору: блок ставится к любой грани соседа.
     private void touch(BlockCoord cell) {
         for (int[] offset : new int[][] {{0, -1, 0}, {0, 1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}}) {
             touched.add(new BlockCoord(cell.x() + offset[0], cell.y() + offset[1], cell.z() + offset[2]));
@@ -583,7 +558,6 @@ public final class BuildPlanner {
         };
     }
 
-    // Пеший обход от ног по поставленному: шаг тела как у духа (вверх на 1, спуск до 3) в габарите с кольцом.
     private Set<BlockCoord> reachable() {
         Set<BlockCoord> cached = reachable;
         if (cached != null) {
@@ -606,7 +580,6 @@ public final class BuildPlanner {
         return seen;
     }
 
-    // Блок вне одного пути отхода его не перекрывает — проверка правилом отхода только для клеток на этом пути.
     private boolean keepsRetreat(BlockCoord cell, String block) {
         if (SchematicWalk.passable(block) || outside(feet)) {
             return true;
@@ -621,7 +594,6 @@ public final class BuildPlanner {
         return RetreatPath.allows(feet, Set.of(cell), view, this::outside);
     }
 
-    // Путь наружу считается один раз: правила отхода спрашивают его на каждый блок порции.
     private Set<BlockCoord> cachedRetreatPath() {
         Set<BlockCoord> path = retreatPath;
         if (path == null) {
@@ -631,8 +603,6 @@ public final class BuildPlanner {
         return path;
     }
 
-    // Клетки ног, головы и над головой (шаг вверх, спуск) одного кратчайшего пути наружу; пусто — пути нет или обход
-    // велик (тогда — полное правило).
     private Set<BlockCoord> exitPath() {
         Map<BlockCoord, BlockCoord> parent = new HashMap<>();
         Queue<BlockCoord> queue = new ArrayDeque<>();
@@ -667,15 +637,12 @@ public final class BuildPlanner {
             return true;
         }
         Schematic.PlacedEntry entry = primaryAt.get(cell);
-        // Пол шахты лежит в породе: @floor — не висящий блок, даже если соседние ступени ещё не поставлены.
         if (entry != null && SchematicBlocks.isFloor(entry.block())) {
             return true;
         }
         if (!touched.contains(cell)) {
             return false;
         }
-        // Опора — как в мире (BlockPlacer.hasSupport): снизу или сбоку полный блок, висящее — на держателе сверху;
-        // панель на панели без крепкого соседа в мире не ставится (дом семьи 3: стекло окна ждало перемычку).
         if (entry == null) {
             return true;
         }
@@ -692,8 +659,6 @@ public final class BuildPlanner {
         return SchematicRules.supportedIn(grid, sturdy, cell, entry.block(), entry.state());
     }
 
-    // Крепость грани поставленного блока, как в мире: полный блок — все грани; ступени — низ (или верх у перевёрнутых)
-    // и высокая сторона; плита — своя половина; держатель висящего — низ.
     private boolean sturdyFace(int x, int y, int z, BlockSupport.Face face) {
         if (y < 0) {
             return true;
@@ -741,7 +706,6 @@ public final class BuildPlanner {
         return BuildRotation.rotateDirection(local[0], local[1], quarterTurns);
     }
 
-    // Клетка крепления факела или таблички в повёрнутой схеме: состояние в схеме — без поворота (поворачивает мир).
     private @Nullable BlockCoord mountOf(Schematic.PlacedEntry entry, BlockCoord cell) {
         BlockCoord local = SchematicRules.mountOf(entry.block(), entry.state(), new BlockCoord(0, 0, 0));
         if (local == null) {
@@ -762,8 +726,6 @@ public final class BuildPlanner {
         return SchematicBlocks.isFalling(block) ? Cell.FALLING : Cell.SOLID;
     }
 
-    // Шаг тела, как BodyStep, но без проверки опасных соседей: в плане стройки опасностей нет, а проверка соседей
-    // втрое удорожает обход.
     private @Nullable BlockCoord step(BlockCoord from, int dx, int dz) {
         int x = from.x() + dx;
         int z = from.z() + dz;
@@ -787,9 +749,6 @@ public final class BuildPlanner {
         return null;
     }
 
-    // Стоять — как в мире: на заборе, стене и панели не стоят (дом семьи 3, 21.10: стоянка плана на заборе балкона
-    // срывала подход — на столб высотой 1,5 дух не запрыгивает), а пол решает общая с исполнителем функция
-    // MiningSafety.canStandOn: твёрдый и сыпучий (гравий площади) — годный пол.
     private boolean canStand(BlockCoord feet) {
         if (!open(feet.x(), feet.y(), feet.z()) || !open(feet.x(), feet.y() + 1, feet.z())) {
             return false;
@@ -813,8 +772,6 @@ public final class BuildPlanner {
         return cell.x() < 0 || cell.x() >= sizeX || cell.z() < 0 || cell.z() >= sizeZ;
     }
 
-    // Обход — по площадке с кольцом и по полосе до сундука (дух у сундука дальше кольца: фонарь на краю арены,
-    // 21.10 — план из одного «не поставлено», потому что дух не мог сойти с места).
     private boolean withinRing(BlockCoord cell) {
         return cell.x() >= Math.min(-RING, supply.x() - RING)
                 && cell.x() < Math.max(sizeX + RING, supply.x() + RING)
@@ -824,7 +781,6 @@ public final class BuildPlanner {
                 && cell.y() <= schematic.sizeY() + 2;
     }
 
-    // На крыше — стоянка внутри габарита, над которой по схеме ничего нет: наружная поверхность постройки.
     private boolean onRoof(BlockCoord stand) {
         if (outside(stand) || stand.y() < ROOF_MIN_HEIGHT) {
             return false;

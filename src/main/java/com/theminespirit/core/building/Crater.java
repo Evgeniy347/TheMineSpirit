@@ -5,11 +5,6 @@ import com.theminespirit.core.script.CatalogLimits;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Запомненная воронка от взрыва: центр, радиус и уровень окружающей земли (снимок высот краёв).
- *
- * <p>По уровню края {@link CraterPlan} поднимает столбцы воронки до ровной поверхности.
- */
 public record Crater(UUID id, BlockCoord center, int radius, int groundLevel, long createdTick) {
     public static final int RADIUS_MIN = 1;
     public static final int RADIUS_MAX = 16;

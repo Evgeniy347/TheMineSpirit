@@ -262,8 +262,6 @@ class DemoPlacementTests {
         }
     }
 
-    // Замечание владельца 21.10: табличка у сундука попадала в клетку ограды загона при повороте. Вся группа
-    // «сундук + половина + табличка» обязана вращаться вместе с постройкой — проверка на всех поворотах явно.
     @Test
     void compute_EveryBuildingLookAndExplicitRotation_ChestGroupOutsideSchema() {
         PresetLibrary library = loadReal();

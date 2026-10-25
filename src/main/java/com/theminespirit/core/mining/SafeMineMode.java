@@ -5,10 +5,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/**
- * Форма безопасной шахты: спуск лесенкой вниз или горизонтальная штольня.
- * Ширина прохода у обеих — один блок, высота — два.
- */
 public enum SafeMineMode {
     STAIRCASE,
     TUNNEL;

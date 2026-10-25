@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Тело постройки — прямоугольник стен по слою порога входа, без крыльца. Крыльцо (ступенька перед порогом, если пол
- * выше земли) лежит в схеме за стеной, ниже порога; правила стен, крыши и высоты меряют тело, а не габарит схемы.
- * У постройки без крыльца тело совпадает с габаритом.
- */
 public record SchematicBody(int minX, int maxX, int minZ, int maxZ) {
     public record Normal(int dx, int dz) {}
 

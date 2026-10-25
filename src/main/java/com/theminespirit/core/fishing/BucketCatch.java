@@ -1,9 +1,5 @@
 package com.theminespirit.core.fishing;
 
-/**
- * Предел ловли вёдрами за один заход: сколько рыб дух берёт ведром. Число приходит из
- * {@link FishingData#bucketCount()} — правкой датапака мира, а не кодом.
- */
 public final class BucketCatch {
     private BucketCatch() {}
 

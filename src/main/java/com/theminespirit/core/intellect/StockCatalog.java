@@ -111,7 +111,6 @@ public final class StockCatalog {
             if (SEED_IDS.contains(id)) {
                 seeds += count;
             }
-            // Топливо и факелы берут любой уголь: при обычном угле древесный не пережигают (INC-33).
             if (CHARCOAL_ID.equals(id) || COAL_ID.equals(id)) {
                 charcoal += count;
             }

@@ -6,15 +6,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Отметки «постройка стоит»: какой кейс какого уровня выполнен. Живые DONE-задания
- * лежат на доске, а ledger помнит выполненное без билета — так условие переживает
- * снятие билета и перезапуск через журнал. Ключ отметки — {@code building:<case>:<level>}.
- */
 public final class BoardLedger {
     public static final String PREFIX = "building:";
 
-    /** Разобранное условие постройки из зависимости: кейс и уровень, которые должны стоять. */
     public record BuildingMark(BoardCase boardCase, int level) {}
 
     private final Set<String> built = new LinkedHashSet<>();

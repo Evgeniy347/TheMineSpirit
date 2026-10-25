@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-// Методы независимы и считают долгие планы — идут параллельно.
 @Execution(ExecutionMode.CONCURRENT)
 class BuildPlannerTests {
     private static final PresetLibrary LIBRARY = BuildPlanSnapshotTests.library();
@@ -38,7 +37,6 @@ class BuildPlannerTests {
         return trips;
     }
 
-    // Гипотеза владельца 20.10: порция берёт всё подряд, включая декор, и инвентарь забит тем, что ставится последним.
     @Test
     void plan_FillPortion_TakesDecorOnlyOnLastTrip() {
         List<BuildPlanner.Trip> trips = trips(plan("family_house_3", BuildPlanner.Portion.FILL));
@@ -113,7 +111,6 @@ class BuildPlannerTests {
         return all;
     }
 
-    // Исполнитель строит план от того, что есть: весь материал при себе — заходов нет, всё ставится.
     @Test
     void plan_AllMaterialInInventory_NeedsNoTrips() {
         BuildPlanner.Plan plan = planFrom(
@@ -124,7 +121,6 @@ class BuildPlannerTests {
         assertEquals(0, plan.stuck(), "всё при себе — всё ставится: " + plan.lines());
     }
 
-    // Пустой старт равен прежнему плану: снапшоты исполнителя и плана — одно и то же.
     @Test
     void plan_EmptyStart_EqualsDefaultPlan() {
         BuildPlanner.Plan plain = plan("family_house_3", BuildPlanner.Portion.FILL);
@@ -135,7 +131,6 @@ class BuildPlannerTests {
         assertEquals(plain.lines(), started.lines(), "старт «пусто, всё в сундуке» обязан дать тот же план");
     }
 
-    // Два свободных слота и лишнее в остальных: заход освобождает лишнее, когда свободных нет (QUESTIONS-3 п. 5 А).
     @Test
     void plan_JunkSlots_ReleasedWhenNoFreeSlots() {
         BuildPlanner.Plan plan = planFrom(
@@ -151,7 +146,6 @@ class BuildPlannerTests {
         assertEquals(0, plan.stuck(), "лишнее освобождает слоты — стройка доходит до конца: " + plan.lines());
     }
 
-    // Уже стоящее не планируется: стоянки плана ставят только остальное, и ни одна клетка — дважды.
     @Test
     void plan_DoneCells_AreNotPlannedAgain() {
         BuildPlanner.Plan full = plan("family_house", BuildPlanner.Portion.FILL);
@@ -175,9 +169,6 @@ class BuildPlannerTests {
         }
     }
 
-    // План и исполнитель решают «на чём стоять» одной функцией: каждая стоянка плана на полу постройки обязана
-    // проходить правило исполнителя (MiningSafety.canStand). Площадь 1 стоит на гравии: пока исполнитель считал
-    // сыпучий пол запретным, он искал стоянки заново — подходов 47–49 при плане 21.
     @Test
     void plan_PlazaStands_PassExecutorStandRule() {
         for (String scheme : List.of("plaza_1", "plaza_2")) {
@@ -235,7 +226,6 @@ class BuildPlannerTests {
         };
     }
 
-    // Курсор пропускает стоянки, чьи клетки уже стоят, и отдаёт координаты мира.
     @Test
     void cursor_SkipsFinishedStands_AndShiftsToWorld() {
         BuildPlanner.Plan plan = plan("family_house", BuildPlanner.Portion.FILL);

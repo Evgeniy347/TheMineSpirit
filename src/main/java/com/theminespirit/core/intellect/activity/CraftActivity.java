@@ -59,8 +59,6 @@ public final class CraftActivity implements Activity {
         return itemId.startsWith("minecraft:") ? itemId.substring("minecraft:".length()) : itemId;
     }
 
-    // Запас считается по поселению, а craft берёт только свой инвентарь: дух без брёвен получал невыполнимый крафт.
-    // acquire сам берёт из сундука, крафтит из своего или рубит дерево.
     private static ActivityIntent craft(String product, ProcessingRules rules) {
         return new ActivityIntent(
                 ActivityId.CRAFT,

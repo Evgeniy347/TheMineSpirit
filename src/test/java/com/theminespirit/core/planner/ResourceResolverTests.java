@@ -549,7 +549,6 @@ class ResourceResolverTests {
     }
 
     private static ScriptCall gather(String block, int count) {
-        // Брёвна ищутся в радиусе 32: расчистка участка вырубает деревья в 16 от дома.
         int radius = block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
         return new ScriptCall("gather", Map.of("block", block, "count", count, "radius", radius));
     }

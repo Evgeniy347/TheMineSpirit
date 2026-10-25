@@ -2,12 +2,6 @@ package com.theminespirit.core.building;
 
 import java.util.Objects;
 
-/**
- * Спуск якоря демо-стройки до твёрдого полного блока. Игрок смотрит на листву, траву или цветы — якорь
- * ставится не на них, а на землю под ними: иначе постройка повисает в кроне или на кустике.
- *
- * <p>Чистая функция: «твёрдость» слоя задаёт вызывающий (уровень знает блоки, ядро — нет).
- */
 public final class GroundAnchor {
     @FunctionalInterface
     public interface SolidColumn {

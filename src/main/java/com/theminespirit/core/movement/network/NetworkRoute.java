@@ -15,12 +15,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 
-/**
- * Маршрут по сети (решение владельца 20.10): пешком до ближайшей клетки сети, по отрезкам до клетки сети, ближайшей
- * к цели, оттуда — к цели. Ближайшая — по шагам тела духа, а не по прямой: клетка сети этажом выше над головой не
- * вход. Обход до входа и от выхода ограничен {@link #ACCESS_STEPS} шагами — дальше путь игры их не пройдёт. Здесь же
- * пересчёт задетого отрезка: путь тела между его концами заново.
- */
 public final class NetworkRoute {
     static final int ACCESS_STEPS = 24;
     static final int LEG_STEPS = 10;
@@ -66,7 +60,6 @@ public final class NetworkRoute {
         return Optional.of(List.copyOf(distinct));
     }
 
-    // Точки пешего пути вне сети через каждые LEG_STEPS шагов: путь игры длиннее ~20 шагов срывается (см. PathSegment).
     private static List<BlockCoord> legPoints(List<BlockCoord> path) {
         List<BlockCoord> points = new ArrayList<>();
         for (int i = LEG_STEPS; i < path.size() - 1; i += LEG_STEPS) {
@@ -77,7 +70,6 @@ public final class NetworkRoute {
         return points;
     }
 
-    // Клетка, где можно встать, у цели: сама цель, под ней или рядом (цель подхода — часто сундук или верстак).
     public static Optional<BlockCoord> standingNear(BlockCoord cell, SafetyView view) {
         for (int dy : new int[] {0, -1, 1}) {
             for (int radius = 0; radius <= STAND_RADIUS; radius++) {
@@ -97,14 +89,11 @@ public final class NetworkRoute {
         return Optional.empty();
     }
 
-    // Ко входу дух идёт сам — можно и спрыгнуть на 2–3 (со второго этажа недостроенного дома без лестницы); от выхода
-    // путь ищется от цели назад — только шаги в обе стороны.
     private enum Direction {
         FORWARD,
         BOTH
     }
 
-    // Пеший путь (от start до первой клетки сети, включительно) по шагам тела; дальше ACCESS_STEPS — пусто.
     private static Optional<List<BlockCoord>> access(
             BlockCoord start, SafetyView view, PathNetwork network, Direction direction) {
         Map<BlockCoord, BlockCoord> parent = new HashMap<>();
@@ -139,8 +128,6 @@ public final class NetworkRoute {
         return Optional.empty();
     }
 
-    // Новый путь тела между концами задетого отрезка в его габарите с запасом REPAIR_SLACK; пусто — концы больше не
-    // связаны (дверь заложили, лестницу сломали) или путь стал длиннее отрезка.
     public static Optional<List<BlockCoord>> repair(PathSegment segment, SafetyView view) {
         Objects.requireNonNull(segment, "Отрезок не может быть null: его концы — начало и конец пересчёта");
         Objects.requireNonNull(view, "Мир не может быть null: по нему пересчитывается отрезок");

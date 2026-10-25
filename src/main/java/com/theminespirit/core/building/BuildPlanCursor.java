@@ -6,12 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-/**
- * Исполнитель плана стройки (решение владельца 20.10, ночь): идёт по шагам {@link BuildPlanner.Plan} в координатах
- * мира — заход с точным списком, стоянка с клетками, которые с неё ставятся. Шаг стоянки, чьи клетки уже все стоят
- * (поставил сосед, игрок или они были до начала), пропускается; «не поставлено» плана — тоже: такие клетки
- * достраивает обычная стройка после плана.
- */
 public final class BuildPlanCursor {
     public sealed interface Next permits Fetch, StandAt, Done {}
 
@@ -21,7 +15,6 @@ public final class BuildPlanCursor {
         }
     }
 
-    // cells — ещё не поставленные клетки шага в порядке плана.
     public record StandAt(BlockCoord stand, List<BlockCoord> cells) implements Next {
         public StandAt {
             cells = List.copyOf(cells);
@@ -40,7 +33,6 @@ public final class BuildPlanCursor {
         this.origin = Objects.requireNonNull(origin, "Угол стройки не может быть null: от него координаты плана");
     }
 
-    // pending — клетка мира ещё не стоит по схеме; шаги без таких клеток пропускаются.
     public Next next(Predicate<BlockCoord> pending) {
         Objects.requireNonNull(pending, "Проверка клеток не может быть null: без неё не пропустить готовое");
         while (index < steps.size()) {

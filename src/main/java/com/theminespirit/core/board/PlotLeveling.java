@@ -9,25 +9,13 @@ import java.util.Objects;
 import java.util.function.IntBinaryOperator;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Выравнивание участка поселения (решение владельца 16, INC-36; 54b п.3): участок приводится к средней высоте —
- * выступ срезается, яма подсыпается, но не больше чем на {@link #MAX_SHIFT} блоков в колонке. Чистая функция по
- * высотам колонок: «высота» — уровень ног над землёй колонки. Средняя — медиана: постройки на уже выровненном
- * участке (забор, дом — меньше половины колонок) её не сдвигают, и якорь участка не плывёт после стройки.
- *
- * @param cut  ящики срезки (всё твёрдое выше уровня ног участка) — для {@code clear_area}
- * @param fill ящики подсыпки (воздух ниже уровня ног) — для {@code fill} материалом {@code block}
- */
 public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box> voids) {
     public static final int MAX_SHIFT = 10;
     public static final String DEFAULT_BLOCK = "dirt";
-    // Допуск ровного участка: колонка на блок выше или ниже уровня — ровно, ступенька в блок проходима (INC-50).
     public static final int TOLERANCE = 1;
-    // Пустоты под участком (пещеры, старые ходы) засыпаются на эту глубину под уровнем; глубже — не цель (INC-67).
     public static final int VOID_DEPTH = 4;
     public static final PlotLeveling FLAT = new PlotLeveling(List.of(), List.of(), DEFAULT_BLOCK);
 
-    /** Воздух клетки мира: по нему находятся пустоты под участком. */
     @FunctionalInterface
     public interface AirProbe {
         boolean air(int x, int y, int z);
@@ -54,8 +42,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return new PlotLeveling(cut, fill, block, found);
     }
 
-    // Пустоты под землёй участка на VOID_DEPTH под уровнем anchor.y(): воздух ниже поверхности колонки (feet).
-    // Колонку, которую выравнивание не трогает (спуск в шахту), feet отдаёт Integer.MIN_VALUE.
     public static List<Box> voids(BlockCoord anchor, int half, IntBinaryOperator feet, AirProbe probe) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: пустоты ищутся под ним");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: пустота — воздух под поверхностью");
@@ -88,7 +74,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return new PlotLeveling(cut, fill, material, voids);
     }
 
-    // Средняя высота участка {@code half} вокруг якоря — медиана уровней ног колонок.
     public static int level(BlockCoord anchor, int half, IntBinaryOperator feet) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: высоты читаются вокруг него");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них средней высоты нет");
@@ -104,7 +89,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return heights[heights.length / 2];
     }
 
-    // Участок ровный, если каждая колонка в допуске TOLERANCE от уровня {@code anchor.y()}.
     public static boolean isLevel(BlockCoord anchor, int half, IntBinaryOperator feet) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: ровность читается вокруг него");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них ровность не проверить");
@@ -118,9 +102,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return true;
     }
 
-    // Срезка с вершин слоями в блок: сначала верхний слой всего холма, потом следующий. Ящик колонкой на всю высоту
-    // рыл траншею в 1 блок шириной и 4 глубиной: дух из неё не доставал соседний ряд, двое в ней не расходились
-    // (сцена 56); срезанный ряд лишал стоянки старую стенку на вершине соседнего ряда. В слое ряды сливаются по x и z.
     public List<Box> cutTopDown() {
         int top = cut.stream().mapToInt(Box::y2).max().orElse(0);
         int bottom = cut.stream().mapToInt(Box::y1).min().orElse(1);
@@ -158,7 +139,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return List.copyOf(out);
     }
 
-    // План для участка {@code half} вокруг якоря; уровень ног участка — {@code anchor.y()}.
     public static PlotLeveling plan(BlockCoord anchor, int half, IntBinaryOperator feet) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него выравнивается участок");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них нечего выравнивать");
@@ -182,7 +162,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return new PlotLeveling(cut, fill, DEFAULT_BLOCK);
     }
 
-    // Колонки ряда с одинаковой срезкой (подсыпкой) сливаются в один ящик: меньше вызовов скрипта.
     private static @Nullable Run extend(@Nullable Run open, @Nullable Run here, int x, int z, List<Box> out) {
         if (open != null && here != null && open.y1() == here.y1() && open.y2() == here.y2()) {
             return open;

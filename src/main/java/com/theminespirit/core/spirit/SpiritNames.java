@@ -3,10 +3,6 @@ package com.theminespirit.core.spirit;
 import java.util.Collection;
 import java.util.Objects;
 
-/**
- * Имена духов: первый свободный номер после общего префикса. Занятые имена приходят
- * снимком из мира, поэтому имя не повторяется у двух живых духов и читается в журнале.
- */
 public final class SpiritNames {
     public static final String PREFIX = "spirit";
 

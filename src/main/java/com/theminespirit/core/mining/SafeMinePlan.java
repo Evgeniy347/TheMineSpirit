@@ -8,14 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * План безопасной шахты: спуск лесенкой до заданного этажа или штольня заданной длины.
- *
- * <p>Проход — один блок шириной и два высотой. Строится по {@link SafetyView}: жидкость сбоку,
- * под ногами или над головой планируется заложить блоком из инвентаря ({@link SafeMineStep#fill()}),
- * провал под ногами останавливает план (дух туда не шагает), сыпучий блок над головой помечается
- * {@link SafeMineStep#fallingAbove()}. Факелы ставятся каждый {@code torchInterval}-й шаг из данных.
- */
 public record SafeMinePlan(
         BlockCoord entry,
         SafeMineMode mode,

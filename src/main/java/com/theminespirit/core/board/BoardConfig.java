@@ -12,14 +12,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Живые числа доски: приоритеты кейсов, модификаторы приоритета и интервалы. Читается из
- * JSON-таблицы через {@code DataTables} — правится датапаком мира и перезагружается
- * по {@code /reload} без перезапуска. Ключи приоритетов — имена {@link BoardCase},
- * ключи модификаторов — {@link BoardPriorities#MODIFIER_KEYS},
- * ключи интервалов — {@link BoardTuning#INTERVAL_KEYS}. Пустые карты допустимы: недостающее
- * добирают значения по умолчанию из {@code BoardRules}, {@code BoardPriorities} и {@code BoardTuning}.
- */
 public record BoardConfig(
         Map<String, Integer> priorities,
         Map<String, Integer> modifiers,

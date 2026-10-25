@@ -5,10 +5,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Отрезок сети тропинок: клетки ног подряд (каждая следующая — шаг тела духа в обе стороны), длина в мере поиска пути
- * игры не больше {@link #MAX_LENGTH}. Концы отрезка — узлы графа сети.
- */
 public record PathSegment(int id, List<BlockCoord> cells) {
     // mc: поиск пути игры обрывает маршрут на пройденной длине 32 (дальность следования духа), но длину узла
     // перезаписывает и худшим подходом к нему (PathFinder.findPath), и в доме с мебелью и лестницами путь срывается уже

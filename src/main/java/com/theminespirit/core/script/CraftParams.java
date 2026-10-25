@@ -3,8 +3,6 @@ package com.theminespirit.core.script;
 import java.util.Map;
 import java.util.Objects;
 
-// place — поставить скрафченную станцию (печь) рядом, если такой поблизости нет: иначе печь оставалась в инвентаре
-// крафтера, и плавка других духов падала «нужна печь: рядом нет, в инвентаре нет» (приёмка «джунгли» 24.10).
 public record CraftParams(String item, int count, int radius, boolean place) {
     public CraftParams(String item, int count, int radius) {
         this(item, count, radius, false);

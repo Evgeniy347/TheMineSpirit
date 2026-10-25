@@ -6,12 +6,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Пары сундуков схемы. Сундук, у которого рядом по горизонтали стоит сундук, обязан быть половиной двойного:
- * {@code type=left|right}, сосед по стороне соединения — тот же сундук с тем же {@code facing} и противоположным
- * {@code type}. Иначе в мире встают два одинарных сундука рядом — склад выглядит двойным, а открывается одинарным.
- * Сторона соединения — как в ванили: у {@code left} сосед по часовой от {@code facing}, у {@code right} — против.
- */
 public final class ChestPairs {
     private static final String SINGLE = "single";
     private static final String LEFT = "left";

@@ -7,15 +7,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Уровень чарования стола по ванильному правилу. Полка работает, если стоит на периметре 5×5 вокруг стола
- * (по горизонтали ровно {@link #SHELF_DISTANCE} блока), на высоте стола или на блок выше, а клетка между
- * столом и полкой пуста: там ванильный стол ищет блок-передатчик. Каждая подходящая полка даёт одно очко,
- * но в уровень идёт не больше {@link #MAX_SHELVES} полок — отсюда высшая ступень {@link #MAX_LEVEL}.
- *
- * <p>Правило зеркалит ванильный {@code EnchantingTableBlock.isValidBookShelf}: смещения берутся из
- * {@code BOOKSHELF_OFFSETS}, а пустая клетка — из середины отрезка «стол — полка» (целое деление пополам).
- */
 public final class EnchantingPower {
     public static final String BOOKSHELF = "minecraft:bookshelf";
     public static final String ENCHANTING_TABLE = "minecraft:enchanting_table";

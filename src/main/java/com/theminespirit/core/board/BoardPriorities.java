@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Эффективный приоритет задания: база кейса из таблицы плюс дельты сработавших
- * модификаторов ситуации, с зажимом в [0, MAX_PRIORITY]. Все числа — из таблицы
- * board через DataTables; здесь только значения на случай отсутствия таблицы.
- */
 public final class BoardPriorities {
     public static final String PEN_CAUGHT_ANIMAL = "pen_caught_animal";
     public static final String PEN_MISSING_BAIT = "pen_missing_bait";

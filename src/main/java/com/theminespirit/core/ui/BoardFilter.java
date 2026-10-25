@@ -7,10 +7,6 @@ import java.util.Objects;
 import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Фильтр экрана доски: по группе (null — все группы) и по исполнителю. Исполнитель задаётся режимом:
- * все, только невыданные («…») или конкретный дух по имени.
- */
 public record BoardFilter(
         @Nullable BoardTileGroup group,
         Spirit spirit,

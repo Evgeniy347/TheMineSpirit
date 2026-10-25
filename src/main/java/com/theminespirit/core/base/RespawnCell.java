@@ -5,22 +5,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-/**
- * Клетка возрождения духа: ближайшая к точке базы клетка, где дух может стоять — под ногами твёрдый пол, а сама
- * клетка и клетка над ней свободны (два воздуха). Чистая функция: мир спрашивается через {@link Terrain}, поэтому
- * выбор клетки проверяется JUnit без запуска игры.
- *
- * <p>Порядок перебора фиксирован (расстояние, затем координаты), чтобы один и тот же мир давал одну и ту же клетку:
- * случайный выбор после перезапуска уводил бы духа в другое место.
- */
 public final class RespawnCell {
     public static final int SEARCH_RADIUS = 8;
 
     private RespawnCell() {}
 
-    /**
-     * Мир для выбора клетки. {@code floor} отвечает за блок под ногами, {@code air} — за свободную клетку.
-     */
     public record Terrain(Predicate<BlockCoord> floor, Predicate<BlockCoord> air) {
         public Terrain {
             Objects.requireNonNull(floor, "Пол клетки возрождения не может быть null: без него дух провалится");
@@ -28,7 +17,6 @@ public final class RespawnCell {
         }
     }
 
-    // Точка базы: якорь участка поселения, а без него — дом духа.
     public static Optional<BlockCoord> base(Optional<BlockCoord> plotAnchor, Optional<BlockCoord> home) {
         Objects.requireNonNull(plotAnchor, "Якорь участка задаётся Optional.empty(), а не null");
         Objects.requireNonNull(home, "Дом духа задаётся Optional.empty(), а не null");

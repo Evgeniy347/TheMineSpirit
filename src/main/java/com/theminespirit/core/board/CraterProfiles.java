@@ -11,13 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Кольцо запомненных воронок: профиль клеток, которые взрыв выбил из земли. На каждой
- * пересборке профиль проверяется снимком блоков — пока хоть одна клетка пуста, причина
- * жива; засыпанная воронка уходит из кольца, и {@code retain} снимает задание.
- * Кольцо ограничено: память не растёт с числом взрывов, а проверка одного профиля —
- * не больше {@link #MAX_CELLS} блоков.
- */
 public final class CraterProfiles {
     public static final int MAX_CELLS = 16;
 

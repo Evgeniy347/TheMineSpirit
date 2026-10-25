@@ -2,12 +2,6 @@ package com.theminespirit.core.board;
 
 import java.util.Objects;
 
-/**
- * Применимость постоянного задания к духу: чистая функция по снимку состояния.
- * EAT_TO_FULL берёт дух, которому не хватает сытости или здоровья, вне боя, вне похода
- * и без занятости досковым заданием. RESTOCK_FOOD ждёт, пока личной еды меньше половины
- * стака. Остальные постоянные проверяет гейт ресурсов доски ({@code Board.claimable}).
- */
 public final class Applicability {
     public static final int RESTOCK_FOOD_THRESHOLD = 32;
 

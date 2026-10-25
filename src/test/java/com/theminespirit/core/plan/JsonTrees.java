@@ -9,15 +9,6 @@ import java.util.Random;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 
-/**
- * Генератор случайных JSON-деревьев для свойств парсера плана (jqwik).
- *
- * <p>Случайная строка (как {@code @ForAll String}) почти никогда не является JSON, поэтому проверка
- * «парсер на любом JSON бросает только {@link PlanValidationException}» ничего не проверяла: до
- * валидатора доходили лишь синтаксические ошибки Jackson. Генератор строит деревья с ключами плана
- * ({@code type/script/params/steps/times/mode/check/then/else}) и значениями любых типов — null,
- * числа, строки, массивы, вложенные объекты, — чтобы свойство дошло до всех ветвей парсера.
- */
 final class JsonTrees {
     private static final List<String> KEYS = List.of(
             "type",

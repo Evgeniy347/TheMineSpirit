@@ -11,11 +11,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Категории склада: порядок задаёт и раскладку по сундукам, и надпись на табличке. Последняя категория
- * обязана ловить всё ({@code *}): предмет без категории не получил бы сундука. Данные читаются из
- * {@code inventory/warehouse_categories.json} и перезагружаются по {@code /reload}.
- */
 public final class WarehouseCategories {
     public static final String RESOURCE = "data/theminespirit/inventory/warehouse_categories.json";
     public static final int VERSION = 1;

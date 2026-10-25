@@ -2,10 +2,6 @@ package com.theminespirit.core.building;
 
 import java.util.Objects;
 
-/**
- * Правило опоры блока: опорой считается клетка снизу с крепкой верхней гранью или сосед сбоку,
- * крепкий к целевой клетке гранью. Одно правило для постановки в мире и для проверки схем.
- */
 public final class BlockSupport {
     public enum Face {
         UP,

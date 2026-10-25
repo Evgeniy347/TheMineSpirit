@@ -3,7 +3,6 @@ package com.theminespirit.core.building;
 import java.util.Locale;
 import java.util.Optional;
 
-/** Горизонтальное направление состояния блока ({@code facing}) в осях схемы: север — −Z, восток — +X. */
 public enum Facing {
     NORTH(0, -1),
     EAST(1, 0),

@@ -2,12 +2,6 @@ package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
 
-/**
- * Поверхность взрыва для планировщика засыпки: уровень окружающей земли по столбцу и текущие блоки.
- *
- * <p>Адаптер строит её по снимку «высоты поверхности до взрыва» или по соседям края; ядро не знает
- * о мире и работает только с этими ответами.
- */
 public interface CraterSurface {
     BlockCoord center();
 

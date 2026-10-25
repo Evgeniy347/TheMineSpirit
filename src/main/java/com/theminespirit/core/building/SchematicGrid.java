@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Сетка символов слоёв → блоки и клетки воздуха. Двухчастные блоки пишутся одним символом в обеих клетках:
- * дверь — в двух слоях друг над другом (нижняя половина ниже), кровать — в двух соседних клетках вдоль facing
- * (изголовье — по направлению facing). Половина или часть дописывается в состояние сама.
- */
 final class SchematicGrid {
     record Result(List<Schematic.Entry> blocks, List<Schematic.Cell> air) {}
 

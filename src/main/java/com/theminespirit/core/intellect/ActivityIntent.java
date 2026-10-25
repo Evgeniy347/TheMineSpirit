@@ -6,7 +6,6 @@ import java.util.Optional;
 
 public record ActivityIntent(
         ActivityId id, Optional<String> script, Map<String, Object> params, Optional<WorkKind> workKind) {
-    // count намерения acquire — сколько добавить к своему запасу духа; итог по инвентарю считает адаптер.
     public static final String ACQUIRE = "acquire";
 
     public ActivityIntent {

@@ -6,15 +6,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 
-/**
- * Руда в клетке шахты (решение владельца 22.10): обычную — добыть подходящей киркой; руду «на удачу» — только киркой
- * с Удачей, иначе Шёлковым касанием целиком, иначе оставить на месте до такой кирки.
- *
- * <p>Руда «на удачу» — алмазы, изумруды и лазурит: Удача умножает их выход в разы (алмаз и изумруд — до ×4 на
- * Удаче III, лазурит — 4–9 штук до ×4), а сами руды редкие, и ломка простой киркой теряет большую часть добычи
- * навсегда. Уголь, медь, красный камень и кварц обычные и дешёвые, железо и золото нужны сразу для инструментов —
- * их Удача не ждёт.
- */
 public final class MineOres {
     public enum Kind {
         NONE,
@@ -24,7 +15,6 @@ public final class MineOres {
 
     public static final Set<OreKind> LUCK_KINDS = Set.of(OreKind.DIAMOND, OreKind.EMERALD, OreKind.LAPIS);
 
-    /** Кирка в инвентаре духа: слот, годится ли для дропа этой руды, уровень Удачи и Шёлковое касание. */
     public record Pick(int slot, boolean correctForDrops, int fortune, boolean silkTouch) {
         public Pick {
             if (fortune < 0) {
@@ -36,7 +26,6 @@ public final class MineOres {
 
     public sealed interface Decision permits Mine, Leave {}
 
-    /** Добыть; слот пуст — любой подходящий инструмент (выбор BlockBreaker), иначе именно эта кирка. */
     public record Mine(OptionalInt slot, String how) implements Decision {
         public Mine {
             Objects.requireNonNull(slot, "Слот не может быть null: любой инструмент — OptionalInt.empty()");

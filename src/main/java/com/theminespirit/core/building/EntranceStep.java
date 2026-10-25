@@ -5,11 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Вход без прыжка: от земли перед постройкой до порога каждый шаг поднимает не больше чем на полблока (ступени,
- * полублок) — столько игрок и дух проходят шагом. Пол выше земли требует ступеньки перед порогом в крыльце схемы.
- * Высоты считаются в полублоках: земля за габаритом схемы — 0, порог — высота клетки входа.
- */
 public final class EntranceStep {
     private static final int HALVES = 2;
     private static final int MAX_RISE = 1;

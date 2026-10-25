@@ -6,12 +6,6 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
-/**
- * Этапы стройки (решение владельца 20.10, QUESTIONS-2 п. 7): сначала черновые работы — пол, стены, перекрытия,
- * лестницы, крыша — строго полосами по {@value #BAND_HEIGHT} слоя снизу вверх: в следующую полосу дух не поднимается,
- * пока не застроена текущая, и лестница на этаж готова раньше самого этажа; затем отделка — мебель, свет, ковры,
- * цветы, двери и ставни — в любом порядке.
- */
 public final class BuildPhase {
     public static final int BAND_HEIGHT = 4;
     private static final List<String> ROUGH_SUFFIXES = List.of("_stairs", "_slab", "_wall");
@@ -23,7 +17,6 @@ public final class BuildPhase {
     public static boolean rough(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестен этап стройки");
         String path = SchematicBlocks.path(blockId);
-        // Перила балкона и галереи — черновые: без них дух выходит на открытый край балкона и застревает там.
         if (path.endsWith("_fence")) {
             return true;
         }
@@ -55,7 +48,6 @@ public final class BuildPhase {
         return heightAboveBottom / BAND_HEIGHT;
     }
 
-    // Сейчас ставятся черновые клетки нижней незастроенной полосы; когда черновых не осталось — вся отделка.
     public static <T> List<T> current(List<T> unfinished, ToIntFunction<T> heightAboveBottom, Predicate<T> rough) {
         Objects.requireNonNull(unfinished, "Незаконченные клетки не могут быть null: пустой список задаётся пустым");
         Objects.requireNonNull(heightAboveBottom, "Высота клетки не может быть null: без неё нет полосы");
@@ -69,8 +61,6 @@ public final class BuildPhase {
         if (lowest == Integer.MAX_VALUE) {
             return List.copyOf(unfinished);
         }
-        // Пол — первым, до стен нижней полосы: клетка пола, отложенная, пока на ней стоял дух, иначе оказывается
-        // в чулане за уже поставленными стенами, и до неё не дотянуться (усадьба, особняк — 20.10).
         boolean floorLeft = false;
         for (T cell : unfinished) {
             floorLeft |= rough.test(cell) && heightAboveBottom.applyAsInt(cell) == 0;

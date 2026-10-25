@@ -48,9 +48,6 @@ public final class BlockProtection {
         }
     }
 
-    // Участок поселения (INC-70, INC-71): блок, не поставленный игроком, — остаток построек поселения; чёрный список
-    // (заборы, факелы, двери старой ограды и дома) его не держит — иначе старая ограда стоит вечно и ящик «защищён».
-    // Непрочное по GatherPolicy (бедрок) и защищённая зона сервера — по-прежнему нельзя.
     public Decision checkSettlement(String blockId, boolean inProtectedZone) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что проверять");
         if (GatherPolicy.check(blockId) instanceof GatherPolicy.Refused refused) {

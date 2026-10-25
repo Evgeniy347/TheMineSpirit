@@ -8,11 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-/**
- * Запись инцидента для повтора: кто, что, где, какая задача и что в инвентаре; окрестность {@link #RADIUS} блоков
- * вокруг духа снимается структурой NBT в файл {@link #fileName} папки {@link #FOLDER} мира и грузится в тест как
- * сцена (дух — в {@link #spiritOffset} от угла снимка).
- */
 public record IncidentNote(String spirit, String what, BlockCoord at, String task, Map<String, Integer> inventory) {
     public static final int RADIUS = 12;
     public static final int SIZE = 2 * RADIUS + 1;

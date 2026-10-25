@@ -12,13 +12,6 @@ import java.util.Set;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Снимок доски для экрана игрока: задания доски превращаются в плитки, разложенные по группам в порядке
- * показа. Успешно завершённые идут по времени завершения (раньше — выше), затем не удавшиеся завершить
- * (в той же колонке), остальные — по приоритету (выше — раньше), при равенстве — по времени постановки и id.
- * Время завершения берётся из журнала доски (нет записи — время постановки); дух, не найденный по UUID,
- * называется началом UUID.
- */
 public final class BoardSnapshot {
     private static final int SHORT_UUID = 8;
     private static final Comparator<Ranked> ORDER = Comparator.<Ranked, BoardTileGroup>comparing(

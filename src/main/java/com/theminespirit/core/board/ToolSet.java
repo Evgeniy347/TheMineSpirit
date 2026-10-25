@@ -9,12 +9,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Набор инструментов первых шагов: деревянные кирка, топор и лопата, затем каменные
- * кирка, топор, лопата и меч. Порядок ступеней — код (по нему открывается следующий
- * кейс), число комплектов на поселение — данные горячей таблицы board ({@code tools}):
- * {@code perSpirit} комплектов на духа, но не меньше {@code minSets}.
- */
 public final class ToolSet {
     public static final String PER_SPIRIT_KEY = "perSpirit";
     public static final String MIN_SETS_KEY = "minSets";
@@ -47,7 +41,6 @@ public final class ToolSet {
         return STONE;
     }
 
-    // Деревянный и каменный инструмент дешевле нового крафта, чем ремонта (владелец 23.10): сломался — крафт нового.
     public static boolean replacedNotRepaired(String itemId) {
         Objects.requireNonNull(itemId, "itemId не может быть null: ремонт решается по предмету");
         String key = itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
@@ -72,7 +65,6 @@ public final class ToolSet {
         return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
     }
 
-    // Инструмент того же вида любого уровня засчитывается вместо деревянного: дух с каменной киркой деревянную не ждёт.
     public static Map<BoardCase, Integer> woodenShortages(Map<String, Integer> available, int sets) {
         Objects.requireNonNull(available, "available не может быть null: пустой запас задают пустой картой");
         if (sets < 0) {
@@ -92,7 +84,6 @@ public final class ToolSet {
         return shortages;
     }
 
-    // Инструмент того же вида не хуже по уровню закрывает шаг: с каменной киркой деревянную не крафтят.
     public static boolean covered(BoardCase boardCase, Set<String> present) {
         Objects.requireNonNull(present, "present не может быть null: пустой запас задают пустым множеством");
         String key = stockKey(boardCase);

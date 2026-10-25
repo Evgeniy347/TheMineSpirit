@@ -6,11 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Проверка текстовой постройки сторожами {@link SchematicRules} с её собственными исключениями: какие нарушения
- * не прощены и какие исключения устарели (правило уже проходит). Общая для сторожа данных, инструмента
- * {@code scripts/schematic.sh} и загрузки библиотеки — одни и те же правила везде.
- */
 public final class SchematicCheck {
     public record Report(String id, List<String> unexcused, List<String> stale) {
         public Report {
@@ -29,8 +24,6 @@ public final class SchematicCheck {
         }
     }
 
-    // Условие repeat до мирового y проверяется вне игры от номинальной поверхности: иначе сторожа схемы
-    // не увидели бы ни одной повторённой ступени.
     static final int AUDIT_TOP_Y = 64;
 
     private SchematicCheck() {}

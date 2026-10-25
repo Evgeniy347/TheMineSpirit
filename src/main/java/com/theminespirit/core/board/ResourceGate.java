@@ -4,10 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Гейт по ресурсам: задание берётся в работу только при наличии требуемых предметов.
- * Не хватает — задание висит в очереди, а наблюдателю видно, чего и сколько не хватает.
- */
 public final class ResourceGate {
     private ResourceGate() {}
 

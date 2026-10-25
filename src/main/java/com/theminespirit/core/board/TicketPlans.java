@@ -24,29 +24,17 @@ import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * План задания по кейсу: чистая функция «кейс + точка → TaskNode» из скриптов
- * существующего каталога. Новых скриптов не добавляет: план собирается из
- * goto/acquire/fill/capture/build_schematic/withdraw/dig_area/clear_area/deliver.
- */
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
-    // Расчистка и выравнивание — 9 частей 3×3 на свободных духов: четверти на трёх духах оставляли одну на одного, и
-    // остальные стояли до её конца (сцена 56: холм целиком в одной четверти).
     public static final int CLEAR_GRID = 3;
     public static final int CLEAR_PARTS = CLEAR_GRID * CLEAR_GRID;
-    // Ограда кусками периметра на разных духов: одним духом она шла ~2900 тиков, двое простаивали (приёмка «джунгли»).
     public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
-    // Брёвен с малого дерева (дуб 4–6): число деревьев под добычу брёвен — с запасом (INC-64).
     private static final int LOGS_PER_TREE = 4;
     private static final int DIRT_SOURCE_GAP = 4;
-    // Допуск неравенства объёма срезки между частями, блоков: в его пределах ящик остаётся в своей части.
     private static final int CUT_SLACK = 12;
-    // Допуск для рядов подсыпки шире: яма — одно место, дальний дух ходил к ней через участок (подсыпка 2200 тиков).
     private static final int FILL_SLACK = 40;
-    // Запас пола и стенок спуска, который строитель шахты берёт из сундука (блоков каждого вида).
     private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
@@ -82,8 +70,6 @@ public final class TicketPlans {
     private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     private static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
-    // Остатки шага (палки, доски, брёвна, камень, уголь, факелы) — в сундук сразу по окончании шага: у занятого духа
-    // палки после добычи забора держали крафт факелов ~2000 тиков (приёмка «джунгли» 24.10, transfer…:stick PENDING).
     private static final List<String> LEFTOVERS = List.of(
             "minecraft:stick",
             "minecraft:*_planks",
@@ -156,19 +142,12 @@ public final class TicketPlans {
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
-            // Сундуки склада ставятся во дворе сразу (place): в инвентаре крафтера склада не было (приёмка «джунгли»).
             case STOCK_CHESTS -> yard(target);
             case CRAFTING_STATION -> tableNearSpirit(target);
             case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
-            // Печь ставится во дворе станций сразу: в инвентаре крафтера её не находила плавка других духов, а сам
-            // крафтер ставил её там, где плавил (24.10: «нужна печь: рядом (16) нет», факелы ограды ждали печь).
             case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
-            // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
-            // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
-            // Палки факелам — свои из брёвен (acquire крафтит): крафт ждал передачу палок от занятого соседа, и кусок
-            // ограды падал «не хватило torch» (сцена 56).
             case CRAFT_TORCHES ->
                 sequence(
                         new FallbackNode(List.of(
@@ -215,8 +194,6 @@ public final class TicketPlans {
         };
     }
 
-    // Спуск по схеме владельца (mine_descent_v1) в стороне от дома, вглубь на юг: ступени
-    // 1×3 с шагом в блок до y=50 из файла — дух копает булыжник только здесь и выходит наверх пешком.
     public static BlockCoord mineDescentOrigin(BlockCoord home) {
         Objects.requireNonNull(home, "Дом не может быть null: спуск в шахту ставится в стороне от дома");
         return SettlementLayout.mineEntrance(home);
@@ -226,10 +203,6 @@ public final class TicketPlans {
         BlockCoord origin = mineDescentOrigin(target.target());
         int x = origin.x();
         int z = origin.z();
-        // Пол и стенки спуска — из сундука поселения: расчистка сдала туда землю и булыжник, а строитель шахты пришёл
-        // пустым и падал «нет булыжника на стенку» (сцена 56). Сколько есть — столько и берёт.
-        // Подход ко входу — без провала: колонку спуска выравнивание не трогает, и вход бывает в толще холма; к нему
-        // ведёт сама проходка (сцена 56: «тупик» у духа на холме над входом валил шахту).
         return sequence(
                 new FallbackNode(List.of(
                         gotoPoint(new BlockCoord(x, target.target().y(), z)),
@@ -415,23 +388,16 @@ public final class TicketPlans {
                                 CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
-    // Ограда — по периметру участка вокруг дома (SettlementLayout): точка задания — якорь участка.
-    // count задания — номер куска периметра (1..FENCE_PARTS) для отдельного духа; 0 — вся ограда одним заданием.
     private static TaskNode buildFence(TicketTarget target) {
         int part = target.count();
         String scheme =
                 part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(FENCE_SCHEME, part, FENCE_PARTS) : FENCE_SCHEME;
-        // Подход к якорю — без провала: при параллельных шагах на якоре уже стоит хижина, и «тупик» у её стены валил
-        // кусок ограды; к своим клеткам стройка подходит сама (сцена 56).
         return sequence(
                 new FallbackNode(
                         List.of(gotoTarget(target), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                 schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
     }
 
-    // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
-    // габарита дома, иначе стройка дома упиралась в верстак у якоря (решение 54b п.2).
-    // Скрафтить во дворе станций и сразу поставить там (place): печь и сундуки склада первых шагов.
     private static TaskNode placeInYard(String item, int count, TicketTarget target) {
         return withLeftovers(
                 sequence(
@@ -450,8 +416,6 @@ public final class TicketPlans {
                 target);
     }
 
-    // Порядок владельца (INC-63): первый верстак — временный, рядом с духом, без привязки к двору; двор ставится после
-    // выравнивания на высоте плана.
     private static TaskNode tableNearSpirit(TicketTarget target) {
         return withLeftovers(
                 new ScriptCall(
@@ -468,8 +432,6 @@ public final class TicketPlans {
                 target);
     }
 
-    // Двор после выравнивания: сундуки склада и постоянный верстак двора (поиск в радиусе 1 — временный верстак у
-    // места первых крафтов его не заменяет).
     private static TaskNode yard(TicketTarget target) {
         return withLeftovers(
                 sequence(
@@ -528,7 +490,6 @@ public final class TicketPlans {
                 store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
-    // Сдать всё названное в ближайший сундук у места задания; сундука нет или сдавать нечего — шаг не валит план.
     private static TaskNode store(TicketTarget target, String... items) {
         List<TaskNode> steps = new ArrayList<>(items.length + 1);
         steps.add(gotoTarget(target));
@@ -563,13 +524,9 @@ public final class TicketPlans {
     }
 
     private static TaskNode lighting(TicketTarget target) {
-        // Перед хижиной и за ней (SettlementLayout): внутри ограды клетки не заданы схемой, калитку освещают факелы на
-        // её
-        // столбах. Прежний ряд у дома (±2) попадал внутрь ограды 9×9 и валил её сверку.
         List<BlockCoord> torches = SettlementLayout.lighting(target.target());
         List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
         steps.add(gotoTarget(target));
-        // Факелы могут лежать в сундуке или у соседа: acquire берёт их до расстановки, иначе «нет материала torch».
         steps.add(new ScriptCall(ACQUIRE, Map.of(ITEM, TORCH, COUNT, torches.size())));
         for (BlockCoord torch : torches) {
             steps.add(new ScriptCall(
@@ -603,7 +560,6 @@ public final class TicketPlans {
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch)),
-                // Добыча уводит духа от места, а сдача ищет сундук рядом с духом (INC-30).
                 gotoTarget(target),
                 new ScriptCall(
                         "deposit",
@@ -617,8 +573,6 @@ public final class TicketPlans {
         return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
     }
 
-    // Добытое — в сундук поселения рядом с домом (решение главного агента 24.10): крафт и стройка берут из сундука,
-    // а не ждут передачу от занятого духа-«копилки». Сундука нет — добытое остаётся у духа (передачи дух→дух).
     private static TaskNode gatherMaterials(TicketTarget target) {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
@@ -639,7 +593,6 @@ public final class TicketPlans {
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
         if (TorchRules.COAL.equals(item)) {
-            // Уголь — из жилы (шахта у дома): acquire искал уголь через рецепты и уходил в древесный (журнал 05:49).
             return sequence(
                     gotoTarget(target),
                     new ScriptCall(
@@ -653,20 +606,14 @@ public final class TicketPlans {
                                     CatalogLimits.HARVEST_RADIUS_MAX)));
         }
         if (COBBLESTONE.equals(item)) {
-            // Камень у дома бывает дальше 16 (выход скалы в стороне): acquire искал в 16 и проваливал
-            // «подходящих блоков не осталось», печь стояла (приёмка «джунгли»). Как уголь — радиус 32.
             return sequence(
                     gotoTarget(target),
                     new ScriptCall(
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
-        // fresh: добыть ещё, а не взять из сундука, куда добыча же сдаёт (запас не рос).
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         Optional<TreeSpecies> tree = treeOf(item);
         if (tree.isPresent()) {
-            // Брёвна — рубкой деревьев (INC-64): chop_tree выбирает дерево с доступной стоянкой и пропускает
-            // недостижимое; acquire (gather) трижды бился в одно недостижимое бревно и уходил в BLOCKED. Деревьев — с
-            // запасом на малые; нет деревьев рядом — запасной путь acquire.
             int trees = Math.min(CatalogLimits.COUNT_MAX, (batch + LOGS_PER_TREE - 1) / LOGS_PER_TREE);
             return sequence(
                     gotoTarget(target),
@@ -694,7 +641,6 @@ public final class TicketPlans {
                 .findFirst();
     }
 
-    // count задания расчистки — номер четверти (1–4) для отдельного духа; 0 — вся расчистка одним заданием.
     private static TaskNode clearGrounds(TicketTarget target) {
         int radius = GROUNDS_CLEAR_RADIUS;
         List<TaskNode> chunks = new ArrayList<>();
@@ -711,14 +657,8 @@ public final class TicketPlans {
         int quarter = target.count();
         boolean single = quarter >= 1 && quarter <= CLEAR_PARTS;
         List<TaskNode> steps = new ArrayList<>();
-        // Выравнивание участка к средней высоте (решение 16, 54b п.3): сначала срезка выступов (её булыжник и
-        // земля — запас подсыпки), потом подсыпка ям. Выравнивание делится по четвертям, как расчистка: всё оно шло
-        // в первой четверти одним духом, двое стояли (INC-64). Срезка — до расчистки ящика на 3 над участком:
-        // расчистка срывала холм под старой стенкой на его вершине, и стенка висела без стоянки (сцена 56).
         PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
         BlockCoord center = target.target();
-        // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
-        // его берёт следующий обмер, когда соседние ряды срезаны.
         List<PlotLeveling.Box> cuts = leveling.cutTopDown();
         List<Integer> cutPart = balancedParts(cuts, center, CUT_SLACK);
         for (int index = 0; index < cuts.size(); index++) {
@@ -729,12 +669,7 @@ public final class TicketPlans {
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
             }
         }
-        // Ряды подсыпки — тоже по частям поровну: яма низины целиком в части 1 держала её духа ~4700 тиков, пока
-        // остальные части были готовы к ~3600 (сцена 56). Своей срезки части хватает на свою долю ям.
         List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), center, quarter) : leveling.fill();
-        // Ямы подсыпки — сперва от того, что в них стоит (ствол дерева в низине, кусты): высота ног их не видит, а
-        // подсыпка в занятую клетку не встаёт — яма с деревом оставалась, выравнивание шло по кругу (сцена 56).
-        // Воду и пустые клетки расчистка пропускает быстро.
         for (PlotLeveling.Box box : fills) {
             steps.add(new FallbackNode(List.of(
                     new ScriptCall(CLEAR_AREA, boxParams(box, Map.of())),
@@ -742,8 +677,6 @@ public final class TicketPlans {
         }
         int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
         if (volume > 0 && !PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
-            // Булыжник на подсыпку — из запаса поселения (сундуки, свой инвентарь): духу четверти его никто не нёс, и
-            // подсыпка падала «не хватило cobblestone: нужно 2, есть 0» (сцена 56).
             steps.add(new ScriptCall(
                     ACQUIRE,
                     Map.of(ITEM, MINECRAFT + leveling.block(), COUNT, Math.min(volume, CatalogLimits.COUNT_MAX))));
@@ -752,10 +685,6 @@ public final class TicketPlans {
         BlockCoord source = dirtSource(center, single ? quarter : 1);
         for (PlotLeveling.Box layer : layers(fills)) {
             if (dirt) {
-                // Земля под слой (INC-68): своя со срезки лежит в инвентаре (acquire берёт «до N»), недостающая —
-                // добычей за оградой, а не из земли участка; сундука до выравнивания нет. Нехватка — не провал
-                // задания: слой досыплется следующей попыткой выравнивания.
-                // Хватает в инвентаре — добор не ходит за ограду (acquire идёт к месту добычи только при нехватке).
                 steps.add(new FallbackNode(List.of(
                         new ScriptCall(
                                 "acquire_at",
@@ -776,8 +705,6 @@ public final class TicketPlans {
                     new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
-        // Пустоты под участком (до VOID_DEPTH под уровнем) — засыпка без провала четверти: закрытый со всех сторон
-        // карман духу не достать, это не повод валить выравнивание (INC-67).
         List<PlotLeveling.Box> voids = leveling.voids().stream()
                 .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
@@ -786,14 +713,10 @@ public final class TicketPlans {
                     new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
-        // Расчистка своей части (растения, деревья, старые постройки) — после срезки и подсыпки: до них она срезала
-        // заодно холм своей части, доли срезки по объёму теряли смысл, и части 1–3 шли по 2000+ тиков (сцена 56).
         steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         return withLeftovers(new SequenceNode(steps), target);
     }
 
-    // Подсыпка — слоями снизу вверх по всей яме, а не рядами на всю глубину (INC-66): засыпав свой ряд, дух поднимался
-    // на край, а соседний ряд оставался траншеей, дна которой с края не достать. В слое ряды с одинаковым x сливаются.
     static List<PlotLeveling.Box> layers(List<PlotLeveling.Box> fills) {
         List<PlotLeveling.Box> out = new ArrayList<>();
         int bottom = fills.stream().mapToInt(PlotLeveling.Box::y1).min().orElse(0);
@@ -824,7 +747,6 @@ public final class TicketPlans {
         return out;
     }
 
-    // Место добычи земли для подсыпки четверти — за оградой с её стороны, чтобы не копать участок.
     static BlockCoord dirtSource(BlockCoord center, int part) {
         int reach = SettlementLayout.LEVEL_HALF + DIRT_SOURCE_GAP;
         int dx = ((part - 1) % CLEAR_GRID - 1) * reach;
@@ -832,14 +754,10 @@ public final class TicketPlans {
         return new BlockCoord(center.x() + dx, center.y(), center.z() + (dx == 0 && dz == 0 ? -reach : dz));
     }
 
-    // Часть ящика выравнивания по его началу — те же части 3×3, что у расчистки (1 — северо-запад … 9 — юго-восток).
     static int partOf(PlotLeveling.Box box, BlockCoord center) {
         return 1 + band(box.x1() - center.x()) + CLEAR_GRID * band(box.z1() - center.z());
     }
 
-    // Часть каждого ящика срезки — по объёму поровну (с допуском CUT_SLACK к ближайшей части): холм в середине
-    // участка целиком доставался части 5, её дух срезал его ~4700 тиков, пока двое других ждали (сцена 56).
-    // Порядок «сверху вниз» сохраняется внутри каждой части.
     private static List<PlotLeveling.Box> ofPart(List<PlotLeveling.Box> boxes, BlockCoord center, int part) {
         List<Integer> parts = balancedParts(boxes, center, FILL_SLACK);
         List<PlotLeveling.Box> mine = new ArrayList<>();
@@ -910,8 +828,6 @@ public final class TicketPlans {
                         target.target().z() + dz2));
     }
 
-    // Схема дома — по уровню из таблицы этапов (board/stages.json «schemes»): уровень 1 — хижина из дерева рядом,
-    // уровень 2 — каменный дом (решение 54b п.1); уровня без строки — каменный дом, как раньше.
     private static TaskNode buildHouse(int level, TicketTarget target) {
         if (target.schemeFile() != null) {
             return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
@@ -920,7 +836,6 @@ public final class TicketPlans {
         if (staged.isEmpty()) {
             return sequence(gotoTarget(target), schematic(DEFAULT_SCHEME, target));
         }
-        // Дом из таблицы этапов — в центре участка (SettlementLayout): точка задания — якорь участка.
         return sequence(
                 gotoTarget(target),
                 schematic(staged.orElseThrow(), SettlementLayout.houseOrigin(target.target()), target));
@@ -936,8 +851,6 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Задание ремонта инструмента без предмета: скрипт repair_tool "
                     + "чинит конкретный изношенный предмет, без имени чинить нечего");
         }
-        // Наковальню скрипт ищет вокруг себя: сначала к дому, где она стоит (гейт RepairWatch), иначе дух в шахте
-        // или в поле проваливает ремонт «нет наковальни поблизости» (INC-24).
         return sequence(gotoTarget(target), new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem())));
     }
 
@@ -1076,8 +989,6 @@ public final class TicketPlans {
         };
     }
 
-    // Оставленная руда: дух встаёт там, откуда её видел строитель шахты, и добывает её жилу нужной киркой
-    // (кирку с Удачей или Шёлковым касанием выбирает ломка — MineOres).
     private static TaskNode mineLeftOre(TicketTarget target) {
         String ore = target.supplyItem();
         OreKind found = ore == null ? OreKind.ANY : OreKind.ofBlock(ore).orElse(OreKind.ANY);
@@ -1101,10 +1012,6 @@ public final class TicketPlans {
             return new ScriptCall(
                     "deliver", Map.of(ITEM, target.supplyItem(), COUNT, count, "to", "spirit:" + target.transferTo()));
         }
-        // Со склада: сначала к месту задания (сундуки у дома), затем withdraw рядом — получатель брал «ближайший»
-        // вокруг себя и падал «рядом нет допустимого контейнера» (приёмка «джунгли» 24.10). Сундук успели опустошить
-        // (добыча берёт из сундука сама) — передача не валится: провал ставил кейс передач духа на паузу, и все его
-        // передачи ждали; крафт закажет недостающее заново по сундуку.
         return sequence(
                 gotoTarget(target),
                 new FallbackNode(List.of(

@@ -12,17 +12,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-/**
- * Участки сети: габарит, где отрезки построены одним обходом мира, и когда их строить заново. Участок строится один
- * раз; заново — только если потерял отрезок (проход заложили) или маршрут через него не нашёлся, и не чаще
- * {@link #REBUILD_TICKS}. Площадка стройки (QUESTIONS-3, ответ 2) — участок с началом сети во входе, как будто дверь
- * уже стоит; пересчитывается целиком не чаще {@link #REBUILD_TICKS}, если с прошлого раза поставлен блок.
- */
 public final class NetworkAreas {
-    // 3 с: при демо-темпе стройки 10 блоков/с это ~30 блоков, дух за это время проходит ~12 клеток — сеть отстаёт
-    // не больше чем на отрезок, а отрезок, который не прошёлся, пересчитывается и без этого.
     public static final long REBUILD_TICKS = 60;
-    // Сторона участка: поселение 160×160 (решение владельца 19.10) обходится участками не больше четверти площади.
     public static final int MAX_SIDE = 96;
     static final int MARGIN_XZ = 16;
     static final int MARGIN_Y = 10;
@@ -32,7 +23,6 @@ public final class NetworkAreas {
     private final Map<Integer, Integer> owner = new HashMap<>();
     private int nextId;
 
-    // Участки, которые нужно построить сейчас, чтобы маршрут от ног к цели шёл по сети; пусто — строить нечего.
     public List<Integer> prepare(BlockCoord feet, BlockCoord target, long now) {
         Objects.requireNonNull(feet, "Ноги духа не могут быть null: по ним выбирается участок сети");
         Objects.requireNonNull(target, "Цель не может быть null: по ней выбирается участок сети");
@@ -97,7 +87,6 @@ public final class NetworkAreas {
         return require(id).box;
     }
 
-    // Начала сети участка: входы его площадки и входы площадок стройки внутри него (двери, которых ещё нет).
     public List<BlockCoord> entrances(int id) {
         Area area = require(id);
         List<BlockCoord> entrances = new ArrayList<>(area.entrances);
@@ -117,7 +106,6 @@ public final class NetworkAreas {
         return Set.copyOf(require(id).segments);
     }
 
-    // Отрезки заменённых участков — к удалению из сети; новые записаны за участком.
     public Set<Integer> rebuilt(int id, Set<Integer> segments, long now) {
         Area area = require(id);
         Set<Integer> old = new TreeSet<>(area.segments);
@@ -132,7 +120,6 @@ public final class NetworkAreas {
         return old;
     }
 
-    // Участки, целиком поглощённые новым; их отрезки — к удалению.
     public Set<Integer> takeSwallowed() {
         Set<Integer> dropped = new TreeSet<>();
         for (Area area : List.copyOf(areas.values())) {

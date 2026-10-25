@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Сторожа «чем выше уровень, тем богаче» (решения владельца 19.10): высота потолка
- * жилья, размер окна, доля декора — по уровню постройки; достижимость мебели и этажей пешком от входа и парадная
- * лестница шириной 2. Пороги — по уровням 1..4, выше 4 — как у 4; постройка без уровня (0) мерится как уровень 1.
- */
 final class SchematicLevelRules {
     private static final int[] CEILING = {3, 4, 5, 6};
     private static final int[] WINDOW = {1, 2, 4, 6};

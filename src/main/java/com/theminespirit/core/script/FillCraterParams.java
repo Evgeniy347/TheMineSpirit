@@ -4,12 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Параметры скрипта fill_crater: воронку задают её id (UUID) либо позицией «x,y,z» рядом с ней.
- *
- * <p>Один обязательный параметр {@code crater} несёт одно из двух: по UUID воронка находится точно,
- * по координатам — ближайшая накрывающая точку.
- */
 public sealed interface FillCraterParams {
     record ById(UUID id) implements FillCraterParams {
         public ById {

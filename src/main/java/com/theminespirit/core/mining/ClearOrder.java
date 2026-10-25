@@ -7,10 +7,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Порядок расчистки сверху вниз: в колонке ящика ломается верхний ещё стоящий блок. Снизу вверх срезка холма
- * оставляла висеть его верх — старую стенку на вершине, на 4 выше ног, — без стоянки в досягаемости.
- */
 public final class ClearOrder {
     private ClearOrder() {}
 

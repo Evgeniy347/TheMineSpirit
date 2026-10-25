@@ -13,11 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Парадная лестница шириной 2 (владелец 20.10): к ней ведёт дорожка шириной 2 от двойного входа, без сужений до одной
- * клетки и без прыжков. Подход ищется по низкой стороне нижней ступеньки; ширина проверяется парой клеток, которые
- * шагают вместе по тому же обходу, что и {@link SchematicWalk}.
- */
 final class SchematicWideApproach {
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final int REQUIRED_WIDTH = 2;
@@ -136,7 +131,6 @@ final class SchematicWideApproach {
         return pairs;
     }
 
-    // Клетки ног на ступенях одного марша от нижней ступеньки вверх по facing; одна ступенька — не лестница.
     private static Set<BlockCoord> run(Map<BlockCoord, Schematic.Entry> stairs, BlockCoord riser, Facing up) {
         Set<BlockCoord> run = new LinkedHashSet<>();
         BlockCoord current = riser;

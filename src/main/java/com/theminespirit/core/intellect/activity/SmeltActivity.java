@@ -86,8 +86,6 @@ public final class SmeltActivity implements Activity {
                     Optional.empty());
         }
         if (charcoalDeficit >= cookDeficit) {
-            // Древесный уголь блоком не добыть (INC-34): брёвна дух берёт из сундука или рубит (acquire), затем
-            // пережигает их в печи — фабрика задач собирает это парой шагов по полю log.
             return new ActivityIntent(
                     id(),
                     Optional.of("smelt"),
@@ -125,7 +123,6 @@ public final class SmeltActivity implements Activity {
         return stock.hasLogs() ? deficit(stock.charcoal(), rules.charcoalTarget()) : 0;
     }
 
-    // Готовка — только когда сырья хватает на партию: иначе плавка падает «не хватает 3 из 4» (INC-31).
     private static Map<String, Integer> enoughRaw(ProcessingStock stock, ProcessingRules rules) {
         Map<String, Integer> enough = new HashMap<>();
         stock.rawFoods().forEach((item, count) -> {

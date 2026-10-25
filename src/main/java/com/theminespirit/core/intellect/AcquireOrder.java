@@ -7,12 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Итог {@code acquire} для намерения интеллекта: намерение говорит, сколько добавить ({@code more}), а {@code acquire}
- * считает цель по инвентарю духа — без поправки на свой запас дух с 8 досками получал бы «добудь 8 досок», сразу
- * «успевал» и запас поселения не рос. Доски — из своей самой обильной породы брёвен: иначе дух с брёвнами джунглей
- * рубил бы дуб под «дубовые доски» поселения.
- */
 public record AcquireOrder(String item, int count) {
     private static final String MINECRAFT_PREFIX = "minecraft:";
     private static final String PLANKS_SUFFIX = "_planks";

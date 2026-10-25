@@ -807,7 +807,6 @@ class BoardTests {
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
                 Map.of());
-        // Уровень 2 шахты заперт этапом (SettlementStage), поэтому зависимое — неуровневое задание у шахты.
         BoardTicket levelTwo = new BoardTicket(
                 "mine_2",
                 BoardCase.LIGHTING,
@@ -842,7 +841,6 @@ class BoardTests {
     @Test
     void claimable_BuildingDependency_LedgerNoteSatisfies() {
         Board board = boardAt(0);
-        // Уровень 2 шахты заперт этапом (SettlementStage), поэтому зависимое — неуровневое задание у шахты.
         BoardTicket levelTwo = new BoardTicket(
                 "mine_2",
                 BoardCase.LIGHTING,

@@ -72,7 +72,6 @@ public record Schematic(
         this(sizeX, sizeY, sizeZ, blocks, List.of(), null);
     }
 
-    /** Повтор сегмента файла: шаг в клетках и условие остановки (число сегментов или целевой мировой y). */
     public record Repeat(int dx, int dy, int dz, Until until) {
         public Repeat {
             Objects.requireNonNull(until, "Условие повтора не может быть null: без него повтор бесконечен");
@@ -94,7 +93,6 @@ public record Schematic(
             return dy < 0;
         }
 
-        // Сколько копий сегмента нужно, чтобы низ последней достиг цели. baseMinY — низ сегмента в файле.
         public int copies(int topY, int baseMinY) {
             if (until instanceof Times times) {
                 return times.count();
@@ -105,7 +103,6 @@ public record Schematic(
             }
             long start = (long) topY + baseMinY;
             if (dy < 0 ? start <= target : start >= target) {
-                // Вход уже на глубине цели (мир GameTest у дна, y≈−60): копать нечего, уровень достигнут.
                 return 0;
             }
             long distance = Math.abs((long) target - start);
@@ -118,7 +115,6 @@ public record Schematic(
         }
     }
 
-    /** Развёрнутая схема и сдвиг, который вернул её координаты в неотрицательные. */
     public record Expanded(Schematic schematic, BlockCoord offset) {}
 
     public Expanded expand(int topY) {

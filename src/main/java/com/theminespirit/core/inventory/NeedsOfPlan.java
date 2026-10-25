@@ -60,7 +60,6 @@ public final class NeedsOfPlan {
     }
 
     private static void collectFromScript(ScriptCall call, ResourceKnowledge knowledge, List<String> needs) {
-        // Сдача остатков после шага (leftover) — не нужда: дух с такой сдачей в плане иначе не отдавал палки.
         if (ITEM_SCRIPTS.contains(call.script())
                 && !Boolean.TRUE.equals(call.params().get("leftover"))) {
             String item = text(call, ITEM_PARAM);

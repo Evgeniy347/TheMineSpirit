@@ -11,11 +11,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Разметка склада по телу схемы: стопки двойных сундуков, высота стен и таблички категорий.
- * Сундук — блок {@code *_chest}, двойной сундук — два соседних сундука, стопка — двойные сундуки
- * друг над другом. Табличка стоит над столбом справа от стопки и несёт имя категории.
- */
 public record WarehouseLayout(
         Schematic schematic, List<ChestStack> stacks, List<Sign> signs, int doubleChests, int interiorHeight) {
 

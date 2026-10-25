@@ -6,11 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Порода дерева постройки: схемы рисуются дубом, а строят из породы, которая есть у поселения (джунгли, ель…).
- * Блок {@code oak_*} схемы заменяется на тот же блок породы; камень и прочее не трогаются. Порода поселения —
- * с наибольшим запасом брёвен, при равенстве или без брёвен — дуб.
- */
 public final class WoodSpecies {
     public static final String OAK = "oak";
     public static final List<String> ALL =
@@ -29,15 +24,12 @@ public final class WoodSpecies {
         return species;
     }
 
-    // Порода деревянного предмета по префиксу имени (jungle_fence → jungle); не деревянный — пусто.
     public static Optional<String> speciesOf(String item) {
         Objects.requireNonNull(item, "Предмет не может быть null: породу берут из имени");
         String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
         return ALL.stream().filter(species -> name.startsWith(species + "_")).findFirst();
     }
 
-    // Тот же деревянный блок другой породы (jungle_log и oak_log, jungle_fence и oak_fence): стройка такой не сносит —
-    // поставленный поселением столб при смене породы считался «чужим» и ломался (INC-58).
     public static boolean sameRole(String first, String second) {
         Objects.requireNonNull(first, "Блок не может быть null: роль сравнивают по имени");
         Objects.requireNonNull(second, "Блок не может быть null: роль сравнивают по имени");
@@ -98,8 +90,6 @@ public final class WoodSpecies {
         return best;
     }
 
-    // Брёвен рядом нет (вырублены за долгую игру или не попали в выборку) — порода по биому: дуб по умолчанию
-    // ставил ограду из дуба в джунглях, gather:oak_log не добывался (INC-37, живой прогон 24.10).
     public static String ofBiome(String biome) {
         Objects.requireNonNull(biome, "Биом не может быть null: по нему выбирается порода");
         String path = biome.substring(biome.indexOf(':') + 1);
@@ -132,9 +122,6 @@ public final class WoodSpecies {
         return ALL.stream().anyMatch(species -> logs(stock, species) > 0);
     }
 
-    // Вариант слота рецепта по запасу и породе: сначала тот, которого в запасе больше всего, затем вариант породы
-    // поселения (вместо {@code oak_*}). Пусто — предпочтения нет, выбирает общий порядок (палки и сундук в джунглях
-    // брали дубовые доски, которых не добыть).
     public static Optional<String> prefer(List<String> alternatives, Map<String, Integer> stock, String species) {
         Objects.requireNonNull(alternatives, "Варианты не могут быть null: выбирать не из чего");
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");

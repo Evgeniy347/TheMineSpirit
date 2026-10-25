@@ -22,7 +22,6 @@ class InventorySpaceTests {
     @Test
     void holds_FullInventory_RejectsAdditionalStack() {
 
-        // 36 слотов: заполняем все 36 одинаковыми полными стопками
         List<Stack> full = new ArrayList<>();
         for (int i = 0; i < 36; i++) {
             full.add(new Stack("cobblestone", 0, 64, 64));

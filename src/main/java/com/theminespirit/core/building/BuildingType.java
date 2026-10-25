@@ -4,10 +4,6 @@ import java.util.Locale;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Тип строения поселения (жильё, склад, ферма, оборона, инфраструктура…). Идентификатор в json — строчными буквами
- * ({@code housing}, {@code storage}, ...): по типу библиотека пресетов ищет готовые постройки для поселения.
- */
 public enum BuildingType {
     HOUSING("жильё"),
     STORAGE("склад"),

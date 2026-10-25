@@ -13,8 +13,6 @@ import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
 
-// Один тест считает чтения файлов тактики общим счётчиком TacticsResources: параллельный класс, читающий те же
-// файлы, сбил бы счёт. Класс идёт один, без соседей.
 @Isolated
 class TacticsScaleTests {
     private static final TacticsConfig CONFIG = TacticsConfig.loadDefault();

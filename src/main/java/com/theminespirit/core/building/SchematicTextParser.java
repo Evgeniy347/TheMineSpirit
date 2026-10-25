@@ -15,13 +15,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Разбор текстового файла постройки (формат слоёв с легендой). Формат — строгое подмножество YAML:
- * ключи верхнего уровня, легенда {@code 'c': блок[свойства] "текст"}, исключения {@code - rule/reason} и слои
- * {@code - yN: |} со строками, отступ которых на 4 больше отступа дефиса. Первая строка слоя — фронт (z=0),
- * символы слева направо — +X. {@code .} — клетка обязана быть воздухом, пробел — клетку не трогать.
- * Каждая ошибка называет файл, строку и что исправить.
- */
 public final class SchematicTextParser {
     public static final char AIR = '.';
     public static final char ANY = ' ';
