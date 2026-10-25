@@ -44,6 +44,8 @@ public final class TicketPlans {
     private static final int DIRT_SOURCE_GAP = 4;
     // Допуск неравенства объёма срезки между частями, блоков: в его пределах ящик остаётся в своей части.
     private static final int CUT_SLACK = 12;
+    // Допуск для рядов подсыпки шире: яма — одно место, дальний дух ходил к ней через участок (подсыпка 2200 тиков).
+    private static final int FILL_SLACK = 40;
     // Запас пола и стенок спуска, который строитель шахты берёт из сундука (блоков каждого вида).
     private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
@@ -411,7 +413,12 @@ public final class TicketPlans {
         int part = target.count();
         String scheme =
                 part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(FENCE_SCHEME, part, FENCE_PARTS) : FENCE_SCHEME;
-        return sequence(gotoTarget(target), schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
+        // Подход к якорю — без провала: при параллельных шагах на якоре уже стоит хижина, и «тупик» у её стены валил
+        // кусок ограды; к своим клеткам стройка подходит сама (сцена 56).
+        return sequence(
+                new FallbackNode(
+                        List.of(gotoTarget(target), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
+                schematic(scheme, SettlementLayout.fenceOrigin(target.target()), target));
     }
 
     // Станции поселения (верстак, сундуки, печь) дух ставит вокруг себя: крафт — на рабочем дворе участка, вне
@@ -705,7 +712,7 @@ public final class TicketPlans {
         // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
         // его берёт следующий обмер, когда соседние ряды срезаны.
         List<PlotLeveling.Box> cuts = leveling.cutTopDown();
-        List<Integer> cutPart = balancedParts(cuts, center);
+        List<Integer> cutPart = balancedParts(cuts, center, CUT_SLACK);
         for (int index = 0; index < cuts.size(); index++) {
             PlotLeveling.Box box = cuts.get(index);
             if (!single || cutPart.get(index) == quarter) {
@@ -714,7 +721,6 @@ public final class TicketPlans {
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
             }
         }
-        steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         // Ряды подсыпки — тоже по частям поровну: яма низины целиком в части 1 держала её духа ~4700 тиков, пока
         // остальные части были готовы к ~3600 (сцена 56). Своей срезки части хватает на свою долю ям.
         List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), center, quarter) : leveling.fill();
@@ -772,6 +778,9 @@ public final class TicketPlans {
                     new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
+        // Расчистка своей части (растения, деревья, старые постройки) — после срезки и подсыпки: до них она срезала
+        // заодно холм своей части, доли срезки по объёму теряли смысл, и части 1–3 шли по 2000+ тиков (сцена 56).
+        steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         return withLeftovers(new SequenceNode(steps), target);
     }
 
@@ -824,7 +833,7 @@ public final class TicketPlans {
     // участка целиком доставался части 5, её дух срезал его ~4700 тиков, пока двое других ждали (сцена 56).
     // Порядок «сверху вниз» сохраняется внутри каждой части.
     private static List<PlotLeveling.Box> ofPart(List<PlotLeveling.Box> boxes, BlockCoord center, int part) {
-        List<Integer> parts = balancedParts(boxes, center);
+        List<Integer> parts = balancedParts(boxes, center, FILL_SLACK);
         List<PlotLeveling.Box> mine = new ArrayList<>();
         for (int index = 0; index < boxes.size(); index++) {
             if (parts.get(index) == part) {
@@ -834,7 +843,7 @@ public final class TicketPlans {
         return mine;
     }
 
-    static List<Integer> balancedParts(List<PlotLeveling.Box> cuts, BlockCoord center) {
+    static List<Integer> balancedParts(List<PlotLeveling.Box> cuts, BlockCoord center, int slack) {
         int[] load = new int[CLEAR_PARTS + 1];
         List<Integer> parts = new ArrayList<>(cuts.size());
         for (PlotLeveling.Box box : cuts) {
@@ -848,7 +857,7 @@ public final class TicketPlans {
             for (int part = 1; part <= CLEAR_PARTS; part++) {
                 int distance = Math.abs((part - 1) % CLEAR_GRID - (home - 1) % CLEAR_GRID)
                         + Math.abs((part - 1) / CLEAR_GRID - (home - 1) / CLEAR_GRID);
-                if (load[part] <= least + CUT_SLACK && distance < bestDistance) {
+                if (load[part] <= least + slack && distance < bestDistance) {
                     chosen = part;
                     bestDistance = distance;
                 }

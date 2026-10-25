@@ -39,10 +39,12 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.neoforge.OwnWood;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -158,6 +160,22 @@ public final class FirstStepsRunner {
     }
 
     // Шаг открывается, когда его материалы в запасе; нехватка — добыча. Возвращает факелы шага сверх запаса.
+    // Деревянное стройки (забор, ступени, дверь, доски) строители крафтят сами из брёвен поселения: шаг не ждёт его
+    // в запасе, когда брёвен хватает (сцена 56: ограда ждала забор ×82, куски шли по одному через передачи).
+    private static void dropOwnWood(Map<String, Integer> need, StockView stock, String wood) {
+        int cost = 0;
+        List<String> items = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : need.entrySet()) {
+            if (wood.equals(OwnWood.species(entry.getKey()))) {
+                cost += OwnWood.plankCost(entry.getKey(), entry.getValue());
+                items.add(entry.getKey());
+            }
+        }
+        if (!items.isEmpty() && OwnWood.planksIn(stock.available(), wood) >= cost) {
+            items.forEach(need::remove);
+        }
+    }
+
     private record StepContext(
             ServerLevel level,
             BoardService service,
@@ -209,6 +227,7 @@ public final class FirstStepsRunner {
             // Повтор проваленной стройки просит только непоставленное: после провала ограды на 91/94 доска снова
             // заказывала забор ×72 на всю схему — 1800 тиков лишней добычи (приёмка «джунгли» 24.10).
             minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
+            dropOwnWood(need, stock, wood);
         }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         // Факелы шага (ограда — на столбах углов и калитки) — сверх обычного запаса факелов: иначе шаг ждал бы их
@@ -256,7 +275,9 @@ public final class FirstStepsRunner {
             if (caseValue == BoardCase.BUILD_FENCE) {
                 // Ограда — кусками периметра (решение главного агента 24.10): у куска своя бронь — материалы его
                 // клеток без поставленного, строители не делят один материал (проба fence:2 давала «141 из 94»).
-                reserve = partNeed(level, source, partTarget, wood);
+                // Деревянное, которое строители крафтят сами (снято с нужд шага), куску не бронируется.
+                reserve = new HashMap<>(partNeed(level, source, partTarget, wood));
+                reserve.keySet().retainAll(need.keySet());
             }
             BoardOutcome submitted = service.submit(
                     new BoardTicket(

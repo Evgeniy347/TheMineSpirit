@@ -1,13 +1,19 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.SettlementLayout;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.WalkCarefulParams;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.movement.TravelCheck;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -30,13 +36,39 @@ public final class GotoScript implements ScriptInstance {
     private GotoScript(SpiritEntity spirit, GotoParams params, PathMode mode) {
         this.spirit = spirit;
         this.mode = mode;
-        this.target = surface(spirit.level(), new BlockPos(params.x(), params.y(), params.z()));
+        this.target =
+                surface(spirit.level(), outsideHouse(spirit.level(), new BlockPos(params.x(), params.y(), params.z())));
         this.approach = new Approach(spirit);
         this.approach.begin(target, ARRIVAL_TOLERANCE, mode);
     }
 
     // Точка в толще земли (якорь участка под ещё не срезанным холмом) — это поверхность её колонки: дух стоял на
     // холме над якорем и «застревал в тупике» в 4 блоках от цели (сцена 56). Свободная точка не меняется.
+    // Цель в стоящей хижине участка (якорь и дом духа — в её габарите) — рабочий двор: двери дух не открывает, и все
+    // задания «к якорю» после постройки хижины падали «тупиком» у её стены (сцена 56).
+    private static BlockPos outsideHouse(Level level, BlockPos goal) {
+        if (!(level instanceof ServerLevel server)) {
+            return goal;
+        }
+        Optional<SettlementPlot> plot = SettlementPlotStore.get(server).plot();
+        if (plot.isEmpty()) {
+            return goal;
+        }
+        BlockCoord anchor = plot.orElseThrow().anchor();
+        boolean inHut = SettlementLayout.houseColumn(anchor, goal.getX(), goal.getZ())
+                && goal.getY() >= anchor.y() - 1
+                && goal.getY() <= anchor.y() + SettlementLayout.BUILDING_HEIGHT;
+        BlockPos floor = new BlockPos(goal.getX(), anchor.y() - 1, goal.getZ());
+        BlockPos wallFeet = new BlockPos(goal.getX(), anchor.y(), goal.getZ());
+        boolean built = !level.getBlockState(floor).is(BlockTags.DIRT)
+                || !level.getBlockState(wallFeet).isAir();
+        if (!inHut || !built) {
+            return goal;
+        }
+        BlockCoord yard = SettlementLayout.workYard(anchor);
+        return new BlockPos(yard.x(), yard.y(), yard.z());
+    }
+
     private static Vec3 surface(Level level, BlockPos goal) {
         if (level.getBlockState(goal).isAir()
                 && level.getBlockState(goal.below()).isAir()) {

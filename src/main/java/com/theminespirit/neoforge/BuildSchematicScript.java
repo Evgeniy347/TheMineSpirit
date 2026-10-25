@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.BuildPlanCursor;
@@ -28,6 +29,8 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +61,8 @@ import org.slf4j.Logger;
  * Конец — сверка с миром: SUCCEEDED только когда каждая клетка совпала со схемой.
  */
 final class BuildSchematicScript implements ScriptInstance {
+    // Своих крафтов деревянного за стройку: каждый — на всю нехватку предмета.
+    private static final int MAX_OWN_CRAFTS = 8;
     private static final int MAX_FINISH_WAITS = 200;
     // Шаг к середине клетки (тело шириной 0,6 тогда не выходит за её края): дольше — стоянка не годится.
     private static final int MAX_CENTRING_TICKS = 20;
@@ -104,6 +109,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private String failureReason;
     private String lastRefusal = "";
     private TaskRunner supplyRunner;
+    private int crafts;
     private int trips;
     private int standsChosen;
     private int roofStands;
@@ -791,13 +797,40 @@ final class BuildSchematicScript implements ScriptInstance {
                 return startSupply(steps);
             }
         }
+        int needed = countMissing(blockId);
+        if (crafts < MAX_OWN_CRAFTS && !OwnWood.species(blockId).isEmpty()) {
+            // В сундуках нет, а брёвна свои есть — деревянное (забор, ступени, дверь, доски) дух крафтит сам, как
+            // игрок:
+            // кусок ограды ждал передачу забора от соседа, куски шли по одному (сцена 56).
+            int held = BlockItems.countIn(spirit.getInventory(), blockId);
+            int count = Math.min(CatalogLimits.COUNT_MAX, held + Math.max(needed - held, 1));
+            if (OwnWood.planksHeld(spirit.getInventory(), OwnWood.species(blockId))
+                    >= OwnWood.plankCost(blockId, count - held)) {
+                crafts++;
+                LOGGER.info("Стройка {}: крафт своего {} ×{} из брёвен духа", buildKey, blockId, count - held);
+                return startSupply(ownCraft(blockId, count));
+            }
+        }
         failed++;
         tally.failed();
         int have = BlockItems.countIn(spirit.getInventory(), blockId);
-        int needed = countMissing(blockId);
         tally.supplies(placed + have, Math.max(needed - have, 0));
         return fail("не хватило материала '" + blockId + "': поставлено " + placed + " из "
                 + site.primaries().size() + "; нужно " + needed + ", есть " + have);
+    }
+
+    // Крафт своего — на рабочем дворе участка, если он есть: у стройки дух ставил верстак себе под ноги, внутри
+    // хижины, и верстаки загораживали вход в неё (сцена 56).
+    private List<ScriptCall> ownCraft(String blockId, int count) {
+        List<ScriptCall> steps = new ArrayList<>();
+        if (spirit.level() instanceof ServerLevel server) {
+            SettlementPlotStore.get(server).plot().ifPresent(plot -> {
+                BlockCoord yard = SettlementLayout.workYard(plot.anchor());
+                steps.add(new ScriptCall("goto", Map.of("x", yard.x(), "y", yard.y(), "z", yard.z())));
+            });
+        }
+        steps.add(new ScriptCall("acquire", Map.of("item", blockId, "count", count)));
+        return steps;
     }
 
     private ScriptStatus startSupply(List<ScriptCall> steps) {

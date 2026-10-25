@@ -25,6 +25,7 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.social.TransferOrder;
 import com.theminespirit.core.social.TransferPlanner;
 import com.theminespirit.core.social.TransferSource;
+import com.theminespirit.neoforge.OwnWood;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;
@@ -43,10 +44,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import org.slf4j.Logger;
 
@@ -55,8 +54,6 @@ public final class TransferWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int CHEST_RADIUS = 16;
     private static final int CHEST_PROBES = 4;
-    private static final String PLANKS = "_planks";
-    private static final int PLANKS_PER_LOG = 4;
     // Факелы освещения — тоже материал стройки: без передачи дух шёл ставить их пустым («нет материала torch»).
     private static final Set<BoardCase> BUILDS =
             Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.REPAIR_BUILDING);
@@ -202,6 +199,18 @@ public final class TransferWatch {
         } catch (RuntimeException failure) {
             LOGGER.warn("Материалы стройки {} для передачи не посчитаны: {}", build.id(), failure.getMessage());
             return false;
+        }
+        Map<String, Integer> wood = new HashMap<>();
+        need.forEach((item, count) -> {
+            if (!OwnWood.species(item).isEmpty() || OwnWood.stick(item)) {
+                wood.put(item, count);
+            }
+        });
+        if (!wood.isEmpty() && ownWoodCovers(builder, wood)) {
+            // Деревянное стройки строитель крафтит сам из своих брёвен (заход стройки за материалом): передача
+            // забора куску ограды ждала, пока сосед достроит свой кусок, куски шли по одному (сцена 56).
+            need = new HashMap<>(need);
+            need.keySet().removeAll(wood.keySet());
         }
         List<Ingredient> materials = new ArrayList<>();
         need.forEach((item, count) -> materials.add(new Ingredient(ItemIds.normalize(item), count)));
@@ -494,34 +503,21 @@ public final class TransferWatch {
         return false;
     }
 
-    // Хватает ли своих досок и брёвен той же породы на доски и палки крафта (палка — полдоски, бревно — 4 доски).
+    // Хватает ли своих досок и брёвен на деревянное из need (доски, палки, забор…): его дух крафтит сам.
     private static boolean ownWoodCovers(SpiritEntity crafter, Map<String, Integer> need) {
-        int sticks = need.getOrDefault("minecraft:stick", 0) + need.getOrDefault("stick", 0);
-        Optional<String> planksId =
-                need.keySet().stream().filter(id -> id.endsWith(PLANKS)).findFirst();
-        if (planksId.isEmpty() && sticks == 0) {
+        String species = need.keySet().stream()
+                .map(OwnWood::species)
+                .filter(found -> !found.isEmpty())
+                .findFirst()
+                .orElse("");
+        if (species.isEmpty()
+                || !need.keySet().stream().allMatch(id -> OwnWood.stick(id) || species.equals(OwnWood.species(id)))) {
             return false;
         }
-        boolean onlyWood = need.keySet().stream().allMatch(id -> id.endsWith(PLANKS) || id.endsWith("stick"));
-        if (!onlyWood) {
-            return false;
-        }
-        String bare = planksId.orElse("oak_planks");
-        String planks = bare.substring(bare.indexOf(':') + 1);
-        String log = planks.substring(0, planks.length() - PLANKS.length()) + "_log";
-        int wanted = need.getOrDefault(planksId.orElse(""), 0) + (sticks + 1) / 2;
-        int have = 0;
-        Container inventory = crafter.getInventory();
-        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-            ItemStack stack = inventory.getItem(slot);
-            String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
-            if (id.equals(planks)) {
-                have += stack.getCount();
-            } else if (id.equals(log)) {
-                have += stack.getCount() * PLANKS_PER_LOG;
-            }
-        }
-        return have >= wanted;
+        int cost = need.entrySet().stream()
+                .mapToInt(entry -> OwnWood.plankCost(entry.getKey(), entry.getValue()))
+                .sum();
+        return OwnWood.planksHeld(crafter.getInventory(), species) >= cost;
     }
 
     private static boolean busy(SpiritEntity spirit) {
