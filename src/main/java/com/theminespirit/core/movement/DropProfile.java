@@ -2,6 +2,7 @@ package com.theminespirit.core.movement;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class DropProfile {
     public static final int MAX_SAFE_DROP = 2;
@@ -18,5 +19,19 @@ public final class DropProfile {
             }
         }
         return false;
+    }
+
+    public static @Nullable String carefulRefusal(boolean hasPath, boolean reaches, List<Integer> heightsFromNext) {
+        if (!hasPath) {
+            return "пути к цели нет: осторожный шаг не строит обход через обрыв";
+        }
+        if (!reaches) {
+            return "путь не доходит до цели: она за обрывом глубже " + MAX_SAFE_DROP + " блоков или за преградой";
+        }
+        List<Integer> window = heightsFromNext.subList(0, Math.min(heightsFromNext.size(), LOOKAHEAD_CELLS + 1));
+        if (blocksCarefulStep(window)) {
+            return "на пути обрыв глубже " + MAX_SAFE_DROP + " блоков в ближайших " + LOOKAHEAD_CELLS + " клетках";
+        }
+        return null;
     }
 }

@@ -1,7 +1,11 @@
 package com.theminespirit.core.movement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -57,5 +61,54 @@ class DropProfileTests {
                 DropProfile.LOOKAHEAD_CELLS,
                 "Заглядывание осторожного шага — 8 клеток пути: короче — поздняя остановка перед обрывом, "
                         + "длиннее — лишние чтения столбцов при каждом перестроении пути");
+    }
+
+    @Test
+    void carefulRefusal_FlatOrTwoBlockDrop_Passes() {
+        assertNull(
+                DropProfile.carefulRefusal(true, true, List.of(5, 5, 5, 5)),
+                "Ровный путь осторожный шаг обязан пропускать, иначе дух стоит на ровном месте");
+        assertNull(
+                DropProfile.carefulRefusal(true, true, List.of(5, 5, 3, 3)),
+                "Спуск на 2 блока (MAX_SAFE_DROP) осторожный шаг обязан пропускать");
+    }
+
+    @Test
+    void carefulRefusal_ThreeBlockDrop_RefusesWithDropReason() {
+        String reason = DropProfile.carefulRefusal(true, true, List.of(5, 5, 2, 2));
+        assertTrue(
+                reason != null && reason.contains("обрыв"),
+                "Спуск на 3 блока обязан отказать с причиной про обрыв, иначе дух срывается вниз: " + reason);
+    }
+
+    @Test
+    void carefulRefusal_PathMissingOrNotReaching_Refuses() {
+        assertTrue(
+                String.valueOf(DropProfile.carefulRefusal(true, false, List.of(5, 5, 5, 5)))
+                        .contains("не доходит"),
+                "Путь, не доходящий до цели, осторожный шаг обязан отвергать: цель за преградой или обрывом");
+        assertTrue(
+                String.valueOf(DropProfile.carefulRefusal(false, false, List.of()))
+                        .contains("пути к цели нет"),
+                "Отсутствие пути осторожный шаг обязан отвергать");
+    }
+
+    @Test
+    void carefulRefusal_DropBeyondLookahead_PassesUntilRepath() {
+        List<Integer> heights = new ArrayList<>(Collections.nCopies(DropProfile.LOOKAHEAD_CELLS + 3, 9));
+        heights.set(heights.size() - 1, 4);
+        assertNull(
+                DropProfile.carefulRefusal(true, true, heights),
+                "Обрыв дальше " + DropProfile.LOOKAHEAD_CELLS + " клеток осторожный шаг пока не проверяет: "
+                        + "он увидит его при следующем перестроении пути");
+    }
+
+    @Test
+    void carefulRefusal_DropAtLookaheadBoundary_Refuses() {
+        List<Integer> heights = new ArrayList<>(Collections.nCopies(DropProfile.LOOKAHEAD_CELLS + 1, 9));
+        heights.set(heights.size() - 1, 4);
+        assertTrue(
+                String.valueOf(DropProfile.carefulRefusal(true, true, heights)).contains("обрыв"),
+                "Обрыв ровно на границе заглядывания (клетка " + DropProfile.LOOKAHEAD_CELLS + ") обязан отказать");
     }
 }
