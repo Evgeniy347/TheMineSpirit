@@ -2,6 +2,7 @@ package com.theminespirit.core.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
@@ -80,7 +81,7 @@ public record BoardFilter(
 
     public static List<String> spiritNames(List<BoardTile> tiles) {
         Objects.requireNonNull(tiles, "tiles не может быть null: пустая доска — пустой список");
-        TreeSet<String> names = new TreeSet<>();
+        NavigableSet<String> names = new TreeSet<>();
         for (BoardTile tile : tiles) {
             String name = tile.spirit();
             if (name != null) {

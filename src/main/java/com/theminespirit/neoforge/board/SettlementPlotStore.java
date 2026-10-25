@@ -47,7 +47,7 @@ public final class SettlementPlotStore extends SavedData {
         setDirty();
     }
 
-    private static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementPlotStore store = new SettlementPlotStore();
         if (tag.contains(COLUMNS)) {
             store.plot = new SettlementPlot(

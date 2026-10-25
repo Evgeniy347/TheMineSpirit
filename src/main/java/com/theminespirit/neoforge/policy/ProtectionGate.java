@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
+import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -9,10 +10,12 @@ import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +55,21 @@ public final class ProtectionGate {
         return checkBreak(pos, state);
     }
 
+    private static boolean inPlan(ServerLevel level, BlockCoord coord) {
+        return SettlementPlotStore.get(level)
+                .plot()
+                .map(plot -> SettlementLayout.planCell(plot.anchor(), coord.x(), coord.y(), coord.z()))
+                .orElse(false);
+    }
+
+    private static boolean onSettlementPlot(ServerLevel level, BlockCoord coord) {
+        return SettlementPlotStore.get(level)
+                .plot()
+                .map(plot -> Math.abs(coord.x() - plot.anchor().x()) <= SettlementLayout.LEVEL_HALF
+                        && Math.abs(coord.z() - plot.anchor().z()) <= SettlementLayout.LEVEL_HALF)
+                .orElse(false);
+    }
+
     private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
@@ -70,16 +88,32 @@ public final class ProtectionGate {
                     blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
                     new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
-        } else if (level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
-            decision = PROTECTION.checkOwn(blockId(state), inProtectedZone);
         } else {
-            boolean placedByPlayer = level instanceof ServerLevel server
-                    && PlacedBlocksData.get(server).isMarked(pos);
-            decision = PROTECTION.check(
-                    blockId(state),
-                    neighbours(level, pos),
-                    new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+            boolean spiritMarked = false;
+            boolean placedByPlayer = false;
+            boolean onPlot = false;
+            boolean inPlan = false;
+            if (level instanceof ServerLevel server) {
+                spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
+                placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
+                onPlot = onSettlementPlot(server, coord);
+                inPlan = onPlot && inPlan(server, coord);
+            }
+            SettlementBreak.Origin origin = placedByPlayer
+                    ? SettlementBreak.Origin.PLAYER
+                    : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
+            SettlementBreak.Place place = inPlan
+                    ? SettlementBreak.Place.PLAN
+                    : onPlot ? SettlementBreak.Place.PLOT : SettlementBreak.Place.OFF_PLOT;
+            decision = switch (SettlementBreak.of(origin, place)) {
+                case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
+                case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone);
+                case DEFAULT ->
+                    PROTECTION.check(
+                            blockId(state),
+                            neighbours(level, pos),
+                            new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+            };
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;

@@ -69,7 +69,7 @@ public final class MineOreLedger extends SavedData {
         return Map.copyOf(ores);
     }
 
-    private static MineOreLedger load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static MineOreLedger load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         MineOreLedger ledger = new MineOreLedger();
         ListTag entries = tag.getList(ENTRIES, Tag.TAG_COMPOUND);
         for (int i = 0; i < entries.size(); i++) {

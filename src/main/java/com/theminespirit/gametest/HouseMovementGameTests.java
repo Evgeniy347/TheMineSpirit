@@ -13,6 +13,7 @@ import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -240,7 +241,7 @@ public final class HouseMovementGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos min = helper.absolutePos(BlockPos.ZERO);
         Map<BlockPos, Integer> distance = new HashMap<>();
-        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
         distance.put(front, 0);
         queue.add(front);
         while (!queue.isEmpty()) {

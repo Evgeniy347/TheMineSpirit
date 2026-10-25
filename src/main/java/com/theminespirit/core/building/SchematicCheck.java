@@ -40,11 +40,11 @@ public final class SchematicCheck {
         Objects.requireNonNull(document, "Постройка не может быть null: проверять нечего");
         boolean descending = document.schematic().repeat() != null
                 && document.schematic().repeat().descends();
-        document = document.expanded(AUDIT_TOP_Y);
-        SchematicDocument.Header header = document.header();
+        SchematicDocument expanded = document.expanded(AUDIT_TOP_Y);
+        SchematicDocument.Header header = expanded.header();
         if (header.type().isEmpty()) {
             List<String> stale = new ArrayList<>();
-            for (SchematicDocument.Exemption exemption : document.exemptions()) {
+            for (SchematicDocument.Exemption exemption : expanded.exemptions()) {
                 stale.add(id + "|" + exemption.rule().id() + ": исключение у постройки без type — правила к ней "
                         + "не применяются, исключение лишнее");
             }
@@ -59,11 +59,11 @@ public final class SchematicCheck {
         SchematicRules.Structure structure = new SchematicRules.Structure(
                 id,
                 header.type().orElseThrow(),
-                document.schematic(),
+                expanded.schematic(),
                 header.entrance().orElseThrow(),
                 header.level());
         Set<SchematicRules.RuleId> excused = EnumSet.noneOf(SchematicRules.RuleId.class);
-        for (SchematicDocument.Exemption exemption : document.exemptions()) {
+        for (SchematicDocument.Exemption exemption : expanded.exemptions()) {
             excused.add(exemption.rule());
         }
         Set<SchematicRules.RuleId> used = EnumSet.noneOf(SchematicRules.RuleId.class);

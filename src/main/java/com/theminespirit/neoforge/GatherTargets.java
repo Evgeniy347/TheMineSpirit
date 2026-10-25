@@ -1,15 +1,21 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.SettlementLayout;
+import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.mining.StoneSource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.levelgen.Heightmap;
+import org.jspecify.annotations.Nullable;
 
 final class GatherTargets implements HarvestTargets {
     private final Level level;
@@ -19,8 +25,20 @@ final class GatherTargets implements HarvestTargets {
     private final boolean settled;
     private int surfaceStone;
 
+    private final @Nullable BlockCoord settlement;
+    private int settlementSkipped;
+
     GatherTargets(Level level, BlockPos center, int radius, IdFilter filter, boolean settled) {
         this.level = level;
+        // Запрет добычи на участке и в пещерах под ним — только духу этого поселения (дом есть, сам у участка): сцены
+        // GameTest в стороне от чужого участка не теряют свою землю.
+        this.settlement = level instanceof ServerLevel server && settled
+                ? SettlementPlotStore.get(server)
+                        .plot()
+                        .filter(plot -> plot.contains(new BlockCoord(center.getX(), center.getY(), center.getZ())))
+                        .map(SettlementPlot::anchor)
+                        .orElse(null)
+                : null;
         this.settled = settled;
         this.search = BlockLocator.search(level, center, radius, BlockSets.resolve(filter));
         this.refusal = exactRefusal(filter);
@@ -36,6 +54,10 @@ final class GatherTargets implements HarvestTargets {
                 String id = blockId(pos);
                 if (!StoneSource.allowed(id, level.canSeeSky(pos.above()), settled)) {
                     surfaceStone++;
+                    continue;
+                }
+                if (forbiddenBySettlement(pos)) {
+                    settlementSkipped++;
                     continue;
                 }
                 if (GatherPolicy.check(id) instanceof GatherPolicy.Allowed) {
@@ -66,7 +88,21 @@ final class GatherTargets implements HarvestTargets {
 
     @Override
     public String refusalReason() {
+        if (refusal == null && settlementSkipped > 0 && search.done() && surfaceStone == 0) {
+            return "подходящие блоки только на участке поселения или в пещерах под ним (" + settlementSkipped
+                    + "): там добывать нельзя";
+        }
         return refusal == null && surfaceStone > 0 && search.done() ? StoneSource.REFUSAL : refusal;
+    }
+
+    private boolean forbiddenBySettlement(BlockPos pos) {
+        BlockCoord anchor = settlement;
+        if (anchor == null) {
+            return false;
+        }
+        int surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - 1;
+        return SettlementLayout.gatherForbidden(
+                anchor, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), surface - pos.getY());
     }
 
     private String blockId(BlockPos pos) {

@@ -14,6 +14,7 @@ import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.respawn.SpiritRespawnStore;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +78,7 @@ final class GameTestFixtures {
         sweepEntities(helper);
         // Участок поселения хранится в мире: сцена не наследует якорь и породу прошлой сцены (INC-55).
         SettlementPlotStore.get(helper.getLevel()).clear();
+        SpiritRespawnStore.get(helper.getLevel()).clear();
     }
 
     static void finish(GameTestHelper helper) {
@@ -86,6 +88,7 @@ final class GameTestFixtures {
     static void finish(GameTestHelper helper, int clearHeight) {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
+        SpiritRespawnStore.get(helper.getLevel()).clear();
         unregisterScene(helper);
     }
 
@@ -99,6 +102,7 @@ final class GameTestFixtures {
         SettlementPlotStore.get(level).clear();
         CoordinatorRegistry.clear();
         forgetChests(level);
+        SpiritRespawnStore.get(level).clear();
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         MineOreLedger ores = MineOreLedger.get(level);
         AABB box = area(helper, clearHeight).inflate(0, STAGE_BELOW, 0);

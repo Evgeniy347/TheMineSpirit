@@ -311,8 +311,12 @@ public final class SpiritScripts {
         table.put(
                 "set_combat_mode",
                 spirit -> params -> new SetCombatModeScript(spirit, SetCombatModeParams.from(params)));
-        table.put("acquire", spirit -> params -> {
-            AcquireParams parsed = AcquireParams.from(params);
+        table.put("acquire", spirit -> params -> acquire(spirit, AcquireParams.from(params)));
+        table.put("acquire_at", spirit -> params -> acquire(spirit, AcquireParams.fromPlace(params)));
+    }
+
+    private static ScriptInstance acquire(SpiritEntity spirit, AcquireParams parsed) {
+        {
             SpiritSupplies supplies = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
             int count = parsed.count();
             AcquireSupplies source = supplies;
@@ -321,14 +325,15 @@ public final class SpiritScripts {
                 source = new FreshSupplies(supplies, parsed.item());
             }
             return new AcquireScript(
-                    parsed.item(),
-                    count,
-                    acquireKnowledge(spirit, supplies.inventory()),
-                    source,
-                    catalog(),
-                    conditionCatalog(),
-                    new AcquireScript.Registries(() -> registryFor(spirit), conditions()));
-        });
+                            parsed.item(),
+                            count,
+                            acquireKnowledge(spirit, supplies.inventory()),
+                            source,
+                            catalog(),
+                            conditionCatalog(),
+                            new AcquireScript.Registries(() -> registryFor(spirit), conditions()))
+                    .gatherAt(parsed.gatherAt());
+        }
     }
 
     public static ScriptRegistry registryFor(SpiritEntity spirit) {

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -26,7 +27,7 @@ public final class MinePlan {
     public static List<MineColumn> columns(Collection<BlockCoord> floors, Collection<BlockCoord> air) {
         Objects.requireNonNull(floors, "Пол не может быть null: подземная схема без пола не задаёт, где стоять");
         Objects.requireNonNull(air, "Воздух не может быть null: проход без воздуха — пустой список");
-        Map<Long, TreeMap<Integer, BlockCoord>> floorsByColumn = new HashMap<>();
+        Map<Long, NavigableMap<Integer, BlockCoord>> floorsByColumn = new HashMap<>();
         for (BlockCoord floor : floors) {
             floorsByColumn
                     .computeIfAbsent(key(floor.x(), floor.z()), ignored -> new TreeMap<>())
@@ -34,7 +35,7 @@ public final class MinePlan {
         }
         Map<BlockCoord, Integer> heights = new HashMap<>();
         for (BlockCoord cell : air) {
-            TreeMap<Integer, BlockCoord> below = floorsByColumn.get(key(cell.x(), cell.z()));
+            NavigableMap<Integer, BlockCoord> below = floorsByColumn.get(key(cell.x(), cell.z()));
             Map.Entry<Integer, BlockCoord> floor = below == null ? null : below.lowerEntry(cell.y());
             if (floor == null) {
                 throw new IllegalArgumentException("Клетка воздуха " + cell + " без пола под ней: дух не встанет "

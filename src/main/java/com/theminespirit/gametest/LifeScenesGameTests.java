@@ -13,7 +13,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class LifeScenesGameTests {
     private LifeScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_life_arena", timeoutTicks = 5331)
+    @GameTest(template = "arena", batch = "scene_life_arena", timeoutTicks = 5532)
     public static void lifeScene_ArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(
                 helper,
@@ -21,6 +21,7 @@ public final class LifeScenesGameTests {
                 ChunkLoadingGameTests.class,
                 ExperienceGameTests.class,
                 ModLoadingGameTests.class,
+                RespawnGameTests.class,
                 SpiritDespawnGameTests.class,
                 SpiritGameTests.class,
                 SpiritTickingGameTests.class,
