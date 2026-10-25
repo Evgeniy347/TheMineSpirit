@@ -364,4 +364,21 @@ class FirstStepsPlanTests {
                         facts, BoardCase.CLEAR_GROUNDS, Set.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE)),
                 "Пока идёт расчистка, материалы ограды добываются заранее: духи не простаивают");
     }
+
+    @Test
+    void next_StageOneBlockedByMaterial_IronStepsWait() {
+        List<BoardCase> chain = chain();
+        Set<BoardCase> world = EnumSet.copyOf(chain.subList(0, chain.indexOf(BoardCase.LIGHTING)));
+        Set<BoardCase> blocked = EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+        SettlementFacts facts = facts(world, EnumSet.of(BoardCase.BUILD_MINE), blocked);
+        assertEquals(
+                Optional.empty(),
+                FirstStepsPlan.next(facts),
+                "Свет, ограда и хижина упали в BLOCKED — верстак кузнеца и наковальня не открываются: gather:iron_ingot "
+                        + "на этапе 1 уводил духов от снабжения (INC-78)");
+        assertEquals(
+                List.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE),
+                FirstStepsPlan.blockedStageOne(facts),
+                "Заблокированные шаги этапа 1 видны снабжению: по ним ставится добыча недостающего (INC-79)");
+    }
 }

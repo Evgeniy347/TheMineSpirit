@@ -21,14 +21,28 @@ public final class FirstStepsPlan {
         if (!facts.hasHome()) {
             return Optional.empty();
         }
+        int house = chain().indexOf(BoardCase.BUILD_HOUSE);
         for (Step step : ORDER) {
             BoardCase boardCase = step.boardCase();
+            if (chain().indexOf(boardCase) > house && !blockedStageOne(facts).isEmpty()) {
+                return Optional.empty();
+            }
             if (facts.blocked().contains(boardCase) || step.finished(facts)) {
                 continue;
             }
             return Optional.of(boardCase);
         }
         return Optional.empty();
+    }
+
+    public static List<BoardCase> blockedStageOne(SettlementFacts facts) {
+        Objects.requireNonNull(facts, "facts не может быть null: заблокированные шаги читаются по фактам");
+        int house = chain().indexOf(BoardCase.BUILD_HOUSE);
+        return ORDER.stream()
+                .filter(step -> chain().indexOf(step.boardCase()) <= house)
+                .filter(step -> facts.blocked().contains(step.boardCase()) && !step.finished(facts))
+                .map(Step::boardCase)
+                .toList();
     }
 
     public static List<BoardCase> ready(SettlementFacts facts) {
