@@ -57,7 +57,12 @@ final class PlotAudit {
                     Optional<PlotCells.Defect> defect = PlotCells.defect(
                             new PlotCells.Cell(dy, mine, false), found(level.getBlockState(pos(cell))));
                     defect.filter(PlotCells.Defect.HOLE::equals).ifPresent(hole -> holes.addAll(down(level, cell)));
-                    defect.filter(PlotCells.Defect.EXTRA::equals).ifPresent(extra -> extras.add(cell));
+                    defect.filter(PlotCells.Defect.EXTRA::equals).ifPresent(extra -> {
+                        extras.add(cell);
+                        if (cell.y() == anchor.y() - 1) {
+                            holes.add(cell);
+                        }
+                    });
                 }
             }
         }
@@ -131,6 +136,9 @@ final class PlotAudit {
     private static PlotCells.Found found(BlockState state) {
         if (state.isAir() || !state.getFluidState().isEmpty()) {
             return PlotCells.Found.OPEN;
+        }
+        if (state.is(Blocks.COBBLESTONE)) {
+            return PlotCells.Found.COBBLESTONE;
         }
         boolean natural = state.is(BlockTags.DIRT)
                 || state.is(BlockTags.BASE_STONE_OVERWORLD)

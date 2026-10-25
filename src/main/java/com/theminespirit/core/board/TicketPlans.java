@@ -698,18 +698,47 @@ public final class TicketPlans {
         List<PlotLeveling.Box> pits = new ArrayList<>(layers(fills));
         pits.addAll(layers(voids));
         int batch = Math.min(DataTables.INSTANCE.leveling().current().batch(), CatalogLimits.COUNT_MAX);
-        for (List<PlotLeveling.Box> group : FillBatches.of(pits, dirt ? batch : Integer.MAX_VALUE)) {
-            if (dirt) {
+        if (dirt) {
+            for (List<PlotLeveling.Box> group : FillBatches.of(pits, batch)) {
                 steps.add(dirtFor(FillBatches.volume(group), source));
+                for (PlotLeveling.Box layer : group) {
+                    steps.add(fillLayer(layer, PlotLeveling.DEFAULT_BLOCK));
+                }
             }
-            for (PlotLeveling.Box layer : group) {
-                steps.add(new FallbackNode(List.of(
-                        new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, leveling.block()))),
-                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+        } else {
+            List<PlotLeveling.Box> top = new ArrayList<>();
+            List<PlotLeveling.Box> deep = new ArrayList<>();
+            for (PlotLeveling.Box layer : pits) {
+                (PlotLeveling.topLayer(layer.y1(), center.y()) ? top : deep).add(layer);
+            }
+            int deepVolume = FillBatches.volume(deep);
+            if (deepVolume > 0) {
+                steps.add(new ScriptCall(
+                        ACQUIRE,
+                        Map.of(
+                                ITEM,
+                                MINECRAFT + leveling.block(),
+                                COUNT,
+                                Math.min(deepVolume, CatalogLimits.COUNT_MAX))));
+            }
+            for (PlotLeveling.Box layer : deep) {
+                steps.add(fillLayer(layer, leveling.block()));
+            }
+            for (List<PlotLeveling.Box> group : FillBatches.of(top, batch)) {
+                steps.add(dirtFor(FillBatches.volume(group), source));
+                for (PlotLeveling.Box layer : group) {
+                    steps.add(fillLayer(layer, PlotLeveling.fillBlock(layer.y1(), center.y(), leveling.block())));
+                }
             }
         }
         steps.addAll(single ? List.of(chunks.get(quarter - 1)) : chunks);
         return withLeftovers(new SequenceNode(steps), target);
+    }
+
+    private static TaskNode fillLayer(PlotLeveling.Box layer, String block) {
+        return new FallbackNode(List.of(
+                new ScriptCall(FILL, boxParams(layer, Map.of(BLOCK, block))),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode dirtFor(int volume, BlockCoord source) {

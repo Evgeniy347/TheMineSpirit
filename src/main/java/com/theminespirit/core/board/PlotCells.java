@@ -17,6 +17,7 @@ public final class PlotCells {
     public enum Found {
         OPEN,
         NATURAL,
+        COBBLESTONE,
         OTHER
     }
 
@@ -51,6 +52,9 @@ public final class PlotCells {
         Expect expected = expect(cell);
         if (expected == Expect.GROUND && found == Found.OPEN) {
             return Optional.of(Defect.HOLE);
+        }
+        if (expected == Expect.GROUND && found == Found.COBBLESTONE) {
+            return Optional.of(Defect.EXTRA);
         }
         if (expected == Expect.FREE && found == Found.NATURAL) {
             return Optional.of(Defect.EXTRA);

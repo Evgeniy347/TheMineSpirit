@@ -26,6 +26,14 @@ class PlotCellsTests {
     }
 
     @Test
+    void defect_CobblestoneOnPlotSurface_ReplacedWithDirt() {
+        assertEquals(
+                Optional.of(PlotCells.Defect.EXTRA),
+                PlotCells.defect(new PlotCells.Cell(-1, false, false), PlotCells.Found.COBBLESTONE),
+                "Булыжник на поверхности участка — нарушение: верхний блок всегда земля, аудит обязан вернуть её");
+    }
+
+    @Test
     void defect_HutFloorInsteadOfGround_Fine() {
         assertEquals(
                 Optional.empty(),

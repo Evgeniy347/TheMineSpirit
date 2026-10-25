@@ -92,6 +92,22 @@ class PlotLevelingTests {
     }
 
     @Test
+    void fillBlock_TopLayerOfPlan_AlwaysDirt() {
+        assertEquals(
+                PlotLeveling.DEFAULT_BLOCK,
+                PlotLeveling.fillBlock(63, 64, "cobblestone"),
+                "Верхний блок плана выравнивания — всегда земля: булыжник на поверхности участка запрещён");
+        assertEquals(
+                "cobblestone",
+                PlotLeveling.fillBlock(62, 64, "cobblestone"),
+                "Под верхним слоем булыжник допустим: подсыпка в глубине может быть из булыжника");
+        assertEquals(
+                PlotLeveling.DEFAULT_BLOCK,
+                PlotLeveling.fillBlock(62, 64, PlotLeveling.DEFAULT_BLOCK),
+                "В глубине земля тоже допустима: булыжник — не обязательный материал");
+    }
+
+    @Test
     void plan_FlatPlot_NothingToDo() {
         PlotLeveling plan = PlotLeveling.plan(ANCHOR, 2, (x, z) -> 64);
 

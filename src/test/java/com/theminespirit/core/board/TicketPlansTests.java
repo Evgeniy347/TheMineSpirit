@@ -974,6 +974,42 @@ class TicketPlansTests {
                 "Отдельного выхода за ограду в плане нет: acquire идёт туда сам и только при нехватке");
     }
 
+    @Test
+    void plan_ClearWithCobblestoneFill_TopLayerDirtDeeperCobblestone() {
+        BlockCoord anchor = new BlockCoord(0, 64, 0);
+        PlotLeveling leveling =
+                new PlotLeveling(List.of(), List.of(new PlotLeveling.Box(3, 60, 4, 4, 63, 4)), "cobblestone");
+        TicketTarget whole = TicketTarget.at(anchor).withLeveling(leveling);
+
+        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, whole));
+        List<ScriptCall> fills =
+                calls.stream().filter(call -> "fill".equals(call.script())).toList();
+
+        assertEquals(
+                List.of(60, 61, 62, 63),
+                fills.stream().map(call -> call.params().get("y1")).toList(),
+                "Подсыпка идёт слоями снизу вверх: верхний слой ставится последним");
+        assertEquals(
+                List.of("cobblestone", "cobblestone", "cobblestone", PlotLeveling.DEFAULT_BLOCK),
+                fills.stream().map(call -> call.params().get("block")).toList(),
+                "Булыжник — только в глубине: верхний блок участка всегда земля");
+        List<ScriptCall> dirt = calls.stream()
+                .filter(call -> "acquire_at".equals(call.script()))
+                .toList();
+        assertEquals(
+                List.of(2),
+                dirt.stream().map(call -> call.params().get("count")).toList(),
+                "Землю на верхний слой добывают за оградой, а не заменяют булыжником");
+        assertEquals(
+                6,
+                calls.stream()
+                        .filter(call -> "acquire".equals(call.script()))
+                        .map(call -> call.params().get("count"))
+                        .findFirst()
+                        .orElseThrow(() -> new AssertionError("Булыжник на глубину не заказан")),
+                "Булыжник берут на объём глубины без верхнего слоя");
+    }
+
     private static List<ScriptCall> calls(TaskNode root) {
         List<ScriptCall> found = new ArrayList<>();
         collect(root, found);
