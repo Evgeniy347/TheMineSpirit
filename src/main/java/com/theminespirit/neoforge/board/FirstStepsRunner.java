@@ -58,6 +58,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -382,6 +383,16 @@ public final class FirstStepsRunner {
         }
     }
 
+    // Этап 1 ещё строится: открыт шаг первых шагов, кусок ограды или часть расчистки. Отметку журнала постройке
+    // ставит первый сделанный кусок, и этап 2 (уровень шахты, склад) начинался посреди этапа 1 (сцена 56).
+    public static boolean stageOneBuilding(BoardService service) {
+        return service.board().all().stream()
+                .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
+                                || ticket.id().startsWith(FENCE_PART_PREFIX)
+                                || ticket.id().startsWith(CLEAR_PART_PREFIX))
+                        && active(service, ticket.id()));
+    }
+
     private static int partsOf(BoardCase caseValue) {
         return switch (caseValue) {
             case CLEAR_GROUNDS -> TicketPlans.CLEAR_PARTS;
@@ -515,7 +526,9 @@ public final class FirstStepsRunner {
                 || state.is(Blocks.GRAVEL)
                 || state.is(Blocks.COBBLESTONE)
                 || state.is(Blocks.CLAY)
-                || !state.getFluidState().isEmpty();
+                // Вода — не земля участка: пруд в низине засыпается до дна, а не «подсыпка над водой», где у ямы нет
+                // ни стоянки, ни опоры, и выравнивание шло по кругу (сцена 56, сид −1042323956605046699).
+                || (!state.getFluidState().isEmpty() && !state.getFluidState().is(FluidTags.WATER));
     }
 
     // Пока шаг идёт (расчистку ведёт один дух), материалы ближайшей деревянной стройки добываются заранее: иначе

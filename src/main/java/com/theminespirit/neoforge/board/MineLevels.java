@@ -30,7 +30,6 @@ import org.slf4j.Logger;
  */
 final class MineLevels {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final List<String> STAGE_ONE_PREFIXES = List.of("first:", "fence:", "clear:");
     // Уровень 2 — только выработка (dig_area): материал не расходует, булыжник даёт сам. Гейт «stone ×32»
     // ставил supply:stone, а камень (не булыжник) добычей не получить — цикл FAILED→POSTED (INC-28).
     // Уровень 3 кладёт пол из булыжника 7×7 (fill в TicketPlans) — гейт на то, что он тратит.
@@ -56,9 +55,7 @@ final class MineLevels {
         }
         // Этап 1 ещё строится (куски ограды, части расчистки): отметку журнала ставит первый кусок, и выработка
         // уровня 2 начиналась посреди этапа 1 и рыла яму у спуска в участке (сцена 56).
-        boolean stageOneBusy = service.board().all().stream()
-                .anyMatch(ticket ->
-                        STAGE_ONE_PREFIXES.stream().anyMatch(ticket.id()::startsWith) && active(service, ticket.id()));
+        boolean stageOneBusy = FirstStepsRunner.stageOneBuilding(service);
         if (stageOneBusy) {
             return;
         }

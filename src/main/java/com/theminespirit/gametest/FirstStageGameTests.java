@@ -120,7 +120,9 @@ public final class FirstStageGameTests {
         List<String> differ = new ArrayList<>();
         for (BlockPos cell : BlockPos.betweenClosed(BlockPos.ZERO, new BlockPos(size - 1, size - 1, size - 1))) {
             BlockState original = level.getBlockState(from.offset(cell));
-            if (!original.equals(level.getBlockState(helper.absolutePos(corner.offset(cell))))) {
+            // Блок в блок по виду: соединения забора и стен зависят от соседей за краем снимка, а не от снимка.
+            if (!original.is(
+                    level.getBlockState(helper.absolutePos(corner.offset(cell))).getBlock())) {
                 differ.add(cell.toShortString() + " " + original.getBlock());
             }
         }

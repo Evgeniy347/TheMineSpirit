@@ -8,6 +8,7 @@ import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
@@ -23,7 +24,9 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -33,8 +36,6 @@ import org.slf4j.Logger;
 public final class FillSession {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int NO_STAND_LOGGED = 4;
-    // Досягаемость постановки с места — с запасом от предела BlockPlacer.
-    private static final double PLACE_FROM_PLACE = 3.5;
 
     public enum Outcome {
         RUNNING,
@@ -229,7 +230,7 @@ public final class FillSession {
             this.current = cell;
             if (cell.equals(spiritCoord())) {
                 // Своя клетка — под себя: прыжок и блок под ноги, дух поднимается на слой (INC-66).
-                pillar = new PillarColumn(spirit, blockId, 1);
+                pillar = pillarHere(cell);
                 state = State.PILLAR;
                 return;
             }
@@ -293,6 +294,11 @@ public final class FillSession {
                 state = State.PICK;
             }
             case FAILED -> {
+                LOGGER.info(
+                        "[fill] {}: столб в {} не вышел: {}",
+                        spirit.getName().getString(),
+                        current,
+                        pillar.failureReason());
                 skipped++;
                 tally.skipped();
                 releaseAndAdvance();
@@ -301,13 +307,32 @@ public final class FillSession {
         }
     }
 
+    // Над стоянкой до верха колонки — только воздух, вода и листва: пруд в низине и яма под кроной — не пещера.
+    private boolean openAbove(BlockCoord stand) {
+        int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, stand.x(), stand.z());
+        for (int y = stand.y() + 1; y < top; y++) {
+            BlockPos pos = new BlockPos(stand.x(), y, stand.z());
+            BlockState state = level.getBlockState(pos);
+            if (!state.getCollisionShape(level, pos).isEmpty() && !(state.getBlock() instanceof LeavesBlock)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private PillarColumn pillarHere(BlockCoord cell) {
+        return level.getBlockState(toPos(cell)).getFluidState().is(FluidTags.WATER)
+                ? PillarColumn.throughWater(spirit, blockId)
+                : new PillarColumn(spirit, blockId, 1);
+    }
+
     private boolean inReach(BlockCoord cell) {
         BlockPos feet = spirit.blockPosition();
         BlockPos pos = toPos(cell);
         return spirit.onGround()
                 && !pos.equals(feet)
                 && !pos.equals(feet.above())
-                && spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos)) <= PLACE_FROM_PLACE;
+                && SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), cell);
     }
 
     // В клетке можно стоять: твёрдый пол под ней, она и клетка над ней свободны.
@@ -333,7 +358,7 @@ public final class FillSession {
             return true;
         }
         // Небо — без листвы: яма под кроной дерева — не пещера (сцена 56: яма 1×1 под листвой не засыпалась).
-        boolean sky = stand.y() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, stand.x(), stand.z());
+        boolean sky = openAbove(stand);
         return SettlementPlotStore.get(server)
                 .plot()
                 .map(plot -> SettlementLayout.fillStandAllowed(plot.anchor(), stand, sky))
@@ -356,7 +381,7 @@ public final class FillSession {
 
     private void placeCurrent() {
         if (current.equals(spiritCoord())) {
-            pillar = new PillarColumn(spirit, blockId, 1);
+            pillar = pillarHere(current);
             state = State.PILLAR;
             return;
         }
@@ -392,6 +417,14 @@ public final class FillSession {
                         + "; поставлено " + placed + " из " + order.size());
             }
             case OCCUPIED, NO_SUPPORT, CHUNK_NOT_LOADED -> {
+                if (skipped < NO_STAND_LOGGED) {
+                    LOGGER.info(
+                            "[fill] {}: {} не поставить: {} (дух в {})",
+                            spirit.getName().getString(),
+                            current,
+                            refused.message(),
+                            spirit.blockPosition().toShortString());
+                }
                 skipped++;
                 tally.skipped();
                 releaseAndAdvance();

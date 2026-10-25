@@ -167,8 +167,16 @@ public final class TicketPlans {
             case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
             // Факелы и остаток угля — в сундук у дома: иначе они оставались у крафтера, и следующий крафт факелов
             // ждал передачу угля от него, занятого оградой, 1700 тиков (приёмка «джунгли» 24.10).
+            // Палки факелам — свои из брёвен (acquire крафтит): крафт ждал передачу палок от занятого соседа, и кусок
+            // ограды падал «не хватило torch» (сцена 56).
             case CRAFT_TORCHES ->
-                sequence(craft(TORCH, torchCount(target), target), store(target, LEFTOVERS.toArray(String[]::new)));
+                sequence(
+                        new FallbackNode(List.of(
+                                new ScriptCall(
+                                        ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, (torchCount(target) + 3) / 4)),
+                                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
+                        craft(TORCH, torchCount(target), target),
+                        store(target, LEFTOVERS.toArray(String[]::new)));
             case SMELT_CHARCOAL -> smeltCharcoal(target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,

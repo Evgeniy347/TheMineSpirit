@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 
 final class PillarColumn {
     enum Outcome {
@@ -39,6 +41,8 @@ final class PillarColumn {
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
 
+    private boolean waterOk;
+
     PillarColumn(SpiritEntity spirit, String blockId, int height) {
         this(spirit, blockId, height, spirit.blockPosition());
     }
@@ -57,6 +61,13 @@ final class PillarColumn {
         this.baseY = feet.getY();
         this.baseZ = feet.getZ();
         this.placer = new BlockPlacer(spirit);
+    }
+
+    // Засыпка пруда в яме: столб из воды (не лавы) — дух всплывает и ставит блок в воду под собой (сцена 56).
+    static PillarColumn throughWater(SpiritEntity spirit, String blockId) {
+        PillarColumn pillar = new PillarColumn(spirit, blockId, 1);
+        pillar.waterOk = true;
+        return pillar;
     }
 
     static String cheapBlock(SpiritEntity spirit) {
@@ -103,7 +114,7 @@ final class PillarColumn {
                     + ", на земле " + spirit.onGround() + ", столб от " + baseX + "," + baseY + "," + baseZ
                     + ", построено " + built + "): вероятно, потолок над столбом");
         }
-        if (spirit.onGround()) {
+        if (spirit.onGround() || (waterOk && spirit.isInWater())) {
             spirit.getJumpControl().jump();
         }
         return Outcome.RUNNING;
@@ -153,11 +164,13 @@ final class PillarColumn {
             return "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
                     + ": потолок или помеха, столб не строится";
         }
-        if (!level.getFluidState(target).isEmpty()) {
+        if (!level.getFluidState(target).isEmpty()
+                && !(waterOk && level.getFluidState(target).is(FluidTags.WATER))) {
             return "в клетке " + target.toShortString() + " жидкость: лава или вода, столб не строится";
         }
         BlockPos head = target.above();
-        if (!level.getFluidState(head).isEmpty()) {
+        if (!level.getFluidState(head).isEmpty()
+                && !(waterOk && level.getFluidState(head).is(FluidTags.WATER))) {
             return "над клеткой " + target.toShortString() + " жидкость: лава или вода, столб не строится";
         }
         if (!level.getBlockState(head).isAir() && !level.getBlockState(head).canBeReplaced()) {
@@ -165,7 +178,8 @@ final class PillarColumn {
                     + ": потолок, дух не поднимется";
         }
         for (Direction side : Direction.Plane.HORIZONTAL) {
-            if (!level.getFluidState(target.relative(side)).isEmpty()) {
+            FluidState beside = level.getFluidState(target.relative(side));
+            if (!beside.isEmpty() && !(waterOk && beside.is(FluidTags.WATER))) {
                 return "рядом с клеткой " + target.toShortString() + " жидкость: лава или вода, столб не строится";
             }
         }

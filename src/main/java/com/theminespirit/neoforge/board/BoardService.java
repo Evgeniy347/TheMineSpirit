@@ -1185,7 +1185,10 @@ public final class BoardService {
                             Map.of()),
                     target.withSupply(item, count));
         }
-        permanentSupplies(spirits, stock, now);
+        // Постоянный запас (книги, бумага на полки) — после этапа 1: его добыча уводила духов с ограды (сцена 56).
+        if (!FirstStepsRunner.stageOneBuilding(this)) {
+            permanentSupplies(spirits, stock, now);
+        }
     }
 
     private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {

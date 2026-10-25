@@ -33,7 +33,9 @@ public final class WarehouseWatch {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        if (!houseBuilt(service)) {
+        // Склад — этап 2: пока строится этап 1 (куски ограды, части расчистки), он не открывается — его материалы
+        // (книги, бумага) уводили духов с ограды (сцена 56).
+        if (!houseBuilt(service) || FirstStepsRunner.stageOneBuilding(service)) {
             return;
         }
         BlockCoord home = homeOf(spirits);

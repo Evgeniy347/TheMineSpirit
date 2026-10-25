@@ -48,6 +48,7 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -63,6 +64,7 @@ import org.slf4j.Logger;
 final class BuildSchematicScript implements ScriptInstance {
     // Своих крафтов деревянного за стройку: каждый — на всю нехватку предмета.
     private static final int MAX_OWN_CRAFTS = 8;
+    private static final int TORCHES_PER_COAL = 4;
     private static final int MAX_FINISH_WAITS = 200;
     // Шаг к середине клетки (тело шириной 0,6 тогда не выходит за её края): дольше — стоянка не годится.
     private static final int MAX_CENTRING_TICKS = 20;
@@ -798,6 +800,19 @@ final class BuildSchematicScript implements ScriptInstance {
             }
         }
         int needed = countMissing(blockId);
+        if (crafts < MAX_OWN_CRAFTS && "minecraft:torch".equals(blockId)) {
+            // Факелы на столбы ограды — из своего угля и брёвен: передача факелов ждала, пока их скрафтит сосед, и
+            // кусок ограды падал «не хватило torch» (сцена 56).
+            int held = BlockItems.countIn(spirit.getInventory(), blockId);
+            int count = Math.min(CatalogLimits.COUNT_MAX, held + Math.max(needed - held, 1));
+            int coal = spirit.getInventory().countItem(Items.COAL)
+                    + spirit.getInventory().countItem(Items.CHARCOAL);
+            if (coal * TORCHES_PER_COAL >= count - held) {
+                crafts++;
+                LOGGER.info("Стройка {}: крафт своих факелов ×{} из угля духа", buildKey, count - held);
+                return startSupply(ownCraft(blockId, count));
+            }
+        }
         if (crafts < MAX_OWN_CRAFTS && !OwnWood.species(blockId).isEmpty()) {
             // В сундуках нет, а брёвна свои есть — деревянное (забор, ступени, дверь, доски) дух крафтит сам, как
             // игрок:
