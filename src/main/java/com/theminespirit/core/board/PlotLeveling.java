@@ -54,6 +54,15 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return new PlotLeveling(cut, fill, block, found);
     }
 
+    public static boolean topLayer(int y, int level) {
+        return y >= level - 1;
+    }
+
+    public static String fillBlock(int y, int level, String deep) {
+        Objects.requireNonNull(deep, "Материал глубины не может быть null: подсыпка ставится землёй или булыжником");
+        return topLayer(y, level) ? DEFAULT_BLOCK : deep;
+    }
+
     // Пустоты под землёй участка на VOID_DEPTH под уровнем anchor.y(): воздух ниже поверхности колонки (feet).
     // Колонку, которую выравнивание не трогает (спуск в шахту), feet отдаёт Integer.MIN_VALUE.
     public static List<Box> voids(BlockCoord anchor, int half, IntBinaryOperator feet, AirProbe probe) {
