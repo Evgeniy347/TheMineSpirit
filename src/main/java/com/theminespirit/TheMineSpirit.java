@@ -24,6 +24,7 @@ import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
 import com.theminespirit.neoforge.net.ModProtocolHandshake;
+import com.theminespirit.neoforge.net.TownMapChannel;
 import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.respawn.SpiritRespawnService;
 import com.theminespirit.neoforge.rest.RestConfig;
@@ -44,6 +45,7 @@ public final class TheMineSpirit {
         ModEntities.register(modEventBus);
         ModProtocolHandshake.register(modEventBus);
         BoardViewChannel.register(modEventBus);
+        TownMapChannel.register(modEventBus);
         modEventBus.addListener(ModEntities::registerAttributes);
         modEventBus.addListener(SpiritChunkTickets::registerControllers);
         modEventBus.addListener(SettlementChunkTickets::registerControllers);
