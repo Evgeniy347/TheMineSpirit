@@ -44,17 +44,17 @@
     <properties>
       <property name="skipAnnotations" value="true"/>
       <!-- PMD пишет литерал в сообщении с экранированием \uXXXX: кириллица — \u04xx. -->
-      <property name="violationSuppressRegex" value=".*\\u04[0-9a-f]{2}.*"/>
+      <property name="violationSuppressRegex" value=".*\\u04[0-9a-f][0-9a-f].*"/>
       <property name="violationSuppressXPath"
                 value="ancestor::CompilationUnit/PackageDeclaration[@Name = 'com.theminespirit.gametest']"/>
     </properties>
   </rule>
 
-  <!-- Мир и сервер Minecraft (Level, ServerLevel, MinecraftServer) закрывает сама игра: мод их только читает. -->
+  <!-- Мир, сервер и клиент Minecraft (Level, ServerLevel, MinecraftServer, Minecraft) держит сама игра. -->
   <rule ref="category/java/errorprone.xml/CloseResource">
     <properties>
       <property name="allowedResourceTypes"
-                value="net.minecraft.world.level.Level,net.minecraft.server.level.ServerLevel,net.minecraft.server.MinecraftServer,net.minecraft.gametest.framework.GameTestServer"/>
+                value="net.minecraft.world.level.Level,net.minecraft.server.level.ServerLevel,net.minecraft.server.MinecraftServer,net.minecraft.gametest.framework.GameTestServer,net.minecraft.client.Minecraft"/>
     </properties>
   </rule>
 
@@ -83,7 +83,6 @@
     <!-- Адрес привязки REST по умолчанию 0.0.0.0 (LAN, решение владельца) и петля 127.0.0.1 в сценах — не зашитый
          адрес чужого сервера. -->
     <exclude name="AvoidUsingHardCodedIP"/>
-    <exclude name="AvoidAccessibilityAlteration"/>
     <exclude name="LooseCoupling"/>
     <!-- Логирование slf4j с {} не строит строку при выключенном уровне: охрана isDebugEnabled() не нужна. -->
     <exclude name="GuardLogStatement"/>
@@ -91,7 +90,7 @@
 
   <!-- Рефлексия в обход доступа запрещена, кроме обвязки GameTest (тестовый код в main): фильтр пачек меняет
        закрытые списки тестов Minecraft, у которых нет API. -->
-  <rule ref="category/java/bestpractices.xml/AvoidAccessibilityAlteration">
+  <rule ref="category/java/errorprone.xml/AvoidAccessibilityAlteration">
     <properties>
       <property name="violationSuppressXPath"
                 value="ancestor::CompilationUnit/PackageDeclaration[@Name = 'com.theminespirit.gametest']"/>

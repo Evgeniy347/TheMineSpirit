@@ -14,6 +14,8 @@ public final class SchematicBlocks {
     public static final String FLOOR = "@floor";
 
     private static final String FLOOR_BLOCK = "minecraft:cobblestone";
+    private static final String TORCH = "torch";
+    private static final String LANTERN = "lantern";
     private static final Set<String> FLOOR_CLASS = Set.of(
             "stone",
             "cobblestone",
@@ -43,13 +45,13 @@ public final class SchematicBlocks {
             "lava",
             "fire",
             "soul_fire",
-            "torch",
+            TORCH,
             "wall_torch",
             "soul_torch",
             "soul_wall_torch",
             "redstone_torch",
             "redstone_wall_torch",
-            "lantern",
+            LANTERN,
             "soul_lantern",
             "chain",
             "end_rod",
@@ -140,13 +142,13 @@ public final class SchematicBlocks {
             "_chorus_flower");
 
     private static final Map<String, Integer> LIGHT_LEVELS = Map.ofEntries(
-            Map.entry("torch", 14),
+            Map.entry(TORCH, 14),
             Map.entry("wall_torch", 14),
             Map.entry("soul_torch", 10),
             Map.entry("soul_wall_torch", 10),
             Map.entry("redstone_torch", 7),
             Map.entry("redstone_wall_torch", 7),
-            Map.entry("lantern", 15),
+            Map.entry(LANTERN, 15),
             Map.entry("soul_lantern", 10),
             Map.entry("glowstone", 15),
             Map.entry("sea_lantern", 15),
@@ -165,7 +167,7 @@ public final class SchematicBlocks {
     private static final int CANDLE_LIGHT = 3;
 
     private static final String[][] WALL_VARIANTS = {
-        {"wall_torch", "torch"},
+        {"wall_torch", TORCH},
         {"_wall_sign", "_sign"},
         {"_wall_hanging_sign", "_hanging_sign"},
         {"_wall_banner", "_banner"},
@@ -323,7 +325,7 @@ public final class SchematicBlocks {
         if ("chain".equals(path)) {
             return "y".equals(state.getOrDefault("axis", "y"));
         }
-        return path.endsWith("lantern") && "true".equals(state.get("hanging"));
+        return path.endsWith(LANTERN) && "true".equals(state.get("hanging"));
     }
 
     public static boolean holdsHanging(String blockId) {
@@ -344,9 +346,9 @@ public final class SchematicBlocks {
     public static boolean standsOnCenter(String blockId) {
         String path = path(blockId);
         return path.endsWith("_pressure_plate")
-                || path.endsWith("lantern")
+                || path.endsWith(LANTERN)
                 || path.endsWith("candle")
-                || "torch".equals(path)
+                || TORCH.equals(path)
                 || "flower_pot".equals(path)
                 || path.startsWith("potted_");
     }

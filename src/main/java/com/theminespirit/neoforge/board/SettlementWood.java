@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
  * брались дубовые доски, которых не добыть (INC-36, приёмка «джунгли»).
  */
 public final class SettlementWood {
+    private static final String LOG_SUFFIX = "_log";
     private static final int SCAN_RADIUS = 24;
     private static final int SCAN_HEIGHT = 8;
     // Вес биома в голосовании пород — один голос: решает, когда нет ни брёвен в запасе, ни деревьев рядом. Больший
@@ -85,7 +86,7 @@ public final class SettlementWood {
     private static Map<String, Integer> logsOf(Map<String, Integer> items) {
         Map<String, Integer> logs = new TreeMap<>();
         items.forEach((item, count) -> {
-            if (item.endsWith("_log")) {
+            if (item.endsWith(LOG_SUFFIX)) {
                 logs.merge(item, count, Integer::sum);
             }
         });
@@ -111,8 +112,8 @@ public final class SettlementWood {
     private static Map<String, Integer> stockLogs(Map<String, Integer> stock) {
         Map<String, Integer> stockLogs = new HashMap<>();
         stock.forEach((item, count) -> WoodSpecies.speciesOf(item)
-                .filter(species -> item.endsWith("_log"))
-                .ifPresent(species -> stockLogs.merge(species + "_log", count, Integer::sum)));
+                .filter(species -> item.endsWith(LOG_SUFFIX))
+                .ifPresent(species -> stockLogs.merge(species + LOG_SUFFIX, count, Integer::sum)));
         return stockLogs;
     }
 
@@ -131,7 +132,7 @@ public final class SettlementWood {
                 votes.merge(item, count, Integer::sum);
             }
         });
-        votes.merge(biome + "_log", BIOME_WEIGHT, Integer::sum);
+        votes.merge(biome + LOG_SUFFIX, BIOME_WEIGHT, Integer::sum);
         return WoodSpecies.of(votes);
     }
 
@@ -144,7 +145,7 @@ public final class SettlementWood {
                     String id = BuiltInRegistries.BLOCK
                             .getKey(level.getBlockState(pos).getBlock())
                             .getPath();
-                    if (id.endsWith("_log")) {
+                    if (id.endsWith(LOG_SUFFIX)) {
                         logs.merge(id, 1, Integer::sum);
                     }
                 }

@@ -20,14 +20,14 @@ public final class BlockStates {
         if (blockId.isBlank()) {
             throw new IllegalArgumentException("Id блока пуст: по пустому id блок не найти");
         }
-        blockId = SchematicBlocks.placementBlock(blockId);
-        String qualified = blockId.indexOf(':') < 0 ? DEFAULT_NAMESPACE + ":" + blockId : blockId;
+        String placedId = SchematicBlocks.placementBlock(blockId);
+        String qualified = placedId.indexOf(':') < 0 ? DEFAULT_NAMESPACE + ":" + placedId : placedId;
         ResourceLocation location = ResourceLocation.tryParse(qualified);
         Block block = location == null
                 ? null
                 : BuiltInRegistries.BLOCK.getOptional(location).orElse(null);
         if (block == null || Blocks.AIR.equals(block)) {
-            throw new IllegalArgumentException("Неизвестный блок '" + blockId + "': такого id нет в реестре блоков");
+            throw new IllegalArgumentException("Неизвестный блок '" + placedId + "': такого id нет в реестре блоков");
         }
         return block;
     }

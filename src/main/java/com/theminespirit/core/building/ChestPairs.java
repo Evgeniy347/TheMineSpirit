@@ -14,6 +14,8 @@ import java.util.Optional;
  */
 public final class ChestPairs {
     private static final String SINGLE = "single";
+    private static final String LEFT = "left";
+    private static final String RIGHT = "right";
 
     private ChestPairs() {}
 
@@ -47,12 +49,12 @@ public final class ChestPairs {
             }
             return Optional.empty();
         }
-        if (!"left".equals(type) && !"right".equals(type)) {
+        if (!LEFT.equals(type) && !RIGHT.equals(type)) {
             return Optional.of(where + " с type=" + type + ": допустимы single, left, right");
         }
-        Facing join = "left".equals(type) ? facing.clockwise() : facing.counterClockwise();
+        Facing join = LEFT.equals(type) ? facing.clockwise() : facing.counterClockwise();
         Schematic.Entry partner = chests.get(neighbour(cell, join));
-        String opposite = "left".equals(type) ? "right" : "left";
+        String opposite = LEFT.equals(type) ? RIGHT : LEFT;
         if (partner == null
                 || !partner.block().equals(chest.block())
                 || !partner.state()

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
@@ -120,7 +121,7 @@ public final class PathNetwork {
         }
         Map<BlockCoord, Double> dist = new HashMap<>();
         Map<BlockCoord, @Nullable BlockCoord> previous = new HashMap<>();
-        PriorityQueue<Visit> queue = new PriorityQueue<>();
+        Queue<Visit> queue = new PriorityQueue<>();
         for (Hit hit : hits(entry)) {
             relax(dist, previous, queue, null, hit.segment.first(), hit.segment.lengthBetween(0, hit.index));
             relax(
@@ -167,7 +168,7 @@ public final class PathNetwork {
     private void relax(
             Map<BlockCoord, Double> dist,
             Map<BlockCoord, @Nullable BlockCoord> previous,
-            PriorityQueue<Visit> queue,
+            Queue<Visit> queue,
             @Nullable BlockCoord from,
             BlockCoord to,
             double cost) {

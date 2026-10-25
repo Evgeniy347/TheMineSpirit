@@ -77,7 +77,7 @@ public final class FallbackPlanner implements Planner {
                     params.put(binding.getValue(), goal.params().get(binding.getKey()));
                 }
             }
-            if (step.script().equals("chop_tree") && !goal.params().containsKey(COUNT) && textCount.isPresent()) {
+            if ("chop_tree".equals(step.script()) && !goal.params().containsKey(COUNT) && textCount.isPresent()) {
                 params.put(COUNT, textCount.get());
             }
             steps.add(new ScriptCall(step.script(), params));

@@ -42,7 +42,7 @@ public final class BoardViewGameTests {
         try {
             List<BoardTile> tiles = BoardViewChannel.snapshot(helper.getLevel());
             BoardTile tile = tiles.stream()
-                    .filter(candidate -> candidate.id().equals(TICKET_ID))
+                    .filter(candidate -> TICKET_ID.equals(candidate.id()))
                     .findFirst()
                     .orElse(null);
             helper.assertTrue(tile != null, "Снимок доски не содержит поставленное задание: экран J его не покажет");

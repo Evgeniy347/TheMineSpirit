@@ -611,11 +611,7 @@ public final class BuildPlanner {
         if (SchematicWalk.passable(block) || outside(feet)) {
             return true;
         }
-        Set<BlockCoord> path = retreatPath;
-        if (path == null) {
-            path = exitPath();
-            retreatPath = path;
-        }
+        Set<BlockCoord> path = cachedRetreatPath();
         if (!path.isEmpty()
                 && !path.contains(cell)
                 && !path.contains(new BlockCoord(cell.x(), cell.y() - 1, cell.z()))) {
@@ -623,6 +619,16 @@ public final class BuildPlanner {
         }
         retreatPath = null;
         return RetreatPath.allows(feet, Set.of(cell), view, this::outside);
+    }
+
+    // Путь наружу считается один раз: правила отхода спрашивают его на каждый блок порции.
+    private Set<BlockCoord> cachedRetreatPath() {
+        Set<BlockCoord> path = retreatPath;
+        if (path == null) {
+            path = exitPath();
+            retreatPath = path;
+        }
+        return path;
     }
 
     // Клетки ног, головы и над головой (шаг вверх, спуск) одного кратчайшего пути наружу; пусто — пути нет или обход
