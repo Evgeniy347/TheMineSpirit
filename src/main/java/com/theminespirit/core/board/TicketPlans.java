@@ -684,12 +684,6 @@ public final class TicketPlans {
                     new ScriptCall(CLEAR_AREA, boxParams(box, Map.of(KEEP_GROUND, true))),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
-        int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
-        if (volume > 0 && !PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
-            steps.add(new ScriptCall(
-                    ACQUIRE,
-                    Map.of(ITEM, MINECRAFT + leveling.block(), COUNT, Math.min(volume, CatalogLimits.COUNT_MAX))));
-        }
         boolean dirt = PlotLeveling.DEFAULT_BLOCK.equals(leveling.block());
         BlockCoord source = dirtSource(center, single ? quarter : 1);
         List<PlotLeveling.Box> voids = leveling.voids().stream()

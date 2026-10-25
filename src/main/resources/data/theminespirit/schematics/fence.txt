@@ -1,4 +1,4 @@
-# fence — ограда участка поселения 23×23 (SettlementLayout, решение 54b п.2) с калиткой в середине северной стороны;
+# fence — ограда участка поселения 23×23 (SettlementLayout, решение 54b п.2) с калиткой в середине каждой стороны;
 # внутренность схемой не задана: дом, шахта, двор и факелы участка стоят внутри (сторож SettlementLayoutTests).
 type: defense
 size: 23x2x23   # Ш×В×Д
@@ -8,15 +8,16 @@ exemptions:
     reason: "ограда поселения открыта сверху по замыслу: это забор, а не здание"
   - rule: inner_height
     reason: "ограда — периметр забора без пола и потолка: внутренней высоты нет"
-  - rule: light
-    reason: "внутренность участка 23×23 освещают факелы шага LIGHTING вокруг хижины (SettlementLayout.lighting) и факелы на столбах углов и калитки; свои факелы по сторонам ограды удваивали свет и съедали уголь этапа 1"
 legend:
-  'G': oak_fence_gate[facing=north]
+  'N': oak_fence_gate[facing=north]
+  'S': oak_fence_gate[facing=south]
+  'W': oak_fence_gate[facing=west]
+  'E': oak_fence_gate[facing=east]
   'F': oak_fence
   'T': torch
 layers:
-  - y0 забор, столбы-заборы по углам, у калитки и через 5–6 клеток: |
-      FFFFFFFFFFFGFFFFFFFFFFF
+  - y0 забор, столбы-заборы по углам, у калиток и через 5–6 клеток: |
+      FFFFFFFFFFFNFFFFFFFFFFF
       F                     F
       F                     F
       F                     F
@@ -27,6 +28,7 @@ layers:
       F                     F
       F                     F
       F                     F
+      W                     E
       F                     F
       F                     F
       F                     F
@@ -37,9 +39,8 @@ layers:
       F                     F
       F                     F
       F                     F
-      F                     F
-      FFFFFFFFFFFFFFFFFFFFFFF
-  - y1 факелы на столбах углов и калитки: |
+      FFFFFFFFFFFSFFFFFFFFFFF
+  - y1 факелы на столбах углов и калиток: |
       T         T T         T
 
 
@@ -50,16 +51,16 @@ layers:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+      T                     T
 
       T                     T
+
+
+
+
+
+
+
+
+
+      T         T T         T
