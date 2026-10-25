@@ -5,8 +5,10 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.ToolSet;
+import com.theminespirit.core.board.ToolFate;
+import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairCosts;
 import com.theminespirit.core.repair.RepairData;
@@ -71,6 +73,7 @@ final class RepairWatch {
     private static Optional<String> repairableTool(SpiritEntity spirit, BooleanSupplier anvilNear) {
         SpiritInventory inventory = spirit.getInventory();
         int percent = RepairData.loadDefault().maxDurabilityPercent();
+        ToolsConfig tools = DataTables.INSTANCE.board().current().tools();
         RepairCosts costs = RepairCosts.defaults();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
@@ -83,7 +86,7 @@ final class RepairWatch {
                 continue;
             }
             String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-            if (ToolSet.replacedNotRepaired(itemId)) {
+            if (tools.fate(itemId, true) != ToolFate.REPAIR) {
                 continue;
             }
             Optional<String> material = RepairMaterials.materialFor(itemId);
