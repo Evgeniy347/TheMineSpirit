@@ -7,6 +7,7 @@ import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.script.WalkCarefulParams;
 import com.theminespirit.neoforge.movement.TravelCheck;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -37,6 +38,12 @@ public final class GotoScript implements ScriptInstance {
     // Точка в толще земли (якорь участка под ещё не срезанным холмом) — это поверхность её колонки: дух стоял на
     // холме над якорем и «застревал в тупике» в 4 блоках от цели (сцена 56). Свободная точка не меняется.
     private static Vec3 surface(Level level, BlockPos goal) {
+        // Цель-блок с открытым соседом (сундук, верстак) — подход вплотную, как раньше: поднимается только погребённая.
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            if (open(level, goal.relative(side))) {
+                return Vec3.atBottomCenterOf(goal);
+            }
+        }
         BlockPos at = goal;
         for (int step = 0; step <= SURFACE_SEARCH; step++) {
             if (open(level, at) && open(level, at.above())) {

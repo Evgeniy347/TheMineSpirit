@@ -63,7 +63,10 @@ public final class SettlementLayout {
     public static boolean mineColumn(BlockCoord anchor, int x, int z) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: от него ставится вход в шахту");
         BlockCoord entrance = mineEntrance(anchor);
-        return Math.abs(x - entrance.x()) <= 1 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
+        // Схема (ширина 3: стенка, проход, стенка) от угла входа идёт по +x: проход на x+1, стенки на x и x+2. Колонка
+        // по центру входа (x−1…x+1) оставляла стенку x+2 бугром на ровном участке, и выравнивание срезало её по кругу
+        // (сцена 56).
+        return x >= entrance.x() && x <= entrance.x() + 2 && z >= entrance.z() - 1 && z <= anchor.z() + LEVEL_HALF;
     }
 
     // Добыча (gather земли, камня) не берёт блоки участка и пещер под поселением (INC-69: 4-й раз тот же карман под

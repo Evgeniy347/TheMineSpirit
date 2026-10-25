@@ -49,9 +49,15 @@ class PlotLevelingTests {
         assertTrue(
                 SettlementLayout.mineColumn(ANCHOR, entrance.x(), entrance.z() + 5),
                 "Спуск в шахту на юг от входа — не яма участка: подсыпка засыпала бы его");
-        assertFalse(
+        assertTrue(
                 SettlementLayout.mineColumn(ANCHOR, entrance.x() + 2, entrance.z()),
+                "Стенка спуска (x+2 от угла входа) — часть спуска: её срезка выравниванием шла по кругу (сцена 56)");
+        assertFalse(
+                SettlementLayout.mineColumn(ANCHOR, entrance.x() + 3, entrance.z()),
                 "Колонка за стенкой спуска — обычная земля участка, её выравнивают");
+        assertFalse(
+                SettlementLayout.mineColumn(ANCHOR, entrance.x() - 1, entrance.z()),
+                "Колонка перед стенкой спуска — обычная земля участка, её выравнивают");
     }
 
     @Test

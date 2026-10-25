@@ -357,9 +357,16 @@ public class ClearAreaSession {
     }
 
     private void prepareBreak() {
-        if (PlanCells.keep(level, toPos(currentTarget))) {
+        // Снос (перенос постройки) убирает именно поставленное поселением — запрет по плану к нему не относится.
+        if (!demolish && PlanCells.keep(level, toPos(currentTarget))) {
             // Постройка плана поселения (ограда, хижина, двор, факелы, шахта) — не цель расчистки (запрет по плану).
             protectedSkipped++;
+            if (protectedSkipped <= PROTECTED_LOGGED) {
+                LOGGER.info(
+                        "[clear] {}: {} — постройка плана поселения, не ломается",
+                        spirit.getName().getString(),
+                        currentTarget);
+            }
             tally.skipped();
             releaseCurrent();
             state = State.PICK;
