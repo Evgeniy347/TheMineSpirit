@@ -148,6 +148,7 @@ public final class SpiritCommandGameTests {
         String tag = freshTag("pair");
         SpiritEntity first = spawnTagged(helper, new BlockPos(0, 1, 1), tag);
         SpiritEntity second = spawnTagged(helper, new BlockPos(0, 1, 2), tag);
+        second.getInventory().setItem(0, new ItemStack(Items.IRON_AXE, 1));
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(4, 1, 1), "gt_pair_player");
         CommandSourceStack source = playerSource(player);
         CommandDispatcher<CommandSourceStack> dispatcher =
@@ -165,7 +166,10 @@ public final class SpiritCommandGameTests {
                         + ", второй=" + second.taskStatus());
 
         int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
-        helper.assertTrue(accepted == 2, "Выполнимая цель обязана стать задачей обоим духам: результат=" + accepted);
+        helper.assertTrue(
+                accepted == 2,
+                "Выполнимая цель обязана стать задачей обоим духам с разным инвентарём: общее наблюдение первого "
+                        + "духа сторож BatchPlanner отклоняет, и задача не ставится никому. Результат=" + accepted);
         helper.assertTrue(
                 first.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
                         && second.taskStatus()
@@ -175,50 +179,6 @@ public final class SpiritCommandGameTests {
                         + ", второй=" + second.taskStatus());
 
         helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void commandGoal_TwoSpiritsOnArena_PlansFromEachOwnObservation(GameTestHelper helper)
-            throws CommandSyntaxException {
-        GameTestFixtures.reset(helper);
-        helper.setBlock(0, 0, 0, Blocks.STONE);
-        helper.setBlock(10, 0, 10, Blocks.STONE);
-        // Тег уникален на запуск: мир переживает прогоны, и духи с прошлым тегом попали бы в селектор.
-        String tag = freshTag("observe_each");
-        SpiritEntity first = spawnTagged(helper, new BlockPos(0, 1, 0), tag);
-        SpiritEntity second = spawnTagged(helper, new BlockPos(10, 1, 10), tag);
-        second.getInventory().setItem(0, new ItemStack(Items.IRON_AXE, 1));
-        helper.assertTrue(
-                GameTestFixtures.countInInventory(second.getInventory(), Items.IRON_AXE) == 1,
-                "Подготовка обязана положить топор в инвентарь второго духа: без разного инвентаря наблюдения "
-                        + "духов неразличимы и тест не доказывает по-духовые наблюдения");
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(5, 1, 5), "gt_observe_each");
-        try {
-            CommandSourceStack source = playerSource(player);
-            CommandDispatcher<CommandSourceStack> dispatcher =
-                    helper.getLevel().getServer().getCommands().getDispatcher();
-            String both = tagSelector(tag);
-
-            int accepted = dispatcher.execute("spirit goal " + both + " следуй за мной", source);
-            helper.assertTrue(
-                    accepted == 2,
-                    "Одна команда на двух духов обязана ставить задачу обоим: общее наблюдение первого духа "
-                            + "сторож BatchPlanner отклоняет, и задача не ставится никому. Результат=" + accepted);
-            helper.assertTrue(
-                    first.taskStatus()
-                                    .filter(status -> status == RunStatus.RUNNING)
-                                    .isPresent()
-                            && second.taskStatus()
-                                    .filter(status -> status == RunStatus.RUNNING)
-                                    .isPresent(),
-                    "После /spirit goal оба духа обязаны выполняться: первый=" + first.taskStatus() + ", второй="
-                            + second.taskStatus());
-
-            helper.succeed();
-        } finally {
-            first.discard();
-            second.discard();
-        }
     }
 
     @SceneStep(template = "empty", timeoutTicks = 100)

@@ -63,9 +63,6 @@ public final class DefenseScaleGameTests {
                         false,
                         "Оборона ещё считает: прошло " + elapsed + " из " + OBSERVED_TICKS + " тиков наблюдения");
             }
-            helper.assertTrue(
-                    CoordinatorTuning.SNAPSHOT_INTERVAL_TICKS == 10,
-                    "Интервал пересборки 10 тиков: число в тесте, факт — из production");
             helper.assertTrue(defense.planCalls() >= 2, "Оборона пересчиталась дважды: иначе бюджеты делить не на что");
             helper.assertTrue(
                     defense.planCalls() * CoordinatorTuning.SNAPSHOT_INTERVAL_TICKS

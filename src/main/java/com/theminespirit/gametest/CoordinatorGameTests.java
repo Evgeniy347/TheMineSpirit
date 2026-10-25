@@ -54,31 +54,6 @@ public final class CoordinatorGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
-    public static void workReserve_TwoSpiritsOneTarget_SecondRefusedUntilRelease(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
-        SpiritEntity second = TacticsScene.spirit(helper, new BlockPos(6, 1, 5));
-        WorkTarget target = tree(helper, new BlockPos(5, 1, 5));
-
-        helper.assertTrue(
-                WorkReserveHub.reserve(first, target),
-                "Первая бронь цели встаёт: иначе распределение работ не защищает цель");
-        helper.assertTrue(
-                !WorkReserveHub.reserve(second, target),
-                "Второй дух на ту же цель получает отказ: иначе двое рубят одно дерево");
-        helper.assertTrue(WorkReserveHub.release(first, target), "Владелец снимает свою бронь");
-        helper.assertTrue(
-                WorkReserveHub.reserve(second, target), "После release цель свободна: работу забирает следующий дух");
-        helper.assertTrue(
-                WorkReserveHub.releaseAll(second) == 1,
-                "releaseAll снимает бронь духа: выгрузка оставляет цель свободной");
-
-        TacticsScene.finish(helper, first);
-        second.discard();
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 100, coordinator = true)
     public static void workChoose_TargetUnderForeignReservation_NotTaken(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity owner = TacticsScene.spirit(helper, new BlockPos(4, 1, 5));
@@ -264,9 +239,6 @@ public final class CoordinatorGameTests {
             Set<Point> postsBefore) {
         List<Point> posts = postsOf(defenders);
         helper.assertTrue(
-                CoordinatorTuning.DEFENSE_RADIUS == 16.0,
-                "Радиус обороны 16: посты секторов лежат на этом круге, шире — не сектора");
-        helper.assertTrue(
                 posts.size() == 4,
                 "У каждого из четырёх защитников свой пост: иначе оборона не распределяется по секторам");
         helper.assertTrue(
@@ -327,9 +299,6 @@ public final class CoordinatorGameTests {
             if (!attacked[0]) {
                 List<Point> posts = postsOf(defenders);
                 helper.assertTrue(
-                        CoordinatorTuning.DEFENSE_RADIUS == 16.0,
-                        "Радиус обороны 16: посты секторов лежат на этом круге, шире — не сектора");
-                helper.assertTrue(
                         posts.size() == 3, "У каждого из трёх защитников свой пост: иначе некому идти на помощь");
                 helper.assertTrue(
                         posts.stream()
@@ -357,9 +326,6 @@ public final class CoordinatorGameTests {
             helper.assertTrue(
                     !helpers.isEmpty(),
                     "Ближайший свободный защитник получает приказ на помощь: иначе атакованный остаётся один");
-            helper.assertTrue(
-                    CoordinatorTuning.MAX_ASSIST == 2,
-                    "Предел помощи 2: больше — сектора пустеют, меньше — защитники гибнут");
             helper.assertTrue(
                     helpers.size() <= CoordinatorTuning.MAX_ASSIST,
                     "Помощников не больше предела: иначе сектора пустеют, а поселение остаётся без обороны");

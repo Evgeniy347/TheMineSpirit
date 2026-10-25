@@ -1,7 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.MissingNode;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -146,29 +144,6 @@ public final class BuildRestartGameTests {
         return RestFixture.start(helper.getLevel().getServer());
     }
 
-    private static String taskBody(String script, Map<String, Object> params) {
-        StringBuilder body = new StringBuilder("{\"request_id\":\"")
-                .append(UUID.randomUUID())
-                .append("\",\"plan\":{\"type\":\"script\",\"script\":\"")
-                .append(script)
-                .append("\",\"params\":{");
-        boolean first = true;
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
-            if (!first) {
-                body.append(',');
-            }
-            first = false;
-            body.append('"').append(entry.getKey()).append("\":");
-            Object value = entry.getValue();
-            if (value instanceof String text) {
-                body.append('"').append(text).append('"');
-            } else {
-                body.append(value);
-            }
-        }
-        return body.append("}}}").toString();
-    }
-
     // HTTP ходит другим потоком: предел берём из общего REST-шаблона, как ResultGameTests.
     @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void fill_SucceededTask_RestProgressAndResultHoldCounts(GameTestHelper helper) throws IOException {
@@ -177,11 +152,11 @@ public final class BuildRestartGameTests {
         spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 2));
         BlockPos from = helper.absolutePos(new BlockPos(4, 1, 4));
         BlockPos to = helper.absolutePos(new BlockPos(5, 1, 4));
-        TaskPoller poller = TaskPoller.start(helper, rest);
+        ResultGameTests.ResultPoller poller = ResultGameTests.ResultPoller.start(helper, rest);
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.post(
                         "/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        taskBody(
+                        ResultGameTests.taskBody(
                                 "fill",
                                 Map.of(
                                         "block",
@@ -220,47 +195,5 @@ public final class BuildRestartGameTests {
                             && result.path("missing").asInt() == 0,
                     "итог fill в GET задачи обязан нести placed=2 missing=0, получено " + result);
         });
-    }
-
-    private static final class TaskPoller {
-        private final AtomicReference<String> path = new AtomicReference<>();
-        private final AtomicReference<String> latest = new AtomicReference<>();
-        private final AtomicReference<JsonNode> lastJson = new AtomicReference<>(MissingNode.getInstance());
-        private final AtomicReference<CompletableFuture<Void>> inFlight =
-                new AtomicReference<>(CompletableFuture.completedFuture(null));
-
-        static TaskPoller start(GameTestHelper helper, RestFixture rest) {
-            TaskPoller poller = new TaskPoller();
-            helper.onEachTick(() -> poller.poll(rest));
-            return poller;
-        }
-
-        void follow(String taskId) {
-            path.set("/v1/tasks/" + taskId);
-        }
-
-        String latest() {
-            return latest.get();
-        }
-
-        JsonNode lastJson() {
-            return lastJson.get();
-        }
-
-        private void poll(RestFixture rest) {
-            String target = path.get();
-            CompletableFuture<Void> previous = inFlight.get();
-            if (target == null || !previous.isDone()) {
-                return;
-            }
-            previous.join();
-            inFlight.set(rest.get(target).handle((reply, error) -> {
-                if (reply != null && reply.status() == 200) {
-                    latest.set(reply.json().path("state").asText());
-                    lastJson.set(reply.json());
-                }
-                return null;
-            }));
-        }
     }
 }

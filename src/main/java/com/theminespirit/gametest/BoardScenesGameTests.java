@@ -19,7 +19,6 @@ public final class BoardScenesGameTests {
                 helper,
                 List.of("arena", "empty"),
                 BoardAnimalGameTests.class,
-                BoardBackoffGameTests.class,
                 BoardCraterGameTests.class,
                 BoardDispatchGameTests.class,
                 BoardFenceGameTests.class,

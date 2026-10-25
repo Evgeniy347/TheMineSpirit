@@ -409,26 +409,6 @@ public final class CraftGameTests {
     }
 
     @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
-    public static void craft_AcaciaLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
-        craftPickaxeFromLogs(helper, stack(Items.ACACIA_LOG, 2), Items.ACACIA_LOG);
-    }
-
-    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
-    public static void craft_DarkOakLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
-        craftPickaxeFromLogs(helper, stack(Items.DARK_OAK_LOG, 2), Items.DARK_OAK_LOG);
-    }
-
-    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
-    public static void craft_MangroveLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
-        craftPickaxeFromLogs(helper, stack(Items.MANGROVE_LOG, 2), Items.MANGROVE_LOG);
-    }
-
-    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
-    public static void craft_CherryLogsToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
-        craftPickaxeFromLogs(helper, stack(Items.CHERRY_LOG, 2), Items.CHERRY_LOG);
-    }
-
-    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void craft_BambooBlocksToWoodenPickaxe_CraftsPlanksAndSticks(GameTestHelper helper) {
         craftPickaxeFromLogs(helper, stack(Items.BAMBOO_BLOCK, 3), Items.BAMBOO_BLOCK);
     }

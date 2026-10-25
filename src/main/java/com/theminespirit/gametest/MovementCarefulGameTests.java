@@ -3,16 +3,10 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.DropProfile;
-import com.theminespirit.neoforge.CarefulPath;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.pathfinder.Node;
-import net.minecraft.world.level.pathfinder.Path;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -114,7 +108,7 @@ public final class MovementCarefulGameTests {
     // mob.getMaxFallDistance() (у духа DropPolicy.MAX_DROP = 2), поэтому и goto, и walk_careful обходят пропасть
     // и никогда не строят путь с падением глубже MAX_SAFE_DROP: CarefulPath.refusal на реальных путях всегда null.
     // Тест сторожит «дух идёт вдоль пропасти и не срывается» (общий путь для обоих режимов), а различие режимов
-    // покрывает синтетический carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing.
+    // покрывает DropProfileTests.carefulRefusal_*.
     @SceneStep(template = "arena", timeoutTicks = 300)
     public static void walkCareful_SixBlocksAlongFourDeepChasm_ArrivesAndAlwaysHasFloorBelow(GameTestHelper helper) {
         MovementScene.prepare(helper);
@@ -152,51 +146,6 @@ public final class MovementCarefulGameTests {
             saved.restore();
             MovementScene.finish(helper);
         });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 100)
-    public static void carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing(GameTestHelper helper) {
-        helper.assertTrue(
-                DropProfile.LOOKAHEAD_CELLS == 8,
-                "заглядывание вперёд — 8 клеток (решение главного агента к чеклисту 24), в коде "
-                        + DropProfile.LOOKAHEAD_CELLS);
-        helper.assertTrue(
-                DropProfile.MAX_SAFE_DROP == 2,
-                "безопасный спуск — 2 блока (MAX_DROP чеклиста 20), в коде " + DropProfile.MAX_SAFE_DROP);
-        helper.assertTrue(CarefulPath.refusal(path(true, 5, 5, 5, 5)) == null, "ровный путь осторожный шаг пропускает");
-        helper.assertTrue(
-                CarefulPath.refusal(path(true, 5, 5, 3, 3)) == null,
-                "спуск на 2 блока (MAX_DROP) осторожный шаг пропускает");
-        String drop = CarefulPath.refusal(path(true, 5, 5, 2, 2));
-        helper.assertTrue(
-                drop != null && drop.contains("обрыв"),
-                "спуск на 3 блока обязан отказать с причиной про обрыв, получено: " + drop);
-        helper.assertTrue(
-                CarefulPath.refusal(path(false, 5, 5, 5, 5)) != null,
-                "путь, не доходящий до цели, осторожный шаг отвергает: цель за преградой или обрывом");
-        helper.assertTrue(CarefulPath.refusal(null) != null, "отсутствие пути осторожный шаг отвергает");
-        int[] farDrop = new int[DropProfile.LOOKAHEAD_CELLS + 3];
-        Arrays.fill(farDrop, 9);
-        farDrop[farDrop.length - 1] = 4;
-        helper.assertTrue(
-                CarefulPath.refusal(path(true, farDrop)) == null,
-                "обрыв дальше " + DropProfile.LOOKAHEAD_CELLS + " клеток впереди осторожный шаг пока не проверяет: "
-                        + "он увидит его при следующем перестроении пути");
-        int[] nearDrop = new int[DropProfile.LOOKAHEAD_CELLS + 1];
-        Arrays.fill(nearDrop, 9);
-        nearDrop[nearDrop.length - 1] = 4;
-        helper.assertTrue(
-                CarefulPath.refusal(path(true, nearDrop)) != null,
-                "обрыв ровно на границе заглядывания (клетка " + DropProfile.LOOKAHEAD_CELLS + ") обязан отказать");
-        helper.succeed();
-    }
-
-    private static Path path(boolean reached, int... heights) {
-        List<Node> nodes = new ArrayList<>();
-        for (int i = 0; i < heights.length; i++) {
-            nodes.add(new Node(i, heights[i], 0));
-        }
-        return new Path(nodes, new BlockPos(heights.length - 1, heights[heights.length - 1], 0), reached);
     }
 
     private static SavedBlocks digPit(GameTestHelper helper, int depth) {

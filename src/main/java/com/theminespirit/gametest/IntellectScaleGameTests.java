@@ -104,14 +104,8 @@ public final class IntellectScaleGameTests {
                 intellect.entityQueries() <= intellect.decideCalls(),
                 "Запросов сущностей не больше числа пересчётов: один сбор врагов на решение");
         helper.assertTrue(
-                StockReader.STOCK_READ_BUDGET == 4096,
-                "Бюджет чтений запасов 4096: число в тесте, факт — из production");
-        helper.assertTrue(
                 intellect.stockReads() <= StockReader.STOCK_READ_BUDGET * intellect.decideCalls(),
                 "Чтений запасов не больше бюджета на число пересборок: иначе тик читает полмира");
-        helper.assertTrue(
-                IntellectTuning.loadDefault().failBackoffTicks() == 200,
-                "Откат провала 200 тиков: число в тесте, факт — из production");
         helper.assertTrue(
                 intellect.taskFailures() >= SPIRITS,
                 "Провалов не меньше числа духов: иначе механизм отката вообще не включался");

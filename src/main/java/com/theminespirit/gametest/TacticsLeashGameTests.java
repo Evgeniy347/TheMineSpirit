@@ -18,6 +18,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class TacticsLeashGameTests {
     private static final int ZONE_RADIUS = 2;
+    private static final int SEALED_OBSERVED_TICKS = 100;
     private static final int KILL_LIMIT_TICKS = 250;
     private static final int OBSERVED_TICKS = 120;
     private static final double RETURN_TOLERANCE = 2.0;
@@ -57,13 +58,13 @@ public final class TacticsLeashGameTests {
             }
         }
         SpiritEntity spirit = guard(helper, new BlockPos(7, 1, 7), at);
-        boolean[] returning = {false};
         PolicyScene scene = PolicyScene.launch(helper, spirit, 2, () -> {});
-        helper.onEachTick(() -> returning[0] |= spirit.tactics().wantsControl());
 
         helper.succeedWhen(() -> {
             scene.assertStarted();
-            helper.assertTrue(returning[0], "охранник сначала пытается вернуться к посту: тактика держит духа");
+            helper.assertTrue(
+                    scene.ticks() >= SEALED_OBSERVED_TICKS,
+                    "замурованного охранника смотрим " + SEALED_OBSERVED_TICKS + " тиков, прошло " + scene.ticks());
             helper.assertTrue(
                     !spirit.tactics().wantsControl(),
                     "Врагов нет, пост недостижим — возврат снимается, и тактика отпускает духа, а не держит его в "

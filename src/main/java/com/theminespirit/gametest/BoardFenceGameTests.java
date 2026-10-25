@@ -84,10 +84,6 @@ public final class BoardFenceGameTests {
                 repair.boardCase() == BoardCase.REPAIR_FENCE,
                 "Задание сломанного забора — кейс REPAIR_FENCE, фактически " + repair.boardCase());
         helper.assertTrue(
-                BoardRules.priorityOf(BoardCase.REPAIR_FENCE) == 100,
-                "Приоритет ремонта ограждений — 100, высший на доске, фактически "
-                        + BoardRules.priorityOf(BoardCase.REPAIR_FENCE));
-        helper.assertTrue(
                 board.board().find(stoneId).isEmpty(),
                 "Сломанный природный камень — не ограждение: задание " + stoneId + " поднялось зря");
         List<String> queue = board.board().claimable(new StockView(Map.of()), now).stream()

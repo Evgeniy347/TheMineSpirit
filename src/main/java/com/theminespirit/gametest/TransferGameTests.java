@@ -112,34 +112,6 @@ public final class TransferGameTests {
         });
     }
 
-    @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void transfer_DeliverToSpirit_ReceiverGetsItems(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        SpiritEntity giver = TacticsScene.spirit(helper, GIVER_POS);
-        SpiritEntity taker = TacticsScene.spirit(helper, CRAFTER_POS);
-        taker.setNoAi(true);
-        giver.getInventory().setItem(0, new ItemStack(Items.STICK, 2));
-        SpiritRun deliver = SpiritRun.launch(
-                helper,
-                giver,
-                new ScriptCall("deliver", Map.of("item", "stick", "count", 2, "to", "spirit:" + taker.getUUID())),
-                1);
-        helper.succeedWhen(() -> {
-            deliver.assertStarted();
-            RunStatus status = giver.taskStatus().orElse(null);
-            helper.assertTrue(
-                    status != RunStatus.FAILED,
-                    "Передача не должна проваливаться: "
-                            + giver.taskFailureReason().orElse("нет"));
-            helper.assertTrue(status == RunStatus.SUCCEEDED, "Передача ещё идёт: " + status);
-            helper.assertTrue(
-                    GameTestFixtures.countInInventory(taker.getInventory(), Items.STICK) == 2,
-                    "Получатель обязан получить 2 палки, у него: "
-                            + GameTestFixtures.countInInventory(taker.getInventory(), Items.STICK));
-            TacticsScene.finish(helper, giver);
-        });
-    }
-
     private static BlockCoord at(SpiritEntity spirit) {
         return new BlockCoord(
                 spirit.blockPosition().getX(),

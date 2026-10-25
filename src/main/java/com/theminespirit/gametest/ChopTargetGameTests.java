@@ -21,44 +21,6 @@ public final class ChopTargetGameTests {
 
     private ChopTargetGameTests() {}
 
-    @SceneStep(template = FIELD, timeoutTicks = 300)
-    public static void chopTarget_OakByCoordinate_ChoppedCompletely(GameTestHelper helper) {
-        ChopTreeGameTests.prepareField(helper);
-        ChopTreeGameTests.buildOakTree(helper, 4, 4, 5);
-        SpiritEntity spirit = ChopTreeGameTests.spawnChopper(helper);
-        BlockPos target = helper.absolutePos(new BlockPos(4, 1, 4));
-
-        SpiritRun run = SpiritRun.launch(helper, spirit, chopTargetCall(target), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "chop_target по координате ствола обязан завершиться успехом, статус: "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-
-            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
-            helper.assertTrue(
-                    logsInInventory == 5, "в инвентаре должно быть 5 дубовых брёвен, фактически " + logsInInventory);
-
-            int logsInWorld = ChopTreeGameTests.countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(
-                    logsInWorld == 0,
-                    "дерево по координате обязано быть срублено целиком, осталось брёвен " + logsInWorld);
-
-            int droppedLogs = GameTestFixtures.countInWorld(helper, Items.OAK_LOG);
-            helper.assertTrue(
-                    droppedLogs == 0, "сборщик обязан подобрать все выпавшие брёвна, осталось валяться " + droppedLogs);
-
-            int leavesInWorld = ChopTreeGameTests.countBlocksInWorld(helper, Blocks.OAK_LEAVES);
-            helper.assertTrue(
-                    leavesInWorld > 0, "листва должна остаться целой, осталось " + leavesInWorld + " блоков листьев");
-
-            ChopTreeGameTests.clearField(helper);
-        });
-    }
-
     @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTarget_OakWithBirchNextToIt_LeavesNeighbourUntouched(GameTestHelper helper) {
         ChopTreeGameTests.prepareField(helper);
@@ -88,6 +50,14 @@ public final class ChopTargetGameTests {
                     oakInWorld == 0 && birchInWorld == 5,
                     "соседняя берёза обязана уцелеть целиком: дуб в мире=" + oakInWorld + ", берёза в мире="
                             + birchInWorld);
+
+            int droppedLogs = GameTestFixtures.countInWorld(helper, Items.OAK_LOG);
+            helper.assertTrue(
+                    droppedLogs == 0, "сборщик обязан подобрать все выпавшие брёвна, осталось валяться " + droppedLogs);
+
+            int leavesInWorld = ChopTreeGameTests.countBlocksInWorld(helper, Blocks.OAK_LEAVES);
+            helper.assertTrue(
+                    leavesInWorld > 0, "листва должна остаться целой, осталось " + leavesInWorld + " блоков листьев");
 
             ChopTreeGameTests.clearField(helper);
         });

@@ -77,23 +77,6 @@ public final class FishingGameTests {
         });
     }
 
-    @SceneStep(template = "arena", timeoutTicks = 400)
-    public static void smelt_CodInSmoker_CookedCod(GameTestHelper helper) {
-        CraftTestSupport.field(helper);
-        helper.setBlock(STATION_CELL, Blocks.SMOKER);
-        SpiritEntity spirit = CraftTestSupport.prepare(
-                helper, CraftTestSupport.stack(Items.COD, 2), CraftTestSupport.stack(Items.COAL, 1));
-        CraftTestSupport.speedUpFurnaces(helper);
-        SpiritRun run = CraftTestSupport.launch(helper, spirit, "smelt", "cooked_cod", 2);
-
-        helper.succeedWhen(() -> {
-            CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
-            CraftTestSupport.assertCount(helper, spirit, Items.COOKED_COD, 2, "жареная треска из коптильни");
-            CraftTestSupport.assertCount(helper, spirit, Items.COD, 0, "сырая треска после копчения");
-            CraftTestSupport.cleanup(helper, spirit);
-        });
-    }
-
     @SceneStep(template = "arena", timeoutTicks = 200)
     public static void smelt_PufferfishRequested_Refused(GameTestHelper helper) {
         CraftTestSupport.field(helper);

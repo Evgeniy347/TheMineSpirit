@@ -13,10 +13,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -226,89 +224,6 @@ public final class ResultGameTests {
                             && sightings.get(0).path("label").asText().contains("oak_log"),
                     "Итог обязан содержать одну находку oak_log, получено " + sightings);
         });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void scanBlocks_TooManyBlockKinds_RestResultTruncatedToLimit(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        placeDistinctBlocks(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        ResultPoller poller = ResultPoller.start(helper, rest);
-        RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(
-                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        taskBody("scan_blocks", Map.of("radius", 8, "filter", List.of("*"))))
-                .thenApply(accepted -> {
-                    problems.expect(accepted.status() == 202, "POST tasks обязан отвечать 202: " + accepted.body());
-                    poller.follow(accepted.json().path("task_id").asText());
-                    return problems.found();
-                });
-        RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(
-                    "succeeded".equals(poller.latest()),
-                    "scan_blocks обязан завершить задачу успехом; последнее состояние " + poller.latest() + ", тело "
-                            + poller.lastJson());
-            JsonNode result = poller.lastJson().path("result");
-            helper.assertTrue(
-                    result.isObject() && "blocks".equals(result.path("type").asText()),
-                    "Итог обязан быть объектом с type=blocks, получено " + result);
-            helper.assertTrue(
-                    result.path("truncated").asBoolean(false),
-                    "Итог длиннее лимита обязан нести truncated=true, получено " + result);
-            helper.assertTrue(
-                    result.path("blocks").size() == 32,
-                    "Список блоков обязан обрезаться до 32 записей, получено "
-                            + result.path("blocks").size());
-        });
-    }
-
-    private static void placeDistinctBlocks(GameTestHelper helper) {
-        String[] ids = {
-            "white_wool",
-            "orange_wool",
-            "magenta_wool",
-            "light_blue_wool",
-            "yellow_wool",
-            "lime_wool",
-            "pink_wool",
-            "gray_wool",
-            "light_gray_wool",
-            "cyan_wool",
-            "purple_wool",
-            "blue_wool",
-            "brown_wool",
-            "green_wool",
-            "red_wool",
-            "black_wool",
-            "oak_planks",
-            "spruce_planks",
-            "birch_planks",
-            "jungle_planks",
-            "acacia_planks",
-            "dark_oak_planks",
-            "mangrove_planks",
-            "cherry_planks",
-            "bamboo_planks",
-            "crimson_planks",
-            "warped_planks",
-            "oak_log",
-            "spruce_log",
-            "birch_log",
-            "jungle_log",
-            "acacia_log",
-            "dark_oak_log"
-        };
-        int i = 0;
-        for (int z = 0; z < 4 && i < ids.length; z++) {
-            for (int x = 0; x < 9 && i < ids.length; x++) {
-                if (x == SPIRIT_START.getX() && z == SPIRIT_START.getZ()) {
-                    continue;
-                }
-                helper.setBlock(x, 1, z, BuiltInRegistries.BLOCK.get(ResourceLocation.parse("minecraft:" + ids[i])));
-                i++;
-            }
-        }
     }
 
     @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)

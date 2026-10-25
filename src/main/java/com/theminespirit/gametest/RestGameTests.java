@@ -281,14 +281,15 @@ public final class RestGameTests {
         helper.setBlock(chestAt, Blocks.CHEST);
         ((Container) helper.getLevel().getBlockEntity(helper.absolutePos(chestAt)))
                 .setItem(0, new ItemStack(Items.IRON_INGOT, 7));
-        BlockPos dropAt = helper.absolutePos(new BlockPos(6, 2, 6));
-        helper.getLevel()
-                .addFreshEntity(new ItemEntity(
-                        helper.getLevel(),
-                        dropAt.getX() + 0.5,
-                        dropAt.getY() + 0.5,
-                        dropAt.getZ() + 0.5,
-                        new ItemStack(Items.OAK_LOG, 3)));
+        BlockPos dropAt = helper.absolutePos(new BlockPos(1, 2, 8));
+        ItemEntity drop = new ItemEntity(
+                helper.getLevel(),
+                dropAt.getX() + 0.5,
+                dropAt.getY() + 0.5,
+                dropAt.getZ() + 0.5,
+                new ItemStack(Items.OAK_LOG, 3));
+        drop.setNeverPickUp();
+        helper.getLevel().addFreshEntity(drop);
         String path = "/v1/bots/" + spirit.getStringUUID() + "/observe";
         RestFixture.Problems problems = new RestFixture.Problems();
         CompletableFuture<List<String>> scenario = rest.post(path, "{\"radius\":8}".getBytes(StandardCharsets.UTF_8))

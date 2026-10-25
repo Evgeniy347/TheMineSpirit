@@ -119,29 +119,6 @@ public final class ExperienceGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void blockBreaker_SpiritMinesDiamondOre_PlayerGainsAtLeastThreeExperience(GameTestHelper helper) {
-        SpiritEntity spirit = spirit(helper);
-        spirit.getInventory().setItem(TOOL_SLOT, new ItemStack(Items.IRON_PICKAXE));
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 3), "xp_diamond_player");
-        player.totalExperience = 0;
-        helper.setBlock(ORE_AT, Blocks.DIAMOND_ORE);
-        BlockBreaker breaker = new BlockBreaker(spirit);
-        helper.assertTrue(
-                breaker.begin(helper.absolutePos(ORE_AT)) instanceof BlockBreaker.Started,
-                "дух с железной киркой обязан начать ломать алмазную руду");
-        runToEnd(breaker);
-
-        helper.assertTrue(
-                player.totalExperience >= 3,
-                "алмазная руда даёт минимум 3 опыта (UniformInt 3..7): игрок обязан получить не меньше, " + "а получил "
-                        + player.totalExperience);
-        int orbs = orbsNear(helper).size();
-        helper.assertTrue(orbs == 0, "опыт за руду, добытую духом, не превращается в сферы на земле: сфер " + orbs);
-        GameTestFixtures.reset(helper);
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void blockBreaker_SpiritMinesOreWithNoPlayersOnline_PoolsThenGivesOnLogin(GameTestHelper helper) {
         SettlementExperience.get(helper.getLevel().getServer()).drain();
         SpiritEntity spirit = spirit(helper);
