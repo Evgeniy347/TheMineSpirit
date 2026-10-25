@@ -17,7 +17,6 @@ import com.theminespirit.neoforge.WorldScanner;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.level.ChunkPos;
@@ -38,7 +37,7 @@ public final class ScanGameTests {
 
     private ScanGameTests() {}
 
-    @GameTest(template = "arena", batch = "scan_filter", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scanScript_OreFloorWithOreFilter_ReportsOnlyOres(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
@@ -74,7 +73,7 @@ public final class ScanGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "scan_nofilter", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scanScript_OreFloorWithoutFilter_ReportsStoneToo(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
@@ -100,7 +99,7 @@ public final class ScanGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "scan_cost", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void scanSession_Radius32OverSlab_ReadsWithinBudgetPerTickAndSkipsEmptySections(
             GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -147,7 +146,7 @@ public final class ScanGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "scan_long", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scanScript_Radius32InMostlyEmptyWorld_FinishesWithinTickBudget(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
@@ -172,7 +171,7 @@ public final class ScanGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "scan_unloaded", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void scanSession_Radius32NearUnloadedChunks_DoesNotLoadChunks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -207,7 +206,7 @@ public final class ScanGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "scan_unloaded", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void scanSession_ForcedTicket_SkipsChunkWithoutLoading(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -256,7 +255,7 @@ public final class ScanGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "scan_cancel", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scanScript_CancelledOnSecondTick_KeepsPreviousObservation(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);

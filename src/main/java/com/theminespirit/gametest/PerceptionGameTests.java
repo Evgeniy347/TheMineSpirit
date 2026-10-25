@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -49,7 +48,7 @@ public final class PerceptionGameTests {
 
     private PerceptionGameTests() {}
 
-    @GameTest(template = "arena", batch = "perception_scan_blocks", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void scanBlocks_OreFloorWithOreFilter_ReportsOnlyOres(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -89,7 +88,7 @@ public final class PerceptionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_scan_entities", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void scanEntities_CowsAndSheep_ReportsOnlyCows(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -123,7 +122,7 @@ public final class PerceptionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_scan_cost", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void scanScript_BlocksAndEntitiesFocus_ReadOnlyTheirOwnPartOfWorld(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -158,7 +157,7 @@ public final class PerceptionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "perception_hazard_lava", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void senseHazard_LavaFourBlocksAway_ReportsLavaAndLeavesSpiritInPlace(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -198,7 +197,7 @@ public final class PerceptionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_hazard_drop", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void senseHazard_PlatformEdgeThreeBlocksAway_ReportsDropAndLeavesSpiritInPlace(
             GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -238,7 +237,7 @@ public final class PerceptionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_hazard_cost", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void senseHazard_Radius32NearUnloadedChunks_ReadsFourSlicesPerTickAndLoadsNoChunks(
             GameTestHelper helper) {
         GameTestFixtures.reset(helper);

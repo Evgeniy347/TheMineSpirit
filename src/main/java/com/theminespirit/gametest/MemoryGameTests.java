@@ -28,7 +28,6 @@ import java.util.UUID;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -68,7 +67,7 @@ public final class MemoryGameTests {
         return helper.getLevel().dimension().location().toString();
     }
 
-    @GameTest(template = "arena", batch = "memory_remember_recall", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void rememberThenRecall_Point_ReturnsPositionTypeAndDimension(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -95,7 +94,7 @@ public final class MemoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "memory_recall_all", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void recallAll_MixedTypes_ReturnsOnlyPointsOfRequestedType(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -133,7 +132,7 @@ public final class MemoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "memory_forget", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void forget_RememberedPoint_IsNotFoundByRecall(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -160,7 +159,7 @@ public final class MemoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "memory_nbt_roundtrip", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void memory_SavedAndReloaded_KeepsPointsAndDimension(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -195,7 +194,7 @@ public final class MemoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "memory_corrupt", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void memory_CorruptNbt_LoadsEmptyAndCountsFailure(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -218,7 +217,7 @@ public final class MemoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "memory_full", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void remember_SeventeenthPointOfType_FailsWithReadableReason(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -250,7 +249,7 @@ public final class MemoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "memory_command", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void spiritMemoryCommand_RecallAllRecallAndForget_ReportsAndChangesMemory(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);
