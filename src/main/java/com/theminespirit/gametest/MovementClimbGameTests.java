@@ -6,7 +6,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LadderBlock;
@@ -28,7 +27,7 @@ public final class MovementClimbGameTests {
 
     private MovementClimbGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_climb_up", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void climb_LadderFiveBlocksUp_ReachesTopRung(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildLadder(helper);
@@ -57,7 +56,7 @@ public final class MovementClimbGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_climb_down", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void climb_LadderFiveBlocksDown_ReachesBottomFloor(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildLadder(helper);

@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -69,7 +68,7 @@ public final class DescentGameTests {
         return total;
     }
 
-    @GameTest(template = "arena", batch = "descent", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void descend_SafeShaft_ReachesTargetYAndLightsShaft(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithKit(helper, new BlockPos(3, 5, 4));
@@ -128,7 +127,7 @@ public final class DescentGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "descent", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void descend_UnreachableDropInShaft_StillReachesTargetY(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(3, 2, 4), Blocks.AIR);
@@ -156,7 +155,7 @@ public final class DescentGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "descent", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void descend_LavaInShaft_WarnsAndStopsWithWorldSafe(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(5, 2, 4), Blocks.LAVA);

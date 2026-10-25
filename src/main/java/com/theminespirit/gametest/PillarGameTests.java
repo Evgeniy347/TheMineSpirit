@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.PillarUpScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -41,7 +40,7 @@ public final class PillarGameTests {
         return spirit;
     }
 
-    @GameTest(template = TEMPLATE, batch = "pillar_up_down", timeoutTicks = 300)
+    @SceneStep(template = TEMPLATE, timeoutTicks = 300)
     public static void pillarUp_FourBlocksThenDown_ReturnsAllBlocks(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithDirt(helper, 8);
@@ -101,7 +100,7 @@ public final class PillarGameTests {
         });
     }
 
-    @GameTest(template = TEMPLATE, batch = "pillar_up_no_material", timeoutTicks = 100)
+    @SceneStep(template = TEMPLATE, timeoutTicks = 100)
     public static void pillarUp_EmptyInventory_FailsWithMaterialReason(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWithDirt(helper, 0);
@@ -120,7 +119,7 @@ public final class PillarGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = TEMPLATE, batch = "pillar_up_ceiling", timeoutTicks = 100)
+    @SceneStep(template = TEMPLATE, timeoutTicks = 100)
     public static void pillarUp_SolidCeiling_FailsWithCeilingReason(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 1, SPIRIT_START.getZ(), Blocks.STONE);
@@ -142,7 +141,7 @@ public final class PillarGameTests {
     // Потолок в двух клетках над ногами проходит проверку клетки и головы, но не даёт духу
     // подпрыгнуть: раньше каждый тик на земле сбрасывал счётчик застоя, и pillar_up висел
     // в RUNNING вечно (флак chop_tree_tall 17.10). Счётчик обязан идти и на земле.
-    @GameTest(template = TEMPLATE, batch = "pillar_up_blocked_jump", timeoutTicks = 400)
+    @SceneStep(template = TEMPLATE, timeoutTicks = 400)
     public static void pillarUp_CeilingAboveHead_FailsInsteadOfRunningForever(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 2, SPIRIT_START.getZ(), Blocks.STONE);
@@ -173,7 +172,7 @@ public final class PillarGameTests {
         });
     }
 
-    @GameTest(template = TEMPLATE, batch = "pillar_up_water", timeoutTicks = 100)
+    @SceneStep(template = TEMPLATE, timeoutTicks = 100)
     public static void pillarUp_WaterAbove_FailsWithFluidReason(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(SPIRIT_START.getX(), SPIRIT_START.getY() + 1, SPIRIT_START.getZ(), Blocks.WATER);
@@ -194,7 +193,7 @@ public final class PillarGameTests {
     // [флак] Клетка столба прижата к стволу: тело духа 0.6 шириной, сдвиг к стволу больше 0.2 задевает
     // бревно на прыжке (CellCentering.TOLERANCE) и подъём встаёт (флак chop_tree_tall: «не поднялся на
     // 5-й блок»). Столб обязан возвращать духа в центр клетки, а не оставлять его у ствола.
-    @GameTest(template = TEMPLATE, batch = "pillar_up_off_center", timeoutTicks = 300)
+    @SceneStep(template = TEMPLATE, timeoutTicks = 300)
     public static void pillarUp_StartedBesideTrunk_ReturnsToCellCenter(GameTestHelper helper) {
         prepare(helper);
         for (int y = 1; y <= 6; y++) {

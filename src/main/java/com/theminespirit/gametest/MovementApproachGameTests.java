@@ -4,7 +4,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -27,7 +26,7 @@ public final class MovementApproachGameTests {
 
     private MovementApproachGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_approach_glass", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void approach_DiamondOnMoundBehindGlass_StandsOnMoundInReachAndLeavesBlockIntact(
             GameTestHelper helper) {
         MovementScene.prepare(helper);
@@ -72,7 +71,7 @@ public final class MovementApproachGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_approach_sealed", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void approach_TargetInSolidChamber_FailsWithNowhereToStandAndStands(GameTestHelper helper) {
         MovementScene.prepare(helper);
         for (int x = CHAMBER_MIN_X; x <= CHAMBER_MAX_X; x++) {

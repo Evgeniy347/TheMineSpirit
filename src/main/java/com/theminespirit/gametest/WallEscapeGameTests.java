@@ -4,7 +4,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -18,7 +17,7 @@ public final class WallEscapeGameTests {
 
     private WallEscapeGameTests() {}
 
-    @GameTest(template = "arena", batch = "wall_escape", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void wallEscape_HeadInStone_StepsToFreeCell(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritHomeStore;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -28,7 +27,7 @@ public final class MovementHomeGameTests {
 
     private MovementHomeGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_home_arrive", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void returnHome_HomeSixBlocksAway_ArrivesWithinTolerance(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
@@ -56,7 +55,7 @@ public final class MovementHomeGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_home_none", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void returnHome_NoHomeSet_FailsWithinTwoTicksWithoutMoving(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
@@ -90,7 +89,7 @@ public final class MovementHomeGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_home_nbt")
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void home_SavedAndLoaded_SurvivesRoundTripAndRejectsFutureVersion(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity saved = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -150,7 +149,7 @@ public final class MovementHomeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "move_home_legacy")
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void home_LegacyBaseMemoryWithoutHomeKey_MigratesOnLoadAndKeepsMemory(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity legacy = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));

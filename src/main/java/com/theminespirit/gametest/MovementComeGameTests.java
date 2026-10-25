@@ -5,7 +5,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -23,7 +22,7 @@ public final class MovementComeGameTests {
 
     private MovementComeGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_come_player", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void comeToPlayer_NoNameAndMockPlayerSixBlocksAway_ArrivesWithinToleranceNoLaterThan200Ticks(
             GameTestHelper helper) {
         MovementScene.prepare(helper);
@@ -53,7 +52,7 @@ public final class MovementComeGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_come_nobody", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void comeToPlayer_UnknownPlayerName_FailsBeforeFirstStepAndStands(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
