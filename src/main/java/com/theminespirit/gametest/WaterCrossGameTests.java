@@ -6,7 +6,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -59,7 +58,7 @@ public final class WaterCrossGameTests {
     }
 
     // [флак] заплыв через канал в пять блоков плюс переход: под нагрузкой полного прогона заплыв тянется
-    @GameTest(template = "arena", batch = "water_cross_swim", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void crossWater_FiveBlockChannelWithDirt_SwimsWithoutBridge(GameTestHelper helper) {
         MovementScene.prepare(helper);
         // Канал глубиной 2 в каменной чаше: вода не растекается за арену, а переправа идёт вплавь.
@@ -103,7 +102,7 @@ public final class WaterCrossGameTests {
     }
 
     // [флак] четыре клетки моста и переход: запас под нагрузкой соседних сцен полного прогона
-    @GameTest(template = "arena", batch = "water_bridge_pit", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void bridge_FourBlockPit_PlacesBlocksAndCrosses(GameTestHelper helper) {
         MovementScene.prepare(helper);
         carveChannel(helper, PIT_MIN_X, PIT_MAX_X, 0, false);
@@ -133,7 +132,7 @@ public final class WaterCrossGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "water_bridge_nogap", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void bridge_NoGapOnSolidFloor_WalksToTarget(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, START);
@@ -155,7 +154,7 @@ public final class WaterCrossGameTests {
     }
 
     // [флак] заплыв через глубокий пруд: всплытия и подход за плавание под нагрузкой дольше
-    @GameTest(template = "arena", batch = "water_swim", timeoutTicks = 800)
+    @SceneStep(template = "arena", timeoutTicks = 800)
     public static void swim_AcrossDeepTank_SurfacesAndDoesNotDrown(GameTestHelper helper) {
         MovementScene.prepare(helper);
         buildTank(helper);

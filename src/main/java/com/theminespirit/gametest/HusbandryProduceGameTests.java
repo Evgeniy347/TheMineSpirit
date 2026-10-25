@@ -8,7 +8,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Chicken;
@@ -30,7 +29,7 @@ public final class HusbandryProduceGameTests {
 
     private HusbandryProduceGameTests() {}
 
-    @GameTest(template = "arena", batch = "husbandry_shear", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void shear_SheepWithShears_WoolCollectedSheepAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -57,7 +56,7 @@ public final class HusbandryProduceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_milk", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void milk_CowWithBucket_MilkInInventory(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -82,7 +81,7 @@ public final class HusbandryProduceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_eggs", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void collectEggs_EggsOnFloor_AllPickedChickensAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -111,7 +110,7 @@ public final class HusbandryProduceGameTests {
 
     // [флак] овца может выйти из загона после первого возврата и приманка повторится (каждая укладка
     // ограничена 150 тиками): замер 395 тиков работы духа, потолок 500 с запасом, сам тест 800 ≈ 2×
-    @GameTest(template = "arena", batch = "husbandry_lure", timeoutTicks = 800)
+    @SceneStep(template = "arena", timeoutTicks = 800)
     public static void feed_EscapeeFiveBlocksAway_ReturnedInsideWithoutDamage(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -176,7 +175,7 @@ public final class HusbandryProduceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_lava", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void shear_SheepInLava_SkippedAndCounted(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -200,7 +199,7 @@ public final class HusbandryProduceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_no_shears", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void shear_WithoutShears_FailsBeforeApproach(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -223,7 +222,7 @@ public final class HusbandryProduceGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_shear_single_twice", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void shear_CountTwoOneSheep_SecondRunHasNothingToDo(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -28,7 +27,7 @@ public final class PolicyLayerGameTests {
     private PolicyLayerGameTests() {}
 
     // [флак] слои и приостановка: сценарий в сотни тиков духа, запас под нагрузкой
-    @GameTest(template = "arena", batch = "policy_layers", timeoutTicks = 500)
+    @SceneStep(template = "arena", timeoutTicks = 500)
     public static void layers_LavaAppearsBesideTheWalkingSpirit_TaskSuspendedThenResumedAfterTenQuietTicks(
             GameTestHelper helper) {
         GameTestFixtures.reset(helper);
@@ -97,7 +96,7 @@ public final class PolicyLayerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_load", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void load_TwentyIdleSpirits_ReadsAndQueriesStayWithinTierBudgets(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

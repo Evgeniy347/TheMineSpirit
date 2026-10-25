@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Node;
@@ -36,7 +35,7 @@ public final class MovementCarefulGameTests {
 
     private MovementCarefulGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_careful_pit2", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void walkCareful_TargetAtBottomOfTwoDeepPit_StepsDownAndSucceeds(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SavedBlocks saved = digPit(helper, PIT_DEPTH_OK);
@@ -65,7 +64,7 @@ public final class MovementCarefulGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_careful_pit3", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void walkCareful_TargetAtBottomOfThreeDeepPit_RefusesAtOnceAndNeverDescends(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SavedBlocks saved = digPit(helper, PIT_DEPTH_TOO_DEEP);
@@ -116,7 +115,7 @@ public final class MovementCarefulGameTests {
     // и никогда не строят путь с падением глубже MAX_SAFE_DROP: CarefulPath.refusal на реальных путях всегда null.
     // Тест сторожит «дух идёт вдоль пропасти и не срывается» (общий путь для обоих режимов), а различие режимов
     // покрывает синтетический carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing.
-    @GameTest(template = "arena", batch = "move_careful_edge", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void walkCareful_SixBlocksAlongFourDeepChasm_ArrivesAndAlwaysHasFloorBelow(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SavedBlocks saved = digChasm(helper);
@@ -155,7 +154,7 @@ public final class MovementCarefulGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_careful_path")
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void carefulPath_SyntheticPaths_RefusesOnlyDeepDropsUnreachableAndMissing(GameTestHelper helper) {
         helper.assertTrue(
                 DropProfile.LOOKAHEAD_CELLS == 8,

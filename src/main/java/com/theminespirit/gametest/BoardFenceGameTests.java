@@ -18,9 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -38,23 +35,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardFenceGameTests {
-    private static final String BATCH = "board_fence";
 
     private BoardFenceGameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void stopMobsTargetingSpirits(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreMobTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true, calmMobs = true)
     public static void fence_BrokenNearBase_RepairFirstSingleHolder(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -25,13 +24,12 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class PersonalSpaceGameTests {
-    private static final String BATCH = "personal_space";
     private static final int SETTLE_TICKS = 5;
     private static final int MAX_CROWDED_TICKS = 30;
 
     private PersonalSpaceGameTests() {}
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void idleSpirit_PlayerInNeighbourCell_StepsAway(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -50,7 +48,7 @@ public final class PersonalSpaceGameTests {
     }
 
     // [флак] 17 блоков по 10 тиков плюс шаги в сторону; потолок ≈ 2× замера.
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void build_PlayerStandsNextToSpirit_SpiritStepsAsideAndFinishes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

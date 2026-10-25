@@ -6,7 +6,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Cow;
@@ -25,7 +24,7 @@ public final class HusbandryCullGameTests {
 
     private HusbandryCullGameTests() {}
 
-    @GameTest(template = "arena", batch = "husbandry_cull", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void cull_FiveCowsKeepThree_TwoCulledCalfAliveDropsPicked(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -58,7 +57,7 @@ public final class HusbandryCullGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_cull_stone", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void cull_StoneSword_RefusedAllAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -81,7 +80,7 @@ public final class HusbandryCullGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_cull_hands", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void cull_BareHands_RefusedAllAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -103,7 +102,7 @@ public final class HusbandryCullGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_hunt", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void hunt_WildPigsOutsideHomePen_AllCulledOwnAlive(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -132,7 +131,7 @@ public final class HusbandryCullGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "husbandry_cull_calf", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void cull_CalfNearVictim_StrikeDeferredToNext(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

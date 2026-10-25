@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -27,12 +26,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class BoardBackoffGameTests {
-    private static final String BATCH = "board_backoff";
     private static final BoardCase CASE = BoardCase.STOCK_CHESTS;
 
     private BoardBackoffGameTests() {}
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void backoff_AlwaysFailingCase_NotIssuedBeforePause(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -29,7 +28,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardScaleGameTests {
     private static final int SPIRITS = 20;
     private static final int TICKETS = 6;
@@ -40,7 +38,7 @@ public final class BoardScaleGameTests {
 
     private BoardScaleGameTests() {}
 
-    @GameTest(template = "arena", batch = "board_scale", timeoutTicks = TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TIMEOUT_TICKS, board = true)
     public static void scale_TwentySpiritsSixTickets_WorkPerThousandTicksStaysWithinLimits(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

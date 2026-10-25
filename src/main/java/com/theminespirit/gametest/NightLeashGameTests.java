@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.tactics.CombatActuator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -35,7 +34,7 @@ public final class NightLeashGameTests {
 
     private NightLeashGameTests() {}
 
-    @GameTest(template = "arena", batch = "night_leash_refuse", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void goto_NightTargetOutsideSettlement_FailsWithReasonWithoutReaching(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -62,7 +61,7 @@ public final class NightLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "night_leash_allow", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void goto_DayTargetOutsideSettlement_Arrives(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -88,7 +87,7 @@ public final class NightLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "night_leash_follow", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void follow_NightMockPlayerOutsideSettlement_CrossesBoundary(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -119,7 +118,7 @@ public final class NightLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "night_leash_come", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void come_NightMockPlayerOutsideSettlement_Arrives(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -153,7 +152,7 @@ public final class NightLeashGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "night_leash_chase", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void chase_NightEnemyOutsideSettlement_StopsAtBoundary(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);

@@ -13,7 +13,6 @@ import com.theminespirit.neoforge.board.FirstStepsRunner;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -26,14 +25,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class FirstStepsRemainderGameTests {
-    private static final String BATCH = "first_steps_remainder";
     private static final String FENCE_ITEM = "jungle_fence";
     private static final int PLACED = 3;
     private static final int NEED = 72;
 
     private FirstStepsRemainderGameTests() {}
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void remainder_FencePartlyBuilt_NeedsOnlyUnplaced(GameTestHelper helper) {
         BlockPos anchorPos = helper.absolutePos(new BlockPos(4, 1, 4));
         BlockCoord anchor = new BlockCoord(anchorPos.getX(), anchorPos.getY(), anchorPos.getZ());

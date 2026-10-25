@@ -6,7 +6,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -31,7 +30,7 @@ public final class HiveGameTests {
 
     private HiveGameTests() {}
 
-    @GameTest(template = "arena", batch = "hive_campfire", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvest_FullHiveWithCampfire_HoneycombCollectedBeesCalm(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -63,7 +62,7 @@ public final class HiveGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "hive_place_campfire", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvest_NoCampfireWithMaterials_CampfirePlacedThenHarvest(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -107,7 +106,7 @@ public final class HiveGameTests {
 
     // Флак полного прогона 18.10: пчела влетала в клетку будущего костра, BlockPlacer отказывал OCCUPIED, и сбор
     // проваливался сразу. Существо в клетке костра уходит — дух обязан дождаться и поставить костёр.
-    @GameTest(template = "arena", batch = "hive_fire_occupied", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvest_BeeInCampfireCellLeaves_SpiritWaitsAndPlacesCampfire(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -139,7 +138,7 @@ public final class HiveGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "hive_bottle", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void harvest_GlassBottle_MilkHoneyInInventory(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

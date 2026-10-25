@@ -4,7 +4,6 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -18,7 +17,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ArmorEquipGameTests {
     private ArmorEquipGameTests() {}
 
-    @GameTest(template = "arena", batch = "armor_auto_chest", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void armor_LeatherAndIronChest_EquipsIron(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -37,7 +36,7 @@ public final class ArmorEquipGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "armor_auto_helm", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void armor_LeatherWornDiamondPickedUp_EquipsDiamondAndKeepsLeather(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -60,7 +59,7 @@ public final class ArmorEquipGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "armor_auto_broken", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void armor_NearlyBrokenWorn_ReplacedByWholeInInventory(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

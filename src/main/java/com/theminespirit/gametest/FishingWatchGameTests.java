@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -34,13 +33,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class FishingWatchGameTests {
-    private static final String BATCH = "fishing_watch";
 
     private FishingWatchGameTests() {}
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void fishingWatch_FishAtThreshold_PostsSmokerCraft(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -73,7 +70,7 @@ public final class FishingWatchGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void fishingWatch_NoFoodNearWater_PostsWorkPoint(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

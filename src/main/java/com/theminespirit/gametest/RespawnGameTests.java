@@ -14,7 +14,6 @@ import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
@@ -29,7 +28,7 @@ public final class RespawnGameTests {
 
     private RespawnGameTests() {}
 
-    @GameTest(template = "arena", batch = "respawn", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void respawn_SpiritDies_ReturnsToPlotAnchor(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         floor(helper, 5, 5);

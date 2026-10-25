@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
@@ -37,7 +36,7 @@ public final class HungerGameTests {
         return GameTestFixtures.countInInventory(spirit.getInventory(), Items.BREAD);
     }
 
-    @GameTest(template = "arena", batch = "hunger_eat", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void hungry_WithBreadInInventory_EatsAndSatietyRises(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -59,7 +58,7 @@ public final class HungerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "hunger_full", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void full_WithBreadInInventory_DoesNotEat(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -81,7 +80,7 @@ public final class HungerGameTests {
     }
 
     // [флак] сцена длиннее прочих сцен голода: сперва бой под тактикой, затем обед после него
-    @GameTest(template = "arena", batch = "hunger_combat", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void combat_WhileFightingThenPeaceful_StopsEatingThenEats(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -136,7 +135,7 @@ public final class HungerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "hunger_save", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void saveAndReload_AfterRestart_KeepsSatiety(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));

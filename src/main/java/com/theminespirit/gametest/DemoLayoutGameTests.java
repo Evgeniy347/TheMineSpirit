@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -173,28 +172,28 @@ public final class DemoLayoutGameTests {
 
     // [флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "demo_arena", batch = "demo_layout", timeoutTicks = 12000)
+    @SceneStep(template = "demo_arena", timeoutTicks = 12000)
     public static void familyHouse_LookSouth_TurnsEntryToPlayerAndClearsPlatform(GameTestHelper helper)
             throws CommandSyntaxException {
         runFamilyHouse(helper, 0, BuildRotation.NONE);
     }
 
     // [флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-    @GameTest(template = "demo_arena", batch = "demo_layout", timeoutTicks = 12000)
+    @SceneStep(template = "demo_arena", timeoutTicks = 12000)
     public static void familyHouse_LookWest_TurnsEntryToPlayerAndClearsPlatform(GameTestHelper helper)
             throws CommandSyntaxException {
         runFamilyHouse(helper, 90, BuildRotation.CLOCKWISE_90);
     }
 
     // [флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-    @GameTest(template = "demo_arena", batch = "demo_layout", timeoutTicks = 12000)
+    @SceneStep(template = "demo_arena", timeoutTicks = 12000)
     public static void familyHouse_LookNorth_TurnsEntryToPlayerAndClearsPlatform(GameTestHelper helper)
             throws CommandSyntaxException {
         runFamilyHouse(helper, 180, BuildRotation.CLOCKWISE_180);
     }
 
     // [флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-    @GameTest(template = "demo_arena", batch = "demo_layout", timeoutTicks = 12000)
+    @SceneStep(template = "demo_arena", timeoutTicks = 12000)
     public static void familyHouse_LookEast_TurnsEntryToPlayerAndClearsPlatform(GameTestHelper helper)
             throws CommandSyntaxException {
         runFamilyHouse(helper, 270, BuildRotation.COUNTERCLOCKWISE_90);

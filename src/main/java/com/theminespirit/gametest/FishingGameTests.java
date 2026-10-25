@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityType;
@@ -35,7 +34,7 @@ public final class FishingGameTests {
     private FishingGameTests() {}
 
     // [флак] поклёвка случайна (ванильное ожидание до ~380 тиков), плюс подход к берегу — потолок с запасом
-    @GameTest(template = "arena", batch = "fishing_pond", timeoutTicks = 900)
+    @SceneStep(template = "arena", timeoutTicks = 900)
     public static void fish_RodBesidePond_ReelsInFish(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         pond(helper);
@@ -58,7 +57,7 @@ public final class FishingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "fishing_no_rod", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void fish_NoRod_Refuses(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         pond(helper);
@@ -78,7 +77,7 @@ public final class FishingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "fishing_smoker", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void smelt_CodInSmoker_CookedCod(GameTestHelper helper) {
         CraftTestSupport.field(helper);
         helper.setBlock(STATION_CELL, Blocks.SMOKER);
@@ -95,7 +94,7 @@ public final class FishingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "fishing_smoker_puffer", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void smelt_PufferfishRequested_Refused(GameTestHelper helper) {
         CraftTestSupport.field(helper);
         helper.setBlock(STATION_CELL, Blocks.SMOKER);
@@ -112,7 +111,7 @@ public final class FishingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "fishing_bucket", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void bucketfish_CodAtPond_BucketsCod(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         pond(helper);
@@ -138,7 +137,7 @@ public final class FishingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "fishing_workpoint", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void workpoint_OpenWaterNearBuilding_ChoosesFarShore(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         deepPond(helper);

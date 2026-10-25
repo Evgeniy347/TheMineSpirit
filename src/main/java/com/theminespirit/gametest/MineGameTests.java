@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Container;
@@ -57,7 +56,7 @@ public final class MineGameTests {
 
     private MineGameTests() {}
 
-    @GameTest(template = "arena", batch = "mine_happy", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_FiveIronOreWithIronPickaxe_SucceedsWithoutTunnelsAndWithinReadBudget(
             GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
@@ -124,7 +123,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_NoOreInRadius_ScansAtMostFourSlicesPerTick(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -157,7 +156,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_no_tool", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void mineVein_WoodenPickaxeOnIronOre_FailsFastWithTierReason(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -187,7 +186,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_lava_neighbor", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_OreWithLavaBehindFace_SkipsUnsafeAndLeavesLava(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -229,7 +228,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_water_above", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_OreWithWaterAbove_IsNotTouched(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -261,7 +260,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_sealed", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void mineVein_SealedOreWithinReach_MinedFromPlaceNeighboursStay(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -310,7 +309,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_pit", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void mineVein_OreAboveThreeDeepPit_MinedFromPlaceSpiritKeepsHeight(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -343,7 +342,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_gravel_ceiling", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_OreUnderCeilingGravel_MinesFromSideAndIsNotBuried(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -374,7 +373,7 @@ public final class MineGameTests {
 
     // [флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
     // потолок 1000 ≈ 1.7× замера
-    @GameTest(template = "arena", batch = "gather_dirt_heap", timeoutTicks = 1000)
+    @SceneStep(template = "arena", timeoutTicks = 1000)
     public static void gather_DirtHeapOfEighteen_CollectsAllAndKeepsFloor(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -431,7 +430,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "gather_pocket", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_DirtRingAroundSealedPocket_MinedFromOutsideWithinReach(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -481,7 +480,7 @@ public final class MineGameTests {
     }
 
     // [флак] 1200 тиков HARVEST_NO_PROGRESS_TICKS: отказ обязан прийти не позже предела простоя
-    @GameTest(template = "arena", batch = "gather_no_path", timeoutTicks = 1400)
+    @SceneStep(template = "arena", timeoutTicks = 1400)
     public static void gather_StoneBehindGlassWall_FailsWithNoPathReasonWithinTimeout(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.DIRT);
@@ -549,7 +548,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "gather_refill", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_FewTargetsLeft_KeepsRefillingSearchEachTick(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -598,7 +597,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "gather_logs", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void gather_WildcardLogFilter_CollectsAllMatchingLogs(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -624,7 +623,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "gather_forbidden", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void gather_ForbiddenContainerAndBedrock_RefuseAtOnceAndKeepChest(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -663,7 +662,7 @@ public final class MineGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "mine_cancel", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_CancelledMidWork_LeavesCaveUnchanged(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -704,7 +703,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_tool_break", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_PickaxeWithOneDurability_FailsBeforeMiningAsNeedTool(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -743,7 +742,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tool_replace_spare", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void toolReplace_SpentPickaxeInHandAndSpareInInventory_MinesWithSpareAndKeepsWorn(
             GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
@@ -787,7 +786,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "tool_replace_none", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void toolReplace_SpentPickaxeInHandAndNoSpare_FailsNeedTool(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -823,7 +822,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_any", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_AnyOreWithStonePickaxe_MinesCoalAndSkipsDiamond(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -855,7 +854,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "gather_any_ore", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_WildcardOreWithStonePickaxe_MinesCoalAndSkipsDiamond(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -890,7 +889,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "gather_any_ore_close", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_WildcardOreDiamondCloserThanCoal_SkipsDiamond(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -923,7 +922,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_preserve", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void mineVein_TwoRedstoneOre_ConservesAllDrops(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -967,7 +966,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "gather_policy", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void gatherPolicy_ExactIds_ExistInRegistries(GameTestHelper helper) {
         for (String id : GatherPolicy.forbiddenExactIds()) {
             helper.assertTrue(
@@ -979,7 +978,7 @@ public final class MineGameTests {
     }
 
     // [флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
-    @GameTest(template = "arena", batch = "gather_stone_wooden", timeoutTicks = 1400)
+    @SceneStep(template = "arena", timeoutTicks = 1400)
     public static void gather_StoneHeapWithWoodenPickaxe_MinesAll(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -1012,7 +1011,7 @@ public final class MineGameTests {
     }
 
     // [флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
-    @GameTest(template = "arena", batch = "gather_drop_delay", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void gather_StoneDropTemporarilyUnpickable_CollectsAfterDelay(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
@@ -1057,7 +1056,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "empty", batch = "mine_registry", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void scripts_RegistryForSpirit_ContainsMineVeinAndGather(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         SpiritEntity spirit = spawnWith(helper, SPIRIT_START, Items.IRON_PICKAXE);
@@ -1069,7 +1068,7 @@ public final class MineGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "mine_persist", timeoutTicks = 280)
+    @SceneStep(template = "arena", timeoutTicks = 280)
     public static void gatherCobblestone_SavedMidway_ResumesWithoutExtraMining(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1116,7 +1115,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_persist_last", timeoutTicks = 260)
+    @SceneStep(template = "arena", timeoutTicks = 260)
     public static void gatherCobblestone_SavedAfterLastBlock_RestoresAsSucceeded(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1161,7 +1160,7 @@ public final class MineGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_scale_search", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void blockLocator_TwoStepsInOneTick_CountsSlicesPerTick(GameTestHelper helper) {
         buildCave(helper, CAVE_SHIFT_INSIDE_ARENA);
         BlockPos center = SPIRIT_START.offset(CAVE_SHIFT_INSIDE_ARENA, 0, CAVE_SHIFT_INSIDE_ARENA);
@@ -1228,7 +1227,7 @@ public final class MineGameTests {
     }
 
     // [флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
-    @GameTest(template = "arena", batch = "mine_full_base", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void mineVein_FullInventoryNearChest_DepositsAndContinues(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

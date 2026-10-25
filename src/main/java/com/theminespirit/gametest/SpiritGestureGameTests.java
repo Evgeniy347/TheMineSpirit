@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -24,13 +23,12 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class SpiritGestureGameTests {
-    private static final String BATCH = "gesture";
     private static final int SETTLE_TICKS = 5;
     private static final double SIGHT = 8.0;
 
     private SpiritGestureGameTests() {}
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void placeBlock_TargetCell_SpiritLooksAtItAndSwingsArm(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -66,7 +64,7 @@ public final class SpiritGestureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void clearArea_SingleBlock_SpiritLooksAtItAndSwingsArm(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -13,12 +13,14 @@ import org.junit.jupiter.api.Test;
 
 class GameTestTimeoutGuardTests {
     private static final Pattern GAMETEST_WITH_TIMEOUT = Pattern.compile(
-            "@GameTest\\s*\\([^)]*timeoutTicks\\s*=\\s*([^,)]+?)\\s*[,)]", Pattern.MULTILINE | Pattern.DOTALL);
+            "@(?:GameTest|SceneStep)\\s*\\([^)]*timeoutTicks\\s*=\\s*([^,)]+?)\\s*[,)]",
+            Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern STATIC_FINAL_INT = Pattern.compile(
             "(?:private\\s+|public\\s+|protected\\s+)?static\\s+final\\s+int\\s+([A-Za-z_]\\w*)\\s*=\\s*([0-9_]+)\\s*;");
     private static final Pattern STATIC_IMPORT =
             Pattern.compile("import\\s+static\\s+([\\w.]+)\\.([A-Za-z_]\\w*)\\s*;");
     private static final Pattern CLASS_DECL = Pattern.compile("(?:class|interface|enum|record)\\s+([A-Za-z_]\\w*)");
+    private static final Pattern NEXT_TEST = Pattern.compile("@(?:GameTest|SceneStep)\\s*\\(");
     private static final int SANE_TIMEOUT_LIMIT = 400;
 
     @Test
@@ -117,6 +119,41 @@ class GameTestTimeoutGuardTests {
                 List.of(),
                 timeoutsOf(sample),
                 "Сторож ложно срабатывает: timeoutTicks = 600 с меткой [флак] — законно");
+    }
+
+    @Test
+    void gameTestTimeoutPattern_SceneStep600_NoComment() {
+        String sample = """
+                        class Sample {
+                            @SceneStep(template = "arena", timeoutTicks = 600)
+                            public static void spawn_spiritType_Lives(GameTestHelper helper) {
+                            }
+                        }
+                        """;
+
+        assertEquals(
+                List.of("timeoutTicks=600"),
+                timeoutsOf(sample),
+                "Сторож ослеп: бюджет шага укрупнённой сцены 600 без [флак] обязан попадать в нарушители — шаг "
+                        + "тот же бывший тест, и его тайм-аут так же прячет зависание");
+    }
+
+    @Test
+    void gameTestTimeoutPattern_SceneOfSteps_IsClean() {
+        String sample = """
+                        class Sample {
+                            @GameTest(template = "arena", batch = "scene_chop_arena", timeoutTicks = 9000)
+                            public static void chopScene_ArenaSteps_AllPass(GameTestHelper helper) {
+                                SceneSteps.run(helper, List.of("arena"), ChopTreeGameTests.class);
+                            }
+                        }
+                        """;
+
+        assertEquals(
+                List.of(),
+                timeoutsOf(sample),
+                "Сторож ложно срабатывает: тайм-аут укрупнённой сцены — сумма бюджетов шагов, его сверяет "
+                        + "SceneSteps при запуске");
     }
 
     @Test
@@ -289,6 +326,9 @@ class GameTestTimeoutGuardTests {
         sources.forEach((file, text) -> {
             Matcher matcher = GAMETEST_WITH_TIMEOUT.matcher(text);
             while (matcher.find()) {
+                if (isSceneOfSteps(text, matcher.end())) {
+                    continue;
+                }
                 String expression = matcher.group(1).trim();
                 Constant constant = resolve(expression, text, classes);
                 if (constant == null) {
@@ -308,6 +348,9 @@ class GameTestTimeoutGuardTests {
         List<String> names = new ArrayList<>();
         Matcher matcher = GAMETEST_WITH_TIMEOUT.matcher(text);
         while (matcher.find()) {
+            if (isSceneOfSteps(text, matcher.end())) {
+                continue;
+            }
             String expression = matcher.group(1).trim();
             Constant constant = resolve(expression, text, classes);
             if (constant == null) {
@@ -317,6 +360,14 @@ class GameTestTimeoutGuardTests {
             }
         }
         return names;
+    }
+
+    // Укрупнённая сцена (SceneSteps.run) ждёт сумму бюджетов шагов: её тайм-аут сверяет SceneSteps при запуске, а
+    // правило «> 400 — с [флак]» действует на бюджет каждого шага (@SceneStep).
+    private static boolean isSceneOfSteps(String text, int annotationEnd) {
+        Matcher next = NEXT_TEST.matcher(text);
+        int end = next.find(annotationEnd) ? next.start() : text.length();
+        return text.substring(annotationEnd, end).contains("SceneSteps.run(");
     }
 
     private static boolean hasAnyJustification(String text, int annotationStart, Constant constant) {

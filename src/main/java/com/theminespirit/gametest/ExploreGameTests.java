@@ -7,7 +7,6 @@ import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -26,7 +25,7 @@ public final class ExploreGameTests {
 
     private ExploreGameTests() {}
 
-    @GameTest(template = "arena", batch = "explore_survey", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void explore_IronOreInRadius_RemembersResourceAndReturnsToStart(GameTestHelper helper) {
         MovementScene.prepare(helper);
         helper.setBlock(ORE, Blocks.IRON_ORE);
@@ -60,7 +59,7 @@ public final class ExploreGameTests {
 
     // Потолок как у соседнего explore_survey (400): планировщик обходит загруженные чанки, и в полном
     // прогоне (уровень держит структуры соседних сцен) план строится дольше, чем за 100 тиков; проверки не тронуты.
-    @GameTest(template = "arena", batch = "explore_night", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void explore_NightRouteOutsideSettlement_FailsBeforeLeaving(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, new BlockPos(1, 1, 1));

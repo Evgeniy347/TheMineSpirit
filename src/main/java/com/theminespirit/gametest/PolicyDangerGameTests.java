@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -65,7 +64,7 @@ public final class PolicyDangerGameTests {
         return "вердикт " + spirit.policies().verdict() + "; угрозы [" + threats + "]";
     }
 
-    @GameTest(template = "arena", batch = "policy_creeper_near", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void creeper_FourBlocksAway_SpiritKeepsSevenAndDoesNotReturn(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -109,7 +108,7 @@ public final class PolicyDangerGameTests {
         return creeper;
     }
 
-    @GameTest(template = "arena", batch = "policy_charged_creeper", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void chargedCreeper_TenBlocksAway_SpiritMovesAwayAlongTheEdge(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         for (int x = 0; x <= 10; x++) {
@@ -133,7 +132,7 @@ public final class PolicyDangerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_creeper_far", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void creeper_NineBlocksAway_SpiritStaysInPlace(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -160,7 +159,7 @@ public final class PolicyDangerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_tnt", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void tnt_FourBlocksAwayWithEightyTickFuse_SpiritIsNineAwayAndUnharmed(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -219,7 +218,7 @@ public final class PolicyDangerGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "policy_portal", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void portal_SpiritInPortalCellWithTargetInsideIt_StepsOutAndStaysInOverworld(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -252,7 +251,7 @@ public final class PolicyDangerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_portal_goto_veto", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void portal_GotoIntoPortalCell_FailsWithReasonAndSpiritStaysOutside(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -286,7 +285,7 @@ public final class PolicyDangerGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "policy_portal_follow_veto", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void portal_FollowPlayerStandingInPortalCell_FailsWithReason(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

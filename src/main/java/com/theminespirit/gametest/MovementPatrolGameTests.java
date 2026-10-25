@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Blocks;
@@ -39,7 +38,7 @@ public final class MovementPatrolGameTests {
 
     private MovementPatrolGameTests() {}
 
-    @GameTest(template = "arena", batch = "move_patrol_loop", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void patrol_LoopOverFourCorners_VisitsAllInOrderAndSucceedsWithFewPathBuilds(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, CENTER);
@@ -73,7 +72,7 @@ public final class MovementPatrolGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_patrol_wall", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void patrol_OneCornerSealedInWalls_IsSkippedAndCountedWhileOthersAreVisited(GameTestHelper helper) {
         MovementScene.prepare(helper);
         BlockPos sealed = CORNERS.get(WALLED_CORNER);
@@ -112,7 +111,7 @@ public final class MovementPatrolGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_patrol_cancel", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void patrol_CancelledMidWay_StopsNavigationAndStandsStill(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, CENTER);
@@ -159,7 +158,7 @@ public final class MovementPatrolGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "move_patrol_reload", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void patrol_SpiritReloadedAfterTwoOfFourPoints_KeepsProgressAndFinishes(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity first = MovementScene.spirit(helper, CENTER);

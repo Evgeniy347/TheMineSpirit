@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.husbandry.HerdSession;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Chicken;
@@ -32,7 +31,7 @@ public final class HusbandryScaleGameTests {
 
     private HusbandryScaleGameTests() {}
 
-    @GameTest(template = "arena", batch = "husbandry_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void herdCheckAndFeed_TwelveAnimals_StaysWithinQueryAndTickBudgets(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

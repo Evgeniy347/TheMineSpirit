@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -31,7 +30,7 @@ public final class PerceptionScaleGameTests {
 
     private PerceptionScaleGameTests() {}
 
-    @GameTest(template = "arena", batch = "perception_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void scanBlocks_TwentySpiritsHundredTicks_StaysWithinPortionBudgets(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         List<BlockPos> slab = buildSlab(helper);

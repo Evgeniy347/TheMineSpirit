@@ -26,7 +26,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -78,7 +77,7 @@ public final class ChopTreeGameTests {
 
     private ChopTreeGameTests() {}
 
-    @GameTest(template = "empty", batch = "chop_registry", timeoutTicks = 20)
+    @SceneStep(template = "empty", timeoutTicks = 20)
     public static void treeSpecies_AllIds_ExistInRegistries(GameTestHelper helper) {
         for (TreeSpecies species : TreeSpecies.ALL) {
             helper.assertTrue(
@@ -97,7 +96,7 @@ public final class ChopTreeGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_basic", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_SingleOakFiveLogs_SucceedsWithLogsInInventory(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -135,7 +134,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_protected_zone", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_TreeInsideProtectedZone_LogsStayAndSummaryCountsThem(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -164,7 +163,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_axe_durability", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_AxeDurability_DecreasesByLogCount(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -191,7 +190,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_two_trees", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_TwoTreesAnySpecies_BothChopped(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -220,7 +219,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_species_filter", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_BirchAndOakSpeciesBirch_OnlyBirchChopped(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -253,7 +252,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_two_adjacent", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_TwoAdjacentOaks_OnlySelectedChopped(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -281,7 +280,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_log_house", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_LogHouseNearby_HouseIntact(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -321,7 +320,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_hut_and_pillar", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_HutAndPillarRejected_NotATreeReturnsFail(GameTestHelper helper) {
         prepareField(helper);
         buildLogHut(helper, 3, 3, 3);
@@ -353,7 +352,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_eight_logs", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_EightLogTree_AllChoppedFromOneStand(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 8);
@@ -379,7 +378,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_count_exceeds", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_CountThreeWithOneTree_FailsWithCountMessage(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -405,7 +404,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_unreachable_island", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_TreeOnIslandWithPit_RejectedUnreachable(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -444,7 +443,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_cancel", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_CancelMidChop_WorldUnchangedAfter40Ticks(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -487,7 +486,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_by_hand", timeoutTicks = 300)
+    @SceneStep(template = FIELD, timeoutTicks = 300)
     public static void chopTree_WithoutAxeTwoLogs_SucceedsByHand(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -517,7 +516,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_slope_oak", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_OakOnSlopeWithBranchOverGrass_ChoppedWithBranch(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -548,7 +547,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_built_posts", timeoutTicks = 260)
+    @SceneStep(template = FIELD, timeoutTicks = 260)
     public static void chopTree_LogPostsWithPlankWallsUnderCrown_UntouchedAndRealOakChopped(GameTestHelper helper) {
         prepareField(helper);
         buildPlankHutOnLedge(helper, 3, 3);
@@ -583,7 +582,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_cobblestone_wall", timeoutTicks = 200)
+    @SceneStep(template = FIELD, timeoutTicks = 200)
     public static void chopTree_LogPostByCobblestoneWallUnderForeignCrown_NotChoppedRealOakChopped(
             GameTestHelper helper) {
         prepareField(helper);
@@ -624,7 +623,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_big_building", timeoutTicks = 200)
+    @SceneStep(template = FIELD, timeoutTicks = 200)
     public static void chopTree_LogBuildingOfManyLogs_TreeBehindItIsChopped(GameTestHelper helper) {
         prepareField(helper);
         for (int x = 3; x <= 9; x++) {
@@ -661,7 +660,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = "mine_arena", batch = "chop_tree_tall", timeoutTicks = 400)
+    @SceneStep(template = "mine_arena", timeoutTicks = 400)
     public static void chopTree_NineLogTrunk_AllLogsChoppedFromOneStand(GameTestHelper helper) {
         clearField(helper, TALL_FIELD_HEIGHT);
         for (int x = 0; x < PLATFORM; x++) {
@@ -706,7 +705,7 @@ public final class ChopTreeGameTests {
     }
 
     // [флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
-    @GameTest(template = "mine_arena", batch = "chop_tree_tall_2x2", timeoutTicks = 1800)
+    @SceneStep(template = "mine_arena", timeoutTicks = 1800)
     public static void chopTree_GiantSpruceTwoByTwoHeightTwenty_ChoppedFromOneStand(GameTestHelper helper) {
         clearField(helper, 22);
         for (int x = 0; x < PLATFORM; x++) {
@@ -765,7 +764,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_scale_reads", timeoutTicks = 200)
+    @SceneStep(template = FIELD, timeoutTicks = 200)
     public static void chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog(GameTestHelper helper) {
         prepareField(helper);
         buildTree(helper, 4, 4, TALL_TREE_LOGS, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
@@ -810,7 +809,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_scale_search", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick(GameTestHelper helper) {
         prepareField(helper);
         // Акация: ни один другой тест не строит акации. Палитра секции не сжимается после удаления блока,
@@ -857,7 +856,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_persist", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_ReloadedAfterFirstTree_ChopsExactlyThreeTrees(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -912,7 +911,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_replant_oak", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_ReplantWithOneSapling_PlantsItAtTrunkBase(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -941,7 +940,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_replant_none", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_ReplantWithoutSaplings_SucceedsAndReportsNoSaplings(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -965,7 +964,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_replant_dark_oak", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_ReplantDarkOakWithFourSaplings_PlantsAllFourCells(GameTestHelper helper) {
         prepareField(helper);
         buildDarkOakTree(helper, 4, 4, 4);
@@ -996,7 +995,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_replant_short", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_ReplantDarkOakWithThreeSaplings_PlantsOneByOneFallback(GameTestHelper helper) {
         prepareField(helper);
         buildDarkOakTree(helper, 4, 4, 4);
@@ -1031,7 +1030,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_dark_oak_2x2", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_DarkOakTwoByTwoFromNeighbourCell_ChoppedWhole(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -1062,7 +1061,7 @@ public final class ChopTreeGameTests {
 
     // [флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
     // потолок с запасом на флаки полного прогона
-    @GameTest(template = FIELD, batch = "chop_tree_renew_area", timeoutTicks = 800)
+    @SceneStep(template = FIELD, timeoutTicks = 800)
     public static void chopTree_ReplantOakWithExtraSaplings_RenewsAreaAwayFromWall(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -1113,7 +1112,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_vanished", timeoutTicks = 170)
+    @SceneStep(template = FIELD, timeoutTicks = 170)
     public static void chopTree_SecondOakVanishesDuringFirst_FailsWithTreesRanOut(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 3, 3, 5);
@@ -1149,7 +1148,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_crowded_vanished", timeoutTicks = 400)
+    @SceneStep(template = FIELD, timeoutTicks = 400)
     public static void chopTree_TwoSpiritsOneTree_LoserFailsWithTreesRanOutNotAir(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -1189,7 +1188,7 @@ public final class ChopTreeGameTests {
     }
 
     // [флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
-    @GameTest(template = FIELD, batch = "chop_tree_reach_behind_wall", timeoutTicks = 500)
+    @SceneStep(template = FIELD, timeoutTicks = 500)
     public static void chopTree_FarBranchBehindWall_ChoppedFromOneStand(GameTestHelper helper) {
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -1238,7 +1237,7 @@ public final class ChopTreeGameTests {
         });
     }
 
-    @GameTest(template = FIELD, batch = "chop_tree_view_table", timeoutTicks = 40)
+    @SceneStep(template = FIELD, timeoutTicks = 40)
     public static void treeView_BlockTable_ClassifiesBuiltAndNaturalBlocks(GameTestHelper helper) {
         prepareField(helper);
         Map<BlockState, Boolean> table = blockClassificationTable();
@@ -1369,7 +1368,7 @@ public final class ChopTreeGameTests {
                 Blocks.COCOA);
     }
 
-    @GameTest(template = FIELD, batch = "tree_view_unloaded_cell", timeoutTicks = 40)
+    @SceneStep(template = FIELD, timeoutTicks = 40)
     public static void treeView_UnloadedCell_AllAnswersFalseAndChunkNotLoaded(GameTestHelper helper) {
         prepareField(helper);
         Level level = helper.getLevel();

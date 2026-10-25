@@ -7,7 +7,6 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -24,7 +23,7 @@ public final class SpiritTickingGameTests {
     private SpiritTickingGameTests() {}
 
     // [флак] дух идёт за габариты структуры, ждём тики духа и сдвиг чанков
-    @GameTest(template = "arena", batch = "ticking_beyond", timeoutTicks = 600)
+    @SceneStep(template = "arena", timeoutTicks = 600)
     public static void spirit_GotoBeyondStructureChunks_KeepsTickingAndArrives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 1), "Наблюдатель за духом");

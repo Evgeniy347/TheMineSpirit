@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -25,7 +24,7 @@ public final class BlockLocatorGameTests {
 
     private BlockLocatorGameTests() {}
 
-    @GameTest(template = "empty", batch = "locator_air", timeoutTicks = 40)
+    @SceneStep(template = "empty", timeoutTicks = 40)
     public static void blockLocator_AirOnlyArea_ReadsNoPositions(GameTestHelper helper) {
         BlockPos center = helper.absolutePos(new BlockPos(1, SKY_HEIGHT, 1));
         BlockLocator.Search search =
@@ -41,7 +40,7 @@ public final class BlockLocatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "locator_single", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockLocator_SingleTargetBlock_ReadsAtMostOneSectionAndFindsIt(GameTestHelper helper) {
         BlockPos center = helper.absolutePos(new BlockPos(1, SKY_HEIGHT, 1));
         helper.getLevel().setBlock(center, Blocks.DIAMOND_ORE.defaultBlockState(), 2);
@@ -67,7 +66,7 @@ public final class BlockLocatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "locator_palette", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockLocator_SectionWithoutTargetBlock_IsSkippedByPalette(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -86,7 +85,7 @@ public final class BlockLocatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "locator_order", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockLocator_TwoTargetsAtDifferentDistances_ReportsNearerSliceFirst(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         BlockPos center = helper.absolutePos(new BlockPos(1, SKY_HEIGHT, 1));
@@ -112,7 +111,7 @@ public final class BlockLocatorGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", batch = "locator_sets", timeoutTicks = 40)
+    @SceneStep(template = "empty", timeoutTicks = 40)
     public static void blockSets_OreAndLogFilters_ResolveRegistryBlocks(GameTestHelper helper) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.of("*_ore")));
         Set<Block> exact = BlockSets.resolve(IdFilter.of(List.of("minecraft:oak_log")));

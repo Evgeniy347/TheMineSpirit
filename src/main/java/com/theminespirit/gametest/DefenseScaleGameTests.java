@@ -12,7 +12,6 @@ import com.theminespirit.neoforge.defense.DefenseService;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Spider;
@@ -24,14 +23,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class DefenseScaleGameTests {
     private static final int SPIRITS = 20;
     private static final int OBSERVED_TICKS = 130;
 
     private DefenseScaleGameTests() {}
 
-    @GameTest(template = "arena", batch = "defense_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
     public static void scale_TwentySpiritsDefense_QueriesBounded(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         long started = helper.getLevel().getGameTime();

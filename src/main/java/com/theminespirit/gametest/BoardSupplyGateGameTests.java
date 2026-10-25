@@ -19,7 +19,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -34,13 +33,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardSupplyGateGameTests {
-    private static final String BATCH = "board_supply_gate";
 
     private BoardSupplyGateGameTests() {}
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void supply_EnchantItems_WaitForStageAndPostOnce(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -100,7 +99,7 @@ public final class MineBuildGameTests {
     }
 
     // [флак] 27 блоков камня железной киркой, 9 ступеней вниз и выход назад пешком; замерено ~700 тиков, запас 2×
-    @GameTest(template = "mine_arena", batch = "mine_build_descent", timeoutTicks = 1600)
+    @SceneStep(template = "mine_arena", timeoutTicks = 1600)
     public static void mineDescent_RockToDepth_DigsStepsAndWalksBackUp(GameTestHelper helper) {
         rock(helper);
         SpiritEntity spirit = miner(helper);
@@ -135,7 +134,7 @@ public final class MineBuildGameTests {
     }
 
     // [флак] спуск 9 ступеней, добыча камня поселением ×12 и возврат домой наверх; запас 2× к ~900 тиков
-    @GameTest(template = "mine_arena", batch = "mine_gather_exit", timeoutTicks = 2400)
+    @SceneStep(template = "mine_arena", timeoutTicks = 2400)
     public static void mineGather_SettledStone_SpiritWalksBackHome(GameTestHelper helper) {
         rock(helper);
         SpiritEntity spirit = miner(helper);
@@ -166,7 +165,7 @@ public final class MineBuildGameTests {
     }
 
     // [флак] спуск 9 ступеней, затем возврат тактики (Approach) со дна к якорю наверху; запас 2× к ~900 тиков
-    @GameTest(template = "mine_arena", batch = "mine_approach_exit", timeoutTicks = 2000)
+    @SceneStep(template = "mine_arena", timeoutTicks = 2000)
     public static void mineApproach_FromBottom_ReachesAnchorOnTop(GameTestHelper helper) {
         rock(helper);
         SpiritEntity spirit = miner(helper);
@@ -206,7 +205,7 @@ public final class MineBuildGameTests {
     }
 
     // [флак] спуск с обходом руды: 9 ступеней + 3 колонки обхода и выход наверх; замерено ~850 тиков, запас 2×
-    @GameTest(template = "mine_arena", batch = "mine_build_luck_ore", timeoutTicks = 1800)
+    @SceneStep(template = "mine_arena", timeoutTicks = 1800)
     public static void mineDescent_DiamondWithoutFortune_LeavesOreDetoursAndRemembers(GameTestHelper helper) {
         rock(helper);
         BlockPos ore = step(3, 2);
@@ -242,7 +241,7 @@ public final class MineBuildGameTests {
     }
 
     // [флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
-    @GameTest(template = "mine_arena", batch = "mine_build_cave", timeoutTicks = 1600)
+    @SceneStep(template = "mine_arena", timeoutTicks = 1600)
     public static void mineDescent_CaveUnderSteps_PlacesFloorAndWallsInAir(GameTestHelper helper) {
         rock(helper);
         for (int x = FIRST_X + 4; x <= FIRST_X + 6; x++) {
@@ -276,7 +275,7 @@ public final class MineBuildGameTests {
     }
 
     // [флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
-    @GameTest(template = "mine_arena", batch = "mine_build_water", timeoutTicks = 1600)
+    @SceneStep(template = "mine_arena", timeoutTicks = 1600)
     public static void mineDescent_WaterBehindWall_PlugsAndSpiritNeverUnderWater(GameTestHelper helper) {
         rock(helper);
         BlockPos wallWater = step(3, 1).south();
@@ -308,7 +307,7 @@ public final class MineBuildGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mine_build_surface_stone", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void gather_SettledSpiritStoneUnderSky_RefusesSurfaceStone(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

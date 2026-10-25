@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.crater.CraterStore;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -57,7 +56,7 @@ public final class CraterGameTests {
         return new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
     }
 
-    @GameTest(template = "arena", batch = "crater_record", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void explosion_CreeperNearHome_RecordsCrater(GameTestHelper helper) {
         buildPlatform(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 2, 2));
@@ -88,7 +87,7 @@ public final class CraterGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "crater_fill", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fillCrater_EnoughDirt_LevelsSurface(GameTestHelper helper) {
         buildPlatform(helper);
         helper.setBlock(CENTER, Blocks.AIR);
@@ -112,7 +111,7 @@ public final class CraterGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "crater_partial", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fillCrater_TooLittleDirt_PartialFillWithResult(GameTestHelper helper) {
         buildPlatform(helper);
         for (int x = CENTER.getX() - 1; x <= CENTER.getX() + 1; x++) {

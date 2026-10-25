@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,7 +39,7 @@ public final class DigGameTests {
                 "dig_area", Map.of("x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ(), "size", size));
     }
 
-    @GameTest(template = "arena", batch = "dig", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void dig_StoneCube_DigsToBottomWithoutTunnels(GameTestHelper helper) {
         prepare(helper);
         for (int x = 3; x <= 6; x++) {
@@ -93,7 +92,7 @@ public final class DigGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "dig", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void dig_SizeOutOfBounds_RejectedWithNumbersKeepsWorld(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(new BlockPos(4, 1, 4), Blocks.STONE);

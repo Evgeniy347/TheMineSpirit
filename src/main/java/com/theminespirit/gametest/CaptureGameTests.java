@@ -10,11 +10,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.item.ItemStack;
@@ -32,23 +28,12 @@ public final class CaptureGameTests {
     private static final BlockPos START = new BlockPos(1, 1, 8);
     private static final BlockPos HOME = new BlockPos(2, 1, 2);
     private static final BlockPos FLOCK = new BlockPos(8, 1, 8);
-    private static final String BATCH = "capture";
     // [флак] овца идёт за кормом шагом ванильной навигации; потолок ≈ 2× замера ~300 тиков.
     private static final int CAPTURE_TIMEOUT_TICKS = 800;
 
     private CaptureGameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void stopMobsTargetingSpirits(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreMobTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = CAPTURE_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = CAPTURE_TIMEOUT_TICKS, calmMobs = true)
     public static void capture_SheepOutsidePenWithWheat_LuredIntoPenWithoutBlocks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -82,7 +67,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, calmMobs = true)
     public static void capture_WithoutFeed_FailsNamingFeed(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -104,7 +89,7 @@ public final class CaptureGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, calmMobs = true)
     public static void capture_WithoutHome_FailsNamingHome(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

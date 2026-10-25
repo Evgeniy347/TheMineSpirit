@@ -17,7 +17,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -30,7 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class PerceptionLookGameTests {
     private PerceptionLookGameTests() {}
 
-    @GameTest(template = "arena", batch = "perception_look_block", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void lookAt_GoldBlockThreeBlocksAway_DescribesBlock(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -51,7 +50,7 @@ public final class PerceptionLookGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_look_mob", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void lookAt_CowTwoBlocksAway_DescribesAirAndMob(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -77,7 +76,7 @@ public final class PerceptionLookGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_look_container", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void lookAt_ChestOneBlockAway_DescribesBlockAndContainer(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -101,7 +100,7 @@ public final class PerceptionLookGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_look_unloaded", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void lookAt_UnloadedChunk_SkipsCellWithoutLoadingChunk(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         BlockPos base = helper.absolutePos(new BlockPos(1, 1, 1));

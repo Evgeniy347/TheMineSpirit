@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.AABB;
@@ -48,7 +47,7 @@ public final class DemoCityGameTests {
                         SpiritEntity.class, new AABB(centre).inflate(SEARCH_RADIUS), spirit -> !spirit.isRemoved());
     }
 
-    @GameTest(template = "demo_arena", batch = "demo_city", timeoutTicks = 200)
+    @SceneStep(template = "demo_arena", timeoutTicks = 200)
     public static void demoCity_StageZero_StartsOneSpiritPerBuildingAtOnce(GameTestHelper helper)
             throws CommandSyntaxException {
         GameTestFixtures.reset(helper);

@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -67,7 +66,7 @@ public final class BuildingGameTests {
                         to.getZ()));
     }
 
-    @GameTest(template = "arena", batch = "build_fill", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_TwoCubeBottomUp_SpiritEndsOutside(GameTestHelper helper) {
         prepare(helper);
         BlockPos first = new BlockPos(6, 1, 6);
@@ -128,7 +127,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_reserve", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_TwoSpiritsOneBox_EachCellPlacedOnce(GameTestHelper helper) {
         prepare(helper);
         BlockPos first = new BlockPos(4, 1, 4);
@@ -171,7 +170,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_fill_fail", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_NeedEightHaveThree_FailsWithNumbersKeepsThree(GameTestHelper helper) {
         prepare(helper);
         BlockPos first = new BlockPos(4, 1, 4);
@@ -207,7 +206,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_fill_fail", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void fill_ProtectedBox_FailsNamingPolicyKeepsWorld(GameTestHelper helper) {
         prepare(helper);
         BlockPos first = new BlockPos(4, 1, 4);
@@ -254,7 +253,7 @@ public final class BuildingGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "build_supplies", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void supplies_TwoChestsWithCobble_NearestFirstSkipsEmpty(GameTestHelper helper) {
         prepare(helper);
         BlockPos near = new BlockPos(2, 1, 2);
@@ -311,7 +310,7 @@ public final class BuildingGameTests {
                 Map.of("block", "cobblestone", "x", absolute.getX(), "y", absolute.getY(), "z", absolute.getZ()));
     }
 
-    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void placeBlock_EmptyCellWithBlock_SucceedsAndConsumes(GameTestHelper helper) {
         prepare(helper);
         BlockPos target = new BlockPos(3, 1, 3);
@@ -341,7 +340,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void placeBlock_OccupiedCell_FailsNamedOccupied(GameTestHelper helper) {
         prepare(helper);
         BlockPos target = new BlockPos(3, 1, 3);
@@ -367,7 +366,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void placeBlock_FarCell_SpiritApproachesAndPlaces(GameTestHelper helper) {
         prepare(helper);
         BlockPos target = new BlockPos(7, 1, 7);
@@ -388,7 +387,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void placeBlock_WithoutMaterial_FailsWithNumbers(GameTestHelper helper) {
         prepare(helper);
         BlockPos target = new BlockPos(2, 1, 2);
@@ -410,7 +409,7 @@ public final class BuildingGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void placer_RefusalsInOrder_OccupiedBeatsNoMaterial(GameTestHelper helper) {
         prepare(helper);
         BlockPos occupied = new BlockPos(2, 1, 1);
@@ -445,7 +444,7 @@ public final class BuildingGameTests {
 
     // Замечание владельца 21.10: у духов в руках ничего не было. Поставленный блок виден в руке (синхронизируемое поле
     // для клиента), настоящая рука и инвентарь не трогаются; у сундука рука снова пустая.
-    @GameTest(template = "arena", batch = "build_place", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void placer_PlacedCobblestone_ShownInHandRealHandEmpty(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = spawnWith(helper, new BlockPos(1, 1, 1), 3);

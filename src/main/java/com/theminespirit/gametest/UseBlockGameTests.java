@@ -8,7 +8,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Husk;
@@ -35,7 +34,7 @@ public final class UseBlockGameTests {
 
     private UseBlockGameTests() {}
 
-    @GameTest(template = "arena", batch = "useblock_lever", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void useBlock_LeverOnSupportBesideLamp_LampLights(GameTestHelper helper) {
         MovementScene.prepare(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
@@ -73,7 +72,7 @@ public final class UseBlockGameTests {
     }
 
     // mc: калитка открывается по взгляду нажавшего (player.getDirection()) — без игрока use_block падал на null.
-    @GameTest(template = "arena", batch = "useblock_gate", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void useBlock_ClosedFenceGate_OpensGate(GameTestHelper helper) {
         MovementScene.prepare(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
@@ -103,7 +102,7 @@ public final class UseBlockGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "open_door", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void open_OakDoor_OpensThenCloseDoorCloses(GameTestHelper helper) {
         MovementScene.prepare(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
@@ -155,7 +154,7 @@ public final class UseBlockGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "setmode_passive", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void setCombatMode_Passive_SpiritNeverStrikesAttackingHusk(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));

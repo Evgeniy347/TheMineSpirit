@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -34,7 +33,7 @@ public final class RestTaskScaleGameTests {
 
     private RestTaskScaleGameTests() {}
 
-    @GameTest(batch = "rest_scale_watcher", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty(
             GameTestHelper helper) throws IOException {
         GameTestFixtures.reset(helper);
@@ -110,7 +109,7 @@ public final class RestTaskScaleGameTests {
         });
     }
 
-    @GameTest(batch = "rest_scale_log", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_FourOpenStreams_LogWrittenOncePerChangeNotPerStream(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);
@@ -152,7 +151,7 @@ public final class RestTaskScaleGameTests {
         });
     }
 
-    @GameTest(batch = "rest_scale_hops", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_OnePlanPost_CostsExactlyOneServerHopAndReadsCostNone(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -23,7 +22,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(coordinator = true)
 public final class CoordinatorScaleGameTests {
     private static final int SPIRITS = 20;
     private static final int SCALE_TICKS = 100;
@@ -32,7 +30,7 @@ public final class CoordinatorScaleGameTests {
 
     private CoordinatorScaleGameTests() {}
 
-    @GameTest(template = "arena", batch = "coordinator_scale", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300, coordinator = true)
     public static void scale_TwentySpiritsHundredTicks_CoordinatorWithinQueryBudget(GameTestHelper helper) {
         MovementScene.prepare(helper);
         ServerPlayer player = MovementScene.mockPlayer(helper, new BlockPos(4, 1, 4));

@@ -14,7 +14,6 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Items;
@@ -29,7 +28,7 @@ public final class AcquireBrainGameTests {
 
     private AcquireBrainGameTests() {}
 
-    @GameTest(template = "arena", batch = "acquire_brain", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void acquireRunning_SnapshotAndRestore_ContinuesToSuccess(GameTestHelper helper) {
         field(helper);
         FullCycleScene.buildOakTree(helper, TREE, TREE_LOGS);

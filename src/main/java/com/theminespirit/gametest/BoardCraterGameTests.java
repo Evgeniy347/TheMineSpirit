@@ -19,9 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -45,9 +42,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
  */
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
-@SettlementSystems(board = true)
 public final class BoardCraterGameTests {
-    private static final String BATCH = "board_crater";
     private static final float BLAST_RADIUS = 5.0f;
     private static final int BLAST_DIRT = 79;
     // [флак] заделка 3×3: путь к яме, добыча из инвентаря и 9 постановок плюс ожидание двух
@@ -57,17 +52,7 @@ public final class BoardCraterGameTests {
 
     private BoardCraterGameTests() {}
 
-    @BeforeBatch(batch = BATCH)
-    public static void stopMobsTargetingSpirits(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = BATCH)
-    public static void restoreMobTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true, calmMobs = true)
     public static void crater_BlastOutsideTerritory_TicketWithDirtCount(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -147,7 +132,7 @@ public final class BoardCraterGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = FILL_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = FILL_TIMEOUT_TICKS, board = true, calmMobs = true)
     public static void crater_DirtGate_FillsFlat(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -225,7 +210,7 @@ public final class BoardCraterGameTests {
 
     // Флак полного прогона 18.10 (crater_dirtgate_fillsflat): задание «добыть доски» без адресата выдавалось
     // ближайшему духу — тому, кого ждала адресная заделка воронки; дух уходил за досками, а воронка ждала.
-    @GameTest(template = "arena", batch = "board_addressed_first", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void issue_AddressedTicketWaiting_GenericTicketGoesToOtherSpirit(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -289,7 +274,7 @@ public final class BoardCraterGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = FILL_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = FILL_TIMEOUT_TICKS, board = true, calmMobs = true)
     public static void crater_DirtGate_WaitsSupply(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

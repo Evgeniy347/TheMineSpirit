@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -32,7 +31,7 @@ public final class ResultGameTests {
 
     private ResultGameTests() {}
 
-    @GameTest(batch = "result_chop_text", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void chopTree_SucceededTask_RestResultHoldsSummaryText(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -59,7 +58,7 @@ public final class ResultGameTests {
         });
     }
 
-    @GameTest(batch = "result_wait", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void wait_SucceededTask_RestResultHoldsTicksObject(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
@@ -84,7 +83,7 @@ public final class ResultGameTests {
         });
     }
 
-    @GameTest(batch = "result_chop_sse", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void chopTree_SucceededTask_SseFinalStateCarriesResult(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         buildOakTree(helper, 4, 4, 5);
@@ -125,7 +124,7 @@ public final class ResultGameTests {
         });
     }
 
-    @GameTest(batch = "result_scan_blocks", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void scanBlocks_FilteredScan_RestResultHoldsBlocksObject(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         helper.setBlock(3, 1, 3, Blocks.OAK_LOG);
@@ -163,7 +162,7 @@ public final class ResultGameTests {
         });
     }
 
-    @GameTest(batch = "result_scan_hazard", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void senseHazard_WaterNearby_RestResultHoldsHazardsObject(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         helper.setBlock(4, 1, 4, Blocks.WATER);
@@ -196,7 +195,7 @@ public final class ResultGameTests {
         });
     }
 
-    @GameTest(batch = "result_scan_locate", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void locateBlock_LogNearby_RestResultHoldsLocatedSightings(GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
         helper.setBlock(4, 1, 4, Blocks.OAK_LOG);
@@ -229,7 +228,7 @@ public final class ResultGameTests {
         });
     }
 
-    @GameTest(batch = "result_scan_truncated", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void scanBlocks_TooManyBlockKinds_RestResultTruncatedToLimit(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -312,7 +311,7 @@ public final class ResultGameTests {
         }
     }
 
-    @GameTest(batch = "result_chop_reload", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void chopTree_ReloadedAfterFirstTree_ResultKeepsCountersOfBoth(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

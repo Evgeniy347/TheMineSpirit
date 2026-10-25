@@ -10,7 +10,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
@@ -29,7 +28,7 @@ public final class SleepGameTests {
 
     private SleepGameTests() {}
 
-    @GameTest(template = "arena", batch = "sleep_lie", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void sleep_NightAtBed_LiesDown(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -59,7 +58,7 @@ public final class SleepGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "sleep_wake", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void sleep_Morning_WakesUp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -94,7 +93,7 @@ public final class SleepGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "sleep_hurt", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void sleep_Attacked_WakesUp(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT);
@@ -120,7 +119,7 @@ public final class SleepGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "sleep_two", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void sleep_TwoBedsTwoSpirits_SleepApart(GameTestHelper helper) {
         MovementScene.prepare(helper);
         SpiritEntity first = MovementScene.spirit(helper, new BlockPos(1, 1, 1));

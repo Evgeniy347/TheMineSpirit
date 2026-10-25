@@ -21,7 +21,6 @@ import com.theminespirit.neoforge.LocateScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -36,7 +35,7 @@ public final class PerceptionLocateGameTests {
 
     private PerceptionLocateGameTests() {}
 
-    @GameTest(template = "arena", batch = "perception_locate_block", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateBlock_OreFiveBlocksAway_ReportsNearestMatchingBlock(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -63,7 +62,7 @@ public final class PerceptionLocateGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_locate_tree", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateTree_OakSixBlocksAway_ReportsOakTrunkNotNearerBirch(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -84,7 +83,7 @@ public final class PerceptionLocateGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_locate_tree_pillar", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateTree_OakPillarNearerThanRealOak_ReportsRealOakBase(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -107,7 +106,7 @@ public final class PerceptionLocateGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_locate_tree_only_pillar", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateTree_OnlyLogPillar_ReportsNotFound(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -128,7 +127,7 @@ public final class PerceptionLocateGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_locate_container", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateContainer_ChestFourBlocksAway_ReportsNearestContainer(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -150,7 +149,7 @@ public final class PerceptionLocateGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_locate_none", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateBlock_NothingMatches_ReportsNotFound(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -172,7 +171,7 @@ public final class PerceptionLocateGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "perception_locate_portions", timeoutTicks = TEST_TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = TEST_TIMEOUT_TICKS)
     public static void locateScript_Radius32_ReadsFourSlicesPerTick(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

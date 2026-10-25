@@ -7,9 +7,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.AfterBatch;
-import net.minecraft.gametest.framework.BeforeBatch;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -28,7 +25,6 @@ public final class MobTargetsGameTests {
     private static final int OBSERVED_TICKS = 100;
     private static final long DAYLIGHT = 6000;
     private static final long NIGHT = 18000;
-    private static final String DISABLED_BATCH = "mob_targets_disabled";
     private static final BlockPos SPIRIT_AT = new BlockPos(4, 1, 4);
     private static final BlockPos MOB_AT = new BlockPos(4, 1, 10);
 
@@ -86,17 +82,7 @@ public final class MobTargetsGameTests {
                 .collect(Collectors.joining("; "));
     }
 
-    @BeforeBatch(batch = DISABLED_BATCH)
-    public static void disableSpiritTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(false);
-    }
-
-    @AfterBatch(batch = DISABLED_BATCH)
-    public static void restoreSpiritTargeting(ServerLevel level) {
-        GameTestFilter.setMobsTargetSpirits(true);
-    }
-
-    @GameTest(template = "arena", batch = "mob_targets_zombie", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void zombie_SixBlocksFromSpiritWithoutSetTarget_TakesSpiritAsTarget(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, MOB_AT);
@@ -113,7 +99,7 @@ public final class MobTargetsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mob_targets_zombified_piglin", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void zombifiedPiglin_SixBlocksFromSpirit_DoesNotTakeTarget(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         ZombifiedPiglin piglin = helper.spawn(EntityType.ZOMBIFIED_PIGLIN, MOB_AT);
@@ -135,7 +121,7 @@ public final class MobTargetsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = DISABLED_BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200, calmMobs = true)
     public static void zombie_WhenMobsTargetSpiritsDisabled_DoesNotTakeTarget(GameTestHelper helper) {
         SpiritEntity spirit = spirit(helper);
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, MOB_AT);
@@ -157,7 +143,7 @@ public final class MobTargetsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mob_targets_spider_day", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void spider_NextToSpiritInDaylight_DoesNotTakeSpiritAsTarget(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, DAYLIGHT);
         SpiritEntity spirit = spirit(helper);
@@ -187,7 +173,7 @@ public final class MobTargetsGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "mob_targets_spider_night", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void spider_NextToSpiritAtNight_TakesSpiritAsTarget(GameTestHelper helper) {
         GameTestFixtures.holdDayTime(helper, NIGHT);
         SpiritEntity spirit = spirit(helper);

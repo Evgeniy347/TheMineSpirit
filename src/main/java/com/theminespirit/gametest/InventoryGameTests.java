@@ -28,7 +28,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -53,7 +52,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class InventoryGameTests {
     private InventoryGameTests() {}
 
-    @GameTest(template = "arena", batch = "inv_access_single", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void containerAccess_SingleChest_Opens27SlotChest(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
@@ -67,7 +66,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_access_double", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void containerAccess_AdjacentChests_OpenAsDouble(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         placeDoubleChest(helper, 5, 6, 1, 4);
@@ -81,7 +80,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_access_kinds", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void containerAccess_BarrelAndShulker_Open(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(5, 1, 3, Blocks.BARREL);
@@ -103,7 +102,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_access_forbidden", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void containerAccess_FurnaceHopperDispenserEnder_Refused(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(2, 1, 2, Blocks.FURNACE);
@@ -124,7 +123,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_access_loot", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void containerAccess_ChestWithUnrevealedLootTable_Refused(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
@@ -144,7 +143,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_mapper_variant", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void stackMapper_DamagedPickaxe_SplitsVariant(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SimpleContainer container = new SimpleContainer(4);
@@ -175,7 +174,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_runner_pace", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void transferRunner_TenStacks_MovesAtMostFourPerTick(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
@@ -222,7 +221,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_runner_cancel", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void transferRunner_CancelMidway_ConservesTotal(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
@@ -260,7 +259,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_runner_changed", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void transferRunner_SourceStolenMidway_FailsWithoutDuplication(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         helper.setBlock(6, 1, 4, Blocks.CHEST);
@@ -345,7 +344,7 @@ public final class InventoryGameTests {
         return total;
     }
 
-    @GameTest(template = "arena", batch = "inv_deposit_basic", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_TenCobblestone_MovesAllAndSorts(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -379,7 +378,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_deposit_messy", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_MessyChest_MergesPartialStacks(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -419,7 +418,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_withdraw_messy", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void withdraw_FiveIngotsFromMessyChest_TakesAndSorts(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -462,7 +461,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_deposit_full", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_ChestFull_FailsWithoutMoving(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -530,7 +529,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_deposit_short", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_SixOfTenRequested_MovesSixAndFails(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -566,7 +565,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_sort_idempotent", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void sortChest_MessyChest_MergesAndKeepsVariants(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -621,7 +620,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_deposit_double", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_DoubleChest_Uses54Slots(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -651,7 +650,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_unload_surplus", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unload_FullInventory_MovesOnlySurplus(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -716,7 +715,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_unload_trigger", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unload_BelowTrigger_SucceedsWithoutTouching(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -749,7 +748,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_equip_chest", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void equip_IronChestplate_SwapsAndPinsDropChance(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -792,7 +791,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_equip_pattern", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void equip_PickaxePattern_TakesMostValuable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -822,7 +821,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_equip_upgrade", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void equip_WornWoodenPickaxeWithIronInInventory_SwapsToIron(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -850,7 +849,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_equip_missing", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void equip_MissingItem_FailsWithoutChanges(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -878,7 +877,7 @@ public final class InventoryGameTests {
     // INC-12: equip вынимает инструмент из инвентаря в настоящую руку, а тактика (SpiritGear.holdNothing) освобождает
     // руку как витрину — предмет обязан вернуться в инвентарь, иначе он исчезает из обоих мест. Цепочка из живого
     // прогона: craft → equip → gather → equip другого.
-    @GameTest(template = "arena", batch = "inv_equip_roundtrip", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void equip_CraftEquipGatherSwap_KeepsEveryTool(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         helper.setBlock(FullCycleScene.TABLE, Blocks.CRAFTING_TABLE);
@@ -998,7 +997,7 @@ public final class InventoryGameTests {
         return GameTestFixtures.countInInventory(spirit.getInventory(), item) + (hand.is(item) ? hand.getCount() : 0);
     }
 
-    @GameTest(template = "arena", batch = "inv_breaker_hand", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void blockBreaker_MainHandPickaxe_BreaksFasterAndWears(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1045,7 +1044,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_unload_auto_partial", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unloadAuto_PartialTorchesInFarChest_TopsItUpAndLeavesNear(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1086,7 +1085,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_unload_auto_full", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void unloadAuto_FarChestFull_TorchesGoToNearestFree(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1152,7 +1151,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_deposit_auto", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void depositAuto_PartialCobbleInFarChest_TopsItUp(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1247,7 +1246,7 @@ public final class InventoryGameTests {
         return stacks;
     }
 
-    @GameTest(template = "arena", batch = "inv_refuse_loot", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_LootChestCoords_RefusesWithoutTouching(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1292,7 +1291,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_refuse_furnace", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_FurnaceCoords_RefusesWithoutTouching(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1333,7 +1332,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_registry_guard", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void registryGuard_ExactIdsInTables_ExistInGameRegistry(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         List<String> matches = exactMatches();
@@ -1355,7 +1354,7 @@ public final class InventoryGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "inv_scale", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_ManyStacks_LimitedMovesSlicesAndCachedTables(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1403,7 +1402,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_persist_deposit", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void deposit_ReloadedMidway_CompletesCountNotMore(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -1485,7 +1484,7 @@ public final class InventoryGameTests {
         };
     }
 
-    @GameTest(template = "arena", batch = "inv_swap_tool", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void swapTool_StoneBlock_HoldsPickaxe(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
@@ -1507,7 +1506,7 @@ public final class InventoryGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "inv_drink_potion", timeoutTicks = 150)
+    @SceneStep(template = "arena", timeoutTicks = 150)
     public static void drinkPotion_HealingPotion_HealsSpirit(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));

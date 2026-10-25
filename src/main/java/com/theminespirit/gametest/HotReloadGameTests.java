@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -56,7 +55,7 @@ public final class HotReloadGameTests {
 
     private HotReloadGameTests() {}
 
-    @GameTest(template = "arena", batch = "hotreload_apply", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void tables_DatapackOverridesArmor_SpiritWearsByNewTable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -86,7 +85,7 @@ public final class HotReloadGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "hotreload_broken", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void tables_BrokenJson_KeepsOldTableAndReportsError(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         int before = DataTables.INSTANCE.armor().current().checkIntervalTicks();
