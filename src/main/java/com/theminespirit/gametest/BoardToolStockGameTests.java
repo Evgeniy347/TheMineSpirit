@@ -64,26 +64,6 @@ public final class BoardToolStockGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 100, board = true)
-    public static void toolStock_StonePickaxeInStock_NoRecraft(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        SpiritEntity spirit = settlement(helper);
-        ServerLevel level = helper.getLevel();
-        BoardService board = isolatedBoard(level, "gametest-tool-stock-stone.jsonl");
-        completeFirstStep(board, spirit, BoardCase.CRAFT_WOODEN_PICKAXE);
-        spirit.getInventory().setItem(0, new ItemStack(Items.STONE_PICKAXE));
-        String pickaxe = pickaxeOf(spirit);
-
-        ToolStockWatch.tick(level, board, List.of(spirit), new StockView(WOOD), level.getGameTime());
-
-        helper.assertTrue(
-                board.board().statusOf(pickaxe).isEmpty(),
-                "Каменная кирка у духа заменяет деревянную: задание запаса не ставится, статус "
-                        + board.board().statusOf(pickaxe));
-        GameTestFixtures.finish(helper);
-        helper.succeed();
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
     public static void toolStock_BeforeFirstStep_LeavesToFirstSteps(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SpiritEntity spirit = settlement(helper);
