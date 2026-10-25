@@ -218,8 +218,12 @@ public final class TicketPlans {
         int z = origin.z();
         // Пол и стенки спуска — из сундука поселения: расчистка сдала туда землю и булыжник, а строитель шахты пришёл
         // пустым и падал «нет булыжника на стенку» (сцена 56). Сколько есть — столько и берёт.
+        // Подход ко входу — без провала: колонку спуска выравнивание не трогает, и вход бывает в толще холма; к нему
+        // ведёт сама проходка (сцена 56: «тупик» у духа на холме над входом валил шахту).
         return sequence(
-                gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                new FallbackNode(List.of(
+                        gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                 takeFloor("minecraft:cobblestone"),
                 takeFloor(MINECRAFT + PlotLeveling.DEFAULT_BLOCK),
                 new ScriptCall(
@@ -701,7 +705,7 @@ public final class TicketPlans {
         // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
         // его берёт следующий обмер, когда соседние ряды срезаны.
         List<PlotLeveling.Box> cuts = leveling.cutTopDown();
-        List<Integer> cutPart = cutParts(cuts, center);
+        List<Integer> cutPart = cutParts(cuts, leveling.fill(), center);
         for (int index = 0; index < cuts.size(); index++) {
             PlotLeveling.Box box = cuts.get(index);
             if (!single || cutPart.get(index) == quarter) {
@@ -819,8 +823,13 @@ public final class TicketPlans {
     // Часть каждого ящика срезки — по объёму поровну (с допуском CUT_SLACK к ближайшей части): холм в середине
     // участка целиком доставался части 5, её дух срезал его ~4700 тиков, пока двое других ждали (сцена 56).
     // Порядок «сверху вниз» сохраняется внутри каждой части.
-    static List<Integer> cutParts(List<PlotLeveling.Box> cuts, BlockCoord center) {
+    // Части с ямами получают срезки сверх прочих на объём своей подсыпки: земля срезки идёт в их яму, а не добывается
+    // за оградой (сцена 56: добыча земли за оградой — ~1000 тиков духов, при том что срезка давала втрое больше).
+    static List<Integer> cutParts(List<PlotLeveling.Box> cuts, List<PlotLeveling.Box> fills, BlockCoord center) {
         int[] load = new int[CLEAR_PARTS + 1];
+        for (PlotLeveling.Box fill : fills) {
+            load[partOf(fill, center)] -= fill.volume();
+        }
         List<Integer> parts = new ArrayList<>(cuts.size());
         for (PlotLeveling.Box box : cuts) {
             int home = partOf(box, center);

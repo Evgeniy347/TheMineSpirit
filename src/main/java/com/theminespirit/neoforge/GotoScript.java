@@ -38,6 +38,18 @@ public final class GotoScript implements ScriptInstance {
     // Точка в толще земли (якорь участка под ещё не срезанным холмом) — это поверхность её колонки: дух стоял на
     // холме над якорем и «застревал в тупике» в 4 блоках от цели (сцена 56). Свободная точка не меняется.
     private static Vec3 surface(Level level, BlockPos goal) {
+        if (level.getBlockState(goal).isAir()
+                && level.getBlockState(goal.below()).isAir()) {
+            // Точка в воздухе над срезанным холмом (дом духа на прежней вершине) — это земля под ней: дух у подножия
+            // «упирался в тупик» в 4 блоках под целью (сцена 56).
+            BlockPos at = goal.below();
+            for (int step = 1;
+                    step < SURFACE_SEARCH && level.getBlockState(at.below()).isAir();
+                    step++) {
+                at = at.below();
+            }
+            return level.getBlockState(at.below()).isAir() ? Vec3.atBottomCenterOf(goal) : Vec3.atBottomCenterOf(at);
+        }
         // Цель-блок с открытым соседом (сундук, верстак) — подход вплотную, как раньше: поднимается только погребённая.
         for (Direction side : Direction.Plane.HORIZONTAL) {
             if (open(level, goal.relative(side))) {

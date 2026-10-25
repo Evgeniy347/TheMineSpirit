@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -263,6 +264,31 @@ class FirstStepsPlanTests {
                 Optional.of(BoardCase.CRAFT_WOODEN_AXE),
                 FirstStepsPlan.next(facts),
                 "Каменная кирка заменяет деревянную: деревянную кирку не крафтят, следующий — деревянный топор");
+    }
+
+    @Test
+    void ready_AfterLeveling_LayoutAndStoneStepsTogether() {
+        List<BoardCase> chain = chain();
+        List<BoardCase> ready = FirstStepsPlan.ready(factsAt(chain.indexOf(BoardCase.CLEAR_GROUNDS) + 1));
+
+        assertTrue(
+                ready.containsAll(List.of(
+                        BoardCase.STOCK_CHESTS,
+                        BoardCase.BUILD_MINE,
+                        BoardCase.CRAFT_FURNACE,
+                        BoardCase.LIGHTING,
+                        BoardCase.BUILD_FENCE,
+                        BoardCase.BUILD_HOUSE)),
+                "После выравнивания шахта, двор, свет, ограда, хижина и печь открываются сразу на разных духов "
+                        + "(решение владельца 25.10): по цепочке после выравнивания работал один дух, двое стояли; "
+                        + "открыто " + ready);
+        assertFalse(
+                ready.contains(BoardCase.CRAFT_ANVIL),
+                "Наковальня (железо) — после дома по цепочке: её добыча отнимала духов у этапа 1");
+        assertEquals(
+                List.of(BoardCase.CLEAR_GROUNDS),
+                FirstStepsPlan.ready(factsAt(chain.indexOf(BoardCase.CLEAR_GROUNDS))),
+                "До выравнивания включительно — по одному шагу: ограда и хижина не встают на неровном участке");
     }
 
     @Test

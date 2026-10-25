@@ -8,7 +8,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 /**
- * Генератор первых шагов на новом месте: каждое действие — отдельная задача доски, строго по цепочке. Вход — чистые
+ * Генератор первых шагов на новом месте: каждое действие — отдельная задача доски; до выравнивания — строго по
+ * цепочке, после него — параллельно ({@link #ready}). Вход — чистые
  * факты о поселении, решение — один следующий кейс.
  *
  * <p>Порядок — решение владельца 21.10, уточнён 24.10 (INC-63): временный верстак → деревянные инструменты →
@@ -39,6 +40,38 @@ public final class FirstStepsPlan {
             return Optional.of(boardCase);
         }
         return Optional.empty();
+    }
+
+    // Шаги, которые можно открыть сейчас. До выравнивания включительно — строго по одному, по цепочке; после него
+    // все невыполненные шаги открываются сразу на разных духов (решение владельца 25.10): шахта, двор, свет, ограда,
+    // хижина, каменные инструменты и печь — тому, кто свободен, а не ждут всей цепочки (сцена 56: после
+    // выравнивания работал один дух, двое стояли). Первый в списке — шаг цепочки, как у next.
+    public static List<BoardCase> ready(SettlementFacts facts) {
+        Objects.requireNonNull(facts, "facts не может быть null: генератор решает по фактам, а не вслепую");
+        Optional<BoardCase> first = next(facts);
+        if (first.isEmpty()) {
+            return List.of();
+        }
+        int leveling = chain().indexOf(BoardCase.CLEAR_GROUNDS);
+        if (chain().indexOf(first.orElseThrow()) <= leveling) {
+            return List.of(first.orElseThrow());
+        }
+        // Стол кузнеца и наковальня (железо) — после дома по цепочке: их добыча железа отнимала духов у этапа 1.
+        int house = chain().indexOf(BoardCase.BUILD_HOUSE);
+        if (chain().indexOf(first.orElseThrow()) > house) {
+            return List.of(first.orElseThrow());
+        }
+        List<BoardCase> open = new ArrayList<>();
+        for (Step step : ORDER) {
+            int index = chain().indexOf(step.boardCase());
+            if (index > leveling
+                    && index <= house
+                    && !facts.blocked().contains(step.boardCase())
+                    && !step.finished(facts)) {
+                open.add(step.boardCase());
+            }
+        }
+        return List.copyOf(open);
     }
 
     // Ближайший невыполненный шаг из wanted после current: его материалы добываются, пока current ещё идёт.

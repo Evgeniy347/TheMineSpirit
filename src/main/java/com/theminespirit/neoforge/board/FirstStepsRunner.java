@@ -135,20 +135,49 @@ public final class FirstStepsRunner {
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
         SettlementFacts facts = scan.facts();
         boolean mine = facts.mineEntrance();
-        Optional<BoardCase> next = FirstStepsPlan.next(facts);
+        List<BoardCase> ready = FirstStepsPlan.ready(facts);
+        Optional<BoardCase> next = ready.stream().findFirst();
         String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, wood);
         ensurePickaxe(level, service, spirits, stock, new StoneSite(home, wood), next, now);
-        if (next.isPresent() && STONE_STEPS.contains(next.orElseThrow())) {
+        if (ready.size() == 1 && STONE_STEPS.contains(next.orElseThrow())) {
             parallelStone(level, service, facts, new StoneSite(home, wood), stock, next.orElseThrow(), now);
         }
-        if (next.isEmpty() || hasActive(service, next.orElseThrow())) {
-            TorchWatch.tick(service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, 0, log), now);
-            next.filter(PREFETCH_DURING::contains)
-                    .ifPresent(current -> prefetch(level, service, facts, home, stock, current, now));
-            return;
+        next.filter(PREFETCH_DURING::contains)
+                .filter(current -> hasActive(service, current))
+                .ifPresent(current -> prefetch(level, service, facts, home, stock, current, now));
+        int torches = 0;
+        for (BoardCase caseValue : ready) {
+            if (!hasActive(service, caseValue)) {
+                StepContext context = new StepContext(level, service, spirits, stock, facts, anchor, wood, now);
+                torches = Math.max(torches, openIfStocked(context, caseValue));
+            }
         }
-        BoardCase caseValue = next.orElseThrow();
+        TorchWatch.tick(
+                service, spirits, home, stock, new TorchWatch.Site(scan.furnaceBlock(), mine, torches, log), now);
+    }
+
+    // Шаг открывается, когда его материалы в запасе; нехватка — добыча. Возвращает факелы шага сверх запаса.
+    private record StepContext(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            SettlementFacts facts,
+            BlockCoord anchor,
+            String wood,
+            long now) {}
+
+    private static int openIfStocked(StepContext context, BoardCase caseValue) {
+        ServerLevel level = context.level();
+        BoardService service = context.service();
+        List<SpiritEntity> spirits = context.spirits();
+        StockView stock = context.stock();
+        SettlementFacts facts = context.facts();
+        BlockCoord anchor = context.anchor();
+        String wood = context.wood();
+        long now = context.now();
+        BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         TicketTarget target = targetFor(caseValue, anchor, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, anchor, stock));
@@ -184,9 +213,7 @@ public final class FirstStepsRunner {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         // Факелы шага (ограда — на столбах углов и калитки) — сверх обычного запаса факелов: иначе шаг ждал бы их
         // вечно.
-        TorchWatch.Site site =
-                new TorchWatch.Site(scan.furnaceBlock(), mine, need.getOrDefault(TorchRules.TORCH, 0), log);
-        TorchWatch.tick(service, spirits, home, stock, site, now);
+        int torches = need.getOrDefault(TorchRules.TORCH, 0);
         if (!missing.isEmpty()) {
             LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
             for (Map.Entry<String, Integer> entry : missing.entrySet()) {
@@ -198,9 +225,10 @@ public final class FirstStepsRunner {
                     postGather(service, source, home, entry.getKey(), shortage, helpers(entry.getKey(), spirits), now);
                 }
             }
-            return;
+            return torches;
         }
         openStep(level, service, new OpenStep(caseValue, target, need, wood), source, now);
+        return torches;
     }
 
     private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
