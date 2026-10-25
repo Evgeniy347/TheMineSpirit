@@ -28,6 +28,20 @@ class BoardSnapshotTests {
             long at,
             String assignee,
             boolean done) {
+        return timed(id, priority, status, missing, deps, at, assignee, done, 0L, 0L);
+    }
+
+    private static BoardTask timed(
+            String id,
+            int priority,
+            String status,
+            Map<String, Integer> missing,
+            List<String> deps,
+            long at,
+            String assignee,
+            boolean done,
+            long startedAt,
+            long finishedAt) {
         return new BoardTask(
                 id,
                 "BUILD_HOUSE",
@@ -42,7 +56,10 @@ class BoardSnapshotTests {
                 "always",
                 priority,
                 List.of(),
-                done);
+                done,
+                startedAt,
+                finishedAt,
+                finishedAt > startedAt ? finishedAt - startedAt : 0L);
     }
 
     @Test
@@ -50,13 +67,12 @@ class BoardSnapshotTests {
         List<BoardTask> tasks = List.of(
                 task("lack", 90, "WAITING_RESOURCES", Map.of("oak_log", 3), List.of(), 1),
                 task("free-low", 10, "PENDING", Map.of(), List.of(), 2),
-                task("done-late", 50, "DONE", Map.of(), List.of(), 3, SPIRIT_UUID, true),
+                timed("done-late", 50, "DONE", Map.of(), List.of(), 3, SPIRIT_UUID, true, 500L, 900L),
                 task("work", 20, "ASSIGNED", Map.of(), List.of(), 4, SPIRIT_UUID, false),
                 task("free-high", 70, "PENDING", Map.of(), List.of(), 5),
-                task("done-early", 50, "DONE", Map.of(), List.of(), 6, SPIRIT_UUID, true));
+                timed("done-early", 50, "DONE", Map.of(), List.of(), 6, SPIRIT_UUID, true, 0L, 100L));
 
-        List<BoardTile> tiles =
-                BoardSnapshot.build(tasks, Map.of("done-late", 900L, "done-early", 100L), uuid -> "Тихон");
+        List<BoardTile> tiles = BoardSnapshot.build(tasks, uuid -> "Тихон");
 
         assertEquals(
                 List.of("done-early", "done-late", "lack", "work", "free-high", "free-low"),
@@ -73,9 +89,7 @@ class BoardSnapshotTests {
     @Test
     void build_UnknownSpirit_ShowsShortUuid() {
         List<BoardTile> tiles = BoardSnapshot.build(
-                List.of(task("work", 20, "ASSIGNED", Map.of(), List.of(), 1, SPIRIT_UUID, false)),
-                Map.of(),
-                uuid -> null);
+                List.of(task("work", 20, "ASSIGNED", Map.of(), List.of(), 1, SPIRIT_UUID, false)), uuid -> null);
 
         assertEquals("0f1e2d3c", tiles.get(0).spirit(), "Дух вне загруженных чанков показывается началом UUID");
     }
@@ -108,8 +122,8 @@ class BoardSnapshotTests {
 
     @Test
     void unfinishedTask_InDoneColumn_IsNotCompleted() {
-        List<BoardTile> tiles = BoardSnapshot.build(
-                List.of(task("blocked", 1, "BLOCKED", Map.of(), List.of(), 1)), Map.of(), uuid -> null);
+        List<BoardTile> tiles =
+                BoardSnapshot.build(List.of(task("blocked", 1, "BLOCKED", Map.of(), List.of(), 1)), uuid -> null);
 
         assertTrue(tiles.get(0).unfinished(), "Заблокированное задание в завершённых помечается как не удавшееся");
         assertFalse(tiles.get(0).completed(), "Заблокированное задание нельзя считать успешно завершённым");
@@ -117,8 +131,8 @@ class BoardSnapshotTests {
 
     @Test
     void build_DependentTask_KeepsDependencyIds() {
-        List<BoardTile> tiles = BoardSnapshot.build(
-                List.of(task("after", 5, "PENDING", Map.of(), List.of("before"), 1)), Map.of(), uuid -> null);
+        List<BoardTile> tiles =
+                BoardSnapshot.build(List.of(task("after", 5, "PENDING", Map.of(), List.of("before"), 1)), uuid -> null);
 
         assertEquals(
                 List.of("before"),
@@ -129,8 +143,18 @@ class BoardSnapshotTests {
     @Test
     void build_DoneWithoutJournal_UsesCreationTime() {
         List<BoardTile> tiles = BoardSnapshot.build(
-                List.of(task("done", 5, "DONE", Map.of(), List.of(), 42, null, true)), Map.of(), uuid -> null);
+                List.of(task("done", 5, "DONE", Map.of(), List.of(), 42, null, true)), uuid -> null);
 
         assertEquals(42L, tiles.get(0).doneAt(), "Без записи журнала время завершения — время постановки");
+    }
+
+    @Test
+    void build_TimedTask_KeepsStartFinishAndSpentTicks() {
+        List<BoardTile> tiles = BoardSnapshot.build(
+                List.of(timed("work", 5, "DONE", Map.of(), List.of(), 1, SPIRIT_UUID, true, 500L, 900L)), uuid -> null);
+
+        assertEquals(500L, tiles.get(0).startedAt(), "Плитка обязана нести тик выдачи из журнала");
+        assertEquals(900L, tiles.get(0).finishedAt(), "Плитка обязана нести тик закрытия из журнала");
+        assertEquals(400L, tiles.get(0).durationTicks(), "Плитка обязана нести затраченные тики работы");
     }
 }

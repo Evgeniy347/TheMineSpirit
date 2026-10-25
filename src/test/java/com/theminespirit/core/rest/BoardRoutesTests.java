@@ -84,6 +84,13 @@ class BoardRoutesTests {
                 10,
                 task.get("missing").get("oak_log").asInt(),
                 "GET обязан отдавать нехватку из гейта, а не полную нужду: " + response.body());
+        assertEquals(0L, task.get("startedAt").asLong(), "GET обязан отдавать тик выдачи задания: " + response.body());
+        assertEquals(
+                0L, task.get("finishedAt").asLong(), "GET обязан отдавать тик закрытия задания: " + response.body());
+        assertEquals(
+                0L,
+                task.get("durationTicks").asLong(),
+                "GET обязан отдавать затраченные тики задания: " + response.body());
     }
 
     @Test
