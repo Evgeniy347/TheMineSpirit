@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.SettlementLayout;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildOrder;
@@ -14,6 +15,7 @@ import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +25,15 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class FillSession {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final int NO_STAND_LOGGED = 4;
+
     public enum Outcome {
         RUNNING,
         SUCCEEDED,
@@ -225,8 +232,24 @@ public final class FillSession {
                 return;
             }
             List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
+            if (stands.isEmpty() && floorUnder(cell) && allowedStand(cell)) {
+                // Дно ямы в блок шириной: с края до него не дотянуться, соседей-стоянок нет — дух спускается в саму
+                // клетку и засыпает столбом под себя (сцена 56: яма 1×1×3 оставалась, выравнивание шло по кругу).
+                stands = List.of(cell);
+            }
 
             if (stands.isEmpty()) {
+                if (noStand < NO_STAND_LOGGED) {
+                    BlockPos at = toPos(cell);
+                    LOGGER.info(
+                            "[fill] {}: нет стоянки у {}: под ней {}, в ней {}, над ней {}, верх без листвы y={}",
+                            spirit.getName().getString(),
+                            cell,
+                            level.getBlockState(at.below()).getBlock(),
+                            level.getBlockState(at).getBlock(),
+                            level.getBlockState(at.above()).getBlock(),
+                            level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.x(), cell.z()));
+                }
                 noStand++;
                 skipped++;
                 tally.skipped();
@@ -270,6 +293,16 @@ public final class FillSession {
         }
     }
 
+    // В клетке можно стоять: твёрдый пол под ней, она и клетка над ней свободны.
+    private boolean floorUnder(BlockCoord cell) {
+        BlockPos pos = toPos(cell);
+        return level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)
+                && level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
+                && level.getBlockState(pos.above())
+                        .getCollisionShape(level, pos.above())
+                        .isEmpty();
+    }
+
     // Под ногами духа твёрдый пол: столбом под себя он поднимется, выходить из ямы не нужно.
     private boolean onFloor() {
         BlockPos below = spirit.blockPosition().below();
@@ -282,7 +315,8 @@ public final class FillSession {
         if (!(level instanceof ServerLevel server)) {
             return true;
         }
-        boolean sky = level.canSeeSky(toPos(stand));
+        // Небо — без листвы: яма под кроной дерева — не пещера (сцена 56: яма 1×1 под листвой не засыпалась).
+        boolean sky = stand.y() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, stand.x(), stand.z());
         return SettlementPlotStore.get(server)
                 .plot()
                 .map(plot -> SettlementLayout.fillStandAllowed(plot.anchor(), stand, sky))
@@ -373,6 +407,15 @@ public final class FillSession {
     }
 
     private Outcome fail(String reason) {
+        // Провал подсыпки — в лог с клетками: подсыпка внутри fallback не валит задание, и без строки повтор по кругу
+        // «подсыпка 3 блоков» не разобрать (сцена 56).
+        LOGGER.info(
+                "[fill] {}: {} клеток {} от {} не засыпаны: {}",
+                spirit.getName().getString(),
+                blockId,
+                region.size(),
+                region.stream().min(Comparator.naturalOrder()).orElse(null),
+                reason);
         failureReason = reason;
         outcome = Outcome.FAILED;
         cancel();

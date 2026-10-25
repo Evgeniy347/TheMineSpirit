@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -167,6 +168,8 @@ public final class FirstStageGameTests {
         private final Map<UUID, Integer> low = new HashMap<>();
         private final Map<UUID, Integer> idle = new HashMap<>();
         private final List<String> stuck = new ArrayList<>();
+        // Тики духов по сценариям — куда ушло время этапа (предел 6000 тиков).
+        private final Map<String, Integer> spent = new TreeMap<>();
 
         Watch(GameTestHelper helper, BoardService board, List<SpiritEntity> spirits) {
             this.helper = helper;
@@ -181,6 +184,7 @@ public final class FirstStageGameTests {
             Optional<SettlementPlot> plot =
                     SettlementPlotStore.get(helper.getLevel()).plot();
             for (SpiritEntity spirit : spirits) {
+                spent.merge(spirit.currentTaskScript().orElse("-"), 1, Integer::sum);
                 boolean busy = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
                         || !board.board().assignedTo(spirit.getUUID()).isEmpty();
                 boolean below = plot.map(p -> below(spirit, p.anchor())).orElse(false);
@@ -223,7 +227,8 @@ public final class FirstStageGameTests {
                     .map(ticket -> ticket.id() + "="
                             + board.board().statusOf(ticket.id()).orElse(null))
                     .toList();
-            return "тик " + helper.getTick() + ", духи " + spiritsNow + ", открыто " + open;
+            return "тик " + helper.getTick() + ", духи " + spiritsNow + ", открыто " + open + ", тики по сценариям "
+                    + spent;
         }
     }
 }

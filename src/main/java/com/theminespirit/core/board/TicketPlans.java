@@ -42,6 +42,10 @@ public final class TicketPlans {
     // Брёвен с малого дерева (дуб 4–6): число деревьев под добычу брёвен — с запасом (INC-64).
     private static final int LOGS_PER_TREE = 4;
     private static final int DIRT_SOURCE_GAP = 4;
+    // Допуск неравенства объёма срезки между частями, блоков: в его пределах ящик остаётся в своей части.
+    private static final int CUT_SLACK = 12;
+    // Запас пола и стенок спуска, который строитель шахты берёт из сундука (блоков каждого вида).
+    private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
     private static final String COBBLESTONE = "cobblestone";
     private static final int LEFT_ORE_RADIUS = 4;
@@ -202,8 +206,12 @@ public final class TicketPlans {
         BlockCoord origin = mineDescentOrigin(target.target());
         int x = origin.x();
         int z = origin.z();
+        // Пол и стенки спуска — из сундука поселения: расчистка сдала туда землю и булыжник, а строитель шахты пришёл
+        // пустым и падал «нет булыжника на стенку» (сцена 56). Сколько есть — столько и берёт.
         return sequence(
                 gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                takeFloor("minecraft:cobblestone"),
+                takeFloor("minecraft:" + PlotLeveling.DEFAULT_BLOCK),
                 new ScriptCall(
                         "build_schematic",
                         Map.of(
@@ -217,6 +225,22 @@ public final class TicketPlans {
                                 z,
                                 "rotation",
                                 MINE_DESCENT_ROTATION)));
+    }
+
+    private static TaskNode takeFloor(String item) {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                CONTAINER,
+                                NEAREST,
+                                ITEM,
+                                item,
+                                COUNT,
+                                MINE_FLOOR_TAKE,
+                                RADIUS,
+                                SUPPLY_CONTAINER_RADIUS)),
+                new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode buildMineLevel(int level, TicketTarget target) {
@@ -667,8 +691,11 @@ public final class TicketPlans {
         BlockCoord center = target.target();
         // Недостижимый ящик срезки не валит четверть (сцена 56: первый же ящик без стоянки бросал 55 остальных) —
         // его берёт следующий обмер, когда соседние ряды срезаны.
-        for (PlotLeveling.Box box : leveling.cutTopDown()) {
-            if (!single || partOf(box, center) == quarter) {
+        List<PlotLeveling.Box> cuts = leveling.cutTopDown();
+        List<Integer> cutPart = cutParts(cuts, center);
+        for (int index = 0; index < cuts.size(); index++) {
+            PlotLeveling.Box box = cuts.get(index);
+            if (!single || cutPart.get(index) == quarter) {
                 steps.add(new FallbackNode(List.of(
                         new ScriptCall("clear_area", boxParams(box, Map.of())),
                         new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
@@ -678,6 +705,14 @@ public final class TicketPlans {
         List<PlotLeveling.Box> fills = leveling.fill().stream()
                 .filter(box -> !single || partOf(box, center) == quarter)
                 .toList();
+        // Ямы подсыпки — сперва от того, что в них стоит (ствол дерева в низине, кусты): высота ног их не видит, а
+        // подсыпка в занятую клетку не встаёт — яма с деревом оставалась, выравнивание шло по кругу (сцена 56).
+        // Воду и пустые клетки расчистка пропускает быстро.
+        for (PlotLeveling.Box box : fills) {
+            steps.add(new FallbackNode(List.of(
+                    new ScriptCall("clear_area", boxParams(box, Map.of())),
+                    new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))));
+        }
         int volume = fills.stream().mapToInt(PlotLeveling.Box::volume).sum();
         if (volume > 0 && !PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
             // Булыжник на подсыпку — из запаса поселения (сундуки, свой инвентарь): духу четверти его никто не нёс, и
@@ -770,6 +805,34 @@ public final class TicketPlans {
     // Часть ящика выравнивания по его началу — те же части 3×3, что у расчистки (1 — северо-запад … 9 — юго-восток).
     static int partOf(PlotLeveling.Box box, BlockCoord center) {
         return 1 + band(box.x1() - center.x()) + CLEAR_GRID * band(box.z1() - center.z());
+    }
+
+    // Часть каждого ящика срезки — по объёму поровну (с допуском CUT_SLACK к ближайшей части): холм в середине
+    // участка целиком доставался части 5, её дух срезал его ~4700 тиков, пока двое других ждали (сцена 56).
+    // Порядок «сверху вниз» сохраняется внутри каждой части.
+    static List<Integer> cutParts(List<PlotLeveling.Box> cuts, BlockCoord center) {
+        int[] load = new int[CLEAR_PARTS + 1];
+        List<Integer> parts = new ArrayList<>(cuts.size());
+        for (PlotLeveling.Box box : cuts) {
+            int home = partOf(box, center);
+            int least = Integer.MAX_VALUE;
+            for (int part = 1; part <= CLEAR_PARTS; part++) {
+                least = Math.min(least, load[part]);
+            }
+            int chosen = home;
+            int bestDistance = Integer.MAX_VALUE;
+            for (int part = 1; part <= CLEAR_PARTS; part++) {
+                int distance = Math.abs((part - 1) % CLEAR_GRID - (home - 1) % CLEAR_GRID)
+                        + Math.abs((part - 1) / CLEAR_GRID - (home - 1) / CLEAR_GRID);
+                if (load[part] <= least + CUT_SLACK && distance < bestDistance) {
+                    chosen = part;
+                    bestDistance = distance;
+                }
+            }
+            load[chosen] += box.volume();
+            parts.add(chosen);
+        }
+        return parts;
     }
 
     private static int band(int offset) {

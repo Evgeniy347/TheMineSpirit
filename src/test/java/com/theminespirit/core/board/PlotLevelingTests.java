@@ -14,13 +14,17 @@ class PlotLevelingTests {
     @Test
     void cutTopDown_HillWithRuinOnTop_HighestBoxFirst() {
         PlotLeveling plan = PlotLeveling.plan(ANCHOR, 2, (x, z) -> x == 1 && z == 1 ? 69 : z == 1 ? 68 : 64);
-        List<Integer> tops =
-                plan.cutTopDown().stream().map(PlotLeveling.Box::y2).toList();
+        List<PlotLeveling.Box> layers = plan.cutTopDown();
         assertEquals(
-                List.of(68, 67, 67),
-                tops,
-                "Срезка с вершин: ряд со стенкой на холме (ноги 69) — раньше рядов холма, иначе стенка остаётся "
-                        + "висеть без стоянки (сцена 56)");
+                List.of(
+                        new PlotLeveling.Box(1, 68, 1, 1, 68, 1),
+                        new PlotLeveling.Box(-2, 67, 1, 2, 67, 1),
+                        new PlotLeveling.Box(-2, 66, 1, 2, 66, 1),
+                        new PlotLeveling.Box(-2, 65, 1, 2, 65, 1),
+                        new PlotLeveling.Box(-2, 64, 1, 2, 64, 1)),
+                layers,
+                "Срезка с вершин слоями в блок: стенка на холме (ноги 69) — раньше холма, иначе висит без стоянки; "
+                        + "ящик колонкой на всю высоту рыл траншею, из которой дух не выбирался (сцена 56)");
     }
 
     @Test

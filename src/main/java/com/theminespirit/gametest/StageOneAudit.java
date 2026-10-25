@@ -56,7 +56,12 @@ final class StageOneAudit {
                 int feet = feet(level, anchor, x, z);
                 if (!SettlementLayout.mineColumn(anchor, x, z)
                         && Math.abs(feet - anchor.y()) > PlotLeveling.TOLERANCE) {
-                    off.add("(" + x + ", " + z + ") ноги " + feet);
+                    // Что стоит под ногами — сразу видно, листва это, верстак или земля (сцена 56).
+                    BlockPos top = new BlockPos(x, feet - 1, z);
+                    off.add("(" + x + ", " + z + ") ноги " + feet + " на "
+                            + BuiltInRegistries.BLOCK
+                                    .getKey(level.getBlockState(top).getBlock())
+                                    .getPath());
                 }
             }
         }

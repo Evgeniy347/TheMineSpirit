@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -1090,5 +1091,30 @@ class TicketPlansTests {
                 collectCalls(TicketPlans.plan(BoardCase.CLEAR_GROUNDS, target()), "clear_area")
                         .size(),
                 "Без номера четверти — вся расчистка одним заданием");
+    }
+
+    @Test
+    void plan_ClearPartsLevelingRemainder_EveryCutLayerInSomePart() {
+        BlockCoord anchor = new BlockCoord(0, 64, 0);
+        PlotLeveling leveling = new PlotLeveling(
+                List.of(new PlotLeveling.Box(-6, 64, 2, -6, 65, 2), new PlotLeveling.Box(-5, 64, 2, -5, 66, 2)),
+                List.of(),
+                "dirt");
+        Set<Integer> layers = new TreeSet<>();
+        for (int part = 1; part <= TicketPlans.CLEAR_PARTS; part++) {
+            TaskNode plan = TicketPlans.plan(
+                    BoardCase.CLEAR_GROUNDS,
+                    TicketTarget.at(anchor).withLeveling(leveling).withCount(part));
+            for (ScriptCall call : collectCalls(plan, "clear_area")) {
+                if (call.params().get("y1").equals(call.params().get("y2"))) {
+                    layers.add((Integer) call.params().get("y1"));
+                }
+            }
+        }
+        assertEquals(
+                Set.of(64, 65, 66),
+                layers,
+                "Каждый слой срезки остатка выравнивания — в плане какой-то части: иначе холмик в пару колонок "
+                        + "остаётся и выравнивание идёт по кругу (сцена 56)");
     }
 }

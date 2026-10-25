@@ -96,6 +96,7 @@ public final class FirstStepsRunner {
     private static final String FURNACE_ITEM = "furnace";
     private static final int FEET_SCAN_DEPTH = 48;
     private static final int EXPAND_DEPTH = 4;
+    private static final int LEVELING_SHOWN = 6;
 
     private FirstStepsRunner() {}
 
@@ -235,7 +236,9 @@ public final class FirstStepsRunner {
                             caseValue,
                             Optional.empty(),
                             BoardRules.priorityOf(caseValue),
-                            now,
+                            // Части — в очередь по номеру: при равном времени доска брала по имени, «clear:N» раньше
+                            // «first:», и первая часть шла последней одним духом, двое стояли (сцена 56).
+                            now + part - 1,
                             1,
                             BoardTicket.ALWAYS_CAUSE,
                             List.of(),
@@ -427,6 +430,10 @@ public final class FirstStepsRunner {
                     plan.fillVolume(),
                     plan.block(),
                     plan.voids().size());
+            if (plan.cut().size() + plan.fill().size() <= LEVELING_SHOWN) {
+                // Остаток выравнивания из пары ящиков — их координаты: повтор по кругу из лога виден сразу (сцена 56).
+                LOGGER.info("[plot] остаток выравнивания: срезка {}, подсыпка {}", plan.cut(), plan.fill());
+            }
         }
         return plan;
     }

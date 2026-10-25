@@ -118,12 +118,44 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return true;
     }
 
-    // Срезка с вершин: ящики выше — раньше. Срезанный ряд холма лишал стоянки старую стенку на вершине соседнего
-    // ряда, и она висела на 4 выше ног (сцена 56).
+    // Срезка с вершин слоями в блок: сначала верхний слой всего холма, потом следующий. Ящик колонкой на всю высоту
+    // рыл траншею в 1 блок шириной и 4 глубиной: дух из неё не доставал соседний ряд, двое в ней не расходились
+    // (сцена 56); срезанный ряд лишал стоянки старую стенку на вершине соседнего ряда. В слое ряды сливаются по x и z.
     public List<Box> cutTopDown() {
-        List<Box> ordered = new ArrayList<>(cut);
-        ordered.sort(Comparator.comparingInt(Box::y2).reversed());
-        return List.copyOf(ordered);
+        int top = cut.stream().mapToInt(Box::y2).max().orElse(0);
+        int bottom = cut.stream().mapToInt(Box::y1).min().orElse(1);
+        List<Box> out = new ArrayList<>();
+        for (int y = top; y >= bottom; y--) {
+            int level = y;
+            List<Box> rows = new ArrayList<>();
+            cut.stream()
+                    .filter(box -> box.y1() <= level && level <= box.y2())
+                    .sorted(Comparator.comparingInt(Box::z1).thenComparingInt(Box::x1))
+                    .forEach(box -> {
+                        Box last = rows.isEmpty() ? null : rows.get(rows.size() - 1);
+                        if (last != null && last.z1() == box.z1() && last.x2() + 1 == box.x1()) {
+                            rows.set(rows.size() - 1, new Box(last.x1(), level, last.z1(), box.x2(), level, last.z2()));
+                        } else {
+                            rows.add(new Box(box.x1(), level, box.z1(), box.x2(), level, box.z2()));
+                        }
+                    });
+            rows.sort(Comparator.comparingInt(Box::x1).thenComparingInt(Box::x2).thenComparingInt(Box::z1));
+            Box open = null;
+            for (Box row : rows) {
+                if (open != null && open.x1() == row.x1() && open.x2() == row.x2() && open.z2() + 1 == row.z1()) {
+                    open = new Box(open.x1(), level, open.z1(), open.x2(), level, row.z2());
+                    continue;
+                }
+                if (open != null) {
+                    out.add(open);
+                }
+                open = row;
+            }
+            if (open != null) {
+                out.add(open);
+            }
+        }
+        return List.copyOf(out);
     }
 
     // План для участка {@code half} вокруг якоря; уровень ног участка — {@code anchor.y()}.

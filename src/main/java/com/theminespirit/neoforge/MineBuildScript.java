@@ -29,6 +29,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -297,12 +298,18 @@ final class MineBuildScript implements ScriptInstance {
         for (BlockCoord cell : column.cells()) {
             for (int[] side : SIDES) {
                 BlockCoord wall = new BlockCoord(cell.x() + side[0], cell.y(), cell.z() + side[1]);
-                if (walls.contains(wall)) {
+                if (walls.contains(wall) && !aboveGround(wall)) {
                     found.add(wall);
                 }
             }
         }
         return found;
+    }
+
+    // Стенка на поверхности и выше (сбоку от входа на уровне ног участка) ни от пропасти, ни от пещеры не держит, а
+    // на ровном участке встаёт бугром: выравнивание срезало стенки шахты и шло по кругу (сцена 56).
+    private boolean aboveGround(BlockCoord wall) {
+        return wall.y() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, wall.x(), wall.z());
     }
 
     private boolean oreInFloor(BlockCoord floor, BlockState state) {
