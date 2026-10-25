@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -37,7 +36,7 @@ public final class TransferGameTests {
 
     private TransferGameTests() {}
 
-    @GameTest(template = "arena", batch = "transfer_craft", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void transfer_SticksToCrafter_StonePickaxeCrafted(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         helper.setBlock(TABLE_POS, Blocks.CRAFTING_TABLE);
@@ -113,7 +112,7 @@ public final class TransferGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "transfer_deliver_spirit", timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void transfer_DeliverToSpirit_ReceiverGetsItems(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         SpiritEntity giver = TacticsScene.spirit(helper, GIVER_POS);

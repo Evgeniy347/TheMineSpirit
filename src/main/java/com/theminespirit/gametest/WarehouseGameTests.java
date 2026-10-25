@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -58,7 +57,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class WarehouseGameTests {
-    private static final String BATCH = "warehouse";
     private static final int SETTLE_TICKS = 5;
 
     private WarehouseGameTests() {}
@@ -99,7 +97,7 @@ public final class WarehouseGameTests {
 
     // [флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
     // иначе тест меряет скорость стройки, а не её результат.
-    @GameTest(template = "arena", batch = "warehouse_build", timeoutTicks = 12000)
+    @SceneStep(template = "arena", timeoutTicks = 12000)
     public static void warehouse_LevelOneBuilt_AllChestsOpenable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -165,7 +163,7 @@ public final class WarehouseGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
+    @SceneStep(template = "arena", timeoutTicks = 200)
     public static void warehouse_LevelTwoSign_StandsWithCategory(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -202,8 +200,7 @@ public final class WarehouseGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 200)
-    @SettlementSystems(board = true)
+    @SceneStep(template = "arena", timeoutTicks = 200, board = true)
     public static void warehouse_TransitionOneToTwo_QueuesRelocation(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -242,7 +239,7 @@ public final class WarehouseGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = BATCH, timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void warehouse_DepositRawIron_GoesToOreChest(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -30,12 +29,11 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class SpiritSuppliesGameTests {
     private static final String FIELD = "arena";
-    private static final String BATCH = "acquire_supplies";
     private static final int TIMEOUT = 100;
 
     private SpiritSuppliesGameTests() {}
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void inventory_TwoStacksInInventory_CountsTotal(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -52,7 +50,7 @@ public final class SpiritSuppliesGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void inventory_MapOfStacks_ReturnsAllItemsWithTotals(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -77,7 +75,7 @@ public final class SpiritSuppliesGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void withdraw_SingleChest_ReturnsNearestStepWithCappedCount(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -99,7 +97,7 @@ public final class SpiritSuppliesGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void withdraw_TwoChests_NearerChestFirstThenFarther(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -142,7 +140,7 @@ public final class SpiritSuppliesGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void withdraw_EmptyAndLootChests_SkippedWithoutSteps(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -167,7 +165,7 @@ public final class SpiritSuppliesGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, batch = BATCH, timeoutTicks = TIMEOUT)
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void withdraw_ChestBeyondRadius_SkippedAtRadiusTwo(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
