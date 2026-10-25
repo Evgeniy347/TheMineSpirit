@@ -9,7 +9,6 @@ import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -28,7 +27,7 @@ public final class PolicySuspendGameTests {
 
     private PolicySuspendGameTests() {}
 
-    @GameTest(template = "arena", batch = "suspend_goto", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void suspend_GotoMidWalk_SpiritStandsStillThenResumeArrives(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
@@ -83,7 +82,7 @@ public final class PolicySuspendGameTests {
     }
 
     // [флак] ломка блока с приостановкой: сотни тиков духа, запас под нагрузкой
-    @GameTest(template = "arena", batch = "suspend_break", timeoutTicks = 500)
+    @SceneStep(template = "arena", timeoutTicks = 500)
     public static void suspend_MidBreak_CrackIsRemovedBlockStaysThenBreakFinishes(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);

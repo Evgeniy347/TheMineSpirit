@@ -21,7 +21,6 @@ import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -93,7 +92,7 @@ public final class PolicyProtectionGameTests {
         return new WorkZone(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()), radius);
     }
 
-    @GameTest(template = "arena", batch = "protect_deny", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void breaker_DenyListBlocks_RefusedAsProtectedAndStayIntact(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
@@ -118,7 +117,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_tended", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void breaker_WheatInFarmlandMarkedByPlayer_TendedBreakAllowedUntendedRefused(GameTestHelper helper) {
         prepare(helper);
         for (int x = 3; x <= 5; x++) {
@@ -147,7 +146,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_player_log", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_LogPlacedByPlayerAndNaturalLog_SkipsPlacedAndReportsIt(GameTestHelper helper) {
         prepare(helper);
         helper.setBlock(6, 1, 2, Blocks.OAK_LOG);
@@ -197,7 +196,7 @@ public final class PolicyProtectionGameTests {
         }
     }
 
-    @GameTest(template = "arena", batch = "protect_buildings", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void breaker_LogsAroundThresholdAndInHouse_OnlyBuildingLogsAreProtected(GameTestHelper helper) {
         prepare(helper);
         BlockPos five = new BlockPos(1, 1, 1);
@@ -236,7 +235,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_zone", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void protectedZone_FromConfig_CobbleInsideIsKeptOutsideIsBreakableAndPlacingIsRefused(
             GameTestHelper helper) {
         prepare(helper);
@@ -275,7 +274,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_zone_goto", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void workZone_GotoTargetOutside_FailsWithReason(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -293,7 +292,7 @@ public final class PolicyProtectionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "protect_zone_return", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void workZone_SpiritTeleportedFarOut_ReturnsWithinMargin(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -322,7 +321,7 @@ public final class PolicyProtectionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "protect_zone_follow", timeoutTicks = 300)
+    @SceneStep(template = "arena", timeoutTicks = 300)
     public static void workZone_FollowedPlayerLeavesZone_TaskFailsAndSpiritStays(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
@@ -362,7 +361,7 @@ public final class PolicyProtectionGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "protect_persist", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void persistence_WorkZoneAndPlacedMarks_SurviveSaveAndLoad(GameTestHelper helper) {
         prepare(helper);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
@@ -398,7 +397,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_dig_down", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void breaker_BlockUnderFeetAbovePitOfThree_RefusedAsDropAndSpiritStays(GameTestHelper helper) {
         prepare(helper);
         BlockPos pillar = new BlockPos(4, 3, 4);
@@ -418,7 +417,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_dig_floor", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void breaker_BlockUnderFeetOverSolidFloor_IsAllowed(GameTestHelper helper) {
         prepare(helper);
         BlockPos dirt = new BlockPos(4, 1, 4);
@@ -434,7 +433,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_load", timeoutTicks = 100)
+    @SceneStep(template = "arena", timeoutTicks = 100)
     public static void load_TwoHundredBreaks_ReadTwentySixNeighboursEach(GameTestHelper helper) {
         prepare(helper);
         BlockPos dirt = new BlockPos(5, 1, 4);
@@ -461,7 +460,7 @@ public final class PolicyProtectionGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", batch = "protect_command", timeoutTicks = 40)
+    @SceneStep(template = "arena", timeoutTicks = 40)
     public static void zoneCommand_SetThenClear_ChangesTheSpiritWorkZone(GameTestHelper helper)
             throws CommandSyntaxException {
         prepare(helper);
@@ -534,7 +533,7 @@ public final class PolicyProtectionGameTests {
         return new ScriptCall("gather", Map.of("block", "minecraft:cobblestone", "count", count, "radius", 8));
     }
 
-    @GameTest(template = "arena", batch = "protect_unprotect", timeoutTicks = 400)
+    @SceneStep(template = "arena", timeoutTicks = 400)
     public static void gather_PlayerHeapThenUnprotectThenRemove_RefusesCollectsRefuses(GameTestHelper helper) {
         prepare(helper);
         BlockPos heap = new BlockPos(6, 0, 6);
