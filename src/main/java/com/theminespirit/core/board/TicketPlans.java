@@ -925,6 +925,9 @@ public final class TicketPlans {
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {
+        if (target.schemeFile() == null && target.leveling() != null) {
+            return LevelRepair.plan(target);
+        }
         String scheme = target.schemeFile() == null ? "repair" : target.schemeFile();
         return sequence(gotoTarget(target), schematic(scheme, target));
     }

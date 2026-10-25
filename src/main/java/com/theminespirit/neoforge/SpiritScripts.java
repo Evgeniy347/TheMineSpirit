@@ -337,7 +337,8 @@ public final class SpiritScripts {
                             catalog(),
                             conditionCatalog(),
                             new AcquireScript.Registries(() -> registryFor(spirit), conditions()))
-                    .gatherAt(parsed.gatherAt());
+                    .gatherAt(parsed.gatherAt())
+                    .gatherAtLeast(DataTables.INSTANCE.leveling().current().tripMin());
         }
     }
 

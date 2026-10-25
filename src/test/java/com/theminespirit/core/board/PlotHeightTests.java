@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class PlotHeightTests {
     private static final BlockCoord CENTER = new BlockCoord(0, 64, 0);
     private static final int HALF = 5;
-    private static final LevelingRules RULES = new LevelingRules(25, 128, 64);
+    private static final LevelingRules RULES = new LevelingRules(25, 128, 64, 32);
     private static final IntBinaryOperator SLOPE = (x, z) -> x < 0 ? 66 : x == 0 ? 64 : 62;
 
     @Test

@@ -134,6 +134,7 @@ public final class FirstStepsRunner {
         }
         // Якорь участка — один на поселение, зафиксирован в мире: от него выравнивание и все постройки раскладки.
         BlockCoord anchor = plotOf(level, service, spirits, now).anchor();
+        PlotAudit.tick(level, service, anchor, now);
         BlockCoord home = new BlockCoord(anchor.x(), homeY(spirits), anchor.z());
         String wood = woodOf(level, home, stock);
         Scan scan = buildFacts(level, new StoneSite(home, wood), anchor, stock, service, world);
