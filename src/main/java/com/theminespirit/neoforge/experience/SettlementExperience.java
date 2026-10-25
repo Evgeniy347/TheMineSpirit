@@ -8,12 +8,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/**
- * Пул опыта поселения: опыт духов, накопленный, пока ни один реальный игрок не в сети.
- *
- * <p>Копится на уровне Верхнего мира (одна запись на сервер), раздаётся при входе игрока. Так опыт
- * не теряется, если дух убил моба или добыл руду на пустом сервере.
- */
 public final class SettlementExperience extends SavedData {
     private static final String DATA_NAME = ModIdentity.MOD_ID + "_settlement_experience";
     private static final String PENDING_KEY = "Pending";

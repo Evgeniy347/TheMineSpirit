@@ -20,11 +20,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.slf4j.Logger;
 
-/**
- * Сверка сборок до игровой фазы: клиент со старым модом отключается с «обновите клиент»,
- * а не падает на set_entity_data. Канал необязательный: иначе старый клиент не дожил бы
- * до понятного отказа.
- */
 public final class ModProtocolHandshake {
     public static final ConfigurationTask.Type TASK =
             new ConfigurationTask.Type(ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "protocol"));

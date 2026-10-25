@@ -35,12 +35,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Засыпка воронки от взрыва: берёт землю из инвентаря и ближних сундуков (через существующее
- * снабжение acquire/withdraw) и ставит по плану {@link CraterPlan} снизу вверх.
- *
- * <p>Нехватка земли не роняет задачу: засыпается сколько хватило, итог называет засыпанное и нехватку.
- */
 public final class FillCraterScript implements ScriptInstance {
     static final String FILL_BLOCK = "minecraft:dirt";
 

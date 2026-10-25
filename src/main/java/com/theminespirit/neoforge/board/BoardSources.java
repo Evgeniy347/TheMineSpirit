@@ -8,11 +8,6 @@ import java.util.List;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Оркестратор источников доски (периодических): опрос животных, первые шаги, чаровальня,
- * воронки и заборы. Возвращает живые причины пересборки: по ним доска снимает задания,
- * чья причина отпала.
- */
 public final class BoardSources {
     private final WoolWatch wool = new WoolWatch();
     private final FishingWatch fishing = new FishingWatch();

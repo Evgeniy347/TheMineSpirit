@@ -28,13 +28,6 @@ import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Экран поселения, вкладка «Доска задач»: окно в рамке экрана достижений растягивается по размеру окна,
- * три колонки групп (завершённые, активные, доступные) со своими списками и прокруткой колесом под
- * курсором, сверху кнопки фильтров по статусу и исполнителю. Задания, которые не удалось завершить,
- * стоят в колонке завершённых с красной подписью и причиной в подсказке. Данные — снимок доски,
- * полученный с сервера при открытии; живого обновления нет.
- */
 public final class BoardScreen extends Screen {
     private static final String KEY = ModIdentity.MOD_ID + ".board.";
     private static final ResourceLocation WINDOW =

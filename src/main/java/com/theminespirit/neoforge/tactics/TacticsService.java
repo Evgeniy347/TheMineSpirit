@@ -71,11 +71,7 @@ public final class TacticsService {
     private static final int NEVER = -1_000_000;
     private static final double RETURN_PROGRESS = 0.5;
     private static final int RETURN_STALL_TICKS = 200;
-    // Возврат к якорю без врагов дольше этого — снимается, как застрявший: дух под землёй (шахта, y=64 при якоре
-    // y=71) шёл к якорю, понемногу приближаясь, и 25+ минут числился в бою (INC-40).
     private static final int RETURN_MAX_TICKS = 600;
-    // После снятого возврата новый не начинается столько тиков: каждая оценка тактики сбрасывала «вернулся», и дух
-    // снова уходил к недостижимому якорю, числясь в бою (INC-40).
     private static final int RETURN_COOLDOWN_TICKS = 1200;
 
     private final SpiritEntity spirit;
@@ -108,7 +104,6 @@ public final class TacticsService {
     private @Nullable Point stallPoint;
     private double stallBest;
     private int stallTicks;
-    // Последний итог подхода к якорю — в строку инцидента (INC-38: почему дух не дошёл, а не только сколько осталось).
     private String lastReturnState = "-";
     private CombatDirective directive;
     private final DirectiveOwnership ownership = new DirectiveOwnership();
@@ -570,7 +565,6 @@ public final class TacticsService {
         }
         returnTicks++;
         if (stalledReturn(point, distance) || returnTicks > RETURN_MAX_TICKS) {
-            // Без врагов возврат к якорю, который не приближается, держал бы духа в «бою» вечно (INC-35, INC-40).
             if (returnTicks > RETURN_MAX_TICKS) {
                 LOGGER.warn(
                         "[incident] дух {} шёл к якорю {} дольше {} тиков (осталось {}, стоит в {}): возврат снят на {}"
@@ -590,7 +584,6 @@ public final class TacticsService {
             return;
         }
         if (!approach.isActive() && DigOutScript.sealed(spirit.level(), spirit.blockPosition())) {
-            // Замурованному к якорю не пройти: возврат держал его «в бою» часами (INC-45) — выход копает dig_out.
             returned = true;
             returnTicks = 0;
             returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;

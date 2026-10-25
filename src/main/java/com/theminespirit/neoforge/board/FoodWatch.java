@@ -26,11 +26,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-/**
- * Постоянное задание «пополнить личную еду со склада»: духу, у которого еда ниже суточной нормы
- * и который голоден, выдаётся RESTOCK_FOOD с продуктом, выбранным по сытности. Сырьё при наличии
- * станции готовки не раздаётся — оно сначала идёт на готовку. Мир читает только этот адаптер.
- */
 final class FoodWatch {
     private static final int STATION_RADIUS = 8;
     private static final int STATION_BUDGET = 4096;

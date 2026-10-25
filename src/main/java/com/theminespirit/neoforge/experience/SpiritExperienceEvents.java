@@ -11,15 +11,6 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 
-/**
- * Опыт от духов стекается реальным игрокам, а не падает сферами на землю.
- *
- * <p>Единственное место подписки: смерть моба от духа (в том числе от его стрелы), добыча блока
- * духом ({@link BlockDropsEvent} несёт опыт блока) и вход игрока для выдачи накопленного пула.
- * Пометка «опыт не ронять» ставится самому мобу, а не общему полю: ванильный
- * {@link LivingEntity#skipDropExperience()} переживает и паузу до удаления, и второго моба,
- * убитого тем же духом следом.
- */
 public final class SpiritExperienceEvents {
     public SpiritExperienceEvents(IEventBus bus) {
         bus.addListener(this::onDeath);

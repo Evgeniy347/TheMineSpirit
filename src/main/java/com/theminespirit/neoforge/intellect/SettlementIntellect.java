@@ -104,7 +104,6 @@ public final class SettlementIntellect {
         decideCalls++;
         BoardService boardService = BoardRegistry.get(level);
         stage = SettlementStage.of(boardService.board().ledger());
-        // Материалы заданий доски забронированы: фоновый крафт палок не ест доски сундуков (INC-36, приёмка).
         StockReader.Stocks stocks = StockReader.read(level, members, home, BoardReserve.items(boardService.board()));
         stockReads += stocks.reads();
         stockContainers += stocks.containers();

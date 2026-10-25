@@ -350,8 +350,6 @@ public final class HarvestSession {
         state = State.APPROACH;
     }
 
-    // Земля, песок и гравий берутся слоем не глубже блока под ногами на старте: добыча вглубь рыла траншею в 3
-    // блока, из которой дух не выбирался (сцена 56, сид 519074267563303498: земля на подсыпку за оградой).
     private List<BlockCoord> shallow(List<BlockCoord> candidates) {
         List<BlockCoord> kept = new ArrayList<>();
         for (BlockCoord candidate : candidates) {
@@ -636,8 +634,6 @@ public final class HarvestSession {
                 fail("не удалось подобрать дроп у " + currentTarget + ": " + reason);
                 return;
             }
-            // Пока есть недобытые блоки, провал сбора не смертелен: следующий сломанный блок может освободить
-            // предмет (накрывающий блок, тесная ниша). Место запоминается и повторяется после всей добычи.
             dropRetries.failed(currentTarget);
             collector = null;
             currentTarget = null;

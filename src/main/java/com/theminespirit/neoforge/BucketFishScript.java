@@ -18,11 +18,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Ловля рыбы ведром: дух находит рыбу в воде рядом, подходит и сажает её в пустое ведро.
- * Заход ограничен {@link FishingData#bucketCount()} — числом из fishing.json. Ведёрная рыба
- * идёт на будущие пруды, поэтому её берут отдельно от удочки и не больше заданного предела.
- */
 public final class BucketFishScript implements ScriptInstance {
     private static final double ARRIVAL = 1.6;
     private static final double REACH = 3.0;

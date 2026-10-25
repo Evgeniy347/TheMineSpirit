@@ -19,10 +19,6 @@ import net.minecraft.commands.arguments.MessageArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * {@code /spirit board} — очередь заданий поселения в чат: кейс, приоритет, владелец, статус и нехватка
- * ресурсов. {@code /spirit board cancel <id>} — отмена задания (как REST-отмена доски).
- */
 public final class SpiritBoardCommand {
     private SpiritBoardCommand() {}
 

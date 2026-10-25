@@ -15,8 +15,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.Level;
 
-// Снимок всех допустимых контейнеров в радиусе для раскладки "auto": скан идёт порциями по срезам,
-// открывается один раз на раскладку, дальше обновляется по факту вставки.
 final class AutoContainerScan {
     private static final int SLICES_PER_TICK = 4;
 

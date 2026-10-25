@@ -29,12 +29,8 @@ public final class Approach {
     }
 
     private static final double MOVE_SPEED = 1.0;
-    // Конец пути игры дальше 3 блоков от цели — путь не дошёл; ближе — обычный подход к сундуку или верстаку,
-    // к самому блоку путь не ведёт.
     private static final double NETWORK_GAP = 3.0;
     private static final int NETWORK_ATTEMPTS = 2;
-    // Сеть — при любом недошедшем пути, и вблизи: цель за стеной или этажом выше близка по прямой, а пешком — через
-    // дверь или лестницу в другом конце дома, дальше поиска пути игры (дом игрока 3, дом семьи 3, 21.10).
 
     private final SpiritEntity spirit;
     private PathRefreshPolicy pathRefresh;
@@ -153,7 +149,6 @@ public final class Approach {
         return refusal;
     }
 
-    // Для разбора трудных подходов: сколько раз спрашивали сеть тропинок и сколько маршрутов она дала.
     public String networkNote() {
         return "сеть: запросов " + networkAttempts + ", маршрутов " + networkRoutes;
     }
@@ -190,8 +185,6 @@ public final class Approach {
         return legs.current();
     }
 
-    // Сеть тропинок (решение владельца 20.10): путь игры к цели в пределах 32 не дошёл — по сети отрезками, каждый
-    // в пределах пути игры. Отрезок, который не прошёлся, — к пересчёту, дальше как без сети.
     private void followNetwork(Vec3 target) {
         if (mode != PathMode.NORMAL || targetEntity != null || !(spirit.level() instanceof ServerLevel level)) {
             return;

@@ -10,10 +10,6 @@ import com.theminespirit.core.reload.TableStatus;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
-/**
- * {@code /spirit presets} — список готовых построек: id, этап, тип, габариты, вход и материалы.
- * По нему человек проверяет, что библиотека прочиталась и что датапак её не сломал.
- */
 final class SpiritPresetsCommand {
     private SpiritPresetsCommand() {}
 

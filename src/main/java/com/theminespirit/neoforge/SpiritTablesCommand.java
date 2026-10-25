@@ -11,10 +11,6 @@ import java.time.format.DateTimeFormatter;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
-/**
- * {@code /spirit tables} — что загружено, откуда, когда и по какому хэшу, плюс ошибки последней перезагрузки.
- * По этому списку человек проверяет, что датапак переопределил таблицу и что /reload прошёл без ошибок.
- */
 final class SpiritTablesCommand {
     private static final DateTimeFormatter TIME =
             DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());

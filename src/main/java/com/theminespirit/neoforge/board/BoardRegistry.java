@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.server.level.ServerLevel;
 
-/** Одна доска на уровень: живёт в памяти, а снимок состояния берётся из SavedData мира. */
 public final class BoardRegistry {
     private static final Map<ServerLevel, BoardService> BY_LEVEL = new ConcurrentHashMap<>();
 

@@ -182,9 +182,6 @@ public final class SpiritEntity extends PathfinderMob {
         return DropPolicy.MAX_DROP;
     }
 
-    // Замечание владельца 21.10: у духов в руках ничего не было. Что дух ставит или чем работает — видно игроку: сервер
-    // кладёт копию в синхронизируемое поле, клиент рисует её в главной руке; настоящая рука и инвентарь не меняются,
-    // счёт материала и выпадение при смерти те же. Пусто — видна настоящая рука (оружие, инструмент).
     public void showInHand(ItemStack stack) {
         ItemStack shown = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
         if (!ItemStack.isSameItemSameComponents(entityData.get(DATA_SHOWN_ITEM), shown)) {
@@ -214,9 +211,6 @@ public final class SpiritEntity extends PathfinderMob {
         return super.getItemBySlot(slot);
     }
 
-    // Рука — место хранения: equip/swap_tool кладут в неё единственный экземпляр из инвентаря, а бой и стройка —
-    // временную копию для показа. Освобождать руку можно только через releaseMainHand: настоящий предмет
-    // возвращается в инвентарь, копия просто исчезает. Иначе тактика (SpiritGear.holdNothing) теряет вещь (INC-12).
     public void holdInMainHand(ItemStack stack) {
         setItemSlot(EquipmentSlot.MAINHAND, stack);
         mainHandBorrowed = false;
@@ -571,8 +565,6 @@ public final class SpiritEntity extends PathfinderMob {
         brain().start(plan);
     }
 
-    // Фоновое занятие интеллекта (рубка, крафт досок, отдых днём) уступает заданию доски: доска вытесняет его,
-    // а не ждёт конца; сон ночью не вытесняется.
     public void startBackgroundTask(TaskNode plan) {
         startTask(plan);
         backgroundGeneration = taskGeneration();
@@ -724,7 +716,6 @@ public final class SpiritEntity extends PathfinderMob {
         buildStats = stats;
     }
 
-    // Итог последней стройки по схеме (план против исполненного) — для аудита GameTest.
     public Optional<BuildStats> buildStats() {
         return Optional.ofNullable(buildStats);
     }

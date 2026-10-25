@@ -34,12 +34,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-/**
- * Проходка подземной схемы (спуск, ход) по колонкам от входа вглубь (решения владельца 22.10): пол ставится до шага
- * вперёд, клетки «.» выламываются, жидкость у прохода перекрывается булыжником до вскрытия, руда — по правилу руды,
- * оставленная руда — в память поселения и обход сбоку. В конце дух возвращается наверх пешком по своим ступеням.
- * Каждый тик решение берётся из мира заново, поэтому осыпавшийся гравий или прерванная ломка просто доделываются.
- */
 final class MineBuildScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double STAND_ARRIVAL = 0.6;
@@ -260,7 +254,6 @@ final class MineBuildScript implements ScriptInstance {
         phase = Phase.PICK;
     }
 
-    // Пол до шага вперёд: дух не ступает в пустоту, воду или на гравий над пустотой.
     private boolean solidReady(BlockCoord floor, String what) {
         if (leftOres.contains(floor)) {
             return true;
@@ -290,8 +283,6 @@ final class MineBuildScript implements ScriptInstance {
         };
     }
 
-    // Стенки слева и справа от прохода (решение владельца 23.10): дух и игрок не падают в пропасть сбоку, скелеты
-    // из пещеры не стреляют в проход. Стенка — та же клетка @floor, что и пол, но сбоку от воздуха колонки.
     private List<BlockCoord> wallsOf(MineColumn column) {
         List<BlockCoord> found = new ArrayList<>();
         for (BlockCoord cell : column.cells()) {
@@ -353,7 +344,6 @@ final class MineBuildScript implements ScriptInstance {
         }
         int at = plan.indexOf(column) + 1;
         for (MineColumn side : detour.get()) {
-            // Обход проходит сквозь стенку оставленной колонки: эти клетки больше не стенка, иначе их заложат снова.
             side.cells().forEach(walls::remove);
             if (!plan.contains(side)) {
                 plan.add(at++, side);
@@ -430,8 +420,6 @@ final class MineBuildScript implements ScriptInstance {
         }
     }
 
-    // Факелы схемы необязательны (решение владельца 22.10): ход строится без них; есть факелы — ставятся по схеме,
-    // нет или клетка не держит факел — пропускаются без провала стройки.
     private void torch() {
         Schematic.PlacedEntry entry = torches.isEmpty() ? null : torches.get(0);
         if (entry == null || BlockItems.countIn(spirit.getInventory(), entry.block()) < 1) {
@@ -466,7 +454,6 @@ final class MineBuildScript implements ScriptInstance {
         }
     }
 
-    // Выход наверх пешком по своим ступеням: от последней колонки по цепочке родителей ко входу, короткими шагами.
     private void beginExit() {
         exitPath.clear();
         BlockPos feet = spirit.blockPosition();

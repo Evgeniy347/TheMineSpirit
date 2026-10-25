@@ -26,12 +26,6 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Источник доски «шерсть и кровати». Работает только при живом гейте «загон ≥ 4 овец»:
- * до него овец разводят, а шерсть и кровати не трогают. Дикие овцы — вне домашнего круга
- * и не из пойманных, не чаще одного выхода в игровые сутки; число голов за выход —
- * {@code wild_sheep_per_day}. Кроватей не больше духов: спрос — духи без кровати.
- */
 public final class WoolWatch {
     public static final String CAUSE = "wool:pen";
 

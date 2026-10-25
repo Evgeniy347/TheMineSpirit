@@ -160,8 +160,6 @@ public final class SpiritCoordinator {
     }
 
     private List<UUID> reservationsOwners() {
-        // WorkReservations не даёт итератор владельцев; обойдём через releaseAll-логику нет
-        // но нам нужны владельцы с бронированиями - просто не делаем сложного; release при отсутствии духа
         return List.of();
     }
 
@@ -255,8 +253,6 @@ public final class SpiritCoordinator {
         idleSince.keySet().retainAll(present);
     }
 
-    // Мирный пост (без врагов, без цели) ещё не выдан и дух свободен меньше порога — не выдаём: иначе каждое
-    // короткое занятие интеллекта снимало пост, а простой ставил снова (INC-27). Выданный пост держится как раньше.
     private boolean holdsCalmPost(UUID id, CombatDirective d, Set<UUID> urgent, Map<UUID, String> forced) {
         if (urgent.contains(id)
                 || forced.containsKey(id)
@@ -364,9 +360,7 @@ public final class SpiritCoordinator {
 
     private void applyDirectiveToSpirit(SpiritEntity spirit, CombatDirective d, String forcedTargetId, Point post) {
         TacticsService tactics = spirit.tactics();
-        // Для обороны/защиты задачи нет в текущем API - применяем напрямую
         tactics.applyDirective(d, DirectiveOwner.COORDINATOR);
-        // guard zone при GUARD_AREA
         if (d.safePoint().isPresent()) {
             Point safe = d.safePoint().get();
             tactics.setGuardZone(
@@ -377,14 +371,14 @@ public final class SpiritCoordinator {
                     new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()), (int) Math.floor(post.z())),
                     CoordinatorTuning.DEFENSE_POST_RADIUS);
         }
-        // ward
         if (d.target().isPresent()) {
             TargetSelector.Target t = d.target().get();
             if (t.kind() == TargetSelector.Kind.SPIRIT && t.name().isPresent()) {
                 try {
                     tactics.setWard(UUID.fromString(t.name().get()));
                 } catch (IllegalArgumentException notUuid) {
-                    // игнорируем некорректный UUID цели
+                    // lib: UUID.fromString бросает IllegalArgumentException на имени без UUID — цель без него не
+                    // ставится
                 }
             }
         }
@@ -396,7 +390,7 @@ public final class SpiritCoordinator {
                     forced = living;
                 }
             } catch (IllegalArgumentException notUuid) {
-                // битый id цели — дух дерётся по своей оценке, а не по пустому следу
+                // lib: битый id цели — дух дерётся по своей оценке, а не по пустому следу
             }
             tactics.setForcedTarget(forced);
         } else {

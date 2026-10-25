@@ -32,11 +32,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
-/**
- * Достраивает наблюдение духа до полного: предмет в руке, здоровье и сытость, задание доски, выпавшие
- * предметы, содержимое ближайших контейнеров и время суток. Мир читает только здесь — базовое наблюдение
- * (блоки, сущности, контейнеры, инвентарь) собирает {@link WorldScanner}.
- */
 public final class ObservationReader {
     private ObservationReader() {}
 

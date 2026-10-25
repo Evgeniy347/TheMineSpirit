@@ -48,8 +48,6 @@ public final class RecipeKnowledge implements ResourceKnowledge {
         this.species = species;
     }
 
-    // Те же рецепты, но вариант рецепта и слота (порода досок, брёвен) — по запасу духа и породе поселения, а не
-    // первый в общем порядке: в джунглях acquire палок и сундука брал дубовые доски, которых не добыть.
     public RecipeKnowledge preferring(Map<String, Integer> stock, String woodSpecies) {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         return new RecipeKnowledge(index, Map.copyOf(stock), WoodSpecies.check(woodSpecies));
@@ -191,8 +189,8 @@ public final class RecipeKnowledge implements ResourceKnowledge {
                 .orElse(0);
     }
 
-    @SuppressWarnings(
-            "deprecation") // ванильный геттер помечен @Deprecated, но data map NeoForge читается только через него
+    // lib: ванильный геттер помечен @Deprecated, но data map NeoForge читается только через него
+    @SuppressWarnings("deprecation")
     private static int dataMapBurnTicks(Item item) {
         FurnaceFuel fuel = item.builtInRegistryHolder().getData(NeoForgeDataMaps.FURNACE_FUELS);
         return fuel == null ? 0 : fuel.burnTime();
@@ -209,8 +207,6 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private String representative(IngredientSpec slot) {
-        // Вариант из запаса добывать не надо — проверка добываемости только для породы поселения: полный обход
-        // рецептов для каждого предмета запаса (каменные кирпичи…) вешал серверный поток (приёмка «джунгли»).
         Optional<String> preferred = WoodSpecies.prefer(slot.alternatives(), available, species)
                 .filter(alternative -> held(alternative) || canObtain(alternative, new HashSet<>()));
         if (preferred.isPresent()) {
@@ -225,10 +221,6 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private String pickRepresentative(List<String> alternatives) {
-        // Сырьё предпочтительнее прямой руды: raw_iron добывается из любой железной
-        // руды (iron_ore и deepslate_iron_ore — оба в DropTable), а deepslate_iron_ore
-        // — частный блок, которого в мире может не быть: плавка через него план
-        // строит добычу конкретного блока вместо универсального сырья.
         Optional<String> raw = pickObtainable(alternatives.stream()
                 .filter(alternative -> ownBlock(alternative).isEmpty()));
         if (raw.isPresent()) {

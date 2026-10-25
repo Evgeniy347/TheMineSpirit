@@ -19,16 +19,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Укрытие первого дня (INC-10/21): строит схему {@code schematics/shelter.txt} тем же путём, что
- * {@code build_schematic}, подставляя дешёвый материал духа вместо заполнителя. До первого блока проверяет полный
- * запас корпуса, полублока порога и факела: недоделки из-за нехватки материала не бывает. После стройки дух выходит
- * из укрытия через проём — вход открыт, дверь не запирает строителя.
- */
 final class BuildShelterScript implements ScriptInstance {
     static final String SCHEMATIC = "shelter";
     static final String TORCH = "torch";
-    // Вход схемы shelter.txt: x=3, порог z=1; крыльцо — z=0, перед ним z=-1.
     private static final int ENTRANCE_X = 3;
     private static final int ENTRANCE_Z = 1;
     private static final String BODY = "cobblestone";

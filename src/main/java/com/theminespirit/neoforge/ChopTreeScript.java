@@ -292,8 +292,6 @@ public final class ChopTreeScript implements ScriptInstance {
         return true;
     }
 
-    // Цель могла срубить другой дух, пока эта ждала брони: основание уже воздух.
-    // Пересканируем дерево в мире и пропускаем срубленное без исключения (INC-17).
     private Optional<Tree> refresh(Tree found) {
         Optional<BlockCoord> surviving =
                 found.logs().stream().filter(treeView::isLog).findFirst();

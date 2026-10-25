@@ -27,12 +27,6 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 
-/**
- * Возрождение погибшего духа поселения: смерть кладёт запись в {@link SpiritRespawnStore}, через задержку из
- * данных дух возвращается на базу поселения (якорь участка, без участка — дом), в ближайшую свободную клетку.
- * Инвентарь не копируется: он выпадает на месте смерти. Личность (UUID и имя) сохраняется, поэтому число духов
- * поселения восстанавливается.
- */
 public final class SpiritRespawnService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long RETRY_TICKS = 20;

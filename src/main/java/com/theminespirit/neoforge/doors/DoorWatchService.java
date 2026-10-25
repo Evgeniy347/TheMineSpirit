@@ -166,7 +166,6 @@ public final class DoorWatchService {
         }
         List<SpiritRef> spiritRefs = new ArrayList<>();
         for (SpiritEntity spirit : spirits.values()) {
-            // Демо-дух — витрина стройки: бытовые дела (закрыть дверь) перебили бы его задачу и итог стройки.
             if (spirit.isRemoved() || spirit.isDemo() || !spirit.level().equals(level)) {
                 continue;
             }
@@ -236,7 +235,6 @@ public final class DoorWatchService {
         }
 
         List<BlockPos> knownDoors() {
-            // Копия: rememberDoor забывает клетку, где двери больше нет, — обход не правит карту на ходу.
             return List.copyOf(doors.keySet());
         }
 

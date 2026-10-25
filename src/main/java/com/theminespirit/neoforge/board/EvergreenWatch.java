@@ -17,11 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Постоянное задание «поесть до полной сытости»: адресуется духу, которому не хватает
- * сытости или здоровья, и снимается с очереди, когда нужда отпала. Задание остаётся
- * на доске выполненным — оно видно как условие, а не исчезает.
- */
 final class EvergreenWatch {
     private EvergreenWatch() {}
 

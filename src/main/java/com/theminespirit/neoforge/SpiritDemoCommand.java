@@ -22,7 +22,6 @@ import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
-/** {@code /spirit demo} — креативная демонстрация: подкоманда на каждую постройку, upgrade, city, list и stop. */
 final class SpiritDemoCommand {
     private static final List<String> ROTATIONS =
             List.of("none", "clockwise_90", "clockwise_180", "counterclockwise_90");

@@ -14,11 +14,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.slf4j.Logger;
 
-/**
- * Память поселения об оставленной руде (решение владельца 22.10): руда на удачу без кирки с Удачей остаётся в стене
- * шахты, её место записано здесь, чтобы вернуться с нужной киркой. Хранится с миром, а не с духом: дух может
- * погибнуть, а руда остаётся.
- */
 public final class MineOreLedger extends SavedData {
     public static final int MAX_ENTRIES = 1024;
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -28,7 +23,6 @@ public final class MineOreLedger extends SavedData {
     private static final SavedData.Factory<MineOreLedger> FACTORY =
             new SavedData.Factory<>(MineOreLedger::new, MineOreLedger::load);
 
-    // Оставленная руда: id блока и стоянка в шахте, откуда её видел строитель.
     public record Left(String block, BlockCoord stand) {}
 
     private final Map<BlockCoord, Left> ores = new LinkedHashMap<>();

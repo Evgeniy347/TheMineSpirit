@@ -6,7 +6,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-/** Доска на шине событий: тик раз в BOARD_INTERVAL_TICKS по расписанию уровня. */
 public final class BoardLifecycle {
     private BoardLifecycle() {}
 

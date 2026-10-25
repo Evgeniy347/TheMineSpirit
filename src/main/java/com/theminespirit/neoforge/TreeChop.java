@@ -268,8 +268,6 @@ final class TreeChop {
                         if (!isStandable(pos)) {
                             continue;
                         }
-                        // Соседняя по стороне клетка — вплотную к стволу; по диагонали — только если сбоку негде
-                        // встать (INC-49).
                         double diagonal = dx != 0 && dz != 0 ? DIAGONAL_PENALTY : 0;
                         double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos)) + diagonal;
                         if (distance < bestDistance) {

@@ -25,13 +25,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
-/**
- * Постоянный запас деревянного набора: первые шаги делают инструмент один раз ({@code first:*}
- * после DONE не переиздаётся), а сломанный или отданный инструмент доска восполняет сама — задание
- * {@code stock:<кейс>:<дух>} этому духу на нехватку в его собственном наборе. Ставится только после шага
- * первых шагов этого инструмента
- * (не спорит с цепочкой) и только когда дерева в запасе хватает (иначе невыполнимо — дух не получает его).
- */
 public final class ToolStockWatch {
     public static final String PREFIX = "stock:";
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -49,8 +42,6 @@ public final class ToolStockWatch {
             if (home.isEmpty() || spirit.isRemoved()) {
                 continue;
             }
-            // Набор у каждого духа свой (владелец 23.10): недостача считается по его инвентарю и руке, а задание
-            // крафта адресовано ему — инструмент в общем сундуке или у соседа его кирку не заменяет.
             Map<BoardCase, Integer> shortages = ToolSet.woodenShortages(ownTools(spirit), ToolSet.count(1));
             for (Map.Entry<BoardCase, Integer> entry : shortages.entrySet()) {
                 BoardCase caseValue = entry.getKey();

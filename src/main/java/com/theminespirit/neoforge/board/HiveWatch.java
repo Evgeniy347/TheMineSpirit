@@ -23,11 +23,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-/**
- * Источник доски «пчёлы»: полный улей рядом с поселением — задание собрать соты или мёд;
- * соты и доски в запасах, а рядом с домом цветы — задание поставить улей. Пчёл не убивают
- * ни один из планов: сбор идёт только через ножницы или бутылку.
- */
 public final class HiveWatch {
     public static final String CAUSE = "hive:settlement";
 

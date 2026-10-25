@@ -9,12 +9,6 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
-/**
- * Забирает накопленный печью опыт плавки, не бросая сферы: ванильный
- * {@link AbstractFurnaceBlockEntity#awardUsedRecipesAndPopExperience} отдаёт опыт сферами тому, кто забрал
- * результат, а дух только складывает результат в свой инвентарь. Здесь тот же опыт считается из карты
- * использованных рецептов и возвращается числом вызывающему, а карта очищается, как в ванили.
- */
 public final class FurnaceExperience {
     private FurnaceExperience() {}
 

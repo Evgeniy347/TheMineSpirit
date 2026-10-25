@@ -42,8 +42,6 @@ final class ClearAreaScript implements ScriptInstance {
 
     @Override
     public ScriptStatus tick() {
-        // Лопата проверяется в начале ящика и между клетками: в большом ящике (сотни блоков) она кончалась на середине,
-        // и остаток копался рукой (сцена 56). Не вышло — больше в этом ящике не пробует.
         if (restock == null && restockAttempts < MAX_RESTOCKS && (!restockChecked || session.picking())) {
             restockChecked = true;
             restock = shovelRestock();
@@ -79,16 +77,12 @@ final class ClearAreaScript implements ScriptInstance {
                 : Optional.empty();
     }
 
-    // Лопата износилась — новая до расчистки, как сделал бы игрок: срезка участка — сотни блоков земли, каменной
-    // лопаты хватает на 131, дальше дух копал рукой втрое дольше (сцена 56: трава 19 тиков вместо 5). Каменная — при
-    // булыжнике в инвентаре, иначе деревянная (доски из своих брёвен); не вышло — расчистка идёт чем есть.
     private @Nullable TaskRunner shovelRestock() {
         if (spirit == null || usableShovel(spirit)) {
             return null;
         }
         boolean cobble = spirit.getInventory().countItem(Items.COBBLESTONE) > 0;
         Item shovel = cobble ? Items.STONE_SHOVEL : Items.WOODEN_SHOVEL;
-        // acquire добирает «до N»: изношенная лопата того же вида в инвентаре засчиталась бы и новой не было бы.
         int held = spirit.getInventory().countItem(shovel);
         return TaskRunner.start(
                 new ScriptCall(

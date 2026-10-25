@@ -26,12 +26,6 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
-/**
- * Снимок инцидента для повтора в тесте: окрестность духа ±{@link IncidentNote#RADIUS} — структурой NBT в
- * {@code <мир>/theminespirit/incidents/<время>-<дух>.nbt}, рядом в том же файле (ключ {@link #META}) — дух целиком
- * (инвентарь, задача, дом), что случилось и задание. Снимок одного духа — не чаще раза в {@link #MIN_GAP_TICKS}:
- * повторный провал того же шага не засыпает мир файлами.
- */
 public final class IncidentSnapshots {
     public static final String META = "theminespirit_incident";
     public static final long MIN_GAP_TICKS = 1200;
@@ -40,7 +34,6 @@ public final class IncidentSnapshots {
 
     private IncidentSnapshots() {}
 
-    // Запись инцидента: строка для лога (дух, позиция, задача, инвентарь, путь снимка) и снимок окрестности в мир.
     public static String record(ServerLevel level, SpiritEntity spirit, String what) {
         IncidentNote note = note(spirit, what);
         long now = level.getGameTime();
@@ -72,7 +65,6 @@ public final class IncidentSnapshots {
                 inventory(spirit));
     }
 
-    // Снимок окрестности духа в файл без предела частоты: запись инцидента и проверка загрузки в тесте.
     public static void write(ServerLevel level, IncidentNote note, SpiritEntity spirit, Path file) {
         StructureTemplate template = new StructureTemplate();
         BlockCoord origin = note.origin();
@@ -103,7 +95,6 @@ public final class IncidentSnapshots {
         }
     }
 
-    // Снимок инцидента из файла: структура для постановки в мир теста и метаданные духа.
     public static Loaded load(ServerLevel level, Path file) {
         CompoundTag tag;
         try {
@@ -116,7 +107,6 @@ public final class IncidentSnapshots {
         return new Loaded(template, tag.getCompound(META));
     }
 
-    /** Снимок, прочитанный из файла: структура окрестности и метаданные инцидента. */
     public record Loaded(StructureTemplate template, CompoundTag meta) {
         public Optional<String> spirit() {
             return meta.contains("spirit") ? Optional.of(meta.getString("spirit")) : Optional.empty();

@@ -89,7 +89,6 @@ public final class BlockBreaker {
         return begin(target, intent(tended, demolish), true);
     }
 
-    // Руда на удачу ломается именно киркой с Удачей или Шёлковым касанием, а не самой быстрой (MineOres).
     public Begin beginWithSlot(BlockPos target, int slot) {
         forcedSlot = slot;
         try {
@@ -268,8 +267,6 @@ public final class BlockBreaker {
         return options;
     }
 
-    // Руда на удачу ломается киркой с Удачей или Шёлковым касанием, если такая есть, — а не самой быстрой:
-    // иначе mine_vein и задание оставленной руды теряют алмазы и лазурит (MineOres).
     private void preferLuckPick(BlockState targetState) {
         if (forcedSlot != NO_FORCED_SLOT || MineOres.kindOf(BlockStates.idOf(targetState)) != MineOres.Kind.LUCK) {
             return;

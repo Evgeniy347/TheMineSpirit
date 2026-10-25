@@ -6,11 +6,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-/**
- * Предложение интеллекта поселения: дух, занятие, скрипт и план. Интеллект занятий сам не запускает — выдаёт
- * их доска ({@link BoardService#offerActivities}), чтобы всё, что делает дух, было видно на ней. Защита
- * ({@link ActivityId#DEFEND}) — без плана: это отметка для тактики, а не задача.
- */
 public record ActivityOffer(
         SpiritEntity spirit,
         ActivityId activity,

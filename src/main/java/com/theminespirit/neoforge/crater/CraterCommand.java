@@ -9,11 +9,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * {@code /spirit craters} — список запомненных воронок: id, центр, радиус и уровень края.
- *
- * <p>По id воронки человек ставит скрипт fill_crater. Пустой список — взрывов рядом с поселением не было.
- */
 public final class CraterCommand {
     private CraterCommand() {}
 

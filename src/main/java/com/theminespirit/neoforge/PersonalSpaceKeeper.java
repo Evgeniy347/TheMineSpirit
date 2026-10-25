@@ -10,10 +10,6 @@ import java.util.Optional;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
-/**
- * Личное пространство игрока: подошёл игрок вплотную — дух делает шаг в сторону по свободной клетке и продолжает
- * свою задачу (решение — {@link PersonalSpace}). Пока дух сам идёт по пути, отход не нужен: он и так в движении.
- */
 final class PersonalSpaceKeeper {
     private static final double MOVE_SPEED = 1.0;
 

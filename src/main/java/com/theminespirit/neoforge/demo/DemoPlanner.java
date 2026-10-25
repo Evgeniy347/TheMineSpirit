@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import net.minecraft.core.BlockPos;
 
-/** Сборка демо-постройки из библиотеки пресетов: раскладка, материалы сундука и блоки без предмета. */
 final class DemoPlanner {
     private DemoPlanner() {}
 
@@ -46,7 +45,6 @@ final class DemoPlanner {
                         + chosen.scheme() + ".txt (/spirit tables)"));
     }
 
-    // Участок уже разложен (витрина city раскладывает улицу сама): сундук, блоки без предмета и материалы.
     static DemoPlan plan(DemoBuildings.Level chosen, DemoPlacement placement) {
         Preset preset = preset(chosen);
         Schematic schematic = preset.schematic();

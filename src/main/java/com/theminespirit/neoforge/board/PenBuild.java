@@ -20,10 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Загон по уровням: следующий уровень ставится, когда предыдущий стоит, и держится гейтом
- * материалов схемы. Уровень не прыгает: пока в ledger нет уровня N, уровень N+1 не выдаётся.
- */
 public final class PenBuild {
     private static final String[] SCHEMES = {"", "pen_4x5", "pen_7x7", "pen_9x9"};
 

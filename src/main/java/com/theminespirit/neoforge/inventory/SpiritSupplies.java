@@ -28,10 +28,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
-/**
- * Снабжение для acquire: считает предмет в инвентаре духа и планирует шаги withdraw
- * по ближним контейнерам — ближний первым, недоступные и пустые пропускаются.
- */
 public final class SpiritSupplies implements AcquireSupplies {
     private static final int SLICES_PER_TICK = 4;
     private static final Set<Block> STATION_BLOCKS =

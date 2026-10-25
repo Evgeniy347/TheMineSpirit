@@ -20,15 +20,10 @@ import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-/**
- * Ставит путь «уголь → факел» на доску ({@link TorchRules}): одно задание факелов за раз, приоритет — таблица доски.
- * Древесный уголь — духу, у которого печь в инвентаре, если печь ещё не стоит у дома: он её и поставит при плавке.
- */
 public final class TorchWatch {
     public static final String PREFIX = "torch:";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    // Что видно у дома: печь стоит, шахта есть, сколько факелов ждёт очередной шаг (ограда — на столбах).
     public record Site(
             boolean furnaceBlock,
             boolean mine,
@@ -53,7 +48,6 @@ public final class TorchWatch {
                 stock.available(), furnace, mine, Math.max(TorchRules.TORCH_TARGET, stepDemand), site.log());
         if (next.isEmpty()) {
             int torches = stock.available().getOrDefault(TorchRules.TORCH, 0);
-            // Шаг ждёт факелы, а цепочка угля молчит — причина в журнале раз в минуту (печь пропала, 24.10).
             if (torches < stepDemand && now % STALL_NOTE_TICKS < BoardTuning.boardIntervalTicks()) {
                 LOGGER.info(
                         "Факелы шага ждут: нужно {}, есть {}, печь {} (блок {}, в запасе {}), шахта {}, бревно {}",

@@ -22,10 +22,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/**
- * Состояние доски в данных мира: билеты, статусы, держатели и ledger переживают перезапуск.
- * Доска остаётся чистой (ядро); адаптер только пишет и читает её снимок по NBT.
- */
 public final class BoardStateStore extends SavedData {
     public static final String NAME = "theminespirit_board";
 

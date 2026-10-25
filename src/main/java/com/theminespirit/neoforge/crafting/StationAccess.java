@@ -24,7 +24,6 @@ final class StationAccess {
     }
 
     private static final Supply NO_SUPPLY = spirit -> false;
-    // Дух дальше от участка (поход) — станция поселения не ищется: идти к ней дольше, чем поставить свою.
     private static final int SETTLEMENT_REACH = 48;
 
     private final SpiritEntity spirit;
@@ -91,7 +90,6 @@ final class StationAccess {
             headTo(existing.get());
             return;
         }
-        // Станции поселения общие (INC-51): нет рядом с духом — сначала к станции на участке, новая не ставится.
         if (!settlementSearched && settlementFinder == null) {
             Optional<BlockPos> center = settlementCenter()
                     .filter(at -> at.distSqr(spirit.blockPosition()) <= SETTLEMENT_REACH * SETTLEMENT_REACH);
@@ -136,7 +134,6 @@ final class StationAccess {
                 return Optional.of(new BlockPos(anchor.x(), anchor.y(), anchor.z()));
             }
         }
-        // Без зафиксированного участка поселения нет: дом одного духа — не участок.
         return Optional.empty();
     }
 

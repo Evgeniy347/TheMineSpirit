@@ -229,8 +229,6 @@ public final class FurnaceSession {
         }
     }
 
-    // Печь поселения общая (INC-51): готовое прошлой плавки дух забирает себе (сдаст в сундук), остаток топлива
-    // сгорит в новой плавке. Занята она, только если в загрузке идёт плавка другого сырья. true — печь свободна.
     public static boolean shareSettlementFurnace(SpiritEntity spirit, BlockPos pos, Item input) {
         if (!(spirit.level().getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity furnace)) {
             return true;

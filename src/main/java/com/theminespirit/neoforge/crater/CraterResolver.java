@@ -7,9 +7,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
-/**
- * Находит воронку по параметрам скрипта fill_crater: по id точно или по позиции — ближайшую.
- */
 public final class CraterResolver {
     private CraterResolver() {}
 

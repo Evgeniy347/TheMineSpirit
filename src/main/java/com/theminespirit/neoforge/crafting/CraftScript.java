@@ -255,7 +255,6 @@ public final class CraftScript implements ScriptInstance {
         return nextStep >= steps.size() ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
     }
 
-    // Скрафченная станция с place ставится рядом, если такой поблизости нет (печь первых шагов — у двора станций).
     private ScriptStatus finish(ScriptStatus status) {
         if (status != ScriptStatus.SUCCEEDED || !params.place()) {
             return status;
@@ -278,17 +277,11 @@ public final class CraftScript implements ScriptInstance {
         }
         StationType type = StationType.byId(params.item()).orElseThrow();
         if (StationPlacer.place(spirit, type).isEmpty()) {
-            // Вплотную к духу места нет (двор занят верстаком и сундуками) — клетка в шаге досягаемости: печь
-            // оставалась в инвентаре, шаг падал, а запас «с печью» закрывал CRAFT_FURNACE без записи в журнале
-            // (приёмка «джунгли» 24.10: «нет [CRAFT_FURNACE]»).
             return placeBlocks();
         }
         return ScriptStatus.SUCCEEDED;
     }
 
-    // Не станция (сундуки склада первых шагов): скрафченное ставится рядом с духом, не вплотную к другому сундуку.
-    // Сундуки оставались в инвентаре крафтера — на участке их не было, и сдача добытого не находила склад
-    // (приёмка «джунгли» 24.10: «сундуки []»).
     private ScriptStatus placeBlocks() {
         Optional<Item> item = ItemIds.item(ItemIds.normalize(params.item()));
         if (item.isEmpty() || !(item.get() instanceof BlockItem blockItem)) {
@@ -310,8 +303,6 @@ public final class CraftScript implements ScriptInstance {
         cells.sort(Comparator.comparingDouble((BlockPos cell) -> cell.distSqr(origin))
                 .thenComparing(Comparator.naturalOrder()));
         Level level = spirit.level();
-        // Сундук — сначала второй половиной к одиночному сундуку рядом, затем первым так, чтобы рядом было место второй
-        // половине: два сундука склада — двойной (INC-52).
         while (left > 0) {
             Optional<BlockPos> placed = Optional.empty();
             for (int pass = 0; pass < PLACE_PASSES && placed.isEmpty(); pass++) {
@@ -329,8 +320,6 @@ public final class CraftScript implements ScriptInstance {
         return ScriptStatus.SUCCEEDED;
     }
 
-    // Проход 0 — вторая половина к одиночному сундуку; 1 — одиночный с местом для второй половины (сундуков ещё
-    // больше одного); 2 — любая свободная клетка.
     private Optional<BlockPos> placeOnce(
             Level level, BlockPlacer placer, List<BlockPos> cells, BlockState state, String id, int pass, int left) {
         for (BlockPos cell : cells) {
@@ -363,7 +352,6 @@ public final class CraftScript implements ScriptInstance {
         return false;
     }
 
-    // paired — клетка второй половины двойного сундука: соседний сундук там и нужен, второй сосед — нет.
     private static boolean freeCell(Level level, BlockPos cell, BlockState state, boolean paired) {
         BlockPos floor = cell.below();
         if (!level.getBlockState(cell).isAir()
