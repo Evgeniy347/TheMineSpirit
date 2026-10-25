@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 public final class FillSession {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int NO_STAND_LOGGED = 4;
+    // Досягаемость постановки с места — с запасом от предела BlockPlacer.
+    private static final double PLACE_FROM_PLACE = 3.5;
 
     public enum Outcome {
         RUNNING,
@@ -231,6 +233,12 @@ public final class FillSession {
                 state = State.PILLAR;
                 return;
             }
+            if (inReach(cell)) {
+                // Клетка в досягаемости — ставится с места, без подхода к соседней стоянке: подход к каждой клетке
+                // ямы съедал большую часть подсыпки (сцена 56).
+                placeCurrent();
+                return;
+            }
             List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
             if (stands.isEmpty() && floorUnder(cell) && allowedStand(cell)) {
                 // Дно ямы в блок шириной: с края до него не дотянуться, соседей-стоянок нет — дух спускается в саму
@@ -291,6 +299,15 @@ public final class FillSession {
                 state = State.PICK;
             }
         }
+    }
+
+    private boolean inReach(BlockCoord cell) {
+        BlockPos feet = spirit.blockPosition();
+        BlockPos pos = toPos(cell);
+        return spirit.onGround()
+                && !pos.equals(feet)
+                && !pos.equals(feet.above())
+                && spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos)) <= PLACE_FROM_PLACE;
     }
 
     // В клетке можно стоять: твёрдый пол под ней, она и клетка над ней свободны.

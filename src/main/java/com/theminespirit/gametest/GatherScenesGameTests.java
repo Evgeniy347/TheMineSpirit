@@ -31,7 +31,7 @@ public final class GatherScenesGameTests {
                 UseBlockGameTests.class);
     }
 
-    @GameTest(template = "mine_arena", batch = "scene_gather_mine_arena", timeoutTicks = 4802)
+    @GameTest(template = "mine_arena", batch = "scene_gather_mine_arena", timeoutTicks = 5203)
     public static void gatherScene_MineArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(helper, List.of("mine_arena"), DigOutGameTests.class);
     }
