@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -38,7 +37,7 @@ public final class RestTaskCancelGameTests {
 
     private record Stopped(Vec3 position, long gameTime) {}
 
-    @GameTest(batch = "rest_cancel_move", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void delete_RunningGoto_Returns200CancelledTwiceAnd404ForUnknownAndSpiritStops(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -118,7 +117,7 @@ public final class RestTaskCancelGameTests {
         });
     }
 
-    @GameTest(batch = "rest_cancel_mining", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void delete_GatherMidBreaking_WorldQuietAndNothingLostAfterFortyTicks(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);

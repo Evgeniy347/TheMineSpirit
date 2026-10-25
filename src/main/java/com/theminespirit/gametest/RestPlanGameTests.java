@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -24,7 +23,7 @@ public final class RestPlanGameTests {
 
     private RestPlanGameTests() {}
 
-    @GameTest(batch = "rest_plan_goals", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_GoalsWithoutImplementedScriptOrTarget_Rejects422WithReasonAndChopAndFollowAccept202(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
@@ -78,7 +77,7 @@ public final class RestPlanGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_plan_dry_run", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void plan_ExtraParamAndOversizedAndDryRun_Rejects422WithReasonAndWorldUntouched(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

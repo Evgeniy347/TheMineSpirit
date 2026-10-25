@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -37,7 +36,7 @@ public final class RestEventsGameTests {
 
     private RestEventsGameTests() {}
 
-    @GameTest(batch = "rest_events_flow", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_SequenceOfGotos_StateFirstThenProgressThenFinalSucceededAndStreamCloses(
             GameTestHelper helper) throws IOException {
         RestFixture rest = arena(helper);
@@ -82,7 +81,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_resume", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_ReconnectWithLastEventId_ReceivesOnlyLaterFramesThenFinalState(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -142,7 +141,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_failed", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_GotoToUnreachableAirPoint_ScriptFailedWithReasonThenStateFailed(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -186,7 +185,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_limit", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_FifthConcurrentStream_Returns429ThenSlotFreedAfterClientLeaves(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -243,7 +242,7 @@ public final class RestEventsGameTests {
         });
     }
 
-    @GameTest(batch = "rest_events_stop", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void events_GatewayStopped_OpenStreamEndsWithoutWaitingForKeepalive(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);
@@ -279,7 +278,7 @@ public final class RestEventsGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_events_burst", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void requests_BurstOfHundredFromOneAddress_PartRejectedWith429AndRetryAfter(GameTestHelper helper)
             throws IOException {
         RestFixture rest = arena(helper);

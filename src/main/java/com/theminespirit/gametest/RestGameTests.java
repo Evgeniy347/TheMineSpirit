@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Container;
@@ -56,7 +55,7 @@ public final class RestGameTests {
 
     private RestGameTests() {}
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void capabilities_ImplementedScripts_ListedWithSchemaWithoutUnimplemented(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -96,7 +95,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_bots", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void bots_SpawnedThenDiscardedSpirit_ListedThenAbsent(GameTestHelper helper) throws IOException {
         GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -121,7 +120,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_botState", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void botState_IdleThenGotoStarted_ReportsIdleThenBusy(GameTestHelper helper) throws IOException {
         GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -165,7 +164,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void bot_UnknownId_Returns404NotFoundObject(GameTestHelper helper) throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         RestFixture.Problems problems = new RestFixture.Problems();
@@ -194,7 +193,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_observe", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_RadiusEightAndInvalidRadius_ReturnsObservationAnd400(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);
@@ -238,7 +237,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_observe_ore_floor", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_OreFloorWithOreFilter_KeepsOnlyOreInBlocks(GameTestHelper helper) throws IOException {
         GameTestFixtures.reset(helper);
         buildOreFloor(helper);
@@ -270,7 +269,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_observe_rich", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_SpiritWithResources_ReportsHeldDropChestContentsAndTime(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.reset(helper);
@@ -343,7 +342,7 @@ public final class RestGameTests {
         return total;
     }
 
-    @GameTest(batch = "rest_observe_discard", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_SpiritDiscardedMidScan_Returns404WithId(GameTestHelper helper) throws IOException {
         GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -380,7 +379,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_observe_stop", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);
@@ -432,7 +431,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, done);
     }
 
-    @GameTest(batch = "rest_threads", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void threads_ForeignThreadAccess_IndexRejectsWhileGatewayAndHttpWork(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);
@@ -466,7 +465,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void stop_RunningServer_RefusesConnectionsAndFreesPort(GameTestHelper helper) throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
         RestFixture.Problems problems = new RestFixture.Problems();
@@ -484,7 +483,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "restlifecycle", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void lifecycle_TryStartOnBusyPort_StopsGatewayWithoutLeavingObserveSubscription(GameTestHelper helper)
             throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -504,7 +503,7 @@ public final class RestGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void badRequests_BrokenJsonOversizedBodyUnknownPathWrongMethod_ReturnDocumentedErrors(
             GameTestHelper helper) throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -564,7 +563,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_oversized", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void oversizedBodies_FourParallelTwelveMebibyteRequests_AllGet400WithoutConnectionDrop(
             GameTestHelper helper) throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -593,7 +592,7 @@ public final class RestGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(template = "arena", batch = "rest_decisions", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void decisions_HuskAttacksAfterCalm_ServesIgnoreToFightRecord(GameTestHelper helper)
             throws IOException {
         TacticsScene.prepare(helper);

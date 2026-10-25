@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.NeoForge;
@@ -29,7 +28,7 @@ public final class RestScaleGameTests {
 
     private RestScaleGameTests() {}
 
-    @GameTest(batch = "rest_concurrency", template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "empty", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach(GameTestHelper helper)
             throws IOException {
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -57,7 +56,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_observe_radius32", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_Radius32_ReadsWithinPerTickBudget(GameTestHelper helper) throws IOException {
         GameTestFixtures.sweepEntities(helper);
         RestFixture rest = RestFixture.start(helper.getLevel().getServer());
@@ -80,7 +79,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_observe_five", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent(GameTestHelper helper)
             throws IOException {
         GameTestFixtures.sweepEntities(helper);
@@ -120,7 +119,7 @@ public final class RestScaleGameTests {
         RestFixture.await(helper, rest, scenario);
     }
 
-    @GameTest(batch = "rest_index_thirty", template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
+    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void index_ThirtySpirits_SnapshotReadsExactlyThirtyEntries(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         MinecraftServer minecraft = helper.getLevel().getServer();

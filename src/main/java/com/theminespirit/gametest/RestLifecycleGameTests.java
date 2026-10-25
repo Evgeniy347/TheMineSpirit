@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -23,7 +22,7 @@ public final class RestLifecycleGameTests {
 
     private RestLifecycleGameTests() {}
 
-    @GameTest(batch = "rest_config_defaults", template = "empty", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void config_Defaults_MatchDocumentedValues(GameTestHelper helper) {
         helper.assertTrue(
                 Boolean.TRUE.equals(defaultOf("enabled")),
@@ -44,7 +43,7 @@ public final class RestLifecycleGameTests {
         return value.getDefault();
     }
 
-    @GameTest(batch = "rest_trystart_taken", template = "empty", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void tryStart_PortAlreadyTaken_ReturnsEmptyAndServerKeepsRunning(GameTestHelper helper)
             throws IOException {
         MinecraftServer minecraft = helper.getLevel().getServer();
@@ -60,7 +59,7 @@ public final class RestLifecycleGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest_trystart_unresolvable", template = "empty", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void tryStart_UnresolvableAddress_ReturnsEmptyAndServerKeepsRunning(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
 
@@ -74,7 +73,7 @@ public final class RestLifecycleGameTests {
         helper.succeed();
     }
 
-    @GameTest(batch = "rest_trystart_free", template = "empty", timeoutTicks = 100)
+    @SceneStep(template = "empty", timeoutTicks = 100)
     public static void tryStart_FreePort_ReturnsRunningServerThatStops(GameTestHelper helper) {
         MinecraftServer minecraft = helper.getLevel().getServer();
 
