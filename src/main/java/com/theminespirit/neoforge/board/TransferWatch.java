@@ -12,6 +12,8 @@ import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.TransferCarriers;
+import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.inventory.BaseKit;
@@ -293,11 +295,8 @@ public final class TransferWatch {
                 continue;
             }
             UUID assignee = order.from().orElse(order.to());
-            List<String> modifiers = List.of(
-                    "to=" + order.to(),
-                    "item=" + order.item(),
-                    "count=" + order.count(),
-                    "from=" + order.from().map(UUID::toString).orElse("warehouse"));
+            List<String> modifiers = TransferTicket.modifiers(
+                    order.to(), order.item(), order.count(), order.from().orElse(null));
             BoardOutcome outcome = service.submit(
                     new BoardTicket(
                             id,
@@ -578,18 +577,6 @@ public final class TransferWatch {
         return spirit.taskStatus().orElse(null) == RunStatus.RUNNING && !spirit.runsBackgroundTask();
     }
 
-    static Set<UUID> donors(BoardService service, String craftId) {
-        Set<UUID> donors = new HashSet<>();
-        for (BoardTicket ticket : service.board().all()) {
-            if (ticket.boardCase() == BoardCase.TRANSFER_ITEM
-                    && cause(craftId).equals(ticket.cause())
-                    && active(service, ticket.id())) {
-                ticket.assignee().ifPresent(donors::add);
-            }
-        }
-        return donors;
-    }
-
     private static boolean active(BoardService service, String ticketId) {
         return service.board().statusOf(ticketId).filter(TransferWatch::open).isPresent();
     }
@@ -612,7 +599,7 @@ public final class TransferWatch {
     }
 
     private static String cause(String craftId) {
-        return "transfer:" + craftId;
+        return TransferCarriers.cause(craftId);
     }
 
     private static String ticketId(String craftId, TransferOrder order) {

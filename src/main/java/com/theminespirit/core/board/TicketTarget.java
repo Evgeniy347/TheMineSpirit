@@ -97,7 +97,7 @@ public record TicketTarget(
         return builder.build();
     }
 
-    public TicketTarget withTransfer(UUID source, UUID recipient, String item, int amount) {
+    public TicketTarget withTransfer(@Nullable UUID source, UUID recipient, String item, int amount) {
         Builder builder = new Builder(this);
         builder.supplyItem = item;
         builder.supplyCount = amount;

@@ -5,12 +5,14 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.FirstStepsPlan;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolFallback;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.ToolsConfig;
@@ -21,6 +23,7 @@ import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,7 +60,12 @@ public final class ToolStockWatch {
                 continue;
             }
             Map<String, Integer> own = ownTools(spirit, config, percent);
-            for (String item : ToolSet.missing(config, own, craftable)) {
+            Set<String> craftableNow = ToolFallback.allowed(
+                    craftable(source, config, ownStock(spirit)),
+                    openTickets(service, spirit.getUUID()),
+                    now,
+                    BoardTuning.toolFallbackTicks());
+            for (String item : ToolSet.missing(config, own, craftable, craftableNow)) {
                 BoardCase caseValue = ToolSet.caseFor(item)
                         .orElseThrow(() -> new IllegalStateException(
                                 "Инструмент " + item + " без кейса крафта: набор духа не собрать"));
@@ -118,6 +126,18 @@ public final class ToolStockWatch {
         return craftable;
     }
 
+    private static StockView ownStock(SpiritEntity spirit) {
+        Map<String, Integer> items = new HashMap<>();
+        SpiritInventory inventory = spirit.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!stack.isEmpty()) {
+                items.merge(BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath(), stack.getCount(), Integer::sum);
+            }
+        }
+        return new StockView(items);
+    }
+
     private static Map<String, Integer> ownTools(SpiritEntity spirit, ToolsConfig config, int percent) {
         Map<String, Integer> own = new HashMap<>();
         SpiritInventory inventory = spirit.getInventory();
@@ -152,6 +172,18 @@ public final class ToolStockWatch {
 
     public static String ticketId(BoardCase caseValue, UUID spirit) {
         return PREFIX + caseValue.name().toLowerCase(Locale.ROOT) + ":" + spirit;
+    }
+
+    private static List<BoardTicket> openTickets(BoardService service, UUID spirit) {
+        List<BoardTicket> open = new ArrayList<>();
+        for (BoardTicket ticket : service.board().all()) {
+            if (ToolSet.isTool(ticket.boardCase())
+                    && ticket.id().equals(ticketId(ticket.boardCase(), spirit))
+                    && active(service, ticket.id())) {
+                open.add(ticket);
+            }
+        }
+        return open;
     }
 
     private static boolean active(BoardService service, String id) {

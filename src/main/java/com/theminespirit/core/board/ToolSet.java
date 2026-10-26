@@ -77,6 +77,12 @@ public final class ToolSet {
     }
 
     public static List<String> missing(ToolsConfig config, Map<String, Integer> own, Set<String> craftable) {
+        return missing(config, own, craftable, Set.of());
+    }
+
+    public static List<String> missing(
+            ToolsConfig config, Map<String, Integer> own, Set<String> craftable, Set<String> craftableNow) {
+        Objects.requireNonNull(craftableNow, "Скрафчиваемое из своего инвентаря не может быть null: пустое — пустым");
         Objects.requireNonNull(config, "Набор инструментов не может быть null: без него нет цели духа");
         Objects.requireNonNull(own, "Свои инструменты не могут быть null: пустой набор задают пустой картой");
         Objects.requireNonNull(craftable, "Скрафчиваемые инструменты не могут быть null: пустой — пустым множеством");
@@ -87,7 +93,8 @@ public final class ToolSet {
             if (best >= target) {
                 continue;
             }
-            Optional<String> candidate = affordable(kind, best, target, craftable);
+            Optional<String> now = best < 0 ? affordable(kind, best, target, craftableNow) : Optional.empty();
+            Optional<String> candidate = now.isPresent() ? now : affordable(kind, best, target, craftable);
             if (candidate.isPresent()) {
                 missing.add(candidate.orElseThrow());
             } else if (best < 0) {

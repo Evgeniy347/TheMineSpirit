@@ -91,6 +91,10 @@ public final class DispatchRound {
         awaiting.putIfAbsent(spirit, why);
     }
 
+    public void release(UUID spirit) {
+        awaiting.remove(spirit);
+    }
+
     public boolean awaited(UUID spirit) {
         return awaiting.containsKey(spirit);
     }

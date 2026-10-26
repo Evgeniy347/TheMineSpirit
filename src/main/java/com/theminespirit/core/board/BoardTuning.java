@@ -45,6 +45,8 @@ public final class BoardTuning {
 
     public static final int TRANSFER_MAX_COUNT = 64;
 
+    public static final long TOOL_FALLBACK_TICKS = 1200;
+
     public static final Set<String> INTERVAL_KEYS = Set.of(
             "boardIntervalTicks",
             "herdScanIntervalTicks",
@@ -65,7 +67,8 @@ public final class BoardTuning {
             "enchantCheckInterval",
             "enchantShelvesMin",
             "transferRadiusBlocks",
-            "transferMaxCount");
+            "transferMaxCount",
+            "toolFallbackTicks");
 
     private BoardTuning() {}
 
@@ -141,6 +144,10 @@ public final class BoardTuning {
 
     public static int transferMaxCount() {
         return (int) interval("transferMaxCount", TRANSFER_MAX_COUNT);
+    }
+
+    public static long toolFallbackTicks() {
+        return interval("toolFallbackTicks", TOOL_FALLBACK_TICKS);
     }
 
     private static long interval(String key, long fallback) {
