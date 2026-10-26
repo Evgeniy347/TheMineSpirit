@@ -4,15 +4,19 @@ import com.theminespirit.core.forestry.AreaReplant;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.ReplantData;
 import com.theminespirit.core.forestry.ReplantPlan;
+import com.theminespirit.core.forestry.ReplantSite;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,6 +25,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 final class Replanter {
     enum State {
@@ -42,9 +47,11 @@ final class Replanter {
     private boolean lackedSaplings;
     private final boolean areaAllowed;
     private boolean areaPlanned;
+    private final @Nullable TownPlan town;
 
     Replanter(SpiritEntity spirit, TreeSpecies species, List<BlockPos> cells, TreeView view) {
         this.spirit = spirit;
+        this.town = townOf(spirit);
         this.saplingItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(species.saplingId()));
         this.saplingState = Block.byItem(saplingItem).defaultBlockState();
         this.data = ReplantData.loadDefault();
@@ -143,6 +150,9 @@ final class Replanter {
 
     private boolean canPlantAt(BlockPos cell) {
         Level level = spirit.level();
+        if (!ReplantSite.allowed(town, toCoord(cell))) {
+            return false;
+        }
         if (level.getChunkSource().getChunkNow(cell.getX() >> 4, cell.getZ() >> 4) == null) {
             return false;
         }
@@ -181,6 +191,13 @@ final class Replanter {
             }
         }
         return false;
+    }
+
+    private static @Nullable TownPlan townOf(SpiritEntity spirit) {
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        return SettlementPlotStore.get(level).town().orElse(null);
     }
 
     private static BlockCoord toCoord(BlockPos pos) {
