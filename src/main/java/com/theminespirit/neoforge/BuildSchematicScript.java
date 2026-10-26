@@ -1059,7 +1059,7 @@ final class BuildSchematicScript implements ScriptInstance {
         if (site.onRoof(stand)) {
             roofStands++;
         }
-        approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+        approach.beginWithRoutes(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
         return ScriptStatus.RUNNING;
     }
 

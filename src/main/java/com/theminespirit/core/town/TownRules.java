@@ -14,7 +14,7 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
     private static final Set<String> ROOT = Set.of("ground", "streets", "spacing", "buildings");
     private static final Set<String> GROUND = Set.of("area", "probeRadius", "cliffStep", "slopeWeight", "slopeMax");
     private static final Set<String> STREETS = Set.of("main", "side", "ring", "ringInset", "blockSize");
-    private static final Set<String> SPACING = Set.of("gap", "stageMargin", "chestFreePercent");
+    private static final Set<String> SPACING = Set.of("gap", "stageMargin", "chestFreePercent", "fenceStrip");
     private static final Set<String> ENTRY = Set.of("id", "name", "width", "depth", "quarter", "level", "rotate");
 
     public record Ground(int area, int probeRadius, int cliffStep, int slopeWeight, int slopeMax) {
@@ -42,8 +42,13 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
         }
     }
 
-    public record Spacing(int gap, int stageMargin, int chestFreePercent) {
+    public record Spacing(int gap, int stageMargin, int chestFreePercent, int fenceStrip) {
         public Spacing {
+            if (fenceStrip < 0 || fenceStrip > stageMargin + 1) {
+                throw new IllegalArgumentException("Полоса ограды " + fenceStrip + " клеток по обе стороны линии: "
+                        + "от 0 до поля ограды + 1 (" + (stageMargin + 1) + "), иначе забор встаёт на разные высоты "
+                        + "или выравнивание уходит за участок");
+            }
             if (gap < 0 || stageMargin < 1 || chestFreePercent < 0 || chestFreePercent > 100) {
                 throw new IllegalArgumentException("Отступы плана: между участками " + gap + ", поле ограды этапа "
                         + stageMargin + ", свободно в сундуках " + chestFreePercent
@@ -105,7 +110,8 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
                     new Spacing(
                             number(p, "gap", origin),
                             number(p, "stageMargin", origin),
-                            number(p, "chestFreePercent", origin)),
+                            number(p, "chestFreePercent", origin),
+                            number(p, "fenceStrip", origin)),
                     entries);
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);

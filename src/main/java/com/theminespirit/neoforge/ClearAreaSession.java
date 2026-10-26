@@ -266,7 +266,7 @@ public class ClearAreaSession {
         currentTarget = next.target();
         currentStand = next.stand();
         pickedKind = blockAt(currentTarget);
-        approach.begin(
+        approach.beginWithRoutes(
                 new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
         approaches++;
         state = State.APPROACH;
