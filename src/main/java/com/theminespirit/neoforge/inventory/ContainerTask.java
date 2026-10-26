@@ -32,6 +32,7 @@ abstract class ContainerTask implements ScriptInstance {
     private final ReachApproach approach;
     private Phase phase = Phase.FIND;
     private Container container;
+    private BlockPos containerPos;
     private AutoMove current;
     private TransferRunner runner;
     private TransferRunner.Shortage lastShortage = TransferRunner.Shortage.NONE;
@@ -191,6 +192,7 @@ abstract class ContainerTask implements ScriptInstance {
         switch (ContainerAccess.open(finder.level(), pos)) {
             case ContainerAccess.Opened opened -> {
                 container = opened.container();
+                containerPos = pos.immutable();
                 approach.begin(pos);
                 phase = Phase.APPROACH;
             }
@@ -211,7 +213,8 @@ abstract class ContainerTask implements ScriptInstance {
         }
         current = move;
         container = move.container();
-        approach.begin(new BlockPos(move.pos().x(), move.pos().y(), move.pos().z()));
+        containerPos = new BlockPos(move.pos().x(), move.pos().y(), move.pos().z());
+        approach.begin(containerPos);
         phase = Phase.APPROACH;
     }
 
@@ -237,6 +240,7 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     private void transfer() {
+        holdOpen();
         if (runner == null) {
             phase = Phase.SORT;
             return;
@@ -257,6 +261,7 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     private void sort() {
+        holdOpen();
         ContainerSort.apply(container, InventoryTables.values());
         if (isAuto()) {
             scan.updateSnapshot(current.snapshotIndex());
@@ -270,6 +275,12 @@ abstract class ContainerTask implements ScriptInstance {
             fail(finishReason != null ? finishReason : "перенос не завершён: перенесено " + movedTotal());
         } else {
             succeed();
+        }
+    }
+
+    private void holdOpen() {
+        if (containerPos != null) {
+            ContainerOpenService.hold(spirit, containerPos);
         }
     }
 
