@@ -173,10 +173,11 @@ public final class SimplificationGameTests {
                     if (x == 4 && z == 4 && y < 3) {
                         continue;
                     }
-                    helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.BEDROCK);
                 }
             }
         }
+        helper.setBlock(new BlockPos(4, 0, 4), Blocks.BEDROCK);
         SpiritEntity spirit = MovementScene.spirit(helper, SPIRIT_AT);
         SpiritRun run = SpiritRun.launch(
                 helper,
@@ -188,7 +189,7 @@ public final class SimplificationGameTests {
             run.assertStarted();
             helper.assertTrue(
                     spirit.taskStatus().orElse(null) == RunStatus.FAILED,
-                    "Из замурованной клетки выхода нет: перенос не сквозь стены (решение владельца 18.10), goto обязан "
+                    "Из клетки в неразрушимых стенах выхода нет: перенос не сквозь стены (решение владельца 18.10), goto обязан "
                             + "провалиться, статус " + spirit.taskStatus());
             helper.assertTrue(
                     spirit.teleports() == 0 && spirit.blockPosition().equals(helper.absolutePos(SPIRIT_AT)),
