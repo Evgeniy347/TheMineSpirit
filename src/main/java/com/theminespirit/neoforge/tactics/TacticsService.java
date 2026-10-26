@@ -572,6 +572,10 @@ public final class TacticsService {
             returnTicks = 0;
             return;
         }
+        if (approach.detouring()) {
+            approach.tick();
+            return;
+        }
         returnTicks++;
         if (stalledReturn(point, distance) || returnTicks > RETURN_MAX_TICKS) {
             if (returnTicks > RETURN_MAX_TICKS) {
@@ -600,7 +604,7 @@ public final class TacticsService {
             return;
         }
         if (!approach.isActive()) {
-            approach.begin(target, RETURN_ARRIVAL);
+            approach.beginWithRoutes(target, RETURN_ARRIVAL);
         }
         Approach.State state = approach.tick();
         if (state != Approach.State.MOVING) {

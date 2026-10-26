@@ -7,7 +7,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.movement.DeadEndRefusal;
 import com.theminespirit.neoforge.movement.PassageWalk;
 import com.theminespirit.neoforge.movement.PathNetworkService;
-import com.theminespirit.neoforge.movement.StuckTeleport;
+import com.theminespirit.neoforge.movement.StuckRescue;
 import com.theminespirit.neoforge.policy.NightLeashGate;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +40,7 @@ public final class Approach {
     private int timeoutTicks;
     private int elapsed;
     private int deadEndTicks;
-    private int teleports;
+    private final StuckRescue rescue;
     private boolean active;
     private PathMode mode = PathMode.NORMAL;
     private String refusal;
@@ -50,6 +50,7 @@ public final class Approach {
 
     public Approach(SpiritEntity spirit) {
         this.spirit = spirit;
+        this.rescue = new StuckRescue(spirit);
     }
 
     public void begin(Vec3 target, double arrival) {
@@ -59,6 +60,11 @@ public final class Approach {
     public void begin(Vec3 target, double arrival, PathMode pathMode) {
         mode = pathMode;
         start(target, null, arrival);
+    }
+
+    public void beginWithRoutes(Vec3 target, double arrival) {
+        begin(target, arrival, PathMode.NORMAL);
+        rescue.reset(true);
     }
 
     public void begin(Entity target, double arrival) {
@@ -85,6 +91,9 @@ public final class Approach {
             finish();
             return State.TIMEOUT;
         }
+        if (rescue.walking()) {
+            return State.MOVING;
+        }
         boolean opened = passages.tick();
         if (stuckWatcher.observe(spirit.getX(), spirit.getY(), spirit.getZ())) {
             if (opened || passages.openToward(blockCoord(target))) {
@@ -92,7 +101,7 @@ public final class Approach {
                 pathRefresh = new PathRefreshPolicy();
                 return State.MOVING;
             }
-            if (teleportCloser(target)) {
+            if (rescued(target)) {
                 return State.MOVING;
             }
             finish();
@@ -122,7 +131,7 @@ public final class Approach {
                     deadEndTicks = 0;
                     return State.MOVING;
                 }
-                if (teleportCloser(target)) {
+                if (rescued(target)) {
                     deadEndTicks = 0;
                     return State.MOVING;
                 }
@@ -146,6 +155,10 @@ public final class Approach {
         if (active) {
             spirit.getNavigation().stop();
         }
+    }
+
+    public boolean detouring() {
+        return active && rescue.routing();
     }
 
     public boolean isActive() {
@@ -177,7 +190,7 @@ public final class Approach {
         timeoutTicks = GotoTuning.timeoutTicks(spirit.position().distanceTo(point));
         elapsed = 0;
         deadEndTicks = 0;
-        teleports = 0;
+        rescue.reset(false);
         refusal = null;
         legs = null;
         networkAttempts = 0;
@@ -259,13 +272,11 @@ public final class Approach {
         return new BlockCoord((int) Math.floor(point.x), (int) Math.floor(point.y), (int) Math.floor(point.z));
     }
 
-    private boolean teleportCloser(Vec3 target) {
-        Optional<BlockCoord> step = StuckTeleport.find(spirit, mode, blockCoord(target), teleports);
-        if (step.isEmpty()) {
+    private boolean rescued(Vec3 target) {
+        if (!rescue.free(mode, blockCoord(target), (int) Math.floor(arrival), targetEntity != null)) {
             return false;
         }
-        StuckTeleport.apply(spirit, step.get());
-        teleports++;
+        timeoutTicks = Math.max(timeoutTicks, elapsed + rescue.ticksBudget());
         stuckWatcher = new StuckWatcher(GotoTuning.STUCK_MIN_MOVEMENT, GotoTuning.STUCK_TICKS);
         pathRefresh = new PathRefreshPolicy();
         return true;
@@ -276,10 +287,11 @@ public final class Approach {
     }
 
     public int teleports() {
-        return teleports;
+        return rescue.teleports();
     }
 
     private void finish() {
+        rescue.cancel();
         spirit.getNavigation().stop();
         passages.settle();
         active = false;

@@ -50,7 +50,7 @@ abstract class ContainerTask implements ScriptInstance {
             this.finder = new ContainerFinder(spirit.level(), spirit.blockPosition(), target, radius);
             this.scan = null;
         }
-        this.approach = new ReachApproach(spirit);
+        this.approach = ReachApproach.withRoutes(spirit);
     }
 
     protected abstract TransferRunner beginTransfer(Container container);

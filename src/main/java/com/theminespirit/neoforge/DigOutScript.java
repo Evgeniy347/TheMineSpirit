@@ -2,7 +2,10 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.neoforge.movement.RouteDetour;
+import com.theminespirit.neoforge.movement.RouteWalk;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -19,12 +22,14 @@ import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import org.jspecify.annotations.Nullable;
 
 public final class DigOutScript implements ScriptInstance {
     private static final int MAX_STEPS = 96;
     private static final int STEP_TICKS = 60;
     private static final int SEALED_SCAN = 256;
     private static final String FLOOR_BLOCK = "minecraft:cobblestone";
+    private static final int HOME_RADIUS = 2;
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -40,6 +45,8 @@ public final class DigOutScript implements ScriptInstance {
     private int turns;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
+    private boolean routePlanned;
+    private @Nullable RouteWalk route;
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this.spirit = spirit;
@@ -101,6 +108,9 @@ public final class DigOutScript implements ScriptInstance {
         if (spirit.isRemoved()) {
             return fail("дух исчез, выбираясь из-под земли");
         }
+        if (followRoute()) {
+            return ScriptStatus.RUNNING;
+        }
         if (breaking) {
             if (breaker.tick() == BlockBreaker.Progress.BREAKING) {
                 return ScriptStatus.RUNNING;
@@ -137,6 +147,27 @@ public final class DigOutScript implements ScriptInstance {
         stepTicks = 0;
         spirit.getNavigation().moveTo(next.getX() + 0.5, next.getY(), next.getZ() + 0.5, 1.0);
         return ScriptStatus.RUNNING;
+    }
+
+    private boolean followRoute() {
+        if (!routePlanned) {
+            routePlanned = true;
+            route = RouteDetour.plan(spirit, new BlockCoord(target.x(), target.y(), target.z()), HOME_RADIUS, "dig_out")
+                    .orElse(null);
+        }
+        RouteWalk current = route;
+        if (current == null) {
+            return false;
+        }
+        RouteWalk.State state = current.tick();
+        if (state == RouteWalk.State.RUNNING) {
+            return true;
+        }
+        if (state == RouteWalk.State.FAILED) {
+            RouteDetour.failed(spirit, current);
+        }
+        route = null;
+        return false;
     }
 
     private ScriptStatus walkTick(BlockPos feet) {
@@ -212,6 +243,10 @@ public final class DigOutScript implements ScriptInstance {
 
     @Override
     public void cancel() {
+        if (route != null) {
+            route.cancel();
+            route = null;
+        }
         if (breaking) {
             breaker.cancel();
             breaking = false;

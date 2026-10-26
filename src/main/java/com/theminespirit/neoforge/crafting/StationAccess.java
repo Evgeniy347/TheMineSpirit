@@ -50,7 +50,7 @@ final class StationAccess {
         this.radius = radius;
         this.supply = supply;
         this.finder = new StationFinder(spirit.level(), spirit.blockPosition(), radius, type);
-        this.approach = new ReachApproach(spirit);
+        this.approach = ReachApproach.withRoutes(spirit);
     }
 
     State tick() {

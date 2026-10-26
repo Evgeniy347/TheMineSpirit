@@ -40,6 +40,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.repair.RepairData;
+import com.theminespirit.core.route.RouteRules;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.town.TownRules;
@@ -82,6 +83,7 @@ public final class DataTables {
     private final TableHolder<MagnetRules> magnet;
     private final TableHolder<FishingWait> fishingWait;
     private final TableHolder<Unstuck> unstuck;
+    private final TableHolder<RouteRules> route;
     private final TableHolder<StageRules> stages;
     private final TableHolder<LevelingRules> leveling;
     private final TableHolder<TownRules> town;
@@ -147,6 +149,7 @@ public final class DataTables {
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
         this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
+        this.route = single("route", RouteRules.RESOURCE, RouteRules::parse, RouteRules::load);
         this.stages = single("stages", StageRules.RESOURCE, StageRules::parse, StageRules::load);
         this.leveling = single("leveling", LevelingRules.RESOURCE, LevelingRules::parse, LevelingRules::load);
         this.town = single("town", TownRules.RESOURCE, TownRules::parse, TownRules::load);
@@ -349,6 +352,10 @@ public final class DataTables {
 
     public TableHolder<Unstuck> unstuck() {
         return unstuck;
+    }
+
+    public TableHolder<RouteRules> route() {
+        return route;
     }
 
     public TableHolder<StageRules> stages() {
