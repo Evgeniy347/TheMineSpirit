@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
@@ -27,7 +26,7 @@ class StageSiteTests {
         BlockCoord house = SITE.houseOrigin();
         List<BlockCoord> corners = new ArrayList<>(
                 List.of(house, new BlockCoord(house.x() + hut.sizeX() - 1, house.y(), house.z() + hut.sizeZ() - 1)));
-        StagePlans.palisade(SITE).forEach(block -> corners.add(block.at()));
+        SITE.palisadeLine().forEach(cell -> corners.add(new BlockCoord(cell.x(), house.y(), cell.z())));
         for (BlockCoord corner : corners) {
             assertTrue(
                     SITE.hut().covers(corner.x(), corner.z()),

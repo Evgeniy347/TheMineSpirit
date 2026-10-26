@@ -239,9 +239,6 @@ class TicketPlansTests {
     void plan_LightingOnPlan_EveryPlannedTorchOffHouse() {
         StageSite site = TownFixtures.flatSite();
         List<PlannedBlock> torches = new ArrayList<>();
-        site.torchPosts()
-                .forEach(post -> torches.add(new PlannedBlock(
-                        new BlockCoord(post.x(), TownFixtures.LEVEL + 1, post.z()), StagePlans.TORCH)));
         site.groundTorches().forEach(cell -> torches.add(new PlannedBlock(cell, StagePlans.TORCH)));
         TicketTarget target = TicketTarget.at(site.workYard()).withWork(new StageWork(site, torches));
 

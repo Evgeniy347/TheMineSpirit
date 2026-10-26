@@ -23,6 +23,8 @@ public record StageSite(
     public static final int HOUSE_SHIFT_X = 1;
     public static final int HOUSE_SHIFT_Z = 3;
     public static final int PALISADE_GATE = 3;
+    public static final int PALISADE_WIDTH = 7;
+    public static final int PALISADE_DEPTH = 3;
     public static final int YARD_CHEST_ROW = 3;
     public static final int YARD_STATION_ROW = 1;
     public static final int MINE_SHIFT = 1;
@@ -48,6 +50,24 @@ public record StageSite(
 
     public BlockCoord palisadeOrigin() {
         return new BlockCoord(hut.x(), anchor.y(), hut.z());
+    }
+
+    public List<ColumnMask.Cell> palisadeLine() {
+        List<ColumnMask.Cell> line = new ArrayList<>();
+        for (int dz = PALISADE_DEPTH - 1; dz > 0; dz--) {
+            line.add(new ColumnMask.Cell(hut.x(), hut.z() + dz));
+        }
+        for (int dx = 0; dx < PALISADE_WIDTH; dx++) {
+            line.add(new ColumnMask.Cell(hut.x() + dx, hut.z()));
+        }
+        for (int dz = 1; dz < PALISADE_DEPTH; dz++) {
+            line.add(new ColumnMask.Cell(hut.x() + PALISADE_WIDTH - 1, hut.z() + dz));
+        }
+        return List.copyOf(line);
+    }
+
+    public int palisadeGate() {
+        return PALISADE_DEPTH - 1 + PALISADE_GATE;
     }
 
     public boolean houseColumn(int x, int z) {
@@ -113,26 +133,6 @@ public record StageSite(
             }
         }
         return false;
-    }
-
-    public List<ColumnMask.Cell> torchPosts() {
-        List<ColumnMask.Cell> posts = new ArrayList<>();
-        int size = ring.posts().size();
-        for (int gate : ring.gates()) {
-            for (int side : new int[] {-1, 1}) {
-                int at = Math.floorMod(gate + side, size);
-                if (!ring.isGate(at) && !posts.contains(ring.posts().get(at))) {
-                    posts.add(ring.posts().get(at));
-                }
-            }
-        }
-        return List.copyOf(posts);
-    }
-
-    public List<BlockCoord> palisadeTorches() {
-        return List.of(
-                new BlockCoord(hut.x() + PALISADE_GATE - 1, anchor.y() + 1, hut.z()),
-                new BlockCoord(hut.x() + PALISADE_GATE + 1, anchor.y() + 1, hut.z()));
     }
 
     public List<BlockCoord> groundTorches() {

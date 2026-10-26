@@ -2,6 +2,7 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.WoodSpecies;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -13,17 +14,19 @@ public record BuildSchematicParams(
         int z,
         @Nullable BuildRotation rotation,
         int segments,
-        @Nullable String wood) {
+        @Nullable String wood,
+        List<String> only) {
     public static final int SEGMENTS_FROM_FILE = 0;
     public static final int SEGMENTS_MAX = 64;
     public static final String WOOD = "wood";
+    public static final String ONLY = "only";
 
     public BuildSchematicParams(String file, int x, int y, int z, @Nullable BuildRotation rotation) {
-        this(file, x, y, z, rotation, SEGMENTS_FROM_FILE, null);
+        this(file, x, y, z, rotation, SEGMENTS_FROM_FILE, null, List.of());
     }
 
     public BuildSchematicParams(String file, int x, int y, int z, @Nullable BuildRotation rotation, int segments) {
-        this(file, x, y, z, rotation, segments, null);
+        this(file, x, y, z, rotation, segments, null, List.of());
     }
 
     public BuildSchematicParams {
@@ -35,6 +38,7 @@ public record BuildSchematicParams(
         BuildingCoords.checkY(y);
         BuildingCoords.checkZ(z);
         rotation = rotation == null ? BuildRotation.NONE : rotation;
+        only = List.copyOf(Objects.requireNonNull(only, "Отбор блоков build_schematic не может быть null"));
         if (wood != null) {
             WoodSpecies.check(wood);
         }
@@ -53,7 +57,10 @@ public record BuildSchematicParams(
                 ScriptArgs.requireInt(params, "z"),
                 rotation(params),
                 ScriptArgs.optionalInt(params, "segments").orElse(SEGMENTS_FROM_FILE),
-                params.get(WOOD) instanceof String wood ? wood : null);
+                params.get(WOOD) instanceof String wood ? wood : null,
+                params.get(ONLY) instanceof String only && !only.isBlank()
+                        ? List.of(only.split(","))
+                        : List.<String>of());
     }
 
     private static BuildRotation rotation(Map<String, Object> params) {

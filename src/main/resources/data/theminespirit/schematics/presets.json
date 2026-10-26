@@ -34,6 +34,14 @@
   "player_house_2",
   "player_house_3",
   "player_house_4",
-  "plaza_3"
+  "plaza_3",
+  "fence_long",
+  "fence_straight",
+  "fence_post",
+  "fence_corner",
+  "fence_diagonal",
+  "fence_corner45_left",
+  "fence_corner45_right",
+  "fence_wicket"
  ]
 }

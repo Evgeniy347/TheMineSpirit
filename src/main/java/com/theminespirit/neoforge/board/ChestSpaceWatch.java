@@ -13,7 +13,6 @@ import com.theminespirit.core.inventory.WarehouseSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.EnumSet;
@@ -76,7 +75,7 @@ final class ChestSpaceWatch {
                         List.of(),
                         Map.of()),
                 TicketTarget.at(site.workYard())
-                        .withWork(new StageWork(site, StageBlocks.of(level, BoardCase.STOCK_CHESTS, site, slot)))
+                        .withWork(StageBuilds.of(level, BoardCase.STOCK_CHESTS, site, slot))
                         .withCount(slot));
         if (outcome != BoardOutcome.ACCEPTED) {
             return;

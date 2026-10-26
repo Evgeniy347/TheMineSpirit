@@ -20,6 +20,22 @@
    {"level": 1, "scheme": "plaza_1"}, {"level": 2, "scheme": "plaza_2"}, {"level": 3, "scheme": "plaza_3"}]},
   {"id": "palisade_section", "name": "Палисад-секция", "type": "defense", "levels": [
    {"level": 0, "scheme": "palisade_section"}]},
+  {"id": "fence_long", "name": "Забор: длинный прямой фрагмент", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_long"}]},
+  {"id": "fence_straight", "name": "Забор: прямой фрагмент", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_straight"}]},
+  {"id": "fence_post", "name": "Забор: столб", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_post"}]},
+  {"id": "fence_corner", "name": "Забор: угол 90°", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_corner"}]},
+  {"id": "fence_diagonal", "name": "Забор: диагональ", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_diagonal"}]},
+  {"id": "fence_corner45_left", "name": "Забор: угол 45° влево", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_corner45_left"}]},
+  {"id": "fence_corner45_right", "name": "Забор: угол 45° вправо", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_corner45_right"}]},
+  {"id": "fence_wicket", "name": "Забор: калитка", "type": "defense", "levels": [
+   {"level": 0, "scheme": "fence_wicket"}]},
   {"id": "pen", "name": "Загон", "type": "farm", "levels": [
    {"level": 1, "scheme": "pen_4x5"}, {"level": 2, "scheme": "pen_7x7"}, {"level": 3, "scheme": "pen_9x9"}]},
   {"id": "enchant_room", "name": "Чаровальня", "type": "craft", "levels": [

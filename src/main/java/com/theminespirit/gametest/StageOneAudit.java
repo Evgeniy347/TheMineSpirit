@@ -7,7 +7,6 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
-import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
@@ -18,10 +17,10 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.board.FirstStepsRunner;
 import com.theminespirit.neoforge.board.GroundProbe;
-import com.theminespirit.neoforge.board.StageBlocks;
+import com.theminespirit.neoforge.board.SchemeAudit;
+import com.theminespirit.neoforge.board.StageBuilds;
 import com.theminespirit.neoforge.board.StrayBlocks;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +79,7 @@ final class StageOneAudit {
         List<String> steps = new ArrayList<>();
         int[][] sides = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         for (ColumnMask.Cell post : site.ring().posts()) {
-            int base = StageBlocks.builtPost(level, post, StageBlocks.postY(level, site, post));
+            int base = StageBuilds.builtPost(level, post, StageBuilds.postY(level, site, post));
             for (int[] side : sides) {
                 int x = post.x() + side[0];
                 int z = post.z() + side[1];
@@ -122,16 +121,14 @@ final class StageOneAudit {
         if ("place_block".equals(call.script()) && call.params().get("block") instanceof String block) {
             expect(level, new BlockPos(x, y, z), WoodSpecies.swap(block, wood), missing, total);
         }
-        if ("build_schematic".equals(call.script())
-                && !call.params().containsKey("rotation")
-                && call.params().get("file") instanceof String file) {
-            for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                if (!entry.optional() && !SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
-                    BlockPos pos = new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz());
-                    expect(level, pos, WoodSpecies.swap(entry.block(), wood), missing, total);
-                }
-            }
-        }
+        SchemeAudit.entries(call)
+                .ifPresent(entries -> entries.forEach(entry -> expect(
+                        level,
+                        new BlockPos(
+                                entry.pos().x(), entry.pos().y(), entry.pos().z()),
+                        WoodSpecies.swap(entry.block(), wood),
+                        missing,
+                        total)));
     }
 
     private static void expect(ServerLevel level, BlockPos pos, String block, List<String> missing, int[] total) {

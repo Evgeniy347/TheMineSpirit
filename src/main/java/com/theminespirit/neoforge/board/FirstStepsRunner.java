@@ -326,8 +326,7 @@ public final class FirstStepsRunner {
             TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
             StageWork work = target.work();
             if (caseValue == BoardCase.BUILD_FENCE && work != null) {
-                partTarget = partTarget.withWork(
-                        new StageWork(work.site(), StageBlocks.of(level, caseValue, work.site(), part)));
+                partTarget = partTarget.withWork(StageBuilds.of(level, caseValue, work.site(), part));
             }
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE) {
@@ -633,8 +632,7 @@ public final class FirstStepsRunner {
 
     public static TicketTarget targetFor(ServerLevel level, BoardCase caseValue, StageSite stage, String wood) {
         BlockCoord point = BEFORE_YARD.contains(caseValue) ? stage.anchor() : stage.workYard();
-        TicketTarget target =
-                TicketTarget.at(point).withWork(new StageWork(stage, StageBlocks.of(level, caseValue, stage, 0)));
+        TicketTarget target = TicketTarget.at(point).withWork(StageBuilds.of(level, caseValue, stage, 0));
         if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
         }
@@ -817,22 +815,11 @@ public final class FirstStepsRunner {
             case SequenceNode sequence -> sequence.steps().forEach(step -> minusPlaced(level, step, wood, need));
             case FallbackNode fallback -> minusPlaced(level, fallback.steps().get(0), wood, need);
             case ScriptCall call
-            when "build_schematic".equals(call.script())
-                    && !call.params().containsKey("rotation")
-                    && call.params().get("file") instanceof String file
-                    && SchematicMaterials.known(
-                            DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()))
-                    && call.params().get("x") instanceof Integer x
-                    && call.params().get("y") instanceof Integer y
-                    && call.params().get("z") instanceof Integer z -> {
-                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                    if (entry.optional() || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
-                        continue;
-                    }
+            when SchemeAudit.entries(call).isPresent() -> {
+                for (Schematic.PlacedEntry entry : SchemeAudit.entries(call).orElseThrow()) {
                     String block = bare(WoodSpecies.swap(entry.block(), wood));
-                    BlockState state =
-                            level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
-                    if (placed(state, block)) {
+                    BlockCoord at = entry.pos();
+                    if (placed(level.getBlockState(new BlockPos(at.x(), at.y(), at.z())), block)) {
                         String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(entry.block()), wood));
                         need.computeIfPresent(item, (key, count) -> count > 1 ? count - 1 : null);
                     }
@@ -1051,28 +1038,18 @@ public final class FirstStepsRunner {
                         placed(level.getBlockState(new BlockPos(x, y, z)), bare(WoodSpecies.swap(block, wood))) ? 1 : 0,
                         1);
             case ScriptCall call
-            when "build_schematic".equals(call.script())
-                    && !call.params().containsKey("rotation")
-                    && call.params().get("file") instanceof String file
-                    && SchematicMaterials.known(
-                            DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()))
-                    && call.params().get("x") instanceof Integer x
-                    && call.params().get("y") instanceof Integer y
-                    && call.params().get("z") instanceof Integer z -> {
+            when SchemeAudit.entries(call).isPresent() -> {
                 int done = 0;
-                int total = 0;
-                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                    if (entry.optional() || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
-                        continue;
-                    }
-                    BlockState state =
-                            level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
-                    total++;
-                    if (placed(state, bare(WoodSpecies.swap(entry.block(), wood)))) {
+                List<Schematic.PlacedEntry> entries = SchemeAudit.entries(call).orElseThrow();
+                for (Schematic.PlacedEntry entry : entries) {
+                    BlockCoord at = entry.pos();
+                    if (placed(
+                            level.getBlockState(new BlockPos(at.x(), at.y(), at.z())),
+                            bare(WoodSpecies.swap(entry.block(), wood)))) {
                         done++;
                     }
                 }
-                yield new Placed(done, total);
+                yield new Placed(done, entries.size());
             }
             default -> new Placed(0, 0);
         };
