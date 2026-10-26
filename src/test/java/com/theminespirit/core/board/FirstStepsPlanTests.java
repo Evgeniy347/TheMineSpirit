@@ -37,10 +37,10 @@ class FirstStepsPlanTests {
         chain.add(BoardCase.CRAFT_FURNACE);
         chain.add(BoardCase.LIGHTING);
         chain.add(BoardCase.BUILD_FENCE);
-        chain.add(BoardCase.BUILD_ORCHARD);
         chain.add(BoardCase.BUILD_HOUSE);
         chain.add(BoardCase.CRAFT_SMITHING_TABLE);
         chain.add(BoardCase.CRAFT_ANVIL);
+        chain.add(BoardCase.BUILD_ORCHARD);
         return chain;
     }
 
@@ -349,8 +349,7 @@ class FirstStepsPlanTests {
     void next_StageOneBlockedByMaterial_IronStepsWait() {
         List<BoardCase> chain = chain();
         Set<BoardCase> world = EnumSet.copyOf(chain.subList(0, chain.indexOf(BoardCase.LIGHTING)));
-        Set<BoardCase> blocked =
-                EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_ORCHARD, BoardCase.BUILD_HOUSE);
+        Set<BoardCase> blocked = EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
         SettlementFacts facts = facts(world, EnumSet.of(BoardCase.BUILD_MINE), blocked);
         assertEquals(
                 Optional.empty(),
@@ -358,7 +357,7 @@ class FirstStepsPlanTests {
                 "Свет, ограда и хижина упали в BLOCKED — верстак кузнеца и наковальня не открываются: gather:iron_ingot "
                         + "на этапе 1 уводил духов от снабжения (INC-78)");
         assertEquals(
-                List.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_ORCHARD, BoardCase.BUILD_HOUSE),
+                List.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE),
                 FirstStepsPlan.blockedStageOne(facts),
                 "Заблокированные шаги этапа 1 видны снабжению: по ним ставится добыча недостающего (INC-79)");
     }
