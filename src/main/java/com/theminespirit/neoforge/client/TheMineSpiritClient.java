@@ -37,6 +37,11 @@ public final class TheMineSpiritClient {
                 screen.show(reply);
             }
         });
+        TownMapChannel.onClientMarkers(reply -> {
+            if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
+                screen.showMarkers(reply.markers());
+            }
+        });
         BoardViewChannel.onClientReply(tiles -> {
             if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
                 screen.show(tiles);

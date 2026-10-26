@@ -3,11 +3,13 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanner;
 import com.theminespirit.core.town.TownSnapshot;
+import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,6 +44,32 @@ public final class TownSnapshots {
         progress.put(TownPlanner.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
         List<List<BlockCoord>> paths = PathNetworkService.segments(level);
         return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, progress, paths));
+    }
+
+    public static Optional<TownMapView.Bounds> markerBounds(ServerLevel level) {
+        SettlementPlotStore store = SettlementPlotStore.get(level);
+        Optional<TownPlan> town = store.town();
+        Optional<StageSite> site = store.site();
+        if (town.isEmpty() || site.isEmpty() || store.plot().isEmpty()) {
+            return Optional.empty();
+        }
+        TownPlan plan = town.orElseThrow();
+        ColumnMask region = plan.region();
+        int[] box = {
+            region.minX(), region.minZ(), region.minX() + region.width() - 1, region.minZ() + region.depth() - 1
+        };
+        include(box, plan.fence().posts());
+        include(box, site.orElseThrow().ring().posts());
+        return Optional.of(new TownMapView.Bounds(box[0], box[1], box[2], box[3]));
+    }
+
+    private static void include(int[] box, List<ColumnMask.Cell> cells) {
+        for (ColumnMask.Cell cell : cells) {
+            box[0] = Math.min(box[0], cell.x());
+            box[1] = Math.min(box[1], cell.z());
+            box[2] = Math.max(box[2], cell.x());
+            box[3] = Math.max(box[3], cell.z());
+        }
     }
 
     private static TownSnapshot.Progress step(

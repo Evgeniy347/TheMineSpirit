@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public record TownMapView(List<MapRect> rects, List<MapLine> lines) {
+public record TownMapView(List<MapRect> rects, List<MapLine> lines, List<MapMarker> markers) {
     public enum Kind {
         STREET_MAIN,
         STREET_SIDE,
@@ -64,6 +64,15 @@ public record TownMapView(List<MapRect> rects, List<MapLine> lines) {
     public TownMapView {
         rects = List.copyOf(Objects.requireNonNull(rects, "Прямоугольники карты не могут быть null"));
         lines = List.copyOf(Objects.requireNonNull(lines, "Линии карты не могут быть null"));
+        markers = List.copyOf(Objects.requireNonNull(markers, "Метки карты не могут быть null"));
+    }
+
+    public TownMapView(List<MapRect> rects, List<MapLine> lines) {
+        this(rects, lines, List.of());
+    }
+
+    public TownMapView withMarkers(List<MapMarker> next) {
+        return new TownMapView(rects, lines, next);
     }
 
     public static TownMapView of(TownSnapshot snapshot) {

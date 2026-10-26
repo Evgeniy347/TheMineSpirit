@@ -122,5 +122,7 @@
   "theminespirit.map.empty": "Плана поселения пока нет",
   "theminespirit.map.offline": "Сервер без мода: план недоступен",
   "theminespirit.map.lot": "Готово: %s%%",
-  "theminespirit.map.lot.damaged": "Повреждена: цела на %s%%, до восстановления %s%%"
+  "theminespirit.map.lot.damaged": "Повреждена: цела на %s%%, до восстановления %s%%",
+  "theminespirit.map.player": "Игрок",
+  "theminespirit.map.no_job": "Без задания"
 }

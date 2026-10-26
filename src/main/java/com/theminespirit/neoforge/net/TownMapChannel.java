@@ -1,9 +1,11 @@
 package com.theminespirit.neoforge.net;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.ui.MapMarker;
 import com.theminespirit.core.ui.TerrainTile;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.board.TerrainTiles;
+import com.theminespirit.neoforge.board.TownMarkers;
 import com.theminespirit.neoforge.board.TownSnapshots;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,14 +28,21 @@ public final class TownMapChannel {
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_map_request"));
     public static final CustomPacketPayload.Type<Reply> REPLY =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_map_reply"));
+    public static final CustomPacketPayload.Type<MarkersRequest> MARKERS_REQUEST = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_markers_request"));
+    public static final CustomPacketPayload.Type<MarkersReply> MARKERS_REPLY = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_markers_reply"));
 
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
     private static final int MAX_RECTS = 32_768;
     private static final int MAX_POINTS = 16_384;
     private static final int MAX_TILES = 4096;
+    private static final int MAX_MARKERS = 512;
     private static final List<TownMapView.Kind> KINDS = List.of(TownMapView.Kind.values());
     private static final List<TownMapView.LineKind> LINE_KINDS = List.of(TownMapView.LineKind.values());
+    private static final List<MapMarker.Kind> MARKER_KINDS = List.of(MapMarker.Kind.values());
     private static volatile Consumer<Reply> clientReceiver = reply -> {};
+    private static volatile Consumer<MarkersReply> markerReceiver = reply -> {};
 
     private TownMapChannel() {}
 
@@ -43,6 +52,30 @@ public final class TownMapChannel {
         @Override
         public CustomPacketPayload.Type<Request> type() {
             return REQUEST;
+        }
+    }
+
+    public record MarkersRequest() implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, MarkersRequest> STREAM_CODEC =
+                StreamCodec.unit(new MarkersRequest());
+
+        @Override
+        public CustomPacketPayload.Type<MarkersRequest> type() {
+            return MARKERS_REQUEST;
+        }
+    }
+
+    public record MarkersReply(List<MapMarker> markers) implements CustomPacketPayload {
+        public static final StreamCodec<FriendlyByteBuf, MarkersReply> STREAM_CODEC =
+                StreamCodec.of(TownMapChannel::writeMarkersReply, TownMapChannel::readMarkersReply);
+
+        public MarkersReply {
+            markers = List.copyOf(Objects.requireNonNull(markers, "Метки карты не могут быть null"));
+        }
+
+        @Override
+        public CustomPacketPayload.Type<MarkersReply> type() {
+            return MARKERS_REPLY;
         }
     }
 
@@ -69,19 +102,38 @@ public final class TownMapChannel {
         clientReceiver = receiver;
     }
 
+    public static void onClientMarkers(Consumer<MarkersReply> receiver) {
+        markerReceiver = receiver;
+    }
+
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION).optional();
         registrar.playToServer(REQUEST, Request.STREAM_CODEC, TownMapChannel::handleRequest);
         registrar.playToClient(REPLY, Reply.STREAM_CODEC, (reply, context) -> clientReceiver.accept(reply));
+        registrar.playToServer(MARKERS_REQUEST, MarkersRequest.STREAM_CODEC, TownMapChannel::handleMarkersRequest);
+        registrar.playToClient(
+                MARKERS_REPLY, MarkersReply.STREAM_CODEC, (reply, context) -> markerReceiver.accept(reply));
     }
 
     private static void handleRequest(Request ignoredRequest, IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
             ServerLevel level = player.serverLevel().getServer().overworld();
-            Optional<TownMapView> view = TownSnapshots.current(level).map(TownMapView::of);
+            Optional<TownMapView> view = TownSnapshots.current(level)
+                    .map(TownMapView::of)
+                    .map(map -> map.withMarkers(TownMarkers.around(level, map.bounds())));
             List<TerrainTile> tiles =
                     view.map(map -> TerrainTiles.around(level, map.bounds())).orElse(List.of());
             context.reply(new Reply(view, tiles));
+        }
+    }
+
+    private static void handleMarkersRequest(MarkersRequest ignoredRequest, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player) {
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            List<MapMarker> markers = TownSnapshots.markerBounds(level)
+                    .map(bounds -> TownMarkers.around(level, bounds))
+                    .orElse(List.of());
+            context.reply(new MarkersReply(markers));
         }
     }
 
@@ -110,6 +162,27 @@ public final class TownMapChannel {
             buf.writeVarInt(LINE_KINDS.indexOf(line.kind()));
             writePoints(buf, line.points());
             writePoints(buf, line.gates());
+        }
+        writeMarkers(buf, view.markers());
+    }
+
+    private static void writeMarkersReply(FriendlyByteBuf buf, MarkersReply reply) {
+        writeMarkers(buf, reply.markers());
+    }
+
+    private static MarkersReply readMarkersReply(FriendlyByteBuf buf) {
+        return new MarkersReply(readMarkers(buf));
+    }
+
+    private static void writeMarkers(FriendlyByteBuf buf, List<MapMarker> all) {
+        List<MapMarker> markers = all.subList(0, Math.min(all.size(), MAX_MARKERS));
+        buf.writeVarInt(markers.size());
+        for (MapMarker marker : markers) {
+            buf.writeVarInt(MARKER_KINDS.indexOf(marker.kind()));
+            buf.writeUtf(marker.name());
+            buf.writeUtf(marker.occupation());
+            buf.writeInt(marker.x());
+            buf.writeInt(marker.z());
         }
     }
 
@@ -160,7 +233,17 @@ public final class TownMapChannel {
             List<TownMapView.MapPoint> points = readPoints(buf, "точек линии");
             lines.add(new TownMapView.MapLine(kind, points, readPoints(buf, "калиток линии")));
         }
-        return new TownMapView(rects, lines);
+        return new TownMapView(rects, lines, readMarkers(buf));
+    }
+
+    private static List<MapMarker> readMarkers(FriendlyByteBuf buf) {
+        int count = checked(buf.readVarInt(), MAX_MARKERS, "меток карты");
+        List<MapMarker> markers = new ArrayList<>(count);
+        for (int index = 0; index < count; index++) {
+            MapMarker.Kind kind = MARKER_KINDS.get(checked(buf.readVarInt(), MARKER_KINDS.size() - 1, "вид метки"));
+            markers.add(new MapMarker(kind, buf.readUtf(), buf.readUtf(), buf.readInt(), buf.readInt()));
+        }
+        return markers;
     }
 
     private static List<TerrainTile> readTiles(FriendlyByteBuf buf) {
