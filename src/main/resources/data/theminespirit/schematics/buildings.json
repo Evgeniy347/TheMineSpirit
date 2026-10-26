@@ -42,6 +42,24 @@
    {"level": 1, "scheme": "yard_chest"}]},
   {"id": "ground_torch", "name": "Факел на земле", "type": "infrastructure", "levels": [
    {"level": 1, "scheme": "ground_torch"}]},
+  {"id": "street5_straight", "name": "Улица 5: прямой участок", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street5_straight"}]},
+  {"id": "street5_turn", "name": "Улица 5: поворот 90°", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street5_turn"}]},
+  {"id": "street5_t", "name": "Улица 5: Т-перекрёсток", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street5_t"}]},
+  {"id": "street5_cross", "name": "Улица 5: перекрёсток «+»", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street5_cross"}]},
+  {"id": "street7_straight", "name": "Улица 7: прямой участок", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street7_straight"}]},
+  {"id": "street7_turn", "name": "Улица 7: поворот 90°", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street7_turn"}]},
+  {"id": "street7_t", "name": "Улица 7: Т-перекрёсток", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street7_t"}]},
+  {"id": "street7_cross", "name": "Улица 7: перекрёсток «+»", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street7_cross"}]},
+  {"id": "street_patch", "name": "Улица: заплатка", "type": "infrastructure", "levels": [
+   {"level": 1, "scheme": "street_patch"}]},
   {"id": "pen", "name": "Загон", "type": "farm", "levels": [
    {"level": 1, "scheme": "pen_4x5"}, {"level": 2, "scheme": "pen_7x7"}, {"level": 3, "scheme": "pen_9x9"}]},
   {"id": "enchant_room", "name": "Чаровальня", "type": "craft", "levels": [

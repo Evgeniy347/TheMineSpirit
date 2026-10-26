@@ -45,6 +45,15 @@
   "fence_wicket",
   "yard_1",
   "yard_chest",
-  "ground_torch"
+  "ground_torch",
+  "street5_straight",
+  "street5_turn",
+  "street5_t",
+  "street5_cross",
+  "street7_straight",
+  "street7_turn",
+  "street7_t",
+  "street7_cross",
+  "street_patch"
  ]
 }

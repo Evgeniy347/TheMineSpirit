@@ -3,8 +3,17 @@ package com.theminespirit.neoforge.board;
 import static net.minecraft.commands.Commands.literal;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StreetLayout;
+import com.theminespirit.core.town.StreetTile;
+import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownSnapshot;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
@@ -40,6 +49,26 @@ public final class SpiritPlanCommand {
                         false);
             }
         }
+        streets(source);
         return plan.lots().size();
+    }
+
+    private static void streets(CommandSourceStack source) {
+        SettlementPlotStore store = SettlementPlotStore.get(source.getLevel());
+        Optional<TownPlan> town = store.town();
+        Optional<StageSite> site = store.site();
+        if (town.isEmpty() || site.isEmpty()) {
+            return;
+        }
+        List<StreetTile> tiles = StreetLayout.of(DataTables.INSTANCE.presets().current())
+                .town(
+                        town.orElseThrow().streets(),
+                        town.orElseThrow().anchor().x(),
+                        town.orElseThrow().anchor().z(),
+                        DataTables.INSTANCE.town().current().streets(),
+                        site.orElseThrow().enclosure());
+        Map<String, Long> kinds =
+                tiles.stream().collect(Collectors.groupingBy(StreetTile::scheme, TreeMap::new, Collectors.counting()));
+        source.sendSuccess(() -> Component.literal("  улицы этапа по плиткам-схемам: " + kinds), false);
     }
 }
