@@ -69,7 +69,7 @@ public final class ChopTreeScript implements ScriptInstance {
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
         this.searchCenter = coords(spirit.blockPosition());
         this.search = newSearch(searchCenter);
-        this.chop = new TreeChop(spirit, logFilter, params.replant(), treeView);
+        this.chop = new TreeChop(spirit, logFilter, params.replant(), false, treeView);
     }
 
     private BlockLocator.Search newSearch(BlockCoord center) {

@@ -14,12 +14,14 @@ final class ChopGuard {
 
     private ChopGuard() {}
 
-    static boolean protectedLog(SpiritEntity spirit, Tree tree, List<BlockCoord> logs) {
+    static boolean protectedLog(SpiritEntity spirit, Tree tree, List<BlockCoord> logs, boolean grove) {
         for (BlockCoord log : logs) {
             BlockPos pos = new BlockPos(log.x(), log.y(), log.z());
             BlockState state = spirit.level().getBlockState(pos);
-            if (!state.isAir()
-                    && spirit.protectionGate().checkBreak(pos, state) instanceof BlockProtection.Refused refused) {
+            BlockProtection.Decision decision = grove
+                    ? spirit.protectionGate().checkHarvest(pos, state)
+                    : spirit.protectionGate().checkBreak(pos, state);
+            if (!state.isAir() && decision instanceof BlockProtection.Refused refused) {
                 LOGGER.info(
                         "[chop] {}: дерево {} не рубится целиком — бревно {} защищено: {}",
                         spirit.getName().getString(),

@@ -4,14 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.Set;
 
-public record WoodRules(int stockPlanks) {
+public record WoodRules(int stockPlanks, int groveMatureLogs, int groveCheckTicks) {
     public static final String RESOURCE = "data/theminespirit/board/wood.json";
-    private static final Set<String> FIELDS = Set.of("stockPlanks");
+    private static final Set<String> FIELDS = Set.of("stockPlanks", "groveMatureLogs", "groveCheckTicks");
 
     public WoodRules {
         if (stockPlanks < 1) {
             throw new IllegalArgumentException("Запас для выбора породы " + stockPlanks
                     + " досок: нужен хотя бы 1, иначе порода постройки решается пустым запасом");
+        }
+        if (groveMatureLogs < 1 || groveCheckTicks < 1) {
+            throw new IllegalArgumentException("Роща: зрелость " + groveMatureLogs + " брёвен, проверка раз в "
+                    + groveCheckTicks + " тиков — оба числа от 1, иначе саженец рубится сразу или проверка без паузы");
         }
     }
 
@@ -19,7 +23,10 @@ public record WoodRules(int stockPlanks) {
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, FIELDS, origin, "wood.json");
         try {
-            return new WoodRules(JsonResource.integer(root.get("stockPlanks"), origin, "stockPlanks"));
+            return new WoodRules(
+                    JsonResource.integer(root.get("stockPlanks"), origin, "stockPlanks"),
+                    JsonResource.integer(root.get("groveMatureLogs"), origin, "groveMatureLogs"),
+                    JsonResource.integer(root.get("groveCheckTicks"), origin, "groveCheckTicks"));
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }

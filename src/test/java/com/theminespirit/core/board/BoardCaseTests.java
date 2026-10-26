@@ -83,6 +83,7 @@ class BoardCaseTests {
             "SHEAR_SHEEP",
             "TRANSFER_ITEM",
             "WEAVE_WOOL",
+            "HARVEST_GROVE",
             "HARVEST_HIVE",
             "PLACE_BEEHIVE",
             "PLANT_GROVE");

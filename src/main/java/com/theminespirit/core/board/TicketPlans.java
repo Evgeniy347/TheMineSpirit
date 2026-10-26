@@ -190,6 +190,7 @@ public final class TicketPlans {
             case SHEAR_SHEEP -> shearSheep(target);
             case HUNT_WILD_SHEEP -> huntWildSheep(target);
             case HARVEST_HIVE -> harvestHive();
+            case HARVEST_GROVE -> GrovePlans.harvest(target);
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);

@@ -91,6 +91,7 @@ class TicketPlansTests {
             Map.entry(BoardCase.SHEAR_SHEEP, "shear"),
             Map.entry(BoardCase.HUNT_WILD_SHEEP, "hunt"),
             Map.entry(BoardCase.HARVEST_HIVE, "harvest_hive"),
+            Map.entry(BoardCase.HARVEST_GROVE, "chop_target"),
             Map.entry(BoardCase.PLACE_BEEHIVE, "craft"));
 
     private static final List<BoardCase> PLANNED_CASES =

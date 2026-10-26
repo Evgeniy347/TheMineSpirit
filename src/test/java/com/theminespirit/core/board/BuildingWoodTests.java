@@ -7,7 +7,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class BuildingWoodTests {
-    private static final WoodRules RULES = new WoodRules(24);
+    private static final WoodRules RULES = new WoodRules(24, 5, 200);
     private static final String HOUSE = BuildingWoods.key(BoardCase.BUILD_HOUSE, new BlockCoord(0, 64, 0));
     private static final String FENCE = BuildingWoods.key(BoardCase.BUILD_FENCE, new BlockCoord(10, 64, 0));
 

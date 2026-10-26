@@ -3,7 +3,9 @@ package com.theminespirit.core.script;
 import java.util.Map;
 import java.util.Objects;
 
-public record ChopTargetParams(int x, int y, int z, boolean replant) {
+public record ChopTargetParams(int x, int y, int z, boolean replant, boolean grove) {
+    public static final String GROVE = "grove";
+
     public ChopTargetParams {
         checkHorizontal("x", x);
         checkHorizontal("z", z);
@@ -19,7 +21,8 @@ public record ChopTargetParams(int x, int y, int z, boolean replant) {
                 ScriptArgs.requireInt(params, "x"),
                 ScriptArgs.requireInt(params, "y"),
                 ScriptArgs.requireInt(params, "z"),
-                ScriptArgs.requireBoolean(params, "replant"));
+                ScriptArgs.requireBoolean(params, "replant"),
+                ScriptArgs.optionalBoolean(params, GROVE, false));
     }
 
     private static void checkHorizontal(String name, int value) {

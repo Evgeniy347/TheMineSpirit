@@ -27,6 +27,7 @@ class BoardConfigTests {
                 Map.entry("BREED_ANIMALS", 55),
                 Map.entry("COLLECT_DROPS", 55),
                 Map.entry("SHEAR_SHEEP", 55),
+                Map.entry("HARVEST_GROVE", 30),
                 Map.entry("HARVEST_HIVE", 55),
                 Map.entry("HERD_CULL", 50),
                 Map.entry("HUNT_WILD_SHEEP", 50),

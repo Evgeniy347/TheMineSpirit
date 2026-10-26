@@ -31,6 +31,7 @@ final class TreeChop {
     private final SpiritEntity spirit;
     private final IdFilter logFilter;
     private final boolean replant;
+    private final boolean grove;
     private final TreeView view;
     private final Approach approach;
     private final BlockBreaker breaker;
@@ -50,10 +51,11 @@ final class TreeChop {
     private boolean secondStand;
     private @Nullable BlockPos stand;
 
-    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, TreeView view) {
+    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, boolean grove, TreeView view) {
         this.spirit = spirit;
         this.logFilter = logFilter;
         this.replant = replant;
+        this.grove = grove;
         this.view = view;
         this.approach = new Approach(spirit);
         this.breaker = new BlockBreaker(spirit);
@@ -150,13 +152,13 @@ final class TreeChop {
         }
         if (!guarded) {
             guarded = true;
-            if (ChopGuard.protectedLog(spirit, tree, plan.order())) {
+            if (ChopGuard.protectedLog(spirit, tree, plan.order(), grove)) {
                 return ChopOutcome.simple(ChopOutcome.State.PROTECTED);
             }
         }
         while (planIndex < plan.order().size()) {
             BlockCoord log = plan.order().get(planIndex);
-            BlockBreaker.Begin begin = breaker.beginAnyDistance(toPos(log));
+            BlockBreaker.Begin begin = breaker.beginAnyDistance(toPos(log), grove);
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
                 return ChopOutcome.running();

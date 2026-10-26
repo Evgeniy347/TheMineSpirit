@@ -150,6 +150,7 @@ public final class FirstStepsRunner {
         PlotAudit.tick(level, service, stage, now);
         OldChests.tick(level, service, stage, now);
         ChestSpaceWatch.tick(level, service, stage, now);
+        GroveHarvest.tick(level, service, stage, now);
         SettlementPlotStore.get(level).town().ifPresent(town -> PlanDemolition.tick(level, service, stage, town, now));
         BlockCoord home = new BlockCoord(
                 stage.anchor().x(), homeY(spirits), stage.anchor().z());
