@@ -20,11 +20,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class StagePlans {
-    public static final String FENCE = "minecraft:oak_fence";
-    public static final String TORCH = "minecraft:torch";
     public static final String AIR = "minecraft:air";
-    public static final String TABLE = "minecraft:crafting_table";
-    public static final String FURNACE = "minecraft:furnace";
+    private static final String TABLE = "minecraft:crafting_table";
+    private static final String FURNACE = "minecraft:furnace";
     private static final String TABLE_BLOCK = "crafting_table";
     private static final String MINECRAFT = "minecraft:";
     private static final int GROVE_STEP = 2;
