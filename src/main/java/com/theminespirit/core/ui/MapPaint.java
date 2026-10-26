@@ -13,11 +13,17 @@ public final class MapPaint {
 
     private MapPaint() {}
 
-    public sealed interface Shape permits Fill, Text {}
+    public sealed interface Shape permits Fill, Text, Raster {}
 
     public record Fill(int x1, int y1, int x2, int y2, int color) implements Shape {}
 
     public record Text(int x, int y, String text, int color) implements Shape {}
+
+    public record Raster(int x1, int y1, int x2, int y2, TerrainRaster raster) implements Shape {
+        public Raster {
+            Objects.requireNonNull(raster, "Растр местности в слое карты не может быть null");
+        }
+    }
 
     public record Font(ToIntFunction<String> width, int lineHeight) {
         public Font {
@@ -27,7 +33,17 @@ public final class MapPaint {
 
     public static List<Shape> of(
             TownMapView view, MapViewport viewport, Optional<TownMapView.MapRect> hovered, Font font) {
+        return of(view, Optional.empty(), viewport, hovered, font);
+    }
+
+    public static List<Shape> of(
+            TownMapView view,
+            Optional<TerrainRaster> terrain,
+            MapViewport viewport,
+            Optional<TownMapView.MapRect> hovered,
+            Font font) {
         Objects.requireNonNull(view, "Карта не может быть null");
+        Objects.requireNonNull(terrain, "Слой местности не может быть null: пусто — Optional.empty()");
         Objects.requireNonNull(viewport, "Окно карты не может быть null");
         List<Shape> out = new ArrayList<>();
         out.add(new Fill(
@@ -36,6 +52,7 @@ public final class MapPaint {
                 viewport.left() + viewport.width(),
                 viewport.top() + viewport.height(),
                 MapStyle.BACKGROUND));
+        terrain.filter(raster -> !raster.isEmpty()).ifPresent(raster -> out.add(terrain(raster, viewport)));
         List<Text> labels = new ArrayList<>();
         for (TownMapView.MapRect rect : view.rects()) {
             MapBoxes.of(rect, viewport)
@@ -73,6 +90,14 @@ public final class MapPaint {
         if (wide && tall && !rect.label().isEmpty()) {
             labels.add(new Text(box.x1() + LABEL_PAD, box.y1() + LABEL_PAD, rect.label(), MapStyle.TEXT));
         }
+    }
+
+    private static Raster terrain(TerrainRaster raster, MapViewport viewport) {
+        int x1 = (int) Math.round(viewport.screenX(raster.x1()));
+        int y1 = (int) Math.round(viewport.screenY(raster.z1()));
+        int x2 = (int) Math.round(viewport.screenX(raster.x1() + raster.width()));
+        int y2 = (int) Math.round(viewport.screenY(raster.z1() + raster.height()));
+        return new Raster(x1, y1, x2, y2, raster);
     }
 
     private static void gates(List<Shape> out, TownMapView.MapLine line, MapViewport viewport) {

@@ -1,16 +1,20 @@
 package com.theminespirit.neoforge.net;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.ui.TerrainTile;
 import com.theminespirit.core.ui.TownMapView;
+import com.theminespirit.neoforge.board.TerrainTiles;
 import com.theminespirit.neoforge.board.TownSnapshots;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -23,12 +27,13 @@ public final class TownMapChannel {
     public static final CustomPacketPayload.Type<Reply> REPLY =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_map_reply"));
 
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
     private static final int MAX_RECTS = 32_768;
     private static final int MAX_POINTS = 16_384;
+    private static final int MAX_TILES = 4096;
     private static final List<TownMapView.Kind> KINDS = List.of(TownMapView.Kind.values());
     private static final List<TownMapView.LineKind> LINE_KINDS = List.of(TownMapView.LineKind.values());
-    private static volatile Consumer<Optional<TownMapView>> clientReceiver = view -> {};
+    private static volatile Consumer<Reply> clientReceiver = reply -> {};
 
     private TownMapChannel() {}
 
@@ -41,9 +46,14 @@ public final class TownMapChannel {
         }
     }
 
-    public record Reply(Optional<TownMapView> view) implements CustomPacketPayload {
+    public record Reply(Optional<TownMapView> view, List<TerrainTile> tiles) implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, Reply> STREAM_CODEC =
                 StreamCodec.of(TownMapChannel::write, TownMapChannel::read);
+
+        public Reply {
+            Objects.requireNonNull(view, "Снимок карты не может быть null: пусто — Optional.empty()");
+            tiles = List.copyOf(Objects.requireNonNull(tiles, "Тайлы местности не могут быть null"));
+        }
 
         @Override
         public CustomPacketPayload.Type<Reply> type() {
@@ -55,30 +65,33 @@ public final class TownMapChannel {
         modBus.addListener(TownMapChannel::registerPayloads);
     }
 
-    public static void onClientReply(Consumer<Optional<TownMapView>> receiver) {
+    public static void onClientReply(Consumer<Reply> receiver) {
         clientReceiver = receiver;
     }
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION).optional();
         registrar.playToServer(REQUEST, Request.STREAM_CODEC, TownMapChannel::handleRequest);
-        registrar.playToClient(REPLY, Reply.STREAM_CODEC, (reply, context) -> clientReceiver.accept(reply.view()));
+        registrar.playToClient(REPLY, Reply.STREAM_CODEC, (reply, context) -> clientReceiver.accept(reply));
     }
 
     private static void handleRequest(Request ignoredRequest, IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
-            context.reply(new Reply(
-                    TownSnapshots.current(player.serverLevel().getServer().overworld())
-                            .map(TownMapView::of)));
+            ServerLevel level = player.serverLevel().getServer().overworld();
+            Optional<TownMapView> view = TownSnapshots.current(level).map(TownMapView::of);
+            List<TerrainTile> tiles =
+                    view.map(map -> TerrainTiles.around(level, map.bounds())).orElse(List.of());
+            context.reply(new Reply(view, tiles));
         }
     }
 
     private static void write(FriendlyByteBuf buf, Reply reply) {
         buf.writeBoolean(reply.view().isPresent());
-        if (reply.view().isEmpty()) {
-            return;
-        }
-        TownMapView view = reply.view().orElseThrow();
+        reply.view().ifPresent(view -> writeView(buf, view));
+        writeTiles(buf, reply.tiles());
+    }
+
+    private static void writeView(FriendlyByteBuf buf, TownMapView view) {
         List<TownMapView.MapRect> rects =
                 view.rects().subList(0, Math.min(view.rects().size(), MAX_RECTS));
         buf.writeVarInt(rects.size());
@@ -109,10 +122,23 @@ public final class TownMapChannel {
         }
     }
 
-    private static Reply read(FriendlyByteBuf buf) {
-        if (!buf.readBoolean()) {
-            return new Reply(Optional.empty());
+    private static void writeTiles(FriendlyByteBuf buf, List<TerrainTile> all) {
+        List<TerrainTile> tiles = all.subList(0, Math.min(all.size(), MAX_TILES));
+        buf.writeVarInt(tiles.size());
+        for (TerrainTile tile : tiles) {
+            buf.writeInt(tile.chunkX());
+            buf.writeInt(tile.chunkZ());
+            buf.writeBytes(tile.ids());
         }
+    }
+
+    private static Reply read(FriendlyByteBuf buf) {
+        Optional<TownMapView> view = buf.readBoolean() ? Optional.of(readView(buf)) : Optional.empty();
+        List<TerrainTile> tiles = readTiles(buf);
+        return new Reply(view, tiles);
+    }
+
+    private static TownMapView readView(FriendlyByteBuf buf) {
         int count = checked(buf.readVarInt(), MAX_RECTS, "прямоугольников");
         List<TownMapView.MapRect> rects = new ArrayList<>(count);
         for (int index = 0; index < count; index++) {
@@ -134,7 +160,20 @@ public final class TownMapChannel {
             List<TownMapView.MapPoint> points = readPoints(buf, "точек линии");
             lines.add(new TownMapView.MapLine(kind, points, readPoints(buf, "калиток линии")));
         }
-        return new Reply(Optional.of(new TownMapView(rects, lines)));
+        return new TownMapView(rects, lines);
+    }
+
+    private static List<TerrainTile> readTiles(FriendlyByteBuf buf) {
+        int count = checked(buf.readVarInt(), MAX_TILES, "тайлов местности");
+        List<TerrainTile> tiles = new ArrayList<>(count);
+        for (int index = 0; index < count; index++) {
+            int chunkX = buf.readInt();
+            int chunkZ = buf.readInt();
+            byte[] ids = new byte[TerrainTile.COLUMNS];
+            buf.readBytes(ids);
+            tiles.add(new TerrainTile(chunkX, chunkZ, ids));
+        }
+        return tiles;
     }
 
     private static List<TownMapView.MapPoint> readPoints(FriendlyByteBuf buf, String what) {
