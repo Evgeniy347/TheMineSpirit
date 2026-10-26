@@ -104,7 +104,7 @@ public final class ChopTargetScript implements ScriptInstance {
         return ScriptStatus.RUNNING;
     }
 
-    private ScriptStatus advance(TreeChop.Outcome outcome) {
+    private ScriptStatus advance(ChopOutcome outcome) {
         return switch (outcome.state()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case DONE -> finish(outcome);
@@ -117,7 +117,7 @@ public final class ChopTargetScript implements ScriptInstance {
         };
     }
 
-    private ScriptStatus finish(TreeChop.Outcome outcome) {
+    private ScriptStatus finish(ChopOutcome outcome) {
         chopped = 1;
         standingLogs = outcome.standingLogs();
         plantedSaplings = outcome.plantedSaplings();

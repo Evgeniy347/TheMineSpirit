@@ -311,7 +311,7 @@ public final class ChopTreeScript implements ScriptInstance {
         return Optional.empty();
     }
 
-    private ScriptStatus advance(TreeChop.Outcome outcome) {
+    private ScriptStatus advance(ChopOutcome outcome) {
         return switch (outcome.state()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case DONE -> finishTree(outcome);
@@ -321,7 +321,7 @@ public final class ChopTreeScript implements ScriptInstance {
         };
     }
 
-    private ScriptStatus finishTree(TreeChop.Outcome outcome) {
+    private ScriptStatus finishTree(ChopOutcome outcome) {
         releaseReserved();
         chopped++;
         standingLogs += outcome.standingLogs();
