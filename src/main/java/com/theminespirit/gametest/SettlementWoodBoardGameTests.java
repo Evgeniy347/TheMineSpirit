@@ -47,7 +47,7 @@ public final class SettlementWoodBoardGameTests {
                             Map.of()),
                     TicketTarget.at(home).withSupply(item, 6));
         }
-        FirstStepsRunner.dropOtherWood(helper.getLevel(), board, "jungle");
+        FirstStepsRunner.dropOtherWood(helper.getLevel(), board, Set.of("jungle"));
         BoardStatus oak = board.board().statusOf("gather:oak_fence").orElse(null);
         BoardStatus jungle = board.board().statusOf("gather:jungle_fence").orElse(null);
         board.board().restore(new BoardState(List.of(), Set.of()));

@@ -118,6 +118,11 @@ public final class SettlementWood {
         return WoodSpecies.of(votes);
     }
 
+    static Map<String, Integer> around(ServerLevel level, BlockCoord place) {
+        Map<String, Integer> logs = nearby(level, place, SCAN_RADIUS, 2);
+        return WoodSpecies.hasLogs(logs) ? logs : nearby(level, place, WIDE_SCAN_RADIUS, WIDE_SCAN_STEP);
+    }
+
     private static Map<String, Integer> nearby(ServerLevel level, BlockCoord home, int radius, int step) {
         Map<String, Integer> logs = new HashMap<>();
         for (int dx = -radius; dx <= radius; dx += step) {
