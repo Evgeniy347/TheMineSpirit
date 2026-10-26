@@ -1,6 +1,7 @@
 package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
@@ -33,6 +34,8 @@ public final class BoardTasks {
                 || status == BoardStatus.ASSIGNED;
         boolean done =
                 status == BoardStatus.DONE || (!queued && board.ledger().has(ticket.boardCase(), ticket.level()));
+        BoardTiming attempt =
+                BoardTiming.attempt(status, timing, BoardActivities.isActivity(ticket.boardCase()), ticket.createdAt());
         return new BoardTask(
                 ticket.id(),
                 ticket.boardCase().name(),
@@ -48,9 +51,9 @@ public final class BoardTasks {
                 ticket.priority(),
                 ticket.modifiers(),
                 done,
-                timing.startedAt(),
-                timing.finishedAt(),
-                timing.durationTicks(board.now()),
+                attempt.startedAt(),
+                attempt.finishedAt(),
+                attempt.durationTicks(board.now()),
                 BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null));
     }
 }

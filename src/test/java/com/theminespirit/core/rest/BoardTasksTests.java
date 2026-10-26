@@ -99,4 +99,73 @@ class BoardTasksTests {
         assertEquals(1500L, closed.finishedAt(), "Наблюдатель обязан видеть тик закрытия из журнала");
         assertEquals(1400L, closed.durationTicks(), "Затрата завершённого задания — разница начала и конца");
     }
+
+    @Test
+    void of_PendingAfterPreviousRun_HidesOldAttemptTimes() {
+        Board board = new Board(() -> 2000);
+        BoardTicket ticket = ticket("supply:dirt", Map.of());
+
+        BoardTask task =
+                BoardTasks.of(board, ticket, BoardStatus.PENDING, new StockView(Map.of()), new BoardTiming(100L, 700L));
+
+        assertEquals(0L, task.startedAt(), "Задание, вернувшееся в очередь, не показывает начало старой попытки");
+        assertEquals(0L, task.finishedAt(), "Задание в очереди не показывает конец старой попытки");
+        assertEquals(0L, task.durationTicks(), "Без начала затрата неизвестна и равна нулю");
+    }
+
+    @Test
+    void of_AssignedAfterJournalClose_DropsFinishAndCountsToNow() {
+        Board board = new Board(() -> 2000);
+        BoardTicket ticket = ticket("supply:dirt", Map.of());
+
+        BoardTask task = BoardTasks.of(
+                board, ticket, BoardStatus.ASSIGNED, new StockView(Map.of()), new BoardTiming(100L, 700L));
+
+        assertEquals(100L, task.startedAt(), "Начало берётся из последней выдачи");
+        assertEquals(0L, task.finishedAt(), "Идущее задание не имеет конца");
+        assertEquals(1900L, task.durationTicks(), "Идущее задание тратит время до текущего тика");
+    }
+
+    @Test
+    void of_ActivityWithoutJournal_StartsWhenSpiritTookIt() {
+        Board board = new Board(() -> 9000);
+        BoardTicket activity = new BoardTicket(
+                "activity:" + SPIRIT,
+                BoardCase.ACTIVITY_MINE,
+                Optional.of(SPIRIT),
+                BoardRules.priorityOf(BoardCase.ACTIVITY_MINE),
+                5000L,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+
+        BoardTask task =
+                BoardTasks.of(board, activity, BoardStatus.ASSIGNED, new StockView(Map.of()), BoardTiming.NONE);
+
+        assertEquals(5000L, task.startedAt(), "Занятие духа начинается, когда дух его взял, даже без журнала");
+        assertEquals(0L, task.finishedAt(), "Текущее занятие духа не имеет конца");
+        assertEquals(4000L, task.durationTicks(), "Длительность занятия считается от его начала");
+    }
+
+    @Test
+    void of_ActivityWithJournal_UsesJournalStart() {
+        Board board = new Board(() -> 9000);
+        BoardTicket activity = new BoardTicket(
+                "activity:" + SPIRIT,
+                BoardCase.ACTIVITY_UNLOAD,
+                Optional.of(SPIRIT),
+                BoardRules.priorityOf(BoardCase.ACTIVITY_UNLOAD),
+                5000L,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+
+        BoardTask task = BoardTasks.of(
+                board, activity, BoardStatus.ASSIGNED, new StockView(Map.of()), new BoardTiming(7000L, 0L));
+
+        assertEquals(7000L, task.startedAt(), "Начало занятия берётся из журнала выдачи");
+        assertEquals(2000L, task.durationTicks(), "Длительность занятия считается от журнального начала");
+    }
 }

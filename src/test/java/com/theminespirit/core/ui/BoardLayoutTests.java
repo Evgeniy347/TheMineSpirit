@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -104,5 +105,17 @@ class BoardLayoutTests {
         assertTrue(
                 stage.bottom() <= window.y(),
                 "Надпись этапа обязана стоять над окном доски: иначе она попадает на рамку");
+    }
+
+    @Test
+    void tile_FiveTextLines_FitIntoHeight() {
+        int lines = 5;
+        int needed = BoardLayout.TILE_TEXT_TOP + lines * BoardLayout.TILE_LINE_STEP;
+
+        assertTrue(
+                BoardLayout.TILE_HEIGHT >= needed,
+                "Плитка несёт пять строк (задача, исполнитель, начало/конец, затрата, причина), но их высота "
+                        + needed + " больше TILE_HEIGHT " + BoardLayout.TILE_HEIGHT
+                        + ": последняя строка обрежется. Увеличьте TILE_HEIGHT или уменьшите шаг строк");
     }
 }

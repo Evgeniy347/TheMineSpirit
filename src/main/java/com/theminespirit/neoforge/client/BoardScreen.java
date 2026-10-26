@@ -8,6 +8,7 @@ import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.BoardTimeView;
 import com.theminespirit.core.ui.BoardWaitReasons;
 import com.theminespirit.core.ui.ScreenTabs;
 import com.theminespirit.neoforge.net.BoardViewChannel;
@@ -273,8 +274,8 @@ public final class BoardScreen extends Screen {
                 y + BoardLayout.TILE_HEIGHT,
                 tile.unfinished() ? FAILED_COLOR : GROUP_COLORS.get(tile.group()));
         int textWidth = width - 2 * TEXT_PAD;
-        int lineStep = font.lineHeight + 1;
-        int lineY = y + 3;
+        int lineStep = BoardLayout.TILE_LINE_STEP;
+        int lineY = y + BoardLayout.TILE_TEXT_TOP;
         String text = font.plainSubstrByWidth(taskText(tile).getString(), textWidth);
         graphics.drawString(font, text, x + TEXT_PAD, lineY, TEXT_COLOR);
         lineY += lineStep;
@@ -309,22 +310,23 @@ public final class BoardScreen extends Screen {
     }
 
     private static @Nullable Component timeText(BoardTile tile) {
-        if (tile.startedAt() <= 0) {
+        BoardTimeView time = BoardTimeView.of(tile);
+        if (!time.showsMoment()) {
             return null;
         }
-        MutableComponent started = Component.translatable(KEY + "time.started", momentText(tile.startedAt()));
-        if (tile.finishedAt() > 0) {
-            started.append(" · ").append(Component.translatable(KEY + "time.finished", momentText(tile.finishedAt())));
+        MutableComponent started = Component.translatable(KEY + "time.started", momentText(time.startedAt()));
+        if (time.showsFinish()) {
+            started.append(" · ").append(Component.translatable(KEY + "time.finished", momentText(time.finishedAt())));
         }
         return started;
     }
 
     private static @Nullable Component spentText(BoardTile tile) {
-        if (tile.durationTicks() <= 0) {
+        BoardTimeView time = BoardTimeView.of(tile);
+        if (!time.showsSpent()) {
             return null;
         }
-        long minutes = BoardClock.spentMinutes(tile.durationTicks());
-        return Component.translatable(KEY + (tile.finishedAt() > 0 ? "time.spent" : "time.running"), minutes);
+        return Component.translatable(KEY + (time.running() ? "time.running" : "time.spent"), time.minutes());
     }
 
     private static Component momentText(long tick) {

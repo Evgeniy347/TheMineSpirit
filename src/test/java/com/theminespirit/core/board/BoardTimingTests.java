@@ -81,4 +81,48 @@ class BoardTimingTests {
         assertEquals(100L, timing.startedAt(), "Порядок записей в хвосте журнала не меняет начало");
         assertEquals(700L, timing.finishedAt(), "Порядок записей в хвосте журнала не меняет конец");
     }
+
+    @Test
+    void attempt_PendingAfterPreviousRun_HidesStaleJournalTimes() {
+        BoardTiming attempt = BoardTiming.attempt(BoardStatus.PENDING, new BoardTiming(100L, 700L), false, 50L);
+
+        assertFalse(
+                attempt.started(), "Задание в очереди ещё не начато: старое начало прошлой попытки не показывается");
+        assertFalse(attempt.finished(), "Задание в очереди не закончено: старое закрытие прошлой попытки не видно");
+    }
+
+    @Test
+    void attempt_AssignedWithOldFinish_DropsFinishAndCountsToNow() {
+        BoardTiming attempt = BoardTiming.attempt(BoardStatus.ASSIGNED, new BoardTiming(100L, 200L), false, 100L);
+
+        assertEquals(100L, attempt.startedAt(), "Начало идущего задания — последняя выдача из журнала");
+        assertFalse(attempt.finished(), "Идущее задание не имеет конца, даже если журнал помнит старый провал");
+        assertEquals(300L, attempt.durationTicks(400L), "Идущее задание тратит время до текущего тика");
+    }
+
+    @Test
+    void attempt_ClosedStatus_KeepsFinishForSpentTime() {
+        for (BoardStatus status : List.of(BoardStatus.DONE, BoardStatus.FAILED, BoardStatus.CANCELLED)) {
+            BoardTiming attempt = BoardTiming.attempt(status, new BoardTiming(100L, 700L), false, 100L);
+
+            assertEquals(700L, attempt.finishedAt(), status + " обязано показывать конец текущей попытки");
+            assertEquals(600L, attempt.durationTicks(999L), status + " обязано показывать затрату закрытой попытки");
+        }
+    }
+
+    @Test
+    void attempt_ActivityWithoutJournal_StartsWhenSpiritTookIt() {
+        BoardTiming attempt = BoardTiming.attempt(BoardStatus.ASSIGNED, BoardTiming.NONE, true, 5000L);
+
+        assertEquals(5000L, attempt.startedAt(), "Без записи журнала занятие духа началось, когда дух его взял");
+        assertFalse(attempt.finished(), "Текущее занятие духа не имеет конца");
+        assertEquals(4000L, attempt.durationTicks(9000L), "Длительность занятия считается от начала занятия");
+    }
+
+    @Test
+    void attempt_ActivityWithJournal_UsesJournalStart() {
+        BoardTiming attempt = BoardTiming.attempt(BoardStatus.ASSIGNED, new BoardTiming(300L, 0L), true, 5000L);
+
+        assertEquals(300L, attempt.startedAt(), "Начало занятия берётся из журнала, а не из постановки плитки");
+    }
 }
