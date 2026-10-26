@@ -26,6 +26,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TorchRules;
+import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -909,8 +910,10 @@ public final class BoardService {
                 continue;
             }
             board.noteWait(ticket.id(), null);
-            TicketTarget target =
-                    gatherOnTop(ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits))), spirit);
+            TicketTarget target = gatherOnTop(
+                    ticket,
+                    TransferTicket.restore(ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)))),
+                    spirit);
             Optional<TicketTarget> fitted = fitTransfer(ticket, target, spirit);
             if (fitted.isEmpty()) {
                 dropEmptyTransfer(ticket, target, spirit);

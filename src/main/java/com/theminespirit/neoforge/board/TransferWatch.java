@@ -12,6 +12,7 @@ import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.inventory.BaseKit;
@@ -293,11 +294,8 @@ public final class TransferWatch {
                 continue;
             }
             UUID assignee = order.from().orElse(order.to());
-            List<String> modifiers = List.of(
-                    "to=" + order.to(),
-                    "item=" + order.item(),
-                    "count=" + order.count(),
-                    "from=" + order.from().map(UUID::toString).orElse("warehouse"));
+            List<String> modifiers = TransferTicket.modifiers(
+                    order.to(), order.item(), order.count(), order.from().orElse(null));
             BoardOutcome outcome = service.submit(
                     new BoardTicket(
                             id,
