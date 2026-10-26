@@ -33,8 +33,6 @@ public final class StagePlans {
     private static final String MINECRAFT = "minecraft:";
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
-    private static final int PALISADE_WIDTH = 7;
-    private static final int PALISADE_DEPTH = 3;
     private static final int GROVE_STEP = 2;
     private static final int CHEST_PLANKS = 20;
     private static final int FURNACE_STONE = 8;
@@ -60,7 +58,7 @@ public final class StagePlans {
             case BUILD_FENCE, LIGHTING, PLANT_GROVE -> Optional.of(placeAll(target, work.blocks()));
             case STOCK_CHESTS -> Optional.of(chests(target, site, work.blocks()));
             case CRAFT_FURNACE -> Optional.of(station(target, site.workYard(), work.blocks()));
-            case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site, work.blocks())) : Optional.empty();
+            case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site)) : Optional.empty();
             case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
             default -> Optional.empty();
         };
@@ -82,21 +80,6 @@ public final class StagePlans {
         return MINECRAFT + WoodSpecies.swap("oak_sapling", wood);
     }
 
-    public static List<PlannedBlock> palisade(StageSite site) {
-        BlockCoord origin = site.palisadeOrigin();
-        List<PlannedBlock> blocks = new ArrayList<>();
-        for (int dx = 0; dx < PALISADE_WIDTH; dx++) {
-            String block = dx == StageSite.PALISADE_GATE ? GATE_NORTH : FENCE;
-            blocks.add(new PlannedBlock(new BlockCoord(origin.x() + dx, origin.y(), origin.z()), block));
-        }
-        for (int dz = 1; dz < PALISADE_DEPTH; dz++) {
-            blocks.add(new PlannedBlock(new BlockCoord(origin.x(), origin.y(), origin.z() + dz), FENCE));
-            blocks.add(new PlannedBlock(
-                    new BlockCoord(origin.x() + PALISADE_WIDTH - 1, origin.y(), origin.z() + dz), FENCE));
-        }
-        return List.copyOf(blocks);
-    }
-
     public static List<PlannedBlock> yardBlocks(StageSite site, int slot) {
         List<BlockCoord> pair = site.chestSlots().get(Math.max(1, slot) - 1);
         List<PlannedBlock> blocks = new ArrayList<>();
@@ -108,7 +91,7 @@ public final class StagePlans {
         return List.copyOf(blocks);
     }
 
-    private static TaskNode hut(TicketTarget target, StageSite site, List<PlannedBlock> palisade) {
+    private static TaskNode hut(TicketTarget target, StageSite site) {
         String scheme = DataTables.INSTANCE
                 .stages()
                 .current()
@@ -137,9 +120,6 @@ public final class StagePlans {
                                     id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
                         }));
         steps.add(new ScriptCall("build_schematic", Map.copyOf(params)));
-        if (target.count() != 1) {
-            steps.add(placeAll(target, palisade));
-        }
         return new SequenceNode(steps);
     }
 

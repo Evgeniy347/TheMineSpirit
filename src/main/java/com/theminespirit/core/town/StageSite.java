@@ -22,7 +22,6 @@ public record StageSite(
     public static final int HOUSE_DEPTH = 6;
     public static final int HOUSE_SHIFT_X = 1;
     public static final int HOUSE_SHIFT_Z = 3;
-    public static final int PALISADE_GATE = 3;
     public static final int YARD_CHEST_ROW = 3;
     public static final int YARD_STATION_ROW = 1;
     public static final int MINE_SHIFT = 1;
@@ -46,7 +45,7 @@ public record StageSite(
         return new BlockCoord(hut.x() + HOUSE_SHIFT_X, anchor.y(), hut.z() + HOUSE_SHIFT_Z);
     }
 
-    public BlockCoord palisadeOrigin() {
+    public BlockCoord hutPlotOrigin() {
         return new BlockCoord(hut.x(), anchor.y(), hut.z());
     }
 
@@ -127,12 +126,6 @@ public record StageSite(
             }
         }
         return List.copyOf(posts);
-    }
-
-    public List<BlockCoord> palisadeTorches() {
-        return List.of(
-                new BlockCoord(hut.x() + PALISADE_GATE - 1, anchor.y() + 1, hut.z()),
-                new BlockCoord(hut.x() + PALISADE_GATE + 1, anchor.y() + 1, hut.z()));
     }
 
     public List<BlockCoord> groundTorches() {

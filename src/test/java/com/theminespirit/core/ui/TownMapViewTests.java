@@ -28,7 +28,7 @@ class TownMapViewTests {
                 .toList();
         assertEquals(PLAN.placements().size(), lots.size(), "Каждое место плана — прямоугольник участка на карте");
         TownMapView.MapRect hut = lots.stream()
-                .filter(rect -> "Хижина с палисадником".equals(rect.label()))
+                .filter(rect -> "Хижина".equals(rect.label()))
                 .findFirst()
                 .orElseThrow();
         assertEquals(

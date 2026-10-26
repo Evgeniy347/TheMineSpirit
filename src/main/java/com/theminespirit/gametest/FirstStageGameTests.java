@@ -77,8 +77,8 @@ public final class FirstStageGameTests {
 
     private FirstStageGameTests() {}
 
-    // [флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина с палисадником и
-    // факелы тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
+    // [флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина и факелы
+    // тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
     @GameTest(template = "settlement_arena", batch = BATCH, timeoutTicks = 6000, skyAccess = true)
     public static void firstStage_GeneratedWorldThreeSpirits_PlotBuiltByPlan(GameTestHelper helper) {
         GameTestFixtures.reset(helper);

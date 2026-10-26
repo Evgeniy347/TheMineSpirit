@@ -88,7 +88,7 @@ public final class BuildingWoodChoice {
     }
 
     private static BlockCoord originOf(BoardCase building, StageSite stage) {
-        return building == BoardCase.BUILD_HOUSE ? stage.houseOrigin() : stage.palisadeOrigin();
+        return building == BoardCase.BUILD_HOUSE ? stage.houseOrigin() : stage.hutPlotOrigin();
     }
 
     private static String biomeId(ServerLevel level, BlockCoord place) {

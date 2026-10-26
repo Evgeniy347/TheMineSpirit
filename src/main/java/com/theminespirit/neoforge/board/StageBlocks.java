@@ -32,7 +32,6 @@ public final class StageBlocks {
             case PLANT_GROVE -> grove(level, site);
             case STOCK_CHESTS -> StagePlans.yardBlocks(site, part);
             case CRAFT_FURNACE -> List.of(new PlannedBlock(site.furnace(), StagePlans.FURNACE));
-            case BUILD_HOUSE -> palisade(level, site);
             default -> List.of();
         };
     }
@@ -92,17 +91,6 @@ public final class StageBlocks {
                 site.groundTorches().stream()
                         .map(cell -> new PlannedBlock(cell, StagePlans.TORCH))
                         .toList());
-    }
-
-    private static List<PlannedBlock> palisade(ServerLevel level, StageSite site) {
-        List<PlannedBlock> blocks = new ArrayList<>(StagePlans.palisade(site));
-        blocks.addAll(grounded(
-                level,
-                site,
-                site.palisadeTorches().stream()
-                        .map(cell -> new PlannedBlock(cell, StagePlans.TORCH))
-                        .toList()));
-        return List.copyOf(blocks);
     }
 
     public static int builtPost(ServerLevel level, ColumnMask.Cell post, int planned) {

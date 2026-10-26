@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
@@ -21,17 +20,16 @@ class StageSiteTests {
     private static final StageSite SITE = TownFixtures.flatSite();
 
     @Test
-    void hut_SchemeAndPalisade_InsideHutPlot() throws IOException {
+    void hut_Scheme_InsideHutPlot() throws IOException {
         Schematic hut = SchematicTextParser.parse(Files.readString(ROOT.resolve("hut_1.txt")), "hut_1")
                 .schematic();
         BlockCoord house = SITE.houseOrigin();
-        List<BlockCoord> corners = new ArrayList<>(
-                List.of(house, new BlockCoord(house.x() + hut.sizeX() - 1, house.y(), house.z() + hut.sizeZ() - 1)));
-        StagePlans.palisade(SITE).forEach(block -> corners.add(block.at()));
+        List<BlockCoord> corners =
+                List.of(house, new BlockCoord(house.x() + hut.sizeX() - 1, house.y(), house.z() + hut.sizeZ() - 1));
         for (BlockCoord corner : corners) {
             assertTrue(
                     SITE.hut().covers(corner.x(), corner.z()),
-                    "Клетка " + corner + " хижины или палисадника вне её места в плане " + SITE.hut()
+                    "Клетка " + corner + " хижины вне её места в плане " + SITE.hut()
                             + ": хижина строится только на своей площадке");
         }
         assertEquals(

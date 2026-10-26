@@ -55,7 +55,7 @@ class ReplantSiteTests {
     void allowed_InGrove_Allows() {
         assertTrue(
                 ReplantSite.allowed(town(), new BlockCoord(22, 70, 22)),
-                "В роще плана сажать можно: палисадник и сад — единственные деревья поселения");
+                "В роще плана сажать можно: сад — единственные деревья поселения");
     }
 
     @Test
