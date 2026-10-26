@@ -141,7 +141,7 @@ class BoardRulesTests {
         if (boardCase == BoardCase.FILL_CRATER) {
             return 5;
         }
-        if (boardCase == BoardCase.ENCHANT_SHELVES || boardCase == BoardCase.HARVEST_GROVE) {
+        if (boardCase == BoardCase.ENCHANT_SHELVES || boardCase == BoardCase.HARVEST_ORCHARD) {
             return 6;
         }
         return 3;

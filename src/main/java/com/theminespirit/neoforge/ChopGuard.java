@@ -14,11 +14,11 @@ final class ChopGuard {
 
     private ChopGuard() {}
 
-    static boolean protectedLog(SpiritEntity spirit, Tree tree, List<BlockCoord> logs, boolean grove) {
+    static boolean protectedLog(SpiritEntity spirit, Tree tree, List<BlockCoord> logs, boolean orchard) {
         for (BlockCoord log : logs) {
             BlockPos pos = new BlockPos(log.x(), log.y(), log.z());
             BlockState state = spirit.level().getBlockState(pos);
-            BlockProtection.Decision decision = grove
+            BlockProtection.Decision decision = orchard
                     ? spirit.protectionGate().checkHarvest(pos, state)
                     : spirit.protectionGate().checkBreak(pos, state);
             if (!state.isAir() && decision instanceof BlockProtection.Refused refused) {

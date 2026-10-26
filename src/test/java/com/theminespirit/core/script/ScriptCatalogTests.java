@@ -237,7 +237,7 @@ class ScriptCatalogTests {
         assertEquals(
                 5,
                 chopTarget.params().size(),
-                "У chop_target ровно пять параметров: x, y, z, replant и grove. Лишний попал бы в capabilities, "
+                "У chop_target ровно пять параметров: x, y, z, replant и orchard. Лишний попал бы в capabilities, "
                         + "а забытый не подставил бы умолчание");
     }
 

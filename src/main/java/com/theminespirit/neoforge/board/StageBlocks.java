@@ -29,7 +29,6 @@ public final class StageBlocks {
         return switch (boardCase) {
             case BUILD_FENCE -> fence(level, site, part);
             case LIGHTING -> torches(level, site);
-            case PLANT_GROVE -> grove(level, site);
             case STOCK_CHESTS -> StagePlans.yardBlocks(site, part);
             case CRAFT_FURNACE -> List.of(new PlannedBlock(site.furnace(), StagePlans.FURNACE));
             case BUILD_HOUSE -> palisade(level, site);
@@ -115,17 +114,6 @@ public final class StageBlocks {
             }
         }
         return planned;
-    }
-
-    private static List<PlannedBlock> grove(ServerLevel level, StageSite site) {
-        String wood =
-                SettlementPlotStore.get(level).plot().map(plot -> plot.wood()).orElseThrow();
-        List<PlannedBlock> blocks = new ArrayList<>();
-        for (BlockCoord spot : site.saplings()) {
-            int y = GroundProbe.feet(level, spot.x(), spot.z(), site.anchor().y());
-            blocks.add(new PlannedBlock(new BlockCoord(spot.x(), y, spot.z()), StagePlans.sapling(wood)));
-        }
-        return List.copyOf(blocks);
     }
 
     private static List<PlannedBlock> grounded(ServerLevel level, StageSite site, List<PlannedBlock> blocks) {

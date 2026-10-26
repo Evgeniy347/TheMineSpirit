@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 final class BuildPlanStart {
@@ -31,6 +32,10 @@ final class BuildPlanStart {
         Map<String, Integer> required = new TreeMap<>();
         Set<BlockCoord> done = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
+            if (optionalPresent(spirit, entry)) {
+                done.add(relative(entry.pos(), origin));
+                continue;
+            }
             String key = BuildPlanner.item(entry.block());
             items.putIfAbsent(key, BlockItems.itemFor(entry.block()));
             blocks.putIfAbsent(key, entry.block());
@@ -99,6 +104,14 @@ final class BuildPlanStart {
                 BuildSupplyTrip.junkSlots(spirit, site),
                 stacks(items));
         return new Prepared(supply, start, Map.copyOf(items));
+    }
+
+    private static boolean optionalPresent(SpiritEntity spirit, Schematic.PlacedEntry entry) {
+        if (!entry.optional()) {
+            return false;
+        }
+        BlockState present = spirit.level().getBlockState(SchematicSite.toPos(entry.pos()));
+        return !present.isAir() && !present.canBeReplaced();
     }
 
     private static BlockCoord supplyPoint(

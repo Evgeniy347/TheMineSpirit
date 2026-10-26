@@ -22,6 +22,8 @@
    {"level": 0, "scheme": "palisade_section"}]},
   {"id": "pen", "name": "Загон", "type": "farm", "levels": [
    {"level": 1, "scheme": "pen_4x5"}, {"level": 2, "scheme": "pen_7x7"}, {"level": 3, "scheme": "pen_9x9"}]},
+  {"id": "orchard", "name": "Сад", "type": "farm", "levels": [
+   {"level": 1, "scheme": "orchard_1"}]},
   {"id": "enchant_room", "name": "Чаровальня", "type": "craft", "levels": [
    {"level": 1, "scheme": "enchant_room_v1"}, {"level": 2, "scheme": "enchant_room_v2"},
    {"level": 3, "scheme": "enchant_room_v3"}]},

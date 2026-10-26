@@ -20,7 +20,7 @@ class ReplantSiteTests {
         TownStreets streets = new TownStreets(ColumnMask.rect(0, 0, 40, 0), empty, empty);
         List<Placement> places = List.of(
                 new Placement("hut", "Хижина", 1, 5, 5, 7, 9, Placement.Facing.NORTH),
-                new Placement("grove", "Роща", 1, 20, 20, 9, 9, Placement.Facing.NORTH));
+                new Placement("orchard", "Сад", 1, 20, 20, 9, 9, Placement.Facing.NORTH));
         return new TownPlan(
                 new BlockCoord(20, 70, 20),
                 ColumnMask.rect(0, 0, 40, 40),
@@ -52,10 +52,10 @@ class ReplantSiteTests {
     }
 
     @Test
-    void allowed_InGrove_Allows() {
+    void allowed_InOrchard_Allows() {
         assertTrue(
                 ReplantSite.allowed(town(), new BlockCoord(22, 70, 22)),
-                "В роще плана сажать можно: палисадник и сад — единственные деревья поселения");
+                "В саду плана сажать можно: палисадник и сад — единственные деревья поселения");
     }
 
     @Test

@@ -197,7 +197,7 @@ public final class BuildPlanner {
         Map<BlockCoord, Schematic.PlacedEntry> byCell = new HashMap<>();
         List<Schematic.PlacedEntry> seconds = new ArrayList<>();
         for (Schematic.PlacedEntry entry : schematic.entries(new BlockCoord(0, 0, 0), rotation)) {
-            if (entry.optional() || (start != null && start.skip().contains(entry.pos()))) {
+            if (start != null && start.skip().contains(entry.pos())) {
                 continue;
             }
             schemeCells.add(entry.pos());

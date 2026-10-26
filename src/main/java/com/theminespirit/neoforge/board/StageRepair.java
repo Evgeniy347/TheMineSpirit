@@ -74,7 +74,7 @@ final class StageRepair {
             case BUILD_HOUSE -> StageSites.HUT;
             case STOCK_CHESTS, CRAFT_FURNACE -> StageSites.YARD;
             case BUILD_MINE -> StageSites.MINE;
-            case PLANT_GROVE -> StageSites.GROVE;
+            case BUILD_ORCHARD -> StageSites.ORCHARD;
             case BUILD_FENCE -> "Ограда";
             case LIGHTING -> "Факелы";
             default -> step.name().toLowerCase(Locale.ROOT);

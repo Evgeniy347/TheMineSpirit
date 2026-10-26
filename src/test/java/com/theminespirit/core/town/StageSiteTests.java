@@ -76,7 +76,7 @@ class StageSiteTests {
 
     @Test
     void ring_EnclosesStageAndAnchor_PadsOffTheFence() {
-        List<Placement> stage = List.of(SITE.hut(), SITE.yard(), SITE.mine(), SITE.grove());
+        List<Placement> stage = List.of(SITE.hut(), SITE.yard(), SITE.mine(), SITE.orchard());
         for (Placement place : stage) {
             for (ColumnMask.Cell cell : place.mask().cells()) {
                 assertTrue(
@@ -91,20 +91,19 @@ class StageSiteTests {
     }
 
     @Test
-    void level_PadsAndStreetsBetween_GroveNotLeveled() {
-        for (Placement pad : List.of(SITE.hut(), SITE.yard(), SITE.mine())) {
+    void level_PadsAndStreetsBetween_OrchardLeveled() {
+        for (Placement pad : List.of(SITE.hut(), SITE.yard(), SITE.mine(), SITE.orchard())) {
             for (ColumnMask.Cell cell : pad.mask().cells()) {
                 assertTrue(
                         SITE.level().contains(cell.x(), cell.z()),
                         "Клетка " + cell + " площадки '" + pad.id() + "' не выравнивается: постройка встанет на уступ");
             }
         }
-        ColumnMask strip = FenceStrip.of(SITE.ring(), TownRules.load().spacing().fenceStrip());
-        for (ColumnMask.Cell cell : SITE.grove().mask().cells()) {
-            assertFalse(
-                    SITE.level().contains(cell.x(), cell.z()) && !strip.contains(cell.x(), cell.z()),
-                    "Роща " + cell + " выравнивается: выравнивание — только площадки построек, улицы между ними "
-                            + "и полоса ограды (INC-91)");
+        for (ColumnMask.Cell cell : SITE.orchard().mask().cells()) {
+            assertTrue(
+                    SITE.level().contains(cell.x(), cell.z()),
+                    "Сад " + cell + " не выравнивается: схема orchard_1 ставится на ровную площадку, иначе "
+                            + "тропинки и саженцы повиснут или утонут");
         }
         assertTrue(
                 SITE.level().count() < SITE.enclosure().count() / 2,
@@ -139,7 +138,7 @@ class StageSiteTests {
     @Test
     void gatherForbidden_InsideFenceAndDeepNearby_ForbiddenFarCaveAllowed() {
         BlockCoord inside = new BlockCoord(
-                SITE.grove().x(), TownFixtures.LEVEL - 1, SITE.grove().z());
+                SITE.orchard().x(), TownFixtures.LEVEL - 1, SITE.orchard().z());
         BlockCoord far = new BlockCoord(
                 SITE.enclosure().minX() - StageSite.CAVE_MARGIN - 5,
                 TownFixtures.LEVEL - 9,

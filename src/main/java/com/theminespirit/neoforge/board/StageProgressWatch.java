@@ -19,7 +19,7 @@ final class StageProgressWatch {
             BoardCase.BUILD_FENCE,
             BoardCase.BUILD_HOUSE,
             BoardCase.LIGHTING,
-            BoardCase.PLANT_GROVE,
+            BoardCase.BUILD_ORCHARD,
             BoardCase.REPAIR_BUILDING);
     private final Map<String, Integer> placedAtIssue = new HashMap<>();
 

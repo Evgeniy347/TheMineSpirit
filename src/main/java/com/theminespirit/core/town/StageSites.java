@@ -1,6 +1,11 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
@@ -10,13 +15,13 @@ public final class StageSites {
     public static final String HUT = "hut";
     public static final String YARD = "yard";
     public static final String MINE = "mine";
-    public static final String GROVE = "grove";
+    public static final String ORCHARD = "orchard";
 
     private StageSites() {}
 
     public static Optional<StageSite> find(TownPlan plan, int stage, int levelY, TownRules rules) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
-        boolean placed = List.of(HUT, YARD, MINE, GROVE).stream()
+        boolean placed = List.of(HUT, YARD, MINE, ORCHARD).stream()
                 .allMatch(id -> plan.placement(id).isPresent());
         return placed ? Optional.of(of(plan, stage, levelY, rules)) : Optional.empty();
     }
@@ -49,16 +54,45 @@ public final class StageSites {
         ColumnMask level = pads.union(between)
                 .union(FenceStrip.of(ring, rules.spacing().fenceStrip()))
                 .intersect(plan.region());
+        Placement orchard = need(plan, ORCHARD, stage);
         return new StageSite(
                 stage,
                 anchor,
                 need(plan, HUT, stage),
                 need(plan, YARD, stage),
                 need(plan, MINE, stage),
-                need(plan, GROVE, stage),
+                orchard,
+                orchardSaplings(orchard, levelY),
                 level,
                 enclosure,
                 ring);
+    }
+
+    private static List<BlockCoord> orchardSaplings(Placement orchard, int levelY) {
+        String scheme = DataTables.INSTANCE
+                .stages()
+                .current()
+                .scheme(BoardCase.BUILD_ORCHARD, 1)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "stages.json: нет схемы BUILD_ORCHARD уровня 1 — саду не из чего взять места деревьев"));
+        Schematic schematic = DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Нет схемы '" + scheme + "' для сада: проверьте presets.json и файл схемы"))
+                .schematic();
+        List<BlockCoord> cells = new ArrayList<>();
+        for (Schematic.Entry entry : schematic.blocks()) {
+            if (entry.optional() && SchematicBlocks.path(entry.block()).endsWith("_sapling")) {
+                cells.add(new BlockCoord(orchard.x() + entry.dx(), levelY + entry.dy(), orchard.z() + entry.dz()));
+            }
+        }
+        if (cells.isEmpty()) {
+            throw new IllegalArgumentException("В схеме '" + scheme + "' нет мягких клеток-саженцев: сад остался бы "
+                    + "без деревьев, а рубка и защита — без мест");
+        }
+        return List.copyOf(cells);
     }
 
     private static Placement need(TownPlan plan, String id, int stage) {

@@ -35,7 +35,6 @@ public final class StagePlans {
     private static final String TICKS = "ticks";
     private static final int PALISADE_WIDTH = 7;
     private static final int PALISADE_DEPTH = 3;
-    private static final int GROVE_STEP = 2;
     private static final int CHEST_PLANKS = 20;
     private static final int FURNACE_STONE = 8;
     private static final int PLANKS_PER_LOG = 4;
@@ -57,29 +56,13 @@ public final class StagePlans {
             return Optional.of(TicketPlans.plan(repaired, 1, target.withWork(new StageWork(site, work.blocks()))));
         }
         return switch (boardCase) {
-            case BUILD_FENCE, LIGHTING, PLANT_GROVE -> Optional.of(placeAll(target, work.blocks()));
+            case BUILD_FENCE, LIGHTING -> Optional.of(placeAll(target, work.blocks()));
             case STOCK_CHESTS -> Optional.of(chests(target, site, work.blocks()));
             case CRAFT_FURNACE -> Optional.of(station(target, site.workYard(), work.blocks()));
             case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site, work.blocks())) : Optional.empty();
             case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
             default -> Optional.empty();
         };
-    }
-
-    public static TaskNode groveAround(TicketTarget target) {
-        String sapling = sapling(target.wood() == null ? WoodSpecies.OAK : target.wood());
-        BlockCoord center = target.target();
-        List<PlannedBlock> blocks = new ArrayList<>();
-        for (int dx : new int[] {-GROVE_STEP, GROVE_STEP}) {
-            for (int dz : new int[] {-GROVE_STEP, GROVE_STEP}) {
-                blocks.add(new PlannedBlock(new BlockCoord(center.x() + dx, center.y(), center.z() + dz), sapling));
-            }
-        }
-        return placeAll(target, blocks);
-    }
-
-    public static String sapling(String wood) {
-        return MINECRAFT + WoodSpecies.swap("oak_sapling", wood);
     }
 
     public static List<PlannedBlock> palisade(StageSite site) {

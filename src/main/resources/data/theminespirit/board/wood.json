@@ -1,5 +1,5 @@
 {
   "stockPlanks": 24,
-  "groveMatureLogs": 5,
-  "groveCheckTicks": 200
+  "orchardMatureLogs": 5,
+  "orchardCheckTicks": 200
 }

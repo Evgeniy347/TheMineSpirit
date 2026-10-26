@@ -111,7 +111,7 @@ public final class FirstStepsPlan {
         steps.add(Step.layout(BoardCase.BUILD_HOUSE, SettlementFacts::houses));
         steps.add(new Step(BoardCase.CRAFT_SMITHING_TABLE, SettlementFacts::smithingTable));
         steps.add(new Step(BoardCase.CRAFT_ANVIL, SettlementFacts::anvil));
-        steps.add(new Step(BoardCase.PLANT_GROVE, facts -> false));
+        steps.add(Step.layout(BoardCase.BUILD_ORCHARD, SettlementFacts::orchard));
         return List.copyOf(steps);
     }
 

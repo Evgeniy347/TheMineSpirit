@@ -18,7 +18,7 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
-import com.theminespirit.neoforge.policy.GroveTrees;
+import com.theminespirit.neoforge.policy.OrchardTrees;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -259,7 +259,7 @@ public final class ChopTreeScript implements ScriptInstance {
         }
         for (BlockPos pos : search.step(ScanTuning.SLICES_PER_TICK)) {
             BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            if (!GroveTrees.planned(spirit.level(), cell)) {
+            if (!OrchardTrees.planned(spirit.level(), cell)) {
                 candidates.offer(cell);
             }
         }
