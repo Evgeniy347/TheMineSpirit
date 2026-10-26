@@ -6,20 +6,25 @@ import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.forestry.TreeSpan;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DoorBlock;
@@ -201,13 +206,16 @@ final class SchematicSite {
     }
 
     List<BlockCoord> toClear() {
-        List<BlockCoord> cells = new ArrayList<>();
+        Set<BlockCoord> unique = new LinkedHashSet<>();
         for (BlockCoord cell : air) {
             BlockState current = level.getBlockState(toPos(cell));
-            if (!current.isAir() && current.getFluidState().isEmpty()) {
-                cells.add(cell);
+            if (current.is(BlockTags.LOGS)) {
+                unique.addAll(TreeSpan.of(cell, this::wildLog));
+            } else if (!current.isAir() && current.getFluidState().isEmpty()) {
+                unique.add(cell);
             }
         }
+        List<BlockCoord> cells = new ArrayList<>(unique);
         for (Schematic.PlacedEntry entry : entries) {
             if (entry.optional()) {
                 continue;
@@ -224,6 +232,15 @@ final class SchematicSite {
         }
         cells.sort(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()));
         return cells;
+    }
+
+    private boolean wildLog(BlockCoord cell) {
+        BlockPos pos = toPos(cell);
+        boolean placed = level instanceof ServerLevel server
+                && PlacedBlocksData.get(server).isMarked(pos);
+        return !schemeCells.contains(cell)
+                && !placed
+                && level.getBlockState(pos).is(BlockTags.LOGS);
     }
 
     boolean freeForPlacing(Schematic.PlacedEntry entry) {

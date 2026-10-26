@@ -1,25 +1,48 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.SourceGuard;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
 
 public final class BoardSources {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private final WoolWatch wool = new WoolWatch();
     private final FishingWatch fishing = new FishingWatch();
     private final HiveWatch hive = new HiveWatch();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
     private int herdScans;
+    private final SourceGuard guard = new SourceGuard(BoardSources::report);
 
     private BoardSources() {}
 
     public static BoardSources create() {
         return new BoardSources();
+    }
+
+    public boolean failedRound() {
+        return guard.failedRound();
+    }
+
+    private static void report(String source, RuntimeException error, boolean repeated) {
+        if (repeated) {
+            LOGGER.warn(
+                    "[incident] источник доски {} снова упал: {}; пропущен до следующей пересборки",
+                    source,
+                    error.getMessage());
+        } else {
+            LOGGER.error(
+                    "[incident] источник доски {} упал, пропущен до следующей пересборки; тик сервера идёт",
+                    source,
+                    error);
+        }
     }
 
     public int herdScans() {
@@ -32,36 +55,37 @@ public final class BoardSources {
             return Set.of();
         }
         Set<String> live = new HashSet<>();
-        FirstStepsRunner.tick(level, service, spirits, stock, now);
-        ToolStockWatch.tick(level, service, spirits, stock, now);
-        EvergreenWatch.tick(level, service, spirits, now);
-        FoodWatch.tick(level, service, spirits, stock, now);
-        fishing.tick(level, service, spirits, stock, now);
-        RepairWatch.tick(level, service, spirits, now);
-        PenBuild.tick(level, service, spirits, now);
-        WarehouseWatch.tick(level, service, spirits, now);
-        MineLevels.tick(level, service, spirits, now);
+        guard.startRound();
+        guard.run("first_steps", () -> FirstStepsRunner.tick(level, service, spirits, stock, now));
+        guard.run("tool_stock", () -> ToolStockWatch.tick(level, service, spirits, stock, now));
+        guard.run("evergreen", () -> EvergreenWatch.tick(level, service, spirits, now));
+        guard.run("food", () -> FoodWatch.tick(level, service, spirits, stock, now));
+        guard.run("fishing", () -> fishing.tick(level, service, spirits, stock, now));
+        guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
+        guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));
+        guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
+        guard.run("mine_levels", () -> MineLevels.tick(level, service, spirits, now));
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {
             lastEnchantCheck = now;
-            EnchantRoomWatch.tick(level, service, spirits, stock, now);
+            guard.run("enchant_room", () -> EnchantRoomWatch.tick(level, service, spirits, stock, now));
         }
         if (now - lastHerdScan >= BoardTuning.herdScanIntervalTicks()) {
             lastHerdScan = now;
             herdScans++;
-            HerdWatch.tick(level, service, spirits, now);
+            guard.run("herd", () -> HerdWatch.tick(level, service, spirits, now));
         }
-        live.addAll(TransferWatch.liveCauses(service));
-        wool.tick(level, service, spirits, stock, now);
+        live.addAll(guard.call("transfer", () -> TransferWatch.liveCauses(service), Set.of()));
+        guard.run("wool", () -> wool.tick(level, service, spirits, stock, now));
         if (wool.live()) {
             live.add(WoolWatch.CAUSE);
         }
-        hive.tick(level, service, spirits, stock, now);
+        guard.run("hive", () -> hive.tick(level, service, spirits, stock, now));
         if (hive.live()) {
             live.add(HiveWatch.CAUSE);
         }
-        live.addAll(CraterWatch.liveCauses(level, service));
-        live.addAll(FenceWatch.liveCauses(level, service));
-        live.addAll(LeftOreWatch.tick(level, service, spirits, now));
+        live.addAll(guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of()));
+        live.addAll(guard.call("fence", () -> FenceWatch.liveCauses(level, service), Set.of()));
+        live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level, service, spirits, now), Set.of()));
         return live;
     }
 }

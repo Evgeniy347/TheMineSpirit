@@ -27,6 +27,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
@@ -85,6 +86,8 @@ final class BuildSchematicScript implements ScriptInstance {
     private long squadVersion = -1;
     private BlockCoord approachStand;
     private BlockCoord breaking;
+    private String breakingId = "-";
+    private final RemovalLog removals = new RemovalLog();
     private long ticks;
     private long lastPlaceTick = Long.MIN_VALUE / 2;
     private int placed;
@@ -255,6 +258,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         if (progress == BlockBreaker.Progress.BROKEN) {
             cleared++;
+            removals.removed(breakingId, breaking);
         }
         breaking = null;
         excludedStands.clear();
@@ -345,6 +349,7 @@ final class BuildSchematicScript implements ScriptInstance {
             switch (begin) {
                 case BlockBreaker.Started ignored -> {
                     breaking = cell;
+                    breakingId = BlockStates.idOf(level.getBlockState(SchematicSite.toPos(cell)));
                     return ScriptStatus.RUNNING;
                 }
                 case BlockBreaker.Protected refused -> blocked.put(cell, "очистка запрещена: " + refused.reason());
@@ -673,6 +678,7 @@ final class BuildSchematicScript implements ScriptInstance {
                 PathNetworkService.endSite(server, buildKey);
             }
             tally.supplies(placed, 0);
+            logRemovals();
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -1125,7 +1131,14 @@ final class BuildSchematicScript implements ScriptInstance {
         return stats;
     }
 
+    private void logRemovals() {
+        if (!removals.isEmpty()) {
+            LOGGER.info("[clear] стройка {} духом {} сняла: {}", buildKey, spirit.displayName(), removals.summary());
+        }
+    }
+
     private ScriptStatus fail(String reason) {
+        logRemovals();
         noteStats();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;

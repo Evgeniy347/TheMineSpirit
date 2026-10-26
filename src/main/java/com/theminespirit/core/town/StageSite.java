@@ -28,6 +28,7 @@ public record StageSite(
     public static final int MINE_SHIFT = 1;
     public static final int MINE_WIDTH = 3;
     public static final int GROVE_INSET = 2;
+    public static final int GROVE_TREE_HEIGHT = 16;
     public static final int MINE_SHALLOW = 12;
 
     public StageSite {
@@ -100,6 +101,18 @@ public record StageSite(
                 new BlockCoord(grove.x() + far, anchor.y(), grove.z() + near),
                 new BlockCoord(grove.x() + near, anchor.y(), grove.z() + far),
                 new BlockCoord(grove.x() + far, anchor.y(), grove.z() + far));
+    }
+
+    public boolean groveTree(int x, int y, int z) {
+        if (y < anchor.y() - 1 || y > anchor.y() + GROVE_TREE_HEIGHT) {
+            return false;
+        }
+        for (BlockCoord spot : saplings()) {
+            if (spot.x() == x && spot.z() == z) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<ColumnMask.Cell> torchPosts() {

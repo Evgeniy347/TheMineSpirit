@@ -56,6 +56,7 @@ public final class StuckRescue {
         if (state == RouteWalk.State.FAILED) {
             RouteDetour.failed(spirit, current);
         }
+        RouteDetour.removed(spirit, current);
         walk = null;
         return false;
     }
