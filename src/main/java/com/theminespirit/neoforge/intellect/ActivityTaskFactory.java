@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.intellect.AcquireOrder;
 import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.activity.SmeltActivity;
@@ -41,7 +42,7 @@ public final class ActivityTaskFactory {
             return Optional.of(new SequenceNode(withHome(spirit, new ScriptCall(script, intent.params()))));
         }
         Map<String, Object> params = switch (script) {
-            case "chop_tree" -> Map.of("species", "any", COUNT, 4, RADIUS, 16, "replant", true);
+            case "chop_tree" -> chopParams();
             case "harvest_crop" -> Map.of("crop", "any", RADIUS, 8, "replant", true);
             case "mine_vein" -> Map.of("ore", "any", COUNT, 8, RADIUS, 16);
             case "unload" -> Map.of("container", "auto", RADIUS, 8, "force", false);
@@ -116,5 +117,9 @@ public final class ActivityTaskFactory {
         }
         AcquireOrder order = AcquireOrder.of(item, more, held);
         return Map.of("item", order.item(), COUNT, order.count());
+    }
+
+    private static Map<String, Object> chopParams() {
+        return Map.of("species", "any", COUNT, 4, RADIUS, BoardTuning.chopRadius(), "replant", true);
     }
 }

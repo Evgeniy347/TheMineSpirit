@@ -84,6 +84,7 @@
     "boardIntervalTicks": 100,
     "herdScanIntervalTicks": 200,
     "craterTerritoryRadius": 64,
+    "chopRadius": 100,
     "maxPending": 64,
     "maxActivePerSpirit": 1,
     "stockReadBudget": 8,
