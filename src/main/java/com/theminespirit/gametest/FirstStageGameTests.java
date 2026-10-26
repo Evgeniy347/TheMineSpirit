@@ -25,6 +25,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -45,6 +46,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import org.slf4j.Logger;
@@ -54,6 +56,7 @@ import org.slf4j.Logger;
 @SettlementSystems(board = true, coordinator = true)
 public final class FirstStageGameTests {
     static final String BATCH = "first_stage";
+    private static final int HELD_MARGIN = 48;
     private static final int STUCK_LIMIT = 600;
     private static final int STARTING_LOGS = 64;
     private static final int PIT_DEPTH = 3;
@@ -83,14 +86,15 @@ public final class FirstStageGameTests {
         GameTestClock.align(helper);
         long seed = GeneratedScene.seed();
         ScenePlan scene = GeneratedScene.place(helper, seed, BATCH);
+        GameTestChunks.hold(helper, GeneratedScene.at(0, 0, 0), scene.radius() + HELD_MARGIN);
         ServerLevel level = helper.getLevel();
         BoardService board = BoardRegistry.get(level);
         board.board().restore(new BoardState(List.of(), Set.of()));
         BlockPos home = GeneratedScene.at(0, scene.height(0, 0) + 1, 0);
         List<SpiritEntity> spirits = new ArrayList<>();
         for (int index = 0; index < SPIRITS; index++) {
-            SpiritEntity spirit = spirit(helper, home.offset(index - 1, 0, 0), home, scene.wood());
-            spirit.getRandom().setSeed(seed + index);
+            SpiritEntity spirit =
+                    spirit(helper, home.offset(index - 1, 0, 0), home, scene.wood(), new UUID(seed, index));
             spirits.add(spirit);
         }
         incidentRoundTrip(helper, spirits.get(0), seed);
@@ -207,8 +211,15 @@ public final class FirstStageGameTests {
         return count;
     }
 
-    private static SpiritEntity spirit(GameTestHelper helper, BlockPos at, BlockPos home, String wood) {
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), at);
+    private static SpiritEntity spirit(GameTestHelper helper, BlockPos at, BlockPos home, String wood, UUID id) {
+        SpiritEntity spirit = Objects.requireNonNull(
+                ModEntities.SPIRIT.get().create(helper.getLevel()),
+                "Дух сцены не создан: тип сущности не зарегистрирован");
+        spirit.setUUID(id);
+        spirit.getRandom().setSeed(id.getMostSignificantBits() + id.getLeastSignificantBits());
+        Vec3 spot = Vec3.atBottomCenterOf(helper.absolutePos(at));
+        spirit.moveTo(spot.x, spot.y, spot.z, 0.0F, 0.0F);
+        helper.getLevel().addFreshEntity(spirit);
         BlockPos absolute = helper.absolutePos(home);
         spirit.setHome(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()));
         Item log = BuiltInRegistries.ITEM.get(ResourceLocation.withDefaultNamespace(wood + "_log"));
