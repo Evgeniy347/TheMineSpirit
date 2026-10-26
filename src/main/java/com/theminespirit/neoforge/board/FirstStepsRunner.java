@@ -30,6 +30,7 @@ import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.MineStone;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -259,7 +260,7 @@ public final class FirstStepsRunner {
             need.remove(PlotLeveling.DEFAULT_BLOCK);
         }
         if (caseValue == BoardCase.BUILD_MINE) {
-            int floors = mineFloorsToPlace(level, stage);
+            int floors = mineFloorsToBring(level, stage);
             String block = stock.available().getOrDefault(COBBLESTONE, 0) >= floors
                             || stock.available().getOrDefault(PlotLeveling.DEFAULT_BLOCK, 0) < floors
                     ? COBBLESTONE
@@ -928,9 +929,21 @@ public final class FirstStepsRunner {
         return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood);
     }
 
-    private static int mineFloorsToPlace(ServerLevel level, StageSite stage) {
-        Placed floors = mineFloors(level, stage);
-        return floors.total() - floors.done();
+    private static int mineFloorsToBring(ServerLevel level, StageSite stage) {
+        Optional<MineLayout> layout = mineLayout(stage);
+        if (layout.isEmpty()) {
+            return 0;
+        }
+        Map<BlockCoord, String> blocks = new HashMap<>();
+        for (List<BlockCoord> cells :
+                List.of(layout.get().floors(), layout.get().air())) {
+            for (BlockCoord cell : cells) {
+                BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
+                blocks.put(
+                        cell, BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+            }
+        }
+        return MineStone.floorsToBring(layout.get(), blocks);
     }
 
     private static Placed mineFloors(ServerLevel level, StageSite stage) {
