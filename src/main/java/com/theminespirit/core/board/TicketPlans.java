@@ -696,8 +696,12 @@ public final class TicketPlans {
         if (target.schemeFile() == null && target.leveling() != null) {
             return LevelRepair.plan(target);
         }
-        String scheme = target.schemeFile() == null ? "repair" : target.schemeFile();
-        return sequence(gotoTarget(target), schematic(scheme, target));
+        if (target.schemeFile() == null) {
+            throw new IllegalArgumentException("Ремонт без схемы постройки и без выравнивания: чинят по схеме той "
+                    + "постройки, что повреждена (StageWork.repairs или файл схемы); цель задания потеряна — ждать, "
+                    + "пока аудит этапа её восстановит");
+        }
+        return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
     }
 
     private static TaskNode repairTool(TicketTarget target) {

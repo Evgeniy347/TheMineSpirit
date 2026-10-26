@@ -236,8 +236,10 @@ public final class BoardService {
         Set<String> liveCauses = sources.tick(level, this, spirits, unreserved, now);
         liveCauses.addAll(liveHerdCauses(level));
         liveCauses.addAll(liveDropCauses(level));
-        board.retain(liveCauses, now);
-        retains++;
+        if (!sources.failedRound()) {
+            board.retain(liveCauses, now);
+            retains++;
+        }
         digOut(level, spirits);
         issue(level, spirits, now);
         reconcileActivities(spirits, true);
