@@ -102,7 +102,8 @@
     "enchantCheckInterval": 500,
     "enchantShelvesMin": 4,
     "transferRadiusBlocks": 32,
-    "transferMaxCount": 64
+    "transferMaxCount": 64,
+    "toolFallbackTicks": 1200
   },
   "levels": {
     "BUILD_MINE": 4,
