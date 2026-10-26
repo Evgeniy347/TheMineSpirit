@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
+import java.util.function.ToDoubleFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
@@ -23,11 +24,8 @@ final class ChopStand {
         return best(spirit.level(), target, used, pos -> nearest(pos, rest));
     }
 
-    private interface Score {
-        double of(BlockPos pos);
-    }
-
-    private static @Nullable BlockPos best(Level level, Tree target, @Nullable BlockPos used, Score score) {
+    private static @Nullable BlockPos best(
+            Level level, Tree target, @Nullable BlockPos used, ToDoubleFunction<BlockPos> score) {
         int baseY = target.base().y();
         BlockPos best = null;
         double bestScore = Double.MAX_VALUE;
@@ -42,7 +40,7 @@ final class ChopStand {
                         if (pos.equals(used) || !isStandable(level, pos)) {
                             continue;
                         }
-                        double value = score.of(pos) + (dx != 0 && dz != 0 ? DIAGONAL_PENALTY : 0);
+                        double value = score.applyAsDouble(pos) + (dx != 0 && dz != 0 ? DIAGONAL_PENALTY : 0);
                         if (value < bestScore) {
                             bestScore = value;
                             best = pos;
