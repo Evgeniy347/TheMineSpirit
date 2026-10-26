@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.movement;
 
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.neoforge.BlockBreaker;
@@ -38,6 +39,8 @@ public final class RouteWalk {
     private boolean breaking;
     private boolean pillarPlaced;
     private @Nullable String failure;
+    private final RemovalLog removals = new RemovalLog();
+    private String breakingId = "-";
 
     public RouteWalk(SpiritEntity spirit, Route route) {
         this.spirit = spirit;
@@ -74,6 +77,10 @@ public final class RouteWalk {
         return (int) Math.ceil(cost) * 2 + STEP_TICKS * steps.size();
     }
 
+    public RemovalLog removals() {
+        return removals;
+    }
+
     public String failure() {
         return failure == null ? "-" : failure;
     }
@@ -89,10 +96,14 @@ public final class RouteWalk {
     private Optional<String> breakCell(BlockPos cell) {
         Level level = spirit.level();
         if (breaking) {
-            if (breaker.tick() == BlockBreaker.Progress.BREAKING) {
+            BlockBreaker.Progress progress = breaker.tick();
+            if (progress == BlockBreaker.Progress.BREAKING) {
                 return Optional.empty();
             }
             breaking = false;
+            if (progress == BlockBreaker.Progress.BROKEN) {
+                removals.removed(breakingId, new BlockCoord(cell.getX(), cell.getY(), cell.getZ()));
+            }
         }
         if (level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) {
             advance();
@@ -101,6 +112,7 @@ public final class RouteWalk {
         return switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
                 breaking = true;
+                breakingId = BlockStates.idOf(level.getBlockState(cell));
                 yield Optional.empty();
             }
             case BlockBreaker.Refused refused -> Optional.of(refused.message());

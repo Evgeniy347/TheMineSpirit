@@ -49,6 +49,15 @@ public final class RouteDetour {
         return route.usable() ? Optional.of(new RouteWalk(spirit, route)) : Optional.empty();
     }
 
+    public static void removed(SpiritEntity spirit, RouteWalk walk) {
+        if (!walk.removals().isEmpty()) {
+            LOGGER.info(
+                    "[route] дух {} проложил путь, сняв: {}",
+                    spirit.displayName(),
+                    walk.removals().summary());
+        }
+    }
+
     public static void failed(SpiritEntity spirit, RouteWalk walk) {
         LOGGER.warn(
                 "[route] дух {} сошёл с маршрута в {}: {}",

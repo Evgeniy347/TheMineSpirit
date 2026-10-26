@@ -166,6 +166,7 @@ public final class DigOutScript implements ScriptInstance {
         if (state == RouteWalk.State.FAILED) {
             RouteDetour.failed(spirit, current);
         }
+        RouteDetour.removed(spirit, current);
         route = null;
         return false;
     }
