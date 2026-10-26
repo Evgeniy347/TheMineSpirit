@@ -495,13 +495,18 @@ public final class FirstStepsRunner {
     private static PlotLeveling leveling(ServerLevel level, StageSite site, StockView stock) {
         BlockCoord anchor = site.anchor();
         PlotLeveling plan = PlotLeveling.plan(anchor, site.level(), plotFeet(level, site));
-        IntBinaryOperator feet =
-                (x, z) -> site.mineColumn(x, z) ? Integer.MIN_VALUE : GroundProbe.feet(level, x, z, anchor.y());
+        IntBinaryOperator feet = (x, z) -> GroundProbe.feet(level, x, z, anchor.y());
+        Set<BlockCoord> shaft = new HashSet<>();
+        mineLayout(site).ifPresent(mine -> {
+            shaft.addAll(mine.air());
+            shaft.addAll(mine.floors());
+        });
         plan = plan.withVoids(PlotLeveling.voids(
                 anchor,
                 site.level(),
                 feet,
-                (x, y, z) -> level.getBlockState(new BlockPos(x, y, z)).isAir()));
+                (x, y, z) -> level.getBlockState(new BlockPos(x, y, z)).isAir(),
+                shaft));
         if (plan.fillVolume() > 0 && stock.available().getOrDefault(COBBLESTONE, 0) >= plan.fillVolume()) {
             plan = plan.withBlock(COBBLESTONE);
         }

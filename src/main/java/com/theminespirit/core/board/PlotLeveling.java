@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.IntBinaryOperator;
 import org.jspecify.annotations.Nullable;
 
@@ -53,6 +54,12 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
     }
 
     public static List<Box> voids(BlockCoord anchor, ColumnMask area, IntBinaryOperator feet, AirProbe probe) {
+        return voids(anchor, area, feet, probe, Set.of());
+    }
+
+    public static List<Box> voids(
+            BlockCoord anchor, ColumnMask area, IntBinaryOperator feet, AirProbe probe, Set<BlockCoord> kept) {
+        Objects.requireNonNull(kept, "Оставляемые пустоты не могут быть null: нет таких — пустое множество");
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: пустоты ищутся под ним");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: пустота — воздух под поверхностью");
         Objects.requireNonNull(probe, "Проба воздуха не может быть null: без неё пустот не найти");
@@ -65,7 +72,7 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
             int surface = Math.min(feet.applyAsInt(x, z), anchor.y());
             Integer start = null;
             for (int y = bottom; y <= surface; y++) {
-                boolean hole = y < surface && probe.air(x, y, z);
+                boolean hole = y < surface && probe.air(x, y, z) && !kept.contains(new BlockCoord(x, y, z));
                 if (hole && start == null) {
                     start = y;
                 } else if (!hole && start != null) {
