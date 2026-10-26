@@ -11,6 +11,7 @@ import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.TaskRetention;
 import com.theminespirit.core.intellect.WorkRoles;
 import com.theminespirit.core.inventory.InventoryFill;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,7 +46,7 @@ public final class UnloadActivity implements Activity {
         }
         InventoryNormTable table = InventoryNormTable.loadDefault();
         InventoryFill fill = view.inventoryFill(spirit.id()).orElse(null);
-        if (fill == null) {
+        if (fill == null || fill.occupiedSlots() < CatalogLimits.UNLOAD_TRIGGER_SLOTS) {
             return false;
         }
         if (spirit.workTarget().isPresent()) {
