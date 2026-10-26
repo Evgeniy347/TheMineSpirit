@@ -615,7 +615,10 @@ public final class BoardService {
             return Optional.of(BoardCase.ACTIVITY_ESCAPE);
         }
         if (spirit.tactics().wantsControl() && board.assignedTo(id).isEmpty()) {
-            return Optional.of(BoardCase.ACTIVITY_COMBAT);
+            Optional<BoardCase> tactic = BoardActivities.caseOf(spirit.tactics().action());
+            if (tactic.isPresent()) {
+                return tactic;
+            }
         }
         boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
         Launched own = launched.get(id);

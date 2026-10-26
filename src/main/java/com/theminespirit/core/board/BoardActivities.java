@@ -5,6 +5,7 @@ import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.tactics.TacticsAction;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,11 @@ public final class BoardActivities {
             BoardCase.ACTIVITY_EXTERNAL,
             BoardCase.ACTIVITY_FARM,
             BoardCase.ACTIVITY_FORAGE,
+            BoardCase.ACTIVITY_GUARD,
             BoardCase.ACTIVITY_MINE,
             BoardCase.ACTIVITY_REST,
+            BoardCase.ACTIVITY_RETREAT,
+            BoardCase.ACTIVITY_RETURN,
             BoardCase.ACTIVITY_SMELT,
             BoardCase.ACTIVITY_UNLOAD);
     private static final String GOTO = "goto";
@@ -43,6 +47,17 @@ public final class BoardActivities {
     public static String idOf(UUID spirit) {
         Objects.requireNonNull(spirit, "Дух занятия не может быть null: у каждого духа одно задание-занятие");
         return ID_PREFIX + spirit;
+    }
+
+    public static Optional<BoardCase> caseOf(TacticsAction action) {
+        Objects.requireNonNull(action, "Действие тактики не может быть null: по нему подписывают занятие духа");
+        return switch (action) {
+            case FIGHT -> Optional.of(BoardCase.ACTIVITY_COMBAT);
+            case RETREAT -> Optional.of(BoardCase.ACTIVITY_RETREAT);
+            case RETURN -> Optional.of(BoardCase.ACTIVITY_RETURN);
+            case GUARD -> Optional.of(BoardCase.ACTIVITY_GUARD);
+            case IDLE -> Optional.empty();
+        };
     }
 
     public static BoardCase caseOf(ActivityId activity) {
