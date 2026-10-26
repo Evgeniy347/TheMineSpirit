@@ -156,7 +156,7 @@ public final class BlockBreaker {
         preferLuckPick(targetState);
         List<ToolOption> options = toolOptions(targetState);
         forcedSlot = requestedSlot;
-        choice = ToolChoice.best(options, reserve);
+        choice = ToolChoice.best(options, reserve, MiningTables.repairTiers());
         if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
             return new Refused(RefuseReason.NEED_TOOL, needToolReason(targetState));
         }
@@ -225,7 +225,7 @@ public final class BlockBreaker {
 
     public boolean dropsAllowedFor(BlockState targetState) {
         Objects.requireNonNull(targetState, "Состояние блока не может быть null: по нему выбирается инструмент");
-        return ToolChoice.best(toolOptions(targetState), MiningTables.toolReserve())
+        return ToolChoice.best(toolOptions(targetState), MiningTables.toolReserve(), MiningTables.repairTiers())
                 .dropsAllowed();
     }
 
@@ -252,7 +252,13 @@ public final class BlockBreaker {
         boolean needsTool = targetState.requiresCorrectToolForDrops();
         List<ToolOption> options = new ArrayList<>();
         options.add(new ToolOption(
-                ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool, ToolChoice.UNWEARING, ToolChoice.UNWEARING, false));
+                ToolChoice.HAND,
+                ToolChoice.HAND_SPEED,
+                !needsTool,
+                ToolChoice.UNWEARING,
+                ToolChoice.UNWEARING,
+                false,
+                ""));
         ItemStack hand = spirit.getMainHandItem();
         if (!hand.isEmpty() && allowed(ToolChoice.MAIN_HAND)) {
             options.add(optionFor(ToolChoice.MAIN_HAND, hand, targetState, needsTool));
@@ -285,19 +291,22 @@ public final class BlockBreaker {
     private static ToolOption optionFor(int slot, ItemStack stack, BlockState targetState, boolean needsTool) {
         int max = stack.isDamageableItem() ? stack.getMaxDamage() : ToolChoice.UNWEARING;
         int remaining = max > 0 ? max - stack.getDamageValue() : ToolChoice.UNWEARING;
+        String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
         return new ToolOption(
                 slot,
                 stack.getDestroySpeed(targetState),
                 !needsTool || stack.isCorrectToolForDrops(targetState),
                 remaining,
                 max,
-                stack.isEnchanted());
+                stack.isEnchanted(),
+                itemId);
     }
 
     private void replaceSpentHandTool(BlockState targetState, ToolReserve reserve) {
         ItemStack hand = spirit.getMainHandItem();
         if (hand.isEmpty()
-                || !optionFor(ToolChoice.MAIN_HAND, hand, targetState, true).spent(reserve)) {
+                || !optionFor(ToolChoice.MAIN_HAND, hand, targetState, true)
+                        .spent(reserve, MiningTables.repairTiers())) {
             return;
         }
         int source = bestSpareSlot(targetState, reserve);
@@ -311,6 +320,7 @@ public final class BlockBreaker {
 
     private int bestSpareSlot(BlockState targetState, ToolReserve reserve) {
         Container inventory = spirit.getInventory();
+        List<String> repairTiers = MiningTables.repairTiers();
         int bestSlot = -1;
         double bestSpeed = ToolChoice.HAND_SPEED;
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
@@ -319,7 +329,7 @@ public final class BlockBreaker {
                 continue;
             }
             ToolOption option = optionFor(slot, stack, targetState, true);
-            if (option.spent(reserve)) {
+            if (option.spent(reserve, repairTiers)) {
                 continue;
             }
             if (option.speed() > bestSpeed || (option.speed() == bestSpeed && bestSlot < 0)) {

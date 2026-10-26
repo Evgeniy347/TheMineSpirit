@@ -19,6 +19,8 @@ public final class BoardLayout {
     public static final int CONTENT_PAD = 2;
     public static final int TILE_HEIGHT = 56;
     public static final int TILE_GAP = 2;
+    public static final int TILE_TEXT_TOP = 3;
+    public static final int TILE_LINE_STEP = 10;
 
     private final Rect window;
     private final Rect inner;

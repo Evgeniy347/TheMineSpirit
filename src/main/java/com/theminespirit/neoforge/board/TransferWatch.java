@@ -146,7 +146,7 @@ public final class TransferWatch {
         if (submitOrders(service, spirits, craftTicket, orders, now)) {
             return true;
         }
-        return heldByBusy(ingredients, crafter, orders, Map.of(), spirits, mapper);
+        return !gather && heldByBusy(ingredients, crafter, orders, Map.of(), spirits, mapper);
     }
 
     private static boolean heldByBusy(
@@ -196,9 +196,9 @@ public final class TransferWatch {
             SpiritEntity builder) {
         Map<String, Integer> need;
         try {
-            need = CaseMaterials.need(
-                    TicketPlans.plan(build.boardCase(), build.level(), service.targetOf(build.id(), spirits)),
-                    FirstStepsRunner.materialSource(level));
+            TaskNode plan = TicketPlans.plan(build.boardCase(), build.level(), service.targetOf(build.id(), spirits));
+            need = BuildRemainder.left(
+                    level, build.boardCase(), plan, CaseMaterials.need(plan, FirstStepsRunner.materialSource(level)));
         } catch (RuntimeException failure) {
             LOGGER.warn("Материалы стройки {} для передачи не посчитаны: {}", build.id(), failure.getMessage());
             return false;

@@ -11,19 +11,19 @@ public final class MapStyle {
     public static final int GATE = 0xFF4FC3F7;
     public static final int TEXT = 0xFFFFFFFF;
     private static final int PERCENT = 100;
-    private static final int LOT_EMPTY = 0xFF4E5A3A;
-    private static final int LOT_DONE = 0xFF6FA548;
-    private static final int LOT_DAMAGED = 0xFFB0503A;
+    private static final int LOT_EMPTY = 0xA84E5A3A;
+    private static final int LOT_DONE = 0xA86FA548;
+    private static final int LOT_DAMAGED = 0xB0B0503A;
 
     private MapStyle() {}
 
     public static int fill(TownMapView.MapRect rect) {
         Objects.requireNonNull(rect, "Прямоугольник карты не может быть null");
         return switch (rect.kind()) {
-            case STREET_MAIN -> 0xFF8C8577;
-            case STREET_SIDE -> 0xFF77716A;
-            case STREET_RING -> 0xFF6B665F;
-            case PATH -> 0xFFB79C6B;
+            case STREET_MAIN -> 0xC08C8577;
+            case STREET_SIDE -> 0xC077716A;
+            case STREET_RING -> 0xC06B665F;
+            case PATH -> 0xB8B79C6B;
             case LOT -> rect.damaged() ? LOT_DAMAGED : blend(LOT_EMPTY, LOT_DONE, rect.percent());
         };
     }
@@ -34,8 +34,8 @@ public final class MapStyle {
 
     public static int blend(int from, int to, int percent) {
         int share = Math.max(0, Math.min(PERCENT, percent));
-        int out = 0xFF000000;
-        for (int shift = 0; shift <= 16; shift += 8) {
+        int out = 0;
+        for (int shift = 0; shift <= 24; shift += 8) {
             int a = from >> shift & 0xFF;
             int b = to >> shift & 0xFF;
             out |= (a + (b - a) * share / PERCENT) << shift;

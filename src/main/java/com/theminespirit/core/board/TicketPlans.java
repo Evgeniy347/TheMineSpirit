@@ -666,7 +666,7 @@ public final class TicketPlans {
                                             COUNT,
                                             trees,
                                             RADIUS,
-                                            CatalogLimits.CHOP_RADIUS_MAX,
+                                            BoardTuning.chopRadius(),
                                             "replant",
                                             true)),
                             acquire)));

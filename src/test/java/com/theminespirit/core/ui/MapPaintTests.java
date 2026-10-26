@@ -3,6 +3,7 @@ package com.theminespirit.core.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,18 @@ class MapPaintTests {
     }
 
     @Test
+    void of_Terrain_BackgroundThenTerrainThenSemiTransparentPlan() {
+        TerrainRaster terrain = TerrainRaster.of(List.of(tile(0, 0, 12)));
+        List<MapPaint.Shape> shapes = MapPaint.of(VIEW, Optional.of(terrain), VIEWPORT, Optional.empty(), FONT);
+        assertEquals(MapStyle.BACKGROUND, ((MapPaint.Fill) shapes.get(0)).color(), "Сначала фон окна");
+        MapPaint.Raster raster = (MapPaint.Raster) shapes.get(1);
+        assertTrue(raster.x2() > raster.x1() && raster.y2() > raster.y1(), "Слой местности — первой картинкой на фоне");
+        assertTrue(shapes.indexOf(raster) < shapes.size() - 1, "План рисуется поверх местности");
+        assertTrue((MapStyle.fill(WIDE) >>> 24) < 0xFF, "Участок полупрозрачен, чтобы видеть рельеф под ним");
+        assertTrue((MapStyle.fill(ROAD) >>> 24) < 0xFF, "Улица полупрозрачна, чтобы видеть рельеф под ней");
+    }
+
+    @Test
     void hint_DamagedLot_IntactAndRemainingPercent() {
         TownMapView.MapRect damaged = new TownMapView.MapRect(TownMapView.Kind.LOT, 0, 0, 4, 4, "Хижина", 70, true);
         assertEquals(
@@ -71,6 +84,12 @@ class MapPaintTests {
         BoardLayout.Rect plan = ScreenTabs.rect(427, ScreenTabs.Tab.PLAN);
         assertEquals(board.x() + board.width() + ScreenTabs.GAP, plan.x(), "Вкладки рядом, «План» правее доски");
         assertEquals(427 - BoardLayout.MARGIN, plan.x() + plan.width(), "Вкладки прижаты к правому краю");
+    }
+
+    private static TerrainTile tile(int chunkX, int chunkZ, int id) {
+        byte[] ids = new byte[TerrainTile.COLUMNS];
+        Arrays.fill(ids, (byte) id);
+        return new TerrainTile(chunkX, chunkZ, ids);
     }
 
     private static List<MapPaint.Text> texts(List<MapPaint.Shape> shapes) {

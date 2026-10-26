@@ -32,9 +32,9 @@ public final class TheMineSpiritClient {
                 screen.showStage(stage);
             }
         });
-        TownMapChannel.onClientReply(view -> {
+        TownMapChannel.onClientReply(reply -> {
             if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
-                screen.show(view);
+                screen.show(reply);
             }
         });
         BoardViewChannel.onClientReply(tiles -> {

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PlotLevelingTests {
@@ -57,11 +58,17 @@ class PlotLevelingTests {
     }
 
     @Test
-    void voids_MineColumn_Skipped() {
+    void voids_CaveAroundMineShaft_FilledExceptShaft() {
+        Set<BlockCoord> shaft =
+                Set.of(new BlockCoord(ANCHOR.x(), 61, ANCHOR.z()), new BlockCoord(ANCHOR.x(), 62, ANCHOR.z()));
+
         assertEquals(
-                List.of(),
-                PlotLeveling.voids(ANCHOR, square(ANCHOR, 0), (x, z) -> Integer.MIN_VALUE, (x, y, z) -> true),
-                "Спуск в шахту — не пустота: его колонку выравнивание не засыпает");
+                List.of(
+                        new PlotLeveling.Box(ANCHOR.x(), 60, ANCHOR.z(), ANCHOR.x(), 60, ANCHOR.z()),
+                        new PlotLeveling.Box(ANCHOR.x(), 63, ANCHOR.z(), ANCHOR.x(), 63, ANCHOR.z())),
+                PlotLeveling.voids(ANCHOR, square(ANCHOR, 0), (x, z) -> 64, (x, y, z) -> y >= 60, shaft),
+                "Пещера в колонке шахты засыпается до уровня, кроме клеток самой схемы спуска (INC-83: дух в 7-й раз "
+                        + "в старом кармане под участком — колонку шахты выравнивание пропускало целиком)");
     }
 
     @Test

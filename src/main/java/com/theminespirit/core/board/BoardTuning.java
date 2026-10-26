@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.Set;
 
 public final class BoardTuning {
@@ -11,6 +12,7 @@ public final class BoardTuning {
     public static final int MAX_PENDING = 64;
 
     public static final int CRATER_TERRITORY_RADIUS = 64;
+    public static final int CHOP_RADIUS = 100;
 
     public static final long HERD_SCAN_INTERVAL_TICKS = 200;
 
@@ -47,6 +49,7 @@ public final class BoardTuning {
             "boardIntervalTicks",
             "herdScanIntervalTicks",
             "craterTerritoryRadius",
+            "chopRadius",
             "maxPending",
             "maxActivePerSpirit",
             "stockReadBudget",
@@ -72,6 +75,10 @@ public final class BoardTuning {
 
     public static long herdScanIntervalTicks() {
         return interval("herdScanIntervalTicks", HERD_SCAN_INTERVAL_TICKS);
+    }
+
+    public static int chopRadius() {
+        return (int) Math.min(interval("chopRadius", CHOP_RADIUS), CatalogLimits.CHOP_RADIUS_MAX);
     }
 
     public static int craterTerritoryRadius() {

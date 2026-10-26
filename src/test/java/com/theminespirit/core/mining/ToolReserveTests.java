@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ToolReserveTests {
     private static final String ORIGIN = ToolReserve.RESOURCE;
+    private static final List<String> REPAIR_TIERS = List.of("iron", "diamond");
 
     @Test
     void loadedFile_MatchDefaults_FractionAndUses() {
@@ -73,6 +75,55 @@ class ToolReserveTests {
         assertFalse(
                 reserve.spent(1, 100, true),
                 "При keep_enchant_last_use=false последний удар зачарованного инструмента не защищён");
+    }
+
+    @Test
+    void spent_WoodenPickaxeOneUseLeft_NotSpent() {
+        assertFalse(
+                ToolReserve.defaults().spent(1, 59, false, "minecraft:wooden_pickaxe", REPAIR_TIERS),
+                "Деревянная кирка с последним ударом обязана остаться годной: дерево не чинят, его тратят до поломки");
+    }
+
+    @Test
+    void spent_IronPickaxeAtUsesThreshold_Spent() {
+        assertTrue(
+                ToolReserve.defaults().spent(3, 251, false, "minecraft:iron_pickaxe", REPAIR_TIERS),
+                "Железная кирка с остатком 3 удара равна порогу reserve_uses=3: уровень из repairTiers берегут под ремонт");
+    }
+
+    @Test
+    void spent_StonePickaxeZeroRemaining_Spent() {
+        assertTrue(
+                ToolReserve.defaults().spent(0, 131, false, "minecraft:stone_pickaxe", REPAIR_TIERS),
+                "Каменная кирка с нулевым остатком сломана: сломанный инструмент изношен на любом уровне");
+    }
+
+    @Test
+    void spent_StoneShovelOneUseLeft_NotSpent() {
+        assertFalse(
+                ToolReserve.defaults().spent(1, 131, false, "minecraft:stone_shovel", REPAIR_TIERS),
+                "Каменная лопата с последним ударом обязана остаться годной: камень не чинят, его тратят до поломки");
+    }
+
+    @Test
+    void spent_GoldenPickaxeNearThreshold_NotSpent() {
+        assertFalse(
+                ToolReserve.defaults().spent(3, 33, false, "minecraft:golden_pickaxe", REPAIR_TIERS),
+                "Золотая кирка с остатком 3 удара обязана остаться годной: золото не чинят, его тратят до поломки");
+    }
+
+    @Test
+    void spent_NetheriteCountsAsDiamond_Spent() {
+        assertTrue(
+                ToolReserve.defaults().spent(3, 2032, false, "minecraft:netherite_pickaxe", REPAIR_TIERS),
+                "Незеритовая кирка с остатком на пороге обязана беречься: незерит чинят как алмазный уровень");
+    }
+
+    @Test
+    void spent_IronOutsideRepairTiers_NotSpent() {
+        assertFalse(
+                ToolReserve.defaults().spent(3, 251, false, "minecraft:iron_pickaxe", List.of("stone")),
+                "Железная кирка с остатком 3 удара годна, если железа нет в repairTiers: берегут только уровни из таблицы");
     }
 
     @Test

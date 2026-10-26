@@ -32,6 +32,24 @@ public record BoardTiming(long startedAt, long finishedAt) {
         return Math.max(0L, end - startedAt);
     }
 
+    public static BoardTiming attempt(BoardStatus status, BoardTiming journal, boolean activity, long createdAt) {
+        Objects.requireNonNull(status, "Статус не может быть null: по нему решают, идёт задание или закрыто");
+        Objects.requireNonNull(journal, "Время журнала не может быть null: без него нечего уточнять");
+        if (createdAt < 0) {
+            throw new IllegalArgumentException(
+                    "Время постановки " + createdAt + " отрицательно: задание не ставят до начала отсчёта");
+        }
+        if (activity) {
+            long startedAt = journal.started() ? journal.startedAt() : createdAt;
+            return new BoardTiming(startedAt, 0L);
+        }
+        return switch (status) {
+            case ASSIGNED -> new BoardTiming(journal.startedAt(), 0L);
+            case DONE, FAILED, CANCELLED -> journal;
+            default -> NONE;
+        };
+    }
+
     public static Map<String, BoardTiming> fromJournal(List<BoardLogEntry> entries) {
         Objects.requireNonNull(entries, "Журнал не может быть null: без него времени задания не узнать");
         Map<String, Long> starts = new LinkedHashMap<>();

@@ -41,6 +41,15 @@ class BoardTuningTests {
     }
 
     @Test
+    void chopRadius_FromData_IsOwnerHundred() {
+        assertEquals(
+                100,
+                BoardTuning.chopRadius(),
+                "Радиус поиска деревьев для рубки — 100 блоков и для фона, и для доски (решение владельца 26.10, "
+                        + "INC-83: фон рубил в 16 и «деревья закончились»); число — в board.json, ключ chopRadius");
+    }
+
+    @Test
     void craterTerritoryRadius_Is_OwnerDefault() {
         assertEquals(
                 64,

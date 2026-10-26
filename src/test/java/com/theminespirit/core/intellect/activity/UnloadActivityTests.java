@@ -56,6 +56,16 @@ class UnloadActivityTests {
     }
 
     @Test
+    void eligible_FewSlotsWithSurplus_IsFalse() {
+        InventoryFill light = new InventoryFill(8, 36, 117, 200);
+
+        assertFalse(
+                new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), viewWith(SPIRIT, light)),
+                "Мало занятых ячеек: скрипт разгрузки сочтёт это «уже сделано» и выйдет ни с чем, а выбор повторит "
+                        + "разгрузку по кругу (2329 событий ACTIVITY_UNLOAD против 62 рубки)");
+    }
+
+    @Test
     void eligible_WorkerWithPressure_IsTrue() {
         assertTrue(
                 new UnloadActivity().eligible(SettlementViews.spirit(SPIRIT), viewWith(SPIRIT, LOADED)),

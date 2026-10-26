@@ -14,24 +14,21 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
-import com.theminespirit.core.board.EatNeed;
+import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EvergreenRules;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.ResourceGate;
-import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.movement.PitEscape;
@@ -618,7 +615,10 @@ public final class BoardService {
             return Optional.of(BoardCase.ACTIVITY_ESCAPE);
         }
         if (spirit.tactics().wantsControl() && board.assignedTo(id).isEmpty()) {
-            return Optional.of(BoardCase.ACTIVITY_COMBAT);
+            Optional<BoardCase> tactic = BoardActivities.caseOf(spirit.tactics().action());
+            if (tactic.isPresent()) {
+                return tactic;
+            }
         }
         boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
         Launched own = launched.get(id);
@@ -896,26 +896,19 @@ public final class BoardService {
     }
 
     private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
-        Map<UUID, Integer> held = board.assignedCounts();
-        List<BoardTicket> claimable = board.claimable(stock, now);
+        List<BoardTicket> claimable = DispatchRound.order(board.claimable(stock, now));
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
-        Set<UUID> awaited = new HashSet<>();
+        DispatchRound round = new DispatchRound(board, now);
+        DispatchPick pick = new DispatchPick(round, spirits);
         for (BoardTicket ticket : claimable) {
-            ticket.assignee()
-                    .filter(holder ->
-                            level.getEntity(holder) instanceof SpiritEntity own && free(own, held, ticket, now))
-                    .ifPresent(awaited::add);
-        }
-        for (BoardTicket ticket : claimable) {
-            SpiritEntity spirit = chooseSpirit(ticket, spirits, level, held, now, awaited);
-            noteWhy(ticket, spirits, spirit, now);
+            SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             if (spirit == null) {
-                LOGGER.debug(
-                        "Задание {} ждёт свободного духа: {}",
-                        ticket.id(),
-                        ticket.assignee().isPresent() ? "свой дух занят" : "свободных нет или их ждут свои задания");
+                String why = pick.why(ticket);
+                board.noteWait(ticket.id(), why);
+                LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(), why);
                 continue;
             }
+            board.noteWait(ticket.id(), null);
             TicketTarget target =
                     gatherOnTop(ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits))), spirit);
             Optional<TicketTarget> fitted = fitTransfer(ticket, target, spirit);
@@ -925,7 +918,7 @@ public final class BoardService {
             }
             target = fitted.orElseThrow();
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
-                awaitTransfers(ticket, spirit, awaited);
+                awaitTransfers(ticket, spirit, round);
                 continue;
             }
             TaskNode plan;
@@ -961,7 +954,7 @@ public final class BoardService {
                 crafters.forget(ticket.id());
                 issuedGenerations.put(ticket.id(), spirit.taskGeneration());
                 claims++;
-                held.merge(spirit.getUUID(), 1, Integer::sum);
+                round.take(spirit.getUUID());
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
                 LOGGER.info(
                         "Доска выдала задание {} (кейс {}) духу {}",
@@ -988,9 +981,11 @@ public final class BoardService {
                 : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
     }
 
-    private void awaitTransfers(BoardTicket ticket, SpiritEntity crafter, Set<UUID> awaited) {
+    private void awaitTransfers(BoardTicket ticket, SpiritEntity crafter, DispatchRound round) {
         crafters.remember(ticket.id(), crafter.getUUID());
-        awaited.addAll(TransferWatch.donors(this, ticket.id()));
+        for (UUID donor : TransferWatch.donors(this, ticket.id())) {
+            round.await(donor, "несёт ингредиенты для " + ticket.id());
+        }
         LOGGER.info(
                 "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
                 ticket.id(),
@@ -1053,68 +1048,6 @@ public final class BoardService {
         return centers;
     }
 
-    private SpiritEntity chooseSpirit(
-            BoardTicket ticket,
-            List<SpiritEntity> spirits,
-            ServerLevel level,
-            Map<UUID, Integer> held,
-            long now,
-            Set<UUID> awaited) {
-        if (ticket.assignee().isPresent()) {
-            Entity entity = level.getEntity(ticket.assignee().orElseThrow());
-            if (entity instanceof SpiritEntity spirit && free(spirit, held, ticket, now)) {
-                return spirit;
-            }
-            return null;
-        }
-        if (crafters.remembered(ticket.id()).filter(awaited::contains).isPresent()) {
-            return null;
-        }
-        List<SpiritEntity> unclaimed = spirits.stream()
-                .filter(spirit -> !awaited.contains(spirit.getUUID()))
-                .toList();
-        return crafters.choose(
-                ticket.id(),
-                unclaimed,
-                SpiritEntity::getUUID,
-                spirit -> free(spirit, held, ticket, now),
-                () -> nearestFree(unclaimed, targets.get(ticket.id()), held, ticket, now));
-    }
-
-    private boolean free(SpiritEntity spirit, Map<UUID, Integer> held, BoardTicket ticket, long now) {
-        RunStatus status = spirit.taskStatus().orElse(null);
-        boolean busy = status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent();
-        if (busy && !(spirit.runsBackgroundTask() && !spirit.tactics().wantsControl())) {
-            return false;
-        }
-        return held.getOrDefault(spirit.getUUID(), 0) < BoardTuning.maxActivePerSpirit()
-                && board.availableTo(spirit.getUUID(), ticket.boardCase(), now)
-                && ToolGate.allows(ticket.boardCase(), itemIds(spirit))
-                && EvergreenRules.issuedTo(ticket, spirit.getUUID(), eatNeed(spirit), viewOf(spirit));
-    }
-
-    private void noteWhy(BoardTicket ticket, List<SpiritEntity> spirits, @Nullable SpiritEntity chosen, long now) {
-        if (chosen != null) {
-            board.noteWait(ticket.id(), null);
-            return;
-        }
-        BoardCase boardCase = ticket.boardCase();
-        List<SpiritEntity> tooled = spirits.stream()
-                .filter(candidate -> ToolGate.allows(boardCase, itemIds(candidate)))
-                .toList();
-        String reason;
-        if (tooled.isEmpty()) {
-            reason = ToolGate.required(boardCase).isPresent()
-                    ? "нет духа с киркой: ждёт кирку (задание " + PICKAXE_TICKET + ")"
-                    : "нет духов";
-        } else if (tooled.stream().noneMatch(candidate -> board.availableTo(candidate.getUUID(), boardCase, now))) {
-            reason = "все годные духи (" + tooled.size() + ") на паузе кейса " + boardCase + " после провалов";
-        } else {
-            reason = "годные духи заняты или ждут свои задания";
-        }
-        board.noteWait(ticket.id(), reason);
-    }
-
     static List<String> itemIds(SpiritEntity spirit) {
         List<String> ids = new ArrayList<>();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
@@ -1124,42 +1057,6 @@ public final class BoardService {
             }
         }
         return ids;
-    }
-
-    private static EatNeed eatNeed(SpiritEntity spirit) {
-        return new EatNeed(
-                spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
-                        Math.ceil(spirit.getMaxHealth()));
-    }
-
-    private static SpiritView viewOf(SpiritEntity spirit) {
-        return new SpiritView(
-                spirit.tactics().wantsControl(), false, spirit.taskStatus().orElse(null) == RunStatus.RUNNING);
-    }
-
-    private SpiritEntity nearestFree(
-            List<SpiritEntity> spirits, TicketTarget target, Map<UUID, Integer> held, BoardTicket ticket, long now) {
-        SpiritEntity best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (SpiritEntity spirit : spirits) {
-            if (!free(spirit, held, ticket, now)) {
-                continue;
-            }
-            double distance = target == null
-                    ? 0
-                    : spirit.distanceToSqr(
-                            target.target().x() + 0.5,
-                            target.target().y(),
-                            target.target().z() + 0.5);
-            if (distance < bestDistance
-                    || (distance == bestDistance
-                            && best != null
-                            && spirit.getUUID().compareTo(best.getUUID()) < 0)) {
-                best = spirit;
-                bestDistance = distance;
-            }
-        }
-        return best;
     }
 
     private void ensureSupply(List<SpiritEntity> spirits, StockView stock, long now) {

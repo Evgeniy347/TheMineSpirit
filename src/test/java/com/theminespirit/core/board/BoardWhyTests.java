@@ -44,9 +44,10 @@ class BoardWhyTests {
         board.submit(gated);
 
         assertEquals(
-                Optional.of("не хватает материалов: {cobblestone=8}"),
+                Optional.of("не хватает материалов: cobblestone×8 (в сундуках двора и у духов 0, добыть или сделать "
+                        + "ещё 8)"),
                 BoardWhy.waitReason(board, gated, EMPTY, 0),
-                "Гейт материалов называет нехватку");
+                "Гейт материалов называет, что принести: материал×количество, сколько уже есть и сколько добыть");
     }
 
     @Test

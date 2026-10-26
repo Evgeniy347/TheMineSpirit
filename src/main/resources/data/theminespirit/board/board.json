@@ -1,6 +1,9 @@
 {
   "priorities": {
     "ACTIVITY_COMBAT": 100,
+    "ACTIVITY_RETREAT": 100,
+    "ACTIVITY_RETURN": 30,
+    "ACTIVITY_GUARD": 30,
     "ACTIVITY_ARM": 100,
     "ACTIVITY_EXTERNAL": 95,
     "ACTIVITY_EXPEDITION": 95,
@@ -84,6 +87,7 @@
     "boardIntervalTicks": 100,
     "herdScanIntervalTicks": 200,
     "craterTerritoryRadius": 64,
+    "chopRadius": 100,
     "maxPending": 64,
     "maxActivePerSpirit": 1,
     "stockReadBudget": 8,
