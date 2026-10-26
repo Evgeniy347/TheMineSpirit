@@ -153,4 +153,21 @@ class StageSiteTests {
                 SITE.fillStandAllowed(SITE.workYard(), false),
                 "Подсыпка со стоянки на площадке под крышей недопустима: дух замуруется в площадке");
     }
+
+    @Test
+    void complete_StoredPlanWithoutOrchard_IsIncompleteAndGetsReplanned() {
+        TownPlan full = TownFixtures.flatPlan();
+        TownPlan old = new TownPlan(
+                full.anchor(),
+                full.region(),
+                full.streets(),
+                full.placements().stream()
+                        .filter(place -> !StageSites.ORCHARD.equals(place.id()))
+                        .toList(),
+                full.fence(),
+                full.unplaced());
+
+        assertTrue(StageSites.complete(full), "свежий план содержит все места этапа 1");
+        assertFalse(StageSites.complete(old), "план мира без сада (старая «роща») не годится и размечается заново");
+    }
 }

@@ -7,6 +7,7 @@ import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TerrainGrid;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanner;
@@ -24,7 +25,7 @@ final class TownSurvey {
 
     static TownPlan town(
             ServerLevel level, BoardService service, SettlementPlotStore store, BlockCoord center, long now) {
-        Optional<TownPlan> kept = store.town().filter(plan -> near(plan.anchor(), center));
+        Optional<TownPlan> kept = store.town().filter(plan -> near(plan.anchor(), center) && StageSites.complete(plan));
         if (kept.isPresent()) {
             return kept.orElseThrow();
         }
