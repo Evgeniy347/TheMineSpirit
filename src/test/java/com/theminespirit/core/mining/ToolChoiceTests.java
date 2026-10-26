@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class ToolChoiceTests {
     private static final ToolReserve RESERVE = ToolReserve.defaults();
+    private static final List<String> REPAIR_TIERS = List.of("iron", "diamond");
 
     @Test
     void slots_HandAndMainHand_AreMinusOneAndMinusTwo() {
@@ -111,8 +112,11 @@ class ToolChoiceTests {
     @Test
     void best_SpentToolWithHealthySpare_ChoosesSpare() {
         Choice choice = ToolChoice.best(
-                List.of(new ToolOption(0, 6.0, true, 1, 251, false), new ToolOption(1, 6.0, true, 251, 251, false)),
-                RESERVE);
+                List.of(
+                        new ToolOption(0, 6.0, true, 1, 251, false, "minecraft:iron_pickaxe"),
+                        new ToolOption(1, 6.0, true, 251, 251, false, "minecraft:iron_pickaxe")),
+                RESERVE,
+                REPAIR_TIERS);
 
         assertEquals(
                 1,
@@ -123,7 +127,8 @@ class ToolChoiceTests {
 
     @Test
     void best_OnlySpentCorrectTool_ReturnsHandWithoutDrops() {
-        Choice choice = ToolChoice.best(List.of(new ToolOption(0, 6.0, true, 2, 251, false)), RESERVE);
+        Choice choice = ToolChoice.best(
+                List.of(new ToolOption(0, 6.0, true, 2, 251, false, "minecraft:iron_pickaxe")), RESERVE, REPAIR_TIERS);
 
         assertEquals(
                 new Choice(ToolChoice.HAND, ToolChoice.HAND_SPEED, false),
@@ -135,8 +140,11 @@ class ToolChoiceTests {
     @Test
     void best_HealthySlowerTool_BeatsSpentFasterTool() {
         Choice choice = ToolChoice.best(
-                List.of(new ToolOption(0, 8.0, true, 1, 251, false), new ToolOption(1, 4.0, true, 251, 251, false)),
-                RESERVE);
+                List.of(
+                        new ToolOption(0, 8.0, true, 1, 251, false, "minecraft:iron_pickaxe"),
+                        new ToolOption(1, 4.0, true, 251, 251, false, "minecraft:iron_pickaxe")),
+                RESERVE,
+                REPAIR_TIERS);
 
         assertEquals(
                 1,
@@ -146,7 +154,7 @@ class ToolChoiceTests {
 
     @Test
     void best_EnchantedToolOnLastUse_IsTreatedAsSpent() {
-        ToolOption enchanted = new ToolOption(0, 6.0, true, 1, 100, true);
+        ToolOption enchanted = new ToolOption(0, 6.0, true, 1, 100, true, "minecraft:iron_pickaxe");
 
         assertTrue(
                 enchanted.spent(RESERVE),
@@ -172,11 +180,12 @@ class ToolChoiceTests {
                         true,
                         ToolChoice.UNWEARING,
                         ToolChoice.UNWEARING,
-                        false),
-                new ToolOption(0, ToolChoice.HAND_SPEED, true, 1, 100, false));
+                        false,
+                        ""),
+                new ToolOption(0, ToolChoice.HAND_SPEED, true, 1, 100, false, "minecraft:iron_shovel"));
 
         assertFalse(
-                ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE), options),
+                ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE, REPAIR_TIERS), options),
                 "Изношенный инструмент на мягком блоке (не требует инструмента) — не повод для отказа: "
                         + "рука даёт дроп, иначе дух бросал бы землю и брёвна из-за износа лопаты или топора");
     }
@@ -190,11 +199,12 @@ class ToolChoiceTests {
                         false,
                         ToolChoice.UNWEARING,
                         ToolChoice.UNWEARING,
-                        false),
-                new ToolOption(0, 6.0, true, 2, 251, false));
+                        false,
+                        ""),
+                new ToolOption(0, 6.0, true, 2, 251, false, "minecraft:iron_pickaxe"));
 
         assertTrue(
-                ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE), options),
+                ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE, REPAIR_TIERS), options),
                 "Правильный инструмент есть, но изношен, и рука без дропа: отказ с причиной, "
                         + "а не ломка голыми руками и потеря блока");
     }
@@ -208,11 +218,45 @@ class ToolChoiceTests {
                         false,
                         ToolChoice.UNWEARING,
                         ToolChoice.UNWEARING,
-                        false),
-                new ToolOption(0, 4.0, false, 251, 251, false));
+                        false,
+                        ""),
+                new ToolOption(0, 4.0, false, 251, 251, false, "minecraft:iron_pickaxe"));
 
         assertFalse(
-                ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE), options),
+                ToolChoice.shouldRefuseForLackOfTool(ToolChoice.best(options, RESERVE, REPAIR_TIERS), options),
                 "Правильного инструмента нет вовсе: это забота проверки уровня руды, а не отказа «нужен инструмент»");
+    }
+
+    @Test
+    void best_WoodenPickaxeOneUseLeft_ChosenOverHand() {
+        Choice choice = ToolChoice.best(
+                List.of(new ToolOption(0, 4.0, true, 1, 59, false, "minecraft:wooden_pickaxe")), RESERVE, REPAIR_TIERS);
+
+        assertEquals(
+                0,
+                choice.slot(),
+                "Деревянная кирка с последним ударом выбирается для работы: дерево тратят до поломки, а не берегут");
+    }
+
+    @Test
+    void best_IronPickaxeAtThreshold_DeferredToHand() {
+        Choice choice = ToolChoice.best(
+                List.of(new ToolOption(0, 6.0, true, 3, 251, false, "minecraft:iron_pickaxe")), RESERVE, REPAIR_TIERS);
+
+        assertEquals(
+                new Choice(ToolChoice.HAND, ToolChoice.HAND_SPEED, false),
+                choice,
+                "Железная кирка на пороге износа откладывается под ремонт: рука без дропа вместо траты запаса прочности");
+    }
+
+    @Test
+    void best_StoneShovelOneUseLeft_ChosenOverHand() {
+        Choice choice = ToolChoice.best(
+                List.of(new ToolOption(0, 2.0, true, 1, 131, false, "minecraft:stone_shovel")), RESERVE, REPAIR_TIERS);
+
+        assertEquals(
+                0,
+                choice.slot(),
+                "Каменная лопата с последним ударом выбирается для работы: камень тратят до поломки, а не берегут");
     }
 }

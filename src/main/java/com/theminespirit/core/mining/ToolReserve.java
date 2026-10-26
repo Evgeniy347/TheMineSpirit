@@ -1,7 +1,11 @@
 package com.theminespirit.core.mining;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.inventory.JsonResource;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public record ToolReserve(double fraction, int uses, boolean keepEnchantedLastUse) {
@@ -11,6 +15,8 @@ public record ToolReserve(double fraction, int uses, boolean keepEnchantedLastUs
     public static final int MAX_USES = 64;
 
     private static final Set<String> FIELDS = Set.of("reserve_fraction", "reserve_uses", "keep_enchant_last_use");
+    private static final String NETHERITE = "netherite";
+    private static final String DIAMOND = "diamond";
     private static final ToolReserve DEFAULTS = new ToolReserve(0.05, 3, true);
 
     public ToolReserve {
@@ -40,6 +46,27 @@ public record ToolReserve(double fraction, int uses, boolean keepEnchantedLastUs
         }
         int fractionCap = (int) Math.ceil(fraction * max);
         return remaining <= Math.max(uses, fractionCap);
+    }
+
+    public boolean spent(int remaining, int max, boolean enchanted, String itemId, Collection<String> repairTiers) {
+        Objects.requireNonNull(itemId, "Предмет не может быть null: уровень износа читается по материалу инструмента");
+        Objects.requireNonNull(
+                repairTiers, "Уровни ремонта не могут быть null: без них неизвестно, какой инструмент беречь");
+        if (max <= 0) {
+            return false;
+        }
+        if (remaining <= 0) {
+            return true;
+        }
+        Optional<String> tier = ToolsConfig.tierOf(itemId);
+        if (tier.isEmpty() || !repairable(tier.orElseThrow(), repairTiers)) {
+            return false;
+        }
+        return spent(remaining, max, enchanted);
+    }
+
+    private static boolean repairable(String tier, Collection<String> repairTiers) {
+        return repairTiers.contains(tier) || (NETHERITE.equals(tier) && repairTiers.contains(DIAMOND));
     }
 
     public static ToolReserve load() {

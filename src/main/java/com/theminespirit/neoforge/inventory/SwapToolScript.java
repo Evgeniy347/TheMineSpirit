@@ -46,7 +46,7 @@ public final class SwapToolScript implements ScriptInstance {
         }
         BlockState state = block.get().defaultBlockState();
         List<ToolChoice.ToolOption> options = optionsFor(state);
-        ToolChoice.Choice choice = ToolChoice.best(options, MiningTables.toolReserve());
+        ToolChoice.Choice choice = ToolChoice.best(options, MiningTables.toolReserve(), MiningTables.repairTiers());
         if (!choice.dropsAllowed()) {
             return fail("нет подходящего инструмента для блока '" + params.block()
                     + "': в руке и инвентаре нет целого инструмента, которым блок даёт дроп");
@@ -85,7 +85,13 @@ public final class SwapToolScript implements ScriptInstance {
         boolean needsTool = state.requiresCorrectToolForDrops();
         List<ToolChoice.ToolOption> options = new ArrayList<>();
         options.add(new ToolChoice.ToolOption(
-                ToolChoice.HAND, ToolChoice.HAND_SPEED, !needsTool, ToolChoice.UNWEARING, ToolChoice.UNWEARING, false));
+                ToolChoice.HAND,
+                ToolChoice.HAND_SPEED,
+                !needsTool,
+                ToolChoice.UNWEARING,
+                ToolChoice.UNWEARING,
+                false,
+                ""));
         ItemStack hand = spirit.getMainHandItem();
         if (!hand.isEmpty()) {
             options.add(option(ToolChoice.MAIN_HAND, hand, state, needsTool));
@@ -109,7 +115,8 @@ public final class SwapToolScript implements ScriptInstance {
                 !needsTool || stack.isCorrectToolForDrops(state),
                 remaining,
                 max,
-                stack.isEnchanted());
+                stack.isEnchanted(),
+                StackMapper.itemId(stack));
     }
 
     private String heldId() {

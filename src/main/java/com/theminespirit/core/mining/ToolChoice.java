@@ -1,5 +1,7 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.board.ToolsConfig;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,20 +14,34 @@ public final class ToolChoice {
     private ToolChoice() {}
 
     public record ToolOption(
-            int slot, double speed, boolean correctForDrops, int remainingUses, int maxUses, boolean enchanted) {
+            int slot,
+            double speed,
+            boolean correctForDrops,
+            int remainingUses,
+            int maxUses,
+            boolean enchanted,
+            String itemId) {
+        public ToolOption {
+            Objects.requireNonNull(itemId, "Предмет не может быть null: уровень износа читается по его материалу");
+        }
+
         public static ToolOption of(int slot, double speed, boolean correctForDrops) {
-            return new ToolOption(slot, speed, correctForDrops, UNWEARING, UNWEARING, false);
+            return new ToolOption(slot, speed, correctForDrops, UNWEARING, UNWEARING, false, "");
         }
 
         public boolean spent(ToolReserve reserve) {
             return reserve.spent(remainingUses, maxUses, enchanted);
+        }
+
+        public boolean spent(ToolReserve reserve, Collection<String> repairTiers) {
+            return reserve.spent(remainingUses, maxUses, enchanted, itemId, repairTiers);
         }
     }
 
     public record Choice(int slot, double speed, boolean dropsAllowed) {}
 
     public static Choice best(List<ToolOption> options) {
-        return best(options, ToolReserve.defaults());
+        return best(options, ToolReserve.defaults(), ToolsConfig.defaults().repairTiers());
     }
 
     public static boolean shouldRefuseForLackOfTool(Choice choice, List<ToolOption> options) {
@@ -34,10 +50,12 @@ public final class ToolChoice {
         return !choice.dropsAllowed() && options.stream().anyMatch(ToolOption::correctForDrops);
     }
 
-    public static Choice best(List<ToolOption> options, ToolReserve reserve) {
+    public static Choice best(List<ToolOption> options, ToolReserve reserve, Collection<String> repairTiers) {
         Objects.requireNonNull(
                 options, "options не может быть null: пустой набор инструментов задаётся пустым списком");
         Objects.requireNonNull(reserve, "reserve не может быть null: по нему решается, износился ли инструмент");
+        Objects.requireNonNull(
+                repairTiers, "repairTiers не может быть null: без уровней ремонта неизвестно, что беречь");
         ToolOption best = null;
         boolean anyCorrect = false;
         for (ToolOption option : options) {
@@ -45,7 +63,7 @@ public final class ToolChoice {
                 continue;
             }
             anyCorrect = true;
-            if (option.spent(reserve)) {
+            if (option.spent(reserve, repairTiers)) {
                 continue;
             }
             if (best == null
