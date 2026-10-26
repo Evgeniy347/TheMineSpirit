@@ -47,6 +47,8 @@ public final class BoardTuning {
 
     public static final long TOOL_FALLBACK_TICKS = 1200;
 
+    public static final int REBUILD_PERCENT = 50;
+
     public static final Set<String> INTERVAL_KEYS = Set.of(
             "boardIntervalTicks",
             "herdScanIntervalTicks",
@@ -68,7 +70,8 @@ public final class BoardTuning {
             "enchantShelvesMin",
             "transferRadiusBlocks",
             "transferMaxCount",
-            "toolFallbackTicks");
+            "toolFallbackTicks",
+            "rebuildPercent");
 
     private BoardTuning() {}
 
@@ -148,6 +151,10 @@ public final class BoardTuning {
 
     public static long toolFallbackTicks() {
         return interval("toolFallbackTicks", TOOL_FALLBACK_TICKS);
+    }
+
+    public static int rebuildPercent() {
+        return (int) Math.min(interval("rebuildPercent", REBUILD_PERCENT), MAX_PRIORITY);
     }
 
     private static long interval(String key, long fallback) {

@@ -26,8 +26,11 @@ final class StageRepair {
 
     private StageRepair() {}
 
-    static BoardOutcome submit(
-            BoardService service, BoardCase step, TicketTarget target, int missing, int total, long now) {
+    record Gap(int missing, int total, Map<String, Integer> need) {}
+
+    static BoardOutcome submit(BoardService service, BoardCase step, TicketTarget target, Gap gap, long now) {
+        int missing = gap.missing();
+        int total = gap.total();
         StageWork work = target.work();
         if (work == null) {
             throw new IllegalArgumentException("Восстановление " + step + " без места этапа: план не передан");
@@ -47,7 +50,7 @@ final class StageRepair {
                         1,
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
-                        Map.of()),
+                        gap.need()),
                 target.withWork(work.repairing(step.name())));
         if (outcome == BoardOutcome.ACCEPTED) {
             String name = label(step);

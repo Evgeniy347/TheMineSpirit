@@ -7,6 +7,7 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.FirstStepsPlan;
@@ -19,6 +20,7 @@ import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementPlot;
+import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
@@ -359,6 +361,15 @@ public final class FirstStepsRunner {
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
         Placed placed = audit(level, caseValue, work.site(), step.wood());
         int missing = placed.total() - placed.done();
+        if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
+            LOGGER.info(
+                    "[layout] {} по журналу сделан, но нет {} из {} блоков: не построено — шаг стройки заново",
+                    caseValue,
+                    missing,
+                    placed.total());
+            reopenParts(service, caseValue, parts);
+            return false;
+        }
         LOGGER.info(
                 "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: восстановление",
                 caseValue,
@@ -372,17 +383,32 @@ public final class FirstStepsRunner {
                         List.of("missing=" + missing, "total=" + placed.total()),
                         null,
                         ConfigStamp.current()));
-        BoardOutcome repair = StageRepair.submit(service, caseValue, step.target(), missing, placed.total(), now);
+        BoardOutcome repair = StageRepair.submit(
+                service,
+                caseValue,
+                step.target(),
+                new StageRepair.Gap(missing, placed.total(), repairNeed(level, step)),
+                now);
         if (repair == BoardOutcome.ACCEPTED || repair == BoardOutcome.DUPLICATE) {
             return true;
         }
+        reopenParts(service, caseValue, parts);
+        return false;
+    }
+
+    private static Map<String, Integer> repairNeed(ServerLevel level, OpenStep step) {
+        Map<String, Integer> need = new HashMap<>(step.need());
+        minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
+        return StageAudit.shortage(need);
+    }
+
+    private static void reopenParts(BoardService service, BoardCase caseValue, int parts) {
         for (int part = 1; part <= parts; part++) {
             String id = partId(caseValue, part);
             if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
                 service.reopen(id);
             }
         }
-        return false;
     }
 
     public static void dropOtherWood(ServerLevel level, BoardService service, String wood) {
@@ -992,13 +1018,13 @@ public final class FirstStepsRunner {
         return new Placed(done, layout.get().air().size()).plus(mineFloors(level, stage));
     }
 
-    private record Placed(int done, int total) {
+    record Placed(int done, int total) {
         Placed plus(Placed other) {
             return new Placed(done + other.done, total + other.total);
         }
     }
 
-    private static Placed placedBlocks(ServerLevel level, TaskNode plan, String wood) {
+    static Placed placedBlocks(ServerLevel level, TaskNode plan, String wood) {
         return switch (plan) {
             case FallbackNode fallback -> placedBlocks(level, fallback.steps().get(0), wood);
             case SequenceNode sequence ->

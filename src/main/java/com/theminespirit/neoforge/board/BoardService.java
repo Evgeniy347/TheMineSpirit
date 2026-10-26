@@ -91,6 +91,7 @@ public final class BoardService {
     private final TaskStall stall = new TaskStall();
     private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
+    private final StageProgressWatch progress = new StageProgressWatch();
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private StockView stock = new StockView(Map.of());
@@ -755,7 +756,12 @@ public final class BoardService {
                     status,
                     spirit.tactics().wantsControl());
             switch (run) {
-                case SUCCEEDED, FAILED -> settle(spirit, ticket, run == TicketRun.SUCCEEDED);
+                case SUCCEEDED, FAILED -> {
+                    String empty = run == TicketRun.SUCCEEDED && spirit.level() instanceof ServerLevel level
+                            ? progress.emptyResult(level, ticket, targets.get(ticket.id()))
+                            : null;
+                    settle(spirit, ticket, run == TicketRun.SUCCEEDED && empty == null, empty);
+                }
                 case RESUME -> resume(spirit, ticket, spirits);
                 case RUNNING -> checkStall(spirit, ticket);
                 case DISPLACED -> {}
@@ -831,7 +837,7 @@ public final class BoardService {
                 : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
     }
 
-    private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success) {
+    private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success, @Nullable String verdict) {
         issuedGenerations.remove(ticket.id());
         if (success) {
             board.complete(ticket.id());
@@ -843,7 +849,12 @@ public final class BoardService {
                 default -> {}
             }
         } else {
-            board.fail(ticket.id(), stock, spirit.taskFailureReason().orElse(null));
+            String reason =
+                    verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
+            board.fail(
+                    ticket.id(),
+                    stock,
+                    verdict != null ? verdict : spirit.taskFailureReason().orElse(null));
             LOGGER.warn(
                     "[incident] дух {} ({}) провалил задание доски {} (кейс {}): {}; статус {}; доска выдаёт "
                             + "следующее задание; {}",
@@ -851,9 +862,9 @@ public final class BoardService {
                     spirit.getUUID(),
                     ticket.id(),
                     ticket.boardCase(),
-                    spirit.taskFailureReason().orElse("причина не записана"),
+                    reason,
                     board.statusOf(ticket.id()).orElse(null),
-                    incident(spirit, ticket, spirit.taskFailureReason().orElse("причина не записана")));
+                    incident(spirit, ticket, reason));
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
@@ -958,6 +969,7 @@ public final class BoardService {
             if (outcome == BoardOutcome.CLAIMED) {
                 crafters.forget(ticket.id());
                 issuedGenerations.put(ticket.id(), spirit.taskGeneration());
+                progress.issued(level, ticket, target);
                 claims++;
                 round.take(spirit.getUUID());
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
