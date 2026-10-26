@@ -1,8 +1,11 @@
 package com.theminespirit.core.board;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.UUID;
 
 public final class BoardWhy {
@@ -25,7 +28,7 @@ public final class BoardWhy {
         }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         if (!missing.isEmpty()) {
-            return Optional.of("не хватает материалов: " + missing);
+            return Optional.of(shortage(ticket.requiredItems(), missing, stock));
         }
         if (board.recentlyFailed(ticket.id(), now)) {
             return Optional.of("откат после провала: задание вернётся в очередь после паузы");
@@ -40,5 +43,15 @@ public final class BoardWhy {
                                     + board.consecutiveFailures(spirit, ticket.boardCase()) + " провалов подряд");
         }
         return board.waitNote(ticket.id());
+    }
+
+    static String shortage(Map<String, Integer> need, Map<String, Integer> missing, StockView stock) {
+        List<String> parts = new ArrayList<>();
+        for (String item : new TreeSet<>(missing.keySet())) {
+            int have = stock.available().getOrDefault(item, 0);
+            parts.add(item + "×" + need.getOrDefault(item, 0) + " (в сундуках двора и у духов " + have
+                    + ", добыть или сделать ещё " + missing.get(item) + ")");
+        }
+        return "не хватает материалов: " + String.join("; ", parts);
     }
 }
