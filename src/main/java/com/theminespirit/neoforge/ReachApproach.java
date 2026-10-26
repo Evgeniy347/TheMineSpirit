@@ -23,11 +23,18 @@ public final class ReachApproach {
     private BlockCoord stand;
     private boolean active;
     private String refusal;
+    private boolean routes;
 
     public ReachApproach(SpiritEntity spirit) {
         this.spirit = spirit;
         this.approach = new Approach(spirit);
         this.safety = new LevelSafetyView(spirit.level());
+    }
+
+    public static ReachApproach withRoutes(SpiritEntity spirit) {
+        ReachApproach approach = new ReachApproach(spirit);
+        approach.routes = true;
+        return approach;
     }
 
     public void begin(BlockPos block) {
@@ -113,7 +120,12 @@ public final class ReachApproach {
             return false;
         }
         stand = next.get();
-        approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), STAND_ARRIVAL);
+        Vec3 point = new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5);
+        if (routes && !DigOutScript.open(spirit.level(), spirit.blockPosition())) {
+            approach.beginWithRoutes(point, STAND_ARRIVAL);
+        } else {
+            approach.begin(point, STAND_ARRIVAL);
+        }
         return true;
     }
 

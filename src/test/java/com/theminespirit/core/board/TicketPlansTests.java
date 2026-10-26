@@ -772,6 +772,18 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_TransferItemFromWarehouseToSelf_IsPlainGotoThenWithdraw() {
+        UUID self = UUID.fromString("00000000-0000-0000-0000-0000000000c3");
+        TaskNode plan = TicketPlans.plan(BoardCase.TRANSFER_ITEM, target().withTransfer(null, self, "stick", 2));
+
+        assertEquals(
+                List.of("goto", "withdraw", "wait"),
+                collectScripts(plan),
+                "Передача со склада самому себе (INC-85) — обычные goto к двору и withdraw из ближайшего сундука: "
+                        + "оба подхода строят маршрут с ломкой из-под земли, отдельного deliver-шага нет");
+    }
+
+    @Test
     void plan_BreedAnimals_BreedsSpeciesPair() {
         TaskNode plan = TicketPlans.plan(BoardCase.BREED_ANIMALS, target().withSpecies(Species.COW));
         ScriptCall breed = findCall(plan, "breed");
