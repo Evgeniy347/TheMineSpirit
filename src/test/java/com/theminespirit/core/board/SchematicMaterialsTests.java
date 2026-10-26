@@ -32,4 +32,10 @@ class SchematicMaterialsTests {
 
         assertEquals(Map.of("oak_planks", 12), need, "наземная схема требует свои блоки");
     }
+
+    @Test
+    void known_RepairWithoutSchematicFile_IsUnknown() {
+        assertEquals(false, SchematicMaterials.known(Optional.empty()), "ремонт без файла схемы не сверяется с миром");
+        assertEquals(true, SchematicMaterials.known(Optional.of(BuildingType.HOUSING)), "схема каталога сверяется");
+    }
 }

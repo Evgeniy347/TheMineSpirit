@@ -809,6 +809,8 @@ public final class FirstStepsRunner {
             when "build_schematic".equals(call.script())
                     && !call.params().containsKey("rotation")
                     && call.params().get("file") instanceof String file
+                    && SchematicMaterials.known(
+                            DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()))
                     && call.params().get("x") instanceof Integer x
                     && call.params().get("y") instanceof Integer y
                     && call.params().get("z") instanceof Integer z -> {
@@ -1040,6 +1042,8 @@ public final class FirstStepsRunner {
             when "build_schematic".equals(call.script())
                     && !call.params().containsKey("rotation")
                     && call.params().get("file") instanceof String file
+                    && SchematicMaterials.known(
+                            DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()))
                     && call.params().get("x") instanceof Integer x
                     && call.params().get("y") instanceof Integer y
                     && call.params().get("z") instanceof Integer z -> {

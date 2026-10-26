@@ -8,6 +8,10 @@ import java.util.function.Supplier;
 public final class SchematicMaterials {
     private SchematicMaterials() {}
 
+    public static boolean known(Optional<BuildingType> type) {
+        return type.isPresent();
+    }
+
     public static Map<String, Integer> count(Optional<BuildingType> type, Supplier<Map<String, Integer>> blocks) {
         if (type.isEmpty() || type.get() == BuildingType.UNDERGROUND) {
             return Map.of();
