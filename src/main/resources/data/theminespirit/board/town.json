@@ -18,7 +18,7 @@
     {"id": "well", "name": "Колодец", "width": 7, "depth": 7, "quarter": "nw", "level": true, "rotate": true},
     {"id": "lumber_yard", "name": "Лесопилка", "width": 15, "depth": 17, "quarter": "se", "level": true, "rotate": true},
     {"id": "workshop", "name": "Мастерская", "width": 17, "depth": 17, "quarter": "se", "level": true, "rotate": true},
-    {"id": "orchard", "name": "Сад", "width": 11, "depth": 11, "quarter": "se", "level": true, "rotate": true},
+    {"id": "orchard", "name": "Сад", "width": 19, "depth": 19, "quarter": "se", "level": true, "rotate": true},
     {"id": "player_house", "name": "Дом игрока", "width": 26, "depth": 25, "quarter": "ne", "level": true, "rotate": true},
     {"id": "forge", "name": "Кузница", "width": 19, "depth": 15, "quarter": "se", "level": true, "rotate": true},
     {"id": "bakery", "name": "Пекарня", "width": 17, "depth": 17, "quarter": "sw", "level": true, "rotate": true},
