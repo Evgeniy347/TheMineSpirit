@@ -1,0 +1,16 @@
+# yard_chest — пара сундуков двора на клетках резерва yard_1: ставится, когда свободного места в сундуках < 20%.
+name: "Пара сундуков двора"
+type: infrastructure
+stage: 1
+size: 2x1x2   # Ш×В×Д
+entrance: 0,0,0
+exemptions:
+  - rule: light
+    reason: "пара сундуков стоит во дворе yard_1: свет двора — его факел"
+legend:
+  'L': chest[facing=north,type=left]
+  'R': chest[facing=north,type=right]
+layers:
+  - y0 пара сундуков за проходом: |
+
+      LR

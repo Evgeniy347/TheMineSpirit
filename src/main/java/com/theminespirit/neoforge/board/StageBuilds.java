@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
@@ -14,6 +13,7 @@ import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.WallLayout;
 import com.theminespirit.core.town.WallPiece;
+import com.theminespirit.core.town.YardScheme;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -31,11 +31,10 @@ public final class StageBuilds {
     public static StageWork of(ServerLevel level, BoardCase boardCase, StageSite site, int part) {
         return switch (boardCase) {
             case BUILD_FENCE -> fence(level, site, part);
-            case BUILD_HOUSE -> new StageWork(site, List.of(), palisade(site));
-            case LIGHTING -> new StageWork(site, StageLegacyBlocks.torches(level, site));
+            case LIGHTING -> new StageWork(site, List.of(), YardScheme.lighting(site));
             case PLANT_GROVE -> new StageWork(site, StageLegacyBlocks.grove(level, site));
-            case STOCK_CHESTS -> new StageWork(site, StagePlans.yardBlocks(site, part));
-            case CRAFT_FURNACE -> new StageWork(site, List.of(new PlannedBlock(site.furnace(), StagePlans.FURNACE)));
+            case STOCK_CHESTS -> new StageWork(site, List.of(), YardScheme.stock(site, part));
+            case CRAFT_FURNACE -> new StageWork(site, List.of(), List.of(YardScheme.furnace(site)));
             default -> new StageWork(site, List.of());
         };
     }
@@ -66,14 +65,6 @@ public final class StageBuilds {
 
     private static WallLayout fenceLayout() {
         return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.FENCE);
-    }
-
-    private static List<SchemeBuild> palisade(StageSite site) {
-        int y = site.anchor().y();
-        return fenceLayout().open(site.palisadeLine(), List.of(site.palisadeGate())).stream()
-                .map(piece ->
-                        new SchemeBuild(piece.scheme(), new BlockCoord(piece.x(), y, piece.z()), piece.rotation()))
-                .toList();
     }
 
     private static StageWork fence(ServerLevel level, StageSite site, int part) {

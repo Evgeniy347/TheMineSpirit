@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.SchemeFilter;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;
@@ -14,16 +15,18 @@ import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptSpec;
 import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownFixtures;
+import com.theminespirit.core.town.YardScheme;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -238,27 +241,30 @@ class TicketPlansTests {
     @Test
     void plan_LightingOnPlan_EveryPlannedTorchOffHouse() {
         StageSite site = TownFixtures.flatSite();
-        List<PlannedBlock> torches = new ArrayList<>();
-        site.groundTorches().forEach(cell -> torches.add(new PlannedBlock(cell, StagePlans.TORCH)));
-        TicketTarget target = TicketTarget.at(site.workYard()).withWork(new StageWork(site, torches));
+        TicketTarget target =
+                TicketTarget.at(site.workYard()).withWork(new StageWork(site, List.of(), YardScheme.lighting(site)));
 
-        List<ScriptCall> placed = collectCalls(TicketPlans.plan(BoardCase.LIGHTING, target), "place_block");
+        List<BlockCoord> torches = new ArrayList<>();
+        for (ScriptCall call : collectCalls(TicketPlans.plan(BoardCase.LIGHTING, target), "build_schematic")) {
+            BuildSchematicParams params = BuildSchematicParams.from(call.params());
+            SchemeFilter.only(
+                            DataTables.INSTANCE
+                                    .presets()
+                                    .current()
+                                    .byId(params.file())
+                                    .orElseThrow()
+                                    .schematic(),
+                            params.only())
+                    .entries(new BlockCoord(params.x(), params.y(), params.z()), params.rotation())
+                    .forEach(entry -> torches.add(entry.pos()));
+        }
 
         assertEquals(
-                torches.size(),
-                placed.stream()
-                        .map(call -> List.of(
-                                call.params().get("x"),
-                                call.params().get("y"),
-                                call.params().get("z")))
-                        .distinct()
-                        .count(),
-                "Свет этапа ставит каждый факел плана: у калиток и на площадках, без пропусков");
+                5,
+                torches.stream().distinct().count(),
+                "Свет этапа — клетки схем: факел двора, два у шахты и два у крыльца хижины, без пропусков");
         assertTrue(
-                placed.stream()
-                        .noneMatch(
-                                call -> site.houseColumn((Integer) call.params().get("x"), (Integer)
-                                        call.params().get("z"))),
+                torches.stream().noneMatch(torch -> site.houseColumn(torch.x(), torch.z())),
                 "Факел в габарите хижины ломал её сверку (приёмка «джунгли»)");
     }
 

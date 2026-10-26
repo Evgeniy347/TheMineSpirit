@@ -42,6 +42,9 @@
   "fence_diagonal",
   "fence_corner45_left",
   "fence_corner45_right",
-  "fence_wicket"
+  "fence_wicket",
+  "yard_1",
+  "yard_chest",
+  "ground_torch"
  ]
 }

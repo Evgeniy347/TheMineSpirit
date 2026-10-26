@@ -22,7 +22,6 @@ import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StageAudit;
-import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
@@ -107,7 +106,6 @@ public final class FirstStepsRunner {
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String STONE_PART_PREFIX = "stone:";
     private static final String FENCE_PART_PREFIX = "fence:";
-    private static final String HOUSE_PART_PREFIX = "house:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
     private static final String SAPLING = "_sapling";
@@ -363,6 +361,9 @@ public final class FirstStepsRunner {
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
         Placed placed = audit(level, caseValue, work.site(), step.wood());
         int missing = placed.total() - placed.done();
+        if (missing == 0) {
+            return true;
+        }
         if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
             LOGGER.info(
                     "[layout] {} по журналу сделан, но нет {} из {} блоков: не построено — шаг стройки заново",
@@ -437,7 +438,6 @@ public final class FirstStepsRunner {
         return service.board().all().stream()
                 .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
                                 || ticket.id().startsWith(FENCE_PART_PREFIX)
-                                || ticket.id().startsWith(HOUSE_PART_PREFIX)
                                 || ticket.id().startsWith(RepairPlan.PREFIX)
                                 || ticket.id().startsWith(CLEAR_PART_PREFIX))
                         && active(service, ticket.id()));
@@ -447,7 +447,6 @@ public final class FirstStepsRunner {
         return switch (caseValue) {
             case CLEAR_GROUNDS -> GroundsPlan.CLEAR_PARTS;
             case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
-            case BUILD_HOUSE -> StagePlans.HOUSE_PARTS;
             default -> 1;
         };
     }
@@ -456,12 +455,7 @@ public final class FirstStepsRunner {
         if (part == 1) {
             return FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
         }
-        String prefix = switch (caseValue) {
-            case BUILD_FENCE -> FENCE_PART_PREFIX;
-            case BUILD_HOUSE -> HOUSE_PART_PREFIX;
-            default -> CLEAR_PART_PREFIX;
-        };
-        return prefix + part;
+        return (caseValue == BoardCase.BUILD_FENCE ? FENCE_PART_PREFIX : CLEAR_PART_PREFIX) + part;
     }
 
     private static Map<String, Integer> partNeed(
@@ -1085,7 +1079,7 @@ public final class FirstStepsRunner {
             }
             return true;
         }
-        if (step != BoardCase.BUILD_FENCE && step != BoardCase.BUILD_HOUSE) {
+        if (step != BoardCase.BUILD_FENCE) {
             return true;
         }
         boolean anyPart = false;

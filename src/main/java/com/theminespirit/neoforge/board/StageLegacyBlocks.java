@@ -11,15 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 final class StageLegacyBlocks {
     private StageLegacyBlocks() {}
 
-    static List<PlannedBlock> torches(ServerLevel level, StageSite site) {
-        return grounded(
-                level,
-                site,
-                site.groundTorches().stream()
-                        .map(cell -> new PlannedBlock(cell, StagePlans.TORCH))
-                        .toList());
-    }
-
     static List<PlannedBlock> grove(ServerLevel level, StageSite site) {
         String wood =
                 SettlementPlotStore.get(level).plot().map(plot -> plot.wood()).orElseThrow();
@@ -29,22 +20,5 @@ final class StageLegacyBlocks {
             blocks.add(new PlannedBlock(new BlockCoord(spot.x(), y, spot.z()), StagePlans.sapling(wood)));
         }
         return List.copyOf(blocks);
-    }
-
-    private static List<PlannedBlock> grounded(ServerLevel level, StageSite site, List<PlannedBlock> blocks) {
-        return blocks.stream()
-                .map(block -> new PlannedBlock(
-                        new BlockCoord(
-                                block.at().x(),
-                                GroundProbe.feet(
-                                                level,
-                                                block.at().x(),
-                                                block.at().z(),
-                                                site.anchor().y())
-                                        + block.at().y()
-                                        - site.anchor().y(),
-                                block.at().z()),
-                        block.block()))
-                .toList();
     }
 }

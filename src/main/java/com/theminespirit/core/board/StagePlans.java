@@ -23,11 +23,9 @@ public final class StagePlans {
     public static final String FENCE = "minecraft:oak_fence";
     public static final String TORCH = "minecraft:torch";
     public static final String AIR = "minecraft:air";
-    public static final int HOUSE_PARTS = 2;
-    public static final String CHEST_LEFT = "minecraft:chest[facing=north,type=left]";
-    public static final String CHEST_RIGHT = "minecraft:chest[facing=north,type=right]";
     public static final String TABLE = "minecraft:crafting_table";
-    public static final String FURNACE = "minecraft:furnace[facing=north]";
+    public static final String FURNACE = "minecraft:furnace";
+    private static final String TABLE_BLOCK = "crafting_table";
     private static final String MINECRAFT = "minecraft:";
     private static final int GROVE_STEP = 2;
     private static final int CHEST_PLANKS = 20;
@@ -49,9 +47,9 @@ public final class StagePlans {
         return switch (boardCase) {
             case BUILD_FENCE, LIGHTING, PLANT_GROVE ->
                 Optional.of(PlanSteps.placeAll(target, work.blocks(), work.builds()));
-            case STOCK_CHESTS -> Optional.of(chests(target, site, work.blocks()));
-            case CRAFT_FURNACE -> Optional.of(station(target, site.workYard(), work.blocks()));
-            case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site, work.builds())) : Optional.empty();
+            case STOCK_CHESTS -> Optional.of(chests(target, site, work.builds()));
+            case CRAFT_FURNACE -> Optional.of(station(target, site.workYard(), work.builds()));
+            case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site)) : Optional.empty();
             case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
             default -> Optional.empty();
         };
@@ -73,18 +71,7 @@ public final class StagePlans {
         return MINECRAFT + WoodSpecies.swap("oak_sapling", wood);
     }
 
-    public static List<PlannedBlock> yardBlocks(StageSite site, int slot) {
-        List<BlockCoord> pair = site.chestSlots().get(Math.max(1, slot) - 1);
-        List<PlannedBlock> blocks = new ArrayList<>();
-        blocks.add(new PlannedBlock(pair.get(0), CHEST_LEFT));
-        blocks.add(new PlannedBlock(pair.get(1), CHEST_RIGHT));
-        if (slot <= 1) {
-            blocks.add(new PlannedBlock(site.craftingTable(), TABLE));
-        }
-        return List.copyOf(blocks);
-    }
-
-    private static TaskNode hut(TicketTarget target, StageSite site, List<SchemeBuild> palisade) {
+    private static TaskNode hut(TicketTarget target, StageSite site) {
         String scheme = DataTables.INSTANCE
                 .stages()
                 .current()
@@ -113,34 +100,31 @@ public final class StagePlans {
                                     id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
                         }));
         steps.add(new ScriptCall("build_schematic", Map.copyOf(params)));
-        if (target.count() != 1) {
-            steps.add(PlanSteps.placeAll(target, List.of(), palisade));
-        }
         return new SequenceNode(steps);
     }
 
-    private static TaskNode chests(TicketTarget target, StageSite site, List<PlannedBlock> blocks) {
+    private static TaskNode chests(TicketTarget target, StageSite site, List<SchemeBuild> builds) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(site.workYard()));
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         steps.add(PlanSteps.withdraw(MINECRAFT + wood + "_planks", CHEST_PLANKS));
-        if (blocks.size() > 2) {
-            steps.add(PlanSteps.craft(TABLE, 1));
-            steps.add(PlanSteps.place(blocks.get(2), target));
+        for (SchemeBuild build : builds) {
+            steps.add(
+                    build.only().contains(TABLE_BLOCK)
+                            ? PlanSteps.craft(TABLE, 1)
+                            : PlanSteps.craft("minecraft:chest", 2));
+            steps.add(PlanSteps.build(build, target.wood()));
         }
-        steps.add(PlanSteps.craft("minecraft:chest", 2));
-        steps.add(PlanSteps.place(blocks.get(0), target));
-        steps.add(PlanSteps.place(blocks.get(1), target));
         return new SequenceNode(steps);
     }
 
-    private static TaskNode station(TicketTarget target, BlockCoord yard, List<PlannedBlock> blocks) {
+    private static TaskNode station(TicketTarget target, BlockCoord yard, List<SchemeBuild> builds) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(yard));
         steps.add(PlanSteps.withdraw("minecraft:cobblestone", FURNACE_STONE));
-        for (PlannedBlock block : blocks) {
-            steps.add(PlanSteps.craft(PlanSteps.bare(block.block()), 1));
-            steps.add(PlanSteps.place(block, target));
+        for (SchemeBuild build : builds) {
+            steps.add(PlanSteps.craft(FURNACE, 1));
+            steps.add(PlanSteps.build(build, target.wood()));
         }
         return new SequenceNode(steps);
     }

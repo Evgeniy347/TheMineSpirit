@@ -32,6 +32,7 @@ final class PlanSteps {
     private static final int FENCES_PER_CRAFT = 3;
     private static final int PLANKS_PER_FENCE_CRAFT = 5;
     private static final int YARD_REACH = 8;
+    private static final int BUILD_HOP = 8;
 
     private PlanSteps() {}
 
@@ -145,8 +146,20 @@ final class PlanSteps {
         for (PlannedBlock block : blocks) {
             steps.add(place(block, target));
         }
-        builds.forEach(build -> steps.add(build(build, target.wood())));
+        BlockCoord last =
+                blocks.isEmpty() ? null : blocks.get(blocks.size() - 1).at();
+        for (SchemeBuild build : builds) {
+            if (last != null && far(last, build.origin())) {
+                steps.add(gotoPoint(build.origin()));
+            }
+            steps.add(build(build, target.wood()));
+            last = build.origin();
+        }
         return new SequenceNode(steps);
+    }
+
+    private static boolean far(BlockCoord from, BlockCoord to) {
+        return Math.abs(from.x() - to.x()) + Math.abs(from.z() - to.z()) > BUILD_HOP;
     }
 
     static ScriptCall build(SchemeBuild build, @Nullable String wood) {

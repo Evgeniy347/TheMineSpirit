@@ -14,7 +14,7 @@ public final class SchemeFilter {
         }
         List<String> paths = blocks.stream().map(SchematicBlocks::path).toList();
         List<Schematic.Entry> kept = schematic.blocks().stream()
-                .filter(entry -> paths.contains(SchematicBlocks.path(entry.block())))
+                .filter(entry -> !entry.optional() && paths.contains(SchematicBlocks.path(entry.block())))
                 .toList();
         if (kept.isEmpty()) {
             throw new IllegalArgumentException("В схеме нет блоков " + blocks

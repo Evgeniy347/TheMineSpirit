@@ -8,6 +8,7 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,17 +21,16 @@ class StageSiteTests {
     private static final StageSite SITE = TownFixtures.flatSite();
 
     @Test
-    void hut_SchemeAndPalisade_InsideHutPlot() throws IOException {
+    void hut_Scheme_InsideHutPlot() throws IOException {
         Schematic hut = SchematicTextParser.parse(Files.readString(ROOT.resolve("hut_1.txt")), "hut_1")
                 .schematic();
         BlockCoord house = SITE.houseOrigin();
         List<BlockCoord> corners = new ArrayList<>(
                 List.of(house, new BlockCoord(house.x() + hut.sizeX() - 1, house.y(), house.z() + hut.sizeZ() - 1)));
-        SITE.palisadeLine().forEach(cell -> corners.add(new BlockCoord(cell.x(), house.y(), cell.z())));
         for (BlockCoord corner : corners) {
             assertTrue(
                     SITE.hut().covers(corner.x(), corner.z()),
-                    "Клетка " + corner + " хижины или палисадника вне её места в плане " + SITE.hut()
+                    "Клетка " + corner + " хижины вне её места в плане " + SITE.hut()
                             + ": хижина строится только на своей площадке");
         }
         assertEquals(
@@ -40,22 +40,28 @@ class StageSiteTests {
     }
 
     @Test
-    void yard_ChestSlotsTableFurnace_InsideYardAndDistinct() {
-        List<BlockCoord> cells = new ArrayList<>(List.of(SITE.craftingTable(), SITE.furnace(), SITE.workYard()));
-        SITE.chestSlots().forEach(cells::addAll);
+    void yard_SchemeCells_InsideYardOffWorkPoint() {
+        List<BlockCoord> cells = new ArrayList<>();
+        DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(YardScheme.YARD)
+                .orElseThrow()
+                .schematic()
+                .entries(YardScheme.origin(SITE))
+                .forEach(entry -> cells.add(entry.pos()));
         for (BlockCoord cell : cells) {
             assertTrue(
                     SITE.yardColumn(cell.x(), cell.z()),
                     "Клетка двора " + cell + " вне места двора " + SITE.yard() + ": двор — площадка этапа 1");
         }
-        assertEquals(
-                cells.size(),
-                cells.stream().distinct().count(),
-                "Сундуки, верстак, печь и точка двора не делят клетки: иначе второй блок не поставить");
         assertTrue(
-                SITE.chestSlots().size() >= 2,
+                !cells.contains(SITE.workYard()),
+                "Точка двора, где дух крафтит и берёт из сундуков, свободна: схема двора её не занимает");
+        assertTrue(
+                YardScheme.slots(SITE).size() >= 2,
                 "Ряд сундуков двора держит запас под рост склада (решение владельца 25.10), а мест "
-                        + SITE.chestSlots().size());
+                        + YardScheme.slots(SITE).size());
     }
 
     @Test

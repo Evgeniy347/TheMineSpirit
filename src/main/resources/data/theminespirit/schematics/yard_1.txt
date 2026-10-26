@@ -1,0 +1,29 @@
+# yard_1 — двор этапа 1: пара сундуков, верстак, печь, факел; справа от сундуков — резерв ряда сундуков на вырост.
+# Шаги доски строят двор частями (отбор блоков): сундуки и верстак, печь, факел. Резерв — мягкие клетки сундуков:
+# двор их не требует, а правило «свободно < 20%» ставит по ним пару сундуков схемой yard_chest.
+name: "Двор"
+type: infrastructure
+stage: 1
+size: 7x1x4   # Ш×В×Д
+entrance: 3,0,0
+exemptions:
+  - rule: closed_walls
+    reason: "двор — открытая площадка со станками и сундуками, не здание: стен нет"
+  - rule: roof
+    reason: "двор открыт сверху: станки и сундуки под небом, как у костра"
+  - rule: inner_height
+    reason: "у открытого двора нет пола и потолка: внутренней высоты нет"
+legend:
+  'C': crafting_table
+  'F': furnace[facing=north]
+  'T': torch
+  'L': chest[facing=north,type=left]
+  'R': chest[facing=north,type=right]
+  'l': chest[facing=north,type=left] ~
+  'r': chest[facing=north,type=right] ~
+layers:
+  - y0 станки и факел, проход, ряд сундуков с резервом: |
+
+       C   FT
+
+      LRlrlr
