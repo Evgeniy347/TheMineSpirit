@@ -18,6 +18,7 @@ import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
+import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StageAudit;
@@ -30,7 +31,6 @@ import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildRotation;
-import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.MineStone;
 import com.theminespirit.core.building.Preset;
@@ -732,13 +732,9 @@ public final class FirstStepsRunner {
 
             @Override
             public Map<String, Integer> schematicBlocks(String file) {
-                boolean underground = DataTables.INSTANCE
-                        .presets()
-                        .current()
-                        .byId(file)
-                        .map(preset -> preset.type() == BuildingType.UNDERGROUND)
-                        .orElse(false);
-                return underground ? Map.of() : PresetLibrary.countMaterials(SchematicResources.load(file));
+                return SchematicMaterials.count(
+                        DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()),
+                        () -> PresetLibrary.countMaterials(SchematicResources.load(file)));
             }
         };
     }
