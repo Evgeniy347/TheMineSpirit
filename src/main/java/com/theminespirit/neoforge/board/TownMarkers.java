@@ -22,6 +22,10 @@ public final class TownMarkers {
     private TownMarkers() {}
 
     public static List<MapMarker> around(ServerLevel level, TownMapView.Bounds bounds) {
+        return around(level, bounds, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    }
+
+    public static List<MapMarker> around(ServerLevel level, TownMapView.Bounds bounds, int minY, int maxY) {
         TownMapView.Bounds area = new TownMapView.Bounds(
                 bounds.x1() - MARGIN, bounds.z1() - MARGIN, bounds.x2() + MARGIN, bounds.z2() + MARGIN);
         Optional<BoardService> service = BoardRegistry.peek(level);
@@ -31,7 +35,8 @@ public final class TownMarkers {
                     && !spirit.isRemoved()
                     && spirit.isAlive()
                     && !spirit.isDemo()
-                    && inside(area, spirit.getBlockX(), spirit.getBlockZ())) {
+                    && inside(area, spirit.getBlockX(), spirit.getBlockZ())
+                    && insideY(minY, maxY, spirit.getBlockY())) {
                 markers.add(new MapMarker(
                         MapMarker.Kind.SPIRIT,
                         spirit.displayName(),
@@ -41,7 +46,7 @@ public final class TownMarkers {
             }
         }
         for (ServerPlayer player : level.players()) {
-            if (inside(area, player.getBlockX(), player.getBlockZ())) {
+            if (inside(area, player.getBlockX(), player.getBlockZ()) && insideY(minY, maxY, player.getBlockY())) {
                 markers.add(new MapMarker(
                         MapMarker.Kind.PLAYER,
                         player.getGameProfile().getName(),
@@ -71,5 +76,9 @@ public final class TownMarkers {
 
     private static boolean inside(TownMapView.Bounds bounds, int x, int z) {
         return x >= bounds.x1() && x <= bounds.x2() && z >= bounds.z1() && z <= bounds.z2();
+    }
+
+    private static boolean insideY(int minY, int maxY, int y) {
+        return y >= minY && y <= maxY;
     }
 }

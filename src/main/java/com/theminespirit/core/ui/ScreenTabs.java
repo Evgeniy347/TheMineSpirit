@@ -10,7 +10,8 @@ public final class ScreenTabs {
 
     public enum Tab {
         BOARD(0),
-        PLAN(1);
+        PLAN(1),
+        MINE(2);
 
         private final int slot;
 

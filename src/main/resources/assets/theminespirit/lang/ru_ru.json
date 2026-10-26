@@ -117,6 +117,7 @@
   "theminespirit.board.case.weave_wool": "Сделать шерсть",
   "theminespirit.tab.board": "Доска",
   "theminespirit.tab.plan": "План",
+  "theminespirit.tab.mine": "Шахта",
   "theminespirit.map.title": "План поселения",
   "theminespirit.map.loading": "Загрузка плана…",
   "theminespirit.map.empty": "Плана поселения пока нет",
@@ -124,5 +125,11 @@
   "theminespirit.map.lot": "Готово: %s%%",
   "theminespirit.map.lot.damaged": "Повреждена: цела на %s%%, до восстановления %s%%",
   "theminespirit.map.player": "Игрок",
-  "theminespirit.map.no_job": "Без задания"
+  "theminespirit.map.no_job": "Без задания",
+  "theminespirit.mine.title": "План шахты",
+  "theminespirit.mine.loading": "Загрузка среза шахты…",
+  "theminespirit.mine.empty": "Шахты пока нет",
+  "theminespirit.mine.offline": "Сервер без мода: шахта недоступна",
+  "theminespirit.mine.height": "Высота Y=%s (от %s до %s), Shift+колесо или ↑/↓",
+  "theminespirit.mine.progress": "Готово: %s%%"
 }
