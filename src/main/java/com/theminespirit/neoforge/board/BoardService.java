@@ -13,11 +13,13 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EvergreenRules;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.PriorityContext;
+import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
@@ -39,6 +41,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -238,6 +241,7 @@ public final class BoardService {
         digOut(level, spirits);
         issue(level, spirits, now);
         reconcileActivities(spirits, true);
+        releaseDeadHolders(level, spirits, now);
         flushBlockNotes();
         rebuilds++;
         lastRebuild = now;
@@ -503,9 +507,7 @@ public final class BoardService {
     }
 
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
-        Set<UUID> present = new HashSet<>();
         for (SpiritEntity spirit : spirits) {
-            present.add(spirit.getUUID());
             Optional<BoardCase> occupation = occupationOf(spirit);
             if (occupation.isPresent()) {
                 board.occupy(
@@ -520,20 +522,53 @@ public final class BoardService {
         if (!census) {
             return;
         }
+    }
+
+    private void releaseDeadHolders(ServerLevel level, List<SpiritEntity> spirits, long now) {
+        Set<UUID> live = new HashSet<>();
+        for (SpiritEntity spirit : spirits) {
+            live.add(spirit.getUUID());
+        }
         for (BoardTicket ticket : board.all()) {
-            UUID holder = ticket.assignee().orElse(null);
-            if (holder == null || present.contains(holder)) {
+            if (board.statusOf(ticket.id()).orElse(null) != BoardStatus.ASSIGNED
+                    || BoardActivities.isActivity(ticket.boardCase())) {
                 continue;
             }
-            if (BoardActivities.isActivity(ticket.boardCase())) {
-                board.vacate(holder);
-                launched.remove(holder);
-            } else if (board.statusOf(ticket.id()).orElse(null) == BoardStatus.ASSIGNED) {
-                LOGGER.info(
-                        "[board] задание {} снято с духа {}: его нет среди живых духов поселения", ticket.id(), holder);
-                board.release(ticket.id());
+            UUID holder = board.holderOf(ticket.id()).orElse(null);
+            if (holder == null || live.contains(holder) || !repairGoalDone(level, ticket)) {
+                continue;
             }
+            board.complete(ticket.id());
         }
+        for (Board.HolderRelease freed : board.releaseDeadHolders(live)) {
+            if (freed.activity()) {
+                launched.remove(freed.holder());
+            }
+            LOGGER.info(
+                    "[board] задание {} освобождено: держатель {} погиб или удалён", freed.ticketId(), freed.holder());
+            journal.recordEntry(BoardLog.note(
+                    freed.ticketId(),
+                    freed.boardCase(),
+                    now,
+                    List.of("держатель " + freed.holder() + " погиб/удалён"),
+                    freed.holder().toString(),
+                    ConfigStamp.current()));
+        }
+    }
+
+    private boolean repairGoalDone(ServerLevel level, BoardTicket ticket) {
+        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING || !ticket.id().startsWith(RepairPlan.PREFIX)) {
+            return false;
+        }
+        TicketTarget target = targets.get(ticket.id());
+        StageWork work = target == null ? null : target.work();
+        String wood = target == null ? null : target.wood();
+        if (work == null || work.repairs().isEmpty() || wood == null) {
+            return false;
+        }
+        FirstStepsRunner.Placed placed =
+                FirstStepsRunner.audit(level, BoardCase.valueOf(work.repairs()), work.site(), wood);
+        return placed.total() > 0 && placed.done() >= placed.total();
     }
 
     private void digOut(ServerLevel level, List<SpiritEntity> spirits) {

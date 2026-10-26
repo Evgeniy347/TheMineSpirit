@@ -369,6 +369,41 @@ public final class Board {
         return true;
     }
 
+    public List<HolderRelease> releaseDeadHolders(Set<UUID> live) {
+        Objects.requireNonNull(
+                live,
+                "live не может быть null: без живых духов непонятно, чей держатель погиб — пустой набор задают пустым множеством");
+        List<HolderRelease> released = new ArrayList<>();
+        for (BoardTicket ticket : List.copyOf(tickets.values())) {
+            if (statuses.get(ticket.id()) != BoardStatus.ASSIGNED) {
+                continue;
+            }
+            UUID holder = holder(ticket);
+            if (holder == null || live.contains(holder)) {
+                continue;
+            }
+            if (BoardActivities.isActivity(ticket.boardCase())) {
+                if (vacate(holder)) {
+                    released.add(new HolderRelease(ticket.id(), ticket.boardCase(), holder, true));
+                }
+            } else if (release(ticket.id())) {
+                released.add(new HolderRelease(ticket.id(), ticket.boardCase(), holder, false));
+            }
+        }
+        return List.copyOf(released);
+    }
+
+    public record HolderRelease(String ticketId, BoardCase boardCase, UUID holder, boolean activity) {
+        public HolderRelease {
+            Objects.requireNonNull(
+                    ticketId, "ticketId освобождения не может быть null: без id непонятно, какое задание вернулось");
+            Objects.requireNonNull(
+                    boardCase, "Кейс освобождения не может быть null: без него запись журнала не описать");
+            Objects.requireNonNull(
+                    holder, "holder освобождения не может быть null: погибший держатель известен всегда");
+        }
+    }
+
     public void occupy(UUID spirit, BoardCase activity, long now) {
         occupy(spirit, activity, null, now);
     }
