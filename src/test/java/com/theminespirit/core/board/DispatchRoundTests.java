@@ -1,0 +1,114 @@
+package com.theminespirit.core.board;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+
+class DispatchRoundTests {
+    private static final BoardCase CASE = BoardCase.GATHER_MATERIALS;
+    private static final EatNeed FED = new EatNeed(20, 20, 20, 20);
+
+    private static List<DispatchRound.Candidate> spirits(int count) {
+        List<DispatchRound.Candidate> spirits = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+            spirits.add(new DispatchRound.Candidate(
+                    new UUID(0, i), "spirit-" + i, null, List.of(), FED, SpiritView.free()));
+        }
+        return spirits;
+    }
+
+    private static BoardTicket ticket(String id, Optional<UUID> assignee) {
+        return new BoardTicket(
+                id, CASE, assignee, BoardRules.priorityOf(CASE), 0, 1, BoardTicket.ALWAYS_CAUSE, List.of(), Map.of());
+    }
+
+    private static Board board(List<BoardTicket> tickets) {
+        Board board = new Board(() -> 0);
+        tickets.forEach(board::submit);
+        return board;
+    }
+
+    private static void run(Board board, DispatchRound round, List<DispatchRound.Candidate> spirits, String declined) {
+        for (BoardTicket ticket : DispatchRound.order(board.claimable(new StockView(Map.of()), 0))) {
+            Optional<DispatchRound.Candidate> chosen = round.choose(ticket, spirits);
+            if (chosen.isEmpty() || ticket.id().equals(declined)) {
+                continue;
+            }
+            board.claim(ticket.id(), chosen.orElseThrow().id(), 0);
+            round.take(chosen.orElseThrow().id());
+        }
+    }
+
+    @Test
+    void choose_FourFreeSpiritsTenTickets_EverySpiritBusy() {
+        List<BoardTicket> tickets = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            tickets.add(ticket("gather:" + i, Optional.empty()));
+        }
+        Board board = board(tickets);
+        DispatchRound round = new DispatchRound(board, 0);
+        List<DispatchRound.Candidate> spirits = spirits(4);
+
+        run(board, round, spirits, "");
+
+        assertEquals(
+                Map.of(new UUID(0, 1), 1, new UUID(0, 2), 1, new UUID(0, 3), 1, new UUID(0, 4), 1),
+                board.assignedCounts(),
+                "4 свободных духа при 10 заданиях заняты все по одному (INC-83: 4 из 5 стояли при 10 заданиях); "
+                        + "проверь выбор свободного духа и счёт взятых в раунде");
+        String why = round.why(tickets.get(9), spirits);
+        assertTrue(
+                why.contains("spirit-1 — держит gather:") && why.contains("spirit-4 — держит gather:"),
+                "Причина ожидания называет каждого духа и чем он занят, а не «годные духи заняты»: " + why);
+    }
+
+    @Test
+    void choose_OwnTicketNotIssued_OwnerTakesOtherWork() {
+        List<DispatchRound.Candidate> spirits = spirits(4);
+        List<BoardTicket> tickets = new ArrayList<>();
+        tickets.add(ticket("own:spirit-1", Optional.of(spirits.get(0).id())));
+        for (int i = 0; i < 9; i++) {
+            tickets.add(ticket("gather:" + i, Optional.empty()));
+        }
+        Board board = board(tickets);
+        DispatchRound round = new DispatchRound(board, 0);
+
+        run(board, round, spirits, "own:spirit-1");
+
+        assertEquals(
+                4,
+                board.assignedCounts().size(),
+                "Своё задание духа не выдано (ждёт передачу) — дух не простаивает «в ожидании своего», а берёт "
+                        + "другое по силам; иначе он стоит, пока висят задания");
+    }
+
+    @Test
+    void why_BusyAndPausedSpirits_NamesEachConcretely() {
+        BoardTicket failed = ticket("failed", Optional.empty());
+        BoardTicket waiting = ticket("waiting", Optional.empty());
+        Board board = board(List.of(failed));
+        UUID paused = new UUID(0, 1);
+        board.claim("failed", paused, 0);
+        board.fail("failed");
+        board.submit(waiting);
+        List<DispatchRound.Candidate> spirits = List.of(
+                new DispatchRound.Candidate(paused, "spirit-1", null, List.of(), FED, SpiritView.free()),
+                new DispatchRound.Candidate(
+                        new UUID(0, 2), "spirit-2", "chop_tree", List.of(), FED, SpiritView.free()));
+        DispatchRound round = new DispatchRound(board, 0);
+        round.await(new UUID(0, 3), "несёт ингредиенты для house:2");
+
+        String why = round.why(waiting, spirits);
+
+        assertEquals(
+                "spirit-1 — на паузе кейса GATHER_MATERIALS после 1 провалов; spirit-2 — занят: chop_tree",
+                why,
+                "Причина ожидания по каждому духу: пауза кейса с числом провалов и текущее занятие");
+    }
+}

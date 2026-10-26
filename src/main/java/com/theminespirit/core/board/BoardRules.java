@@ -29,6 +29,9 @@ public final class BoardRules {
         Map<BoardCase, Integer> priorities = new EnumMap<>(BoardCase.class);
         priorities.put(BoardCase.REPAIR_FENCE, 100);
         priorities.put(BoardCase.ACTIVITY_COMBAT, 100);
+        priorities.put(BoardCase.ACTIVITY_RETREAT, 100);
+        priorities.put(BoardCase.ACTIVITY_RETURN, 30);
+        priorities.put(BoardCase.ACTIVITY_GUARD, 30);
         priorities.put(BoardCase.ACTIVITY_ARM, 100);
         priorities.put(BoardCase.ACTIVITY_EXTERNAL, 95);
         priorities.put(BoardCase.ACTIVITY_EXPEDITION, 95);

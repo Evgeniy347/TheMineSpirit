@@ -17,6 +17,7 @@ import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.Situation;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticalOutcome;
+import com.theminespirit.core.tactics.TacticsAction;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TacticsEngine;
 import com.theminespirit.core.tactics.TacticsMemory;
@@ -99,6 +100,7 @@ public final class TacticsService {
     private Optional<RetreatPlan> plan = Optional.empty();
     private RetreatMethod planMethod = RetreatMethod.NONE;
     private Optional<Point> returnTarget = Optional.empty();
+    private TacticsAction action = TacticsAction.IDLE;
     private int returnTicks;
     private long returnBlockedUntil;
     private @Nullable Point stallPoint;
@@ -293,6 +295,10 @@ public final class TacticsService {
 
     public boolean wantsControl() {
         return active;
+    }
+
+    public TacticsAction action() {
+        return active ? action : TacticsAction.IDLE;
     }
 
     public PolicyExemptions exemptions() {
@@ -523,6 +529,7 @@ public final class TacticsService {
         }
         if (retreat.retreating() && plan.isPresent()) {
             active = true;
+            action = TacticsAction.RETREAT;
             progress = retreating.step(plan.get(), entity(shootTargetId));
             return;
         }
@@ -531,6 +538,7 @@ public final class TacticsService {
                 : entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
+            action = TacticsAction.FIGHT;
             returnTicks = 0;
             returnBlockedUntil = 0;
             retreating.reset();
@@ -546,6 +554,7 @@ public final class TacticsService {
                 && !returned
                 && spirit.level().getGameTime() >= returnBlockedUntil) {
             active = true;
+            action = zone.isPresent() ? TacticsAction.GUARD : TacticsAction.RETURN;
             returnToAnchor(returnTarget.get());
             return;
         }
@@ -628,6 +637,7 @@ public final class TacticsService {
     }
 
     private void release() {
+        action = TacticsAction.IDLE;
         if (active) {
             retreating.reset();
             combat.stop();

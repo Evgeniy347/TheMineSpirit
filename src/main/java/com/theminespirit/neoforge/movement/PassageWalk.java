@@ -1,14 +1,15 @@
 package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.movement.GateCrossing;
 import com.theminespirit.core.movement.Passage;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -35,13 +36,13 @@ import org.slf4j.Logger;
 public final class PassageWalk {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double REACH = 4.0;
-    private static final double PASSED = 1.5;
+    private static final double ABANDONED = 2 * REACH;
     private static final int NODES_AHEAD = 3;
     private static final int SEARCH = 3;
     private static final double OCCUPIED_INFLATE = 0.1;
 
     private final SpiritEntity spirit;
-    private final Set<BlockCoord> opened = new HashSet<>();
+    private final Map<BlockCoord, GateCrossing> opened = new HashMap<>();
 
     public PassageWalk(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -105,7 +106,7 @@ public final class PassageWalk {
         if (!use(pos, state)) {
             return false;
         }
-        opened.add(coord);
+        opened.put(coord, new GateCrossing(coord, blockCoord(spirit.blockPosition())));
         LOGGER.info(
                 "[move] {} открыл {} в {}: закрытая преграда на пути",
                 spirit.getName().getString(),
@@ -115,7 +116,8 @@ public final class PassageWalk {
     }
 
     private void closePassed() {
-        closeAll(coord -> movedAway(coord) && !occupied(coord));
+        BlockCoord feet = blockCoord(spirit.blockPosition());
+        closeAll(coord -> (passed(coord, feet) || abandoned(coord)) && !occupied(coord));
     }
 
     private void closeAll(Predicate<BlockCoord> ready) {
@@ -123,7 +125,7 @@ public final class PassageWalk {
             return;
         }
         List<BlockCoord> closing = new ArrayList<>();
-        for (BlockCoord coord : opened) {
+        for (BlockCoord coord : opened.keySet()) {
             Passage.Cell cell = passageAt(spirit.level(), coord);
             if (cell == null || !cell.open()) {
                 closing.add(coord);
@@ -183,9 +185,15 @@ public final class PassageWalk {
         return spirit.getEyePosition().distanceToSqr(center) <= REACH * REACH;
     }
 
-    private boolean movedAway(BlockCoord coord) {
+    private boolean passed(BlockCoord coord, BlockCoord feet) {
+        GateCrossing crossing = opened.get(coord);
+        crossing.observe(feet);
+        return crossing.closable();
+    }
+
+    private boolean abandoned(BlockCoord coord) {
         Vec3 center = Vec3.atCenterOf(toPos(coord));
-        return spirit.position().distanceToSqr(center) > PASSED * PASSED;
+        return spirit.position().distanceToSqr(center) > ABANDONED * ABANDONED;
     }
 
     private boolean occupied(BlockCoord coord) {
