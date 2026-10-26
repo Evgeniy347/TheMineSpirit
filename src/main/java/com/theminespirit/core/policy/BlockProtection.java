@@ -80,6 +80,10 @@ public final class BlockProtection {
         return new Allowed();
     }
 
+    public boolean natural(String blockId) {
+        return natural.matches(blockId);
+    }
+
     public List<String> denyPatterns() {
         return deny.patterns();
     }

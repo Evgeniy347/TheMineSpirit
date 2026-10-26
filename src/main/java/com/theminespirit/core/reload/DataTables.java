@@ -5,6 +5,7 @@ import com.theminespirit.core.base.RespawnRules;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.board.WoodRules;
 import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -85,6 +86,7 @@ public final class DataTables {
     private final TableHolder<Unstuck> unstuck;
     private final TableHolder<RouteRules> route;
     private final TableHolder<StageRules> stages;
+    private final TableHolder<WoodRules> wood;
     private final TableHolder<LevelingRules> leveling;
     private final TableHolder<TownRules> town;
     private final TableHolder<PersonalSpace> personalSpace;
@@ -151,6 +153,7 @@ public final class DataTables {
         this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
         this.route = single("route", RouteRules.RESOURCE, RouteRules::parse, RouteRules::load);
         this.stages = single("stages", StageRules.RESOURCE, StageRules::parse, StageRules::load);
+        this.wood = single("wood", WoodRules.RESOURCE, WoodRules::parse, WoodRules::load);
         this.leveling = single("leveling", LevelingRules.RESOURCE, LevelingRules::parse, LevelingRules::load);
         this.town = single("town", TownRules.RESOURCE, TownRules::parse, TownRules::load);
         this.personalSpace =
@@ -360,6 +363,10 @@ public final class DataTables {
 
     public TableHolder<StageRules> stages() {
         return stages;
+    }
+
+    public TableHolder<WoodRules> wood() {
+        return wood;
     }
 
     public TableHolder<PersonalSpace> personalSpace() {

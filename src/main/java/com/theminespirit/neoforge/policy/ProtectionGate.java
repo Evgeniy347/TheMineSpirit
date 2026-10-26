@@ -76,11 +76,11 @@ public final class ProtectionGate {
             return outside;
         }
         Level level = spirit.level();
-        if (GroveTrees.treePart(state) && GroveTrees.planned(level, coord)) {
+        if (!tended && GroveTrees.treePart(state) && GroveTrees.planned(level, coord)) {
             return new BlockProtection.Refused(
                     PolicyId.PROTECTED_ZONE,
                     "в " + pos.toShortString() + " дерево или саженец рощи плана: роща — часть плана, её не снимают "
-                            + "снос, расчистка, выравнивание и фоновая рубка");
+                            + "снос, расчистка, выравнивание и фоновая рубка — только задание рощи");
         }
         String dimension = level.dimension().location().toString();
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);

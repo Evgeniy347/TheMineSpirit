@@ -69,7 +69,7 @@ public final class ChopTreeScript implements ScriptInstance {
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
         this.searchCenter = coords(spirit.blockPosition());
         this.search = newSearch(searchCenter);
-        this.chop = new TreeChop(spirit, logFilter, params.replant(), treeView);
+        this.chop = new TreeChop(spirit, logFilter, params.replant(), false, treeView);
     }
 
     private BlockLocator.Search newSearch(BlockCoord center) {
@@ -311,7 +311,7 @@ public final class ChopTreeScript implements ScriptInstance {
         return Optional.empty();
     }
 
-    private ScriptStatus advance(TreeChop.Outcome outcome) {
+    private ScriptStatus advance(ChopOutcome outcome) {
         return switch (outcome.state()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case DONE -> finishTree(outcome);
@@ -321,7 +321,7 @@ public final class ChopTreeScript implements ScriptInstance {
         };
     }
 
-    private ScriptStatus finishTree(TreeChop.Outcome outcome) {
+    private ScriptStatus finishTree(ChopOutcome outcome) {
         releaseReserved();
         chopped++;
         standingLogs += outcome.standingLogs();

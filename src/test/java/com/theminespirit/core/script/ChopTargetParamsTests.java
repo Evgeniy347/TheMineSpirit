@@ -13,7 +13,7 @@ class ChopTargetParamsTests {
         ChopTargetParams params = ChopTargetParams.from(Map.of("x", 12, "y", 64, "z", -7, "replant", true));
 
         assertEquals(
-                new ChopTargetParams(12, 64, -7, true),
+                new ChopTargetParams(12, 64, -7, true, false),
                 params,
                 "chop_target обязан принять координату ствола и флаг посадки: по ним скрипт знает, какое дерево рубить "
                         + "и восстанавливать ли саженец");
@@ -24,7 +24,7 @@ class ChopTargetParamsTests {
         ChopTargetParams params = ChopTargetParams.from(Map.of("x", 1, "y", 70, "z", 2, "replant", false));
 
         assertEquals(
-                new ChopTargetParams(1, 70, 2, false),
+                new ChopTargetParams(1, 70, 2, false, false),
                 params,
                 "replant=false обязан сохраняться: без него дух сажал бы саженец там, где игрок не просил");
     }

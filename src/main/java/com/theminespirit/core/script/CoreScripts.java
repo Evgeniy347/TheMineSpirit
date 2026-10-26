@@ -463,7 +463,8 @@ public final class CoreScripts {
                                         true,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
                                         CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.bool("replant", false, false)),
+                                ParamSpec.bool("replant", false, false),
+                                ParamSpec.bool(ChopTargetParams.GROVE, false, false)),
                         List.of("по координате есть ствол настоящего дерева"),
                         List.of("дерево срублено целиком", "предметы подобраны в инвентарь")),
                 spec(

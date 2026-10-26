@@ -72,7 +72,7 @@ final class PlanDemolition {
             return;
         }
         LOGGER.info(
-                "[plot] {}: снос {} блоков духов вне плана поселения, первые {}",
+                "[plot] {}: снос {} искусственных блоков вне плана поселения, первые {}",
                 id,
                 stray.size(),
                 stray.stream().limit(SHOWN).toList());

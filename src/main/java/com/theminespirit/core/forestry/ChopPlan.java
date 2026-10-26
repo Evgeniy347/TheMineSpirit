@@ -18,6 +18,13 @@ public record ChopPlan(List<BlockCoord> order) {
         return new ChopPlan(ordered);
     }
 
+    public ChopPlan rest(TreeView view, BlockCoord from) {
+        Objects.requireNonNull(view, "view не может быть null: остаток ствола считается по миру после прохода");
+        Objects.requireNonNull(from, "from не может быть null: порядок добивки считается от второй стоянки");
+        return new ChopPlan(
+                order.stream().filter(view::isLog).sorted(topFirst(from)).toList());
+    }
+
     private static Comparator<BlockCoord> topFirst(BlockCoord from) {
         return Comparator.comparingInt(BlockCoord::y)
                 .reversed()

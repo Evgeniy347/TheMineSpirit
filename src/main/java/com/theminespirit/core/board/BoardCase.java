@@ -57,6 +57,7 @@ public enum BoardCase {
     FILL_CRATER,
     FISH,
     GATHER_MATERIALS,
+    HARVEST_GROVE,
     HARVEST_HIVE,
     HERD_CULL,
     HUNT_WILD_SHEEP,

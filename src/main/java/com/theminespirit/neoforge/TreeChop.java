@@ -13,48 +13,13 @@ import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class TreeChop {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final double DIAGONAL_PENALTY = 10_000;
-
-    enum State {
-        RUNNING,
-        DONE,
-        PROTECTED,
-        UNREACHABLE,
-        FAILED
-    }
-
-    record Outcome(
-            State state,
-            int standingLogs,
-            int plantedSaplings,
-            int skippedCells,
-            boolean lackedSaplings,
-            String reason) {
-        static Outcome running() {
-            return new Outcome(State.RUNNING, 0, 0, 0, false, null);
-        }
-
-        static Outcome done(int standingLogs, int plantedSaplings, int skippedCells, boolean lackedSaplings) {
-            return new Outcome(State.DONE, standingLogs, plantedSaplings, skippedCells, lackedSaplings, null);
-        }
-
-        static Outcome simple(State state) {
-            return new Outcome(state, 0, 0, 0, false, null);
-        }
-
-        static Outcome failed(String reason) {
-            return new Outcome(State.FAILED, 0, 0, 0, false, reason);
-        }
-    }
 
     private enum Phase {
         APPROACH,
@@ -66,6 +31,7 @@ final class TreeChop {
     private final SpiritEntity spirit;
     private final IdFilter logFilter;
     private final boolean replant;
+    private final boolean grove;
     private final TreeView view;
     private final Approach approach;
     private final BlockBreaker breaker;
@@ -81,12 +47,15 @@ final class TreeChop {
     private int skippedCells;
     private boolean lackedSaplings;
     private boolean breaking;
+    private boolean guarded;
+    private boolean secondStand;
     private @Nullable BlockPos stand;
 
-    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, TreeView view) {
+    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, boolean grove, TreeView view) {
         this.spirit = spirit;
         this.logFilter = logFilter;
         this.replant = replant;
+        this.grove = grove;
         this.view = view;
         this.approach = new Approach(spirit);
         this.breaker = new BlockBreaker(spirit);
@@ -99,7 +68,7 @@ final class TreeChop {
     void begin(Tree target) {
         tree = target;
         species = speciesOf(target);
-        BlockPos stand = standingCellBesideTrunk(target);
+        BlockPos stand = ChopStand.first(spirit, target);
         BlockCoord from = stand == null ? target.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
         plan = ChopPlan.of(target, from);
         planIndex = 0;
@@ -108,13 +77,15 @@ final class TreeChop {
         skippedCells = 0;
         lackedSaplings = false;
         breaking = false;
+        guarded = false;
+        secondStand = false;
         Vec3 approachPoint = stand == null ? Vec3.atCenterOf(toPos(target.base())) : Vec3.atBottomCenterOf(stand);
         this.stand = stand;
         approach.begin(approachPoint, stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
     }
 
-    Outcome tick() {
+    ChopOutcome tick() {
         return switch (phase) {
             case APPROACH -> approach();
             case CHOP -> chop();
@@ -148,15 +119,15 @@ final class TreeChop {
         }
     }
 
-    private Outcome approach() {
+    private ChopOutcome approach() {
         return switch (approach.tick()) {
-            case MOVING -> Outcome.running();
+            case MOVING -> ChopOutcome.running();
             case ARRIVED -> resumeChop();
-            case STUCK, TIMEOUT -> Outcome.simple(State.UNREACHABLE);
+            case STUCK, TIMEOUT -> secondStand ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
         };
     }
 
-    private Outcome resumeChop() {
+    private ChopOutcome resumeChop() {
         if (phase == Phase.APPROACH) {
             BlockCoord base = tree.base();
             double trunk = Math.sqrt(spirit.position().distanceToSqr(Vec3.atBottomCenterOf(toPos(base))));
@@ -168,37 +139,76 @@ final class TreeChop {
                     String.format(Locale.ROOT, "%.1f", trunk));
         }
         phase = Phase.CHOP;
-        return Outcome.running();
+        return ChopOutcome.running();
     }
 
-    private Outcome chop() {
+    private ChopOutcome chop() {
         if (breaking) {
             if (breaker.tick() == BlockBreaker.Progress.BREAKING) {
-                return Outcome.running();
+                return ChopOutcome.running();
             }
             breaking = false;
             planIndex++;
         }
+        if (!guarded) {
+            guarded = true;
+            if (ChopGuard.protectedLog(spirit, tree, plan.order(), grove)) {
+                return ChopOutcome.simple(ChopOutcome.State.PROTECTED);
+            }
+        }
         while (planIndex < plan.order().size()) {
             BlockCoord log = plan.order().get(planIndex);
-            BlockBreaker.Begin begin = breaker.beginAnyDistance(toPos(log));
+            BlockBreaker.Begin begin = breaker.beginAnyDistance(toPos(log), grove);
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
-                return Outcome.running();
+                return ChopOutcome.running();
             }
             if (begin instanceof BlockBreaker.Protected) {
-                return Outcome.simple(State.PROTECTED);
-            }
-            BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
-            if (refused.reason() != BlockBreaker.RefuseReason.AIR) {
-                standingLogs++;
+                return ChopOutcome.simple(ChopOutcome.State.PROTECTED);
             }
             planIndex++;
         }
+        return afterPass();
+    }
+
+    private ChopOutcome afterPass() {
+        BlockCoord from = stand == null ? tree.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
+        ChopPlan rest = plan.rest(view, from);
+        if (rest.order().isEmpty()) {
+            return startCollect();
+        }
+        plan = rest;
+        if (secondStand) {
+            return leftStanding();
+        }
+        secondStand = true;
+        planIndex = 0;
+        stand = ChopStand.second(spirit, tree, rest.order(), stand);
+        LOGGER.info(
+                "[chop] {} у дерева {}: после прохода стоят {} брёвен — добивка со второй стоянки {}",
+                spirit.getName().getString(),
+                tree.base(),
+                rest.order().size(),
+                stand == null ? "нет (подход к стволу)" : stand.toShortString());
+        approach.begin(
+                stand == null ? Vec3.atCenterOf(toPos(tree.base())) : Vec3.atBottomCenterOf(stand),
+                stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
+        phase = Phase.APPROACH;
+        return ChopOutcome.running();
+    }
+
+    private ChopOutcome leftStanding() {
+        standingLogs = plan.rest(view, tree.base()).order().size();
+        LOGGER.warn(
+                "[chop] {} у дерева {}: и со второй стоянки не срублено {} брёвен: {}",
+                spirit.getName().getString(),
+                tree.base(),
+                standingLogs,
+                plan.order());
         return startCollect();
     }
 
-    private Outcome startCollect() {
+    private ChopOutcome startCollect() {
         collector = new DropCollector(
                 spirit,
                 logFilter,
@@ -207,24 +217,24 @@ final class TreeChop {
                 PickupTuning.DEFAULT,
                 OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         phase = Phase.COLLECT;
-        return Outcome.running();
+        return ChopOutcome.running();
     }
 
-    private Outcome collect() {
+    private ChopOutcome collect() {
         return switch (collector.tick()) {
-            case RUNNING -> Outcome.running();
+            case RUNNING -> ChopOutcome.running();
             case DONE -> {
                 collector = null;
                 yield replant ? startReplant() : finish();
             }
             case FAILED -> {
                 cancel();
-                yield Outcome.failed("подбор дропа после рубки: " + collector.failureReason());
+                yield ChopOutcome.failed("подбор дропа после рубки: " + collector.failureReason());
             }
         };
     }
 
-    private Outcome startReplant() {
+    private ChopOutcome startReplant() {
         int baseY = tree.base().y();
         List<BlockPos> cells = tree.logs().stream()
                 .filter(log -> log.y() == baseY)
@@ -232,12 +242,12 @@ final class TreeChop {
                 .toList();
         replanter = new Replanter(spirit, species, cells, view);
         phase = Phase.REPLANT;
-        return Outcome.running();
+        return ChopOutcome.running();
     }
 
-    private Outcome replant() {
+    private ChopOutcome replant() {
         if (replanter.tick() == Replanter.State.RUNNING) {
-            return Outcome.running();
+            return ChopOutcome.running();
         }
         plantedSaplings += replanter.planted();
         skippedCells += replanter.skipped();
@@ -246,50 +256,8 @@ final class TreeChop {
         return finish();
     }
 
-    private Outcome finish() {
-        return Outcome.done(standingLogs, plantedSaplings, skippedCells, lackedSaplings);
-    }
-
-    private BlockPos standingCellBesideTrunk(Tree target) {
-        int baseY = target.base().y();
-        BlockPos best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (BlockCoord log : target.logs()) {
-            if (log.y() != baseY) {
-                continue;
-            }
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    if (dx == 0 && dz == 0) {
-                        continue;
-                    }
-                    for (int dy = 0; dy <= 1; dy++) {
-                        BlockPos pos = new BlockPos(log.x() + dx, baseY + dy, log.z() + dz);
-                        if (!isStandable(pos)) {
-                            continue;
-                        }
-                        double diagonal = dx != 0 && dz != 0 ? DIAGONAL_PENALTY : 0;
-                        double distance = spirit.position().distanceToSqr(Vec3.atBottomCenterOf(pos)) + diagonal;
-                        if (distance < bestDistance) {
-                            bestDistance = distance;
-                            best = pos;
-                        }
-                    }
-                }
-            }
-        }
-        return best;
-    }
-
-    private boolean isStandable(BlockPos pos) {
-        Level level = spirit.level();
-        BlockPos below = pos.below();
-        return (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced())
-                && (level.getBlockState(pos.above()).isAir()
-                        || level.getBlockState(pos.above()).canBeReplaced())
-                && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)
-                && level.getFluidState(pos).isEmpty()
-                && level.getFluidState(pos.above()).isEmpty();
+    private ChopOutcome finish() {
+        return ChopOutcome.done(standingLogs, plantedSaplings, skippedCells, lackedSaplings);
     }
 
     private TreeSpecies speciesOf(Tree found) {

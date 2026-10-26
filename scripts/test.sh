@@ -43,7 +43,8 @@ usage() {
   unit      быстрые JUnit-тесты (без запуска игры)
   gametest  GameTest под замком: общий набор без ручных демо-аудитов (--full — он же, с пределом полного)
 
-Сид генерируемой сцены: --seed N повторяет ту же сцену (сид пишется в лог теста строкой [scene]);
+Сид генерируемой сцены: --seed N повторяет ту же сцену, место сетки тестов и случайность мира (мир прогона
+— заново; сид пишется в лог теста строкой [scene]);
 без --seed каждая сцена берёт новый случайный сид.
 
 Шарды GameTest: на ПК 3 сервера, на Linux 1; THEMINESPIRIT_GAMETEST_SHARDS перекрывает.
@@ -843,6 +844,9 @@ else
             shard_args+=("-Dtheminespirit.gametest.dir=build/gametest-run/shard-$shard")
         fi
         mkdir -p "$shard_run_dir"
+        if [ -n "$GAMETEST_SEED" ]; then
+            rm -rf "$shard_run_dir/world"
+        fi
         {
             echo "exclude=$GAMETEST_EXCLUDE"
             echo "shard=$shard_value"

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.BuildingWoods;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
@@ -9,6 +10,8 @@ import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanCodec;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.HolderLookup;
@@ -29,6 +32,7 @@ public final class SettlementPlotStore extends SavedData {
     private static final String WOOD = "Wood";
     private static final String LEVELED = "Leveled";
     private static final String TOWN = "Town";
+    private static final String BUILDING_WOOD = "BuildingWood";
     private static final int FIRST_STAGE = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final SavedData.Factory<SettlementPlotStore> FACTORY =
@@ -38,6 +42,7 @@ public final class SettlementPlotStore extends SavedData {
     private @Nullable TownPlan town;
     private @Nullable StageSite site;
     private boolean leveled;
+    private BuildingWoods woods = BuildingWoods.NONE;
 
     private SettlementPlotStore() {}
 
@@ -58,6 +63,7 @@ public final class SettlementPlotStore extends SavedData {
         plot = null;
         site = null;
         leveled = false;
+        woods = BuildingWoods.NONE;
         setDirty();
     }
 
@@ -90,9 +96,19 @@ public final class SettlementPlotStore extends SavedData {
                 || before.anchor().x() != next.anchor().x()
                 || before.anchor().z() != next.anchor().z()) {
             leveled = false;
+            woods = BuildingWoods.NONE;
         }
         plot = next;
         site = null;
+        setDirty();
+    }
+
+    public BuildingWoods woods() {
+        return woods;
+    }
+
+    public void fixWoods(BuildingWoods next) {
+        woods = Objects.requireNonNull(next, "Породы построек не могут быть null: фиксируется выбор построек");
         setDirty();
     }
 
@@ -112,12 +128,17 @@ public final class SettlementPlotStore extends SavedData {
         town = null;
         site = null;
         leveled = false;
+        woods = BuildingWoods.NONE;
         setDirty();
     }
 
     private static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementPlotStore store = new SettlementPlotStore();
         store.leveled = tag.getBoolean(LEVELED);
+        CompoundTag chosen = tag.getCompound(BUILDING_WOOD);
+        Map<String, String> woods = new HashMap<>();
+        chosen.getAllKeys().forEach(key -> woods.put(key, chosen.getString(key)));
+        store.woods = new BuildingWoods(woods);
         if (tag.contains(COLUMNS)) {
             store.plot = new SettlementPlot(
                     new BlockCoord(tag.getInt(X), tag.getInt(Y), tag.getInt(Z)),
@@ -142,6 +163,9 @@ public final class SettlementPlotStore extends SavedData {
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         SettlementPlot current = plot;
         tag.putBoolean(LEVELED, leveled);
+        CompoundTag chosen = new CompoundTag();
+        woods.chosen().forEach(chosen::putString);
+        tag.put(BUILDING_WOOD, chosen);
         if (current != null) {
             tag.putInt(X, current.anchor().x());
             tag.putInt(Y, current.anchor().y());

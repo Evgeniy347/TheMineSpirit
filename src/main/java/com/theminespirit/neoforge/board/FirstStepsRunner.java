@@ -150,6 +150,7 @@ public final class FirstStepsRunner {
         PlotAudit.tick(level, service, stage, now);
         OldChests.tick(level, service, stage, now);
         ChestSpaceWatch.tick(level, service, stage, now);
+        GroveHarvest.tick(level, service, stage, now);
         SettlementPlotStore.get(level).town().ifPresent(town -> PlanDemolition.tick(level, service, stage, town, now));
         BlockCoord home = new BlockCoord(
                 stage.anchor().x(), homeY(spirits), stage.anchor().z());
@@ -166,7 +167,7 @@ public final class FirstStepsRunner {
                 .toList();
         Optional<BoardCase> next = ready.stream().findFirst();
         String log = WoodSpecies.swap("oak_log", wood);
-        dropOtherWood(level, service, wood);
+        dropOtherWood(level, service, BuildingWoodChoice.allowed(level, wood));
         ensurePickaxe(level, service, spirits, stock, site, next, now);
         if (ready.size() == 1 && STONE_STEPS.contains(next.orElseThrow())) {
             parallelStone(level, service, facts, site, stock, next.orElseThrow(), now);
@@ -239,8 +240,10 @@ public final class FirstStepsRunner {
         StockView stock = context.stock();
         SettlementFacts facts = context.facts();
         StageSite stage = context.stage();
-        String wood = context.wood();
         long now = context.now();
+        String wood = blocked
+                ? BuildingWoodChoice.stored(level, caseValue, stage, context.wood())
+                : BuildingWoodChoice.settle(level, service, caseValue, stage, stock.available(), context.wood(), now);
         BlockCoord home = new BlockCoord(
                 stage.anchor().x(), homeY(spirits), stage.anchor().z());
         TicketTarget target = targetFor(level, caseValue, stage, wood);
@@ -367,6 +370,7 @@ public final class FirstStepsRunner {
                     caseValue,
                     missing,
                     placed.total());
+            BuildingWoodChoice.rebuilt(level, caseValue, work.site());
             reopenParts(service, caseValue, parts);
             return false;
         }
@@ -411,15 +415,15 @@ public final class FirstStepsRunner {
         }
     }
 
-    public static void dropOtherWood(ServerLevel level, BoardService service, String wood) {
+    public static void dropOtherWood(ServerLevel level, BoardService service, Set<String> woods) {
         for (BoardTicket ticket : List.copyOf(service.board().all())) {
             if (!ticket.id().startsWith(GATHER_PREFIX) || !active(service, ticket.id())) {
                 continue;
             }
             String item = bare(ticket.id().substring(GATHER_PREFIX.length()));
             Optional<String> species = WoodSpecies.speciesOf(item);
-            if (species.isPresent() && !species.orElseThrow().equals(wood) && service.cancel(level, ticket.id())) {
-                LOGGER.info("[wood] снята добыча {}: порода поселения {}", ticket.id(), wood);
+            if (species.isPresent() && !woods.contains(species.orElseThrow()) && service.cancel(level, ticket.id())) {
+                LOGGER.info("[wood] снята добыча {}: породы построек {}", ticket.id(), woods);
             }
         }
     }
@@ -586,7 +590,14 @@ public final class FirstStepsRunner {
         if (building.isEmpty() || hasActive(service, building.orElseThrow())) {
             return;
         }
-        String wood = woodOf(level, home, stock);
+        String wood = BuildingWoodChoice.settle(
+                level,
+                service,
+                building.orElseThrow(),
+                site.stage(),
+                stock.available(),
+                woodOf(level, home, stock),
+                now);
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
         materials(source, building.orElseThrow(), targetFor(level, building.orElseThrow(), site.stage(), wood))
@@ -951,10 +962,11 @@ public final class FirstStepsRunner {
         return new TownSnapshot.Progress(placed.done(), placed.total(), done && placed.done() < placed.total());
     }
 
-    static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String wood) {
+    static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
         if (step == BoardCase.BUILD_MINE) {
             return mineAudit(level, stage);
         }
+        String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
         return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood);
     }
 

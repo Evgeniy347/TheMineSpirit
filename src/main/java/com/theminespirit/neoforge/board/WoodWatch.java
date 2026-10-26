@@ -11,6 +11,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.OwnWood;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.EnumSet;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -38,17 +40,39 @@ final class WoodWatch {
             List<SpiritEntity> spirits,
             StockView stock,
             BlockCoord home,
-            String wood,
+            String fallback,
             long now) {
         MaterialSource source = FirstStepsRunner.materialSource(level);
-        int needed = 0;
+        Map<String, Integer> needed = new TreeMap<>();
         for (BoardTicket ticket : service.board().all()) {
             if (!WOODEN.contains(ticket.boardCase())
                     || !OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE))) {
                 continue;
             }
-            needed += planks(level, service.targetOf(ticket.id(), spirits), ticket, source, wood);
+            TicketTarget target = service.targetOf(ticket.id(), spirits);
+            String wood = woodOf(level, ticket, target, fallback);
+            needed.merge(wood, planks(level, target, ticket, source, wood), Integer::sum);
         }
+        needed.forEach((wood, planks) -> gather(service, source, stock, home, wood, planks, now));
+    }
+
+    private static String woodOf(ServerLevel level, BoardTicket ticket, TicketTarget target, String fallback) {
+        String own = target.wood();
+        if (own != null) {
+            return own;
+        }
+        StageWork work = target.work();
+        return work == null ? fallback : BuildingWoodChoice.stored(level, ticket.boardCase(), work.site(), fallback);
+    }
+
+    private static void gather(
+            BoardService service,
+            MaterialSource source,
+            StockView stock,
+            BlockCoord home,
+            String wood,
+            int needed,
+            long now) {
         int held = OwnWood.planksIn(stock.available(), wood);
         for (Map.Entry<String, Integer> entry : stock.available().entrySet()) {
             boolean made = wood.equals(OwnWood.species(entry.getKey()))

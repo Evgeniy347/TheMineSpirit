@@ -99,16 +99,27 @@ class StageSiteTests {
                         "Клетка " + cell + " площадки '" + pad.id() + "' не выравнивается: постройка встанет на уступ");
             }
         }
+        ColumnMask strip = FenceStrip.of(SITE.ring(), TownRules.load().spacing().fenceStrip());
         for (ColumnMask.Cell cell : SITE.grove().mask().cells()) {
             assertFalse(
-                    SITE.level().contains(cell.x(), cell.z()),
-                    "Роща " + cell + " выравнивается: выравнивание — только площадки построек и улицы между ними");
+                    SITE.level().contains(cell.x(), cell.z()) && !strip.contains(cell.x(), cell.z()),
+                    "Роща " + cell + " выравнивается: выравнивание — только площадки построек, улицы между ними "
+                            + "и полоса ограды (INC-91)");
         }
         assertTrue(
                 SITE.level().count() < SITE.enclosure().count() / 2,
                 "Выравнивается " + SITE.level().count() + " колонок из "
                         + SITE.enclosure().count()
                         + " огороженных: выравнивать весь участок запрещено (решение владельца 25.10)");
+    }
+
+    @Test
+    void level_FenceLine_PostsAndStripLeveled() {
+        for (ColumnMask.Cell post : SITE.ring().posts()) {
+            assertTrue(
+                    SITE.level().contains(post.x(), post.z()) || SITE.mineColumn(post.x(), post.z()),
+                    "Столб ограды " + post + " не на площадке выравнивания: забор встанет на разных высотах (INC-91)");
+        }
     }
 
     @Test

@@ -37,8 +37,6 @@ public final class StageSites {
                 .main()
                 .union(plan.streets().side())
                 .union(plan.streets().ring());
-        ColumnMask between = streets.intersect(box(pads, 0));
-        ColumnMask level = pads.union(between).intersect(plan.region());
         ColumnMask built = plan.upToStage(stage).stream()
                 .map(Placement::mask)
                 .reduce(ColumnMask::union)
@@ -47,6 +45,10 @@ public final class StageSites {
         ColumnMask enclosure =
                 connected(box(core, rules.spacing().stageMargin()).intersect(plan.region()), anchor);
         FenceLine ring = FenceGates.around(enclosure, plan.streets());
+        ColumnMask between = streets.intersect(box(pads, 0));
+        ColumnMask level = pads.union(between)
+                .union(FenceStrip.of(ring, rules.spacing().fenceStrip()))
+                .intersect(plan.region());
         return new StageSite(
                 stage,
                 anchor,

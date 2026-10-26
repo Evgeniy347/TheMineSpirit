@@ -235,9 +235,9 @@ class ScriptCatalogTests {
                 replant.defaultValue(),
                 "replant в chop_target по умолчанию false, как у chop_tree: посадка — явное желание, а не случайность");
         assertEquals(
-                4,
+                5,
                 chopTarget.params().size(),
-                "У chop_target ровно четыре параметра: x, y, z и replant. Лишний попал бы в capabilities, "
+                "У chop_target ровно пять параметров: x, y, z, replant и grove. Лишний попал бы в capabilities, "
                         + "а забытый не подставил бы умолчание");
     }
 
