@@ -7,6 +7,7 @@ import com.theminespirit.core.ui.MapPaint;
 import com.theminespirit.core.ui.MapStyle;
 import com.theminespirit.core.ui.MapViewport;
 import com.theminespirit.core.ui.ScreenTabs;
+import com.theminespirit.core.ui.TerrainRaster;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.net.TownMapChannel;
 import java.util.List;
@@ -25,6 +26,8 @@ public final class TownMapScreen extends Screen {
     private static final int TEXT = 0xFFFFFFFF;
     private static final int TITLE_Y = 6;
     private @Nullable TownMapView view;
+    private TerrainRaster terrain = TerrainRaster.EMPTY;
+    private @Nullable TerrainTexture texture;
     private @Nullable MapViewport viewport;
     private boolean answered;
     private boolean offline;
@@ -33,10 +36,15 @@ public final class TownMapScreen extends Screen {
         super(Component.translatable(KEY + "title"));
     }
 
-    void show(Optional<TownMapView> received) {
+    void show(TownMapChannel.Reply received) {
         answered = true;
-        view = received.orElse(null);
+        view = received.view().orElse(null);
+        terrain = TerrainRaster.of(received.tiles());
         viewport = null;
+        closeTexture();
+        if (!terrain.isEmpty()) {
+            texture = TerrainTexture.of(terrain);
+        }
     }
 
     @Override
@@ -64,10 +72,11 @@ public final class TownMapScreen extends Screen {
         }
         Optional<TownMapView.MapRect> hovered = MapHit.lotAt(current, window, mouseX, mouseY);
         MapPaint.Font metrics = new MapPaint.Font(font::width, font.lineHeight);
-        for (MapPaint.Shape shape : MapPaint.of(current, window, hovered, metrics)) {
+        for (MapPaint.Shape shape : MapPaint.of(current, Optional.of(terrain), window, hovered, metrics)) {
             switch (shape) {
                 case MapPaint.Fill fill -> graphics.fill(fill.x1(), fill.y1(), fill.x2(), fill.y2(), fill.color());
                 case MapPaint.Text text -> graphics.drawString(font, text.text(), text.x(), text.y(), text.color());
+                case MapPaint.Raster raster -> drawTerrain(graphics, raster, window);
             }
         }
         hovered.ifPresent(lot -> graphics.renderComponentTooltip(font, hint(MapHint.of(lot)), mouseX, mouseY));
@@ -97,6 +106,12 @@ public final class TownMapScreen extends Screen {
         return false;
     }
 
+    @Override
+    public void removed() {
+        closeTexture();
+        super.removed();
+    }
+
     private MapViewport window() {
         MapViewport window = viewport;
         if (window != null) {
@@ -105,12 +120,47 @@ public final class TownMapScreen extends Screen {
         int areaWidth = Math.max(1, width - 2 * BoardLayout.MARGIN);
         int areaHeight = Math.max(1, height - TOP - BoardLayout.MARGIN);
         TownMapView current = view;
-        TownMapView.Bounds bounds = current == null ? new TownMapView.Bounds(0, 0, 0, 0) : current.bounds();
+        TownMapView.Bounds bounds = current == null ? new TownMapView.Bounds(0, 0, 0, 0) : mapBounds(current);
         window = MapViewport.fit(bounds, BoardLayout.MARGIN, TOP, areaWidth, areaHeight);
         if (current != null) {
             viewport = window;
         }
         return window;
+    }
+
+    private TownMapView.Bounds mapBounds(TownMapView current) {
+        return terrain.isEmpty() ? current.bounds() : current.bounds().union(terrain.bounds());
+    }
+
+    private void drawTerrain(GuiGraphics graphics, MapPaint.Raster raster, MapViewport window) {
+        TerrainTexture current = texture;
+        if (current == null) {
+            return;
+        }
+        int right = window.left() + window.width();
+        int bottom = window.top() + window.height();
+        graphics.enableScissor(window.left(), window.top(), right, bottom);
+        graphics.blit(
+                current.id(),
+                raster.x1(),
+                raster.y1(),
+                raster.x2() - raster.x1(),
+                raster.y2() - raster.y1(),
+                0.0F,
+                0.0F,
+                current.width(),
+                current.height(),
+                current.width(),
+                current.height());
+        graphics.disableScissor();
+    }
+
+    private void closeTexture() {
+        TerrainTexture current = texture;
+        if (current != null) {
+            current.close();
+            texture = null;
+        }
     }
 
     private void requestSnapshot() {

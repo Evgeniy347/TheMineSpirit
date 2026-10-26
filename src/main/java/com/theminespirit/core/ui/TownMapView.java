@@ -54,7 +54,12 @@ public record TownMapView(List<MapRect> rects, List<MapLine> lines) {
         }
     }
 
-    public record Bounds(int x1, int z1, int x2, int z2) {}
+    public record Bounds(int x1, int z1, int x2, int z2) {
+        public Bounds union(Bounds other) {
+            return new Bounds(
+                    Math.min(x1, other.x1), Math.min(z1, other.z1), Math.max(x2, other.x2), Math.max(z2, other.z2));
+        }
+    }
 
     public TownMapView {
         rects = List.copyOf(Objects.requireNonNull(rects, "Прямоугольники карты не могут быть null"));

@@ -48,8 +48,9 @@ class TownMapPngTests {
         for (long seed : SEEDS) {
             TownPlan plan = TownFixtures.hillyPlan(seed);
             TownMapView view = TownMapView.of(snapshot(plan));
-            MapViewport viewport = MapViewport.fit(view.bounds(), 0, 0, WIDTH, HEIGHT);
-            List<Rectangle> labels = draw(view, viewport, Optional.empty(), "plan-seed-" + seed + ".png");
+            TerrainRaster terrain = relief(view);
+            MapViewport viewport = MapViewport.fit(view.bounds().union(terrain.bounds()), 0, 0, WIDTH, HEIGHT);
+            List<Rectangle> labels = draw(view, terrain, viewport, Optional.empty(), "plan-seed-" + seed + ".png");
             assertApart(labels, seed);
             assertEquals(
                     view.rects().stream()
@@ -64,17 +65,18 @@ class TownMapPngTests {
     void render_HoverDamagedLot_TooltipWithRestorePercent() throws IOException {
         Files.createDirectories(OUT);
         TownMapView view = TownMapView.of(snapshot(TownFixtures.hillyPlan(SEEDS[0])));
+        TerrainRaster terrain = relief(view);
         TownMapView.MapRect damaged = view.rects().stream()
                 .filter(TownMapView.MapRect::damaged)
                 .findFirst()
                 .orElseThrow();
-        MapViewport fit = MapViewport.fit(view.bounds(), 0, 0, WIDTH, HEIGHT);
+        MapViewport fit = MapViewport.fit(view.bounds().union(terrain.bounds()), 0, 0, WIDTH, HEIGHT);
         double x = fit.screenX((damaged.x1() + damaged.x2() + 1) / 2.0);
         double y = fit.screenY((damaged.z1() + damaged.z2() + 1) / 2.0);
         MapViewport zoomed = fit.zoom(x, y, 3);
         Optional<TownMapView.MapRect> hovered = MapHit.lotAt(view, zoomed, x, y);
         assertEquals(Optional.of(damaged), hovered, "Курсор в центре повреждённого участка — подсказка о нём");
-        assertApart(draw(view, zoomed, hovered, "plan-hover-damaged.png"), SEEDS[0]);
+        assertApart(draw(view, terrain, zoomed, hovered, "plan-hover-damaged.png"), SEEDS[0]);
     }
 
     private static TownSnapshot snapshot(TownPlan plan) {
@@ -101,16 +103,67 @@ class TownMapPngTests {
         return cells;
     }
 
+    private static TerrainRaster relief(TownMapView view) {
+        TownMapView.Bounds bounds = view.bounds();
+        int margin = 32;
+        int minChunkX = Math.floorDiv(bounds.x1() - margin, TerrainTile.SIZE);
+        int maxChunkX = Math.floorDiv(bounds.x2() + margin, TerrainTile.SIZE);
+        int minChunkZ = Math.floorDiv(bounds.z1() - margin, TerrainTile.SIZE);
+        int maxChunkZ = Math.floorDiv(bounds.z2() + margin, TerrainTile.SIZE);
+        List<TerrainTile> tiles = new ArrayList<>();
+        for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+            for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+                tiles.add(new TerrainTile(chunkX, chunkZ, reliefChunk(chunkX, chunkZ)));
+            }
+        }
+        return TerrainRaster.of(tiles);
+    }
+
+    private static byte[] reliefChunk(int chunkX, int chunkZ) {
+        byte[] ids = new byte[TerrainTile.COLUMNS];
+        for (int localZ = 0; localZ < TerrainTile.SIZE; localZ++) {
+            for (int localX = 0; localX < TerrainTile.SIZE; localX++) {
+                int worldX = chunkX * TerrainTile.SIZE + localX;
+                int worldZ = chunkZ * TerrainTile.SIZE + localZ;
+                ids[localZ * TerrainTile.SIZE + localX] = (byte) reliefColor(worldX, worldZ);
+            }
+        }
+        return ids;
+    }
+
+    private static int reliefColor(int x, int z) {
+        double wave = Math.sin(x / 15.0) * Math.cos(z / 19.0) + 0.5 * Math.sin((x + z) / 27.0);
+        if (wave < -0.55) {
+            return 12;
+        }
+        if (wave > 0.75) {
+            return 11;
+        }
+        if (wave > 0.35) {
+            return 7;
+        }
+        if (wave < -0.2) {
+            return 2;
+        }
+        return 1;
+    }
+
     private static List<Rectangle> draw(
-            TownMapView view, MapViewport viewport, Optional<TownMapView.MapRect> hovered, String file)
+            TownMapView view,
+            TerrainRaster terrain,
+            MapViewport viewport,
+            Optional<TownMapView.MapRect> hovered,
+            String file)
             throws IOException {
         BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
         FontMetrics metrics = g.getFontMetrics();
         List<Rectangle> labels = new ArrayList<>();
-        for (MapPaint.Shape shape : MapPaint.of(view, viewport, hovered, new MapPaint.Font(metrics::stringWidth, 9))) {
+        for (MapPaint.Shape shape : MapPaint.of(
+                view, Optional.of(terrain), viewport, hovered, new MapPaint.Font(metrics::stringWidth, 9))) {
             switch (shape) {
                 case MapPaint.Fill fill -> {
                     g.setColor(new Color(fill.color(), true));
@@ -121,12 +174,20 @@ class TownMapPngTests {
                     g.drawString(text.text(), text.x(), text.y() + metrics.getAscent() - 2);
                     labels.add(new Rectangle(text.x(), text.y(), metrics.stringWidth(text.text()), 9));
                 }
+                case MapPaint.Raster raster -> drawTerrain(g, raster);
             }
         }
         hovered.ifPresent(lot -> tooltip(g, metrics, MapHint.of(lot), viewport, lot));
         g.dispose();
         ImageIO.write(image, "png", OUT.resolve(file).toFile());
         return labels;
+    }
+
+    private static void drawTerrain(Graphics2D g, MapPaint.Raster shape) {
+        TerrainRaster raster = shape.raster();
+        BufferedImage image = new BufferedImage(raster.width(), raster.height(), BufferedImage.TYPE_INT_ARGB);
+        image.setRGB(0, 0, raster.width(), raster.height(), raster.pixels(), 0, raster.width());
+        g.drawImage(image, shape.x1(), shape.y1(), shape.x2() - shape.x1(), shape.y2() - shape.y1(), null);
     }
 
     private static void tooltip(
