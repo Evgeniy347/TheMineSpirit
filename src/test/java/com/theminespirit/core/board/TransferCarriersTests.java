@@ -47,7 +47,7 @@ class TransferCarriersTests {
         DispatchRound round = new DispatchRound(board, 0);
         TransferCarriers.carrying(board, CRAFT, Set.of()).forEach(donor -> round.await(donor, "несёт"));
         BoardTicket transfer = board.all().stream()
-                .filter(ticket -> ticket.id().equals(TRANSFER))
+                .filter(ticket -> TRANSFER.equals(ticket.id()))
                 .findFirst()
                 .orElseThrow();
 
