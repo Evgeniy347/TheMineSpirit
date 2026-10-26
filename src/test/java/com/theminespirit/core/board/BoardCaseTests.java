@@ -60,6 +60,7 @@ class BoardCaseTests {
             "LIGHTING",
             "MINE_LEFT_ORE",
             "BUILD_HOUSE",
+            "BUILD_ORCHARD",
             "BUILD_WAREHOUSE",
             "REPAIR_FENCE",
             "REPAIR_BUILDING",
@@ -83,10 +84,9 @@ class BoardCaseTests {
             "SHEAR_SHEEP",
             "TRANSFER_ITEM",
             "WEAVE_WOOL",
-            "HARVEST_GROVE",
+            "HARVEST_ORCHARD",
             "HARVEST_HIVE",
-            "PLACE_BEEHIVE",
-            "PLANT_GROVE");
+            "PLACE_BEEHIVE");
 
     @Test
     void caseSet_Is_Complete() {
@@ -98,7 +98,7 @@ class BoardCaseTests {
                 expected,
                 actual,
                 "Набор кейсов доски обязан совпадать с чеклистами 36, 37Б, 39 и пчёлами (39: 37 прежних "
-                        + "плюс HARVEST_HIVE, PLACE_BEEHIVE, рощей этапа 1 PLANT_GROVE): "
+                        + "плюс HARVEST_HIVE, PLACE_BEEHIVE, сад этапа 1 BUILD_ORCHARD): "
                         + "каждый вид задания получает приоритет, гейт и план по своему имени; "
                         + "лишний кейс — сирота в таблице BoardRules, потерянный — задание без источника");
     }

@@ -40,6 +40,7 @@ class DemoBuildingsTests {
                         "plaza",
                         "palisade_section",
                         "pen",
+                        "orchard",
                         "enchant_room",
                         "mine_entrance",
                         "mine_descent",

@@ -1,6 +1,9 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicPart;
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
@@ -13,6 +16,8 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 
 public final class TicketPlans {
@@ -125,6 +131,7 @@ public final class TicketPlans {
             case BUILD_PEN -> buildPenLevel(level, target);
             case ENCHANT_ROOM -> enchantRoomLevel(level, target);
             case BUILD_HOUSE -> buildHouse(level, target);
+            case BUILD_ORCHARD -> buildOrchard(target);
             case BUILD_WAREHOUSE -> buildWarehouseLevel(level, target);
             default -> legacyPlan(boardCase, target);
         };
@@ -190,11 +197,10 @@ public final class TicketPlans {
             case SHEAR_SHEEP -> shearSheep(target);
             case HUNT_WILD_SHEEP -> huntWildSheep(target);
             case HARVEST_HIVE -> harvestHive();
-            case HARVEST_GROVE -> GrovePlans.harvest(target);
+            case HARVEST_ORCHARD -> OrchardPlans.harvest(target);
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);
-            case PLANT_GROVE -> StagePlans.groveAround(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
             case BREED_ANIMALS -> breedAnimals(target);
@@ -680,6 +686,44 @@ public final class TicketPlans {
         return TreeSpecies.ALL.stream()
                 .filter(tree -> tree.logId().equals(full))
                 .findFirst();
+    }
+
+    private static TaskNode buildOrchard(TicketTarget target) {
+        StageWork work = target.work();
+        StageSite site = work == null ? null : work.site();
+        String scheme = DataTables.INSTANCE
+                .stages()
+                .current()
+                .scheme(BoardCase.BUILD_ORCHARD, 1)
+                .orElseThrow(() -> new IllegalStateException(
+                        "stages.json: нет схемы сада уровня 1 — постройке сада не по чему строиться"));
+        BlockCoord origin = site == null ? target.target() : site.orchardOrigin();
+        String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(gotoPoint(site == null ? target.target() : site.workYard()));
+        orchardMaterials(scheme)
+                .forEach((item, count) -> steps.add(new ScriptCall(
+                        ACQUIRE,
+                        Map.of(ITEM, WoodSpecies.swap(item, wood), COUNT, Math.min(count, CatalogLimits.COUNT_MAX)))));
+        steps.add(schematic(scheme, origin, target));
+        return new SequenceNode(steps);
+    }
+
+    private static Map<String, Integer> orchardMaterials(String scheme) {
+        Schematic schematic = DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Нет схемы '" + scheme + "' для сада: проверьте presets.json и файл схемы"))
+                .schematic();
+        Map<String, Integer> counts = new TreeMap<>();
+        for (Schematic.Entry entry : schematic.blocks()) {
+            if (!SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
+                counts.merge(SchematicBlocks.itemOf(entry.block()), 1, Integer::sum);
+            }
+        }
+        return Map.copyOf(counts);
     }
 
     private static TaskNode buildHouse(int level, TicketTarget target) {

@@ -39,7 +39,7 @@ public final class TownSnapshots {
                         step(level, service, BoardCase.STOCK_CHESTS, stage, wood),
                         step(level, service, BoardCase.CRAFT_FURNACE, stage, wood)));
         progress.put(StageSites.MINE, step(level, service, BoardCase.BUILD_MINE, stage, wood));
-        progress.put(StageSites.GROVE, step(level, service, BoardCase.PLANT_GROVE, stage, wood));
+        progress.put(StageSites.ORCHARD, step(level, service, BoardCase.BUILD_ORCHARD, stage, wood));
         progress.put(TownPlanner.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));
         progress.put(TownPlanner.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
         List<List<BlockCoord>> paths = PathNetworkService.segments(level);

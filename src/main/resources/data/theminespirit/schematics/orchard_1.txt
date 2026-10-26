@@ -1,0 +1,36 @@
+# orchard_1 — сад, уровень 1 (tasks/47-settlement/catalog.md): четыре яблони, цветы, тропинки, вход.
+# Саженцы — мягкие клетки: стройка их ставит, ремонт не требует, выросшее дерево не трогает.
+name: "Сад, уровень 1"
+type: farm
+stage: 1
+level: 1
+size: 11x1x11   # Ш×В×Д
+entrance: 5,0,0
+exemptions:
+  - rule: closed_walls
+    reason: "сад открыт: стен и забора нет по замыслу, это участок с деревьями и тропинками"
+  - rule: roof
+    reason: "сад под открытым небом: деревьям нужны свет и дождь"
+  - rule: inner_height
+    reason: "у сада нет пола и потолка: внутреннюю высоту не с чем мерить"
+legend:
+  'o': oak_sapling ~
+  'p': dirt_path
+  'f': poppy ~
+  'd': dandelion ~
+  'a': azure_bluet ~
+  'b': cornflower ~
+  'T': torch
+layers:
+  - y0 сад: |
+      T.........T
+      .f.d.p.a.b.
+      ..o..p..o..
+      .d.a.p.f.b.
+      .....p.....
+      ppppppppppp
+      .....p.....
+      .a.f.p.d.b.
+      ..o..p..o..
+      .f.a.p.b.d.
+      T....p....T

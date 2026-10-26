@@ -8,7 +8,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class ReplantSite {
-    public static final Set<String> GREEN_PLOTS = Set.of("grove", "orchard");
+    public static final Set<String> GREEN_PLOTS = Set.of("orchard");
 
     private ReplantSite() {}
 

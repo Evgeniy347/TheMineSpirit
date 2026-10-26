@@ -77,10 +77,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
 public final class FirstStepsRunner {
-    private static final Set<BoardCase> WOODEN_BUILDINGS = EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+    private static final Set<BoardCase> WOODEN_BUILDINGS =
+            EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.BUILD_ORCHARD);
     private static final int LAYOUT_SLACK_DIVISOR = 50;
     private static final Set<BoardCase> LAYOUT_STEPS =
-            EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE);
+            EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_ORCHARD, BoardCase.BUILD_HOUSE);
     private static final Set<BoardCase> PREFETCH_DURING =
             EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE);
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -150,7 +151,7 @@ public final class FirstStepsRunner {
         PlotAudit.tick(level, service, stage, now);
         OldChests.tick(level, service, stage, now);
         ChestSpaceWatch.tick(level, service, stage, now);
-        GroveHarvest.tick(level, service, stage, now);
+        OrchardHarvest.tick(level, service, stage, now);
         SettlementPlotStore.get(level).town().ifPresent(town -> PlanDemolition.tick(level, service, stage, town, now));
         BlockCoord home = new BlockCoord(
                 stage.anchor().x(), homeY(spirits), stage.anchor().z());
@@ -249,13 +250,6 @@ public final class FirstStepsRunner {
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, stage, stock));
-        }
-        if (caseValue == BoardCase.PLANT_GROVE) {
-            Optional<TicketTarget> grove = GroveStock.trimmed(level, target, stock);
-            if (grove.isEmpty()) {
-                return 0;
-            }
-            target = grove.orElseThrow();
         }
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
@@ -924,6 +918,7 @@ public final class FirstStepsRunner {
         boolean lighting = built(level, done, BoardCase.LIGHTING, site, journal);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, site, journal);
         boolean houses = built(level, done, BoardCase.BUILD_HOUSE, site, journal);
+        boolean orchard = built(level, done, BoardCase.BUILD_ORCHARD, site, journal);
         SettlementFacts facts = new SettlementFacts(
                 hasHome,
                 groundsCleared,
@@ -936,6 +931,7 @@ public final class FirstStepsRunner {
                 fence,
                 lighting,
                 houses,
+                orchard,
                 smithingTable,
                 anvil,
                 done,

@@ -20,6 +20,7 @@ class SettlementStageTests {
             BoardCase.CLEAR_GROUNDS,
             BoardCase.BUILD_MINE,
             BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_ORCHARD,
             BoardCase.BUILD_HOUSE,
             BoardCase.STOCK_CHESTS,
             BoardCase.CRAFT_FURNACE,
@@ -43,7 +44,7 @@ class SettlementStageTests {
     void of_AllFirstStageBuilt_SecondStage() {
         BoardLedger ledger = firstStageBuilt();
 
-        assertEquals(2, SettlementStage.of(ledger), "Расчистка, шахта, забор, дом и склад 1 — переход на этап 2");
+        assertEquals(2, SettlementStage.of(ledger), "Расчистка, шахта, забор, сад, дом и склад 1 — переход на этап 2");
         assertEquals(
                 Map.of(BoardCase.BUILD_MINE, 2, BoardCase.BUILD_WAREHOUSE, 2),
                 SettlementStage.missing(ledger),

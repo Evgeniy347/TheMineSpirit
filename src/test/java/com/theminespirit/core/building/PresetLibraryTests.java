@@ -56,11 +56,11 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                34,
+                35,
                 library.size(),
-                "Библиотека обязана прочитать все тридцать три пресета, включая четыре уровня дома семьи и дома игрока, "
+                "Библиотека обязана прочитать все тридцать четыре пресета, включая четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
-                        + "четыре уровня склада и загоны трёх уровней: без них стратегу не из чего "
+                        + "четыре уровня склада, загоны трёх уровней и сад: без них стратегу не из чего "
                         + "составлять планировку поселения");
         assertEquals(
                 List.of(
@@ -74,6 +74,7 @@ class PresetLibraryTests {
                         "pen_7x7",
                         "pen_4x5",
                         "pen_9x9",
+                        "orchard_1",
                         "mine_entrance_v1",
                         "mine_descent_v1",
                         "mine_tunnel_v1",
@@ -295,9 +296,9 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                34,
+                35,
                 paths.size(),
-                "Индекс обязан назвать по телу на каждый из тридцати двух пресетов: пропуск тела оставил бы пресет без схемы");
+                "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
                 PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt",
                 paths.get(2),

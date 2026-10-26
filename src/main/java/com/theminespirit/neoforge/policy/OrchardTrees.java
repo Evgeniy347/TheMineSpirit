@@ -9,11 +9,11 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-public final class GroveTrees {
+public final class OrchardTrees {
     private static final int PLANT_BELOW = 1;
     private static final int PLANT_ABOVE = 2;
 
-    private GroveTrees() {}
+    private OrchardTrees() {}
 
     public static boolean treePart(BlockState state) {
         return state.is(BlockTags.SAPLINGS) || state.is(BlockTags.LOGS);
@@ -25,7 +25,7 @@ public final class GroveTrees {
         }
         return SettlementPlotStore.get(server)
                 .site()
-                .filter(site -> site.groveTree(cell.x(), cell.y(), cell.z()))
+                .filter(site -> site.orchardTree(cell.x(), cell.y(), cell.z()))
                 .filter(site -> planted(server, site, cell))
                 .isPresent();
     }

@@ -195,7 +195,7 @@ final class SchematicSite {
     List<Schematic.PlacedEntry> missing() {
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
         for (Schematic.PlacedEntry entry : entries) {
-            if (entry.optional() && level.getBlockState(toPos(entry.pos())).isAir()) {
+            if (entry.optional()) {
                 continue;
             }
             if (!matches(entry)) {
