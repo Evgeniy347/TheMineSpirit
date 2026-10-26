@@ -28,6 +28,7 @@ public final class TicketPlans {
     public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
     public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = "clockwise_90";
+    public static final int MINE_TUNNEL_SIZE = 5;
     private static final int LOGS_PER_TREE = 4;
     private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
@@ -72,7 +73,6 @@ public final class TicketPlans {
             "minecraft:coal",
             TORCH);
 
-    private static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RESTOCK_FOOD_COUNT = 48;
     private static final int RELOCATE_CLEAR_RADIUS = 4;

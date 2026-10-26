@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.net.BoardViewChannel;
+import com.theminespirit.neoforge.net.MineMapChannel;
 import com.theminespirit.neoforge.net.TownMapChannel;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -39,6 +40,16 @@ public final class TheMineSpiritClient {
         });
         TownMapChannel.onClientMarkers(reply -> {
             if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
+                screen.showMarkers(reply.markers());
+            }
+        });
+        MineMapChannel.onClientReply(reply -> {
+            if (Minecraft.getInstance().screen instanceof MineMapScreen screen) {
+                screen.show(reply);
+            }
+        });
+        MineMapChannel.onClientMarkers(reply -> {
+            if (Minecraft.getInstance().screen instanceof MineMapScreen screen) {
                 screen.showMarkers(reply.markers());
             }
         });

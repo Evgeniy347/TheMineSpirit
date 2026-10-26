@@ -22,6 +22,12 @@ final class ScreenTabButtons {
     }
 
     private static void open(ScreenTabs.Tab tab) {
-        Minecraft.getInstance().setScreen(tab == ScreenTabs.Tab.BOARD ? new BoardScreen() : new TownMapScreen());
+        Minecraft.getInstance()
+                .setScreen(
+                        switch (tab) {
+                            case BOARD -> new BoardScreen();
+                            case PLAN -> new TownMapScreen();
+                            case MINE -> new MineMapScreen();
+                        });
     }
 }

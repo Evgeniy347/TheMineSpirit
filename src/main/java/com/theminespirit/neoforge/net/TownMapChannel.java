@@ -33,7 +33,7 @@ public final class TownMapChannel {
     public static final CustomPacketPayload.Type<MarkersReply> MARKERS_REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_markers_reply"));
 
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
     private static final int MAX_RECTS = 32_768;
     private static final int MAX_POINTS = 16_384;
     private static final int MAX_TILES = 4096;
@@ -113,6 +113,7 @@ public final class TownMapChannel {
         registrar.playToServer(MARKERS_REQUEST, MarkersRequest.STREAM_CODEC, TownMapChannel::handleMarkersRequest);
         registrar.playToClient(
                 MARKERS_REPLY, MarkersReply.STREAM_CODEC, (reply, context) -> markerReceiver.accept(reply));
+        MineMapChannel.register(registrar);
     }
 
     private static void handleRequest(Request ignoredRequest, IPayloadContext context) {
