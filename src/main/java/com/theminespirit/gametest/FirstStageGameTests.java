@@ -80,6 +80,7 @@ public final class FirstStageGameTests {
     public static void firstStage_GeneratedWorldThreeSpirits_PlotBuiltByPlan(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
+        GameTestClock.align(helper);
         long seed = GeneratedScene.seed();
         ScenePlan scene = GeneratedScene.place(helper, seed, BATCH);
         ServerLevel level = helper.getLevel();
@@ -88,7 +89,9 @@ public final class FirstStageGameTests {
         BlockPos home = GeneratedScene.at(0, scene.height(0, 0) + 1, 0);
         List<SpiritEntity> spirits = new ArrayList<>();
         for (int index = 0; index < SPIRITS; index++) {
-            spirits.add(spirit(helper, home.offset(index - 1, 0, 0), home, scene.wood()));
+            SpiritEntity spirit = spirit(helper, home.offset(index - 1, 0, 0), home, scene.wood());
+            spirit.getRandom().setSeed(seed + index);
+            spirits.add(spirit);
         }
         incidentRoundTrip(helper, spirits.get(0), seed);
         Watch watch = new Watch(helper, board, spirits, scene);

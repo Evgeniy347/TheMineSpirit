@@ -111,6 +111,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private @Nullable BuildPlanCursor plan;
     private boolean planChecked;
     private @Nullable CompletableFuture<BuildPlanner.Plan> planPending;
+    private long planStartTick;
     private long planBegan;
     private BlockCoord planSupply = new BlockCoord(0, 0, 0);
     private Map<String, Item> planItems = Map.of();
@@ -279,7 +280,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         CompletableFuture<BuildPlanner.Plan> pending = planPending;
         if (pending != null) {
-            if (!pending.isDone()) {
+            if (ticks == planStartTick) {
                 return ScriptStatus.RUNNING;
             }
             acceptPlan(pending);
@@ -815,6 +816,7 @@ final class BuildSchematicScript implements ScriptInstance {
             return;
         }
         planBegan = System.nanoTime();
+        planStartTick = ticks;
         BuildPlanStart.Prepared prepared = BuildPlanStart.of(spirit, site);
         Map<BlockCoord, Schematic.PlacedEntry> byCell = new HashMap<>();
         site.primaries().forEach(entry -> byCell.put(entry.pos(), entry));

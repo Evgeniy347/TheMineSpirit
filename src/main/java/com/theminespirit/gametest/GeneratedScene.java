@@ -26,6 +26,10 @@ final class GeneratedScene {
 
     private GeneratedScene() {}
 
+    static boolean fixedSeed() {
+        return !System.getProperty(SEED_PROPERTY, "").trim().isEmpty();
+    }
+
     static long seed() {
         String fixed = System.getProperty(SEED_PROPERTY, "").trim();
         if (!fixed.isEmpty()) {
