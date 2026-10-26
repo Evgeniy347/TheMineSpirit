@@ -26,6 +26,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TorchRules;
+import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
@@ -921,7 +922,7 @@ public final class BoardService {
             }
             target = fitted.orElseThrow();
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
-                awaitTransfers(ticket, spirit, round);
+                awaitTransfers(ticket, spirit, spirits, round);
                 continue;
             }
             TaskNode plan;
@@ -933,6 +934,7 @@ public final class BoardService {
                         ticket.id(),
                         ticket.boardCase(),
                         failure.getMessage());
+                dropUnplannedTransfer(ticket, round);
                 continue;
             }
             if (spirit.runsBackgroundTask()) {
@@ -984,15 +986,35 @@ public final class BoardService {
                 : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
     }
 
-    private void awaitTransfers(BoardTicket ticket, SpiritEntity crafter, DispatchRound round) {
+    private void awaitTransfers(
+            BoardTicket ticket, SpiritEntity crafter, List<SpiritEntity> spirits, DispatchRound round) {
         crafters.remember(ticket.id(), crafter.getUUID());
-        for (UUID donor : TransferWatch.donors(this, ticket.id())) {
+        Set<UUID> running = new HashSet<>();
+        for (SpiritEntity each : spirits) {
+            if (each.taskStatus().orElse(null) == RunStatus.RUNNING) {
+                running.add(each.getUUID());
+            }
+        }
+        for (UUID donor : TransferCarriers.carrying(board, ticket.id(), running)) {
             round.await(donor, "несёт ингредиенты для " + ticket.id());
         }
         LOGGER.info(
                 "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
                 ticket.id(),
                 crafter.displayName());
+    }
+
+    private void dropUnplannedTransfer(BoardTicket ticket, DispatchRound round) {
+        if (ticket.boardCase() != BoardCase.TRANSFER_ITEM) {
+            return;
+        }
+        TransferCarriers.dropUnplanned(board, round, ticket);
+        targets.remove(ticket.id());
+        LOGGER.warn(
+                "[incident] передача {} снята: план не собран, держатель {} свободен, доска поставит её заново",
+                ticket.id(),
+                ticket.assignee().map(UUID::toString).orElse("-"));
+        persist();
     }
 
     private void dropEmptyTransfer(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
