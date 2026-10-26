@@ -51,6 +51,16 @@ class TownMapViewTests {
     }
 
     @Test
+    void withMarkers_NewList_KeepsMapAndReplacesMarkers() {
+        MapMarker spirit = new MapMarker(MapMarker.Kind.SPIRIT, "spirit-1", "", 10, 10);
+        TownMapView marked = VIEW.withMarkers(List.of(spirit));
+        assertEquals(VIEW.rects(), marked.rects(), "Метки не меняют участки и улицы карты");
+        assertEquals(VIEW.lines(), marked.lines(), "Метки не меняют контур и ограду");
+        assertEquals(List.of(spirit), marked.markers(), "Снимок карты несёт присланные метки");
+        assertEquals(List.of(), VIEW.markers(), "Старый снимок без меток остаётся неизменным");
+    }
+
+    @Test
     void of_Snapshot_ContourAndStageFenceLines() {
         assertEquals(
                 List.of(TownMapView.LineKind.CONTOUR, TownMapView.LineKind.STAGE_FENCE),

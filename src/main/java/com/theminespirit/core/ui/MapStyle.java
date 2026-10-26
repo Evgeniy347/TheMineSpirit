@@ -10,6 +10,10 @@ public final class MapStyle {
     public static final int STAGE_FENCE = 0xFFC8862E;
     public static final int GATE = 0xFF4FC3F7;
     public static final int TEXT = 0xFFFFFFFF;
+    public static final int MARKER_BORDER = 0xFF101010;
+    public static final int LABEL_BACKGROUND = 0x99000000;
+    public static final int SPIRIT = 0xFF66DD66;
+    public static final int PLAYER = 0xFF54A0FF;
     private static final int PERCENT = 100;
     private static final int LOT_EMPTY = 0xA84E5A3A;
     private static final int LOT_DONE = 0xA86FA548;
@@ -30,6 +34,11 @@ public final class MapStyle {
 
     public static int line(TownMapView.LineKind kind) {
         return kind == TownMapView.LineKind.CONTOUR ? CONTOUR : STAGE_FENCE;
+    }
+
+    public static int marker(MapMarker.Kind kind) {
+        Objects.requireNonNull(kind, "Вид метки карты не может быть null");
+        return kind == MapMarker.Kind.SPIRIT ? SPIRIT : PLAYER;
     }
 
     public static int blend(int from, int to, int percent) {

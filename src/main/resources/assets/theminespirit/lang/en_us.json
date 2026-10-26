@@ -122,5 +122,7 @@
   "theminespirit.map.empty": "No settlement plan yet",
   "theminespirit.map.offline": "Server without the mod: plan unavailable",
   "theminespirit.map.lot": "Done: %s%%",
-  "theminespirit.map.lot.damaged": "Damaged: %s%% intact, %s%% to restore"
+  "theminespirit.map.lot.damaged": "Damaged: %s%% intact, %s%% to restore",
+  "theminespirit.map.player": "Player",
+  "theminespirit.map.no_job": "No task"
 }

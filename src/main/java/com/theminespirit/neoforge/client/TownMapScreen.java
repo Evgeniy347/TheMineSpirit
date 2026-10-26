@@ -3,6 +3,8 @@ package com.theminespirit.neoforge.client;
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.MapHint;
 import com.theminespirit.core.ui.MapHit;
+import com.theminespirit.core.ui.MapMarker;
+import com.theminespirit.core.ui.MapMarkers;
 import com.theminespirit.core.ui.MapPaint;
 import com.theminespirit.core.ui.MapStyle;
 import com.theminespirit.core.ui.MapViewport;
@@ -10,6 +12,7 @@ import com.theminespirit.core.ui.ScreenTabs;
 import com.theminespirit.core.ui.TerrainRaster;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.net.TownMapChannel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
@@ -25,12 +28,14 @@ public final class TownMapScreen extends Screen {
     private static final int TOP = ScreenTabs.TOP + ScreenTabs.HEIGHT + BoardLayout.BUTTON_GAP;
     private static final int TEXT = 0xFFFFFFFF;
     private static final int TITLE_Y = 6;
+    private static final int MARKER_TICKS = 20;
     private @Nullable TownMapView view;
     private TerrainRaster terrain = TerrainRaster.EMPTY;
     private @Nullable TerrainTexture texture;
     private @Nullable MapViewport viewport;
     private boolean answered;
     private boolean offline;
+    private int markerAge;
 
     public TownMapScreen() {
         super(Component.translatable(KEY + "title"));
@@ -47,12 +52,30 @@ public final class TownMapScreen extends Screen {
         }
     }
 
+    void showMarkers(List<MapMarker> markers) {
+        TownMapView current = view;
+        if (current != null) {
+            view = current.withMarkers(markers);
+        }
+    }
+
     @Override
     protected void init() {
         ScreenTabButtons.add(this::addRenderableWidget, width, ScreenTabs.Tab.PLAN);
         viewport = null;
         if (!answered) {
             requestSnapshot();
+        }
+        requestMarkers();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        markerAge++;
+        if (markerAge >= MARKER_TICKS) {
+            markerAge = 0;
+            requestMarkers();
         }
     }
 
@@ -70,16 +93,25 @@ public final class TownMapScreen extends Screen {
                     font, Component.translatable(KEY + state), width / 2, window.top() + window.height() / 2, TEXT);
             return;
         }
-        Optional<TownMapView.MapRect> hovered = MapHit.lotAt(current, window, mouseX, mouseY);
         MapPaint.Font metrics = new MapPaint.Font(font::width, font.lineHeight);
-        for (MapPaint.Shape shape : MapPaint.of(current, Optional.of(terrain), window, hovered, metrics)) {
+        Optional<MapMarker> hoveredMarker = MapMarkers.at(current.markers(), window, metrics, mouseX, mouseY);
+        Optional<TownMapView.MapRect> hovered =
+                hoveredMarker.isPresent() ? Optional.empty() : MapHit.lotAt(current, window, mouseX, mouseY);
+        List<MapPaint.Shape> shapes =
+                new ArrayList<>(MapPaint.of(current, Optional.of(terrain), window, hovered, metrics));
+        shapes.addAll(MapMarkers.paint(current.markers(), window, hoveredMarker, metrics));
+        for (MapPaint.Shape shape : shapes) {
             switch (shape) {
                 case MapPaint.Fill fill -> graphics.fill(fill.x1(), fill.y1(), fill.x2(), fill.y2(), fill.color());
                 case MapPaint.Text text -> graphics.drawString(font, text.text(), text.x(), text.y(), text.color());
                 case MapPaint.Raster raster -> drawTerrain(graphics, raster, window);
             }
         }
-        hovered.ifPresent(lot -> graphics.renderComponentTooltip(font, hint(MapHint.of(lot)), mouseX, mouseY));
+        if (hoveredMarker.isPresent()) {
+            graphics.renderComponentTooltip(font, hint(MapHint.of(hoveredMarker.orElseThrow())), mouseX, mouseY);
+        } else {
+            hovered.ifPresent(lot -> graphics.renderComponentTooltip(font, hint(MapHint.of(lot)), mouseX, mouseY));
+        }
     }
 
     @Override
@@ -171,6 +203,13 @@ public final class TownMapScreen extends Screen {
             return;
         }
         PacketDistributor.sendToServer(new TownMapChannel.Request());
+    }
+
+    private void requestMarkers() {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection != null && connection.hasChannel(TownMapChannel.MARKERS_REQUEST)) {
+            PacketDistributor.sendToServer(new TownMapChannel.MarkersRequest());
+        }
     }
 
     private static List<Component> hint(MapHint hint) {
