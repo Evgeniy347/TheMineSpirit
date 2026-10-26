@@ -927,7 +927,7 @@ public final class FirstStepsRunner {
         return new TownSnapshot.Progress(placed.done(), placed.total(), done && placed.done() < placed.total());
     }
 
-    private static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String wood) {
+    static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String wood) {
         if (step == BoardCase.BUILD_MINE) {
             return mineAudit(level, stage);
         }
@@ -992,7 +992,7 @@ public final class FirstStepsRunner {
         return new Placed(done, layout.get().air().size()).plus(mineFloors(level, stage));
     }
 
-    private record Placed(int done, int total) {
+    record Placed(int done, int total) {
         Placed plus(Placed other) {
             return new Placed(done + other.done, total + other.total);
         }
