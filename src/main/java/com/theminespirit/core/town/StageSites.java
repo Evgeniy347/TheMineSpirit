@@ -1,6 +1,9 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
@@ -54,13 +57,15 @@ public final class StageSites {
         ColumnMask level = pads.union(between)
                 .union(FenceStrip.of(ring, rules.spacing().fenceStrip()))
                 .intersect(plan.region());
+        Placement mine = need(plan, MINE, stage);
         Placement orchard = need(plan, ORCHARD, stage);
         return new StageSite(
                 stage,
                 anchor,
                 need(plan, HUT, stage),
                 need(plan, YARD, stage),
-                need(plan, MINE, stage),
+                mine,
+                minePlot(mine, levelY),
                 orchard,
                 orchardSaplings(orchard, levelY),
                 level,
@@ -93,6 +98,22 @@ public final class StageSites {
                     + "без деревьев, а рубка и защита — без мест");
         }
         return List.copyOf(cells);
+    }
+
+    private static MinePlot minePlot(Placement mine, int levelY) {
+        String scheme = TicketPlans.MINE_DESCENT_SCHEME;
+        Preset preset = DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .orElseThrow(() -> new IllegalArgumentException("Нет схемы '" + scheme
+                        + "' для шахты: проверьте presets.json и файл схемы — без неё спуск не размечен"));
+        return MinePlot.of(
+                mine,
+                levelY,
+                preset.schematic(),
+                preset.entry(),
+                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION));
     }
 
     private static Placement need(TownPlan plan, String id, int stage) {

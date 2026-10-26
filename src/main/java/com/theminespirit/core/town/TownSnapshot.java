@@ -62,16 +62,7 @@ public record TownSnapshot(
         streets(streets, "side", plan.streets().side());
         streets(streets, "ring", plan.streets().ring());
         List<Lot> lots = plan.placements().stream()
-                .map(place -> new Lot(
-                        place.id(),
-                        place.name(),
-                        place.stage(),
-                        place.x(),
-                        place.z(),
-                        place.width(),
-                        place.depth(),
-                        place.facing().id(),
-                        progress.getOrDefault(place.id(), Progress.NONE)))
+                .map(place -> lot(place, site, progress.getOrDefault(place.id(), Progress.NONE)))
                 .toList();
         return new TownSnapshot(
                 site.stage(),
@@ -85,6 +76,32 @@ public record TownSnapshot(
                 streets,
                 lots,
                 paths);
+    }
+
+    private static Lot lot(Placement place, StageSite site, Progress progress) {
+        if (StageSites.MINE.equals(place.id())) {
+            MinePlot mine = site.minePlot();
+            return new Lot(
+                    place.id(),
+                    place.name(),
+                    place.stage(),
+                    mine.x1(),
+                    mine.z1(),
+                    mine.width(),
+                    mine.depth(),
+                    place.facing().id(),
+                    progress);
+        }
+        return new Lot(
+                place.id(),
+                place.name(),
+                place.stage(),
+                place.x(),
+                place.z(),
+                place.width(),
+                place.depth(),
+                place.facing().id(),
+                progress);
     }
 
     private static List<ColumnMask.Cell> gateCells(FenceLine line) {
