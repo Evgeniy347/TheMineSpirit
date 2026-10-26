@@ -3,9 +3,11 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.mining.ToolReserve;
+import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -147,6 +149,7 @@ final class FarmActions {
 
     private int hoeSlot() {
         ToolReserve reserve = MiningTables.toolReserve();
+        List<String> repairTiers = MiningTables.repairTiers();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);
             if (stack.isEmpty() || !stack.is(ItemTags.HOES)) {
@@ -154,7 +157,11 @@ final class FarmActions {
             }
             if (stack.isDamageableItem()
                     && reserve.spent(
-                            stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage(), stack.isEnchanted())) {
+                            stack.getMaxDamage() - stack.getDamageValue(),
+                            stack.getMaxDamage(),
+                            stack.isEnchanted(),
+                            BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),
+                            repairTiers)) {
                 continue;
             }
             return slot;

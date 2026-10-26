@@ -18,6 +18,8 @@ import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 
 class ToolChoiceProperties {
+    private static final List<String> REPAIR_TIERS = List.of("iron", "diamond");
+
     @Provide
     Arbitrary<List<ToolOption>> optionLists() {
         Arbitrary<ToolOption> option = Combinators.combine(
@@ -36,7 +38,16 @@ class ToolChoiceProperties {
                         Arbitraries.of(true, false),
                         Arbitraries.integers().between(0, 40),
                         Arbitraries.integers().between(0, 40),
-                        Arbitraries.of(true, false))
+                        Arbitraries.of(true, false),
+                        Arbitraries.of(
+                                "",
+                                "minecraft:wooden_pickaxe",
+                                "minecraft:stone_shovel",
+                                "minecraft:golden_axe",
+                                "minecraft:iron_pickaxe",
+                                "minecraft:diamond_sword",
+                                "minecraft:netherite_pickaxe",
+                                "minecraft:stick"))
                 .as(ToolOption::new);
         return option.list().ofMaxSize(12).map(ToolChoiceProperties::uniqueSlots);
     }
@@ -90,10 +101,10 @@ class ToolChoiceProperties {
     void best_SpentCorrectTool_NeverChosenWhenHealthyFasterExists(
             @ForAll("durableOptions") List<ToolOption> options, @ForAll("reserves") ToolReserve reserve) {
         List<ToolOption> healthy = options.stream()
-                .filter(option -> option.correctForDrops() && !option.spent(reserve))
+                .filter(option -> option.correctForDrops() && !option.spent(reserve, REPAIR_TIERS))
                 .toList();
         boolean healthyFasterThanHand = healthy.stream().anyMatch(option -> option.speed() > ToolChoice.HAND_SPEED);
-        Choice choice = ToolChoice.best(options, reserve);
+        Choice choice = ToolChoice.best(options, reserve, REPAIR_TIERS);
 
         if (!healthyFasterThanHand) {
             return;
@@ -107,7 +118,7 @@ class ToolChoiceProperties {
                 .findFirst()
                 .orElseThrow();
         assertFalse(
-                chosen.spent(reserve),
+                chosen.spent(reserve, REPAIR_TIERS),
                 "Выбранный слот " + choice.slot() + " обязан быть неизношенным, а он ниже порога " + reserve + ": "
                         + options);
     }
@@ -115,7 +126,7 @@ class ToolChoiceProperties {
     @Property
     void best_ChosenCorrectTool_IsNeverSpent(
             @ForAll("durableOptions") List<ToolOption> options, @ForAll("reserves") ToolReserve reserve) {
-        Choice choice = ToolChoice.best(options, reserve);
+        Choice choice = ToolChoice.best(options, reserve, REPAIR_TIERS);
         if (choice.slot() == ToolChoice.HAND) {
             return;
         }
@@ -124,7 +135,7 @@ class ToolChoiceProperties {
                 .findFirst()
                 .orElseThrow();
         assertFalse(
-                chosen.spent(reserve),
+                chosen.spent(reserve, REPAIR_TIERS),
                 "Изношенный инструмент выбран как рабочий, хотя в наборе " + options + " при пороге " + reserve);
     }
 
@@ -138,7 +149,8 @@ class ToolChoiceProperties {
                     option.correctForDrops(),
                     option.remainingUses(),
                     option.maxUses(),
-                    option.enchanted()));
+                    option.enchanted(),
+                    option.itemId()));
         }
         return List.copyOf(reslotted);
     }

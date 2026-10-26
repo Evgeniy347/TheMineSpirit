@@ -118,7 +118,7 @@ public final class BlockBreakerGameTests {
     @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_ToolOnLastDurability_RefusedAsNeedTool(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
-        ItemStack pickaxe = new ItemStack(Items.WOODEN_PICKAXE);
+        ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
         int lastUseDamage = pickaxe.getMaxDamage() - 1;
         pickaxe.setDamageValue(lastUseDamage);
         spirit.getInventory().setItem(TOOL_SLOT, pickaxe);

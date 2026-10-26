@@ -10,6 +10,7 @@ import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.ClearAreaParams;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -95,11 +96,16 @@ final class ClearAreaScript implements ScriptInstance {
 
     private static boolean usableShovel(SpiritEntity spirit) {
         ToolReserve reserve = MiningTables.toolReserve();
+        List<String> repairTiers = MiningTables.repairTiers();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);
             if (stack.getItem() instanceof ShovelItem
                     && !reserve.spent(
-                            stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage(), stack.isEnchanted())) {
+                            stack.getMaxDamage() - stack.getDamageValue(),
+                            stack.getMaxDamage(),
+                            stack.isEnchanted(),
+                            BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),
+                            repairTiers)) {
                 return true;
             }
         }
