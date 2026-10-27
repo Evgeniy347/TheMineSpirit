@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import java.util.Objects;
 
 public final class Applicability {
-    public static final int RESTOCK_FOOD_THRESHOLD = 32;
 
     private Applicability() {}
 
@@ -17,7 +16,7 @@ public final class Applicability {
             return (eat.needsFood() || eat.needsHealing()) && !spirit.busy();
         }
         if (boardCase == BoardCase.RESTOCK_FOOD) {
-            return eat.food() < RESTOCK_FOOD_THRESHOLD && !spirit.boardBusy();
+            return !spirit.boardBusy();
         }
         return true;
     }

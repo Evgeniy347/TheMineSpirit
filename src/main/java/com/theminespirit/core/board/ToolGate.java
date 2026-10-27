@@ -6,8 +6,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class ToolGate {
-    private static final Map<BoardCase, String> REQUIRED =
-            Map.of(BoardCase.CLEAR_GROUNDS, "_pickaxe", BoardCase.BUILD_MINE, "_pickaxe");
+    private static final Map<BoardCase, String> REQUIRED = Map.of(
+            BoardCase.CLEAR_GROUNDS, "_pickaxe", BoardCase.BUILD_MINE, "_pickaxe", BoardCase.MINE_LEFT_ORE, "_pickaxe");
 
     private ToolGate() {}
 
