@@ -90,6 +90,10 @@ final class GraphSimulation {
 
     private static void apply(GraphWorld world, GraphPlan.Task task) {
         task.consumes().forEach((item, count) -> world.stock.merge(item, -count, Integer::sum));
+        if (task.id().startsWith("event:")) {
+            world.events.remove(task.id().split(":", 3)[1]);
+            return;
+        }
         if (task.id().startsWith("building:")) {
             world.buildings.put(task.makes(), Built.BUILT);
             if (task.makes().equals(GraphWorld.GRAPH.storage().building())) {

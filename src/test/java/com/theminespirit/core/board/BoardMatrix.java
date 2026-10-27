@@ -137,7 +137,7 @@ final class BoardMatrix {
                 situation.state().eat,
                 situation.state().view);
         for (BoardTicket ticket : DispatchRound.order(board.claimable(stock, clock[0]))) {
-            if (!ticket.id().equals("task")) {
+            if (!"task".equals(ticket.id())) {
                 continue;
             }
             Optional<String> refusal = round.refusal(ticket, spirit);

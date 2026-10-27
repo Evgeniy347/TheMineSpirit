@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record GraphPlan(List<Task> tasks, List<Notice> notices) {
+public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> advice) {
     public record Task(
             String id,
             BoardCase boardCase,
@@ -14,7 +14,8 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices) {
             int priority,
             Map<String, Integer> consumes,
             boolean feasible,
-            boolean chance) {
+            boolean chance,
+            boolean implemented) {
         public Task {
             consumes = Map.copyOf(consumes);
         }
@@ -22,9 +23,12 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices) {
 
     public record Notice(String building, String reason) {}
 
+    public record Advice(String event, String rule) {}
+
     public GraphPlan {
         tasks = List.copyOf(tasks);
         notices = List.copyOf(notices);
+        advice = List.copyOf(advice);
     }
 
     public Optional<Task> task(String id) {

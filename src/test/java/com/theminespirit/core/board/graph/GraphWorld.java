@@ -3,9 +3,11 @@ package com.theminespirit.core.board.graph;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 final class GraphWorld {
     static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
@@ -15,6 +17,7 @@ final class GraphWorld {
     final Map<String, Built> buildings = new HashMap<>();
     int stage = 1;
     int storageFree = 60;
+    final Set<String> events = new HashSet<>();
 
     static GraphWorld empty() {
         GraphWorld world = new GraphWorld();
@@ -54,6 +57,11 @@ final class GraphWorld {
         return this;
     }
 
+    GraphWorld event(String name) {
+        events.add(name);
+        return this;
+    }
+
     GraphWorld built(String building, Built state) {
         buildings.put(building, state);
         return this;
@@ -66,11 +74,12 @@ final class GraphWorld {
         world.buildings.putAll(buildings);
         world.stage = stage;
         world.storageFree = storageFree;
+        world.events.addAll(events);
         return world;
     }
 
     GraphState state() {
-        return new GraphState(stock, stage, kits, buildings, Map.of(), storageFree);
+        return new GraphState(stock, stage, kits, buildings, Map.of(), storageFree, events);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {

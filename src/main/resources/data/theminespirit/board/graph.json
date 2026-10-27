@@ -17,7 +17,18 @@
       "sword": "stone",
       "hoe": "wooden"
     },
-    "base": 60
+    "base": 60,
+    "stageTiers": {
+      "2": {
+        "pickaxe": "iron",
+        "axe": "iron",
+        "shovel": "iron",
+        "sword": "iron"
+      },
+      "3": {
+        "pickaxe": "diamond"
+      }
+    }
   },
   "storage": {
     "minFreePercent": 20,
@@ -285,6 +296,71 @@
       "k": 1,
       "base": 25,
       "stage": 3
+    },
+    "lapis_lazuli": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "diamond": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "gold_ingot": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "redstone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "obsidian": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3,
+      "implemented": false
+    },
+    "glass_bottle": {
+      "xmin": 3,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "nether_wart": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3,
+      "implemented": false
+    },
+    "blaze_rod": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3,
+      "implemented": false
+    },
+    "potion_healing": {
+      "xmin": 2,
+      "k": 1.5,
+      "base": 40,
+      "stage": 3,
+      "implemented": false
+    },
+    "potion_fire_resistance": {
+      "xmin": 1,
+      "k": 1.5,
+      "base": 35,
+      "stage": 3,
+      "implemented": false
     }
   },
   "buildings": {
@@ -651,6 +727,35 @@
         "oak_log": 16,
         "oak_planks": 8
       }
+    },
+    "brewing_stand": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "blaze_rod": 1,
+        "cobblestone": 3
+      },
+      "implemented": false
+    },
+    "enchanting_table": {
+      "case": "ENCHANT_ROOM",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "diamond": 2,
+        "obsidian": 4,
+        "book": 1
+      }
+    },
+    "nether_portal": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 30,
+      "materials": {
+        "obsidian": 10
+      },
+      "implemented": false
     }
   },
   "ways": [
@@ -1450,6 +1555,178 @@
         "stick": 1
       },
       "building": "crafting_table"
+    },
+    {
+      "id": "mine_lapis",
+      "case": "MINE_LEFT_ORE",
+      "makes": "lapis_lazuli",
+      "yield": 4,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "stone",
+      "building": "mine"
+    },
+    {
+      "id": "mine_diamond",
+      "case": "MINE_LEFT_ORE",
+      "makes": "diamond",
+      "yield": 1,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "iron",
+      "building": "mine"
+    },
+    {
+      "id": "mine_gold",
+      "case": "MINE_LEFT_ORE",
+      "makes": "gold_ingot",
+      "yield": 1,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "iron",
+      "building": "mine"
+    },
+    {
+      "id": "mine_redstone",
+      "case": "MINE_LEFT_ORE",
+      "makes": "redstone",
+      "yield": 4,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "iron",
+      "building": "mine"
+    },
+    {
+      "id": "cast_obsidian",
+      "case": "GATHER_MATERIALS",
+      "makes": "obsidian",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bucket": 1
+      },
+      "tool": "pickaxe",
+      "tier": "diamond",
+      "building": "mine",
+      "implemented": false
+    },
+    {
+      "id": "craft_glass_bottle",
+      "case": "GATHER_MATERIALS",
+      "makes": "glass_bottle",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "glass": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "harvest_nether_wart",
+      "case": "GATHER_MATERIALS",
+      "makes": "nether_wart",
+      "yield": 3,
+      "weight": 1.0,
+      "building": "nether_portal",
+      "implemented": false
+    },
+    {
+      "id": "loot_blaze_rod",
+      "case": "COLLECT_DROPS",
+      "makes": "blaze_rod",
+      "yield": 1,
+      "weight": 1.0,
+      "building": "nether_portal",
+      "implemented": false
+    },
+    {
+      "id": "brew_healing",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_healing",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "nether_wart": 1,
+        "glass_bottle": 3,
+        "gold_ingot": 1,
+        "melon_slice": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_fire_resistance",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_fire_resistance",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "nether_wart": 1,
+        "glass_bottle": 3,
+        "blaze_rod": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "craft_diamond_pickaxe",
+      "case": "CRAFT_DIAMOND_PICKAXE",
+      "makes": "diamond_pickaxe",
+      "yield": 1,
+      "weight": 1.2,
+      "consumes": {
+        "diamond": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_diamond_axe",
+      "case": "CRAFT_DIAMOND_AXE",
+      "makes": "diamond_axe",
+      "yield": 1,
+      "weight": 1.2,
+      "consumes": {
+        "diamond": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_diamond_shovel",
+      "case": "CRAFT_DIAMOND_SHOVEL",
+      "makes": "diamond_shovel",
+      "yield": 1,
+      "weight": 1.2,
+      "consumes": {
+        "diamond": 1,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_diamond_sword",
+      "case": "CRAFT_DIAMOND_SWORD",
+      "makes": "diamond_sword",
+      "yield": 1,
+      "weight": 1.2,
+      "consumes": {
+        "diamond": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_diamond_hoe",
+      "case": "GATHER_MATERIALS",
+      "makes": "diamond_hoe",
+      "yield": 1,
+      "weight": 1.2,
+      "consumes": {
+        "diamond": 2,
+        "stick": 2
+      },
+      "building": "crafting_table"
     }
   ],
   "edges": [
@@ -1483,5 +1760,150 @@
       "way": "mine_coal",
       "weight": -5
     }
-  ]
+  ],
+  "events": {
+    "hostile_nearby": {
+      "push": {
+        "tool:sword": 25,
+        "building:lighting": 20,
+        "building:fence": 15,
+        "arrow": 15,
+        "bow": 15,
+        "leather_armor": 10,
+        "food": 10
+      },
+      "advice": [
+        "fight_or_retreat"
+      ]
+    },
+    "creeper_crater": {
+      "tasks": [
+        {
+          "id": "fill_crater",
+          "case": "FILL_CRATER",
+          "base": 60,
+          "consumes": {
+            "dirt": 16
+          }
+        }
+      ],
+      "push": {
+        "building:lighting": 10
+      },
+      "advice": [
+        "keep_distance_from_creeper"
+      ]
+    },
+    "building_damaged": {
+      "tasks": [
+        {
+          "id": "repair_building",
+          "case": "REPAIR_BUILDING",
+          "base": 85,
+          "consumes": {
+            "oak_planks": 8,
+            "cobblestone": 8
+          }
+        }
+      ]
+    },
+    "fence_broken": {
+      "tasks": [
+        {
+          "id": "repair_fence",
+          "case": "REPAIR_FENCE",
+          "base": 95,
+          "consumes": {
+            "oak_log": 4
+          }
+        }
+      ]
+    },
+    "lava_seen": {
+      "push": {
+        "water_bucket": 30,
+        "potion_fire_resistance": 15
+      },
+      "advice": [
+        "no_dig_down_over_lava"
+      ]
+    },
+    "fire": {
+      "tasks": [
+        {
+          "id": "repair_burnt",
+          "case": "REPAIR_BUILDING",
+          "base": 70,
+          "consumes": {
+            "oak_planks": 16
+          }
+        }
+      ],
+      "push": {
+        "water_bucket": 40
+      },
+      "advice": [
+        "extinguish_or_flee"
+      ]
+    },
+    "cactus_near": {
+      "tasks": [
+        {
+          "id": "clear_cactus",
+          "case": "CLEAR_GROUNDS",
+          "base": 40,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "keep_distance_from_cactus"
+      ]
+    },
+    "night": {
+      "push": {
+        "bed": 20,
+        "building:lighting": 15,
+        "torch": 15
+      },
+      "advice": [
+        "sleep_or_guard"
+      ]
+    },
+    "armor_worn": {
+      "push": {
+        "iron_armor": 25,
+        "leather_armor": 25
+      }
+    },
+    "hungry": {
+      "tasks": [
+        {
+          "id": "eat",
+          "case": "EAT_TO_FULL",
+          "base": 80,
+          "consumes": {
+            "food": 1
+          }
+        }
+      ],
+      "push": {
+        "food": 40
+      }
+    },
+    "drowning": {
+      "advice": [
+        "surface_for_air"
+      ]
+    },
+    "suffocation": {
+      "advice": [
+        "dig_out"
+      ]
+    },
+    "fall_risk": {
+      "advice": [
+        "no_jump_over_three"
+      ]
+    }
+  }
 }

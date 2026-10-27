@@ -2,6 +2,7 @@ package com.theminespirit.core.board.graph;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public record GraphState(
         Map<String, Integer> stock,
@@ -9,7 +10,8 @@ public record GraphState(
         Map<String, Map<String, Integer>> kits,
         Map<String, Built> buildings,
         Map<String, Map<String, Integer>> materials,
-        int storageFreePercent) {
+        int storageFreePercent,
+        Set<String> events) {
     public enum Built {
         BUILT,
         PLANNED,
@@ -23,6 +25,7 @@ public record GraphState(
                 Objects.requireNonNull(buildings, "Постройки не могут быть null: неизвестные считаются ABSENT"));
         materials = Map.copyOf(Objects.requireNonNull(
                 materials, "Материалы построек не могут быть null: постройка без схемы — пустая карта"));
+        events = Set.copyOf(Objects.requireNonNull(events, "События не могут быть null: без событий — пустой набор"));
         if (stage < 1) {
             throw new IllegalArgumentException("Этап " + stage + " меньше 1: поселение начинается с этапа 1");
         }

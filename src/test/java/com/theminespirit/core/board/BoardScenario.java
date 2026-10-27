@@ -194,6 +194,7 @@ final class BoardScenario {
         return this;
     }
 
+    @FunctionalInterface
     interface ScenarioCheck {
         void after(BoardScenario scenario, int round);
     }

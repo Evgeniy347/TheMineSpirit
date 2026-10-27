@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public record SupplyGraph(
@@ -22,7 +24,9 @@ public record SupplyGraph(
         Map<String, Item> items,
         Map<String, Building> buildings,
         List<Way> ways,
-        List<Edge> edges) {
+        List<Edge> edges,
+        Set<String> unimplemented,
+        Map<String, GraphEvent> events) {
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
 
     public record Item(String id, int xmin, double k, int base, int stage) {}
@@ -39,17 +43,22 @@ public record SupplyGraph(
         }
     }
 
-    public record Kit(Map<String, String> tiers, int base) {
+    public record Kit(Map<String, String> tiers, Map<Integer, Map<String, String>> stageTiers, int base) {
         public Kit {
             tiers = Map.copyOf(tiers);
+            stageTiers = Map.copyOf(stageTiers);
         }
 
         public List<String> kinds() {
             return tiers.keySet().stream().sorted().toList();
         }
 
-        public String tier(String kind) {
-            return tiers.getOrDefault(kind, "wooden");
+        public String tier(String kind, int stage) {
+            String tier = tiers.getOrDefault(kind, "wooden");
+            for (int step = 1; step <= stage; step++) {
+                tier = stageTiers.getOrDefault(step, Map.of()).getOrDefault(kind, tier);
+            }
+            return tier;
         }
     }
 
@@ -78,6 +87,8 @@ public record SupplyGraph(
         buildings = Map.copyOf(buildings);
         ways = List.copyOf(ways);
         edges = List.copyOf(edges);
+        unimplemented = Set.copyOf(unimplemented);
+        events = Map.copyOf(events);
     }
 
     public static SupplyGraph loadDefault() {
@@ -120,7 +131,10 @@ public record SupplyGraph(
                 root.path("buildReadyBoost").asInt(),
                 root.path("maxPriority").asInt(100),
                 tiers,
-                new Kit(kitTiers, root.path("kit").path("base").asInt()),
+                new Kit(
+                        kitTiers,
+                        stageTiers(root.path("kit")),
+                        root.path("kit").path("base").asInt()),
                 new Storage(
                         storage.path("minFreePercent").asInt(),
                         storage.path("building").asText(),
@@ -128,7 +142,9 @@ public record SupplyGraph(
                 items,
                 buildings,
                 ways,
-                edges);
+                edges,
+                unimplemented(root),
+                GraphEvent.parse(root));
         graph.validate(origin);
         return graph;
     }
@@ -177,6 +193,39 @@ public record SupplyGraph(
         return ways;
     }
 
+    private static Map<Integer, Map<String, String>> stageTiers(JsonNode kit) {
+        Map<Integer, Map<String, String>> stages = new LinkedHashMap<>();
+        kit.path("stageTiers").properties().forEach(entry -> {
+            Map<String, String> tiers = new LinkedHashMap<>();
+            entry.getValue()
+                    .properties()
+                    .forEach(tier -> tiers.put(tier.getKey(), tier.getValue().asText()));
+            stages.put(Integer.parseInt(entry.getKey()), tiers);
+        });
+        return stages;
+    }
+
+    private static Set<String> unimplemented(JsonNode root) {
+        Set<String> ids = new HashSet<>();
+        for (String section : List.of("items", "buildings")) {
+            root.path(section).properties().forEach(entry -> {
+                if (!entry.getValue().path("implemented").asBoolean(true)) {
+                    ids.add(entry.getKey());
+                }
+            });
+        }
+        for (JsonNode node : root.path("ways")) {
+            if (!node.path("implemented").asBoolean(true)) {
+                ids.add(node.path("id").asText());
+            }
+        }
+        return ids;
+    }
+
+    public boolean implemented(String id) {
+        return !unimplemented.contains(id);
+    }
+
     public int rank(String tier) {
         return tiers.indexOf(tier);
     }
@@ -219,12 +268,6 @@ public record SupplyGraph(
                     throw new IllegalStateException("Файл '" + origin + "': постройка " + building.id() + " расходует '"
                             + input + "', которого нет среди предметов графа");
                 }
-            }
-        }
-        for (Way way : ways) {
-            if (way.building() != null && !buildings.containsKey(way.building())) {
-                throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " требует постройку '"
-                        + way.building() + "', которой нет в графе");
             }
         }
         for (Edge edge : edges) {

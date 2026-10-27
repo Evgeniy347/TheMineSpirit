@@ -13,6 +13,7 @@ import java.util.Set;
 public final class GraphPlanner {
     private static final String BUILDING = "building:";
     private static final String TOOL = "tool:";
+    private static final String EVENT = "event:";
     private static final char AT = '@';
 
     private final SupplyGraph graph;
@@ -20,6 +21,7 @@ public final class GraphPlanner {
     private final Map<String, Double> scores = new LinkedHashMap<>();
     private final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final Set<String> chances = new HashSet<>();
+    private final List<GraphPlan.Advice> advice = new ArrayList<>();
 
     private GraphPlanner(SupplyGraph graph, GraphState state) {
         this.graph = Objects.requireNonNull(graph, "Граф не может быть null: без него не из чего выводить задания");
@@ -29,6 +31,7 @@ public final class GraphPlanner {
     public static GraphPlan plan(SupplyGraph graph, GraphState state) {
         GraphPlanner planner = new GraphPlanner(graph, state);
         planner.roots();
+        planner.events();
         planner.edges();
         return planner.result();
     }
@@ -61,7 +64,7 @@ public final class GraphPlanner {
         }
         for (String spirit : state.kits().keySet()) {
             for (String kind : graph.kit().kinds()) {
-                int target = graph.rank(graph.kit().tier(kind));
+                int target = graph.rank(graph.kit().tier(kind, state.stage()));
                 int tier = state.tier(spirit, kind);
                 if (tier < target) {
                     push(
@@ -105,7 +108,7 @@ public final class GraphPlanner {
                 if (graph.rank(tier) <= state.tier(spirit, kind)) {
                     continue;
                 }
-                boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier(kind));
+                boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier(kind, state.stage()));
                 for (SupplyGraph.Way way : graph.producers(tier + "_" + kind)) {
                     if (!aboveKit) {
                         activate(way, way.id() + AT + spirit, value * way.weight(), path);
@@ -179,6 +182,34 @@ public final class GraphPlanner {
         push(BUILDING + id, value, path);
     }
 
+    private void events() {
+        for (String name : state.events()) {
+            GraphEvent event = graph.events().get(name);
+            if (event == null) {
+                continue;
+            }
+            for (GraphEvent.Task task : event.tasks()) {
+                String key = EVENT + name + ":" + task.id();
+                add(key, task.base());
+                for (Map.Entry<String, Integer> input : task.consumes().entrySet()) {
+                    if (state.count(input.getKey()) < input.getValue()) {
+                        push(input.getKey(), task.base() * graph.decay(), new HashSet<>());
+                    }
+                }
+            }
+            event.push().forEach((node, weight) -> {
+                if (node.startsWith(TOOL)) {
+                    pushTool(node.substring(TOOL.length()), weight, new HashSet<>());
+                } else if (node.startsWith(BUILDING)) {
+                    requireBuilding(node.substring(BUILDING.length()), weight, "событие " + name, new HashSet<>());
+                } else {
+                    push(node, weight, new HashSet<>());
+                }
+            });
+            event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
+        }
+    }
+
     private void edges() {
         for (SupplyGraph.Edge edge : graph.edges()) {
             if (!lacking(graph, state, edge.lack())) {
@@ -205,10 +236,30 @@ public final class GraphPlanner {
             int priority = (int) Math.max(0, Math.min(graph.maxPriority(), Math.round(score.getValue())));
             tasks.add(task(score.getKey(), priority));
         }
-        return new GraphPlan(tasks, List.copyOf(notices.values()));
+        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
     }
 
     private GraphPlan.Task task(String key, int priority) {
+        if (key.startsWith(EVENT)) {
+            String[] parts = key.split(":", 3);
+            GraphEvent.Task event = Objects.requireNonNull(
+                            graph.events().get(parts[1]), "Событие " + parts[1] + " задания не описано в графе")
+                    .tasks()
+                    .stream()
+                    .filter(task -> task.id().equals(parts[2]))
+                    .findFirst()
+                    .orElseThrow();
+            return new GraphPlan.Task(
+                    key,
+                    event.boardCase(),
+                    event.id(),
+                    Optional.empty(),
+                    priority,
+                    event.consumes(),
+                    stocked(event.consumes()),
+                    false,
+                    true);
+        }
         if (key.startsWith(BUILDING)) {
             String id = key.substring(BUILDING.length());
             SupplyGraph.Building building = Objects.requireNonNull(
@@ -223,7 +274,8 @@ public final class GraphPlanner {
                     priority,
                     materials,
                     tooled && stocked(materials),
-                    false);
+                    false,
+                    graph.implemented(id));
         }
         int at = key.indexOf(AT);
         String wayId = at < 0 ? key : key.substring(0, at);
@@ -239,7 +291,8 @@ public final class GraphPlanner {
                 priority,
                 way.consumes(),
                 tooled && housed(way) && stocked(way.consumes()),
-                chances.contains(key));
+                chances.contains(key),
+                graph.implemented(wayId));
     }
 
     private Map<String, Integer> materials(String building) {

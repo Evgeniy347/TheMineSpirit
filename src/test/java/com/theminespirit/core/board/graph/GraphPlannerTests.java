@@ -129,7 +129,7 @@ class GraphPlannerTests {
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.notices().stream().anyMatch(notice -> notice.building().equals("warehouse")),
+                plan.notices().stream().anyMatch(notice -> "warehouse".equals(notice.building())),
                 "Склад полон, склада нет в плане — просьба стратегу: " + plan.notices());
     }
 
@@ -151,8 +151,7 @@ class GraphPlannerTests {
 
         assertTrue(
                 plan.task("building:warehouse").isEmpty()
-                        && plan.notices().stream()
-                                .anyMatch(notice -> notice.building().equals("warehouse")),
+                        && plan.notices().stream().anyMatch(notice -> "warehouse".equals(notice.building())),
                 "Склад построен, а места нет — не строим склад заново по кругу, просим стратега расширить: "
                         + plan.task("building:warehouse") + ", " + plan.notices());
     }
@@ -169,5 +168,84 @@ class GraphPlannerTests {
                                 .map(GraphPlan.Task::id)
                                 .filter(id -> id.contains("hoe") || id.contains("sword"))
                                 .toList());
+    }
+
+    @Test
+    void plan_CactusNear_ClearTaskAndKeepDistance() {
+        GraphPlan plan = GraphWorld.settled().event("cactus_near").plan();
+
+        assertTrue(
+                plan.task("event:cactus_near:clear_cactus").isPresent()
+                        && plan.advice().contains(new GraphPlan.Advice("cactus_near", "keep_distance_from_cactus")),
+                "Кактус рядом — задание убрать с участка и совет тактике держаться на расстоянии: " + plan.advice());
+    }
+
+    @Test
+    void plan_CreeperCraterNoDirt_FillTaskRaisesDigging() {
+        GraphPlan calm = GraphWorld.settled().with("dirt", 0).plan();
+        GraphPlan crater =
+                GraphWorld.settled().with("dirt", 0).event("creeper_crater").plan();
+
+        assertTrue(
+                crater.task("event:creeper_crater:fill_crater").isPresent()
+                        && crater.priority("dig_dirt") > calm.priority("dig_dirt"),
+                "Воронка без земли — задание засыпать и земля важнее: " + crater.priority("dig_dirt") + " против "
+                        + calm.priority("dig_dirt"));
+    }
+
+    @Test
+    void plan_LavaSeen_RaisesWaterBucket() {
+        GraphWorld base = GraphWorld.settled();
+        base.stage = 2;
+        GraphPlan calm = base.copy().plan();
+        GraphPlan lava = base.copy().event("lava_seen").plan();
+
+        assertTrue(
+                lava.priority("fill_water_bucket") > calm.priority("fill_water_bucket"),
+                "Встретили лаву — ведро воды важнее: " + lava.priority("fill_water_bucket") + " против "
+                        + calm.priority("fill_water_bucket"));
+    }
+
+    @Test
+    void plan_HostileNearby_RaisesSword() {
+        GraphPlan calm = GraphWorld.settled().tools("spirit-1", 0).plan();
+        GraphPlan hostile = GraphWorld.settled()
+                .tools("spirit-1", 0)
+                .event("hostile_nearby")
+                .plan();
+
+        assertTrue(
+                hostile.priority("craft_stone_sword@spirit-1") > calm.priority("craft_stone_sword@spirit-1"),
+                "Враги рядом — меч важнее: " + hostile.priority("craft_stone_sword@spirit-1") + " против "
+                        + calm.priority("craft_stone_sword@spirit-1"));
+    }
+
+    @Test
+    void plan_StageThree_PotionTasksMarkedUnimplemented() {
+        GraphWorld world = GraphWorld.settled().event("lava_seen");
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("brew_fire_resistance")
+                        .map(task -> !task.implemented())
+                        .orElse(false),
+                "Зелья ещё не реализованы — задание стоит с пометкой «не реализовано»: "
+                        + plan.task("brew_fire_resistance"));
+    }
+
+    @Test
+    void plan_StageTwo_IronPickaxeIsKitNotChance() {
+        GraphWorld world = GraphWorld.settled();
+        world.stage = 2;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_iron_pickaxe@spirit-1")
+                                .map(task -> !task.chance())
+                                .orElse(false)
+                        && plan.task("mine_iron").isPresent(),
+                "Этап 2 — набор железный: железная кирка — нужда набора и тянет добычу железа, а не «ждёт случая»: "
+                        + plan.task("craft_iron_pickaxe@spirit-1"));
     }
 }

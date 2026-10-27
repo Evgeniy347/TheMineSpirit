@@ -38,6 +38,9 @@ final class GraphMutations {
                         building + "=" + built, world -> world.copy().built(building, built)));
             }
         }
+        for (String event : GraphWorld.GRAPH.events().keySet()) {
+            all.add(new Mutation("event=" + event, world -> world.copy().event(event)));
+        }
         for (int free : List.of(0, 19, 20, 100)) {
             all.add(new Mutation("free=" + free, world -> {
                 GraphWorld copy = world.copy();

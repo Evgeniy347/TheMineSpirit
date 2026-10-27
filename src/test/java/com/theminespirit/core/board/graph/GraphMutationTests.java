@@ -124,7 +124,7 @@ class GraphMutationTests {
         GraphPlan plan = GraphWorld.empty().built("crafting_table", Built.BUILT).plan();
 
         assertTrue(
-                GraphWorld.issueOrder(plan).stream().anyMatch(task -> task.id().equals("chop_log")),
+                GraphWorld.issueOrder(plan).stream().anyMatch(task -> "chop_log".equals(task.id())),
                 "В пустом мире рубка выполнима сразу, руками: " + GraphWorld.issueOrder(plan));
     }
 
