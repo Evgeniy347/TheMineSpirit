@@ -1013,6 +1013,10 @@ public final class BoardService {
             try {
                 plan = planOf(ticket, target);
             } catch (RuntimeException failure) {
+                if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
+                    dropGoallessRepair(ticket);
+                    continue;
+                }
                 LOGGER.error(
                         "Задание {} (кейс {}): план не собран: {}",
                         ticket.id(),
@@ -1087,6 +1091,15 @@ public final class BoardService {
                 "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
                 ticket.id(),
                 crafter.displayName());
+    }
+
+    private void dropGoallessRepair(BoardTicket ticket) {
+        board.cancel(ticket.id());
+        targets.remove(ticket.id());
+        persist();
+        LOGGER.info(
+                "[board] ремонт {} снят: цели нет (план сменился или сервер перезапущен), аудит этапа поставит заново",
+                ticket.id());
     }
 
     private void dropUnplannedTransfer(BoardTicket ticket, DispatchRound round) {

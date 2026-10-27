@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class RepairPlan {
     public static final String PREFIX = "repair:";
@@ -33,6 +34,14 @@ public final class RepairPlan {
             target = target.withWood(wood);
         }
         return Optional.of(target);
+    }
+
+    public static boolean goalless(BoardTicket ticket, @Nullable TicketTarget target) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: проверяется цель ремонта");
+        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING) {
+            return false;
+        }
+        return target == null || (target.work() == null && target.schemeFile() == null && target.leveling() == null);
     }
 
     private static void collect(TaskNode plan, List<ScriptCall> found) {
