@@ -1,0 +1,255 @@
+# library_2 — Библиотека, уровень 2 (catalog-2.md, style.md): цоколь, каркас тёмного дуба, крыша из глубинного сланца
+# со свесом; внутри — назначение семьи, мебель у стен, свет без тёмных клеток.
+name: "Библиотека, уровень 2"
+type: social
+stage: 4
+level: 2
+requires: library_1
+size: 15x11x17   # Ш×В×Д
+entrance: 7,1,1
+legend:
+  'c': polished_andesite
+  'S': stone_bricks
+  'a': polished_andesite
+  'L': dark_oak_log[axis=y]
+  '#': dark_oak_planks
+  'G': glass
+  'D': dark_oak_door[facing=south,hinge=left]
+  'p': polished_andesite_stairs[facing=south,half=bottom]
+  '1': deepslate_brick_stairs[facing=east,half=bottom]
+  '2': deepslate_brick_stairs[facing=west,half=bottom]
+  '3': deepslate_brick_stairs[facing=south,half=bottom]
+  '4': deepslate_brick_stairs[facing=north,half=bottom]
+  '_': deepslate_brick_slab[type=bottom]
+  't': dark_oak_fence
+  'q': dark_oak_pressure_plate
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  'n': dark_oak_stairs[facing=north,half=bottom]
+  's': dark_oak_stairs[facing=south,half=bottom]
+  '~': red_carpet
+  'm': white_carpet
+  'g': light_gray_carpet
+  'C': chest[facing=south]
+  'b': barrel[facing=up]
+  'Q': bookshelf
+  'l': lectern[facing=south]
+  'T': crafting_table
+  'F': furnace[facing=south]
+  'k': smoker[facing=south]
+  'u': water_cauldron[level=3]
+  'V': cauldron
+  'v': brewing_stand
+  'A': anvil
+  'W': grindstone
+  'M': cartography_table
+  'j': enchanting_table
+  'B': white_bed[facing=north]
+  'f': campfire[lit=true]
+  'h': hay_block
+  'P': potted_poppy
+  'O': potted_dandelion
+  'X': potted_azure_bluet
+  'H': lantern[hanging=true]
+  'N': lantern[hanging=false]
+  'z': chain[axis=y]
+  'x': oak_leaves
+layers:
+  - y0 цоколь и пол: |
+      aaaaaaapaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaa
+  - y1 зал: |
+      
+       LSSSSLDLSSSSL
+       SC~~~~~~~~~~S
+       S~~mmmlmmm~~S
+       S~~mmmmmmm~~S
+       S~~mmmmmmm~~S
+       S~~mnmmnmm~~S
+       S~~mttmttm~~S
+       S~~mmsmmsm~~S
+       S~~mmmmmmm~~S
+       S~~mmmmmmm~~S
+       S~~mmmmmmm~~S
+       S~~mmmlmmm~~S
+       S~~mmmmmmm~bS
+       SQQQQQQQQQQQS
+       LSSSSSSSSSSSL
+             .
+  - y2: |
+      
+       LSGSSLDLSSGSL
+       S           S
+       G           G
+       S           S
+       S           S
+       S           S
+       S   qq qq   S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       G           G
+       SQQQQQQQQQQQS
+       LSGSSSSSSSGSL
+             .
+  - y3: |
+      
+       LSGSSLSLSSGSL
+       S           S
+       G           G
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       G           G
+       S           S
+       LSGSSSSSSSGSL
+             .
+  - y4: |
+      
+       LSSSSLSLSSSSL
+       S           S
+       S H  H    H S
+       S           S
+       S           S
+       S           S
+       S H  H    H S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       S H  H    H S
+       S           S
+       LSSSSSSSSSSSL
+             .
+  - y5: |
+      
+       LSSSSLSLSSSSL
+       S           S
+       S z  z    z S
+       S           S
+       S           S
+       S           S
+       S z  z    z S
+       S           S
+       S           S
+       S           S
+       S           S
+       S           S
+       S z  z    z S
+       S           S
+       LSSSSSSSSSSSL
+             .
+  - y6: |
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+  - y7: |
+      xtxtxtxtxtxtxtx
+      t1333333333332t
+      x1###########2x
+      t1###########2t
+      x1###########2x
+      t1###########2t
+      x1###########2x
+      t1###########2t
+      x1###########2x
+      t1###########2t
+      x1###########2x
+      t1###########2t
+      x1###########2x
+      t1###########2t
+      x1###########2x
+      t1444444444442t
+      xtxtxtxtxtxtxtx
+  - y8: |
+      
+      
+        13333333332
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        1#########2
+        14444444442
+      
+             .
+  - y9: |
+      
+      
+      
+         133333332
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         1#######2
+         144444442
+      
+      
+             .
+  - y10: |
+      
+      
+      
+      
+          1333332
+          1#####2
+          1#####2
+          1#####2
+          1#####2
+          1#####2
+          1#####2
+          1#####2
+          1444442
+      
+      
+      
+             .

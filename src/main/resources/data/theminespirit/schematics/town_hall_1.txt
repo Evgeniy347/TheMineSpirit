@@ -1,0 +1,204 @@
+# town_hall_1 — ратуша, уровень 1 (catalog-2.md, style.md): зал совета.
+# Цоколь и пол, каркас тёмного дуба, крыша из глубинного сланца со свесом и слуховыми окнами;
+# внутри — зал совета, длинный стол, кресла, кафедра-архив, колокол, свет без тёмных клеток.
+name: "Ратуша, уровень 1 (зал совета)"
+type: social
+stage: 3
+level: 1
+size: 13x10x15   # Ш×В×Д
+entrance: 6,1,1
+legend:
+  'c': polished_andesite
+  'S': stone_bricks
+  'a': polished_andesite
+  'L': dark_oak_log[axis=y]
+  '#': dark_oak_planks
+  'G': glass
+  'D': dark_oak_door[facing=south,hinge=left]
+  'p': polished_andesite_stairs[facing=south,half=bottom]
+  '1': deepslate_brick_stairs[facing=east,half=bottom]
+  '2': deepslate_brick_stairs[facing=west,half=bottom]
+  '3': deepslate_brick_stairs[facing=south,half=bottom]
+  '4': deepslate_brick_stairs[facing=north,half=bottom]
+  '_': deepslate_brick_slab[type=bottom]
+  't': dark_oak_fence
+  'q': dark_oak_pressure_plate
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  'n': dark_oak_stairs[facing=north,half=bottom]
+  's': dark_oak_stairs[facing=south,half=bottom]
+  '~': red_carpet
+  'm': white_carpet
+  'B': bell[attachment=floor,facing=south]
+  'M': cartography_table
+  'Q': bookshelf
+  'l': lectern[facing=south]
+  'C': chest[facing=south]
+  'b': barrel[facing=up]
+  'P': potted_poppy
+  'O': potted_dandelion
+  'A': potted_azure_bluet
+  'v': oak_leaves
+  'z': chain[axis=y]
+  'H': lantern[hanging=true]
+layers:
+  - y0 цоколь и пол: |
+      aaaaaapaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+  - y1 зал совета: |
+      
+       LSSSLDSSLSL
+       SM~~~~~~Q~S
+       Sb~~~~~~~CS
+       Sb~t~~~~~QS
+       L~etw~~~~~L
+       S~etw~~~~~S
+       S~etw~~~~~S
+       S~~t~~~~~~S
+       L~~~~~~~~~L
+       S~~~~~~~~~S
+       S~~~~~~~~OS
+       SP~~~~~~~BS
+       LSSSLSSSLSL
+            .
+  - y2: |
+      
+       LSGSLDSGLSL
+       S         S
+       G         G
+       S  q      S
+       L  q      L
+       S  q      S
+       S  q      S
+       S  q      S
+       L         L
+       S         S
+       G         G
+       S         S
+       LSGSLSSGLSL
+            .
+  - y3: |
+      
+       LSSSLSSSLSL
+       S         S
+       S         S
+       S  HH  H  S
+       L         L
+       S         S
+       S         S
+       S         S
+       L  HH  H  L
+       S         S
+       S         S
+       S         S
+       LSSSLSSSLSL
+            .
+  - y4: |
+      
+       LSSSLSSSLSL
+       S         S
+       S         S
+       S  zz  z  S
+       L         L
+       S         S
+       S         S
+       S         S
+       L  zz  z  L
+       S         S
+       S         S
+       S         S
+       LSSSLSSSLSL
+            .
+  - y5: |
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+  - y6: |
+      tvtvtvtvtvtvt
+      v13333333332v
+      t1#########2t
+      v1#########2v
+      t1#########2t
+      v1#########2v
+      t1#########2t
+      v1#########2v
+      t1#########2t
+      v1#########2v
+      t1#########2t
+      v1#########2v
+      t1#########2t
+      v14444444442v
+      tvtvtvtvtvtvt
+  - y7: |
+      
+      
+        133333332
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        144444442
+      
+            .
+  - y8: |
+      
+      
+      
+         1333332
+         1#####2
+         1#####2
+         1#####2
+         1#####2
+         1#####2
+         1#####2
+         1#####2
+         1444442
+      
+      
+            .
+  - y9: |
+      
+      
+      
+      
+          13332
+          1###2
+          1###2
+          1###2
+          1###2
+          1###2
+          14442
+      
+      
+      
+            .

@@ -85,7 +85,14 @@ class DemoBuildingsTests {
                         "stable",
                         "barracks",
                         "weaver",
-                        "portal_hall"),
+                        "portal_hall",
+                        "town_hall",
+                        "tavern",
+                        "infirmary",
+                        "library",
+                        "training_yard",
+                        "trading_post",
+                        "alchemy"),
                 DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "
                         + "и не найдёт нужную");
