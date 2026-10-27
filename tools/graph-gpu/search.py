@@ -1,0 +1,317 @@
+"""Эволюционный поиск весов графа поселения на видеокарте.
+
+Параметры поиска (каждый множитель в пределах ±50 %, 0.5…1.5):
+  * база каждого предмета,
+  * база каждой постройки,
+  * вес каждого пути,
+  * decay, urgentBoost, buildReadyBoost.
+
+Метрика — сумма шагов до конца этапа 3 по стартовым мирам; застрявший мир
+получает штраф limit + 500. Уравнение p = r + A·p решается матрично на torch
+(CUDA), поколение считается одним пакетом миров.
+
+Запуск:
+    python search.py --mode sensitivity --export ../../TestResults/graph-export
+    python search.py --mode es --generations 20 --population 24 --seeds 2
+Выход: best-weights.json рядом со скриптом (обновляется после каждого поколения).
+"""
+
+import argparse
+import json
+import math
+import os
+import sys
+
+import numpy as np
+
+from graph_model import Graph, PLANNED, ABSENT, BUILT
+import sim_gpu
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+LOW, HIGH = 0.5, 1.5
+PENALTY = 500
+
+SCALARS = ("decay", "urgentBoost", "buildReadyBoost")
+
+
+def parameters(graph):
+    """Список параметров поиска: (вид, id)."""
+    params = [("item", item.id) for item in graph.items.values()]
+    params += [("building", building.id) for building in graph.buildings.values()]
+    params += [("way", way.id) for way in graph.ways]
+    params += [("scalar", name) for name in SCALARS]
+    return params
+
+
+def vector_to_weights(graph, vector, params):
+    """Вектор множителей -> множители конкретных весов для Graph.scaled."""
+    weights = {"items": {}, "buildings": {}, "ways": {}}
+    for value, (kind, key) in zip(vector, params):
+        factor = float(value)
+        if kind == "item":
+            weights["items"][key] = factor
+        elif kind == "building":
+            weights["buildings"][key] = factor
+        elif kind == "way":
+            weights["ways"][key] = factor
+        else:
+            weights[key] = factor
+    return weights
+
+
+def group_of(graph, kind, key):
+    if kind == "item":
+        item = graph.items[key]
+        return "item_per_spirit" if item.per_spirit else "item_stage" + str(item.stage)
+    if kind == "building":
+        return "building_stage" + str(graph.buildings[key].stage)
+    if kind == "way":
+        way = graph.way(key)
+        if graph.is_tool(way.makes):
+            return "way_tool"
+        item = graph.items.get(way.makes)
+        return "way_stage" + str(item.stage) if item is not None else "way_other"
+    return key
+
+
+def groups(graph, params):
+    return sorted({group_of(graph, kind, key) for kind, key in params})
+
+
+def group_vector(graph, params, group, factor):
+    vector = np.ones(len(params))
+    for index, (kind, key) in enumerate(params):
+        if group_of(graph, kind, key) == group:
+            vector[index] = factor
+    return vector
+
+
+def absolute(graph, weights):
+    """Множители -> абсолютные значения в формате graph.json."""
+    out = {
+        "decay": round(graph.decay * weights.get("decay", 1.0), 6),
+        "urgentBoost": int(math.floor(graph.urgent_boost * weights.get("urgentBoost", 1.0) + 0.5)),
+        "buildReadyBoost": int(math.floor(graph.build_ready_boost * weights.get("buildReadyBoost", 1.0) + 0.5)),
+        "items": {},
+        "buildings": {},
+        "ways": {},
+    }
+    for item_id, factor in (weights.get("items") or {}).items():
+        item = graph.items.get(item_id)
+        if item is not None:
+            out["items"][item_id] = int(math.floor(item.base * factor + 0.5))
+    for building_id, factor in (weights.get("buildings") or {}).items():
+        building = graph.buildings.get(building_id)
+        if building is not None:
+            out["buildings"][building_id] = int(math.floor(building.base * factor + 0.5))
+    for way_id, factor in (weights.get("ways") or {}).items():
+        way = graph.way(way_id)
+        if way is not None:
+            out["ways"][way_id] = round(way.weight * factor, 9)
+    return out
+
+
+def make_world(graph, stage=3, built_every_other=False, spirits=1, tier=2, stock=None):
+    world = sim_gpu.World.settled(graph)
+    world.stage = stage
+    for index, building in enumerate(graph.buildings.values()):
+        if building.stage < stage:
+            world.buildings[building.id] = BUILT
+        elif building.stage == stage:
+            world.buildings[building.id] = BUILT if built_every_other and index % 2 == 0 else PLANNED
+        else:
+            world.buildings[building.id] = ABSENT
+    for spirit in range(1, spirits + 1):
+        world.tools("spirit-" + str(spirit), tier if spirit % 2 else -1)
+    world.stock.update(stock or {
+        "oak_log": 100, "oak_planks": 100, "stick": 100, "cobblestone": 100,
+        "coal": 40, "iron_ingot": 20, "dirt": 64, "torch": 30,
+    })
+    return world
+
+
+def java_second(graph):
+    """GraphMutations.baselines()[3]: этап 2, все постройки в плане."""
+    world = sim_gpu.World.settled(graph)
+    world.stage = 2
+    for building_id in graph.buildings:
+        world.buildings[building_id] = PLANNED
+    return world
+
+
+def start_builders():
+    """Стартовые миры поиска и проверки: (имя, функция graph -> World)."""
+    return [
+        ("stage2-full", java_second),
+        ("late3-half", lambda graph: make_world(graph, 3, built_every_other=True)),
+        ("late3", lambda graph: make_world(graph, 3)),
+        ("stage2-all", lambda graph: make_world(graph, 2)),
+    ]
+
+
+def evaluate_population(base_graph, vectors, builders, params, limit=4000, device="cuda"):
+    """Пакетная оценка популяции: все кандидаты × все старты одним прогоном."""
+    worlds = []
+    labels = []
+    for index, vector in enumerate(vectors):
+        graph = base_graph.scaled(vector_to_weights(base_graph, vector, params))
+        for name, builder in builders:
+            worlds.append(builder(graph))
+            labels.append((index, name))
+    outcomes = sim_gpu.run_many(worlds, limit, device)
+    scores = [0] * len(vectors)
+    detail = [[] for _ in vectors]
+    for (index, name), outcome in zip(labels, outcomes):
+        value = outcome["steps"] if outcome["finished"] else limit + PENALTY
+        scores[index] += value
+        detail[index].append({
+            "start": name,
+            "steps": outcome["steps"],
+            "finished": outcome["finished"],
+            "stage": outcome["stage"],
+        })
+    return scores, detail
+
+
+def evaluate(base_graph, vector, builders, params, limit=4000, device="cuda"):
+    scores, detail = evaluate_population(base_graph, [vector], builders, params, limit, device)
+    return scores[0], detail[0]
+
+
+def sensitivity(base_graph, builders, params, limit, device):
+    base = np.ones(len(params))
+    vectors = [base]
+    names = ["base"]
+    for group in groups(base_graph, params):
+        for direction, factor in (("+", 1.3), ("-", 0.7)):
+            vectors.append(group_vector(base_graph, params, group, factor))
+            names.append(group + direction)
+    scores, detail = evaluate_population(base_graph, vectors, builders, params, limit, device)
+    rows = sorted(zip(scores, names, detail))
+    print("Сумма шагов (меньше — лучше):")
+    for score, name, items in rows:
+        steps = ", ".join(item["start"] + "=" + str(item["steps"]) for item in items)
+        print(f"  {name:22s} {score:6d}  [{steps}]")
+    return rows
+
+
+def save(path, base_graph, best, params, limit, device):
+    weights = vector_to_weights(base_graph, best["vector"], params)
+    payload = {
+        "note": "Множители в пределах ±50 %; в graph.json не внесены. "
+                "absolute — готовые значения для переноса вручную.",
+        "score": best["normalized"],
+        "seed": best["seed"],
+        "generation": best["generation"],
+        "parameters": {f"{kind}:{key}": round(float(value), 6)
+                       for (kind, key), value in zip(params, best["vector"])},
+        "weights": weights,
+        "absolute": absolute(base_graph, weights),
+    }
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+
+
+def load_vector(path, params):
+    with open(path, "r", encoding="utf-8") as handle:
+        saved = json.load(handle).get("parameters", {})
+    vector = np.ones(len(params))
+    for index, (kind, key) in enumerate(params):
+        value = saved.get(kind + ":" + key)
+        if value is not None:
+            vector[index] = float(value)
+    return np.clip(vector, LOW, HIGH)
+
+
+def evolution(base_graph, builders, params, generations, population, seeds, limit, device,
+              output, initial=None, sigma0=0.15):
+    """Поколения по кругу берут разные старты; отбор — по шагам на этом старте."""
+    dimension = len(params)
+    mu = max(2, population // 3)
+    base = np.ones(dimension) if initial is None else np.clip(initial, LOW, HIGH)
+    base_detail = evaluate_population(base_graph, [base], builders, params, limit, device)[1][0]
+    base_by_name = {item["start"]: (item["steps"] if item["finished"] else limit + PENALTY)
+                    for item in base_detail}
+    best = None
+    for seed in seeds:
+        rng = np.random.RandomState(seed)
+        mean = base.copy()
+        sigma = sigma0
+        for generation in range(generations):
+            rotating = builders[1 + (seed + generation) % (len(builders) - 1)]
+            builder = [builders[0], rotating]
+            vectors = [mean.copy()]
+            for _ in range(population - 1):
+                vectors.append(np.clip(mean + sigma * rng.randn(dimension), LOW, HIGH))
+            scores, detail = evaluate_population(base_graph, vectors, builder, params, limit, device)
+            order = np.argsort(scores)
+            mean = np.mean([vectors[index] for index in order[:mu]], axis=0)
+            baseline = base_by_name[builder[0][0]] + base_by_name[builder[1][0]]
+            normalized = scores[order[0]] / max(1, baseline)
+            previous = best["normalized"] if best is not None else float("inf")
+            if normalized < previous:
+                best = {
+                    "normalized": normalized,
+                    "vector": vectors[order[0]].copy(),
+                    "seed": seed,
+                    "generation": generation,
+                    "detail": detail[order[0]],
+                }
+                save(output, base_graph, best, params, limit, device)
+            print(f"  сид {seed} поколение {generation:2d} ({builder[0][0]}): "
+                  f"лучший {scores[order[0]]:6d} средний {int(np.mean(scores)):6d} "
+                  f"доля {normalized:.4f} sigma {sigma:.3f} лучшая {best['normalized']:.4f}",
+                  flush=True)
+            sigma = min(0.3, sigma * 1.15) if normalized <= previous else max(0.02, sigma * 0.85)
+    return best
+
+
+def report(base_graph, builders, params, best, limit, device, output):
+    base = np.ones(len(params))
+    base_score, base_detail = evaluate(base_graph, base, builders, params, limit, device)
+    best_score, best_detail = evaluate(base_graph, best["vector"], builders, params, limit, device)
+    with open(output, "r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+    payload["score_before"] = base_score
+    payload["score_after"] = best_score
+    payload["starts_before"] = base_detail
+    payload["starts_after"] = best_detail
+    with open(output, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+    print("Старты (шаги, до -> после):")
+    for before, after in zip(base_detail, best_detail):
+        print(f"  {before['start']:12s} {before['steps']:5d} -> {after['steps']:5d} "
+              f"(этап {after['stage']}, {'готово' if after['finished'] else 'застрял'})")
+    print(f"Сумма: {base_score} -> {best_score}")
+    return payload
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Поиск весов графа на видеокарте")
+    parser.add_argument("--export", default=os.path.join(os.path.dirname(HERE), "..", "TestResults", "graph-export"))
+    parser.add_argument("--mode", choices=("sensitivity", "es"), default="es")
+    parser.add_argument("--generations", type=int, default=20)
+    parser.add_argument("--population", type=int, default=24)
+    parser.add_argument("--seeds", type=int, default=2)
+    parser.add_argument("--limit", type=int, default=4000)
+    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--output", default=os.path.join(HERE, "best-weights.json"))
+    parser.add_argument("--init", default="", help="best-weights.json для дообучения")
+    args = parser.parse_args(argv)
+    base_graph = sim_gpu.load_graph(os.path.abspath(args.export))
+    builders = start_builders()
+    params = parameters(base_graph)
+    if args.mode == "sensitivity":
+        sensitivity(base_graph, builders, params, args.limit, args.device)
+        return 0
+    initial = load_vector(args.init, params) if args.init else None
+    best = evolution(base_graph, builders, params, args.generations, args.population,
+                     list(range(1, args.seeds + 1)), args.limit, args.device, args.output,
+                     initial=initial, sigma0=0.08 if initial is not None else 0.15)
+    report(base_graph, builders, params, best, args.limit, args.device, args.output)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
