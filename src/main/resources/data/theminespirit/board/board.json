@@ -100,9 +100,7 @@
     "caseFailPauseCapTicks": 9600,
     "caseFailLimit": 3,
     "ticketFailLimit": 5,
-    "fencePatrolInterval": 1000,
     "enchantCheckInterval": 500,
-    "enchantShelvesMin": 4,
     "transferRadiusBlocks": 32,
     "transferMaxCount": 64,
     "rebuildPercent": 50
@@ -114,11 +112,6 @@
     "ENCHANT_ROOM": 4,
     "BUILD_HOUSE": 4,
     "BUILD_STREETS": 2
-  },
-  "supplies": {
-    "minecraft:bookshelf": 32,
-    "minecraft:book": 32,
-    "minecraft:paper": 128
   },
   "hive": {
     "hive_radius": 16,
