@@ -15,6 +15,7 @@ public final class GraphPlanner {
     private static final String TOOL = "tool:";
     private static final String EVENT = "event:";
     private static final char AT = '@';
+    private static final double NEGLIGIBLE = 0.5;
 
     private final SupplyGraph graph;
     private final GraphState state;
@@ -22,6 +23,7 @@ public final class GraphPlanner {
     private final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
+    private int pushes;
 
     private GraphPlanner(SupplyGraph graph, GraphState state) {
         this.graph = Objects.requireNonNull(graph, "Граф не может быть null: без него не из чего выводить задания");
@@ -113,9 +115,10 @@ public final class GraphPlanner {
     }
 
     private void push(String node, double value, Set<String> path) {
-        if (value == 0 || !path.add(node)) {
+        if (Math.abs(value) < NEGLIGIBLE || !path.add(node)) {
             return;
         }
+        pushes++;
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
             String spirit = node.substring(node.indexOf(AT) + 1);
@@ -295,7 +298,7 @@ public final class GraphPlanner {
             int priority = (int) Math.max(0, Math.min(graph.maxPriority(), Math.round(score.getValue())));
             tasks.add(task(score.getKey(), priority));
         }
-        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
+        return new GraphPlan(tasks, List.copyOf(notices.values()), advice, pushes);
     }
 
     private GraphPlan.Task task(String key, int priority) {
