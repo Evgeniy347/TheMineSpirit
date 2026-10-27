@@ -9,17 +9,6 @@ import java.util.Map;
 
 final class GraphWorld {
     static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
-    static final Map<String, Map<String, Integer>> MATERIALS = Map.of(
-            "crafting_table", Map.of("oak_planks", 4),
-            "furnace", Map.of("cobblestone", 8),
-            "chests", Map.of("oak_planks", 16),
-            "mine", Map.of("torch", 6),
-            "lighting", Map.of("torch", 8),
-            "fence", Map.of("oak_log", 40),
-            "hut", Map.of("oak_log", 12, "oak_planks", 30, "cobblestone", 16),
-            "orchard", Map.of("oak_sapling", 4, "torch", 4, "dirt", 8),
-            "streets", Map.of("dirt", 40),
-            "warehouse", Map.of("oak_planks", 40, "cobblestone", 32));
 
     final Map<String, Integer> stock = new HashMap<>();
     final Map<String, Map<String, Integer>> kits = new LinkedHashMap<>();
@@ -81,7 +70,7 @@ final class GraphWorld {
     }
 
     GraphState state() {
-        return new GraphState(stock, stage, kits, buildings, MATERIALS, storageFree);
+        return new GraphState(stock, stage, kits, buildings, Map.of(), storageFree);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {

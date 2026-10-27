@@ -142,4 +142,18 @@ class GraphPlannerTests {
                         || plan.task("dig_dirt").orElseThrow().priority() == 0,
                 "Земли больше Xmin·P·S·K — задания «добыть землю» нет: " + plan.task("dig_dirt"));
     }
+
+    @Test
+    void plan_WarehouseBuiltStorageFull_NoticeNotRebuild() {
+        GraphWorld world = GraphWorld.settled().built("warehouse", Built.BUILT);
+        world.storageFree = 5;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("building:warehouse").isEmpty()
+                        && plan.notices().stream()
+                                .anyMatch(notice -> notice.building().equals("warehouse")),
+                "Склад построен, а места нет — не строим склад заново по кругу, просим стратега расширить: "
+                        + plan.task("building:warehouse") + ", " + plan.notices());
+    }
 }

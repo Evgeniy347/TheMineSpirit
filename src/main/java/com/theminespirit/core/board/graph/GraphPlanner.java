@@ -76,7 +76,15 @@ public final class GraphPlanner {
                 requireBuilding(building.id(), building.base(), "постройка этапа " + building.stage(), new HashSet<>());
             }
         }
-        if (state.storageFreePercent() < graph.storage().minFreePercent()) {
+        if (state.storageFreePercent() < graph.storage().minFreePercent()
+                && state.built(graph.storage().building()) == Built.BUILT) {
+            notices.putIfAbsent(
+                    graph.storage().building(),
+                    new GraphPlan.Notice(
+                            graph.storage().building(),
+                            "склад построен, но свободно " + state.storageFreePercent()
+                                    + "%: нужен ещё сундук или расширение"));
+        } else if (state.storageFreePercent() < graph.storage().minFreePercent()) {
             requireBuilding(
                     graph.storage().building(),
                     graph.storage().base(),
@@ -111,14 +119,13 @@ public final class GraphPlanner {
             String id = node.substring(BUILDING.length());
             add(node, value);
             SupplyGraph.Building building = graph.buildings().get(id);
-            Map<String, Integer> needs = state.materials().getOrDefault(id, Map.of());
+            Map<String, Integer> needs = materials(id);
             if (building != null
                     && stocked(needs)
                     && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
                 add(node, graph.buildReadyBoost());
             }
-            for (Map.Entry<String, Integer> input :
-                    state.materials().getOrDefault(id, Map.of()).entrySet()) {
+            for (Map.Entry<String, Integer> input : materials(id).entrySet()) {
                 if (state.count(input.getKey()) < input.getValue()) {
                     push(input.getKey(), value * graph.decay(), path);
                 }
@@ -206,7 +213,7 @@ public final class GraphPlanner {
             String id = key.substring(BUILDING.length());
             SupplyGraph.Building building = Objects.requireNonNull(
                     graph.buildings().get(id), "Постройка " + id + " задания не описана в графе");
-            Map<String, Integer> materials = state.materials().getOrDefault(id, Map.of());
+            Map<String, Integer> materials = materials(id);
             boolean tooled = building.tool() == null || state.bestTier(building.tool()) >= 0;
             return new GraphPlan.Task(
                     key,
@@ -233,6 +240,11 @@ public final class GraphPlanner {
                 way.consumes(),
                 tooled && housed(way) && stocked(way.consumes()),
                 chances.contains(key));
+    }
+
+    private Map<String, Integer> materials(String building) {
+        SupplyGraph.Building known = graph.buildings().get(building);
+        return state.materials().getOrDefault(building, known == null ? Map.of() : known.materials());
     }
 
     private boolean housed(SupplyGraph.Way way) {

@@ -3,70 +3,798 @@
   "urgentBoost": 20,
   "buildReadyBoost": 40,
   "maxPriority": 100,
-  "tiers": ["wooden", "stone", "iron", "diamond"],
-  "kit": {"kinds": ["pickaxe", "axe", "shovel"], "tier": "stone", "base": 60},
-  "storage": {"minFreePercent": 20, "building": "warehouse", "base": 55},
+  "tiers": [
+    "wooden",
+    "stone",
+    "iron",
+    "diamond"
+  ],
+  "kit": {
+    "kinds": [
+      "pickaxe",
+      "axe",
+      "shovel"
+    ],
+    "tier": "stone",
+    "base": 60
+  },
+  "storage": {
+    "minFreePercent": 20,
+    "building": "warehouse",
+    "base": 55
+  },
   "items": {
-    "oak_log": {"xmin": 16, "k": 1, "base": 45},
-    "oak_planks": {"xmin": 16, "k": 1, "base": 40},
-    "stick": {"xmin": 8, "k": 1, "base": 40},
-    "cobblestone": {"xmin": 32, "k": 1, "base": 40},
-    "dirt": {"xmin": 32, "k": 1, "base": 30},
-    "coal": {"xmin": 8, "k": 2, "base": 40},
-    "torch": {"xmin": 16, "k": 2, "base": 50},
-    "oak_sapling": {"xmin": 4, "k": 1, "base": 30},
-    "raw_iron": {"xmin": 0, "k": 1, "base": 30, "stage": 2},
-    "iron_ingot": {"xmin": 3, "k": 2, "base": 35, "stage": 2},
-    "food": {"xmin": 8, "k": 1, "base": 55},
-    "wool": {"xmin": 0, "k": 1, "base": 20, "stage": 2}
+    "oak_log": {
+      "xmin": 16,
+      "k": 1,
+      "base": 45
+    },
+    "oak_planks": {
+      "xmin": 16,
+      "k": 1,
+      "base": 40
+    },
+    "stick": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "cobblestone": {
+      "xmin": 32,
+      "k": 1,
+      "base": 40
+    },
+    "dirt": {
+      "xmin": 32,
+      "k": 1,
+      "base": 30
+    },
+    "coal": {
+      "xmin": 8,
+      "k": 2,
+      "base": 40
+    },
+    "torch": {
+      "xmin": 16,
+      "k": 2,
+      "base": 50
+    },
+    "oak_sapling": {
+      "xmin": 4,
+      "k": 1,
+      "base": 30
+    },
+    "raw_iron": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "iron_ingot": {
+      "xmin": 3,
+      "k": 2,
+      "base": 35,
+      "stage": 2
+    },
+    "food": {
+      "xmin": 8,
+      "k": 1,
+      "base": 55
+    },
+    "wool": {
+      "xmin": 4,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "wheat_seeds": {
+      "xmin": 8,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "wheat": {
+      "xmin": 16,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "bed": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "bricks": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "clay_ball": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    }
   },
   "buildings": {
-    "crafting_table": {"case": "CRAFTING_STATION", "stage": 1, "base": 70},
-    "furnace": {"case": "CRAFT_FURNACE", "stage": 1, "base": 55},
-    "clearing": {"case": "CLEAR_GROUNDS", "stage": 1, "base": 50, "tool": "pickaxe"},
-    "chests": {"case": "STOCK_CHESTS", "stage": 1, "base": 50},
-    "mine": {"case": "BUILD_MINE", "stage": 1, "base": 50, "tool": "pickaxe"},
-    "lighting": {"case": "LIGHTING", "stage": 1, "base": 50},
-    "fence": {"case": "BUILD_FENCE", "stage": 1, "base": 50},
-    "hut": {"case": "BUILD_HOUSE", "stage": 1, "base": 50},
-    "orchard": {"case": "BUILD_ORCHARD", "stage": 1, "base": 45},
-    "streets": {"case": "BUILD_STREETS", "stage": 1, "base": 40},
-    "warehouse": {"case": "BUILD_WAREHOUSE", "stage": 2, "base": 50},
-    "smithing_table": {"case": "CRAFT_SMITHING_TABLE", "stage": 2, "base": 40},
-    "anvil": {"case": "CRAFT_ANVIL", "stage": 2, "base": 40}
+    "crafting_table": {
+      "case": "CRAFTING_STATION",
+      "stage": 1,
+      "base": 70,
+      "materials": {
+        "oak_planks": 4
+      }
+    },
+    "furnace": {
+      "case": "CRAFT_FURNACE",
+      "stage": 1,
+      "base": 55,
+      "materials": {
+        "cobblestone": 8
+      }
+    },
+    "clearing": {
+      "case": "CLEAR_GROUNDS",
+      "stage": 1,
+      "base": 50,
+      "materials": {},
+      "tool": "pickaxe"
+    },
+    "chests": {
+      "case": "STOCK_CHESTS",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_planks": 16
+      }
+    },
+    "mine": {
+      "case": "BUILD_MINE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "torch": 6
+      },
+      "tool": "pickaxe"
+    },
+    "lighting": {
+      "case": "LIGHTING",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "torch": 8
+      }
+    },
+    "fence": {
+      "case": "BUILD_FENCE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_log": 40
+      }
+    },
+    "hut": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_log": 12,
+        "oak_planks": 30,
+        "cobblestone": 16
+      }
+    },
+    "orchard": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "oak_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      }
+    },
+    "streets": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 40,
+      "materials": {
+        "dirt": 40
+      }
+    },
+    "warehouse": {
+      "case": "BUILD_WAREHOUSE",
+      "stage": 2,
+      "base": 50,
+      "materials": {
+        "oak_planks": 40,
+        "cobblestone": 32
+      }
+    },
+    "smithing_table": {
+      "case": "CRAFT_SMITHING_TABLE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "iron_ingot": 2,
+        "oak_planks": 4
+      }
+    },
+    "anvil": {
+      "case": "CRAFT_ANVIL",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "iron_ingot": 31
+      }
+    },
+    "plaza": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 35,
+      "materials": {
+        "cobblestone": 40,
+        "torch": 4
+      }
+    },
+    "family_house_a": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 40,
+        "cobblestone": 24
+      }
+    },
+    "family_house_b": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 40,
+        "cobblestone": 24
+      }
+    },
+    "family_house_c": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 40,
+        "cobblestone": 24
+      }
+    },
+    "barn": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 48,
+        "cobblestone": 16
+      }
+    },
+    "field": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "wheat_seeds": 16,
+        "dirt": 16
+      }
+    },
+    "pen": {
+      "case": "BUILD_PEN",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 24
+      }
+    },
+    "well": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 35,
+      "materials": {
+        "cobblestone": 24
+      }
+    },
+    "lumber_yard": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 32,
+        "cobblestone": 8
+      }
+    },
+    "workshop": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "oak_log": 12,
+        "oak_planks": 32,
+        "cobblestone": 24
+      }
+    },
+    "player_house": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 40,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 64,
+        "cobblestone": 32
+      }
+    },
+    "forge": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "cobblestone": 48,
+        "bricks": 32,
+        "iron_ingot": 4
+      }
+    },
+    "bakery": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "oak_log": 12,
+        "oak_planks": 24,
+        "cobblestone": 32
+      }
+    },
+    "apiary": {
+      "case": "PLACE_BEEHIVE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "oak_planks": 16
+      }
+    },
+    "kennel": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 30,
+      "materials": {
+        "oak_log": 8,
+        "oak_planks": 24,
+        "cobblestone": 8
+      }
+    },
+    "stable": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 30,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 32,
+        "cobblestone": 8
+      }
+    },
+    "barracks": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 40,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 48,
+        "cobblestone": 24,
+        "bed": 4
+      }
+    },
+    "weaver": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "oak_log": 12,
+        "oak_planks": 32,
+        "cobblestone": 16
+      }
+    }
   },
   "ways": [
-    {"id": "chop_log", "case": "GATHER_MATERIALS", "makes": "oak_log", "yield": 4, "weight": 1.0},
-    {"id": "harvest_orchard", "case": "HARVEST_ORCHARD", "makes": "oak_log", "yield": 16, "weight": 0.9, "building": "orchard"},
-    {"id": "craft_planks", "case": "GATHER_MATERIALS", "makes": "oak_planks", "yield": 4, "weight": 1.0, "consumes": {"oak_log": 1}},
-    {"id": "craft_stick", "case": "GATHER_MATERIALS", "makes": "stick", "yield": 4, "weight": 1.0, "consumes": {"oak_planks": 2}},
-    {"id": "mine_cobble", "case": "GATHER_MATERIALS", "makes": "cobblestone", "yield": 16, "weight": 1.0, "tool": "pickaxe", "tier": "wooden"},
-    {"id": "dig_dirt", "case": "GATHER_MATERIALS", "makes": "dirt", "yield": 16, "weight": 1.0},
-    {"id": "mine_coal", "case": "GATHER_MATERIALS", "makes": "coal", "yield": 4, "weight": 1.0, "tool": "pickaxe", "tier": "wooden", "building": "mine"},
-    {"id": "smelt_charcoal", "case": "SMELT_CHARCOAL", "makes": "coal", "yield": 1, "weight": 0.9, "consumes": {"oak_log": 1}, "building": "furnace"},
-    {"id": "craft_torch", "case": "CRAFT_TORCHES", "makes": "torch", "yield": 4, "weight": 1.0, "consumes": {"coal": 1, "stick": 1}},
-    {"id": "gather_sapling", "case": "GATHER_MATERIALS", "makes": "oak_sapling", "yield": 2, "weight": 1.0},
-    {"id": "mine_iron", "case": "GATHER_MATERIALS", "makes": "raw_iron", "yield": 2, "weight": 1.0, "tool": "pickaxe", "tier": "stone", "building": "mine"},
-    {"id": "smelt_iron", "case": "GATHER_MATERIALS", "makes": "iron_ingot", "yield": 1, "weight": 1.0, "consumes": {"raw_iron": 1, "coal": 1}, "building": "furnace"},
-    {"id": "hunt", "case": "HUNT_WILD_SHEEP", "makes": "food", "yield": 2, "weight": 0.8},
-    {"id": "fish", "case": "FISH", "makes": "food", "yield": 2, "weight": 0.6},
-    {"id": "shear", "case": "SHEAR_SHEEP", "makes": "wool", "yield": 2, "weight": 1.0},
-    {"id": "craft_wooden_pickaxe", "case": "CRAFT_WOODEN_PICKAXE", "makes": "wooden_pickaxe", "yield": 1, "weight": 0.6, "consumes": {"oak_planks": 3, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_stone_pickaxe", "case": "CRAFT_STONE_PICKAXE", "makes": "stone_pickaxe", "yield": 1, "weight": 0.8, "consumes": {"cobblestone": 3, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_iron_pickaxe", "case": "CRAFT_IRON_PICKAXE", "makes": "iron_pickaxe", "yield": 1, "weight": 1.0, "consumes": {"iron_ingot": 3, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_wooden_axe", "case": "CRAFT_WOODEN_AXE", "makes": "wooden_axe", "yield": 1, "weight": 0.6, "consumes": {"oak_planks": 3, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_stone_axe", "case": "CRAFT_STONE_AXE", "makes": "stone_axe", "yield": 1, "weight": 0.8, "consumes": {"cobblestone": 3, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_iron_axe", "case": "CRAFT_IRON_AXE", "makes": "iron_axe", "yield": 1, "weight": 1.0, "consumes": {"iron_ingot": 3, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_wooden_shovel", "case": "CRAFT_WOODEN_SHOVEL", "makes": "wooden_shovel", "yield": 1, "weight": 0.6, "consumes": {"oak_planks": 1, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_stone_shovel", "case": "CRAFT_STONE_SHOVEL", "makes": "stone_shovel", "yield": 1, "weight": 0.8, "consumes": {"cobblestone": 1, "stick": 2}, "building": "crafting_table"},
-    {"id": "craft_iron_shovel", "case": "CRAFT_IRON_SHOVEL", "makes": "iron_shovel", "yield": 1, "weight": 1.0, "consumes": {"iron_ingot": 1, "stick": 2}, "building": "crafting_table"}
+    {
+      "id": "chop_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_log",
+      "yield": 4,
+      "weight": 1.0
+    },
+    {
+      "id": "harvest_orchard",
+      "case": "HARVEST_ORCHARD",
+      "makes": "oak_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard"
+    },
+    {
+      "id": "craft_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "oak_log": 1
+      }
+    },
+    {
+      "id": "craft_stick",
+      "case": "GATHER_MATERIALS",
+      "makes": "stick",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 2
+      }
+    },
+    {
+      "id": "mine_cobble",
+      "case": "GATHER_MATERIALS",
+      "makes": "cobblestone",
+      "yield": 16,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "wooden"
+    },
+    {
+      "id": "dig_dirt",
+      "case": "GATHER_MATERIALS",
+      "makes": "dirt",
+      "yield": 16,
+      "weight": 1.0
+    },
+    {
+      "id": "mine_coal",
+      "case": "GATHER_MATERIALS",
+      "makes": "coal",
+      "yield": 4,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "building": "mine"
+    },
+    {
+      "id": "smelt_charcoal",
+      "case": "SMELT_CHARCOAL",
+      "makes": "coal",
+      "yield": 1,
+      "weight": 0.9,
+      "consumes": {
+        "oak_log": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "craft_torch",
+      "case": "CRAFT_TORCHES",
+      "makes": "torch",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "coal": 1,
+        "stick": 1
+      }
+    },
+    {
+      "id": "gather_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_sapling",
+      "yield": 2,
+      "weight": 1.0
+    },
+    {
+      "id": "mine_iron",
+      "case": "GATHER_MATERIALS",
+      "makes": "raw_iron",
+      "yield": 2,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "stone",
+      "building": "mine"
+    },
+    {
+      "id": "smelt_iron",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_ingot",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "raw_iron": 1,
+        "coal": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "hunt",
+      "case": "HUNT_WILD_SHEEP",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.8
+    },
+    {
+      "id": "fish",
+      "case": "FISH",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.6
+    },
+    {
+      "id": "shear",
+      "case": "SHEAR_SHEEP",
+      "makes": "wool",
+      "yield": 2,
+      "weight": 1.0,
+      "building": "pen"
+    },
+    {
+      "id": "craft_wooden_pickaxe",
+      "case": "CRAFT_WOODEN_PICKAXE",
+      "makes": "wooden_pickaxe",
+      "yield": 1,
+      "weight": 0.6,
+      "consumes": {
+        "oak_planks": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_pickaxe",
+      "case": "CRAFT_STONE_PICKAXE",
+      "makes": "stone_pickaxe",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "cobblestone": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_pickaxe",
+      "case": "CRAFT_IRON_PICKAXE",
+      "makes": "iron_pickaxe",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_wooden_axe",
+      "case": "CRAFT_WOODEN_AXE",
+      "makes": "wooden_axe",
+      "yield": 1,
+      "weight": 0.6,
+      "consumes": {
+        "oak_planks": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_axe",
+      "case": "CRAFT_STONE_AXE",
+      "makes": "stone_axe",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "cobblestone": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_axe",
+      "case": "CRAFT_IRON_AXE",
+      "makes": "iron_axe",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 3,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_wooden_shovel",
+      "case": "CRAFT_WOODEN_SHOVEL",
+      "makes": "wooden_shovel",
+      "yield": 1,
+      "weight": 0.6,
+      "consumes": {
+        "oak_planks": 1,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_shovel",
+      "case": "CRAFT_STONE_SHOVEL",
+      "makes": "stone_shovel",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "cobblestone": 1,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_shovel",
+      "case": "CRAFT_IRON_SHOVEL",
+      "makes": "iron_shovel",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 1,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "lumber",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_log",
+      "yield": 32,
+      "weight": 1.0,
+      "building": "lumber_yard"
+    },
+    {
+      "id": "gather_seeds",
+      "case": "GATHER_MATERIALS",
+      "makes": "wheat_seeds",
+      "yield": 4,
+      "weight": 1.0
+    },
+    {
+      "id": "harvest_wheat",
+      "case": "GATHER_MATERIALS",
+      "makes": "wheat",
+      "yield": 16,
+      "weight": 1.0,
+      "building": "field"
+    },
+    {
+      "id": "craft_bread",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 1,
+      "weight": 0.7,
+      "consumes": {
+        "wheat": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "bake_bread",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 3
+      },
+      "building": "bakery"
+    },
+    {
+      "id": "cull_herd",
+      "case": "HERD_CULL",
+      "makes": "food",
+      "yield": 3,
+      "weight": 0.9,
+      "building": "pen"
+    },
+    {
+      "id": "harvest_honey",
+      "case": "HARVEST_HIVE",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.7,
+      "building": "apiary"
+    },
+    {
+      "id": "craft_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "wool": 3,
+        "oak_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "weave_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wool": 3,
+        "oak_planks": 3
+      },
+      "building": "weaver"
+    },
+    {
+      "id": "forge_iron",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_ingot",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "raw_iron": 1,
+        "coal": 1
+      },
+      "building": "forge"
+    },
+    {
+      "id": "fire_bricks",
+      "case": "GATHER_MATERIALS",
+      "makes": "bricks",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "clay_ball": 4,
+        "coal": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "dig_clay",
+      "case": "GATHER_MATERIALS",
+      "makes": "clay_ball",
+      "yield": 8,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden"
+    }
   ],
   "edges": [
-    {"lack": "oak_log", "way": "craft_iron_axe", "weight": 15},
-    {"lack": "oak_log", "way": "craft_stone_axe", "weight": 10},
-    {"lack": "oak_log", "way": "craft_wooden_axe", "weight": 5},
-    {"lack": "torch", "way": "mine_coal", "weight": 10},
-    {"lack": "torch", "way": "smelt_charcoal", "weight": 10},
-    {"lack": "iron_pickaxe", "way": "mine_coal", "weight": -5}
+    {
+      "lack": "oak_log",
+      "way": "craft_iron_axe",
+      "weight": 15
+    },
+    {
+      "lack": "oak_log",
+      "way": "craft_stone_axe",
+      "weight": 10
+    },
+    {
+      "lack": "oak_log",
+      "way": "craft_wooden_axe",
+      "weight": 5
+    },
+    {
+      "lack": "torch",
+      "way": "mine_coal",
+      "weight": 10
+    },
+    {
+      "lack": "torch",
+      "way": "smelt_charcoal",
+      "weight": 10
+    },
+    {
+      "lack": "iron_pickaxe",
+      "way": "mine_coal",
+      "weight": -5
+    }
   ]
 }

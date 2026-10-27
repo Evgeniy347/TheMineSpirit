@@ -8,6 +8,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -82,11 +83,7 @@ class StagePlanMatrixTests {
         return all;
     }
 
-    private static boolean finished(BoardCase step, SettlementFacts facts) {
-        return FirstStepsPlan.nextAfter(facts, step, Set.of(step)).isEmpty()
-                && !FirstStepsPlan.ready(facts).contains(step);
-    }
-
+    @Tag("mutation")
     @ParameterizedTest
     @MethodSource("blocks")
     void ready_AnyClass_NeverOffersBlockedStep(Set<BoardCase> blocked) {
@@ -101,6 +98,7 @@ class StagePlanMatrixTests {
         assertEquals(List.of(), wrong.subList(0, Math.min(5, wrong.size())), "Заблокированный шаг выдан снова");
     }
 
+    @Tag("mutation")
     @ParameterizedTest
     @MethodSource("blocks")
     void ready_UnblockedStageStepLeft_NeverStalls(Set<BoardCase> blocked) {
@@ -165,13 +163,5 @@ class StagePlanMatrixTests {
                         || FirstStepsPlan.ready(facts).contains(BoardCase.BUILD_HOUSE),
                 "Заблокированный свет (нет угля) не останавливает остальные постройки этапа, получено "
                         + FirstStepsPlan.ready(facts));
-    }
-
-    @Test
-    void finished_Helper_AgreesWithReady() {
-        SettlementFacts facts = facts(0, 0, Set.of(), Set.of());
-        assertTrue(
-                !finished(BoardCase.CRAFTING_STATION, facts),
-                "Пустое поселение начинает с верстака: помощник сверки шагов сломан");
     }
 }

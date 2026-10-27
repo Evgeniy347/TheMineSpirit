@@ -32,7 +32,12 @@ public record SupplyGraph(
             BoardCase boardCase,
             int stage,
             int base,
-            @Nullable String tool) {}
+            @Nullable String tool,
+            Map<String, Integer> materials) {
+        public Building {
+            materials = Map.copyOf(materials);
+        }
+    }
 
     public record Kit(List<String> kinds, String tier, int base) {}
 
@@ -80,35 +85,8 @@ public record SupplyGraph(
                                 entry.getValue().path("k").asDouble(1.0),
                                 entry.getValue().path("base").asInt(),
                                 entry.getValue().path("stage").asInt(1))));
-        Map<String, Building> buildings = new LinkedHashMap<>();
-        root.path("buildings")
-                .properties()
-                .forEach(entry -> buildings.put(
-                        entry.getKey(),
-                        new Building(
-                                entry.getKey(),
-                                BoardCase.valueOf(entry.getValue().path("case").asText()),
-                                entry.getValue().path("stage").asInt(1),
-                                entry.getValue().path("base").asInt(),
-                                text(entry.getValue(), "tool"))));
-        List<Way> ways = new ArrayList<>();
-        for (JsonNode node : root.path("ways")) {
-            Map<String, Integer> consumes = new LinkedHashMap<>();
-            node.path("consumes")
-                    .properties()
-                    .forEach(entry ->
-                            consumes.put(entry.getKey(), entry.getValue().asInt()));
-            ways.add(new Way(
-                    node.path("id").asText(),
-                    BoardCase.valueOf(node.path("case").asText()),
-                    node.path("makes").asText(),
-                    node.path("yield").asInt(1),
-                    node.path("weight").asDouble(1.0),
-                    consumes,
-                    text(node, "tool"),
-                    text(node, "tier"),
-                    text(node, "building")));
-        }
+        Map<String, Building> buildings = buildings(root);
+        List<Way> ways = ways(root);
         List<Edge> edges = new ArrayList<>();
         for (JsonNode node : root.path("edges")) {
             edges.add(new Edge(
@@ -143,6 +121,50 @@ public record SupplyGraph(
         return graph;
     }
 
+    private static Map<String, Building> buildings(JsonNode root) {
+        Map<String, Building> buildings = new LinkedHashMap<>();
+        root.path("buildings").properties().forEach(entry -> {
+            Map<String, Integer> materials = new LinkedHashMap<>();
+            entry.getValue()
+                    .path("materials")
+                    .properties()
+                    .forEach(
+                            item -> materials.put(item.getKey(), item.getValue().asInt()));
+            buildings.put(
+                    entry.getKey(),
+                    new Building(
+                            entry.getKey(),
+                            BoardCase.valueOf(entry.getValue().path("case").asText()),
+                            entry.getValue().path("stage").asInt(1),
+                            entry.getValue().path("base").asInt(),
+                            text(entry.getValue(), "tool"),
+                            materials));
+        });
+        return buildings;
+    }
+
+    private static List<Way> ways(JsonNode root) {
+        List<Way> ways = new ArrayList<>();
+        for (JsonNode node : root.path("ways")) {
+            Map<String, Integer> consumes = new LinkedHashMap<>();
+            node.path("consumes")
+                    .properties()
+                    .forEach(entry ->
+                            consumes.put(entry.getKey(), entry.getValue().asInt()));
+            ways.add(new Way(
+                    node.path("id").asText(),
+                    BoardCase.valueOf(node.path("case").asText()),
+                    node.path("makes").asText(),
+                    node.path("yield").asInt(1),
+                    node.path("weight").asDouble(1.0),
+                    consumes,
+                    text(node, "tool"),
+                    text(node, "tier"),
+                    text(node, "building")));
+        }
+        return ways;
+    }
+
     public int rank(String tier) {
         return tiers.indexOf(tier);
     }
@@ -174,6 +196,20 @@ public record SupplyGraph(
                             + "', которого нет среди предметов графа");
                 }
             }
+            if (way.building() != null && !buildings.containsKey(way.building())) {
+                throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " требует постройку '"
+                        + way.building() + "', которой нет в графе");
+            }
+        }
+        for (Building building : buildings.values()) {
+            for (String input : building.materials().keySet()) {
+                if (!items.containsKey(input)) {
+                    throw new IllegalStateException("Файл '" + origin + "': постройка " + building.id() + " расходует '"
+                            + input + "', которого нет среди предметов графа");
+                }
+            }
+        }
+        for (Way way : ways) {
             if (way.building() != null && !buildings.containsKey(way.building())) {
                 throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " требует постройку '"
                         + way.building() + "', которой нет в графе");

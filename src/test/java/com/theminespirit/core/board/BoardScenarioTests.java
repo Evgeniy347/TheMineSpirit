@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 class BoardScenarioTests {
-    private static final int SEEDS = 150;
+    private static final int SEEDS = 2000;
     private static final int ROUNDS = 24;
 
     private static List<BoardScenario.Anomaly> sweep(BoardScenario.ScenarioCheck check) {
@@ -26,6 +27,7 @@ class BoardScenarioTests {
         return found.size() + " случаев, первые: " + found.subList(0, Math.min(3, found.size()));
     }
 
+    @Tag("mutation")
     @Test
     void scenarios_ToolCase_NotHeldWithoutTool() {
         List<BoardScenario.Anomaly> found = sweep((scenario, round) -> {
@@ -43,6 +45,7 @@ class BoardScenarioTests {
         assertTrue(found.isEmpty(), "Задание с инструментом держит дух без инструмента (INC-94): " + first(found));
     }
 
+    @Tag("mutation")
     @Test
     void scenarios_DeadHolder_Released() {
         List<BoardScenario.Anomaly> found = sweep((scenario, round) -> {
@@ -56,6 +59,7 @@ class BoardScenarioTests {
         assertTrue(found.isEmpty(), "Задание держит погибший дух: " + first(found));
     }
 
+    @Tag("mutation")
     @Test
     void scenarios_Spirit_HoldsAtMostLimit() {
         List<BoardScenario.Anomaly> found =
@@ -68,6 +72,7 @@ class BoardScenarioTests {
         assertTrue(found.isEmpty(), "Дух держит больше заданий, чем позволяет maxActivePerSpirit: " + first(found));
     }
 
+    @Tag("mutation")
     @Test
     void scenarios_FreeSpirit_NotIdleWithFittingWork() {
         List<BoardScenario.Anomaly> found = sweep((scenario, round) -> {
@@ -84,6 +89,7 @@ class BoardScenarioTests {
         assertTrue(found.isEmpty(), "Свободный годный дух стоит при выдаваемом задании: " + first(found));
     }
 
+    @Tag("mutation")
     @Test
     void scenarios_PendingTicket_NotStuckOnDeadDependency() {
         List<BoardScenario.Anomaly> found = sweep((scenario, round) -> {

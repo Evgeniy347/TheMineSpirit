@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 class GraphMutationTests {
@@ -28,6 +29,7 @@ class GraphMutationTests {
         return found.subList(0, Math.min(5, found.size()));
     }
 
+    @Tag("mutation")
     @Test
     void plan_AnyWorld_HasFeasibleTaskWhenWorkLeft() {
         List<String> found = sweep((world, out) -> {
@@ -39,6 +41,7 @@ class GraphMutationTests {
         assertEquals(List.of(), head(found), "Мир встал: задания есть, а выполнить нечего (" + found.size() + ")");
     }
 
+    @Tag("mutation")
     @Test
     void plan_InfeasibleTask_EveryGapHasProducer() {
         List<String> found = sweep((world, out) -> {
@@ -60,6 +63,7 @@ class GraphMutationTests {
         assertEquals(List.of(), head(found), "Тупик: нехватка без задания добычи (" + found.size() + ")");
     }
 
+    @Tag("mutation")
     @Test
     void plan_LessStock_NeverLowersProducer() {
         List<String> found = new ArrayList<>();
@@ -78,6 +82,7 @@ class GraphMutationTests {
         assertEquals(List.of(), head(found), "Меньше запаса — не ниже приоритет добычи (" + found.size() + ")");
     }
 
+    @Tag("mutation")
     @Test
     void plan_SameWorld_Deterministic() {
         List<String> found = sweep((world, out) -> {
@@ -121,5 +126,62 @@ class GraphMutationTests {
         assertTrue(
                 GraphWorld.issueOrder(plan).stream().anyMatch(task -> task.id().equals("chop_log")),
                 "В пустом мире рубка выполнима сразу, руками: " + GraphWorld.issueOrder(plan));
+    }
+
+    private static List<String> sweepPairs(BiConsumer<GraphWorld, List<String>> check) {
+        List<String> found = new ArrayList<>();
+        List<GraphMutations.Mutation> all = GraphMutations.single();
+        for (GraphWorld base : GraphMutations.baselines()) {
+            for (int first = 0; first < all.size(); first++) {
+                GraphWorld once = all.get(first).apply().apply(base);
+                for (int second = first + 1; second < all.size(); second++) {
+                    GraphWorld world = all.get(second).apply().apply(once);
+                    List<String> local = new ArrayList<>();
+                    check.accept(world, local);
+                    String name =
+                            all.get(first).name() + " + " + all.get(second).name();
+                    local.forEach(entry -> found.add(name + ": " + entry));
+                }
+            }
+        }
+        return found;
+    }
+
+    private static void stalls(GraphWorld world, List<String> out) {
+        GraphPlan plan = world.plan();
+        if (!plan.tasks().isEmpty() && GraphWorld.issueOrder(plan).isEmpty()) {
+            out.add("ни одного выполнимого из " + plan.tasks().size() + ": " + plan.tasks());
+        }
+    }
+
+    private static void gaps(GraphWorld world, List<String> out) {
+        GraphPlan plan = world.plan();
+        GraphState state = world.state();
+        for (GraphPlan.Task task : plan.tasks()) {
+            if (task.chance()) {
+                continue;
+            }
+            for (Map.Entry<String, Integer> input : task.consumes().entrySet()) {
+                if (state.count(input.getKey()) < input.getValue()
+                        && plan.tasks().stream()
+                                .noneMatch(other -> other.makes().equals(input.getKey()))) {
+                    out.add(task.id() + " ждёт " + input.getKey() + ", а его никто не добывает");
+                }
+            }
+        }
+    }
+
+    @Tag("mutation")
+    @Test
+    void pairs_AnyWorld_HasFeasibleTaskWhenWorkLeft() {
+        List<String> found = sweepPairs(GraphMutationTests::stalls);
+        assertEquals(List.of(), head(found), "Пары мутаций: мир встал (" + found.size() + ")");
+    }
+
+    @Tag("mutation")
+    @Test
+    void pairs_InfeasibleTask_EveryGapHasProducer() {
+        List<String> found = sweepPairs(GraphMutationTests::gaps);
+        assertEquals(List.of(), head(found), "Пары мутаций: тупик без добычи (" + found.size() + ")");
     }
 }

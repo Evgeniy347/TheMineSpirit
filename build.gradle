@@ -279,7 +279,7 @@ tasks.named('check') {
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(4, Runtime.runtime.availableProcessors() - 2))}") as int
 tasks.named('test', Test) {
     useJUnitPlatform {
-        excludeTags 'slow'
+        excludeTags 'slow', 'mutation'
     }
     maxParallelForks = 1
     systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
@@ -314,6 +314,22 @@ tasks.register('slowTest', Test) {
     reports.html.outputLocation = file('TestResults/slow/html')
     reports.junitXml.outputLocation = file('TestResults/slow/xml')
     shouldRunAfter tasks.named('test')
+}
+
+tasks.register('mutationTest', Test) {
+    group = 'verification'
+    description = 'Мутационный перебор ситуаций доски и графа (тег mutation): запускается вручную, без бюджета времени'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'mutation'
+    }
+    maxParallelForks = 1
+    maxHeapSize = '2g'
+    systemProperty 'theminespirit.modId', project.mod_id
+    failOnNoDiscoveredTests = true
+    reports.html.outputLocation = file('TestResults/mutation/html')
+    reports.junitXml.outputLocation = file('TestResults/mutation/xml')
 }
 
 tasks.register('propertyTest', Test) {
