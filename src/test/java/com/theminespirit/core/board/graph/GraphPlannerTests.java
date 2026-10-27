@@ -248,4 +248,39 @@ class GraphPlannerTests {
                 "Этап 2 — набор железный: железная кирка — нужда набора и тянет добычу железа, а не «ждёт случая»: "
                         + plan.task("craft_iron_pickaxe@spirit-1"));
     }
+
+    @Test
+    void plan_NightLightingBuilt_NoRebuild() {
+        GraphPlan plan = GraphWorld.settled()
+                .built("lighting", Built.BUILT)
+                .event("night")
+                .plan();
+
+        assertTrue(
+                plan.task("building:lighting").isEmpty(),
+                "Ночь поднимает свет, но готовое освещение не перестраивается по кругу: "
+                        + plan.task("building:lighting"));
+    }
+
+    @Test
+    void plan_LavaSeenWaterBucketStocked_NoMoreBuckets() {
+        GraphWorld world = GraphWorld.settled().with("water_bucket", 5).event("lava_seen");
+        world.stage = 2;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("fill_water_bucket").isEmpty(),
+                "Вёдер воды хватает — лава не заставляет делать их бесконечно: " + plan.task("fill_water_bucket"));
+    }
+
+    @Test
+    void plan_HostileNearbyStoneSwordHeld_NoSwordPush() {
+        GraphPlan calm = GraphWorld.settled().plan();
+        GraphPlan hostile = GraphWorld.settled().event("hostile_nearby").plan();
+
+        assertEquals(
+                calm.priority("craft_stone_sword@spirit-1"),
+                hostile.priority("craft_stone_sword@spirit-1"),
+                "Каменный меч уже в руках (набор этапа 1) — враги не толкают меч ещё раз");
+    }
 }

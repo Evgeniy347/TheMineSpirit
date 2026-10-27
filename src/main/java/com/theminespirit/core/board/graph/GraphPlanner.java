@@ -197,16 +197,27 @@ public final class GraphPlanner {
                     }
                 }
             }
-            event.push().forEach((node, weight) -> {
-                if (node.startsWith(TOOL)) {
-                    pushTool(node.substring(TOOL.length()), weight, new HashSet<>());
-                } else if (node.startsWith(BUILDING)) {
-                    requireBuilding(node.substring(BUILDING.length()), weight, "событие " + name, new HashSet<>());
-                } else {
-                    push(node, weight, new HashSet<>());
-                }
-            });
+            event.push().forEach((node, weight) -> boost(node, weight, name));
             event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
+        }
+    }
+
+    private void boost(String node, int weight, String event) {
+        if (node.startsWith(TOOL)) {
+            String kind = node.substring(TOOL.length());
+            int target = graph.rank(graph.kit().tier(kind, state.stage()));
+            for (String spirit : state.kits().keySet()) {
+                if (state.tier(spirit, kind) < target) {
+                    push(toolKey(kind, spirit), weight, new HashSet<>());
+                }
+            }
+        } else if (node.startsWith(BUILDING)) {
+            String id = node.substring(BUILDING.length());
+            if (state.built(id) != Built.BUILT) {
+                requireBuilding(id, weight, "событие " + event, new HashSet<>());
+            }
+        } else if (lacking(graph, state, node)) {
+            push(node, weight, new HashSet<>());
         }
     }
 
