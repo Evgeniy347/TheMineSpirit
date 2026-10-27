@@ -195,7 +195,7 @@ public final class CraftOrders {
                 case DONE -> order.where();
             };
             orders.add(new CraftTerminalChannel.Order(
-                    order.id(), target.get(), order.crafts(), status, CraftTerminalService.lines(order.missing())));
+                    order.id(), target.get(), order.crafts(), status, CraftChain.lines(order.missing())));
         }
         return orders;
     }

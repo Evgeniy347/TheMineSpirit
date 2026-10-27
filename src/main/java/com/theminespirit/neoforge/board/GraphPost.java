@@ -25,8 +25,6 @@ import java.util.UUID;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.PickaxeItem;
 import org.jspecify.annotations.Nullable;
 
 final class GraphPost {
@@ -194,7 +192,7 @@ final class GraphPost {
 
     private void gather(String id, String cause, int priority, String item, int count, BlockCoord at) {
         int output = source.outputCount(item);
-        int helpers = MINED.contains(item) ? miners() : spirits.size();
+        int helpers = MINED.contains(item) ? GraphCrew.miners(spirits) : spirits.size();
         List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
         for (int part = 0; part < portions.size(); part++) {
             String partId = part == 0 ? id : id + PART;
@@ -235,7 +233,7 @@ final class GraphPost {
 
     private boolean charcoal(GraphTickets.Ticket ticket, GraphPlan.Task task) {
         String log = GraphNames.item(graph, "#logs", scan.wood());
-        Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : furnaceHolder();
+        Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : GraphCrew.furnaceHolder(spirits);
         submit(
                 ticket(ticket.id(), task.boardCase(), holder, task.priority(), ticket.id(), Map.of(log, CHARCOAL_LOGS)),
                 TicketTarget.at(craftPoint()).withSupply(log, CHARCOAL_LOGS).withCount(CHARCOAL_BATCH));
@@ -274,27 +272,6 @@ final class GraphPost {
                     default -> false;
                 })
                 .isPresent();
-    }
-
-    private int miners() {
-        int miners = 0;
-        for (SpiritEntity spirit : spirits) {
-            var inventory = spirit.getInventory();
-            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-                if (inventory.getItem(slot).getItem() instanceof PickaxeItem) {
-                    miners++;
-                    break;
-                }
-            }
-        }
-        return miners;
-    }
-
-    private Optional<UUID> furnaceHolder() {
-        return spirits.stream()
-                .filter(spirit -> !spirit.isRemoved() && spirit.getInventory().countItem(Items.FURNACE) > 0)
-                .map(SpiritEntity::getUUID)
-                .findFirst();
     }
 
     private static boolean known(String item) {

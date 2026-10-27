@@ -1,21 +1,11 @@
 package com.theminespirit.neoforge.terminal;
 
-import com.theminespirit.core.crafting.ChainCraft;
-import com.theminespirit.core.crafting.ChainPlan;
-import com.theminespirit.core.crafting.RecipeIndex;
-import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.town.SettlementReach;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.crafting.ItemIds;
-import com.theminespirit.neoforge.crafting.RecipeKnowledge;
-import com.theminespirit.neoforge.crafting.RecipeSource;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel.Action;
-import com.theminespirit.neoforge.terminal.CraftTerminalChannel.ChainReply;
-import com.theminespirit.neoforge.terminal.CraftTerminalChannel.Line;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -43,9 +33,11 @@ public final class CraftTerminalService {
             case FILL -> menu(player).ifPresent(menu -> fill(player, menu, action.text()));
             case CLEAR -> menu(player).ifPresent(menu -> clear(player, menu));
             case CHAIN_PREVIEW ->
-                CraftTerminalChannel.send(player, chain(player, action.text(), action.flag(), action.amount(), false));
+                CraftTerminalChannel.send(
+                        player, CraftChain.chain(player, action.text(), action.flag(), action.amount(), false));
             case CHAIN_CRAFT ->
-                CraftTerminalChannel.send(player, chain(player, action.text(), action.flag(), action.amount(), true));
+                CraftTerminalChannel.send(
+                        player, CraftChain.chain(player, action.text(), action.flag(), action.amount(), true));
             case ORDER -> CraftOrders.place(player, action.text(), action.amount());
             case CANCEL -> CraftOrders.cancel(player, action.amount());
         }
@@ -211,7 +203,7 @@ public final class CraftTerminalService {
         }
         if (!complete) {
             picked.forEach(part -> storage.get().insert(part));
-            CraftTerminalChannel.send(player, chain(player, recipeId, true, 1, false));
+            CraftTerminalChannel.send(player, CraftChain.chain(player, recipeId, true, 1, false));
             sendSnapshot(player);
             return false;
         }
@@ -229,77 +221,6 @@ public final class CraftTerminalService {
                 .max(Comparator.comparingInt(SettlementStorage.Kind::free))
                 .map(best -> storage.extract(best.sample(), 1))
                 .orElse(ItemStack.EMPTY);
-    }
-
-    public static ChainReply chain(ServerPlayer player, String target, boolean byRecipe, int requested, boolean run) {
-        Optional<SettlementStorage> storage = storage(player);
-        if (storage.isEmpty()) {
-            return refusal(target, denial(access(player)));
-        }
-        ServerLevel level = player.serverLevel();
-        Map<String, Integer> stock = storage.get().freePlain();
-        RecipeIndex index = RecipeKnowledge.of(level).index();
-        Optional<RecipeSpec> recipe = byRecipe
-                ? RecipeGrid.crafting(level, target)
-                        .flatMap(found -> RecipeSource.crafting(found, level.registryAccess()))
-                : ChainCraft.ofItem(index, ItemIds.normalize(target), 1, stock).map(ChainPlan::target);
-        if (recipe.isEmpty()) {
-            return refusal(target, Component.translatable(KEY + "no_recipe"));
-        }
-        RecipeSpec spec = recipe.get();
-        int limit = Math.max(
-                1,
-                ItemIds.item(spec.outputItem())
-                                .map(item -> new ItemStack(item).getMaxStackSize())
-                                .orElse(MAX_REQUEST)
-                        / spec.outputCount());
-        int max = ChainCraft.maxCrafts(index, spec, stock, limit);
-        int crafts = requested <= 0 ? Math.max(1, max) : Math.min(requested, MAX_REQUEST);
-        ChainPlan plan = ChainCraft.ofRecipe(index, spec, crafts, stock);
-        Component notice = Component.empty();
-        if (run) {
-            ChainExecutor.Outcome outcome = ChainExecutor.run(level, storage.get(), plan);
-            if (outcome instanceof ChainExecutor.Done done) {
-                done.targets().forEach(stack -> give(player, stack, storage));
-                done.extras().forEach(stack -> give(player, stack, storage));
-                notice = Component.translatable(
-                        KEY + "crafted",
-                        plan.targetCount(),
-                        ItemIds.item(spec.outputItem())
-                                .map(item -> new ItemStack(item).getHoverName())
-                                .orElse(Component.literal(spec.outputItem())));
-                sendSnapshot(player);
-                return reply(
-                        spec, ChainCraft.ofRecipe(index, spec, 1, storage.get().freePlain()), max, notice);
-            }
-            notice = Component.literal(((ChainExecutor.Refused) outcome).reason());
-        }
-        return reply(spec, plan, max, notice);
-    }
-
-    private static ChainReply refusal(String target, Component notice) {
-        return new ChainReply(target, ItemStack.EMPTY, 0, 0, 0, List.of(), List.of(), List.of(), notice);
-    }
-
-    private static ChainReply reply(RecipeSpec spec, ChainPlan plan, int max, Component notice) {
-        ItemStack target = ItemIds.item(spec.outputItem()).map(ItemStack::new).orElse(ItemStack.EMPTY);
-        return new ChainReply(
-                spec.id(),
-                target.copyWithCount(plan.targetCount()),
-                plan.crafts(),
-                max,
-                plan.steps().size(),
-                lines(plan.consumed()),
-                lines(plan.leftovers()),
-                lines(plan.missing()),
-                notice);
-    }
-
-    static List<Line> lines(Map<String, Integer> items) {
-        List<Line> lines = new ArrayList<>();
-        items.forEach((id, count) ->
-                ItemIds.item(id).ifPresent(item -> lines.add(new Line(new ItemStack(item), count))));
-        return lines;
     }
 
     static void give(ServerPlayer player, ItemStack stack, Optional<SettlementStorage> storage) {

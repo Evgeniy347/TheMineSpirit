@@ -10,6 +10,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.terminal.CraftChain;
 import com.theminespirit.neoforge.terminal.CraftOrderStore;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
@@ -47,7 +48,7 @@ public final class CraftTabGameTests {
         chest(helper, COAL, new ItemStack(Items.COAL, 1));
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, PLAYER, "craft_tab_chain");
 
-        ChainReply reply = CraftTerminalService.chain(player, "minecraft:torch", false, 1, true);
+        ChainReply reply = CraftChain.chain(player, "minecraft:torch", false, 1, true);
 
         int torches = GameTestFixtures.countInInventory(player.getInventory(), Items.TORCH);
         int planks = GameTestFixtures.countInInventory(player.getInventory(), Items.OAK_PLANKS);
@@ -76,7 +77,7 @@ public final class CraftTabGameTests {
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, PLAYER, "craft_tab_far");
         player.moveTo(player.getX() + FAR + helper.getBounds().getXsize(), player.getY(), player.getZ());
 
-        ChainReply reply = CraftTerminalService.chain(player, "minecraft:torch", false, 1, true);
+        ChainReply reply = CraftChain.chain(player, "minecraft:torch", false, 1, true);
         ItemStack taken = CraftTerminalService.take(player, new ItemStack(Items.OAK_LOG), 1, true);
 
         int torches = GameTestFixtures.countInInventory(player.getInventory(), Items.TORCH);

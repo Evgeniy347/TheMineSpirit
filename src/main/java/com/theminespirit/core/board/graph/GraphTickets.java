@@ -96,7 +96,7 @@ public final class GraphTickets {
         }
         int yield = graph.way(wayId(task)).map(SupplyGraph.Way::yield).orElse(1);
         int shortage = Math.max(
-                GraphPlanner.threshold(item, state) - state.count(item.id()),
+                GraphLack.threshold(item, state) - state.count(item.id()),
                 state.orders().getOrDefault(item.id(), 0));
         return Math.max(1, Math.min(COUNT_MAX, Math.max(yield, shortage)));
     }

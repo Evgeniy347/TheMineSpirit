@@ -132,7 +132,7 @@ class GraphWiringTests {
 
         GraphTickets.Result result = GraphTickets.of(GraphWorld.GRAPH, world.state(), world.plan());
 
-        int threshold = GraphPlanner.threshold(GraphWorld.GRAPH.items().get("oak_log"), world.state());
+        int threshold = GraphLack.threshold(GraphWorld.GRAPH.items().get("oak_log"), world.state());
         assertTrue(
                 result.post().stream()
                         .anyMatch(ticket -> "graph:chop_oak_log".equals(ticket.id())

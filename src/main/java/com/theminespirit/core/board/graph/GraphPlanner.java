@@ -53,36 +53,13 @@ public final class GraphPlanner {
         return planner.flow;
     }
 
-    public static int threshold(SupplyGraph.Item item, GraphState state) {
-        int stage = item.perSpirit() ? 1 : state.stage();
-        return (int) Math.ceil(item.xmin() * state.spirits() * stage * item.k());
-    }
-
-    public static boolean lacking(SupplyGraph graph, GraphState state, String node) {
-        if (graph.isGroup(node)) {
-            List<String> members = graph.members(node);
-            SupplyGraph.Item first = graph.items().get(members.get(0));
-            int have = members.stream().mapToInt(state::count).sum();
-            return first != null && have < threshold(first, state);
-        }
-        SupplyGraph.Item item = graph.items().get(node);
-        if (item != null && item.stage() <= state.stage()) {
-            return state.count(node) < threshold(item, state);
-        }
-        if (graph.isTool(node)) {
-            int split = node.indexOf('_');
-            return state.bestTier(node.substring(split + 1)) < graph.rank(node.substring(0, split));
-        }
-        return false;
-    }
-
     private void roots() {
         for (SupplyGraph.Item item : graph.items().values()) {
             if (item.stage() > state.stage()) {
                 continue;
             }
             int have = count(item.id());
-            if (have < threshold(item, state) && sourced(item.id())) {
+            if (have < GraphLack.threshold(item, state) && sourced(item.id())) {
                 push(null, item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0));
             }
         }
@@ -334,7 +311,7 @@ public final class GraphPlanner {
             if (state.built(id) != Built.BUILT) {
                 requireBuilding(null, id, weight, "событие " + event);
             }
-        } else if (lacking(graph, state, node)) {
+        } else if (GraphLack.lacking(graph, state, node)) {
             push(null, node, weight);
         }
     }
@@ -343,7 +320,7 @@ public final class GraphPlanner {
         Map<String, Double> scores = flow.solve();
         boolean changed = false;
         for (SupplyGraph.Edge edge : graph.edges()) {
-            if (!lacking(graph, state, edge.lack())) {
+            if (!GraphLack.lacking(graph, state, edge.lack())) {
                 continue;
             }
             boolean active = false;
