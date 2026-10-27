@@ -21,10 +21,10 @@ public final class FirstStepsPlan {
         if (!facts.hasHome()) {
             return Optional.empty();
         }
-        int house = chain().indexOf(BoardCase.BUILD_HOUSE);
+        int streets = chain().indexOf(BoardCase.BUILD_STREETS);
         for (Step step : ORDER) {
             BoardCase boardCase = step.boardCase();
-            if (chain().indexOf(boardCase) > house && !blockedStageOne(facts).isEmpty()) {
+            if (chain().indexOf(boardCase) > streets && !blockedStageOne(facts).isEmpty()) {
                 return Optional.empty();
             }
             if (facts.blocked().contains(boardCase) || step.finished(facts)) {
@@ -37,9 +37,9 @@ public final class FirstStepsPlan {
 
     public static List<BoardCase> blockedStageOne(SettlementFacts facts) {
         Objects.requireNonNull(facts, "facts не может быть null: заблокированные шаги читаются по фактам");
-        int house = chain().indexOf(BoardCase.BUILD_HOUSE);
+        int streets = chain().indexOf(BoardCase.BUILD_STREETS);
         return ORDER.stream()
-                .filter(step -> chain().indexOf(step.boardCase()) <= house)
+                .filter(step -> chain().indexOf(step.boardCase()) <= streets)
                 .filter(step -> facts.blocked().contains(step.boardCase()) && !step.finished(facts))
                 .map(Step::boardCase)
                 .toList();
@@ -109,10 +109,10 @@ public final class FirstStepsPlan {
         steps.add(Step.layout(BoardCase.LIGHTING, SettlementFacts::lighting));
         steps.add(Step.layout(BoardCase.BUILD_FENCE, SettlementFacts::fence));
         steps.add(Step.layout(BoardCase.BUILD_HOUSE, SettlementFacts::houses));
-        steps.add(new Step(BoardCase.CRAFT_SMITHING_TABLE, SettlementFacts::smithingTable));
-        steps.add(new Step(BoardCase.CRAFT_ANVIL, SettlementFacts::anvil));
         steps.add(Step.layout(BoardCase.BUILD_ORCHARD, SettlementFacts::orchard));
         steps.add(Step.layout(BoardCase.BUILD_STREETS, SettlementFacts::streets));
+        steps.add(new Step(BoardCase.CRAFT_SMITHING_TABLE, SettlementFacts::smithingTable));
+        steps.add(new Step(BoardCase.CRAFT_ANVIL, SettlementFacts::anvil));
         return List.copyOf(steps);
     }
 
