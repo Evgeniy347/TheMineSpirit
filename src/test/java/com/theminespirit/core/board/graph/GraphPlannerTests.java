@@ -459,6 +459,20 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_PlayerCraftOrder_CraftAtPlayerPriorityAndReport() {
+        GraphPlan plan = GraphWorld.settled().event("player_craft_order").plan();
+
+        assertTrue(
+                plan.task("event:player_craft_order:craft_player_order").isPresent(),
+                "Заказ крафта из вкладки «Крафт» — задание собрать заказ: " + plan.tasks());
+        assertTrue(
+                plan.advice().stream().anyMatch(advice -> "report_order_done_in_chat".equals(advice.rule()))
+                        && plan.advice().stream()
+                                .anyMatch(advice -> "order_shortage_as_player_priority".equals(advice.rule())),
+                "Недостача заказа идёт с приоритетом игрока, о готовности дух пишет в чат: " + plan.advice());
+    }
+
+    @Test
     void plan_PlayerDiedNearBase_CollectAndReturn() {
         GraphPlan plan = GraphWorld.settled().event("player_died_near_base").plan();
 

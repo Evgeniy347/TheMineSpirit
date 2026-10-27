@@ -8324,6 +8324,21 @@
         "return_to_base_if_under_100_blocks"
       ]
     },
+    "player_craft_order": {
+      "tasks": [
+        {
+          "id": "craft_player_order",
+          "case": "ACTIVITY_CRAFT",
+          "base": 100,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "do_player_request",
+        "order_shortage_as_player_priority",
+        "report_order_done_in_chat"
+      ]
+    },
     "nether_expedition": {
       "push": {
         "blaze_rod": 60,
