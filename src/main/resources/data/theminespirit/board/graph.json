@@ -1473,6 +1473,102 @@
       "k": 1,
       "base": 30,
       "stage": 4
+    },
+    "water_bottle": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "blaze_powder": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "ghast_tear": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "pufferfish": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "potion_regeneration": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_strength": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_swiftness": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_night_vision": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_water_breathing": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_healing": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_regeneration": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_fire_resistance": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_strength": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_swiftness": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_night_vision": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_water_breathing": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
     }
   },
   "buildings": {
@@ -6425,6 +6521,209 @@
         "experience": 3
       },
       "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "fill_water_bottle",
+      "case": "GATHER_MATERIALS",
+      "makes": "water_bottle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "glass_bottle": 1
+      },
+      "world": "water",
+      "implemented": true
+    },
+    {
+      "id": "brew_regeneration",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_regeneration",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "ghast_tear": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_strength",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_strength",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "blaze_powder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_swiftness",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_swiftness",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "sugar": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_night_vision",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_night_vision",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "carrot": 1,
+        "gold_ingot": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_water_breathing",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_water_breathing",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "pufferfish": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_healing",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_healing",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_healing": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_regeneration",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_regeneration",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_regeneration": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_fire_resistance",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_fire_resistance",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_fire_resistance": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_strength",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_strength",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_strength": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_swiftness",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_swiftness",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_swiftness": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_night_vision",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_night_vision",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_night_vision": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_water_breathing",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_water_breathing",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_water_breathing": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "grind_blaze_powder",
+      "case": "GATHER_MATERIALS",
+      "makes": "blaze_powder",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "blaze_rod": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "gather_ghast_tear",
+      "case": "GATHER_MATERIALS",
+      "makes": "ghast_tear",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "catch_pufferfish",
+      "case": "GATHER_MATERIALS",
+      "makes": "pufferfish",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "water",
       "implemented": false
     }
   ],
