@@ -22,7 +22,6 @@ import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StageAudit;
-import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
@@ -108,7 +107,6 @@ public final class FirstStepsRunner {
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String STONE_PART_PREFIX = "stone:";
     private static final String FENCE_PART_PREFIX = "fence:";
-    private static final String HOUSE_PART_PREFIX = "house:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
     private static final String SAPLING = "_sapling";
@@ -320,8 +318,7 @@ public final class FirstStepsRunner {
             TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
             StageWork work = target.work();
             if (caseValue == BoardCase.BUILD_FENCE && work != null) {
-                partTarget = partTarget.withWork(
-                        new StageWork(work.site(), StageBlocks.of(level, caseValue, work.site(), part)));
+                partTarget = partTarget.withWork(StageBuilds.of(level, caseValue, work.site(), part));
             }
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE) {
@@ -358,6 +355,9 @@ public final class FirstStepsRunner {
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
         Placed placed = audit(level, caseValue, work.site(), step.wood());
         int missing = placed.total() - placed.done();
+        if (missing == 0) {
+            return true;
+        }
         if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
             LOGGER.info(
                     "[layout] {} по журналу сделан, но нет {} из {} блоков: не построено — шаг стройки заново",
@@ -432,7 +432,6 @@ public final class FirstStepsRunner {
         return service.board().all().stream()
                 .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
                                 || ticket.id().startsWith(FENCE_PART_PREFIX)
-                                || ticket.id().startsWith(HOUSE_PART_PREFIX)
                                 || ticket.id().startsWith(RepairPlan.PREFIX)
                                 || ticket.id().startsWith(CLEAR_PART_PREFIX))
                         && active(service, ticket.id()));
@@ -442,7 +441,6 @@ public final class FirstStepsRunner {
         return switch (caseValue) {
             case CLEAR_GROUNDS -> GroundsPlan.CLEAR_PARTS;
             case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
-            case BUILD_HOUSE -> StagePlans.HOUSE_PARTS;
             default -> 1;
         };
     }
@@ -451,12 +449,7 @@ public final class FirstStepsRunner {
         if (part == 1) {
             return FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
         }
-        String prefix = switch (caseValue) {
-            case BUILD_FENCE -> FENCE_PART_PREFIX;
-            case BUILD_HOUSE -> HOUSE_PART_PREFIX;
-            default -> CLEAR_PART_PREFIX;
-        };
-        return prefix + part;
+        return (caseValue == BoardCase.BUILD_FENCE ? FENCE_PART_PREFIX : CLEAR_PART_PREFIX) + part;
     }
 
     private static Map<String, Integer> partNeed(
@@ -627,8 +620,7 @@ public final class FirstStepsRunner {
 
     public static TicketTarget targetFor(ServerLevel level, BoardCase caseValue, StageSite stage, String wood) {
         BlockCoord point = BEFORE_YARD.contains(caseValue) ? stage.anchor() : stage.workYard();
-        TicketTarget target =
-                TicketTarget.at(point).withWork(new StageWork(stage, StageBlocks.of(level, caseValue, stage, 0)));
+        TicketTarget target = TicketTarget.at(point).withWork(StageBuilds.of(level, caseValue, stage, 0));
         if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);
         }
@@ -811,22 +803,11 @@ public final class FirstStepsRunner {
             case SequenceNode sequence -> sequence.steps().forEach(step -> minusPlaced(level, step, wood, need));
             case FallbackNode fallback -> minusPlaced(level, fallback.steps().get(0), wood, need);
             case ScriptCall call
-            when "build_schematic".equals(call.script())
-                    && !call.params().containsKey("rotation")
-                    && call.params().get("file") instanceof String file
-                    && SchematicMaterials.known(
-                            DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()))
-                    && call.params().get("x") instanceof Integer x
-                    && call.params().get("y") instanceof Integer y
-                    && call.params().get("z") instanceof Integer z -> {
-                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                    if (entry.optional() || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
-                        continue;
-                    }
+            when SchemeAudit.entries(call).isPresent() -> {
+                for (Schematic.PlacedEntry entry : SchemeAudit.entries(call).orElseThrow()) {
                     String block = bare(WoodSpecies.swap(entry.block(), wood));
-                    BlockState state =
-                            level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
-                    if (placed(state, block)) {
+                    BlockCoord at = entry.pos();
+                    if (placed(level.getBlockState(new BlockPos(at.x(), at.y(), at.z())), block)) {
                         String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(entry.block()), wood));
                         need.computeIfPresent(item, (key, count) -> count > 1 ? count - 1 : null);
                     }
@@ -1047,28 +1028,18 @@ public final class FirstStepsRunner {
                         placed(level.getBlockState(new BlockPos(x, y, z)), bare(WoodSpecies.swap(block, wood))) ? 1 : 0,
                         1);
             case ScriptCall call
-            when "build_schematic".equals(call.script())
-                    && !call.params().containsKey("rotation")
-                    && call.params().get("file") instanceof String file
-                    && SchematicMaterials.known(
-                            DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()))
-                    && call.params().get("x") instanceof Integer x
-                    && call.params().get("y") instanceof Integer y
-                    && call.params().get("z") instanceof Integer z -> {
+            when SchemeAudit.entries(call).isPresent() -> {
                 int done = 0;
-                int total = 0;
-                for (Schematic.Entry entry : SchematicResources.load(file).blocks()) {
-                    if (entry.optional() || SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
-                        continue;
-                    }
-                    BlockState state =
-                            level.getBlockState(new BlockPos(x + entry.dx(), y + entry.dy(), z + entry.dz()));
-                    total++;
-                    if (placed(state, bare(WoodSpecies.swap(entry.block(), wood)))) {
+                List<Schematic.PlacedEntry> entries = SchemeAudit.entries(call).orElseThrow();
+                for (Schematic.PlacedEntry entry : entries) {
+                    BlockCoord at = entry.pos();
+                    if (placed(
+                            level.getBlockState(new BlockPos(at.x(), at.y(), at.z())),
+                            bare(WoodSpecies.swap(entry.block(), wood)))) {
                         done++;
                     }
                 }
-                yield new Placed(done, total);
+                yield new Placed(done, entries.size());
             }
             default -> new Placed(0, 0);
         };
@@ -1104,7 +1075,7 @@ public final class FirstStepsRunner {
             }
             return true;
         }
-        if (step != BoardCase.BUILD_FENCE && step != BoardCase.BUILD_HOUSE) {
+        if (step != BoardCase.BUILD_FENCE) {
             return true;
         }
         boolean anyPart = false;

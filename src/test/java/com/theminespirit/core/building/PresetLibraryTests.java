@@ -56,9 +56,9 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                35,
+                55,
                 library.size(),
-                "Библиотека обязана прочитать все тридцать четыре пресета, включая четыре уровня дома семьи и дома игрока, "
+                "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
                         + "четыре уровня склада, загоны трёх уровней и сад: без них стратегу не из чего "
                         + "составлять планировку поселения");
@@ -98,7 +98,27 @@ class PresetLibraryTests {
                         "player_house_2",
                         "player_house_3",
                         "player_house_4",
-                        "plaza_3"),
+                        "plaza_3",
+                        "fence_long",
+                        "fence_straight",
+                        "fence_post",
+                        "fence_corner",
+                        "fence_diagonal",
+                        "fence_corner45_left",
+                        "fence_corner45_right",
+                        "fence_wicket",
+                        "yard_1",
+                        "yard_chest",
+                        "ground_torch",
+                        "street5_straight",
+                        "street5_turn",
+                        "street5_t",
+                        "street5_cross",
+                        "street7_straight",
+                        "street7_turn",
+                        "street7_t",
+                        "street7_cross",
+                        "street_patch"),
                 library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
@@ -217,9 +237,18 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                List.of("palisade_section"),
+                List.of(
+                        "palisade_section",
+                        "fence_long",
+                        "fence_straight",
+                        "fence_post",
+                        "fence_corner",
+                        "fence_diagonal",
+                        "fence_corner45_left",
+                        "fence_corner45_right",
+                        "fence_wicket"),
                 library.byType(BuildingType.DEFENSE).stream().map(Preset::id).toList(),
-                "Поиск по типу «оборона» обязан находить палисад-секцию: по нему стратег выбирает ограждение");
+                "Поиск по типу «оборона» обязан находить палисад-секцию и фрагменты забора: по нему стратег выбирает ограждение");
     }
 
     @Test
@@ -234,7 +263,15 @@ class PresetLibraryTests {
                         "mine_descent_v1",
                         "mine_tunnel_v1",
                         "player_house_1",
-                        "plaza_1"),
+                        "plaza_1",
+                        "fence_long",
+                        "fence_straight",
+                        "fence_post",
+                        "fence_corner",
+                        "fence_diagonal",
+                        "fence_corner45_left",
+                        "fence_corner45_right",
+                        "fence_wicket"),
                 library.byStage(0).stream().map(Preset::id).toList(),
                 "Этап 0 «лагерь выживания» — палисад, факелы, вход в шахту, спуск и ход, первый каменный дом и площадь: по этапу стратег решает, "
                         + "что строить сейчас");
@@ -296,7 +333,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                35,
+                55,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(

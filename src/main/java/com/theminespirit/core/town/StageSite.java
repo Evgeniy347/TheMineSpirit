@@ -1,7 +1,6 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,8 +23,6 @@ public record StageSite(
     public static final int HOUSE_DEPTH = 6;
     public static final int HOUSE_SHIFT_X = 1;
     public static final int HOUSE_SHIFT_Z = 3;
-    public static final int PALISADE_GATE = 3;
-    public static final int YARD_CHEST_ROW = 3;
     public static final int YARD_STATION_ROW = 1;
     public static final int MINE_SHIFT = 1;
     public static final int MINE_WIDTH = 3;
@@ -53,10 +50,6 @@ public record StageSite(
         return new BlockCoord(hut.x() + HOUSE_SHIFT_X, anchor.y(), hut.z() + HOUSE_SHIFT_Z);
     }
 
-    public BlockCoord palisadeOrigin() {
-        return new BlockCoord(hut.x(), anchor.y(), hut.z());
-    }
-
     public boolean houseColumn(int x, int z) {
         BlockCoord house = houseOrigin();
         return x >= house.x() && x < house.x() + HOUSE_WIDTH && z >= house.z() && z < house.z() + HOUSE_DEPTH;
@@ -64,23 +57,6 @@ public record StageSite(
 
     public BlockCoord workYard() {
         return new BlockCoord(yard.centerX(), anchor.y(), yard.z() + YARD_STATION_ROW + 1);
-    }
-
-    public BlockCoord craftingTable() {
-        return new BlockCoord(yard.x() + 1, anchor.y(), yard.z() + YARD_STATION_ROW);
-    }
-
-    public BlockCoord furnace() {
-        return new BlockCoord(yard.x() + yard.width() - 2, anchor.y(), yard.z() + YARD_STATION_ROW);
-    }
-
-    public List<List<BlockCoord>> chestSlots() {
-        List<List<BlockCoord>> slots = new ArrayList<>();
-        for (int x = yard.x(); x + 1 < yard.x() + yard.width(); x += 2) {
-            int z = yard.z() + YARD_CHEST_ROW;
-            slots.add(List.of(new BlockCoord(x, anchor.y(), z), new BlockCoord(x + 1, anchor.y(), z)));
-        }
-        return List.copyOf(slots);
     }
 
     public boolean yardColumn(int x, int z) {
@@ -114,33 +90,6 @@ public record StageSite(
             }
         }
         return false;
-    }
-
-    public List<ColumnMask.Cell> torchPosts() {
-        List<ColumnMask.Cell> posts = new ArrayList<>();
-        int size = ring.posts().size();
-        for (int gate : ring.gates()) {
-            for (int side : new int[] {-1, 1}) {
-                int at = Math.floorMod(gate + side, size);
-                if (!ring.isGate(at) && !posts.contains(ring.posts().get(at))) {
-                    posts.add(ring.posts().get(at));
-                }
-            }
-        }
-        return List.copyOf(posts);
-    }
-
-    public List<BlockCoord> palisadeTorches() {
-        return List.of(
-                new BlockCoord(hut.x() + PALISADE_GATE - 1, anchor.y() + 1, hut.z()),
-                new BlockCoord(hut.x() + PALISADE_GATE + 1, anchor.y() + 1, hut.z()));
-    }
-
-    public List<BlockCoord> groundTorches() {
-        return List.of(
-                new BlockCoord(yard.x() + yard.width() - 1, anchor.y(), yard.z() + YARD_STATION_ROW),
-                new BlockCoord(mine.x(), anchor.y(), mine.z()),
-                new BlockCoord(mine.x() + mine.width() - 1, anchor.y(), mine.z()));
     }
 
     public boolean ringPost(int x, int z) {

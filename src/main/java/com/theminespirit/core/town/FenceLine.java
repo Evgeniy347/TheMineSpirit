@@ -19,17 +19,6 @@ public record FenceLine(List<ColumnMask.Cell> posts, List<Integer> gates) {
         }
     }
 
-    public boolean isGate(int index) {
-        return gates.contains(index);
-    }
-
-    public boolean alongX(int index) {
-        ColumnMask.Cell prev = posts.get(Math.floorMod(index - 1, posts.size()));
-        ColumnMask.Cell next = posts.get(Math.floorMod(index + 1, posts.size()));
-        return prev.z() == next.z()
-                || (posts.get(index).z() == prev.z() && posts.get(index).z() == next.z());
-    }
-
     public boolean straight(int index) {
         ColumnMask.Cell prev = posts.get(Math.floorMod(index - 1, posts.size()));
         ColumnMask.Cell here = posts.get(index);

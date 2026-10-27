@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 
 public final class CaseMaterials {
@@ -84,7 +86,7 @@ public final class CaseMaterials {
                 addCraft(need, call, source);
                 merge(taken.crafted(), normalize(text(call, ITEM)), integer(call, "count"));
             }
-            case "build_schematic" -> addSchematic(need, call, source);
+            case "build_schematic" -> addSchematic(taken.placed(), call, source);
             case "place_block" -> merge(taken.placed(), normalize(withoutState(text(call, "block"))), 1);
             case "acquire" -> merge(taken.acquired(), normalize(text(call, ITEM)), integer(call, "count"));
             default -> {}
@@ -107,11 +109,17 @@ public final class CaseMaterials {
         }
     }
 
-    private static void addSchematic(Map<String, Integer> need, ScriptCall call, MaterialSource source) {
+    private static void addSchematic(Map<String, Integer> placed, ScriptCall call, MaterialSource source) {
         String wood =
                 call.params().get(BuildSchematicParams.WOOD) instanceof String species ? species : WoodSpecies.OAK;
-        source.schematicBlocks(text(call, "file"))
-                .forEach((block, count) -> merge(need, normalize(WoodSpecies.swap(block, wood)), count));
+        List<String> only = call.params().get(BuildSchematicParams.ONLY) instanceof String blocks && !blocks.isBlank()
+                ? Stream.of(blocks.split(",")).map(SchematicBlocks::path).toList()
+                : List.of();
+        source.schematicBlocks(text(call, "file")).forEach((block, count) -> {
+            if (only.isEmpty() || only.contains(SchematicBlocks.path(block))) {
+                merge(placed, normalize(WoodSpecies.swap(block, wood)), count);
+            }
+        });
     }
 
     private static void merge(Map<String, Integer> need, String item, int count) {
