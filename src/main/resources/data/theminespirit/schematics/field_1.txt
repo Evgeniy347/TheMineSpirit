@@ -15,7 +15,7 @@ legend:
   'p': dirt_path
   'e': farmland[moisture=7]
   '~': water
-  'w': wheat[age=7]
+  'w': wheat[age=0] ~
   '_': oak_slab[type=bottom]
   'T': torch
 layers:

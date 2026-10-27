@@ -1,0 +1,42 @@
+# field_beetroot_1 — свекольное поле уровня 1: вода в центре, грядки, тропа вокруг.
+# Посев — мягкие клетки: стройка их ставит, ремонт не требует, выросший корнеплод не трогает.
+# Открытый участок: стен и крыши нет по замыслу, поэтому правила крыши и внутренней высоты исключены.
+name: "Свекольное поле, уровень 1"
+type: farm
+stage: 2
+level: 1
+size: 9x2x9   # Ш×В×Д
+entrance: 4,1,1
+exemptions:
+  - rule: roof
+    reason: "поле под открытым небом: посевам нужны свет и дождь, крыши у поля нет"
+  - rule: inner_height
+    reason: "у поля нет потолка: внутреннюю высоту не с чем мерить, высота ростка — один блок"
+legend:
+  'p': dirt_path
+  'e': farmland[moisture=7]
+  '~': water
+  'b': beetroots[age=0] ~
+  '_': oak_slab[type=bottom]
+  'T': torch
+layers:
+  - y0 грядки, вода и тропа: |
+      ...._....
+      ppppppppp
+      peeeeeeep
+      peeeeeeep
+      peee~eeep
+      peeeeeeep
+      peeeeeeep
+      peeeeeeep
+      ppppppppp
+  - y1 посев и факелы по углам: |
+      .........
+      T.......T
+      .bbbbbbb.
+      .bbbbbbb.
+      .bbb.bbb.
+      .bbbbbbb.
+      .bbbbbbb.
+      .bbbbbbb.
+      T.......T
