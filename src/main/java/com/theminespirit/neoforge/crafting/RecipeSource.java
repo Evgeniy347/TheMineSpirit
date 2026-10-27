@@ -48,8 +48,7 @@ public final class RecipeSource {
         LOGGER.warn("Рецепт {} пропущен: не укладывается в модель крафта духа ({})", id, e.getMessage());
     }
 
-    private static Optional<RecipeSpec> crafting(
-            RecipeHolder<CraftingRecipe> holder, HolderLookup.Provider registries) {
+    public static Optional<RecipeSpec> crafting(RecipeHolder<CraftingRecipe> holder, HolderLookup.Provider registries) {
         CraftingRecipe recipe = holder.value();
         ItemStack result = recipe.getResultItem(registries);
         if (recipe.isSpecial() || result.isEmpty()) {

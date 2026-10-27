@@ -12,6 +12,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +115,9 @@ public final class GraphSource {
         }
         if (GraphFood.hungry(spirits)) {
             events.add("hungry");
+        }
+        if (CraftOrders.waiting(level)) {
+            events.add(CraftOrders.EVENT);
         }
         return Set.copyOf(events);
     }

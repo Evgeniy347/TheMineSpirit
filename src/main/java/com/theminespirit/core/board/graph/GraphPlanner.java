@@ -18,6 +18,7 @@ public final class GraphPlanner {
     private static final String EVENT = "event:";
     private static final String EXPLORE = "explore:";
     private static final String STATION = "station:";
+    private static final String ORDER = "order:";
     private static final int EXPLORE_TICKS = 2400;
     private static final char AT = '@';
 
@@ -38,6 +39,7 @@ public final class GraphPlanner {
         GraphPlanner planner = new GraphPlanner(graph, state);
         planner.roots();
         planner.events();
+        planner.orders();
         planner.standing();
         return planner.result(planner.edges());
     }
@@ -46,6 +48,7 @@ public final class GraphPlanner {
         GraphPlanner planner = new GraphPlanner(graph, state);
         planner.roots();
         planner.events();
+        planner.orders();
         planner.edges();
         return planner.flow;
     }
@@ -290,6 +293,22 @@ public final class GraphPlanner {
             }
             event.push().forEach((node, weight) -> boost(node, weight, name));
             event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
+        }
+    }
+
+    private void orders() {
+        for (Map.Entry<String, Integer> lack : state.orders().entrySet()) {
+            String item = lack.getKey();
+            if (graph.items().containsKey(item) || graph.isGroup(item)) {
+                push(null, item, graph.maxPriority());
+            } else {
+                notices.putIfAbsent(
+                        ORDER + item,
+                        new GraphPlan.Notice(
+                                item,
+                                "заказ игрока ждёт «" + item + "» ×" + lack.getValue()
+                                        + ", а граф не знает, как его добыть: добавьте предмет в граф"));
+            }
         }
     }
 

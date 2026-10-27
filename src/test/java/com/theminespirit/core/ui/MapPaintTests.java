@@ -85,7 +85,9 @@ class MapPaintTests {
         BoardLayout.Rect mine = ScreenTabs.rect(427, ScreenTabs.Tab.MINE);
         assertEquals(board.x() + board.width() + ScreenTabs.GAP, plan.x(), "Вкладки рядом, «План» правее доски");
         assertEquals(plan.x() + plan.width() + ScreenTabs.GAP, mine.x(), "Вкладки рядом, «Шахта» правее плана");
-        assertEquals(427 - BoardLayout.MARGIN, mine.x() + mine.width(), "Вкладки прижаты к правому краю");
+        BoardLayout.Rect craft = ScreenTabs.rect(427, ScreenTabs.Tab.CRAFT);
+        assertEquals(mine.x() + mine.width() + ScreenTabs.GAP, craft.x(), "Вкладки рядом, «Крафт» правее шахты");
+        assertEquals(427 - BoardLayout.MARGIN, craft.x() + craft.width(), "Вкладки прижаты к правому краю");
     }
 
     private static TerrainTile tile(int chunkX, int chunkZ, int id) {

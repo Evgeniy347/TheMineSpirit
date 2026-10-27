@@ -308,6 +308,24 @@ class DeadCodeGuardTests {
     }
 
     @Test
+    void deadCodeScanner_JeiPluginClass_IsEntryPoint() {
+        Map<Path, String> sources = new LinkedHashMap<>();
+        sources.put(Path.of("Plugin.java"), """
+                package sample;
+
+                @JeiPlugin
+                public final class Plugin {
+                }
+                """);
+
+        assertEquals(
+                List.of(),
+                deadCode(sources).stream().map(Finding::describe).toList(),
+                "Класс с @JeiPlugin находит и создаёт JEI по аннотации: ссылок из кода мода на него нет, "
+                        + "но он живой — иначе интеграцию с JEI пришлось бы удалить");
+    }
+
+    @Test
     void deadCodeScanner_UnreferencedClassMethodAndField_AreFound() {
         Map<Path, String> sources = new LinkedHashMap<>();
         sources.put(Path.of("Live.java"), """
@@ -550,7 +568,7 @@ class DeadCodeGuardTests {
                         Math.max(code.lastIndexOf('{', offset), code.lastIndexOf('}', offset))),
                 0);
         String before = code.substring(start, offset);
-        return before.contains("@Mod") || before.contains("@EventBusSubscriber");
+        return before.contains("@Mod") || before.contains("@EventBusSubscriber") || before.contains("@JeiPlugin");
     }
 
     private static Declaration declaration(

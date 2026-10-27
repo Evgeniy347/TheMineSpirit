@@ -14,7 +14,8 @@ public record GraphState(
         Set<String> events,
         Set<String> world,
         Map<String, Integer> distances,
-        Map<String, Integer> stations) {
+        Map<String, Integer> stations,
+        Map<String, Integer> orders) {
     public enum Built {
         BUILT,
         PLANNED,
@@ -35,6 +36,8 @@ public record GraphState(
                 distances, "Расстояния до ресурсов не могут быть null: неизвестное — пустая карта (рядом)"));
         stations = Map.copyOf(Objects.requireNonNull(
                 stations, "Число станций не может быть null: по одной на постройку — пустая карта"));
+        orders = Map.copyOf(Objects.requireNonNull(
+                orders, "Недостача заказов игрока не может быть null: без заказов — пустая карта"));
         if (stage < 1) {
             throw new IllegalArgumentException("Этап " + stage + " меньше 1: поселение начинается с этапа 1");
         }
@@ -50,6 +53,46 @@ public record GraphState(
             Set<String> events,
             Set<String> world) {
         this(stock, stage, kits, buildings, materials, storageFreePercent, events, world, Map.of(), Map.of());
+    }
+
+    public GraphState(
+            Map<String, Integer> stock,
+            int stage,
+            Map<String, Map<String, Integer>> kits,
+            Map<String, Built> buildings,
+            Map<String, Map<String, Integer>> materials,
+            int storageFreePercent,
+            Set<String> events,
+            Set<String> world,
+            Map<String, Integer> distances,
+            Map<String, Integer> stations) {
+        this(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                distances,
+                stations,
+                Map.of());
+    }
+
+    public GraphState withOrders(Map<String, Integer> shortage) {
+        return new GraphState(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                distances,
+                stations,
+                shortage);
     }
 
     public int stations(String building) {
