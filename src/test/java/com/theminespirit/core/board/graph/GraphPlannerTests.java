@@ -676,6 +676,24 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_StageFour_EnchantedBooksMarkedInDevelopment() {
+        GraphWorld world = GraphWorld.settled()
+                .built("enchanting_table", Built.BUILT)
+                .built("enchant_room", Built.PLANNED)
+                .with("book", 16)
+                .with("lapis_lazuli", 48)
+                .with("experience", 48);
+        world.stage = 4;
+        GraphPlan plan = world.plan();
+
+        GraphPlan.Task book = plan.task("enchant_efficiency")
+                .orElseThrow(() -> new AssertionError("Нет задания на книгу чар «эффективность»: " + plan.tasks()));
+        assertTrue(
+                !book.implemented() && plan.task("enchant_silk_touch").isPresent(),
+                "Книги чар внесены как «в разработке» (implemented=false), но стоят на доске: " + book);
+    }
+
+    @Test
     void plan_PlayerHouse_OutranksFamilyHouses() {
         GraphWorld world =
                 GraphWorld.settled().built("player_house", Built.PLANNED).built("family_house_a", Built.PLANNED);

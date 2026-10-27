@@ -1425,6 +1425,54 @@
       "k": 1,
       "base": 20,
       "stage": 2
+    },
+    "experience": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "enchanted_book_efficiency": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_unbreaking": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_fortune": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_mending": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_protection": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_sharpness": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_silk_touch": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
     }
   },
   "buildings": {
@@ -6271,6 +6319,113 @@
         "yellow_wool": 2
       },
       "building": "crafting_table"
+    },
+    {
+      "id": "loot_experience",
+      "case": "GATHER_MATERIALS",
+      "makes": "experience",
+      "yield": 3,
+      "weight": 1.0,
+      "world": "mobs",
+      "implemented": false
+    },
+    {
+      "id": "enchant_efficiency",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_efficiency",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_unbreaking",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_unbreaking",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_fortune",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_fortune",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_mending",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_mending",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_protection",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_protection",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_sharpness",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_sharpness",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_silk_touch",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_silk_touch",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
     }
   ],
   "edges": [
