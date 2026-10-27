@@ -361,6 +361,12 @@
       "base": 35,
       "stage": 3,
       "implemented": false
+    },
+    "flint_and_steel": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 3
     }
   },
   "buildings": {
@@ -748,13 +754,30 @@
         "book": 1
       }
     },
-    "nether_portal": {
+    "portal_hall": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 30,
+      "base": 35,
       "materials": {
-        "obsidian": 10
+        "cobblestone": 160,
+        "obsidian": 10,
+        "torch": 12
       },
+      "advice": [
+        "keep_distance_from_portal_2",
+        "enter_portal_only_bound_to_player"
+      ]
+    },
+    "portal_lit": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "flint_and_steel": 1
+      },
+      "requires": [
+        "portal_hall"
+      ],
       "implemented": false
     }
   },
@@ -1627,7 +1650,7 @@
       "makes": "nether_wart",
       "yield": 3,
       "weight": 1.0,
-      "building": "nether_portal",
+      "building": "portal_lit",
       "implemented": false
     },
     {
@@ -1636,7 +1659,7 @@
       "makes": "blaze_rod",
       "yield": 1,
       "weight": 1.0,
-      "building": "nether_portal",
+      "building": "portal_lit",
       "implemented": false
     },
     {
@@ -1725,6 +1748,18 @@
       "consumes": {
         "diamond": 2,
         "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_flint_and_steel",
+      "case": "GATHER_MATERIALS",
+      "makes": "flint_and_steel",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 1,
+        "flint": 1
       },
       "building": "crafting_table"
     }

@@ -283,4 +283,47 @@ class GraphPlannerTests {
                 hostile.priority("craft_stone_sword@spirit-1"),
                 "Каменный меч уже в руках (набор этапа 1) — враги не толкают меч ещё раз");
     }
+
+    @Test
+    void plan_PortalHallUnfinished_LightingPortalNotFeasible() {
+        GraphWorld world = GraphWorld.settled()
+                .with("flint_and_steel", 1)
+                .built("portal_hall", Built.PLANNED)
+                .built("portal_lit", Built.PLANNED);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("building:portal_lit").map(task -> !task.feasible()).orElse(false)
+                        && plan.task("building:portal_hall").isPresent(),
+                "Зажечь портал нельзя, пока зал портала не готов на 100%: " + plan.task("building:portal_lit"));
+    }
+
+    @Test
+    void plan_PortalHallBuilt_KeepDistanceAndEnterOnlyWithPlayer() {
+        GraphWorld world = GraphWorld.settled().built("portal_hall", Built.BUILT);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.advice().contains(new GraphPlan.Advice("portal_hall", "keep_distance_from_portal_2"))
+                        && plan.advice()
+                                .contains(new GraphPlan.Advice("portal_hall", "enter_portal_only_bound_to_player")),
+                "Зал портала стоит — духи держатся от портала ≥2 блоков и входят только привязанными к игроку: "
+                        + plan.advice());
+    }
+
+    @Test
+    void plan_PortalHallBuiltLighterHeld_LightingFeasible() {
+        GraphWorld world = GraphWorld.settled()
+                .with("flint_and_steel", 1)
+                .built("portal_hall", Built.BUILT)
+                .built("portal_lit", Built.PLANNED);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("building:portal_lit").map(GraphPlan.Task::feasible).orElse(false),
+                "Зал готов и огниво есть — задание «зажечь портал» выполнимо: " + plan.task("building:portal_lit"));
+    }
 }

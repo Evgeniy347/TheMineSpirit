@@ -32,6 +32,7 @@ public final class GraphPlanner {
         GraphPlanner planner = new GraphPlanner(graph, state);
         planner.roots();
         planner.events();
+        planner.standing();
         planner.edges();
         return planner.result();
     }
@@ -133,6 +134,13 @@ public final class GraphPlanner {
                     push(input.getKey(), value * graph.decay(), path);
                 }
             }
+            if (building != null) {
+                for (String required : building.requires()) {
+                    if (state.built(required) != Built.BUILT) {
+                        requireBuilding(required, value * graph.decay(), "нужна постройке " + id, path);
+                    }
+                }
+            }
             if (building != null && building.tool() != null && state.bestTier(building.tool()) < 0) {
                 pushTool(building.tool(), value * graph.decay(), path);
             }
@@ -199,6 +207,14 @@ public final class GraphPlanner {
             }
             event.push().forEach((node, weight) -> boost(node, weight, name));
             event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
+        }
+    }
+
+    private void standing() {
+        for (SupplyGraph.Building building : graph.buildings().values()) {
+            if (state.built(building.id()) == Built.BUILT) {
+                building.advice().forEach(rule -> advice.add(new GraphPlan.Advice(building.id(), rule)));
+            }
         }
     }
 
@@ -276,7 +292,8 @@ public final class GraphPlanner {
             SupplyGraph.Building building = Objects.requireNonNull(
                     graph.buildings().get(id), "Постройка " + id + " задания не описана в графе");
             Map<String, Integer> materials = materials(id);
-            boolean tooled = building.tool() == null || state.bestTier(building.tool()) >= 0;
+            boolean tooled = (building.tool() == null || state.bestTier(building.tool()) >= 0)
+                    && building.requires().stream().allMatch(required -> state.built(required) == Built.BUILT);
             return new GraphPlan.Task(
                     key,
                     building.boardCase(),

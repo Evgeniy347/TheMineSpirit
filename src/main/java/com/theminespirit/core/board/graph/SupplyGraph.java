@@ -28,6 +28,9 @@ public record SupplyGraph(
         Set<String> unimplemented,
         Map<String, GraphEvent> events) {
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
+    private static final String BASE = "base";
+    private static final String STAGE = "stage";
+    private static final String KIT = "kit";
 
     public record Item(String id, int xmin, double k, int base, int stage) {}
 
@@ -37,9 +40,13 @@ public record SupplyGraph(
             int stage,
             int base,
             @Nullable String tool,
-            Map<String, Integer> materials) {
+            Map<String, Integer> materials,
+            List<String> requires,
+            List<String> advice) {
         public Building {
             materials = Map.copyOf(materials);
+            requires = List.copyOf(requires);
+            advice = List.copyOf(advice);
         }
     }
 
@@ -106,8 +113,8 @@ public record SupplyGraph(
                                 entry.getKey(),
                                 entry.getValue().path("xmin").asInt(),
                                 entry.getValue().path("k").asDouble(1.0),
-                                entry.getValue().path("base").asInt(),
-                                entry.getValue().path("stage").asInt(1))));
+                                entry.getValue().path(BASE).asInt(),
+                                entry.getValue().path(STAGE).asInt(1))));
         Map<String, Building> buildings = buildings(root);
         List<Way> ways = ways(root);
         List<Edge> edges = new ArrayList<>();
@@ -120,7 +127,7 @@ public record SupplyGraph(
         List<String> tiers = new ArrayList<>();
         root.path("tiers").forEach(tier -> tiers.add(tier.asText()));
         Map<String, String> kitTiers = new LinkedHashMap<>();
-        root.path("kit")
+        root.path(KIT)
                 .path("tiers")
                 .properties()
                 .forEach(entry -> kitTiers.put(entry.getKey(), entry.getValue().asText()));
@@ -133,12 +140,12 @@ public record SupplyGraph(
                 tiers,
                 new Kit(
                         kitTiers,
-                        stageTiers(root.path("kit")),
-                        root.path("kit").path("base").asInt()),
+                        stageTiers(root.path(KIT)),
+                        root.path(KIT).path(BASE).asInt()),
                 new Storage(
                         storage.path("minFreePercent").asInt(),
                         storage.path("building").asText(),
-                        storage.path("base").asInt()),
+                        storage.path(BASE).asInt()),
                 items,
                 buildings,
                 ways,
@@ -163,10 +170,12 @@ public record SupplyGraph(
                     new Building(
                             entry.getKey(),
                             BoardCase.valueOf(entry.getValue().path("case").asText()),
-                            entry.getValue().path("stage").asInt(1),
-                            entry.getValue().path("base").asInt(),
+                            entry.getValue().path(STAGE).asInt(1),
+                            entry.getValue().path(BASE).asInt(),
                             text(entry.getValue(), "tool"),
-                            materials));
+                            materials,
+                            texts(entry.getValue().path("requires")),
+                            texts(entry.getValue().path("advice"))));
         });
         return buildings;
     }
@@ -270,11 +279,25 @@ public record SupplyGraph(
                 }
             }
         }
+        for (Building building : buildings.values()) {
+            for (String required : building.requires()) {
+                if (!buildings.containsKey(required)) {
+                    throw new IllegalStateException("Файл '" + origin + "': постройка " + building.id()
+                            + " требует постройку '" + required + "', которой нет в графе");
+                }
+            }
+        }
         for (Edge edge : edges) {
             Objects.requireNonNull(
                     way(edge.way()).orElse(null),
                     "Файл '" + origin + "': ребро от '" + edge.lack() + "' ведёт к неизвестному пути " + edge.way());
         }
+    }
+
+    private static List<String> texts(JsonNode node) {
+        List<String> values = new ArrayList<>();
+        node.forEach(value -> values.add(value.asText()));
+        return values;
     }
 
     private static @Nullable String text(JsonNode node, String field) {
