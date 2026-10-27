@@ -18,7 +18,7 @@ from graph_model import Graph, Planner, State, BUILT, PLANNED, ABSENT, EPSILON, 
 
 try:
     import torch
-except Exception:  # pragma: no cover - окружение без torch
+except Exception:
     torch = None
 
 LAST_STAGE = 3
