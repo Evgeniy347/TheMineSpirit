@@ -62,7 +62,8 @@ final class GraphChaos {
                                 building.tool(),
                                 building.materials(),
                                 building.requires(),
-                                building.advice())));
+                                building.advice(),
+                                building.optional())));
         List<SupplyGraph.Way> ways = new ArrayList<>();
         for (SupplyGraph.Way way : graph.ways()) {
             ways.add(new SupplyGraph.Way(
@@ -74,7 +75,8 @@ final class GraphChaos {
                     way.consumes(),
                     way.tool(),
                     way.tier(),
-                    way.building()));
+                    way.building(),
+                    way.world()));
         }
         return new SupplyGraph(
                 Math.min(0.95, graph.decay() * factor(random, spread)),
@@ -89,7 +91,9 @@ final class GraphChaos {
                 ways,
                 graph.edges(),
                 graph.unimplemented(),
-                graph.events());
+                graph.events(),
+                graph.groups(),
+                graph.triggers());
     }
 
     static List<GraphMutations.Mutation> combo(Random random, int size) {

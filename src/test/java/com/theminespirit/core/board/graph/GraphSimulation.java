@@ -110,7 +110,7 @@ final class GraphSimulation {
     }
 
     private static void apply(GraphWorld world, GraphPlan.Task task) {
-        task.consumes().forEach((item, count) -> world.stock.merge(item, -count, Integer::sum));
+        task.consumes().forEach((item, count) -> consume(world, item, count));
         if (task.id().startsWith("event:")) {
             world.events.remove(task.id().split(":", 3)[1]);
             return;
@@ -131,6 +131,19 @@ final class GraphSimulation {
         }
         int yield = world.graph.way(task.id()).orElseThrow().yield();
         world.stock.merge(task.makes(), yield, Integer::sum);
+    }
+
+    private static void consume(GraphWorld world, String item, int count) {
+        if (!world.graph.isGroup(item)) {
+            world.stock.merge(item, -count, Integer::sum);
+            return;
+        }
+        int left = count;
+        for (String member : world.graph.members(item)) {
+            int take = Math.min(left, Math.max(0, world.stock.getOrDefault(member, 0)));
+            world.stock.merge(member, -take, Integer::sum);
+            left -= take;
+        }
     }
 
     private static String top(Map<String, Integer> streak) {
