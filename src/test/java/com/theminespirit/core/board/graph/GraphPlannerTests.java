@@ -304,18 +304,6 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_TradingPost_VillagerJobsInDevelopment() {
-        GraphWorld world =
-                GraphWorld.settled().built("trading_post", Built.BUILT).with("emerald", 8);
-        world.stage = 4;
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("assign_librarian").map(task -> !task.implemented()).orElse(false),
-                "Занятия жителей (библиотекарь) стоят как «в разработке»: " + plan.task("assign_librarian"));
-    }
-
-    @Test
     void plan_ArmorNorms_PerSpiritAndByStage() {
         GraphWorld one = GraphWorld.settled();
         one.stage = 3;
@@ -429,6 +417,121 @@ class GraphPlannerTests {
                         .orElse(false),
                 "Открытый биом без ресурса ставит тропинку до него (прокладка — «в разработке»): "
                         + plan.task("building:path_desert"));
+    }
+
+    @Test
+    void plan_SourceDepleted_AsksRouteMarker() {
+        GraphPlan plan = GraphWorld.settled().event("source_depleted:sand").plan();
+
+        assertTrue(
+                plan.notices().stream().anyMatch(notice -> "route_desert".equals(notice.building())),
+                "Песок кончился — стратегу уходит просьба перенести маршрут route_desert: " + plan.notices());
+    }
+
+    @Test
+    void plan_RouteRetarget_PostsRebuildTask() {
+        GraphPlan plan = GraphWorld.settled().event("route_retarget_desert").plan();
+        GraphPlan.Task task = plan.task("event:route_retarget_desert:rebuild_route_desert")
+                .orElseThrow(() -> new AssertionError("Нет задания перестроить дорогу: " + plan.tasks()));
+
+        assertTrue(
+                task.consumes().containsKey("dirt") && task.consumes().containsKey("cobblestone"),
+                "Перестройка маршрута — задание BUILD_STREETS по земле и булыжнику: " + task);
+        assertTrue(
+                plan.notices().stream().anyMatch(notice -> "route_desert".equals(notice.building())),
+                "Просьба игрока двигает точку маршрута notice-ом стратегу: " + plan.notices());
+    }
+
+    @Test
+    void plan_PlayerDiedFar_CollectGuardShelter() {
+        GraphPlan plan = GraphWorld.settled().event("player_died").plan();
+
+        for (String task : List.of("collect_player_drops", "guard_death_site", "build_death_shelter")) {
+            assertTrue(
+                    plan.task("event:player_died:" + task).isPresent(),
+                    "Гибель игрока вдали от базы — задание " + task + ": " + plan.tasks());
+        }
+        assertTrue(
+                plan.advice().stream().anyMatch(advice -> "death_site_bound_spirits_only".equals(advice.rule()))
+                        && plan.advice().stream()
+                                .anyMatch(advice -> "wait_strategist_return_or_wait_player".equals(advice.rule())),
+                "Место гибели держат только духи похода, дальше решает стратег: " + plan.advice());
+    }
+
+    @Test
+    void plan_PlayerCraftOrder_CraftAtPlayerPriorityAndReport() {
+        GraphPlan plan = GraphWorld.settled().event("player_craft_order").plan();
+
+        assertTrue(
+                plan.task("event:player_craft_order:craft_player_order").isPresent(),
+                "Заказ крафта из вкладки «Крафт» — задание собрать заказ: " + plan.tasks());
+        assertTrue(
+                plan.advice().stream().anyMatch(advice -> "report_order_done_in_chat".equals(advice.rule()))
+                        && plan.advice().stream()
+                                .anyMatch(advice -> "order_shortage_as_player_priority".equals(advice.rule())),
+                "Недостача заказа идёт с приоритетом игрока, о готовности дух пишет в чат: " + plan.advice());
+    }
+
+    @Test
+    void plan_PlayerDiedNearBase_CollectAndReturn() {
+        GraphPlan plan = GraphWorld.settled().event("player_died_near_base").plan();
+
+        assertTrue(
+                plan.task("event:player_died_near_base:collect_player_drops").isPresent()
+                        && plan.task("event:player_died_near_base:return_to_base")
+                                .isPresent()
+                        && plan.task("event:player_died_near_base:guard_death_site")
+                                .isEmpty(),
+                "Ближе 100 блоков к базе — собрать вещи и вернуться, без укрытия: " + plan.tasks());
+    }
+
+    @Test
+    void plan_OcelotLacking_TrustWithRawFishInDevelopment() {
+        GraphWorld world = GraphWorld.settled().with("raw_cod", 4).with("ocelot", 0);
+        world.stage = 2;
+        world.world.add("biome:jungle");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("trust_ocelot").map(task -> !task.implemented()).orElse(false),
+                "Оцелоту не хватает — доверие сырой рыбой в джунглях, «в разработке»: " + plan.task("trust_ocelot"));
+        assertTrue(
+                !GraphWorld.GRAPH.implemented("breed_ocelot") && !GraphWorld.GRAPH.implemented("breed_wolf"),
+                "Размножение питомцев внесено как «в разработке»");
+    }
+
+    @Test
+    void plan_NetherExpedition_NeedsPartyArmorPotionsFood() {
+        GraphWorld world = GraphWorld.settled()
+                .built("portal_lit", Built.BUILT)
+                .built("route_blaze_spawner", Built.BUILT)
+                .with("blaze_rod", 0);
+        world.stage = 4;
+        world.world.add("nether");
+        world.event("nether_expedition");
+        GraphPlan plan = world.plan();
+        SupplyGraph.Way expedition =
+                GraphWorld.GRAPH.way("expedition_blaze_rod").orElseThrow();
+
+        assertTrue(
+                plan.task("expedition_blaze_rod")
+                        .map(task -> !task.implemented())
+                        .orElse(false),
+                "Экспедиция за стержнем ифрита стоит как «в разработке»: " + plan.task("expedition_blaze_rod"));
+        assertTrue(
+                expedition.needs().keySet().containsAll(List.of("expedition_party", "#armor", "food")),
+                "Экспедиции нужны отряд, броня на каждого, мечи, зелья и еда: " + expedition.needs());
+        assertTrue(
+                plan.advice().stream().anyMatch(advice -> "expedition_only_with_player".equals(advice.rule())),
+                "Пока экспедиции идут только с игроком: " + plan.advice());
+        assertTrue(
+                !GraphWorld.GRAPH.implemented("route_end_fortress")
+                        && GraphWorld.GRAPH
+                                        .buildings()
+                                        .get("route_end_fortress")
+                                        .stage()
+                                == 4,
+                "Маршрут до крепости Края внесён на этап 4 и помечен «в разработке»");
     }
 
     @Test

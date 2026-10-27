@@ -3,7 +3,7 @@
 # Запуск: bash stage4_hall.sh <family> <level> | awk -f grid.awk > <scheme>.txt
 set -euo pipefail
 source "$(dirname "$0")/stage4lib.sh"
-family=${1:?семья: tavern|infirmary|library|trading_post|alchemy|enchant_room}
+family=${1:?семья: tavern|infirmary|library|alchemy|enchant_room}
 level=${2:?уровень 1..4}
 case $family in
 tavern)
@@ -22,11 +22,6 @@ library)
   case $level in 1) W=9; D=11;; 2) W=13; D=15;; 3) W=17; D=17;; 4) W=19; D=19;; esac
   type=social; band=Q; scheme=library_$level; stage=4
   name="Библиотека, уровень $level"
-  ;;
-trading_post)
-  case $level in 1) W=9; D=9;; 2) W=13; D=11;; 3) W=13; D=13;; 4) W=13; D=13;; esac
-  type=social; band=b; scheme=trading_post_$level; stage=4
-  name="Торговый пост, уровень $level"
   ;;
 alchemy)
   case $level in 1) W=7; D=9;; 2) W=11; D=11;; 3) W=11; D=11;; 4) W=13; D=13;; esac
@@ -209,15 +204,6 @@ library)
   echo "set 1 $ex $((D - 3)) l"; echo "set 1 $ex 3 l"
   echo "set 1 2 2 C"; echo "set 1 $((W - 1)) $((D - 2)) b"
   if [ "$level" -ge 4 ]; then for z in 3 5 7 9 11 13; do echo "set 1 3 $z P"; echo "set 1 $((W - 2)) $z O"; done; fi
-  ;;
-trading_post)
-  echo "box 1 1 3 $((W - 2)) $((D - 2)) $((D - 2)) b"; echo "box 2 2 3 $((W - 2)) $((D - 2)) $((D - 2)) q"
-  echo "set 1 2 3 C"; echo "set 1 $((W - 1)) 3 C"; echo "set 1 2 $((D - 3)) b"; echo "set 1 $((W - 1)) $((D - 3)) b"
-  echo "set 1 2 2 T"; echo "set 1 $((W - 1)) 2 M"
-  echo "set 2 2 2 P"; echo "set 2 $((W - 1)) 2 O"
-  if [ "$level" -ge 2 ]; then
-    echo "box 1 1 3 $((W - 2)) $((D / 2)) $((D / 2)) b"; echo "box 2 2 3 $((W - 2)) $((D / 2)) $((D / 2)) q"
-  fi
   ;;
 alchemy)
   echo "set 1 2 3 v"; echo "set 1 2 6 v"; echo "set 1 3 3 V"; echo "set 1 3 6 V"

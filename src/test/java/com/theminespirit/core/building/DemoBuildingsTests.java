@@ -91,7 +91,6 @@ class DemoBuildingsTests {
                         "infirmary",
                         "library",
                         "training_yard",
-                        "trading_post",
                         "alchemy"),
                 DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "

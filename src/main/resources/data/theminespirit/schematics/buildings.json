@@ -62,7 +62,6 @@
   {"id": "infirmary", "name": "Лазарет", "type": "social", "levels": [{"level": 1, "scheme": "infirmary_1"}, {"level": 2, "scheme": "infirmary_2"}, {"level": 3, "scheme": "infirmary_3"}, {"level": 4, "scheme": "infirmary_4"}]},
   {"id": "library", "name": "Библиотека", "type": "social", "levels": [{"level": 1, "scheme": "library_1"}, {"level": 2, "scheme": "library_2"}, {"level": 3, "scheme": "library_3"}, {"level": 4, "scheme": "library_4"}]},
   {"id": "training_yard", "name": "Тренировочный двор", "type": "social", "levels": [{"level": 1, "scheme": "training_yard_1"}, {"level": 2, "scheme": "training_yard_2"}, {"level": 3, "scheme": "training_yard_3"}, {"level": 4, "scheme": "training_yard_4"}]},
-  {"id": "trading_post", "name": "Торговый пост", "type": "social", "levels": [{"level": 1, "scheme": "trading_post_1"}, {"level": 2, "scheme": "trading_post_2"}, {"level": 3, "scheme": "trading_post_3"}, {"level": 4, "scheme": "trading_post_4"}]},
   {"id": "alchemy", "name": "Алхимическая лаборатория", "type": "craft", "levels": [{"level": 1, "scheme": "alchemy_1"}, {"level": 2, "scheme": "alchemy_2"}, {"level": 3, "scheme": "alchemy_3"}, {"level": 4, "scheme": "alchemy_4"}]}
  ]
 }

@@ -322,14 +322,14 @@
       "stage": 3
     },
     "nether_wart": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 25,
       "stage": 3,
       "implemented": false
     },
     "blaze_rod": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 25,
       "stage": 3,
@@ -1672,36 +1672,6 @@
       "base": 30,
       "stage": 3
     },
-    "villager_farmer": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_librarian": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_smith": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_butcher": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_cartographer": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
     "chainmail_armor": {
       "xmin": 1,
       "k": 1,
@@ -1815,6 +1785,18 @@
       "base": 25,
       "stage": 2
     },
+    "ocelot": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "raw_salmon": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
     "cat": {
       "xmin": 1,
       "k": 1,
@@ -1838,6 +1820,19 @@
       "k": 1,
       "base": 25,
       "stage": 2
+    },
+    "expedition_party": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "expedition_sword": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3,
+      "perSpirit": true
     }
   },
   "buildings": {
@@ -3271,19 +3266,6 @@
       },
       "estimate": true
     },
-    "trading_post": {
-      "case": "BUILD_HOUSE",
-      "stage": 4,
-      "base": 40,
-      "materials": {
-        "oak_log": 16,
-        "oak_planks": 48,
-        "oak_fence": 16,
-        "barrel": 4,
-        "torch": 4
-      },
-      "estimate": true
-    },
     "path_desert": {
       "case": "BUILD_STREETS",
       "stage": 1,
@@ -3331,6 +3313,100 @@
       "optional": true,
       "estimate": true,
       "implemented": false
+    },
+    "route_desert": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "sand": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "biome:desert"
+    },
+    "route_snow": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "biome:snowy"
+    },
+    "route_dirt": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "biome:plains"
+    },
+    "route_nether_fortress": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 16
+      },
+      "requires": ["portal_lit"],
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "nether"
+    },
+    "route_blaze_spawner": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 16
+      },
+      "requires": ["portal_lit"],
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "nether"
+    },
+    "route_bastion": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 16
+      },
+      "requires": ["portal_lit"],
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "nether"
+    },
+    "route_end_fortress": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "ender_eye": 1
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "end"
     }
   },
   "ways": [
@@ -7258,66 +7334,6 @@
       "implemented": false
     },
     {
-      "id": "assign_farmer",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_farmer",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_librarian",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_librarian",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_smith",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_smith",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_butcher",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_butcher",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_cartographer",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_cartographer",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
       "id": "craft_chainmail_armor",
       "case": "GATHER_MATERIALS",
       "makes": "chainmail_armor",
@@ -7541,6 +7557,99 @@
       "implemented": true
     },
     {
+      "id": "catch_raw_salmon",
+      "case": "GATHER_MATERIALS",
+      "makes": "raw_salmon",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "water",
+      "implemented": false
+    },
+    {
+      "id": "trust_ocelot",
+      "case": "GATHER_MATERIALS",
+      "makes": "ocelot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 2
+      },
+      "world": "biome:jungle",
+      "implemented": false
+    },
+    {
+      "id": "trust_ocelot_salmon",
+      "case": "GATHER_MATERIALS",
+      "makes": "ocelot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_salmon": 2
+      },
+      "world": "biome:jungle",
+      "implemented": false
+    },
+    {
+      "id": "breed_wolf",
+      "case": "BREED_ANIMALS",
+      "makes": "wolf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "beef": 2
+      },
+      "building": "kennel",
+      "needs": {
+        "wolf": 2
+      },
+      "implemented": false
+    },
+    {
+      "id": "breed_wolf_pork",
+      "case": "BREED_ANIMALS",
+      "makes": "wolf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "porkchop": 2
+      },
+      "building": "kennel",
+      "needs": {
+        "wolf": 2
+      },
+      "implemented": false
+    },
+    {
+      "id": "breed_cat",
+      "case": "BREED_ANIMALS",
+      "makes": "cat",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 2
+      },
+      "building": "kennel",
+      "needs": {
+        "cat": 2
+      },
+      "implemented": false
+    },
+    {
+      "id": "breed_ocelot",
+      "case": "BREED_ANIMALS",
+      "makes": "ocelot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 2
+      },
+      "needs": {
+        "ocelot": 2
+      },
+      "world": "biome:jungle",
+      "implemented": false
+    },
+    {
       "id": "tame_cat",
       "case": "GATHER_MATERIALS",
       "makes": "cat",
@@ -7612,6 +7721,90 @@
       },
       "building": "composter",
       "implemented": true
+    },
+    {
+      "id": "form_expedition_party",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "expedition_party",
+      "yield": 1,
+      "weight": 1.0,
+      "implemented": false
+    },
+    {
+      "id": "craft_expedition_sword",
+      "case": "GATHER_MATERIALS",
+      "makes": "expedition_sword",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 2,
+        "stick": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "expedition_blaze_rod",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "blaze_rod",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+
+      },
+      "needs": {
+        "expedition_party": 3,
+        "#armor": 3,
+        "expedition_sword": 3,
+        "potion_fire_resistance": 2,
+        "potion_healing": 2,
+        "food": 8
+      },
+      "building": "route_blaze_spawner",
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "expedition_nether_wart",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "nether_wart",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+
+      },
+      "needs": {
+        "expedition_party": 3,
+        "#armor": 3,
+        "expedition_sword": 3,
+        "potion_fire_resistance": 2,
+        "potion_healing": 2,
+        "food": 8
+      },
+      "building": "route_nether_fortress",
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "expedition_quartz",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "nether_quartz",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+
+      },
+      "needs": {
+        "expedition_party": 3,
+        "#armor": 3,
+        "expedition_sword": 3,
+        "potion_fire_resistance": 2,
+        "potion_healing": 2,
+        "food": 8
+      },
+      "building": "route_nether_fortress",
+      "world": "nether",
+      "implemented": false
     }
   ],
   "edges": [
@@ -7917,7 +8110,8 @@
     },
     "biome_found:desert": {
       "push": {
-        "building:path_desert": 50
+        "building:path_desert": 50,
+        "building:route_desert": 40
       },
       "advice": [
         "mark_on_map",
@@ -7926,7 +8120,8 @@
     },
     "biome_found:plains": {
       "push": {
-        "building:path_plains": 50
+        "building:path_plains": 50,
+        "building:route_dirt": 40
       },
       "advice": [
         "mark_on_map",
@@ -7935,7 +8130,8 @@
     },
     "biome_found:forest": {
       "push": {
-        "building:path_forest": 50
+        "building:path_forest": 50,
+        "building:route_dirt": 40
       },
       "advice": [
         "mark_on_map",
@@ -7944,7 +8140,8 @@
     },
     "biome_found:snowy": {
       "push": {
-        "building:path_snowy": 50
+        "building:path_snowy": 50,
+        "building:route_snow": 40
       },
       "advice": [
         "mark_on_map",
@@ -7979,6 +8176,177 @@
       },
       "advice": [
         "fish_and_crops_better"
+      ]
+    },
+    "source_depleted:sand": {
+      "push": {
+        "building:route_desert": 60
+      },
+      "advice": [
+        "retarget_route",
+        "mark_on_map"
+      ]
+    },
+    "source_depleted:snow": {
+      "push": {
+        "building:route_snow": 60
+      },
+      "advice": [
+        "retarget_route",
+        "mark_on_map"
+      ]
+    },
+    "source_depleted:dirt": {
+      "push": {
+        "building:route_dirt": 60
+      },
+      "advice": [
+        "retarget_route",
+        "mark_on_map"
+      ]
+    },
+    "route_retarget": {
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "route_retarget_desert": {
+      "tasks": [
+        {
+          "id": "rebuild_route_desert",
+          "case": "BUILD_STREETS",
+          "base": 60,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "push": {
+        "building:route_desert": 50
+      },
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "route_retarget_snow": {
+      "tasks": [
+        {
+          "id": "rebuild_route_snow",
+          "case": "BUILD_STREETS",
+          "base": 60,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "push": {
+        "building:route_snow": 50
+      },
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "route_retarget_dirt": {
+      "tasks": [
+        {
+          "id": "rebuild_route_dirt",
+          "case": "BUILD_STREETS",
+          "base": 60,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "push": {
+        "building:route_dirt": 50
+      },
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "player_died": {
+      "tasks": [
+        {
+          "id": "collect_player_drops",
+          "case": "COLLECT_DROPS",
+          "base": 95,
+          "consumes": {}
+        },
+        {
+          "id": "guard_death_site",
+          "case": "ACTIVITY_GUARD",
+          "base": 90,
+          "consumes": {}
+        },
+        {
+          "id": "build_death_shelter",
+          "case": "BUILD_FENCE",
+          "base": 85,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "push": {
+        "food": 20,
+        "tool:sword": 20,
+        "dirt": 15,
+        "cobblestone": 10
+      },
+      "advice": [
+        "death_site_bound_spirits_only",
+        "guard_death_site_radius_20_50",
+        "one_builds_others_guard",
+        "wait_strategist_return_or_wait_player"
+      ]
+    },
+    "player_died_near_base": {
+      "tasks": [
+        {
+          "id": "collect_player_drops",
+          "case": "COLLECT_DROPS",
+          "base": 95,
+          "consumes": {}
+        },
+        {
+          "id": "return_to_base",
+          "case": "ACTIVITY_RETURN",
+          "base": 90,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "death_site_bound_spirits_only",
+        "return_to_base_if_under_100_blocks"
+      ]
+    },
+    "player_craft_order": {
+      "tasks": [
+        {
+          "id": "craft_player_order",
+          "case": "ACTIVITY_CRAFT",
+          "base": 100,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "do_player_request",
+        "order_shortage_as_player_priority",
+        "report_order_done_in_chat"
+      ]
+    },
+    "nether_expedition": {
+      "push": {
+        "blaze_rod": 60,
+        "nether_wart": 60,
+        "nether_quartz": 60
+      },
+      "advice": [
+        "expedition_only_with_player"
       ]
     }
   },
@@ -8053,6 +8421,13 @@
       "dark_oak_slab",
       "cherry_slab",
       "mangrove_slab"
+    ],
+    "#armor": [
+      "leather_armor",
+      "chainmail_armor",
+      "iron_armor",
+      "diamond_armor",
+      "netherite_armor"
     ]
   },
   "blockItems": {
