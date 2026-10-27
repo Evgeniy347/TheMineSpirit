@@ -1,0 +1,24 @@
+# alchemy_1 clockwise_180, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
+заход 1: polished_andesite×98, polished_andesite_stairs×1, dark_oak_log×24, stone_bricks×80, glass×6, dark_oak_planks×155, dark_oak_fence×18, deepslate_brick_stairs×60 | слоты: этап 3, позже 9
+стоянка 3,0,12 на земле: поставлено 14
+стоянка 5,1,10 на polished_andesite (высота 1): поставлено 18
+стоянка 3,1,7 на polished_andesite (высота 1): поставлено 25
+стоянка 3,1,4 на polished_andesite (высота 1): поставлено 21
+стоянка 5,1,3 на polished_andesite (высота 1): поставлено 19
+стоянка 2,1,3 на polished_andesite (высота 1): поставлено 32
+стоянка 5,1,6 на polished_andesite (высота 1): поставлено 34
+стоянка 3,1,6 на polished_andesite (высота 1): поставлено 9
+стоянка 5,1,3 на polished_andesite (высота 1): поставлено 137
+стоянка 3,1,6 на polished_andesite (высота 1): поставлено 76
+стоянка 5,1,8 на polished_andesite (высота 1): поставлено 24
+стоянка 2,1,3 на polished_andesite (высота 1): поставлено 12
+стоянка 3,1,7 на polished_andesite (высота 1): поставлено 18
+стоянка 3,1,6 на polished_andesite (высота 1): поставлено 3
+заход 2: bookshelf×8, barrel×1, water_cauldron×1, red_carpet×6, dark_oak_door×1, cauldron×2, crafting_table×1, brewing_stand×2, chest×1, potted_dandelion×1, potted_poppy×1, lantern×4, chain×4, oak_leaves×18 | слоты: этап 14, позже 0
+стоянка 3,0,12 на земле: поставлено 4
+стоянка 3,1,5 на polished_andesite (высота 1): поставлено 35
+стоянка 5,1,3 на polished_andesite (высота 1): поставлено 6
+стоянка 6,2,7 на brewing_stand (высота 2): поставлено 3
+стоянка 2,1,3 на polished_andesite (высота 1): поставлено 2
+стоянка 2,0,11 на земле: поставлено 1
+итог: заходов 2, стоянок 20, на крыше 0, отказов отхода 0, не поставлено 0

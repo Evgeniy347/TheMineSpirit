@@ -1,0 +1,120 @@
+# training_yard_2 — тренировочный двор, уровень 2 (catalog-2.md): открытая площадка
+# с частоколом-оградой, соломенными чучелами, мишенями, стойкой оружия и фонарями на столбах.
+name: "Тренировочный двор, уровень 2"
+type: social
+stage: 3
+level: 2
+requires: training_yard_1
+size: 17x5x17   # Ш×В×Д
+entrance: 8,1,1
+exemptions:
+  - rule: roof
+    reason: "двор под открытым небом; крыша только над трибуной у уровня 4"
+legend:
+  'a': gravel
+  'c': stone_bricks
+  't': spruce_fence
+  'D': oak_fence_gate[facing=south,open=false]
+  'p': stone_brick_slab[type=bottom]
+  'h': hay_block
+  'j': carved_pumpkin
+  'A': anvil
+  'W': grindstone
+  'b': barrel[facing=up]
+  'L': stripped_dark_oak_log[axis=y]
+  '#': dark_oak_planks
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  'N': lantern[hanging=false]
+  'x': moss_carpet
+layers:
+  - y0 площадка и крыльцо: |
+      aaaaaaaapaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+  - y1 частокол, чучела, стойки: |
+      
+       tttttttDttttttt
+       txxxxxxxxxxxxxt
+       tbbxxxxxxxxxhxt
+       txxxxxxxxxxxbxt
+       txxxxxxxxxxxbxt
+       txxxxxxxxxxxxxt
+       txxxhxxxxxhxxxt
+       txxxxxxxxxxxxxt
+       txxxxxxxxxxxxxt
+       tWxxxxxxxxxxxxt
+       tAxxxxxxxxxxxxt
+       txxxxxxxxxxxxxt
+       txhxxxxxxxxxhxt
+       txxxxxxxxxxxxxt
+       ttttttttttttttt
+              .
+  - y2: |
+      
+         N   N     N
+      
+       N j         j N
+      
+      
+      
+       N   j     j   N
+      
+      
+      
+      
+      
+       N j         j N
+      
+         N   N     N
+              .
+  - y3: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              .
+  - y4 навес: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+              .

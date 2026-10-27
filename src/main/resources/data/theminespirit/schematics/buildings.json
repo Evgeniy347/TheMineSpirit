@@ -1,119 +1,904 @@
 {
  "buildings": [
-  {"id": "family_house", "name": "Дом семьи", "type": "housing", "levels": [
-   {"level": 1, "scheme": "family_house_1"}, {"level": 2, "scheme": "family_house_2"},
-   {"level": 3, "scheme": "family_house_3"}, {"level": 4, "scheme": "family_house_4"}]},
-  {"id": "player_house", "name": "Дом игрока", "type": "housing", "levels": [
-   {"level": 1, "scheme": "player_house_1"}, {"level": 2, "scheme": "player_house_2"},
-   {"level": 3, "scheme": "player_house_3"}, {"level": 4, "scheme": "player_house_4"}]},
-  {"id": "lamp", "name": "Светильник", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "torch_post"}, {"level": 2, "scheme": "lamp_2"}, {"level": 3, "scheme": "lamp_3"}]},
-  {"id": "hut", "name": "Хижина", "type": "housing", "levels": [{"level": 1, "scheme": "hut_1"}]},
-  {"id": "stone_house", "name": "Каменный дом", "type": "housing", "levels": [{"level": 0, "scheme": "stone_house"}]},
-  {"id": "storage_hut", "name": "Склад-хижина", "type": "storage", "levels": [{"level": 0, "scheme": "storage_hut"}]},
-  {"id": "storage", "name": "Склад", "type": "storage", "levels": [
-   {"level": 1, "scheme": "storage_v1"}, {"level": 2, "scheme": "storage_v2"},
-   {"level": 3, "scheme": "storage_v3"}, {"level": 4, "scheme": "storage_v4"}]},
-  {"id": "well", "name": "Колодец", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "well"}, {"level": 2, "scheme": "well_2"}]},
-  {"id": "plaza", "name": "Площадь", "type": "social", "levels": [
-   {"level": 1, "scheme": "plaza_1"}, {"level": 2, "scheme": "plaza_2"}, {"level": 3, "scheme": "plaza_3"}]},
-  {"id": "palisade_section", "name": "Палисад-секция", "type": "defense", "levels": [
-   {"level": 0, "scheme": "palisade_section"}]},
-  {"id": "fence_long", "name": "Забор: длинный прямой фрагмент", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_long"}]},
-  {"id": "fence_straight", "name": "Забор: прямой фрагмент", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_straight"}]},
-  {"id": "fence_post", "name": "Забор: столб", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_post"}]},
-  {"id": "fence_corner", "name": "Забор: угол 90°", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_corner"}]},
-  {"id": "fence_diagonal", "name": "Забор: диагональ", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_diagonal"}]},
-  {"id": "fence_corner45_left", "name": "Забор: угол 45° влево", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_corner45_left"}]},
-  {"id": "fence_corner45_right", "name": "Забор: угол 45° вправо", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_corner45_right"}]},
-  {"id": "fence_wicket", "name": "Забор: калитка", "type": "defense", "levels": [
-   {"level": 0, "scheme": "fence_wicket"}]},
-  {"id": "yard_1", "name": "Двор", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "yard_1"}]},
-  {"id": "yard_chest", "name": "Пара сундуков двора", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "yard_chest"}]},
-  {"id": "ground_torch", "name": "Факел на земле", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "ground_torch"}]},
-  {"id": "street5_straight", "name": "Улица 5: прямой участок", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street5_dirt"}, {"level": 2, "scheme": "street5_straight"}]},
-  {"id": "street5_turn", "name": "Улица 5: поворот 90°", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street5_dirt"}, {"level": 2, "scheme": "street5_turn"}]},
-  {"id": "street5_t", "name": "Улица 5: Т-перекрёсток", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street5_dirt"}, {"level": 2, "scheme": "street5_t"}]},
-  {"id": "street5_cross", "name": "Улица 5: перекрёсток «+»", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street5_dirt"}, {"level": 2, "scheme": "street5_cross"}]},
-  {"id": "street7_straight", "name": "Улица 7: прямой участок", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street7_dirt"}, {"level": 2, "scheme": "street7_straight"}]},
-  {"id": "street7_turn", "name": "Улица 7: поворот 90°", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street7_dirt"}, {"level": 2, "scheme": "street7_turn"}]},
-  {"id": "street7_t", "name": "Улица 7: Т-перекрёсток", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street7_dirt"}, {"level": 2, "scheme": "street7_t"}]},
-  {"id": "street7_cross", "name": "Улица 7: перекрёсток «+»", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street7_dirt"}, {"level": 2, "scheme": "street7_cross"}]},
-  {"id": "street_patch", "name": "Улица: заплатка", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "street_patch_dirt"}, {"level": 2, "scheme": "street_patch"}]},
-  {"id": "pen", "name": "Загон", "type": "farm", "levels": [
-   {"level": 1, "scheme": "pen_4x5"}, {"level": 2, "scheme": "pen_7x7"}, {"level": 3, "scheme": "pen_9x9"}]},
-  {"id": "orchard", "name": "Сад", "type": "farm", "levels": [
-   {"level": 1, "scheme": "orchard_1"}]},
-  {"id": "enchant_room", "name": "Чаровальня", "type": "craft", "levels": [
-   {"level": 1, "scheme": "enchant_room_v1"}, {"level": 2, "scheme": "enchant_room_v2"},
-   {"level": 3, "scheme": "enchant_room_v3"}]},
-  {"id": "mine_entrance", "name": "Вход в шахту", "type": "infrastructure", "levels": [
-   {"level": 1, "scheme": "mine_entrance_v1"}]},
-  {"id": "mine_descent", "name": "Спуск в шахту", "type": "underground", "levels": [
-   {"level": 1, "scheme": "mine_descent_v1"}]},
-  {"id": "mine_tunnel", "name": "Шахтный ход", "type": "underground", "levels": [
-   {"level": 1, "scheme": "mine_tunnel_v1"}]},
-  {"id": "barn", "name": "Амбар", "type": "storage", "levels": [
-   {"level": 1, "scheme": "barn_1"}]},
-  {"id": "field", "name": "Пашня", "type": "farm", "levels": [
-   {"level": 1, "scheme": "field_1"}]},
-  {"id": "field_wheat", "name": "Пшеничное поле", "type": "farm", "levels": [
-   {"level": 1, "scheme": "field_wheat_1"}]},
-  {"id": "field_carrot", "name": "Морковное поле", "type": "farm", "levels": [
-   {"level": 1, "scheme": "field_carrot_1"}]},
-  {"id": "field_potato", "name": "Картофельное поле", "type": "farm", "levels": [
-   {"level": 1, "scheme": "field_potato_1"}]},
-  {"id": "field_beetroot", "name": "Свекольное поле", "type": "farm", "levels": [
-   {"level": 1, "scheme": "field_beetroot_1"}]},
-  {"id": "sugar_cane", "name": "Плантация тростника", "type": "farm", "levels": [
-   {"level": 1, "scheme": "sugar_cane_1"}]},
-  {"id": "melon", "name": "Бахча дыни", "type": "farm", "levels": [
-   {"level": 1, "scheme": "melon_1"}]},
-  {"id": "pumpkin", "name": "Бахча тыквы", "type": "farm", "levels": [
-   {"level": 1, "scheme": "pumpkin_1"}]},
-  {"id": "cocoa", "name": "Плантация какао", "type": "farm", "levels": [
-   {"level": 1, "scheme": "cocoa_1"}]},
-  {"id": "berries", "name": "Ягодник", "type": "farm", "levels": [
-   {"level": 1, "scheme": "berries_1"}]},
-  {"id": "lumber_yard", "name": "Лесопилка", "type": "craft", "levels": [
-   {"level": 1, "scheme": "lumber_yard_1"}]},
-  {"id": "workshop", "name": "Мастерская", "type": "craft", "levels": [
-   {"level": 1, "scheme": "workshop_1"}]},
-  {"id": "forge", "name": "Кузница", "type": "craft", "levels": [
-   {"level": 1, "scheme": "forge_1"}]},
-  {"id": "bakery", "name": "Пекарня", "type": "food", "levels": [
-   {"level": 1, "scheme": "bakery_1"}]},
-  {"id": "apiary", "name": "Пасека", "type": "farm", "levels": [
-   {"level": 1, "scheme": "apiary_1"}]},
-  {"id": "kennel", "name": "Псарня", "type": "pet", "levels": [
-   {"level": 1, "scheme": "kennel_1"}]},
-  {"id": "stable", "name": "Конюшня", "type": "pet", "levels": [
-   {"level": 1, "scheme": "stable_1"}]},
-  {"id": "barracks", "name": "Казарма", "type": "housing", "levels": [
-   {"level": 1, "scheme": "barracks_1"}]},
-  {"id": "weaver", "name": "Ткацкая", "type": "craft", "levels": [
-   {"level": 1, "scheme": "weaver_1"}]},
-  {"id": "portal_hall", "name": "Зал портала", "type": "fortified", "levels": [
-   {"level": 1, "scheme": "portal_hall_1"}]}
+  {
+   "id": "family_house",
+   "name": "Дом семьи",
+   "type": "housing",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "family_house_1"
+    },
+    {
+     "level": 2,
+     "scheme": "family_house_2"
+    },
+    {
+     "level": 3,
+     "scheme": "family_house_3"
+    },
+    {
+     "level": 4,
+     "scheme": "family_house_4"
+    }
+   ]
+  },
+  {
+   "id": "player_house",
+   "name": "Дом игрока",
+   "type": "housing",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "player_house_1"
+    },
+    {
+     "level": 2,
+     "scheme": "player_house_2"
+    },
+    {
+     "level": 3,
+     "scheme": "player_house_3"
+    },
+    {
+     "level": 4,
+     "scheme": "player_house_4"
+    }
+   ]
+  },
+  {
+   "id": "lamp",
+   "name": "Светильник",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "torch_post"
+    },
+    {
+     "level": 2,
+     "scheme": "lamp_2"
+    },
+    {
+     "level": 3,
+     "scheme": "lamp_3"
+    }
+   ]
+  },
+  {
+   "id": "hut",
+   "name": "Хижина",
+   "type": "housing",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "hut_1"
+    }
+   ]
+  },
+  {
+   "id": "stone_house",
+   "name": "Каменный дом",
+   "type": "housing",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "stone_house"
+    }
+   ]
+  },
+  {
+   "id": "storage_hut",
+   "name": "Склад-хижина",
+   "type": "storage",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "storage_hut"
+    }
+   ]
+  },
+  {
+   "id": "storage",
+   "name": "Склад",
+   "type": "storage",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "storage_v1"
+    },
+    {
+     "level": 2,
+     "scheme": "storage_v2"
+    },
+    {
+     "level": 3,
+     "scheme": "storage_v3"
+    },
+    {
+     "level": 4,
+     "scheme": "storage_v4"
+    }
+   ]
+  },
+  {
+   "id": "well",
+   "name": "Колодец",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "well"
+    },
+    {
+     "level": 2,
+     "scheme": "well_2"
+    }
+   ]
+  },
+  {
+   "id": "plaza",
+   "name": "Площадь",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "plaza_1"
+    },
+    {
+     "level": 2,
+     "scheme": "plaza_2"
+    },
+    {
+     "level": 3,
+     "scheme": "plaza_3"
+    }
+   ]
+  },
+  {
+   "id": "palisade_section",
+   "name": "Палисад-секция",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "palisade_section"
+    }
+   ]
+  },
+  {
+   "id": "fence_long",
+   "name": "Забор: длинный прямой фрагмент",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_long"
+    }
+   ]
+  },
+  {
+   "id": "fence_straight",
+   "name": "Забор: прямой фрагмент",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_straight"
+    }
+   ]
+  },
+  {
+   "id": "fence_post",
+   "name": "Забор: столб",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_post"
+    }
+   ]
+  },
+  {
+   "id": "fence_corner",
+   "name": "Забор: угол 90°",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_corner"
+    }
+   ]
+  },
+  {
+   "id": "fence_diagonal",
+   "name": "Забор: диагональ",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_diagonal"
+    }
+   ]
+  },
+  {
+   "id": "fence_corner45_left",
+   "name": "Забор: угол 45° влево",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_corner45_left"
+    }
+   ]
+  },
+  {
+   "id": "fence_corner45_right",
+   "name": "Забор: угол 45° вправо",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_corner45_right"
+    }
+   ]
+  },
+  {
+   "id": "fence_wicket",
+   "name": "Забор: калитка",
+   "type": "defense",
+   "levels": [
+    {
+     "level": 0,
+     "scheme": "fence_wicket"
+    }
+   ]
+  },
+  {
+   "id": "yard_1",
+   "name": "Двор",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "yard_1"
+    }
+   ]
+  },
+  {
+   "id": "yard_chest",
+   "name": "Пара сундуков двора",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "yard_chest"
+    }
+   ]
+  },
+  {
+   "id": "ground_torch",
+   "name": "Факел на земле",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "ground_torch"
+    }
+   ]
+  },
+  {
+   "id": "street5_straight",
+   "name": "Улица 5: прямой участок",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street5_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street5_straight"
+    }
+   ]
+  },
+  {
+   "id": "street5_turn",
+   "name": "Улица 5: поворот 90°",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street5_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street5_turn"
+    }
+   ]
+  },
+  {
+   "id": "street5_t",
+   "name": "Улица 5: Т-перекрёсток",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street5_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street5_t"
+    }
+   ]
+  },
+  {
+   "id": "street5_cross",
+   "name": "Улица 5: перекрёсток «+»",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street5_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street5_cross"
+    }
+   ]
+  },
+  {
+   "id": "street7_straight",
+   "name": "Улица 7: прямой участок",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street7_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street7_straight"
+    }
+   ]
+  },
+  {
+   "id": "street7_turn",
+   "name": "Улица 7: поворот 90°",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street7_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street7_turn"
+    }
+   ]
+  },
+  {
+   "id": "street7_t",
+   "name": "Улица 7: Т-перекрёсток",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street7_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street7_t"
+    }
+   ]
+  },
+  {
+   "id": "street7_cross",
+   "name": "Улица 7: перекрёсток «+»",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street7_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street7_cross"
+    }
+   ]
+  },
+  {
+   "id": "street_patch",
+   "name": "Улица: заплатка",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "street_patch_dirt"
+    },
+    {
+     "level": 2,
+     "scheme": "street_patch"
+    }
+   ]
+  },
+  {
+   "id": "pen",
+   "name": "Загон",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "pen_4x5"
+    },
+    {
+     "level": 2,
+     "scheme": "pen_7x7"
+    },
+    {
+     "level": 3,
+     "scheme": "pen_9x9"
+    }
+   ]
+  },
+  {
+   "id": "orchard",
+   "name": "Сад",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "orchard_1"
+    }
+   ]
+  },
+  {
+   "id": "enchant_room",
+   "name": "Чаровальня",
+   "type": "craft",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "enchant_room_v1"
+    },
+    {
+     "level": 2,
+     "scheme": "enchant_room_v2"
+    },
+    {
+     "level": 3,
+     "scheme": "enchant_room_v3"
+    },
+    {
+     "level": 4,
+     "scheme": "enchant_room_v4"
+    }
+   ]
+  },
+  {
+   "id": "mine_entrance",
+   "name": "Вход в шахту",
+   "type": "infrastructure",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "mine_entrance_v1"
+    }
+   ]
+  },
+  {
+   "id": "mine_descent",
+   "name": "Спуск в шахту",
+   "type": "underground",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "mine_descent_v1"
+    }
+   ]
+  },
+  {
+   "id": "mine_tunnel",
+   "name": "Шахтный ход",
+   "type": "underground",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "mine_tunnel_v1"
+    }
+   ]
+  },
+  {
+   "id": "barn",
+   "name": "Амбар",
+   "type": "storage",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "barn_1"
+    }
+   ]
+  },
+  {
+   "id": "field",
+   "name": "Пашня",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "field_1"
+    }
+   ]
+  },
+  {
+   "id": "field_wheat",
+   "name": "Пшеничное поле",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "field_wheat_1"
+    }
+   ]
+  },
+  {
+   "id": "field_carrot",
+   "name": "Морковное поле",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "field_carrot_1"
+    }
+   ]
+  },
+  {
+   "id": "field_potato",
+   "name": "Картофельное поле",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "field_potato_1"
+    }
+   ]
+  },
+  {
+   "id": "field_beetroot",
+   "name": "Свекольное поле",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "field_beetroot_1"
+    }
+   ]
+  },
+  {
+   "id": "sugar_cane",
+   "name": "Плантация тростника",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "sugar_cane_1"
+    }
+   ]
+  },
+  {
+   "id": "melon",
+   "name": "Бахча дыни",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "melon_1"
+    }
+   ]
+  },
+  {
+   "id": "pumpkin",
+   "name": "Бахча тыквы",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "pumpkin_1"
+    }
+   ]
+  },
+  {
+   "id": "cocoa",
+   "name": "Плантация какао",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "cocoa_1"
+    }
+   ]
+  },
+  {
+   "id": "berries",
+   "name": "Ягодник",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "berries_1"
+    }
+   ]
+  },
+  {
+   "id": "lumber_yard",
+   "name": "Лесопилка",
+   "type": "craft",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "lumber_yard_1"
+    }
+   ]
+  },
+  {
+   "id": "workshop",
+   "name": "Мастерская",
+   "type": "craft",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "workshop_1"
+    }
+   ]
+  },
+  {
+   "id": "forge",
+   "name": "Кузница",
+   "type": "craft",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "forge_1"
+    }
+   ]
+  },
+  {
+   "id": "bakery",
+   "name": "Пекарня",
+   "type": "food",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "bakery_1"
+    }
+   ]
+  },
+  {
+   "id": "apiary",
+   "name": "Пасека",
+   "type": "farm",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "apiary_1"
+    }
+   ]
+  },
+  {
+   "id": "kennel",
+   "name": "Псарня",
+   "type": "pet",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "kennel_1"
+    }
+   ]
+  },
+  {
+   "id": "stable",
+   "name": "Конюшня",
+   "type": "pet",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "stable_1"
+    }
+   ]
+  },
+  {
+   "id": "barracks",
+   "name": "Казарма",
+   "type": "housing",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "barracks_1"
+    }
+   ]
+  },
+  {
+   "id": "weaver",
+   "name": "Ткацкая",
+   "type": "craft",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "weaver_1"
+    }
+   ]
+  },
+  {
+   "id": "portal_hall",
+   "name": "Зал портала",
+   "type": "fortified",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "portal_hall_1"
+    }
+   ]
+  },
+  {
+   "id": "town_hall",
+   "name": "Ратуша",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "town_hall_1"
+    },
+    {
+     "level": 2,
+     "scheme": "town_hall_2"
+    },
+    {
+     "level": 3,
+     "scheme": "town_hall_3"
+    },
+    {
+     "level": 4,
+     "scheme": "town_hall_4"
+    }
+   ]
+  },
+  {
+   "id": "tavern",
+   "name": "Таверна",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "tavern_1"
+    },
+    {
+     "level": 2,
+     "scheme": "tavern_2"
+    },
+    {
+     "level": 3,
+     "scheme": "tavern_3"
+    },
+    {
+     "level": 4,
+     "scheme": "tavern_4"
+    }
+   ]
+  },
+  {
+   "id": "infirmary",
+   "name": "Лазарет",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "infirmary_1"
+    },
+    {
+     "level": 2,
+     "scheme": "infirmary_2"
+    },
+    {
+     "level": 3,
+     "scheme": "infirmary_3"
+    },
+    {
+     "level": 4,
+     "scheme": "infirmary_4"
+    }
+   ]
+  },
+  {
+   "id": "library",
+   "name": "Библиотека",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "library_1"
+    },
+    {
+     "level": 2,
+     "scheme": "library_2"
+    },
+    {
+     "level": 3,
+     "scheme": "library_3"
+    },
+    {
+     "level": 4,
+     "scheme": "library_4"
+    }
+   ]
+  },
+  {
+   "id": "training_yard",
+   "name": "Тренировочный двор",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "training_yard_1"
+    },
+    {
+     "level": 2,
+     "scheme": "training_yard_2"
+    },
+    {
+     "level": 3,
+     "scheme": "training_yard_3"
+    },
+    {
+     "level": 4,
+     "scheme": "training_yard_4"
+    }
+   ]
+  },
+  {
+   "id": "trading_post",
+   "name": "Торговый пост",
+   "type": "social",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "trading_post_1"
+    },
+    {
+     "level": 2,
+     "scheme": "trading_post_2"
+    },
+    {
+     "level": 3,
+     "scheme": "trading_post_3"
+    },
+    {
+     "level": 4,
+     "scheme": "trading_post_4"
+    }
+   ]
+  },
+  {
+   "id": "alchemy",
+   "name": "Алхимическая лаборатория",
+   "type": "craft",
+   "levels": [
+    {
+     "level": 1,
+     "scheme": "alchemy_1"
+    },
+    {
+     "level": 2,
+     "scheme": "alchemy_2"
+    },
+    {
+     "level": 3,
+     "scheme": "alchemy_3"
+    },
+    {
+     "level": 4,
+     "scheme": "alchemy_4"
+    }
+   ]
+  }
  ]
 }

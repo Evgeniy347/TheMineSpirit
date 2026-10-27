@@ -27,6 +27,7 @@ class BuildPlanSnapshotTests {
     private static final int SUPPLY_SIDE_OFFSET = 3;
     private static final SpiritReach REACH = new SpiritReach(3, 15, 3);
     private static final int PLAN_TOP_Y = 64;
+    private static final PresetLibrary LIBRARY = library();
 
     static Preset planned(Preset preset) {
         Schematic.Expanded expanded = preset.schematic().expand(PLAN_TOP_Y);
@@ -75,8 +76,7 @@ class BuildPlanSnapshotTests {
         return schemes;
     }
 
-    static BlockCoord supplyFeet(Preset preset, BuildRotation rotation) {
-        Preset buildable = planned(preset);
+    static BlockCoord supplyFeet(Preset buildable, BuildRotation rotation) {
         Schematic schematic = buildable.schematic();
         DemoPlacement.Door door = DemoPlacement.Door.of(buildable);
         BuildRotation.Cell cell = rotation.rotate(door.x(), door.z(), schematic.sizeX(), schematic.sizeZ());
@@ -91,6 +91,10 @@ class BuildPlanSnapshotTests {
 
     static BuildPlanner.Plan plan(Preset preset, BuildRotation rotation, BuildPlanner.Portion portion) {
         Preset buildable = planned(preset);
+        return planBuilt(buildable, rotation, portion);
+    }
+
+    private static BuildPlanner.Plan planBuilt(Preset buildable, BuildRotation rotation, BuildPlanner.Portion portion) {
         return BuildPlanner.plan(buildable.schematic(), rotation, supplyFeet(buildable, rotation), REACH, portion);
     }
 
@@ -98,16 +102,18 @@ class BuildPlanSnapshotTests {
     @MethodSource("schemes")
     void plans_EveryCatalogBuilding_MatchSnapshot(String scheme) throws IOException {
         boolean update = Boolean.getBoolean("theminespirit.updateSnapshots");
-        PresetLibrary library = library();
+        PresetLibrary library = LIBRARY;
         List<String> changed = new ArrayList<>();
         Optional<Preset> preset = library.byId(scheme);
         assertTrue(preset.isPresent(), "постройка каталога '" + scheme + "' без схемы: план не снять");
+        Preset buildable = planned(preset.get());
         for (BuildRotation rotation : BuildRotation.values()) {
             Path file = DIR.resolve(scheme + "-" + rotation.id() + ".txt");
             List<String> lines = new ArrayList<>();
             lines.add("# " + scheme + " " + rotation.id()
                     + ", порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3");
-            lines.addAll(plan(preset.get(), rotation, BuildPlanner.Portion.FILL).lines());
+            lines.addAll(
+                    planBuilt(buildable, rotation, BuildPlanner.Portion.FILL).lines());
             if (update) {
                 Files.createDirectories(DIR);
                 Files.writeString(file, String.join("\n", lines) + "\n", StandardCharsets.UTF_8);

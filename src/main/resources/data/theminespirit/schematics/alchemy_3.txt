@@ -1,0 +1,225 @@
+# alchemy_3 — Алхимическая лаборатория, уровень 3 (catalog-2.md, style.md): цоколь, каркас тёмного дуба, крыша из глубинного сланца
+# со свесом; внутри — назначение семьи, мебель у стен, свет без тёмных клеток.
+name: "Алхимическая лаборатория, уровень 3"
+type: craft
+stage: 4
+level: 3
+requires: alchemy_2
+size: 13x12x13   # Ш×В×Д
+entrance: 6,1,1
+legend:
+  'c': smooth_stone
+  'S': bricks
+  'a': polished_andesite
+  'L': dark_oak_log[axis=y]
+  '#': dark_oak_planks
+  'G': glass
+  'D': dark_oak_door[facing=south,hinge=left]
+  'p': smooth_stone_stairs[facing=south,half=bottom]
+  '1': deepslate_tile_stairs[facing=east,half=bottom]
+  '2': deepslate_tile_stairs[facing=west,half=bottom]
+  '3': deepslate_tile_stairs[facing=south,half=bottom]
+  '4': deepslate_tile_stairs[facing=north,half=bottom]
+  '_': deepslate_tile_slab[type=bottom]
+  't': dark_oak_fence
+  'q': dark_oak_pressure_plate
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  'n': dark_oak_stairs[facing=north,half=bottom]
+  's': dark_oak_stairs[facing=south,half=bottom]
+  '~': red_carpet
+  'm': white_carpet
+  'g': light_gray_carpet
+  'C': chest[facing=south]
+  'b': barrel[facing=up]
+  'Q': bookshelf
+  'l': lectern[facing=south]
+  'T': crafting_table
+  'F': furnace[facing=south]
+  'k': smoker[facing=south]
+  'u': water_cauldron[level=3]
+  'V': cauldron
+  'v': brewing_stand
+  'A': anvil
+  'W': grindstone
+  'M': cartography_table
+  'j': enchanting_table
+  'B': white_bed[facing=north]
+  'f': campfire[lit=true]
+  'h': hay_block
+  'P': potted_poppy
+  'O': potted_dandelion
+  'X': potted_azure_bluet
+  'H': lantern[hanging=true]
+  'N': lantern[hanging=false]
+  'z': chain[axis=y]
+  'x': oak_leaves
+layers:
+  - y0 цоколь и пол: |
+      aaaaaapaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+  - y1 зал: |
+      
+       LSSSLDLSSSL
+       S    ~  v S
+       SvVv ~ v CS
+       S   x~  V S
+       S    V    S
+       SvV  ~x  bS
+       S    ~    S
+       S    ~    S
+       ST   ~  u S
+       SQQQQQQQQQS
+       LSSSSSSSSSL
+            .
+  - y2: |
+      
+       LSGGLDLGGSL
+       S         S
+       G         G
+       G         G
+       S         S
+       S         S
+       S         S
+       G         G
+       G         G
+       SQPQQQQQOQS
+       LSGGSSSGGSL
+            .
+  - y3: |
+      
+       LSGGLSLGGSL
+       S         S
+       G         G
+       G         G
+       S         S
+       S         S
+       S         S
+       G         G
+       G         G
+       S         S
+       LSGGSSSGGSL
+            .
+  - y4: |
+      
+       LSSSLSLSSSL
+       S         S
+       S         S
+       S         S
+       S         S
+       S         S
+       S         S
+       S         S
+       S         S
+       S         S
+       LSSSSSSSSSL
+            .
+  - y5: |
+      
+       LSSSLSLSSSL
+       S         S
+       S H H   H S
+       S         S
+       S         S
+       S         S
+       S H H   H S
+       S H H   H S
+       S         S
+       S         S
+       LSSSSSSSSSL
+            .
+  - y6: |
+      
+       LSSSLSLSSSL
+       S         S
+       S z z   z S
+       S         S
+       S         S
+       S         S
+       S z z   z S
+       S z z   z S
+       S         S
+       S         S
+       LSSSSSSSSSL
+            .
+  - y7: |
+      #############
+      #############
+      #############
+      #############
+      #####GGG#####
+      #####GGG#####
+      #####GGG#####
+      #############
+      #############
+      #############
+      #############
+      #############
+      #############
+  - y8: |
+      txtxtxtxtxtxt
+      x13333333332x
+      t1#########2t
+      x1#########2x
+      t1#########2t
+      x1#########2x
+      t1#########2t
+      x1#########2x
+      t1#########2t
+      x1#########2x
+      t1#########2t
+      x14444444442x
+      txtxtxtxtxtxt
+  - y9: |
+      
+      
+        133333332
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        1#######2
+        144444442
+      
+            .
+  - y10: |
+      
+      
+      
+         1333332
+         1#####2
+         1#####2
+         1#####2
+         1#####2
+         1#####2
+         1444442
+      
+      
+            .
+  - y11: |
+      
+      
+      
+      
+          13332
+          1###2
+          1###2
+          1###2
+          14442
+      
+      
+      
+            .

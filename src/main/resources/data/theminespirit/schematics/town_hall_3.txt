@@ -1,0 +1,285 @@
+# town_hall_3 — ратуша, уровень 3 (catalog-2.md, style.md): двухзальный дом совета.
+# Цоколь и пол, каркас тёмного дуба, крыша из глубинного сланца со свесом и слуховыми окнами;
+# внутри — зал совета, длинный стол, кресла, кафедра-архив, колокол, свет без тёмных клеток.
+name: "Ратуша, уровень 3 (двухзальный дом совета)"
+type: social
+stage: 4
+level: 3
+requires: town_hall_2
+size: 17x12x19   # Ш×В×Д
+entrance: 8,1,1
+legend:
+  'c': smooth_stone
+  'S': bricks
+  'a': polished_andesite
+  'L': dark_oak_log[axis=y]
+  '#': dark_oak_planks
+  'G': glass
+  'D': dark_oak_door[facing=south,hinge=left]
+  'p': smooth_stone_stairs[facing=south,half=bottom]
+  '1': deepslate_tile_stairs[facing=east,half=bottom]
+  '2': deepslate_tile_stairs[facing=west,half=bottom]
+  '3': deepslate_tile_stairs[facing=south,half=bottom]
+  '4': deepslate_tile_stairs[facing=north,half=bottom]
+  '_': deepslate_tile_slab[type=bottom]
+  't': dark_oak_fence
+  'q': dark_oak_pressure_plate
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  'n': dark_oak_stairs[facing=north,half=bottom]
+  's': dark_oak_stairs[facing=south,half=bottom]
+  '~': red_carpet
+  'm': white_carpet
+  'B': bell[attachment=floor,facing=south]
+  'M': cartography_table
+  'Q': bookshelf
+  'l': lectern[facing=south]
+  'C': chest[facing=south]
+  'b': barrel[facing=up]
+  'P': potted_poppy
+  'O': potted_dandelion
+  'A': potted_azure_bluet
+  'v': oak_leaves
+  'z': chain[axis=y]
+  'H': lantern[hanging=true]
+layers:
+  - y0 цоколь и пол: |
+      aaaaaaaapaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+      aaaaaaaaaaaaaaaaa
+  - y1 зал совета: |
+      
+       LSSSLSSDLSSSLSL
+       SM~~~~~~~~~~Q~S
+       Sb~mmmmmmmmm~CS
+       Sb~tmmmmmnttnQS
+       L~etwmmmmmtt~~L
+       S~etwmmmmmtt~~S
+       S~etwmmmmmtt~~S
+       S~etwmmmmmmm~~S
+       L~etwmmmmmmm~~L
+       S~etwmmmmmmtt~S
+       S~SSSSmmSSSSS~S
+       S~~tmmmmmmmm~~S
+       L~~mmmmmmmmm~~L
+       S~~mmmmmmmmm~bS
+       SCBmlmmmmlmm~OS
+       SPQQQQQQQQQQQBS
+       LSSSLSSSLSSSLSL
+              .
+  - y2: |
+      
+       LSGGLSSDLSGGLSL
+       S             S
+       G             G
+       G  q      qq  G
+       L  q      qq  L
+       S  q      qq  S
+       S  q      qq  S
+       S  q          S
+       L  q          L
+       S  q       qq S
+       S SSSS  SSSSS S
+       S  q          S
+       G             G
+       G             G
+       S             S
+       S QQQQQQQQQQQ S
+       LSGGLSSSLSGGLSL
+              .
+  - y3: |
+      
+       LSGGLSSSLSGGLSL
+       S             S
+       G             G
+       G             G
+       L             L
+       S             S
+       S             S
+       S             S
+       L             L
+       S             S
+       S SSSS  SSSSS S
+       S             S
+       G             G
+       G             G
+       S             S
+       S QQQQQQQQQQQ S
+       LSGGLSSSLSGGLSL
+              .
+  - y4: |
+      
+       LSSSLSSSLSSSLSL
+       S             S
+       S             S
+       S             S
+       L             L
+       S             S
+       S             S
+       S             S
+       L             L
+       S             S
+       S SSSS  SSSSS S
+       S             S
+       L             L
+       S             S
+       S             S
+       S             S
+       LSSSLSSSLSSSLSL
+              .
+  - y5: |
+      
+       LSSSLSSSLSSSLSL
+       S             S
+       S  H  H    H  S
+       S             S
+       L             L
+       S             S
+       S  H  H    H  S
+       S             S
+       L             L
+       S             S
+       S SHSSH SSSHS S
+       S             S
+       L  H  H    H  L
+       S             S
+       S             S
+       S             S
+       LSSSLSSSLSSSLSL
+              .
+  - y6: |
+      
+       LSSSLSSSLSSSLSL
+       S             S
+       S  z  z    z  S
+       S             S
+       L             L
+       S             S
+       S  z  z    z  S
+       S             S
+       L             L
+       S             S
+       S SzSSz SSSzS S
+       S             S
+       L  z  z    z  L
+       S             S
+       S             S
+       S             S
+       LSSSLSSSLSSSLSL
+              .
+  - y7: |
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+      #################
+  - y8: |
+      tvtvtvtvtvtvtvtvt
+      v133333333333332v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v1#############2v
+      t1#############2t
+      v144444444444442v
+      tvtvtvtvtvtvtvtvt
+  - y9: |
+      
+      
+        1333333333332
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1###########2
+        1444444444442
+      
+              .
+  - y10: |
+      
+      
+      
+         13333333332
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         1#########2
+         14444444442
+      
+      
+              .
+  - y11: |
+      
+      
+      
+      
+          133333332
+          1#######2
+          1#######2
+          1#######2
+          1#######2
+          1#######2
+          1#######2
+          1#######2
+          1#######2
+          1#######2
+          144444442
+      
+      
+      
+              .

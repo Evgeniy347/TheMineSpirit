@@ -1,0 +1,99 @@
+# training_yard_1 — тренировочный двор, уровень 1 (catalog-2.md): открытая площадка
+# с частоколом-оградой, соломенными чучелами, мишенями, стойкой оружия и фонарями на столбах.
+name: "Тренировочный двор, уровень 1"
+type: social
+stage: 3
+level: 1
+size: 13x5x13   # Ш×В×Д
+entrance: 6,1,1
+exemptions:
+  - rule: roof
+    reason: "двор под открытым небом; крыша только над трибуной у уровня 4"
+legend:
+  'a': gravel
+  'c': stone_bricks
+  't': spruce_fence
+  'D': oak_fence_gate[facing=south,open=false]
+  'p': stone_brick_slab[type=bottom]
+  'h': hay_block
+  'j': carved_pumpkin
+  'A': anvil
+  'W': grindstone
+  'b': barrel[facing=up]
+  'L': stripped_dark_oak_log[axis=y]
+  '#': dark_oak_planks
+  'e': dark_oak_stairs[facing=east,half=bottom]
+  'w': dark_oak_stairs[facing=west,half=bottom]
+  'N': lantern[hanging=false]
+  'x': moss_carpet
+layers:
+  - y0 площадка и крыльцо: |
+      aaaaaapaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+      aaaaaaaaaaaaa
+  - y1 частокол, чучела, стойки: |
+      
+       tttttDttttt
+       txxxxxxxxxt
+       txhxxxxxhxt
+       txxxxxxxbxt
+       txxxxxxxbxt
+       tWxxxxxxxxt
+       tAxxxxxxxxt
+       txxxxxxxxxt
+       txhxxxxxhxt
+       txxxxxxxxxt
+       ttttttttttt
+            .
+  - y2: |
+      
+         N N   N
+      
+       N j     j N
+      
+       N         N
+      
+      
+      
+       N j     j N
+      
+         N N   N
+            .
+  - y3: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+            .
+  - y4 навес: |
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+            .

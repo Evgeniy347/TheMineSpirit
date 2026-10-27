@@ -96,7 +96,36 @@ class PresetLibraryTests {
             "stable_1",
             "barracks_1",
             "weaver_1",
-            "portal_hall_1");
+            "portal_hall_1",
+            "town_hall_1",
+            "town_hall_2",
+            "town_hall_3",
+            "town_hall_4",
+            "tavern_1",
+            "tavern_2",
+            "tavern_3",
+            "tavern_4",
+            "infirmary_1",
+            "infirmary_2",
+            "infirmary_3",
+            "infirmary_4",
+            "library_1",
+            "library_2",
+            "library_3",
+            "library_4",
+            "training_yard_1",
+            "training_yard_2",
+            "training_yard_3",
+            "training_yard_4",
+            "trading_post_1",
+            "trading_post_2",
+            "trading_post_3",
+            "trading_post_4",
+            "alchemy_1",
+            "alchemy_2",
+            "alchemy_3",
+            "alchemy_4",
+            "enchant_room_v4");
 
     private static PresetLibrary loadReal() {
         List<LoadedContent> contents = new ArrayList<>();
@@ -137,7 +166,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                79,
+                108,
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
@@ -359,7 +388,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                79,
+                108,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
@@ -404,7 +433,12 @@ class PresetLibraryTests {
                         "lumber_yard_1",
                         "workshop_1",
                         "forge_1",
-                        "weaver_1"),
+                        "weaver_1",
+                        "alchemy_1",
+                        "alchemy_2",
+                        "alchemy_3",
+                        "alchemy_4",
+                        "enchant_room_v4"),
                 library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),
                 "Чаровальня обязана лежать в типе «ремесло»: по типу стратег находит постройку под стол чарования");
     }
