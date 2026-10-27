@@ -1041,7 +1041,7 @@
       "base": 35,
       "stage": 2
     },
-    "raw_chicken": {
+    "chicken": {
       "xmin": 4,
       "k": 1,
       "base": 35,
@@ -1810,6 +1810,694 @@
       "stage": 2
     },
     "moss_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "coal_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "copper_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "emerald_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "deepslate_emerald_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "deepslate_lapis_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "deepslate_redstone_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "nether_quartz_ore": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "raw_copper": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "amethyst_shard": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "pointed_dripstone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "tuff": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "ice": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "snowball": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "mud": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "mangrove_roots": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "netherrack": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "basalt": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "crying_obsidian": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "ancient_debris": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "end_stone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "apple": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "bamboo": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "kelp": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "sea_pickle": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "vine": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "shears": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "brown_mushroom": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "red_mushroom": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "blue_orchid": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "lilac": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "peony": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "sunflower": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "lily_of_the_valley": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "orange_tulip": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "pink_petals": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "chorus_fruit": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "warped_stem": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "crimson_stem": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "warped_fungus": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "stripped_oak_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_birch_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_spruce_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_jungle_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_acacia_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_dark_oak_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_cherry_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_mangrove_log": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "stripped_crimson_stem": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "stripped_warped_stem": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "stripped_bamboo_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "bamboo_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "exposed_copper": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "copper_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "weathered_copper": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "oxidized_copper": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "exposed_copper_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "copper_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "weathered_copper_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "oxidized_copper_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "exposed_copper_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "copper_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "weathered_copper_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "oxidized_copper_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "rabbit": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "rabbit_hide": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "spider_eye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "glow_ink_sac": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "turtle_scute": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "armadillo_scute": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "brush": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "creeper_head": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "wither_skeleton_skull": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "wither_rose": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "nautilus_shell": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "heart_of_the_sea": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "prismarine_shard": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "prismarine_crystals": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "wet_sponge": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "sniffer_egg": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "sniffer": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "torchflower_seeds": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "pitcher_pod": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "torchflower": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "pitcher_plant": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "echo_shard": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "disc_fragment_5": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "enchanted_golden_apple": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "sculk_sensor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "shulker_shell": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "elytra": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "dragon_breath": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "nether_star": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "soul_sand": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "dragon_egg": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "trial_key": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "ominous_trial_key": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "ominous_bottle": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "breeze_rod": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "heavy_core": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "totem_of_undying": {
+      "xmin": 0,
+      "k": 1,
+      "base": 10,
+      "stage": 4,
+      "implemented": false
+    },
+    "iron_horse_armor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "golden_horse_armor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "diamond_horse_armor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "iron_golem": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 3,
+      "implemented": false
+    },
+    "snow_golem": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "snow_block": {
       "xmin": 0,
       "k": 1,
       "base": 15,
@@ -3472,7 +4160,7 @@
       "yield": 1,
       "weight": 0.9,
       "consumes": {
-        "#logs": 1
+        "#logs_that_burn": 1
       },
       "building": "furnace"
     },
@@ -5990,7 +6678,7 @@
     {
       "id": "cull_chicken",
       "case": "HERD_CULL",
-      "makes": "raw_chicken",
+      "makes": "chicken",
       "yield": 2,
       "weight": 1.0,
       "consumes": {
@@ -6008,7 +6696,7 @@
       "yield": 2,
       "weight": 1.0,
       "consumes": {
-        "raw_chicken": 1,
+        "chicken": 1,
         "#coals": 1
       },
       "building": "smoker"
@@ -6020,7 +6708,7 @@
       "yield": 2,
       "weight": 0.8,
       "consumes": {
-        "raw_chicken": 1,
+        "chicken": 1,
         "#coals": 1
       },
       "building": "furnace"
@@ -6032,7 +6720,7 @@
       "yield": 2,
       "weight": 0.6,
       "consumes": {
-        "raw_chicken": 1
+        "chicken": 1
       },
       "building": "campfire"
     },
@@ -7697,6 +8385,1052 @@
       "implemented": false
     },
     {
+      "id": "silk_coal_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "coal_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "silk_copper_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "copper_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "stone",
+      "implemented": false
+    },
+    {
+      "id": "silk_emerald_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "emerald_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "iron",
+      "implemented": false
+    },
+    {
+      "id": "silk_deepslate_emerald_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_emerald_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "iron",
+      "implemented": false
+    },
+    {
+      "id": "silk_deepslate_lapis_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_lapis_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "stone",
+      "implemented": false
+    },
+    {
+      "id": "silk_deepslate_redstone_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_redstone_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "iron",
+      "implemented": false
+    },
+    {
+      "id": "silk_nether_quartz_ore",
+      "case": "GATHER_MATERIALS",
+      "makes": "nether_quartz_ore",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "silk_touch",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "mine_copper",
+      "case": "GATHER_MATERIALS",
+      "makes": "raw_copper",
+      "yield": 3,
+      "weight": 1.0,
+      "building": "mine_level_2",
+      "tool": "pickaxe",
+      "tier": "stone",
+      "implemented": false
+    },
+    {
+      "id": "mine_amethyst",
+      "case": "GATHER_MATERIALS",
+      "makes": "amethyst_shard",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "geode",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "mine_dripstone",
+      "case": "GATHER_MATERIALS",
+      "makes": "pointed_dripstone",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "dripstone_caves",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "mine_tuff",
+      "case": "GATHER_MATERIALS",
+      "makes": "tuff",
+      "yield": 8,
+      "weight": 1.0,
+      "building": "mine_level_3",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "silk_ice",
+      "case": "GATHER_MATERIALS",
+      "makes": "ice",
+      "yield": 4,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false,
+      "building": "route_snow"
+    },
+    {
+      "id": "dig_snowball",
+      "case": "GATHER_MATERIALS",
+      "makes": "snowball",
+      "yield": 4,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden",
+      "implemented": false,
+      "building": "route_snow"
+    },
+    {
+      "id": "dig_mud",
+      "case": "GATHER_MATERIALS",
+      "makes": "mud",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "mangrove_swamp",
+      "tool": "shovel",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "chop_mangrove_roots",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_roots",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "mangrove_swamp",
+      "implemented": false
+    },
+    {
+      "id": "mine_netherrack",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherrack",
+      "yield": 8,
+      "weight": 1.0,
+      "world": "nether",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "mine_basalt",
+      "case": "GATHER_MATERIALS",
+      "makes": "basalt",
+      "yield": 6,
+      "weight": 1.0,
+      "world": "nether:basalt_deltas",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "mine_crying_obsidian",
+      "case": "GATHER_MATERIALS",
+      "makes": "crying_obsidian",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "ruined_portal",
+      "tool": "pickaxe",
+      "tier": "diamond",
+      "implemented": false
+    },
+    {
+      "id": "mine_ancient_debris",
+      "case": "GATHER_MATERIALS",
+      "makes": "ancient_debris",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "nether",
+      "tool": "pickaxe",
+      "tier": "diamond",
+      "implemented": false
+    },
+    {
+      "id": "mine_end_stone",
+      "case": "GATHER_MATERIALS",
+      "makes": "end_stone",
+      "yield": 8,
+      "weight": 1.0,
+      "world": "end",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "collect_apple",
+      "case": "COLLECT_DROPS",
+      "makes": "apple",
+      "yield": 1,
+      "weight": 0.5,
+      "world": "tree:oak",
+      "implemented": false
+    },
+    {
+      "id": "harvest_bamboo",
+      "case": "GATHER_MATERIALS",
+      "makes": "bamboo",
+      "yield": 6,
+      "weight": 1.0,
+      "world": "bamboo_jungle",
+      "implemented": false
+    },
+    {
+      "id": "harvest_kelp",
+      "case": "GATHER_MATERIALS",
+      "makes": "kelp",
+      "yield": 6,
+      "weight": 1.0,
+      "world": "ocean",
+      "implemented": false
+    },
+    {
+      "id": "harvest_sea_pickle",
+      "case": "GATHER_MATERIALS",
+      "makes": "sea_pickle",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "warm_ocean",
+      "implemented": false
+    },
+    {
+      "id": "shear_vine",
+      "case": "GATHER_MATERIALS",
+      "makes": "vine",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "biome:jungle",
+      "needs": {
+        "shears": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "forage_brown_mushroom",
+      "case": "GATHER_MATERIALS",
+      "makes": "brown_mushroom",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "mushrooms",
+      "implemented": false
+    },
+    {
+      "id": "forage_red_mushroom",
+      "case": "GATHER_MATERIALS",
+      "makes": "red_mushroom",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "mushrooms",
+      "implemented": false
+    },
+    {
+      "id": "pick_blue_orchid",
+      "case": "GATHER_MATERIALS",
+      "makes": "blue_orchid",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:blue_orchid",
+      "implemented": false
+    },
+    {
+      "id": "pick_lilac",
+      "case": "GATHER_MATERIALS",
+      "makes": "lilac",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:lilac",
+      "implemented": false
+    },
+    {
+      "id": "pick_peony",
+      "case": "GATHER_MATERIALS",
+      "makes": "peony",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:peony",
+      "implemented": false
+    },
+    {
+      "id": "pick_sunflower",
+      "case": "GATHER_MATERIALS",
+      "makes": "sunflower",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:sunflower",
+      "implemented": false
+    },
+    {
+      "id": "pick_lily_of_the_valley",
+      "case": "GATHER_MATERIALS",
+      "makes": "lily_of_the_valley",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:lily_of_the_valley",
+      "implemented": false
+    },
+    {
+      "id": "pick_orange_tulip",
+      "case": "GATHER_MATERIALS",
+      "makes": "orange_tulip",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:orange_tulip",
+      "implemented": false
+    },
+    {
+      "id": "pick_pink_petals",
+      "case": "GATHER_MATERIALS",
+      "makes": "pink_petals",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:pink_petals",
+      "implemented": false
+    },
+    {
+      "id": "harvest_chorus_fruit",
+      "case": "GATHER_MATERIALS",
+      "makes": "chorus_fruit",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "end",
+      "implemented": false
+    },
+    {
+      "id": "chop_warped_stem",
+      "case": "GATHER_MATERIALS",
+      "makes": "warped_stem",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "chop_crimson_stem",
+      "case": "GATHER_MATERIALS",
+      "makes": "crimson_stem",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "forage_warped_fungus",
+      "case": "GATHER_MATERIALS",
+      "makes": "warped_fungus",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "strip_oak_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_oak_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "oak_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_birch_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_birch_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "birch_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_spruce_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_spruce_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_jungle_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_jungle_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_acacia_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_acacia_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_dark_oak_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_dark_oak_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_cherry_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_cherry_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_mangrove_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_mangrove_log",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_log": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_crimson_stem",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_crimson_stem",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "crimson_stem": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_warped_stem",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_warped_stem",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "warped_stem": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "strip_bamboo_block",
+      "case": "GATHER_MATERIALS",
+      "makes": "stripped_bamboo_block",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bamboo_block": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_exposed_copper",
+      "case": "GATHER_MATERIALS",
+      "makes": "exposed_copper",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "copper_block": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_weathered_copper",
+      "case": "GATHER_MATERIALS",
+      "makes": "weathered_copper",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "exposed_copper": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_oxidized_copper",
+      "case": "GATHER_MATERIALS",
+      "makes": "oxidized_copper",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "weathered_copper": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_exposed_copper_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "exposed_copper_door",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "copper_door": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_weathered_copper_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "weathered_copper_door",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "exposed_copper_door": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_oxidized_copper_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "oxidized_copper_door",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "weathered_copper_door": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_exposed_copper_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "exposed_copper_trapdoor",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "copper_trapdoor": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_weathered_copper_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "weathered_copper_trapdoor",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "exposed_copper_trapdoor": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "oxidize_oxidized_copper_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "oxidized_copper_trapdoor",
+      "yield": 1,
+      "weight": 0.2,
+      "consumes": {
+        "weathered_copper_trapdoor": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_rabbit",
+      "case": "COLLECT_DROPS",
+      "makes": "rabbit",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "rabbits",
+      "implemented": false
+    },
+    {
+      "id": "loot_rabbit_hide",
+      "case": "COLLECT_DROPS",
+      "makes": "rabbit_hide",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "rabbits",
+      "implemented": false
+    },
+    {
+      "id": "loot_spider_eye",
+      "case": "COLLECT_DROPS",
+      "makes": "spider_eye",
+      "yield": 1,
+      "weight": 0.5,
+      "world": "mobs",
+      "implemented": false
+    },
+    {
+      "id": "loot_glow_ink_sac",
+      "case": "COLLECT_DROPS",
+      "makes": "glow_ink_sac",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "glow_squid",
+      "implemented": false
+    },
+    {
+      "id": "collect_turtle_scute",
+      "case": "COLLECT_DROPS",
+      "makes": "turtle_scute",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "turtles",
+      "implemented": false
+    },
+    {
+      "id": "brush_armadillo_scute",
+      "case": "GATHER_MATERIALS",
+      "makes": "armadillo_scute",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "armadillo",
+      "needs": {
+        "brush": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_creeper_head",
+      "case": "COLLECT_DROPS",
+      "makes": "creeper_head",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "charged_creeper",
+      "implemented": false
+    },
+    {
+      "id": "loot_wither_skeleton_skull",
+      "case": "COLLECT_DROPS",
+      "makes": "wither_skeleton_skull",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "nether_fortress",
+      "building": "portal_lit",
+      "implemented": false
+    },
+    {
+      "id": "loot_wither_rose",
+      "case": "COLLECT_DROPS",
+      "makes": "wither_rose",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "wither",
+      "implemented": false
+    },
+    {
+      "id": "loot_nautilus_shell",
+      "case": "COLLECT_DROPS",
+      "makes": "nautilus_shell",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "drowned",
+      "implemented": false
+    },
+    {
+      "id": "dig_heart_of_the_sea",
+      "case": "GATHER_MATERIALS",
+      "makes": "heart_of_the_sea",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "buried_treasure",
+      "tool": "shovel",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "loot_prismarine_shard",
+      "case": "COLLECT_DROPS",
+      "makes": "prismarine_shard",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "ocean_monument",
+      "implemented": false
+    },
+    {
+      "id": "loot_prismarine_crystals",
+      "case": "COLLECT_DROPS",
+      "makes": "prismarine_crystals",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "ocean_monument",
+      "implemented": false
+    },
+    {
+      "id": "loot_wet_sponge",
+      "case": "COLLECT_DROPS",
+      "makes": "wet_sponge",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "ocean_monument",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "brush_sniffer_egg",
+      "case": "GATHER_MATERIALS",
+      "makes": "sniffer_egg",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "warm_ocean_ruins",
+      "needs": {
+        "brush": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "hatch_sniffer",
+      "case": "GATHER_MATERIALS",
+      "makes": "sniffer",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "sniffer_egg": 1
+      },
+      "needs": {
+        "moss_block": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "sniff_torchflower_seeds",
+      "case": "GATHER_MATERIALS",
+      "makes": "torchflower_seeds",
+      "yield": 1,
+      "weight": 1.0,
+      "needs": {
+        "sniffer": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "sniff_pitcher_pod",
+      "case": "GATHER_MATERIALS",
+      "makes": "pitcher_pod",
+      "yield": 1,
+      "weight": 1.0,
+      "needs": {
+        "sniffer": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "grow_torchflower",
+      "case": "GATHER_MATERIALS",
+      "makes": "torchflower",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "torchflower_seeds": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "grow_pitcher_plant",
+      "case": "GATHER_MATERIALS",
+      "makes": "pitcher_plant",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "pitcher_pod": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_echo_shard",
+      "case": "GATHER_MATERIALS",
+      "makes": "echo_shard",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "ancient_city",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_disc_fragment_5",
+      "case": "GATHER_MATERIALS",
+      "makes": "disc_fragment_5",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "ancient_city",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_enchanted_golden_apple",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_golden_apple",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "ancient_city",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "silk_sculk_sensor",
+      "case": "GATHER_MATERIALS",
+      "makes": "sculk_sensor",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "deep_dark",
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
+      "id": "loot_shulker_shell",
+      "case": "COLLECT_DROPS",
+      "makes": "shulker_shell",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "end_city",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_elytra",
+      "case": "GATHER_MATERIALS",
+      "makes": "elytra",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "end_city",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "bottle_dragon_breath",
+      "case": "GATHER_MATERIALS",
+      "makes": "dragon_breath",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "glass_bottle": 1
+      },
+      "world": "end",
+      "needs": {
+        "expedition_party": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "defeat_wither",
+      "case": "ACTIVITY_COMBAT",
+      "makes": "nether_star",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wither_skeleton_skull": 3,
+        "soul_sand": 4
+      },
+      "needs": {
+        "expedition_party": 1,
+        "diamond_armor": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "defeat_ender_dragon",
+      "case": "ACTIVITY_COMBAT",
+      "makes": "dragon_egg",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "end",
+      "needs": {
+        "expedition_party": 1,
+        "diamond_armor": 1,
+        "bow": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_trial_key",
+      "case": "COLLECT_DROPS",
+      "makes": "trial_key",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "trial_chambers",
+      "implemented": false
+    },
+    {
+      "id": "loot_ominous_trial_key",
+      "case": "COLLECT_DROPS",
+      "makes": "ominous_trial_key",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "trial_chambers",
+      "needs": {
+        "ominous_bottle": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "loot_breeze_rod",
+      "case": "COLLECT_DROPS",
+      "makes": "breeze_rod",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "trial_chambers",
+      "implemented": false
+    },
+    {
+      "id": "open_ominous_vault",
+      "case": "GATHER_MATERIALS",
+      "makes": "heavy_core",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "ominous_trial_key": 1
+      },
+      "world": "trial_chambers",
+      "implemented": false
+    },
+    {
+      "id": "loot_ominous_bottle",
+      "case": "COLLECT_DROPS",
+      "makes": "ominous_bottle",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "raid",
+      "implemented": false
+    },
+    {
+      "id": "loot_totem_of_undying",
+      "case": "COLLECT_DROPS",
+      "makes": "totem_of_undying",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "raid",
+      "implemented": false
+    },
+    {
+      "id": "loot_iron_horse_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_horse_armor",
+      "yield": 1,
+      "weight": 0.3,
+      "world": "dungeon_chest",
+      "implemented": false
+    },
+    {
+      "id": "loot_golden_horse_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "golden_horse_armor",
+      "yield": 1,
+      "weight": 0.3,
+      "world": "dungeon_chest",
+      "implemented": false
+    },
+    {
+      "id": "loot_diamond_horse_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "diamond_horse_armor",
+      "yield": 1,
+      "weight": 0.3,
+      "world": "dungeon_chest",
+      "implemented": false
+    },
+    {
+      "id": "build_iron_golem",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_golem",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_block": 4,
+        "carved_pumpkin": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "build_snow_golem",
+      "case": "GATHER_MATERIALS",
+      "makes": "snow_golem",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "snow_block": 2,
+        "carved_pumpkin": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "dig_soul_sand",
+      "case": "GATHER_MATERIALS",
+      "makes": "soul_sand",
+      "yield": 8,
+      "weight": 1.0,
+      "world": "nether",
+      "tool": "shovel",
+      "tier": "wooden",
+      "implemented": false
+    },
+    {
       "id": "tame_cat",
       "case": "GATHER_MATERIALS",
       "makes": "cat",
@@ -7901,7 +9635,7 @@
       "weight": 10
     },
     {
-      "lack": "raw_chicken",
+      "lack": "chicken",
       "way": "breed_chicken",
       "weight": 10
     }
@@ -8406,7 +10140,33 @@
       "acacia_log",
       "dark_oak_log",
       "cherry_log",
-      "mangrove_log"
+      "mangrove_log",
+      "stripped_oak_log",
+      "stripped_birch_log",
+      "stripped_spruce_log",
+      "stripped_jungle_log",
+      "stripped_acacia_log",
+      "stripped_dark_oak_log",
+      "stripped_cherry_log",
+      "stripped_mangrove_log"
+    ],
+    "#logs_that_burn": [
+      "oak_log",
+      "birch_log",
+      "spruce_log",
+      "jungle_log",
+      "acacia_log",
+      "dark_oak_log",
+      "cherry_log",
+      "mangrove_log",
+      "stripped_oak_log",
+      "stripped_birch_log",
+      "stripped_spruce_log",
+      "stripped_jungle_log",
+      "stripped_acacia_log",
+      "stripped_dark_oak_log",
+      "stripped_cherry_log",
+      "stripped_mangrove_log"
     ],
     "#planks": [
       "oak_planks",
