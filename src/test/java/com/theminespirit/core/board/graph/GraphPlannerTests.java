@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphState.Built;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class GraphPlannerTests {
@@ -638,5 +640,51 @@ class GraphPlannerTests {
                 plan.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
                 "Стройка начинается с четверти материалов (16 из 58), остальное подвозят по ходу, как в main: "
                         + plan.task("building:hut"));
+    }
+
+    @Test
+    void plan_StageFour_SocialBuildingsAppearOnlyInStageFour() {
+        GraphWorld before = GraphWorld.settled().built("town_hall", Built.PLANNED);
+        GraphWorld after = GraphWorld.settled();
+        after.stage = 4;
+        for (String id : List.of("town_hall", "library", "alchemy")) {
+            after.built(id, Built.PLANNED);
+        }
+
+        assertEquals(
+                Optional.empty(),
+                before.plan().task("building:town_hall"),
+                "Ратуша — постройка четвёртого этапа: до него задания нет, иначе доска тянет камень впустую");
+        assertTrue(
+                after.plan().task("building:town_hall").isPresent()
+                        && after.plan().task("building:library").isPresent()
+                        && after.plan().task("building:alchemy").isPresent(),
+                "На четвёртом этапе ратуша, библиотека и алхимия стоят на доске: "
+                        + after.plan().tasks());
+    }
+
+    @Test
+    void plan_StageFour_TownHallHasMaterialsFromSchema() {
+        GraphWorld world = GraphWorld.settled().built("town_hall", Built.PLANNED);
+        world.stage = 4;
+
+        GraphPlan.Task hall = world.plan().task("building:town_hall").orElseThrow();
+        assertTrue(
+                !hall.consumes().isEmpty() && hall.consumes().containsKey("stone_bricks"),
+                "Материалы ратуши берутся из схемы (каменный кирпич и прочее), а не пустой оценкой: "
+                        + hall.consumes());
+    }
+
+    @Test
+    void plan_PlayerHouse_OutranksFamilyHouses() {
+        GraphWorld world =
+                GraphWorld.settled().built("player_house", Built.PLANNED).built("family_house_a", Built.PLANNED);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.priority("building:player_house") > plan.priority("building:family_house_a"),
+                "Дом игрока важнее домов семей: " + plan.priority("building:player_house") + " против "
+                        + plan.priority("building:family_house_a"));
     }
 }
