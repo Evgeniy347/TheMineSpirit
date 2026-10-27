@@ -41,6 +41,28 @@ public record MineGeometry(
         return Math.max(minY, Math.min(maxY, tunnel.minY()));
     }
 
+    public TownMapView.Bounds descentBounds() {
+        return airBounds(air, new BlockCoord(tunnel.minX(), tunnel.minY(), tunnel.minZ()));
+    }
+
+    public static TownMapView.Bounds airBounds(Iterable<BlockCoord> air, BlockCoord empty) {
+        Objects.requireNonNull(air, "Клетки спуска не могут быть null: по ним считается прямоугольник");
+        Objects.requireNonNull(empty, "Запасная клетка не может быть null: пустой спуск остаётся на месте входа");
+        int x1 = Integer.MAX_VALUE;
+        int z1 = Integer.MAX_VALUE;
+        int x2 = Integer.MIN_VALUE;
+        int z2 = Integer.MIN_VALUE;
+        for (BlockCoord cell : air) {
+            x1 = Math.min(x1, cell.x());
+            z1 = Math.min(z1, cell.z());
+            x2 = Math.max(x2, cell.x());
+            z2 = Math.max(z2, cell.z());
+        }
+        return x1 > x2
+                ? new TownMapView.Bounds(empty.x(), empty.z(), empty.x(), empty.z())
+                : new TownMapView.Bounds(x1, z1, x2, z2);
+    }
+
     private static TownMapView.Bounds bounds(List<BlockCoord> air, List<BlockCoord> floors, BuildBox tunnel) {
         int x1 = tunnel.minX();
         int z1 = tunnel.minZ();

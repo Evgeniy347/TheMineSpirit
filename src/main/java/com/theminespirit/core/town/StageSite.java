@@ -11,6 +11,7 @@ public record StageSite(
         Placement hut,
         Placement yard,
         Placement mine,
+        MinePlot minePlot,
         Placement orchard,
         List<BlockCoord> orchardSaplings,
         ColumnMask level,
@@ -36,6 +37,10 @@ public record StageSite(
         Objects.requireNonNull(hut, "Место хижины не может быть null: этап 1 без хижины не собрать");
         Objects.requireNonNull(yard, "Место двора не может быть null");
         Objects.requireNonNull(mine, "Место спуска в шахту не может быть null");
+        Objects.requireNonNull(
+                minePlot,
+                "Прямоугольник шахты не может быть null: обе вкладки карты и стройка "
+                        + "берут спуск из плана участка");
         Objects.requireNonNull(orchard, "Место сада не может быть null");
         orchardSaplings = List.copyOf(Objects.requireNonNull(
                 orchardSaplings, "Места деревьев сада не могут быть null: пусто — пустой список"));
@@ -83,7 +88,7 @@ public record StageSite(
     }
 
     public BlockCoord mineEntrance() {
-        return new BlockCoord(mine.x() + MINE_SHIFT, anchor.y() - 1, mine.z() + 1);
+        return minePlot.origin();
     }
 
     public boolean mineColumn(int x, int z) {

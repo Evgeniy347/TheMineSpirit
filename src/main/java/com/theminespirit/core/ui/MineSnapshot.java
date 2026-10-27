@@ -142,8 +142,9 @@ public record MineSnapshot(
     private static List<Rect> rects(MineGeometry geometry, MineBlocks blocks) {
         List<Rect> out = new ArrayList<>(2);
         if (!geometry.air().isEmpty()) {
-            int[] box = box(geometry);
-            out.add(new Rect(box[0], box[1], box[2], box[3], DESCENT, descentPercent(geometry, blocks)));
+            TownMapView.Bounds bounds = geometry.descentBounds();
+            out.add(new Rect(
+                    bounds.x1(), bounds.z1(), bounds.x2(), bounds.z2(), DESCENT, descentPercent(geometry, blocks)));
         }
         BuildBox tunnel = geometry.tunnel();
         out.add(new Rect(
@@ -183,20 +184,6 @@ public record MineSnapshot(
 
     private static int percent(int done, int total) {
         return total == 0 ? 0 : done * PERCENT / total;
-    }
-
-    private static int[] box(MineGeometry geometry) {
-        int x1 = Integer.MAX_VALUE;
-        int z1 = Integer.MAX_VALUE;
-        int x2 = Integer.MIN_VALUE;
-        int z2 = Integer.MIN_VALUE;
-        for (BlockCoord cell : geometry.air()) {
-            x1 = Math.min(x1, cell.x());
-            z1 = Math.min(z1, cell.z());
-            x2 = Math.max(x2, cell.x());
-            z2 = Math.max(z2, cell.z());
-        }
-        return new int[] {x1, z1, x2, z2};
     }
 
     private static String path(String blockId) {
