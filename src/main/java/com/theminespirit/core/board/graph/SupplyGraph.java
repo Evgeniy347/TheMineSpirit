@@ -1,0 +1,193 @@
+package com.theminespirit.core.board.graph;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.inventory.JsonResource;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
+
+public record SupplyGraph(
+        double decay,
+        int urgentBoost,
+        int buildReadyBoost,
+        int maxPriority,
+        List<String> tiers,
+        Kit kit,
+        Storage storage,
+        Map<String, Item> items,
+        Map<String, Building> buildings,
+        List<Way> ways,
+        List<Edge> edges) {
+    public static final String RESOURCE = "data/theminespirit/board/graph.json";
+
+    public record Item(String id, int xmin, double k, int base, int stage) {}
+
+    public record Building(
+            String id,
+            BoardCase boardCase,
+            int stage,
+            int base,
+            @Nullable String tool) {}
+
+    public record Kit(List<String> kinds, String tier, int base) {}
+
+    public record Storage(int minFreePercent, String building, int base) {}
+
+    public record Way(
+            String id,
+            BoardCase boardCase,
+            String makes,
+            int yield,
+            double weight,
+            Map<String, Integer> consumes,
+            @Nullable String tool,
+            @Nullable String tier,
+            @Nullable String building) {
+        public Way {
+            consumes = Map.copyOf(consumes);
+        }
+    }
+
+    public record Edge(String lack, String way, int weight) {}
+
+    public SupplyGraph {
+        tiers = List.copyOf(tiers);
+        items = Map.copyOf(items);
+        buildings = Map.copyOf(buildings);
+        ways = List.copyOf(ways);
+        edges = List.copyOf(edges);
+    }
+
+    public static SupplyGraph loadDefault() {
+        return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
+    }
+
+    public static SupplyGraph parse(String json, String origin) {
+        JsonNode root = JsonResource.parse(json, origin);
+        Map<String, Item> items = new LinkedHashMap<>();
+        root.path("items")
+                .properties()
+                .forEach(entry -> items.put(
+                        entry.getKey(),
+                        new Item(
+                                entry.getKey(),
+                                entry.getValue().path("xmin").asInt(),
+                                entry.getValue().path("k").asDouble(1.0),
+                                entry.getValue().path("base").asInt(),
+                                entry.getValue().path("stage").asInt(1))));
+        Map<String, Building> buildings = new LinkedHashMap<>();
+        root.path("buildings")
+                .properties()
+                .forEach(entry -> buildings.put(
+                        entry.getKey(),
+                        new Building(
+                                entry.getKey(),
+                                BoardCase.valueOf(entry.getValue().path("case").asText()),
+                                entry.getValue().path("stage").asInt(1),
+                                entry.getValue().path("base").asInt(),
+                                text(entry.getValue(), "tool"))));
+        List<Way> ways = new ArrayList<>();
+        for (JsonNode node : root.path("ways")) {
+            Map<String, Integer> consumes = new LinkedHashMap<>();
+            node.path("consumes")
+                    .properties()
+                    .forEach(entry ->
+                            consumes.put(entry.getKey(), entry.getValue().asInt()));
+            ways.add(new Way(
+                    node.path("id").asText(),
+                    BoardCase.valueOf(node.path("case").asText()),
+                    node.path("makes").asText(),
+                    node.path("yield").asInt(1),
+                    node.path("weight").asDouble(1.0),
+                    consumes,
+                    text(node, "tool"),
+                    text(node, "tier"),
+                    text(node, "building")));
+        }
+        List<Edge> edges = new ArrayList<>();
+        for (JsonNode node : root.path("edges")) {
+            edges.add(new Edge(
+                    node.path("lack").asText(),
+                    node.path("way").asText(),
+                    node.path("weight").asInt()));
+        }
+        List<String> tiers = new ArrayList<>();
+        root.path("tiers").forEach(tier -> tiers.add(tier.asText()));
+        List<String> kinds = new ArrayList<>();
+        root.path("kit").path("kinds").forEach(kind -> kinds.add(kind.asText()));
+        JsonNode storage = root.path("storage");
+        SupplyGraph graph = new SupplyGraph(
+                root.path("decay").asDouble(0.5),
+                root.path("urgentBoost").asInt(),
+                root.path("buildReadyBoost").asInt(),
+                root.path("maxPriority").asInt(100),
+                tiers,
+                new Kit(
+                        kinds,
+                        root.path("kit").path("tier").asText(),
+                        root.path("kit").path("base").asInt()),
+                new Storage(
+                        storage.path("minFreePercent").asInt(),
+                        storage.path("building").asText(),
+                        storage.path("base").asInt()),
+                items,
+                buildings,
+                ways,
+                edges);
+        graph.validate(origin);
+        return graph;
+    }
+
+    public int rank(String tier) {
+        return tiers.indexOf(tier);
+    }
+
+    public Optional<Way> way(String id) {
+        return ways.stream().filter(way -> way.id().equals(id)).findFirst();
+    }
+
+    public List<Way> producers(String node) {
+        return ways.stream().filter(way -> way.makes().equals(node)).toList();
+    }
+
+    public boolean isTool(String node) {
+        int split = node.indexOf('_');
+        return split > 0
+                && tiers.contains(node.substring(0, split))
+                && kit.kinds().contains(node.substring(split + 1));
+    }
+
+    private void validate(String origin) {
+        for (Way way : ways) {
+            if (!items.containsKey(way.makes()) && !isTool(way.makes())) {
+                throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " делает '" + way.makes()
+                        + "', которого нет среди предметов и инструментов графа");
+            }
+            for (String input : way.consumes().keySet()) {
+                if (!items.containsKey(input)) {
+                    throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " расходует '" + input
+                            + "', которого нет среди предметов графа");
+                }
+            }
+            if (way.building() != null && !buildings.containsKey(way.building())) {
+                throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " требует постройку '"
+                        + way.building() + "', которой нет в графе");
+            }
+        }
+        for (Edge edge : edges) {
+            Objects.requireNonNull(
+                    way(edge.way()).orElse(null),
+                    "Файл '" + origin + "': ребро от '" + edge.lack() + "' ведёт к неизвестному пути " + edge.way());
+        }
+    }
+
+    private static @Nullable String text(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        return value == null || value.isNull() ? null : value.asText();
+    }
+}
