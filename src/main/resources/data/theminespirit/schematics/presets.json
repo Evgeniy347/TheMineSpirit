@@ -58,6 +58,26 @@
   "street_patch",
   "street5_dirt",
   "street7_dirt",
-  "street_patch_dirt"
+  "street_patch_dirt",
+  "barn_1",
+  "field_1",
+  "field_wheat_1",
+  "field_carrot_1",
+  "field_potato_1",
+  "field_beetroot_1",
+  "sugar_cane_1",
+  "melon_1",
+  "pumpkin_1",
+  "cocoa_1",
+  "berries_1",
+  "lumber_yard_1",
+  "workshop_1",
+  "forge_1",
+  "bakery_1",
+  "apiary_1",
+  "kennel_1",
+  "stable_1",
+  "barracks_1",
+  "weaver_1"
  ]
 }
