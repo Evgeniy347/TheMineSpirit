@@ -115,6 +115,7 @@ class DemoBuildingsTests {
                 "Первый уровень загона — 4×5: иначе upgrade построит не тот младший уровень");
         assertEquals("pen_7x7", pen.level(2).scheme(), "Второй уровень загона — 7×7");
         assertEquals("pen_9x9", pen.level(3).scheme(), "Третий уровень загона — 9×9");
+        assertEquals("pen_13x13", pen.level(4).scheme(), "Четвёртый уровень загона — 13×13 с навесом");
         assertNotEquals(
                 pen.level(1).scheme(),
                 pen.level(2).scheme(),
@@ -175,8 +176,8 @@ class DemoBuildingsTests {
     void level_UnknownRequested_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> DemoBuildings.require("pen").level(4),
-                "Четвёртого уровня загона нет: заказ несуществующего уровня обязан отвергаться с подсказкой");
+                () -> DemoBuildings.require("pen").level(5),
+                "Пятого уровня загона нет: заказ несуществующего уровня обязан отвергаться с подсказкой");
     }
 
     @Test

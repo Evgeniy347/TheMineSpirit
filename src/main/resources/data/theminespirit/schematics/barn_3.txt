@@ -1,0 +1,320 @@
+# barn_3 — амбар уровня 3 (docs/settlement/catalog.md): 15×19, ворота шириной 3 (верх — перекладина),
+# сеновал на балках, каменные стены, фонари и глубинная крыша. Навес для телеги — во дворе, не в схеме.
+name: "Амбар, уровень 3 (большие ворота)"
+type: storage
+stage: 3
+level: 3
+requires: barn_2
+size: 15x14x20   # Ш×В×Д
+entrance: 7,1,1
+legend:
+  'c': stone_bricks
+  '#': dark_oak_planks
+  '=': stripped_dark_oak_log[axis=y]
+  'X': stripped_dark_oak_log[axis=x]
+  'G': glass_pane
+  'q': dark_oak_fence_gate[facing=south]
+  'h': hay_block
+  'b': barrel[facing=up]
+  'x': chest[facing=west]
+  'm': composter
+  'L': lantern
+  'R': deepslate_bricks
+  '_': deepslate_brick_slab[type=bottom]
+  'E': deepslate_brick_stairs[facing=east,half=bottom]
+  'W': deepslate_brick_stairs[facing=west,half=bottom]
+layers:
+  - y0: |
+      ......___......
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+      ccccccccccccccc
+  - y1: |
+      ...............
+      =cccccqqqccccc=
+      =.............=
+      =.............=
+      =..b...L...m..=
+      =.............=
+      =..b.......m..=
+      =.............=
+      =....L...L....=
+      =.............=
+      =..........x..=
+      =.............=
+      =.............=
+      =..........x..=
+      =......L......=
+      =.............=
+      =.............=
+      =hhh..........=
+      =hhh..........=
+      =ccccccccccccc=
+  - y2: |
+      ...............
+      =ccccc...ccccc=
+      =.............=
+      =.............=
+      G.............G
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      G.............G
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      G.............G
+      =.............=
+      =hhh..........=
+      =hhh..........=
+      =ccccccccccccc=
+  - y3: |
+      ...............
+      =ccccccccccccc=
+      =.............=
+      =.............=
+      G.............G
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      G.............G
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      G.............G
+      =.............=
+      =hhh..........=
+      =hhh..........=
+      =ccccccccccccc=
+  - y4: |
+      ...............
+      =ccccccccccccc=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =hhh..........=
+      =hhh..........=
+      =ccccccccccccc=
+  - y5: |
+      ...............
+      =ccccccccccccc=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =.............=
+      =XXXXXXXXXXXXX=
+      =XXXXXXXXXXXXX=
+      =ccccccccccccc=
+  - y6: |
+      ...............
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+      ###############
+  - y7: |
+      ...............
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+      ERRRRRRRRRRRRRW
+  - y8: |
+      ...............
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+      .ERRRRRRRRRRRW.
+  - y9: |
+      ...............
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+      ..ERRRRRRRRRW..
+  - y10: |
+      ...............
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+      ...ERRRRRRRW...
+  - y11: |
+      ...............
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+      ....ERRRRRW....
+  - y12: |
+      ...............
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+      .....ERRRW.....
+  - y13: |
+      ...............
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......
+      ......ERW......

@@ -28,6 +28,7 @@ class PresetLibraryTests {
             "pen_7x7",
             "pen_4x5",
             "pen_9x9",
+            "pen_13x13",
             "orchard_1",
             "mine_entrance_v1",
             "mine_descent_v1",
@@ -77,7 +78,11 @@ class PresetLibraryTests {
             "street7_dirt",
             "street_patch_dirt",
             "barn_1",
+            "barn_2",
+            "barn_3",
             "field_1",
+            "field_2",
+            "field_3",
             "field_wheat_1",
             "field_carrot_1",
             "field_potato_1",
@@ -88,7 +93,10 @@ class PresetLibraryTests {
             "cocoa_1",
             "berries_1",
             "lumber_yard_1",
+            "lumber_yard_2",
             "workshop_1",
+            "workshop_2",
+            "workshop_3",
             "forge_1",
             "bakery_1",
             "apiary_1",
@@ -137,7 +145,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                79,
+                87,
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
@@ -359,7 +367,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                79,
+                87,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
@@ -402,7 +410,10 @@ class PresetLibraryTests {
                         "enchant_room_v2",
                         "enchant_room_v3",
                         "lumber_yard_1",
+                        "lumber_yard_2",
                         "workshop_1",
+                        "workshop_2",
+                        "workshop_3",
                         "forge_1",
                         "weaver_1"),
                 library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),

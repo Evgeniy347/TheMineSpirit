@@ -1,0 +1,63 @@
+# field_2 — пашня уровня 2 (catalog.md): поле 13×13, две воды, забор с калиткой, факелы и межи-тропы.
+name: "Пашня, уровень 2 (забор и две воды)"
+type: farm
+stage: 1
+level: 2
+requires: field_1
+size: 13x3x13   # Ш×В×Д
+entrance: 6,1,1
+exemptions:
+  - rule: roof
+    reason: "пашня под открытым небом: грядкам нужны свет и дождь, крыши у поля нет"
+legend:
+  'p': dirt_path
+  'e': farmland[moisture=7]
+  '~': water
+  'w': wheat[age=0] ~
+  'F': oak_fence
+  'G': oak_fence_gate[facing=south]
+  'T': torch
+  '_': oak_slab[type=bottom]
+layers:
+  - y0: |
+      ......_......
+      ppppppppppppp
+      peeeeepeeeeep
+      peeeeepeeeeep
+      pee~eepeeeeep
+      peeeeepeeeeep
+      ppppppppppppp
+      peeeeepeeeeep
+      peeeeepee~eep
+      peeeeepeeeeep
+      peeeeepeeeeep
+      peeeeepeeeeep
+      ppppppppppppp
+  - y1: |
+      .............
+      FFFFFGGGFFFFF
+      Fwwwww.wwwwwF
+      Fwwwww.wwwwwF
+      Fww.ww.wwwwwF
+      Fwwwww.wwwwwF
+      F...........F
+      Fwwwww.wwwwwF
+      Fwwwww.ww.wwF
+      Fwwwww.wwwwwF
+      Fwwwww.wwwwwF
+      Fwwwww.wwwwwF
+      FFFFFFFFFFFFF
+  - y2: |
+      .............
+      T...........T
+      .............
+      .............
+      .............
+      .............
+      .............
+      T...........T
+      .............
+      .............
+      .............
+      .............
+      T.....T.....T
