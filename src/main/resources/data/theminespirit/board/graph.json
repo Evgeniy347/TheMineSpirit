@@ -1672,36 +1672,6 @@
       "base": 30,
       "stage": 3
     },
-    "villager_farmer": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_librarian": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_smith": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_butcher": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
-    "villager_cartographer": {
-      "xmin": 1,
-      "k": 1,
-      "base": 20,
-      "stage": 4
-    },
     "chainmail_armor": {
       "xmin": 1,
       "k": 1,
@@ -3293,19 +3263,6 @@
         "lectern": 4,
         "glass_pane": 16,
         "lantern": 4
-      },
-      "estimate": true
-    },
-    "trading_post": {
-      "case": "BUILD_HOUSE",
-      "stage": 4,
-      "base": 40,
-      "materials": {
-        "oak_log": 16,
-        "oak_planks": 48,
-        "oak_fence": 16,
-        "barrel": 4,
-        "torch": 4
       },
       "estimate": true
     },
@@ -7374,66 +7331,6 @@
       "yield": 2,
       "weight": 1.0,
       "world": "emerald_ore",
-      "implemented": false
-    },
-    {
-      "id": "assign_farmer",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_farmer",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_librarian",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_librarian",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_smith",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_smith",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_butcher",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_butcher",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
-      "implemented": false
-    },
-    {
-      "id": "assign_cartographer",
-      "case": "GATHER_MATERIALS",
-      "makes": "villager_cartographer",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "emerald": 1
-      },
-      "building": "trading_post",
       "implemented": false
     },
     {

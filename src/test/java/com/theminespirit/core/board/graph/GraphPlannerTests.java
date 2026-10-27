@@ -304,18 +304,6 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_TradingPost_VillagerJobsInDevelopment() {
-        GraphWorld world =
-                GraphWorld.settled().built("trading_post", Built.BUILT).with("emerald", 8);
-        world.stage = 4;
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("assign_librarian").map(task -> !task.implemented()).orElse(false),
-                "Занятия жителей (библиотекарь) стоят как «в разработке»: " + plan.task("assign_librarian"));
-    }
-
-    @Test
     void plan_ArmorNorms_PerSpiritAndByStage() {
         GraphWorld one = GraphWorld.settled();
         one.stage = 3;

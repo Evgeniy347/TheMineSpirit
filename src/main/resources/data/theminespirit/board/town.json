@@ -33,7 +33,6 @@
     {"id": "training_yard", "name": "Тренировочный двор", "width": 17, "depth": 17, "quarter": "ne", "level": true, "rotate": true},
     {"id": "enchant_room", "name": "Чаровальня", "width": 17, "depth": 15, "quarter": "ne", "level": true, "rotate": true},
     {"id": "alchemy", "name": "Алхимия", "width": 13, "depth": 13, "quarter": "ne", "level": true, "rotate": true},
-    {"id": "library", "name": "Библиотека", "width": 19, "depth": 19, "quarter": "ne", "level": true, "rotate": true},
-    {"id": "trading_post", "name": "Торговый пост", "width": 15, "depth": 13, "quarter": "sw", "level": true, "rotate": true}
+    {"id": "library", "name": "Библиотека", "width": 19, "depth": 19, "quarter": "ne", "level": true, "rotate": true}
   ]
 }

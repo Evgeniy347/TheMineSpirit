@@ -56,7 +56,7 @@
 
 ## Б8. Библиотека этапов 3–4 (L, параллельно)
 
-`town_hall`, `tavern`, `infirmary`, `library`, `training_yard`, `trading_post`, `alchemy`, `weaver`, `enchant_room` —
+`town_hall`, `tavern`, `infirmary`, `library`, `training_yard`, `alchemy`, `weaver`, `enchant_room` —
 оболочка 1–2 и уровень 3, высшие уровни остальных семей, `wall` 4 и ров, `gate` 4, `archer_tower` 2–3,
 `street` 3–4, `lamp` 4, `plaza` 2 (если не сделан в Б1), `bridge`.
 

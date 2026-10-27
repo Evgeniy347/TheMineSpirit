@@ -10,8 +10,7 @@
     {"stage": 3, "buildings": {"BUILD_MINE": 3, "BUILD_WAREHOUSE": 3, "BUILD_STREETS": 2},
      "plan": ["player_house", "forge", "bakery", "apiary", "kennel", "stable", "barracks", "weaver"]},
     {"stage": 4, "buildings": {"BUILD_MINE": 4, "BUILD_WAREHOUSE": 4},
-     "plan": ["town_hall", "tavern", "infirmary", "training_yard", "enchant_room", "alchemy", "library",
-              "trading_post"]}
+     "plan": ["town_hall", "tavern", "infirmary", "training_yard", "enchant_room", "alchemy", "library"]}
   ],
   "schemes": {
     "BUILD_HOUSE": ["hut_1", "stone_house"],
