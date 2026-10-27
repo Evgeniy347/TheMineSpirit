@@ -1,0 +1,166 @@
+package com.theminespirit.neoforge.board;
+
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLedger;
+import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.SettlementStage;
+import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.ToolFate;
+import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.graph.GraphKits;
+import com.theminespirit.core.board.graph.GraphNames;
+import com.theminespirit.core.board.graph.GraphState;
+import com.theminespirit.core.board.graph.GraphState.Built;
+import com.theminespirit.core.board.graph.StageBuilt;
+import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.repair.RepairCalculator;
+import com.theminespirit.core.repair.RepairData;
+import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+
+final class GraphInputs {
+    private static final String ORCHARD = "orchard_";
+
+    private GraphInputs() {}
+
+    static GraphState state(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            FirstStepsRunner.StageScan scan,
+            SupplyGraph graph,
+            GraphSurroundings.Around around) {
+        int stage = SettlementStage.of(service.board().ledger());
+        Map<String, Built> buildings = buildings(level, service.board().ledger(), scan, graph);
+        return new GraphState(
+                GraphNames.stock(
+                        stock.available(),
+                        StockCatalog.defaultTable().nutrition().keySet()),
+                stage,
+                kits(spirits, graph),
+                buildings,
+                materials(level, service, stock, scan, graph, buildings, stage),
+                ChestSpaceWatch.space(level).freePercent(),
+                around.events(),
+                around.world());
+    }
+
+    static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
+        ToolsConfig config = DataTables.INSTANCE.board().current().tools();
+        int percent = RepairData.loadDefault().maxDurabilityPercent();
+        Map<String, Map<String, Integer>> kits = new HashMap<>();
+        for (SpiritEntity spirit : spirits) {
+            List<String> items = new ArrayList<>();
+            for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+                kept(spirit.getInventory().getItem(slot), config, percent).ifPresent(items::add);
+            }
+            if (spirit.mainHandOwned()) {
+                kept(spirit.getMainHandItem(), config, percent).ifPresent(items::add);
+            }
+            kits.put(spirit.getUUID().toString(), GraphKits.of(items, graph));
+        }
+        return kits;
+    }
+
+    private static Optional<String> kept(ItemStack stack, ToolsConfig config, int percent) {
+        if (stack.isEmpty()) {
+            return Optional.empty();
+        }
+        String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        if (stack.getMaxDamage() > 0 && stack.getDamageValue() > 0) {
+            int durability = stack.getMaxDamage() - stack.getDamageValue();
+            boolean damaged = RepairCalculator.damagedEnoughToRepair(durability, stack.getMaxDamage(), percent);
+            if (config.fate(itemId, damaged) == ToolFate.REPLACE) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(itemId);
+    }
+
+    private static Map<String, Built> buildings(
+            ServerLevel level, BoardLedger ledger, FirstStepsRunner.StageScan scan, SupplyGraph graph) {
+        Map<String, Built> buildings = new HashMap<>(StageBuilt.of(scan.facts()));
+        buildings.putIfAbsent(ORCHARD + scan.wood(), buildings.get(StageBuilt.ORCHARD));
+        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
+        graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
+        for (SupplyGraph.Building building : graph.buildings().values()) {
+            if (buildings.containsKey(building.id())) {
+                continue;
+            }
+            boolean ownCase = sharing.get(building.boardCase()) == 1;
+            if (ownCase && ledger.has(building.boardCase(), 1)) {
+                buildings.put(building.id(), Built.BUILT);
+            } else if (town.flatMap(plan -> plan.placement(building.id())).isPresent()) {
+                buildings.put(building.id(), Built.PLANNED);
+            }
+        }
+        return buildings;
+    }
+
+    private static Map<String, Map<String, Integer>> materials(
+            ServerLevel level,
+            BoardService service,
+            StockView stock,
+            FirstStepsRunner.StageScan scan,
+            SupplyGraph graph,
+            Map<String, Built> buildings,
+            int stage) {
+        MaterialSource source = FirstStepsRunner.materialSource(level);
+        Map<String, Map<String, Integer>> materials = new HashMap<>();
+        for (String id : StageBuilt.ids()) {
+            SupplyGraph.Building building = graph.buildings().get(id);
+            if (building == null || building.stage() > stage || buildings.get(id) == Built.BUILT) {
+                continue;
+            }
+            if (building.boardCase() == BoardCase.CLEAR_GROUNDS || booked(service, building.boardCase())) {
+                materials.put(id, Map.of());
+                continue;
+            }
+            Map<String, Integer> need = FirstStepsRunner.materialsOf(level, stock, scan, building.boardCase());
+            materials.put(id, known(graph, source, need));
+        }
+        return materials;
+    }
+
+    private static boolean booked(BoardService service, BoardCase boardCase) {
+        return FirstStepsRunner.ticketIds(boardCase).stream()
+                .anyMatch(id -> service.board()
+                        .statusOf(id)
+                        .filter(status -> status == BoardStatus.PENDING
+                                || status == BoardStatus.WAITING_RESOURCES
+                                || status == BoardStatus.ASSIGNED)
+                        .isPresent());
+    }
+
+    private static Map<String, Integer> known(SupplyGraph graph, MaterialSource source, Map<String, Integer> need) {
+        Map<String, Integer> raw = new HashMap<>();
+        need.forEach((item, count) -> {
+            if (graph.items().containsKey(GraphNames.graphItem(item))) {
+                raw.merge(item, count, Integer::sum);
+            } else {
+                FirstStepsRunner.expand(source, item, count, raw, 0);
+            }
+        });
+        Map<String, Integer> known = new HashMap<>();
+        GraphNames.need(raw).forEach((item, count) -> {
+            if (graph.items().containsKey(item)) {
+                known.put(item, count);
+            }
+        });
+        return known;
+    }
+}

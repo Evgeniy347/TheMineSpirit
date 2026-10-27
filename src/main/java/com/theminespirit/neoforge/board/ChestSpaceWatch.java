@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 
 final class ChestSpaceWatch {
     static final String PREFIX = "chests:";
+    private static final int FULL_PERCENT = 100;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<BoardStatus> OPEN =
             EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
@@ -39,18 +40,9 @@ final class ChestSpaceWatch {
         if (!service.board().ledger().has(BoardCase.STOCK_CHESTS, 1) || open(service)) {
             return;
         }
-        int free = 0;
-        int slots = 0;
-        for (BlockCoord chest : SettlementChestStore.get(level).chests().all()) {
-            if (ContainerAccess.open(level, new BlockPos(chest.x(), chest.y(), chest.z()))
-                    instanceof ContainerAccess.Opened opened) {
-                Container container = opened.container();
-                slots += container.getContainerSize();
-                for (int slot = 0; slot < container.getContainerSize(); slot++) {
-                    free += container.getItem(slot).isEmpty() ? 1 : 0;
-                }
-            }
-        }
+        Space space = space(level);
+        int free = space.free();
+        int slots = space.slots();
         int threshold = DataTables.INSTANCE.town().current().spacing().chestFreePercent();
         if (!WarehouseSpace.needsChest(free, slots, threshold)) {
             return;
@@ -92,6 +84,28 @@ final class ChestSpaceWatch {
                         List.of("free=" + free, "slots=" + slots, "threshold=" + threshold, "slot=" + slot),
                         null,
                         ConfigStamp.current()));
+    }
+
+    record Space(int free, int slots) {
+        int freePercent() {
+            return slots == 0 ? FULL_PERCENT : free * FULL_PERCENT / slots;
+        }
+    }
+
+    static Space space(ServerLevel level) {
+        int free = 0;
+        int slots = 0;
+        for (BlockCoord chest : SettlementChestStore.get(level).chests().all()) {
+            if (ContainerAccess.open(level, new BlockPos(chest.x(), chest.y(), chest.z()))
+                    instanceof ContainerAccess.Opened opened) {
+                Container container = opened.container();
+                slots += container.getContainerSize();
+                for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                    free += container.getItem(slot).isEmpty() ? 1 : 0;
+                }
+            }
+        }
+        return new Space(free, slots);
     }
 
     private static Optional<Integer> nextSlot(ServerLevel level, StageSite site) {

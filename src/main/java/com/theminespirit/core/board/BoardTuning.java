@@ -45,8 +45,6 @@ public final class BoardTuning {
 
     public static final int TRANSFER_MAX_COUNT = 64;
 
-    public static final long TOOL_FALLBACK_TICKS = 1200;
-
     public static final int REBUILD_PERCENT = 50;
 
     public static final Set<String> INTERVAL_KEYS = Set.of(
@@ -70,7 +68,6 @@ public final class BoardTuning {
             "enchantShelvesMin",
             "transferRadiusBlocks",
             "transferMaxCount",
-            "toolFallbackTicks",
             "rebuildPercent");
 
     private BoardTuning() {}
@@ -147,10 +144,6 @@ public final class BoardTuning {
 
     public static int transferMaxCount() {
         return (int) interval("transferMaxCount", TRANSFER_MAX_COUNT);
-    }
-
-    public static long toolFallbackTicks() {
-        return interval("toolFallbackTicks", TOOL_FALLBACK_TICKS);
     }
 
     public static int rebuildPercent() {

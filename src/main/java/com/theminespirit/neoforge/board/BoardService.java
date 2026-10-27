@@ -8,7 +8,6 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
@@ -18,9 +17,7 @@ import com.theminespirit.core.board.CarriedItems;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.DispatchRound;
-import com.theminespirit.core.board.EvergreenRules;
 import com.theminespirit.core.board.HerdCycles;
-import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
@@ -30,7 +27,6 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolLossRelease;
-import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.coordinator.WorkKind;
@@ -77,7 +73,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class BoardService {
-    static final String PICKAXE_TICKET = "tool:wooden_pickaxe";
     private static final long EARLY_DISPATCH_TICKS = 20;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
@@ -1065,7 +1060,7 @@ public final class BoardService {
         String item = target.supplyItem();
         if (ticket.boardCase() != BoardCase.GATHER_MATERIALS
                 || item == null
-                || TorchRules.COAL.equals(item)
+                || "coal".equals(item)
                 || "cobblestone".equals(item)) {
             return target;
         }
@@ -1228,38 +1223,6 @@ public final class BoardService {
                             Map.of()),
                     target.withSupply(item, count));
         }
-        if (!FirstStepsRunner.stageOneBuilding(this)) {
-            permanentSupplies(spirits, stock, now);
-        }
-    }
-
-    private void permanentSupplies(List<SpiritEntity> spirits, StockView stock, long now) {
-        EvergreenRules.supplyThresholds().forEach((item, threshold) -> {
-            String shortItem = shortId(item);
-            if (!EvergreenRules.supplyNeeded(item, board)) {
-                return;
-            }
-            int have = stock.available().getOrDefault(shortItem, 0);
-            if (have >= threshold || hasActiveSupply(shortItem)) {
-                return;
-            }
-            String id = "supply:" + shortItem;
-            if (active(id) || board.recentlyFailed(id, now)) {
-                return;
-            }
-            submit(
-                    new BoardTicket(
-                            id,
-                            BoardCase.SUPPLY_SITE,
-                            Optional.empty(),
-                            BoardPriorities.effective(BoardCase.ENCHANT_SHELVES, PriorityContext.none()),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    TicketTarget.at(homeOf(spirits)).withSupply(shortItem, threshold - have));
-        });
     }
 
     private boolean hasActiveSupply(String item) {
@@ -1280,10 +1243,6 @@ public final class BoardService {
         return status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
-    }
-
-    private static String shortId(String item) {
-        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {

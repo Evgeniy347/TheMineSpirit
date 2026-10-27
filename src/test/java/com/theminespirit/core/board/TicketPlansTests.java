@@ -29,6 +29,7 @@ import com.theminespirit.core.town.TownFixtures;
 import com.theminespirit.core.town.YardScheme;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +46,9 @@ import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
 
 class TicketPlansTests {
+    private static final List<BoardCase> TOOL_CASES =
+            Arrays.stream(BoardCase.values()).filter(ToolSet::isTool).toList();
+
     private static final int LEGACY_FENCE_HALF = 13;
 
     private static final Map<BoardCase, String> CASE_SCRIPTS = Map.ofEntries(
@@ -652,7 +656,7 @@ class TicketPlansTests {
 
     @Test
     void craftItem_ToolCases_ReturnToolSetItem() {
-        for (BoardCase boardCase : ToolSet.chain()) {
+        for (BoardCase boardCase : TOOL_CASES) {
             assertEquals(
                     Optional.of(ToolSet.itemId(boardCase)),
                     TicketPlans.craftItem(boardCase),
@@ -708,7 +712,7 @@ class TicketPlansTests {
 
     @Test
     void plan_CraftCases_CarryStationRadius() {
-        List<BoardCase> craftCases = new ArrayList<>(ToolSet.chain());
+        List<BoardCase> craftCases = new ArrayList<>(TOOL_CASES);
         craftCases.add(BoardCase.STOCK_CHESTS);
         craftCases.add(BoardCase.CRAFTING_STATION);
         craftCases.add(BoardCase.CRAFT_ANVIL);
@@ -1054,7 +1058,7 @@ class TicketPlansTests {
 
     @Test
     void plan_GatherCoal_MinesCoalVein() {
-        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply(TorchRules.COAL, 4);
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("coal", 4);
 
         ScriptCall vein = findCall(TicketPlans.plan(BoardCase.GATHER_MATERIALS, target), "mine_vein");
 

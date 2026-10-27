@@ -22,6 +22,7 @@ public final class Board {
             STONE_PART_PREFIX,
             FENCE_PART_PREFIX,
             "gather:",
+            "graph:",
             "supply:",
             "mine_level_",
             "repair_tool:");
@@ -340,6 +341,33 @@ public final class Board {
         }
         Set<String> cancelled = new HashSet<>();
         cancelWithDependants(ticketId, cancelled, BoardLog.Event.CANCELLED);
+        return true;
+    }
+
+    public boolean reprioritize(String ticketId, int priority) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: приоритет меняется у задания по id");
+        BoardTicket ticket = tickets.get(ticketId);
+        BoardStatus status = statuses.get(ticketId);
+        boolean open = status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED
+                || status == BoardStatus.BLOCKED;
+        if (ticket == null || !open || ticket.priority() == priority) {
+            return false;
+        }
+        tickets.put(
+                ticketId,
+                new BoardTicket(
+                        ticket.id(),
+                        ticket.boardCase(),
+                        ticket.assignee(),
+                        priority,
+                        ticket.createdAt(),
+                        ticket.level(),
+                        ticket.cause(),
+                        ticket.dependsOn(),
+                        ticket.requiredItems(),
+                        ticket.modifiers()));
         return true;
     }
 

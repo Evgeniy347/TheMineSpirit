@@ -47,6 +47,10 @@ public final class TicketPlans {
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String TORCH = "minecraft:torch";
+    private static final String COAL = "coal";
+    private static final int TORCHES_PER_CRAFT = 4;
+    private static final int CHARCOAL_LOGS = 4;
+    private static final int CHARCOAL_BATCH = 2;
     private static final String BUILD_SCHEMATIC = "build_schematic";
     private static final String FILE = "file";
     private static final String FILL = "fill";
@@ -513,14 +517,14 @@ public final class TicketPlans {
     }
 
     private static int torchCount(TicketTarget target) {
-        int count = target.count() > 0 ? target.count() : TorchRules.TORCHES_PER_CRAFT;
+        int count = target.count() > 0 ? target.count() : TORCHES_PER_CRAFT;
         return Math.min(count, CatalogLimits.COUNT_MAX);
     }
 
     private static TaskNode smeltCharcoal(TicketTarget target) {
         String log = target.supplyItem() == null ? "oak_log" : target.supplyItem();
-        int logs = target.supplyCount() > 0 ? target.supplyCount() : TorchRules.CHARCOAL_LOGS;
-        int charcoal = target.count() > 0 ? target.count() : TorchRules.CHARCOAL_BATCH;
+        int logs = target.supplyCount() > 0 ? target.supplyCount() : CHARCOAL_LOGS;
+        int charcoal = target.count() > 0 ? target.count() : CHARCOAL_BATCH;
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
@@ -640,7 +644,7 @@ public final class TicketPlans {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        if (TorchRules.COAL.equals(item)) {
+        if (COAL.equals(item)) {
             return sequence(
                     gotoTarget(target),
                     new ScriptCall(

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 class ProductionCommentGuardTests {
     private static final Path BASELINE = Path.of("config/comment-baseline.txt");
-    private static final int BASELINE_LIMIT = 233;
+    private static final int BASELINE_LIMIT = 231;
     private static final Set<String> SKIPPED_DIRECTORIES = Set.of(
             ".git", ".gradle", ".idea", ".vs", ".codegraph", "build", "TestResults", "temp-scripts", "run", "run-data");
     private static final Pattern RESTRICTION_LABEL = Pattern.compile("^(?:mc|lib)\\s*:");

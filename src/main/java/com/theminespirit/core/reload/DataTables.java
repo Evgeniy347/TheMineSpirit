@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.WoodRules;
+import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -79,6 +80,7 @@ public final class DataTables {
     private final TableHolder<BlockProtection> protection;
     private final TableHolder<PresetLibrary> presets;
     private final TableHolder<BoardConfig> board;
+    private final TableHolder<SupplyGraph> graph;
     private final TableHolder<DoorRules> doors;
     private final TableHolder<BuildData> building;
     private final TableHolder<MagnetRules> magnet;
@@ -147,6 +149,7 @@ public final class DataTables {
                 ProtectionConfig::readClasspath);
         this.presets = registry.registerLazy(presetsDefinition(), () -> PresetLibrary.parse(loadPresetBodies()));
         this.board = single("board", BoardConfig.RESOURCE, BoardConfig::fromJson, BoardConfig::readFromClasspath);
+        this.graph = single("graph", SupplyGraph.RESOURCE, SupplyGraph::parse, SupplyGraph::loadDefault);
         this.building = single("building", BuildData.RESOURCE, BuildData::parse, BuildData::load);
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
@@ -331,6 +334,10 @@ public final class DataTables {
 
     public TableHolder<BoardConfig> board() {
         return board;
+    }
+
+    public TableHolder<SupplyGraph> graph() {
+        return graph;
     }
 
     public TableHolder<BuildData> building() {

@@ -53,8 +53,9 @@ class BoardReserveTests {
         StockView stock = BoardReserve.unreserved(new StockView(Map.of("jungle_log", 4)), board);
 
         assertEquals(
-                Optional.empty(),
-                TorchRules.next(stock.available(), true, false),
-                "Брёвна под забор забронированы: уголь для факелов из них не пережигается (приёмка «джунгли»)");
+                Map.of(),
+                stock.available(),
+                "Брёвна под забор забронированы: источникам доски (граф и уголь для факелов) они не видны как свободные "
+                        + "(приёмка «джунгли»)");
     }
 }

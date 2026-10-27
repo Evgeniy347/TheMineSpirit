@@ -1442,7 +1442,10 @@
       "base": 55,
       "materials": {
         "#stone_crafting": 8
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "clearing": {
       "case": "CLEAR_GROUNDS",
@@ -1457,7 +1460,10 @@
       "base": 50,
       "materials": {
         "#planks": 16
-      }
+      },
+      "requires": [
+        "clearing"
+      ]
     },
     "mine": {
       "case": "BUILD_MINE",
@@ -1466,7 +1472,10 @@
       "materials": {
         "torch": 6
       },
-      "tool": "pickaxe"
+      "tool": "pickaxe",
+      "requires": [
+        "clearing"
+      ]
     },
     "lighting": {
       "case": "LIGHTING",
@@ -1474,7 +1483,10 @@
       "base": 50,
       "materials": {
         "torch": 8
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "fence": {
       "case": "BUILD_FENCE",
@@ -1482,7 +1494,10 @@
       "base": 50,
       "materials": {
         "oak_log": 40
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "hut": {
       "case": "BUILD_HOUSE",
@@ -1492,7 +1507,10 @@
         "oak_log": 12,
         "oak_planks": 30,
         "cobblestone": 16
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "streets": {
       "case": "BUILD_STREETS",
@@ -1500,7 +1518,10 @@
       "base": 40,
       "materials": {
         "dirt": 40
-      }
+      },
+      "requires": [
+        "hut"
+      ]
     },
     "warehouse": {
       "case": "BUILD_WAREHOUSE",
@@ -2006,7 +2027,8 @@
       "yield": 16,
       "weight": 1.0,
       "tool": "pickaxe",
-      "tier": "wooden"
+      "tier": "wooden",
+      "building": "mine"
     },
     {
       "id": "dig_dirt",
@@ -2923,7 +2945,8 @@
       "makes": "oak_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:oak"
+      "world": "tree:oak",
+      "implemented": false
     },
     {
       "id": "chop_birch_log",
@@ -2957,7 +2980,8 @@
       "makes": "birch_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:birch"
+      "world": "tree:birch",
+      "implemented": false
     },
     {
       "id": "chop_spruce_log",
@@ -2991,7 +3015,8 @@
       "makes": "spruce_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:spruce"
+      "world": "tree:spruce",
+      "implemented": false
     },
     {
       "id": "chop_jungle_log",
@@ -3025,7 +3050,8 @@
       "makes": "jungle_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:jungle"
+      "world": "tree:jungle",
+      "implemented": false
     },
     {
       "id": "chop_acacia_log",
@@ -3059,7 +3085,8 @@
       "makes": "acacia_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:acacia"
+      "world": "tree:acacia",
+      "implemented": false
     },
     {
       "id": "chop_dark_oak_log",
@@ -3093,7 +3120,8 @@
       "makes": "dark_oak_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:dark_oak"
+      "world": "tree:dark_oak",
+      "implemented": false
     },
     {
       "id": "chop_cherry_log",
@@ -3127,7 +3155,8 @@
       "makes": "cherry_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:cherry"
+      "world": "tree:cherry",
+      "implemented": false
     },
     {
       "id": "chop_mangrove_log",
@@ -3161,7 +3190,8 @@
       "makes": "mangrove_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:mangrove"
+      "world": "tree:mangrove",
+      "implemented": false
     },
     {
       "id": "mine_deepslate",
