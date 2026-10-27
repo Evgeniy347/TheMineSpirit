@@ -72,6 +72,28 @@
   {"id": "mine_descent", "name": "Спуск в шахту", "type": "underground", "levels": [
    {"level": 1, "scheme": "mine_descent_v1"}]},
   {"id": "mine_tunnel", "name": "Шахтный ход", "type": "underground", "levels": [
-   {"level": 1, "scheme": "mine_tunnel_v1"}]}
+   {"level": 1, "scheme": "mine_tunnel_v1"}]},
+  {"id": "barn", "name": "Амбар", "type": "storage", "levels": [
+   {"level": 1, "scheme": "barn_1"}]},
+  {"id": "field", "name": "Пашня", "type": "farm", "levels": [
+   {"level": 1, "scheme": "field_1"}]},
+  {"id": "lumber_yard", "name": "Лесопилка", "type": "craft", "levels": [
+   {"level": 1, "scheme": "lumber_yard_1"}]},
+  {"id": "workshop", "name": "Мастерская", "type": "craft", "levels": [
+   {"level": 1, "scheme": "workshop_1"}]},
+  {"id": "forge", "name": "Кузница", "type": "craft", "levels": [
+   {"level": 1, "scheme": "forge_1"}]},
+  {"id": "bakery", "name": "Пекарня", "type": "food", "levels": [
+   {"level": 1, "scheme": "bakery_1"}]},
+  {"id": "apiary", "name": "Пасека", "type": "farm", "levels": [
+   {"level": 1, "scheme": "apiary_1"}]},
+  {"id": "kennel", "name": "Псарня", "type": "pet", "levels": [
+   {"level": 1, "scheme": "kennel_1"}]},
+  {"id": "stable", "name": "Конюшня", "type": "pet", "levels": [
+   {"level": 1, "scheme": "stable_1"}]},
+  {"id": "barracks", "name": "Казарма", "type": "housing", "levels": [
+   {"level": 1, "scheme": "barracks_1"}]},
+  {"id": "weaver", "name": "Ткацкая", "type": "craft", "levels": [
+   {"level": 1, "scheme": "weaver_1"}]}
  ]
 }

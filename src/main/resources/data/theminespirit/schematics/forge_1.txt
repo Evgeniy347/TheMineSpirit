@@ -1,0 +1,103 @@
+# forge_1 — кузница уровня 1 (tasks/47-settlement/catalog-2.md): открытый навес на столбах,
+# две печи, наковальня, точило, котёл с водой, кузнечный стол. Стены не нужны — под навесом работает горн.
+name: "Кузница, уровень 1"
+type: craft
+stage: 3
+level: 1
+size: 9x8x9   # Ш×В×Д
+entrance: 4,1,1
+exemptions:
+  - rule: closed_walls
+    reason: "кузница — открытый навес на столбах: сплошных стен нет по замыслу, дым и жар уходят наружу"
+legend:
+  'C': cobblestone
+  'L': oak_log[axis=y]
+  'F': furnace[facing=south]
+  'A': anvil[facing=south]
+  'g': grindstone[facing=south]
+  's': smithing_table
+  'W': water_cauldron
+  'k': campfire
+  '_': cobblestone_slab[type=bottom]
+  'T': torch
+layers:
+  - y0 пол: |
+      ...._....
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+  - y1 горн и инструмент: |
+      .........
+      L.......L
+      ..F...A..
+      ..F...g..
+      ....s....
+      .k.......
+      ....W....
+      .T.....T.
+      L.......L
+  - y2 столбы: |
+      .........
+      L.......L
+      .........
+      .........
+      .........
+      .........
+      .........
+      .........
+      L.......L
+  - y3 столбы: |
+      .........
+      L.......L
+      .........
+      .........
+      .........
+      .........
+      .........
+      .........
+      L.......L
+  - y4 столбы: |
+      .........
+      L.......L
+      .........
+      .........
+      .........
+      .........
+      .........
+      .........
+      L.......L
+  - y5 крыша навеса: |
+      .........
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+      CCCCCCCCC
+  - y6 скат: |
+      .........
+      ._CCCCC_.
+      ._CCCCC_.
+      ._CCCCC_.
+      ._CCCCC_.
+      ._CCCCC_.
+      ._CCCCC_.
+      ._CCCCC_.
+      ._CCCCC_.
+  - y7 конёк: |
+      .........
+      .._CCC_..
+      .._CCC_..
+      .._CCC_..
+      .._CCC_..
+      .._CCC_..
+      .._CCC_..
+      .._CCC_..
+      .._CCC_..

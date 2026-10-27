@@ -1,0 +1,44 @@
+# apiary_1 — пасека уровня 1 (tasks/47-settlement/catalog.md): два улья, костёр у каждого, цветы кругом.
+# Открытый участок: крыши нет, ульям нужен свет и подлёт; костры дают дым и свет.
+name: "Пасека, уровень 1"
+type: farm
+stage: 3
+level: 1
+size: 7x3x7   # Ш×В×Д
+entrance: 3,1,1
+exemptions:
+  - rule: roof
+    reason: "пасека под открытым небом: ульям нужен свет и свободный подлёт пчёл, крыши нет по замыслу"
+legend:
+  'p': dirt_path
+  'e': dirt
+  'j': beehive
+  'k': campfire
+  'a': poppy ~
+  '_': oak_slab[type=bottom]
+  'T': torch
+layers:
+  - y0 ульи, костры и цветы: |
+      ..._...
+      ppppppp
+      ejkeeee
+      eeeeeee
+      eeaeeee
+      eeejkee
+      eeeeeee
+  - y1 воздух и факелы по углам: |
+      .......
+      T.....T
+      .......
+      .......
+      .......
+      .......
+      T.....T
+  - y2 воздух: |
+      .......
+      .......
+      .......
+      .......
+      .......
+      .......
+      .......

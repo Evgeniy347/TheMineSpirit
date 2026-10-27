@@ -17,6 +17,77 @@ import org.junit.jupiter.api.Test;
 class PresetLibraryTests {
     private static final String INDEX_PATH = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
 
+    private static final List<String> PRESET_IDS = List.of(
+            "palisade_section",
+            "torch_post",
+            "storage_hut",
+            "family_house",
+            "hut_1",
+            "stone_house",
+            "well",
+            "pen_7x7",
+            "pen_4x5",
+            "pen_9x9",
+            "orchard_1",
+            "mine_entrance_v1",
+            "mine_descent_v1",
+            "mine_tunnel_v1",
+            "enchant_room_v1",
+            "enchant_room_v2",
+            "enchant_room_v3",
+            "storage_v1",
+            "storage_v2",
+            "storage_v3",
+            "storage_v4",
+            "family_house_1",
+            "family_house_2",
+            "family_house_3",
+            "family_house_4",
+            "player_house_1",
+            "plaza_1",
+            "well_2",
+            "lamp_2",
+            "lamp_3",
+            "plaza_2",
+            "player_house_2",
+            "player_house_3",
+            "player_house_4",
+            "plaza_3",
+            "fence_long",
+            "fence_straight",
+            "fence_post",
+            "fence_corner",
+            "fence_diagonal",
+            "fence_corner45_left",
+            "fence_corner45_right",
+            "fence_wicket",
+            "yard_1",
+            "yard_chest",
+            "ground_torch",
+            "street5_straight",
+            "street5_turn",
+            "street5_t",
+            "street5_cross",
+            "street7_straight",
+            "street7_turn",
+            "street7_t",
+            "street7_cross",
+            "street_patch",
+            "street5_dirt",
+            "street7_dirt",
+            "street_patch_dirt",
+            "barn_1",
+            "field_1",
+            "lumber_yard_1",
+            "workshop_1",
+            "forge_1",
+            "bakery_1",
+            "apiary_1",
+            "kennel_1",
+            "stable_1",
+            "barracks_1",
+            "weaver_1");
+
     private static PresetLibrary loadReal() {
         List<LoadedContent> contents = new ArrayList<>();
         String indexJson = JsonResource.readClasspath(INDEX_PATH);
@@ -56,72 +127,14 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                58,
+                69,
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
                         + "четыре уровня склада, загоны трёх уровней и сад: без них стратегу не из чего "
                         + "составлять планировку поселения");
         assertEquals(
-                List.of(
-                        "palisade_section",
-                        "torch_post",
-                        "storage_hut",
-                        "family_house",
-                        "hut_1",
-                        "stone_house",
-                        "well",
-                        "pen_7x7",
-                        "pen_4x5",
-                        "pen_9x9",
-                        "orchard_1",
-                        "mine_entrance_v1",
-                        "mine_descent_v1",
-                        "mine_tunnel_v1",
-                        "enchant_room_v1",
-                        "enchant_room_v2",
-                        "enchant_room_v3",
-                        "storage_v1",
-                        "storage_v2",
-                        "storage_v3",
-                        "storage_v4",
-                        "family_house_1",
-                        "family_house_2",
-                        "family_house_3",
-                        "family_house_4",
-                        "player_house_1",
-                        "plaza_1",
-                        "well_2",
-                        "lamp_2",
-                        "lamp_3",
-                        "plaza_2",
-                        "player_house_2",
-                        "player_house_3",
-                        "player_house_4",
-                        "plaza_3",
-                        "fence_long",
-                        "fence_straight",
-                        "fence_post",
-                        "fence_corner",
-                        "fence_diagonal",
-                        "fence_corner45_left",
-                        "fence_corner45_right",
-                        "fence_wicket",
-                        "yard_1",
-                        "yard_chest",
-                        "ground_torch",
-                        "street5_straight",
-                        "street5_turn",
-                        "street5_t",
-                        "street5_cross",
-                        "street7_straight",
-                        "street7_turn",
-                        "street7_t",
-                        "street7_cross",
-                        "street_patch",
-                        "street5_dirt",
-                        "street7_dirt",
-                        "street_patch_dirt"),
+                PRESET_IDS,
                 library.ids(),
                 "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
     }
@@ -336,7 +349,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                58,
+                69,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
@@ -374,7 +387,14 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                List.of("enchant_room_v1", "enchant_room_v2", "enchant_room_v3"),
+                List.of(
+                        "enchant_room_v1",
+                        "enchant_room_v2",
+                        "enchant_room_v3",
+                        "lumber_yard_1",
+                        "workshop_1",
+                        "forge_1",
+                        "weaver_1"),
                 library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),
                 "Чаровальня обязана лежать в типе «ремесло»: по типу стратег находит постройку под стол чарования");
     }
