@@ -99,7 +99,8 @@ final class GraphChaos {
                 graph.unimplemented(),
                 graph.events(),
                 graph.groups(),
-                graph.triggers());
+                graph.triggers(),
+                graph.herdCaps());
     }
 
     static List<GraphMutations.Mutation> combo(Random random, int size) {

@@ -478,8 +478,10 @@ class GraphPlannerTests {
 
     @Test
     void plan_OneCowInPen_BreedingWaitsForPair() {
-        GraphWorld world =
-                GraphWorld.settled().built("pen", Built.BUILT).with("cow", 1).with("wheat", 10);
+        GraphWorld world = GraphWorld.settled()
+                .built("pen_cow", Built.BUILT)
+                .with("herd_cow", 1)
+                .with("wheat", 10);
         world.stage = 2;
         GraphPlan plan = world.plan();
 
@@ -519,5 +521,88 @@ class GraphPlannerTests {
                 plan.notices().isEmpty(),
                 "Этап 1, еды мало — поле, пекарня, загон и пасека этапов 2–3 не источник и не повод просить стратега: "
                         + plan.notices());
+    }
+
+    private static GraphWorld farm() {
+        GraphWorld world = GraphWorld.settled()
+                .built("pen_cow", Built.BUILT)
+                .built("pen_sheep", Built.BUILT)
+                .built("smoker", Built.BUILT)
+                .with("wheat", 20);
+        world.stage = 2;
+        return world;
+    }
+
+    @Test
+    void plan_HerdOverPenCapacity_CullRaised() {
+        GraphPlan calm = farm().with("herd_cow", 6).with("beef", 64).plan();
+        GraphPlan crowded = farm().with("herd_cow", 14).with("beef", 64).plan();
+
+        assertTrue(
+                crowded.priority("cull_cow") > calm.priority("cull_cow"),
+                "Коров больше вместимости загона — забой лишних важнее: " + crowded.priority("cull_cow") + " против "
+                        + calm.priority("cull_cow"));
+    }
+
+    @Test
+    void plan_RawMeatBelowThreshold_BreedingRaised() {
+        GraphPlan stocked = farm().with("herd_cow", 4).with("beef", 64).plan();
+        GraphPlan empty = farm().with("herd_cow", 4).with("beef", 0).plan();
+
+        assertTrue(
+                empty.priority("breed_cow") > stocked.priority("breed_cow"),
+                "Сырого мяса меньше порога — кормление и разведение важнее: " + empty.priority("breed_cow") + " против "
+                        + stocked.priority("breed_cow"));
+    }
+
+    @Test
+    void plan_RawBeefHeld_CookInSmoker() {
+        GraphPlan plan = farm().with("beef", 4).with("food", 0).plan();
+
+        assertTrue(
+                plan.task("cook_beef_smoker").map(GraphPlan.Task::feasible).orElse(false)
+                        && plan.priority("cook_beef_smoker") > plan.priority("cook_beef_campfire"),
+                "Сырая говядина есть, еды мало — жарим, коптильня выше костра: " + plan.task("cook_beef_smoker"));
+    }
+
+    @Test
+    void plan_SheepInCowPen_WoolNeedsSheepPen() {
+        GraphWorld world = GraphWorld.settled().built("pen_cow", Built.BUILT).with("herd_sheep", 3);
+        world.stage = 2;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("shear").map(task -> !task.feasible()).orElse(true),
+                "Загоны раздельные: стричь овец можно только в овчарне — " + plan.task("shear"));
+    }
+
+    @Test
+    void plan_DiamondFoundStonePickaxe_RememberAndRaisePickaxe() {
+        GraphWorld world = GraphWorld.settled().event("ore_found_diamond");
+        world.world.add("ore:diamond_found");
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("mine_found_diamond").map(task -> !task.feasible()).orElse(true)
+                        && plan.advice().stream().anyMatch(advice -> "ore_found_diamond".equals(advice.event())),
+                "Алмазная руда найдена, кирка каменная — не копаем, запоминаем, кирку поднимаем: "
+                        + plan.task("mine_found_diamond"));
+    }
+
+    @Test
+    void plan_DiamondFoundIronPickaxe_MineableFortuneUnimplemented() {
+        GraphWorld world = GraphWorld.settled().tools("spirit-1", 2);
+        world.world.add("ore:diamond_found");
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("mine_found_diamond").map(GraphPlan.Task::feasible).orElse(false)
+                        && plan.task("enchant_fortune_pickaxe")
+                                .map(task -> !task.implemented())
+                                .orElse(true),
+                "С железной киркой найденные алмазы копаются; кирка «на удачу» — чары, пока не реализованы: "
+                        + plan.task("mine_found_diamond"));
     }
 }

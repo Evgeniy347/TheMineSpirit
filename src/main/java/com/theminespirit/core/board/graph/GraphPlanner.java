@@ -91,6 +91,15 @@ public final class GraphPlanner {
                 requireBuilding(building.id(), building.base(), "постройка этапа " + building.stage(), new HashSet<>());
             }
         }
+        graph.herdCaps().forEach((herd, cap) -> {
+            if (count(herd) > cap) {
+                for (SupplyGraph.Way way : graph.ways()) {
+                    if (way.consumes().containsKey(herd) && available(way)) {
+                        add(way.id(), graph.herdCullBoost());
+                    }
+                }
+            }
+        });
         for (SupplyGraph.Trigger trigger : graph.triggers()) {
             SupplyGraph.Building wanted = graph.buildings().get(trigger.build());
             if (wanted != null && count(trigger.have()) > 0 && state.built(trigger.build()) != Built.BUILT) {
@@ -287,10 +296,16 @@ public final class GraphPlanner {
             if (!lacking(graph, state, edge.lack())) {
                 continue;
             }
+            boolean active = false;
             for (String key : List.copyOf(scores.keySet())) {
                 if (key.equals(edge.way()) || key.startsWith(edge.way() + AT)) {
                     add(key, edge.weight());
+                    active = true;
                 }
+            }
+            SupplyGraph.Way way = graph.way(edge.way()).orElse(null);
+            if (!active && edge.weight() > 0 && way != null && !graph.isTool(way.makes()) && available(way)) {
+                activate(way, way.id(), edge.weight(), new HashSet<>());
             }
         }
     }

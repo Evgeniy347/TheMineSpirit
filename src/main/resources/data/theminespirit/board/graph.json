@@ -720,30 +720,6 @@
       "base": 20,
       "stage": 2
     },
-    "cow": {
-      "xmin": 2,
-      "k": 1,
-      "base": 35,
-      "stage": 2
-    },
-    "sheep": {
-      "xmin": 2,
-      "k": 1,
-      "base": 35,
-      "stage": 2
-    },
-    "chicken": {
-      "xmin": 2,
-      "k": 1,
-      "base": 35,
-      "stage": 2
-    },
-    "pig": {
-      "xmin": 2,
-      "k": 1,
-      "base": 35,
-      "stage": 2
-    },
     "milk_bucket": {
       "xmin": 1,
       "k": 1,
@@ -1020,6 +996,61 @@
       "k": 1,
       "base": 25,
       "stage": 2
+    },
+    "herd_cow": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "beef": {
+      "xmin": 4,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "herd_sheep": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "mutton": {
+      "xmin": 4,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "herd_pig": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "porkchop": {
+      "xmin": 4,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "herd_chicken": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "raw_chicken": {
+      "xmin": 4,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "fortune_pickaxe": {
+      "xmin": 0,
+      "k": 1,
+      "base": 40,
+      "stage": 3,
+      "implemented": false
     }
   },
   "buildings": {
@@ -1179,14 +1210,6 @@
       "materials": {
         "wheat_seeds": 16,
         "dirt": 16
-      }
-    },
-    "pen": {
-      "case": "BUILD_PEN",
-      "stage": 2,
-      "base": 45,
-      "materials": {
-        "oak_log": 24
       }
     },
     "well": {
@@ -1545,6 +1568,50 @@
       "requires": [
         "mine_level_3"
       ]
+    },
+    "pen_cow": {
+      "case": "BUILD_PEN",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 24
+      }
+    },
+    "pen_sheep": {
+      "case": "BUILD_PEN",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 24
+      }
+    },
+    "pen_pig": {
+      "case": "BUILD_PEN",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_log": 24
+      }
+    },
+    "smoker": {
+      "case": "CRAFT_SMOKER",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "#logs": 4,
+        "#stone_crafting": 8
+      }
+    },
+    "campfire": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 35,
+      "materials": {
+        "#logs": 3,
+        "stick": 3,
+        "#coals": 1
+      },
+      "optional": true
     }
   },
   "ways": [
@@ -1627,14 +1694,6 @@
         "#coals": 1
       },
       "building": "furnace"
-    },
-    {
-      "id": "hunt",
-      "case": "HUNT_WILD_SHEEP",
-      "makes": "food",
-      "yield": 2,
-      "weight": 0.8,
-      "world": "animals"
     },
     {
       "id": "fish",
@@ -1797,17 +1856,6 @@
         "wheat": 3
       },
       "building": "bakery"
-    },
-    {
-      "id": "cull_herd",
-      "case": "HERD_CULL",
-      "makes": "food",
-      "yield": 3,
-      "weight": 0.9,
-      "building": "pen",
-      "needs": {
-        "pig": 3
-      }
     },
     {
       "id": "harvest_honey",
@@ -2047,17 +2095,6 @@
       }
     },
     {
-      "id": "cull_cows",
-      "case": "HERD_CULL",
-      "makes": "leather",
-      "yield": 2,
-      "weight": 1.0,
-      "building": "pen",
-      "needs": {
-        "cow": 3
-      }
-    },
-    {
       "id": "collect_feathers",
       "case": "GATHER_MATERIALS",
       "makes": "feather",
@@ -2065,7 +2102,7 @@
       "weight": 1.0,
       "building": "chicken_coop",
       "needs": {
-        "chicken": 1
+        "herd_chicken": 1
       }
     },
     {
@@ -2076,7 +2113,7 @@
       "weight": 1.0,
       "building": "chicken_coop",
       "needs": {
-        "chicken": 1
+        "herd_chicken": 1
       }
     },
     {
@@ -2784,65 +2821,6 @@
       "world": "red_sand"
     },
     {
-      "id": "shear",
-      "case": "SHEAR_SHEEP",
-      "makes": "white_wool",
-      "yield": 2,
-      "weight": 1.0,
-      "building": "pen",
-      "needs": {
-        "sheep": 1
-      }
-    },
-    {
-      "id": "shear_black",
-      "case": "SHEAR_SHEEP",
-      "makes": "black_wool",
-      "yield": 1,
-      "weight": 0.3,
-      "building": "pen",
-      "world": "sheep:black",
-      "needs": {
-        "sheep": 1
-      }
-    },
-    {
-      "id": "shear_gray",
-      "case": "SHEAR_SHEEP",
-      "makes": "gray_wool",
-      "yield": 1,
-      "weight": 0.3,
-      "building": "pen",
-      "world": "sheep:gray",
-      "needs": {
-        "sheep": 1
-      }
-    },
-    {
-      "id": "shear_light_gray",
-      "case": "SHEAR_SHEEP",
-      "makes": "light_gray_wool",
-      "yield": 1,
-      "weight": 0.3,
-      "building": "pen",
-      "world": "sheep:light_gray",
-      "needs": {
-        "sheep": 1
-      }
-    },
-    {
-      "id": "shear_brown",
-      "case": "SHEAR_SHEEP",
-      "makes": "brown_wool",
-      "yield": 1,
-      "weight": 0.3,
-      "building": "pen",
-      "world": "sheep:brown",
-      "needs": {
-        "sheep": 1
-      }
-    },
-    {
       "id": "craft_white_bed",
       "case": "CRAFT_BED",
       "makes": "bed",
@@ -3421,112 +3399,6 @@
       }
     },
     {
-      "id": "capture_cow",
-      "case": "CAPTURE_ANIMAL",
-      "makes": "cow",
-      "yield": 1,
-      "weight": 0.8,
-      "world": "animals",
-      "building": "pen"
-    },
-    {
-      "id": "breed_cow",
-      "case": "BREED_ANIMALS",
-      "makes": "cow",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "wheat": 2
-      },
-      "building": "pen",
-      "needs": {
-        "cow": 2
-      }
-    },
-    {
-      "id": "capture_sheep",
-      "case": "CAPTURE_ANIMAL",
-      "makes": "sheep",
-      "yield": 1,
-      "weight": 0.8,
-      "world": "animals",
-      "building": "pen"
-    },
-    {
-      "id": "breed_sheep",
-      "case": "BREED_ANIMALS",
-      "makes": "sheep",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "wheat": 2
-      },
-      "building": "pen",
-      "needs": {
-        "sheep": 2
-      }
-    },
-    {
-      "id": "capture_chicken",
-      "case": "CAPTURE_ANIMAL",
-      "makes": "chicken",
-      "yield": 1,
-      "weight": 0.8,
-      "world": "animals",
-      "building": "chicken_coop"
-    },
-    {
-      "id": "breed_chicken",
-      "case": "BREED_ANIMALS",
-      "makes": "chicken",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "wheat_seeds": 2
-      },
-      "building": "chicken_coop",
-      "needs": {
-        "chicken": 2
-      }
-    },
-    {
-      "id": "capture_pig",
-      "case": "CAPTURE_ANIMAL",
-      "makes": "pig",
-      "yield": 1,
-      "weight": 0.8,
-      "world": "animals",
-      "building": "pen"
-    },
-    {
-      "id": "breed_pig",
-      "case": "BREED_ANIMALS",
-      "makes": "pig",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "carrot": 2
-      },
-      "building": "pen",
-      "needs": {
-        "pig": 2
-      }
-    },
-    {
-      "id": "milk_cow",
-      "case": "GATHER_MATERIALS",
-      "makes": "milk_bucket",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "bucket": 1
-      },
-      "building": "pen",
-      "needs": {
-        "cow": 1
-      }
-    },
-    {
       "id": "loot_rotten_flesh",
       "case": "COLLECT_DROPS",
       "makes": "rotten_flesh",
@@ -4021,6 +3893,426 @@
         "iron_ingot": 1
       },
       "building": "crafting_table"
+    },
+    {
+      "id": "capture_cow",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "herd_cow",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "pen_cow"
+    },
+    {
+      "id": "breed_cow",
+      "case": "BREED_ANIMALS",
+      "makes": "herd_cow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2
+      },
+      "building": "pen_cow",
+      "needs": {
+        "herd_cow": 2
+      }
+    },
+    {
+      "id": "cull_cow",
+      "case": "HERD_CULL",
+      "makes": "beef",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "herd_cow": 1
+      },
+      "building": "pen_cow",
+      "needs": {
+        "herd_cow": 3
+      }
+    },
+    {
+      "id": "cook_beef_smoker",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "beef": 1,
+        "#coals": 1
+      },
+      "building": "smoker"
+    },
+    {
+      "id": "cook_beef_furnace",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.8,
+      "consumes": {
+        "beef": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "cook_beef_campfire",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.6,
+      "consumes": {
+        "beef": 1
+      },
+      "building": "campfire"
+    },
+    {
+      "id": "capture_sheep",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "herd_sheep",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "pen_sheep"
+    },
+    {
+      "id": "breed_sheep",
+      "case": "BREED_ANIMALS",
+      "makes": "herd_sheep",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2
+      },
+      "building": "pen_sheep",
+      "needs": {
+        "herd_sheep": 2
+      }
+    },
+    {
+      "id": "cull_sheep",
+      "case": "HERD_CULL",
+      "makes": "mutton",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "herd_sheep": 1
+      },
+      "building": "pen_sheep",
+      "needs": {
+        "herd_sheep": 3
+      }
+    },
+    {
+      "id": "cook_mutton_smoker",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "mutton": 1,
+        "#coals": 1
+      },
+      "building": "smoker"
+    },
+    {
+      "id": "cook_mutton_furnace",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.8,
+      "consumes": {
+        "mutton": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "cook_mutton_campfire",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.6,
+      "consumes": {
+        "mutton": 1
+      },
+      "building": "campfire"
+    },
+    {
+      "id": "capture_pig",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "herd_pig",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "pen_pig"
+    },
+    {
+      "id": "breed_pig",
+      "case": "BREED_ANIMALS",
+      "makes": "herd_pig",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "carrot": 2
+      },
+      "building": "pen_pig",
+      "needs": {
+        "herd_pig": 2
+      }
+    },
+    {
+      "id": "cull_pig",
+      "case": "HERD_CULL",
+      "makes": "porkchop",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "herd_pig": 1
+      },
+      "building": "pen_pig",
+      "needs": {
+        "herd_pig": 3
+      }
+    },
+    {
+      "id": "cook_porkchop_smoker",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "porkchop": 1,
+        "#coals": 1
+      },
+      "building": "smoker"
+    },
+    {
+      "id": "cook_porkchop_furnace",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.8,
+      "consumes": {
+        "porkchop": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "cook_porkchop_campfire",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.6,
+      "consumes": {
+        "porkchop": 1
+      },
+      "building": "campfire"
+    },
+    {
+      "id": "capture_chicken",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "herd_chicken",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "chicken_coop"
+    },
+    {
+      "id": "breed_chicken",
+      "case": "BREED_ANIMALS",
+      "makes": "herd_chicken",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat_seeds": 2
+      },
+      "building": "chicken_coop",
+      "needs": {
+        "herd_chicken": 2
+      }
+    },
+    {
+      "id": "cull_chicken",
+      "case": "HERD_CULL",
+      "makes": "raw_chicken",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "herd_chicken": 1
+      },
+      "building": "chicken_coop",
+      "needs": {
+        "herd_chicken": 3
+      }
+    },
+    {
+      "id": "cook_raw_chicken_smoker",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "raw_chicken": 1,
+        "#coals": 1
+      },
+      "building": "smoker"
+    },
+    {
+      "id": "cook_raw_chicken_furnace",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.8,
+      "consumes": {
+        "raw_chicken": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "cook_raw_chicken_campfire",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 2,
+      "weight": 0.6,
+      "consumes": {
+        "raw_chicken": 1
+      },
+      "building": "campfire"
+    },
+    {
+      "id": "skin_cow",
+      "case": "HERD_CULL",
+      "makes": "leather",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "herd_cow": 1
+      },
+      "building": "pen_cow",
+      "needs": {
+        "herd_cow": 3
+      }
+    },
+    {
+      "id": "milk_cow",
+      "case": "GATHER_MATERIALS",
+      "makes": "milk_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      },
+      "building": "pen_cow",
+      "needs": {
+        "herd_cow": 1
+      }
+    },
+    {
+      "id": "shear",
+      "case": "SHEAR_SHEEP",
+      "makes": "white_wool",
+      "yield": 2,
+      "weight": 1.0,
+      "building": "pen_sheep",
+      "needs": {
+        "herd_sheep": 1
+      }
+    },
+    {
+      "id": "shear_black",
+      "case": "SHEAR_SHEEP",
+      "makes": "black_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen_sheep",
+      "world": "sheep:black",
+      "needs": {
+        "herd_sheep": 1
+      }
+    },
+    {
+      "id": "shear_gray",
+      "case": "SHEAR_SHEEP",
+      "makes": "gray_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen_sheep",
+      "world": "sheep:gray",
+      "needs": {
+        "herd_sheep": 1
+      }
+    },
+    {
+      "id": "shear_light_gray",
+      "case": "SHEAR_SHEEP",
+      "makes": "light_gray_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen_sheep",
+      "world": "sheep:light_gray",
+      "needs": {
+        "herd_sheep": 1
+      }
+    },
+    {
+      "id": "shear_brown",
+      "case": "SHEAR_SHEEP",
+      "makes": "brown_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen_sheep",
+      "world": "sheep:brown",
+      "needs": {
+        "herd_sheep": 1
+      }
+    },
+    {
+      "id": "hunt_wild",
+      "case": "HUNT_WILD_SHEEP",
+      "makes": "mutton",
+      "yield": 1,
+      "weight": 0.5,
+      "world": "animals"
+    },
+    {
+      "id": "enchant_fortune_pickaxe",
+      "case": "GATHER_MATERIALS",
+      "makes": "fortune_pickaxe",
+      "yield": 1,
+      "weight": 1.0,
+      "implemented": false,
+      "consumes": {
+        "lapis_lazuli": 3,
+        "book": 1
+      },
+      "building": "enchanting_table",
+      "needs": {
+        "diamond": 3
+      }
+    },
+    {
+      "id": "mine_found_diamond",
+      "case": "MINE_LEFT_ORE",
+      "makes": "diamond",
+      "yield": 1,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "iron",
+      "world": "ore:diamond_found"
+    },
+    {
+      "id": "mine_found_diamond_fortune",
+      "case": "MINE_LEFT_ORE",
+      "makes": "diamond",
+      "yield": 3,
+      "weight": 1.3,
+      "world": "ore:diamond_found",
+      "needs": {
+        "fortune_pickaxe": 1
+      }
     }
   ],
   "edges": [
@@ -4053,6 +4345,26 @@
       "lack": "iron_pickaxe",
       "way": "mine_coal",
       "weight": -5
+    },
+    {
+      "lack": "beef",
+      "way": "breed_cow",
+      "weight": 10
+    },
+    {
+      "lack": "mutton",
+      "way": "breed_sheep",
+      "weight": 10
+    },
+    {
+      "lack": "porkchop",
+      "way": "breed_pig",
+      "weight": 10
+    },
+    {
+      "lack": "raw_chicken",
+      "way": "breed_chicken",
+      "weight": 10
     }
   ],
   "events": {
@@ -4237,6 +4549,14 @@
       "push": {
         "iron_ingot": 20
       }
+    },
+    "ore_found_diamond": {
+      "push": {
+        "tool:pickaxe": 20
+      },
+      "advice": [
+        "remember_ore_mine_only_with_iron_pickaxe"
+      ]
     }
   },
   "groups": {
@@ -4335,5 +4655,11 @@
       "have": "mangrove_sapling",
       "build": "orchard_mangrove"
     }
-  ]
+  ],
+  "herdCaps": {
+    "herd_cow": 10,
+    "herd_sheep": 10,
+    "herd_pig": 10,
+    "herd_chicken": 16
+  }
 }
