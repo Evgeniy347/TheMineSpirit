@@ -1,5 +1,5 @@
 # town_hall_3 none, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
-заход 1: polished_andesite×322, smooth_stone_stairs×1, dark_oak_log×92, bricks×284, dark_oak_stairs×14, dark_oak_fence×52, glass×32, dark_oak_planks×823, deepslate_tile_stairs×192 | слоты: этап 7, позже 26
+заход 1: polished_andesite×322, stone_brick_stairs×1, dark_oak_log×92, bricks×284, dark_oak_stairs×14, dark_oak_fence×52, glass×32, dark_oak_planks×823, deepslate_tile_stairs×192 | слоты: этап 7, позже 26
 стоянка 9,0,-2 на земле: поставлено 14
 стоянка 6,1,0 на polished_andesite (высота 1): поставлено 20
 стоянка -1,0,3 на земле: поставлено 21

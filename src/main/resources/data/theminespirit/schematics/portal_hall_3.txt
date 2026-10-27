@@ -17,7 +17,7 @@ legend:
   'H': obsidian
   'I': lantern[hanging=true]
   'J': chain[axis=y]
-  'K': deepslate_bricks_slab
+  'K': deepslate_brick_slab
 layers:
   - y0: |
       .....................

@@ -1797,6 +1797,24 @@
       "base": 25,
       "stage": 2
     },
+    "oak_leaves": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
+    "carved_pumpkin": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "moss_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 2
+    },
     "cat": {
       "xmin": 1,
       "k": 1,
@@ -7647,6 +7665,35 @@
         "ocelot": 2
       },
       "world": "biome:jungle",
+      "implemented": false
+    },
+    {
+      "id": "shear_oak_leaves",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_leaves",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "trees",
+      "implemented": false
+    },
+    {
+      "id": "carve_pumpkin",
+      "case": "GATHER_MATERIALS",
+      "makes": "carved_pumpkin",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "pumpkin": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "forage_moss_block",
+      "case": "GATHER_MATERIALS",
+      "makes": "moss_block",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "lush_caves",
       "implemented": false
     },
     {

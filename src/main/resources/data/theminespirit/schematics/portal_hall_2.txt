@@ -15,7 +15,7 @@ legend:
   'F': torch
   'G': obsidian
   'H': lantern[hanging=true]
-  'I': stone_bricks_slab
+  'I': stone_brick_slab
 layers:
   - y0: |
       ...................

@@ -1,5 +1,5 @@
 # portal_hall_4 none, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
-заход 1: polished_andesite×483, stone_brick_stairs×2, chiseled_stone_bricks×196, deepslate_bricks×542, obsidian×14, deepslate_tiles×483, deepslate_tiles_slab×320 | слоты: этап 9, позже 27
+заход 1: polished_andesite×483, stone_brick_stairs×2, chiseled_stone_bricks×196, deepslate_bricks×542, obsidian×14, deepslate_tiles×483, deepslate_tile_slab×320 | слоты: этап 9, позже 27
 стоянка 11,0,-2 на земле: поставлено 2
 стоянка 11,1,1 на stone_brick_stairs (высота 1): поставлено 21
 стоянка 8,1,4 на polished_andesite (высота 1): поставлено 30
@@ -64,7 +64,7 @@
 стоянка 4,1,5 на polished_andesite (высота 1): поставлено 5
 стоянка 18,1,6 на polished_andesite (высота 1): поставлено 3
 стоянка 18,1,21 на polished_andesite (высота 1): поставлено 2
-заход 2: deepslate_tiles_slab×117 | слоты: этап 2, позже 0
+заход 2: deepslate_tile_slab×117 | слоты: этап 2, позже 0
 стоянка 10,1,6 на polished_andesite (высота 1): поставлено 49
 стоянка 4,1,7 на polished_andesite (высота 1): поставлено 40
 стоянка 4,1,5 на polished_andesite (высота 1): поставлено 9

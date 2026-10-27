@@ -1,5 +1,5 @@
 # portal_hall_2 counterclockwise_90, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
-заход 1: stone_brick_stairs×2, stone_bricks×966, chiseled_stone_bricks×138, obsidian×14, stone_bricks_slab×289 | слоты: этап 17, позже 9
+заход 1: stone_brick_stairs×2, stone_bricks×966, chiseled_stone_bricks×138, obsidian×14, stone_brick_slab×289 | слоты: этап 17, позже 9
 стоянка -2,0,9 на земле: поставлено 2
 стоянка 1,0,8 на земле: поставлено 21
 стоянка 4,1,5 на stone_bricks (высота 1): поставлено 30

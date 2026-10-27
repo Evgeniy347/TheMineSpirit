@@ -18,7 +18,7 @@ legend:
   'I': lantern[hanging=true]
   'J': chain[axis=y]
   'K': deepslate_tiles
-  'L': deepslate_tiles_slab
+  'L': deepslate_tile_slab
 layers:
   - y0: |
       .......................

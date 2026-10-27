@@ -15,7 +15,7 @@ legend:
   '#': dark_oak_planks
   'G': glass
   'D': dark_oak_door[facing=south,hinge=left]
-  'p': smooth_stone_stairs[facing=south,half=bottom]
+  'p': stone_brick_stairs[facing=south,half=bottom]
   '1': deepslate_tile_stairs[facing=east,half=bottom]
   '2': deepslate_tile_stairs[facing=west,half=bottom]
   '3': deepslate_tile_stairs[facing=south,half=bottom]

@@ -1,5 +1,5 @@
 # library_4 clockwise_180, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
-заход 1: polished_andesite×440, smooth_stone_stairs×1, dark_oak_log×42, dark_oak_stairs×4, dark_oak_fence×44, glass×48, bricks×306, dark_oak_planks×1216 | слоты: этап 8, позже 28
+заход 1: polished_andesite×440, stone_brick_stairs×1, dark_oak_log×42, dark_oak_stairs×4, dark_oak_fence×44, glass×48, bricks×306, dark_oak_planks×1216 | слоты: этап 8, позже 28
 стоянка 9,0,22 на земле: поставлено 14
 стоянка 6,1,20 на polished_andesite (высота 1): поставлено 20
 стоянка -1,0,17 на земле: поставлено 21
@@ -74,7 +74,7 @@
 стоянка 20,1,10 на polished_andesite (высота 1): поставлено 53
 стоянка 20,1,16 на polished_andesite (высота 1): поставлено 41
 стоянка 17,1,20 на polished_andesite (высота 1): поставлено 28
-стоянка 10,1,20 на smooth_stone_stairs (высота 1): поставлено 53
+стоянка 10,1,20 на stone_brick_stairs (высота 1): поставлено 53
 стоянка 4,1,20 на polished_andesite (высота 1): поставлено 41
 стоянка 0,1,13 на polished_andesite (высота 1): поставлено 52
 стоянка 0,1,17 на polished_andesite (высота 1): поставлено 6

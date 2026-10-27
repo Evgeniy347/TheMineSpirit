@@ -20,7 +20,7 @@ if [ "$level" -le 2 ]; then
   wall=stone_bricks; plinth=polished_andesite; stonestair=polished_andesite_stairs; stair=deepslate_brick_stairs
   stage=3
 else
-  wall=bricks; plinth=smooth_stone; stonestair=smooth_stone_stairs; stair=deepslate_tile_stairs
+  wall=bricks; plinth=smooth_stone; stonestair=stone_brick_stairs; stair=deepslate_tile_stairs
   stage=4
 fi
 roofslab=${stair%_stairs}_slab

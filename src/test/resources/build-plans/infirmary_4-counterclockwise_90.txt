@@ -1,5 +1,5 @@
 # infirmary_4 counterclockwise_90, порции: черновые от текущей полосы (4 слоя) вверх, отделка — в конце, досягаемость 3/15/3
-заход 1: polished_andesite×288, smooth_stone_stairs×1, dark_oak_log×42, glass×48, bricks×226, dark_oak_planks×709, dark_oak_fence×32, deepslate_tile_stairs×176 | слоты: этап 6, позже 22
+заход 1: polished_andesite×288, stone_brick_stairs×1, dark_oak_log×42, glass×48, bricks×226, dark_oak_planks×709, dark_oak_fence×32, deepslate_tile_stairs×176 | слоты: этап 6, позже 22
 стоянка -2,0,7 на земле: поставлено 14
 стоянка 0,1,4 на polished_andesite (высота 1): поставлено 20
 стоянка 7,0,-1 на земле: поставлено 21
