@@ -24,7 +24,8 @@ class FirstStepsPlanTests {
             BoardCase.LIGHTING,
             BoardCase.BUILD_FENCE,
             BoardCase.BUILD_ORCHARD,
-            BoardCase.BUILD_HOUSE);
+            BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_STREETS);
 
     private static List<BoardCase> chain() {
         List<BoardCase> chain = new ArrayList<>();
@@ -41,6 +42,7 @@ class FirstStepsPlanTests {
         chain.add(BoardCase.CRAFT_SMITHING_TABLE);
         chain.add(BoardCase.CRAFT_ANVIL);
         chain.add(BoardCase.BUILD_ORCHARD);
+        chain.add(BoardCase.BUILD_STREETS);
         return chain;
     }
 
@@ -73,6 +75,7 @@ class FirstStepsPlanTests {
                 world.contains(BoardCase.LIGHTING),
                 world.contains(BoardCase.BUILD_HOUSE),
                 world.contains(BoardCase.BUILD_ORCHARD),
+                world.contains(BoardCase.BUILD_STREETS),
                 world.contains(BoardCase.CRAFT_SMITHING_TABLE),
                 world.contains(BoardCase.CRAFT_ANVIL),
                 done,
@@ -178,6 +181,7 @@ class FirstStepsPlanTests {
                 false,
                 false,
                 false,
+                false,
                 level.done(),
                 level.blocked());
 
@@ -236,6 +240,7 @@ class FirstStepsPlanTests {
                 false,
                 false,
                 false,
+                false,
                 base.done(),
                 base.blocked());
 
@@ -281,7 +286,7 @@ class FirstStepsPlanTests {
     @Test
     void next_NoHome_Empty() {
         SettlementFacts noHome = new SettlementFacts(
-                false, false, false, 0, false, Set.of(), false, false, false, false, false, false, false, false,
+                false, false, false, 0, false, Set.of(), false, false, false, false, false, false, false, false, false,
                 Set.of(), Set.of());
 
         assertEquals(Optional.empty(), FirstStepsPlan.next(noHome), "Без дома первых шагов нет: цепочку задаёт дом");
@@ -298,8 +303,8 @@ class FirstStepsPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SettlementFacts(
-                        true, true, true, -1, true, Set.of(), true, true, true, true, true, true, true, true, Set.of(),
-                        Set.of()),
+                        true, true, true, -1, true, Set.of(), true, true, true, true, true, true, true, true, true,
+                        Set.of(), Set.of()),
                 "Отрицательное число сундуков — ошибка адаптера");
     }
 

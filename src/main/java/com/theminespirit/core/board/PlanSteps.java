@@ -148,14 +148,31 @@ final class PlanSteps {
         }
         BlockCoord last =
                 blocks.isEmpty() ? null : blocks.get(blocks.size() - 1).at();
+        addBuilds(steps, builds, last, target.wood(), 0);
+        return new SequenceNode(steps);
+    }
+
+    static TaskNode buildsOnly(TicketTarget target, List<SchemeBuild> builds) {
+        List<TaskNode> steps = new ArrayList<>();
+        addBuilds(steps, builds, null, target.wood(), 1);
+        return new SequenceNode(steps);
+    }
+
+    private static void addBuilds(
+            List<TaskNode> steps,
+            List<SchemeBuild> builds,
+            @Nullable BlockCoord from,
+            @Nullable String wood,
+            int lift) {
+        BlockCoord last = from;
         for (SchemeBuild build : builds) {
-            if (last != null && far(last, build.origin())) {
-                steps.add(gotoPoint(build.origin()));
+            BlockCoord origin = build.origin();
+            if ((last == null && lift > 0) || (last != null && far(last, origin))) {
+                steps.add(gotoPoint(new BlockCoord(origin.x(), origin.y() + lift, origin.z())));
             }
-            steps.add(build(build, target.wood()));
+            steps.add(build(build, wood));
             last = build.origin();
         }
-        return new SequenceNode(steps);
     }
 
     private static boolean far(BlockCoord from, BlockCoord to) {

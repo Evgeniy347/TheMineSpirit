@@ -61,6 +61,7 @@ class BoardCaseTests {
             "MINE_LEFT_ORE",
             "BUILD_HOUSE",
             "BUILD_ORCHARD",
+            "BUILD_STREETS",
             "BUILD_WAREHOUSE",
             "REPAIR_FENCE",
             "REPAIR_BUILDING",
@@ -98,7 +99,7 @@ class BoardCaseTests {
                 expected,
                 actual,
                 "Набор кейсов доски обязан совпадать с чеклистами 36, 37Б, 39 и пчёлами (39: 37 прежних "
-                        + "плюс HARVEST_HIVE, PLACE_BEEHIVE, сад этапа 1 BUILD_ORCHARD): "
+                        + "плюс HARVEST_HIVE, PLACE_BEEHIVE, сад этапа 1 BUILD_ORCHARD, улицы BUILD_STREETS): "
                         + "каждый вид задания получает приоритет, гейт и план по своему имени; "
                         + "лишний кейс — сирота в таблице BoardRules, потерянный — задание без источника");
     }

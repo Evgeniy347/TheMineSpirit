@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -182,7 +183,8 @@ final class SchematicSite {
         }
         BlockState wanted = wanted(entry);
         boolean block = current.is(wanted.getBlock())
-                || WoodSpecies.sameRole(BlockStates.idOf(current), BlockStates.idOf(wanted));
+                || WoodSpecies.sameRole(BlockStates.idOf(current), BlockStates.idOf(wanted))
+                || EarthCover.covers(BlockStates.idOf(current), BlockStates.idOf(wanted));
         return block && sameSpecifiedState(current, wanted, entry.state());
     }
 

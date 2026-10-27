@@ -24,6 +24,7 @@ public enum BoardCase {
     BUILD_MINE,
     BUILD_ORCHARD,
     BUILD_PEN,
+    BUILD_STREETS,
     BUILD_WAREHOUSE,
     CAPTURE_ANIMAL,
     CLEAR_GROUNDS,

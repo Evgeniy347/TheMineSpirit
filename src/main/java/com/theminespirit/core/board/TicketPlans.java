@@ -201,6 +201,7 @@ public final class TicketPlans {
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);
+            case BUILD_STREETS -> new SequenceNode(List.of(gotoPoint(target.target())));
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
             case BREED_ANIMALS -> breedAnimals(target);

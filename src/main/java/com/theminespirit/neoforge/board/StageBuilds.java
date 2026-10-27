@@ -11,6 +11,7 @@ import com.theminespirit.core.town.SchemeBuild;
 import com.theminespirit.core.town.StageSchemes;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
+import com.theminespirit.core.town.StreetWork;
 import com.theminespirit.core.town.WallLayout;
 import com.theminespirit.core.town.WallPiece;
 import com.theminespirit.core.town.YardScheme;
@@ -34,6 +35,7 @@ public final class StageBuilds {
             case LIGHTING -> new StageWork(site, List.of(), YardScheme.lighting(site));
             case STOCK_CHESTS -> new StageWork(site, List.of(), YardScheme.stock(site, part));
             case CRAFT_FURNACE -> new StageWork(site, List.of(), List.of(YardScheme.furnace(site)));
+            case BUILD_STREETS -> streets(level, site);
             default -> new StageWork(site, List.of());
         };
     }
@@ -60,6 +62,20 @@ public final class StageBuilds {
             }
         }
         return planned;
+    }
+
+    private static StageWork streets(ServerLevel level, StageSite site) {
+        List<SchemeBuild> builds = SettlementPlotStore.get(level)
+                .town()
+                .map(town -> StreetWork.of(
+                        site,
+                        town,
+                        DataTables.INSTANCE.town().current().streets(),
+                        DataTables.INSTANCE.presets().current(),
+                        StreetWork.level(DataTables.INSTANCE.stages().current(), site.stage())))
+                .orElseThrow(() -> new IllegalStateException(
+                        "Места этапа есть, а плана поселения нет: улицам этапа не по чему лечь"));
+        return new StageWork(site, List.of(), builds);
     }
 
     private static WallLayout fenceLayout() {

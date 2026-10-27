@@ -2,9 +2,22 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.reload.DataTables;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class BoardRules {
+    private static final Set<BoardCase> BUILDS = EnumSet.of(
+            BoardCase.CLEAR_GROUNDS,
+            BoardCase.BUILD_FENCE,
+            BoardCase.LIGHTING,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.PLACE_BEEHIVE,
+            BoardCase.BUILD_ORCHARD,
+            BoardCase.BUILD_STREETS,
+            BoardCase.BUILD_MINE,
+            BoardCase.BUILD_WAREHOUSE,
+            BoardCase.ENCHANT_ROOM);
     private static final Map<BoardCase, Integer> PRIORITIES = buildPriorities();
 
     private BoardRules() {}
@@ -61,15 +74,9 @@ public final class BoardRules {
         priorities.put(BoardCase.HERD_CULL, 50);
         priorities.put(BoardCase.COLLECT_DROPS, 55);
         priorities.put(BoardCase.HUNT_WILD_SHEEP, 50);
-        priorities.put(BoardCase.CLEAR_GROUNDS, 50);
-        priorities.put(BoardCase.BUILD_FENCE, 50);
-        priorities.put(BoardCase.LIGHTING, 50);
-        priorities.put(BoardCase.BUILD_HOUSE, 50);
-        priorities.put(BoardCase.PLACE_BEEHIVE, 50);
-        priorities.put(BoardCase.BUILD_ORCHARD, 50);
-        priorities.put(BoardCase.BUILD_MINE, 50);
-        priorities.put(BoardCase.BUILD_WAREHOUSE, 50);
-        priorities.put(BoardCase.ENCHANT_ROOM, 50);
+        for (BoardCase build : BUILDS) {
+            priorities.put(build, 50);
+        }
         priorities.put(BoardCase.GATHER_MATERIALS, 45);
         priorities.put(BoardCase.SUPPLY_SITE, 40);
         priorities.put(BoardCase.TRANSFER_ITEM, 45);

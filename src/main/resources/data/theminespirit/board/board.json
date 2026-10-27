@@ -41,6 +41,7 @@
     "BUILD_HOUSE": 50,
     "PLACE_BEEHIVE": 50,
     "BUILD_ORCHARD": 50,
+    "BUILD_STREETS": 50,
     "BUILD_MINE": 50,
     "ENCHANT_ROOM": 50,
     "GATHER_MATERIALS": 45,
@@ -112,7 +113,8 @@
     "BUILD_PEN": 3,
     "BUILD_WAREHOUSE": 4,
     "ENCHANT_ROOM": 4,
-    "BUILD_HOUSE": 4
+    "BUILD_HOUSE": 4,
+    "BUILD_STREETS": 2
   },
   "supplies": {
     "minecraft:bookshelf": 32,

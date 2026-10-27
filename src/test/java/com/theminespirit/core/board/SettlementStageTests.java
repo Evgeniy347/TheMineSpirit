@@ -24,7 +24,8 @@ class SettlementStageTests {
             BoardCase.BUILD_HOUSE,
             BoardCase.STOCK_CHESTS,
             BoardCase.CRAFT_FURNACE,
-            BoardCase.LIGHTING);
+            BoardCase.LIGHTING,
+            BoardCase.BUILD_STREETS);
 
     @Test
     void of_NothingBuilt_FirstStage() {
@@ -44,9 +45,12 @@ class SettlementStageTests {
     void of_AllFirstStageBuilt_SecondStage() {
         BoardLedger ledger = firstStageBuilt();
 
-        assertEquals(2, SettlementStage.of(ledger), "Расчистка, шахта, забор, сад, дом и склад 1 — переход на этап 2");
         assertEquals(
-                Map.of(BoardCase.BUILD_MINE, 2, BoardCase.BUILD_WAREHOUSE, 2),
+                2,
+                SettlementStage.of(ledger),
+                "Расчистка, шахта, забор, сад, дом, склад и улицы 1 — переход на этап 2");
+        assertEquals(
+                Map.of(BoardCase.BUILD_MINE, 2, BoardCase.BUILD_WAREHOUSE, 2, BoardCase.BUILD_STREETS, 2),
                 SettlementStage.missing(ledger),
                 "Остаток этапа 2 — постройки уровня 2 из stages.json");
     }

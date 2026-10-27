@@ -42,11 +42,11 @@ public final class StagePlans {
                     TicketPlans.plan(repaired, 1, target.withWork(new StageWork(site, work.blocks(), work.builds()))));
         }
         return switch (boardCase) {
-            case BUILD_FENCE, LIGHTING ->
-                Optional.of(PlanSteps.placeAll(target, work.blocks(), work.builds()));
+            case BUILD_FENCE, LIGHTING -> Optional.of(PlanSteps.placeAll(target, work.blocks(), work.builds()));
             case STOCK_CHESTS -> Optional.of(chests(target, site, work.builds()));
             case CRAFT_FURNACE -> Optional.of(station(target, site.workYard(), work.builds()));
             case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site)) : Optional.empty();
+            case BUILD_STREETS -> Optional.of(PlanSteps.buildsOnly(target, work.builds()));
             case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
             default -> Optional.empty();
         };

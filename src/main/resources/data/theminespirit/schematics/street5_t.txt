@@ -2,7 +2,7 @@
 # Улицы плана раскладываются на плитки (StreetLayout) после выравнивания: плитка ложится на слой земли (y−1).
 name: "Улица 5: Т-перекрёсток"
 type: infrastructure
-stage: 1
+stage: 2
 size: 5x2x5   # Ш×В×Д
 entrance: 2,1,0
 exemptions:

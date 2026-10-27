@@ -77,6 +77,7 @@ final class StageRepair {
             case BUILD_ORCHARD -> StageSites.ORCHARD;
             case BUILD_FENCE -> "Ограда";
             case LIGHTING -> "Факелы";
+            case BUILD_STREETS -> "Улицы";
             default -> step.name().toLowerCase(Locale.ROOT);
         };
         return DataTables.INSTANCE

@@ -37,6 +37,7 @@ class BoardConfigTests {
                 Map.entry("BUILD_HOUSE", 50),
                 Map.entry("PLACE_BEEHIVE", 50),
                 Map.entry("BUILD_ORCHARD", 50),
+                Map.entry("BUILD_STREETS", 50),
                 Map.entry("BUILD_MINE", 50),
                 Map.entry("ENCHANT_ROOM", 50),
                 Map.entry("CRAFT_ANVIL", 50),
@@ -147,7 +148,8 @@ class BoardConfigTests {
                 "BUILD_PEN", 3,
                 "ENCHANT_ROOM", 4,
                 "BUILD_HOUSE", 4,
-                "BUILD_WAREHOUSE", 4);
+                "BUILD_WAREHOUSE", 4,
+                "BUILD_STREETS", 2);
     }
 
     @Test

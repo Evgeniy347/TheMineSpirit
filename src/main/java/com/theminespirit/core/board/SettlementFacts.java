@@ -16,6 +16,7 @@ public record SettlementFacts(
         boolean lighting,
         boolean houses,
         boolean orchard,
+        boolean streets,
         boolean smithingTable,
         boolean anvil,
         Set<BoardCase> done,

@@ -30,6 +30,7 @@ import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.MineStone;
 import com.theminespirit.core.building.Preset;
@@ -79,8 +80,12 @@ public final class FirstStepsRunner {
     private static final Set<BoardCase> WOODEN_BUILDINGS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.BUILD_ORCHARD);
     private static final int LAYOUT_SLACK_DIVISOR = 50;
-    private static final Set<BoardCase> LAYOUT_STEPS =
-            EnumSet.of(BoardCase.LIGHTING, BoardCase.BUILD_FENCE, BoardCase.BUILD_ORCHARD, BoardCase.BUILD_HOUSE);
+    private static final Set<BoardCase> LAYOUT_STEPS = EnumSet.of(
+            BoardCase.LIGHTING,
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_ORCHARD,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_STREETS);
     private static final Set<BoardCase> PREFETCH_DURING =
             EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE);
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -266,7 +271,7 @@ public final class FirstStepsRunner {
                 need.merge(block, floors, Integer::sum);
             }
         }
-        if (caseValue == BoardCase.LIGHTING) {
+        if (caseValue == BoardCase.LIGHTING || caseValue == BoardCase.BUILD_STREETS) {
             minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
         }
         if (WOODEN_BUILDINGS.contains(caseValue)) {
@@ -898,8 +903,6 @@ public final class FirstStepsRunner {
         boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, site, journal);
         boolean lighting = built(level, done, BoardCase.LIGHTING, site, journal);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, site, journal);
-        boolean houses = built(level, done, BoardCase.BUILD_HOUSE, site, journal);
-        boolean orchard = built(level, done, BoardCase.BUILD_ORCHARD, site, journal);
         SettlementFacts facts = new SettlementFacts(
                 hasHome,
                 groundsCleared,
@@ -911,8 +914,9 @@ public final class FirstStepsRunner {
                 furnaceAvailable,
                 fence,
                 lighting,
-                houses,
-                orchard,
+                built(level, done, BoardCase.BUILD_HOUSE, site, journal),
+                built(level, done, BoardCase.BUILD_ORCHARD, site, journal),
+                built(level, done, BoardCase.BUILD_STREETS, site, journal),
                 smithingTable,
                 anvil,
                 done,
@@ -1049,6 +1053,7 @@ public final class FirstStepsRunner {
         String actual = bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
         return actual.equals(block)
                 || WoodSpecies.sameRole(actual, block)
+                || EarthCover.covers(actual, block)
                 || ("torch".equals(block) && "wall_torch".equals(actual));
     }
 
