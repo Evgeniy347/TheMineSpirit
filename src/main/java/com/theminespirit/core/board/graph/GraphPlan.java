@@ -15,7 +15,8 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> adv
             Map<String, Integer> consumes,
             boolean feasible,
             boolean chance,
-            boolean implemented) {
+            boolean implemented,
+            int ticks) {
         public Task {
             consumes = Map.copyOf(consumes);
         }

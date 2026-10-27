@@ -1053,6 +1053,791 @@
       "base": 40,
       "stage": 3,
       "implemented": false
+    },
+    "allium": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "azure_bluet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "oxeye_daisy": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "red_tulip": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "calcite": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "flowering_azalea": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "bell": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "honeycomb": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "andesite": {
+      "xmin": 8,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "stone": {
+      "xmin": 8,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "smooth_stone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "iron_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "iron_nugget": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "stone_bricks": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "stone_brick_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "chiseled_stone_bricks": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "polished_deepslate": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "deepslate_bricks": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "deepslate_tiles": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "crafting_table": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 1
+    },
+    "furnace": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 1
+    },
+    "barrel": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "beehive": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "bookshelf": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "brick_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "brick_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "brown_carpet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "campfire": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "candle": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "cartography_table": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "chain": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "cobblestone_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cobblestone_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cobblestone_wall": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "composter": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "dark_oak_pressure_plate": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "deepslate_brick_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "deepslate_brick_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "deepslate_tile_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "deepslate_tile_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "enchanting_table": {
+      "xmin": 0,
+      "k": 1,
+      "base": 35,
+      "stage": 3
+    },
+    "fletching_table": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "glass_pane": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "grindstone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "hay_block": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "lectern": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "light_gray_carpet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "loom": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "anvil": {
+      "xmin": 0,
+      "k": 1,
+      "base": 35,
+      "stage": 3
+    },
+    "smithing_table": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "smoker": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "oak_fence_gate": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "oak_pressure_plate": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "oak_sign": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "polished_andesite": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "purple_carpet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "red_carpet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "spruce_pressure_plate": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "stone_brick_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "stone_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "white_carpet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "yellow_carpet": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "experience": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "enchanted_book_efficiency": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_unbreaking": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_fortune": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_mending": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_protection": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_sharpness": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "enchanted_book_silk_touch": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "water_bottle": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "blaze_powder": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "ghast_tear": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "pufferfish": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "potion_regeneration": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_strength": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_swiftness": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_night_vision": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "potion_water_breathing": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_healing": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_regeneration": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_fire_resistance": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_strength": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_swiftness": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_night_vision": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "splash_potion_water_breathing": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "nether_quartz": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "glowstone_dust": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "magma_cream": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "slime_ball": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "netherite_scrap": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 4
+    },
+    "netherite_ingot": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 4
+    },
+    "ender_pearl": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "ender_eye": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 4
+    },
+    "repeater": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "lever": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "stone_button": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "stone_pressure_plate": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "piston": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "hopper": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "rail": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "minecart": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "emerald": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "villager_farmer": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "villager_librarian": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "villager_smith": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "villager_butcher": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "villager_cartographer": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 4
+    },
+    "chainmail_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 2,
+      "perSpirit": true
+    },
+    "diamond_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 45,
+      "stage": 3,
+      "perSpirit": true
+    },
+    "netherite_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 50,
+      "stage": 4,
+      "perSpirit": true
+    },
+    "crossbow": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 3,
+      "perSpirit": true
+    },
+    "trident": {
+      "xmin": 1,
+      "k": 1,
+      "base": 50,
+      "stage": 4,
+      "perSpirit": true
+    },
+    "bread": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "cake": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 3
+    },
+    "pumpkin_pie": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "beetroot_soup": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "cookie": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "cooked_potato": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "cooked_fish": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "honey_bottle": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "bowl": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 1
+    },
+    "raw_cod": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "lava_bucket": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "fuel_planks": {
+      "xmin": 16,
+      "k": 1,
+      "base": 30,
+      "stage": 1
+    },
+    "wolf": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "cat": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "horse": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "saddle": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "bee_nest": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
     }
   },
   "buildings": {
@@ -1266,7 +2051,7 @@
     "player_house": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 40,
+      "base": 65,
       "materials": {
         "oak_log": 24,
         "oak_planks": 64,
@@ -1635,6 +2420,917 @@
         "#coals": 1
       },
       "optional": true
+    },
+    "family_house_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 48,
+        "cobblestone": 24,
+        "glass_pane": 8
+      },
+      "optional": true
+    },
+    "family_house_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_log": 20,
+        "oak_planks": 56,
+        "cobblestone": 24,
+        "glass_pane": 10,
+        "furnace": 1
+      },
+      "requires": ["family_house_1"],
+      "optional": true
+    },
+    "family_house_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 48,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 64,
+        "cobblestone": 64,
+        "stone_bricks": 32,
+        "glass_pane": 16,
+        "lantern": 4
+      },
+      "requires": ["family_house_2"],
+      "optional": true
+    },
+    "family_house_4": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 48,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 96,
+        "bricks": 32,
+        "stone_bricks": 64,
+        "calcite": 32,
+        "glass_pane": 24,
+        "lantern": 8,
+        "bookshelf": 8
+      },
+      "requires": ["family_house_3"],
+      "optional": true
+    },
+    "player_house_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 65,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 72,
+        "cobblestone": 32,
+        "glass_pane": 12,
+        "bed": 4
+      },
+      "optional": true
+    },
+    "player_house_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 65,
+      "materials": {
+        "oak_log": 28,
+        "oak_planks": 80,
+        "cobblestone": 32,
+        "stone_bricks": 24,
+        "glass_pane": 16,
+        "bookshelf": 8,
+        "lantern": 4
+      },
+      "requires": ["player_house_1"],
+      "optional": true
+    },
+    "player_house_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 65,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 96,
+        "stone_bricks": 48,
+        "polished_andesite": 24,
+        "glass_pane": 24,
+        "bookshelf": 24,
+        "enchanting_table": 1,
+        "lantern": 8
+      },
+      "requires": ["player_house_2"],
+      "optional": true
+    },
+    "player_house_4": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 65,
+      "materials": {
+        "oak_log": 48,
+        "oak_planks": 128,
+        "bricks": 48,
+        "stone_bricks": 64,
+        "deepslate_tile_stairs": 32,
+        "glass_pane": 32,
+        "bookshelf": 32,
+        "enchanting_table": 1,
+        "lantern": 12
+      },
+      "requires": ["player_house_3"],
+      "optional": true
+    },
+    "warehouse_2": {
+      "case": "BUILD_WAREHOUSE",
+      "stage": 2,
+      "base": 55,
+      "materials": {
+        "oak_planks": 64,
+        "cobblestone": 128,
+        "chest": 16
+      },
+      "requires": ["warehouse"],
+      "optional": true
+    },
+    "warehouse_3": {
+      "case": "BUILD_WAREHOUSE",
+      "stage": 3,
+      "base": 55,
+      "materials": {
+        "stone_bricks": 128,
+        "chest": 32,
+        "oak_sign": 8,
+        "torch": 4
+      },
+      "requires": ["warehouse_2"],
+      "optional": true
+    },
+    "warehouse_4": {
+      "case": "BUILD_WAREHOUSE",
+      "stage": 4,
+      "base": 55,
+      "materials": {
+        "stone_bricks": 256,
+        "chest": 64,
+        "oak_sign": 16,
+        "lantern": 8
+      },
+      "requires": ["warehouse_3"],
+      "optional": true
+    },
+    "barn_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 42,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 64,
+        "cobblestone": 24,
+        "hay_block": 8
+      },
+      "requires": ["barn"],
+      "optional": true
+    },
+    "barn_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 42,
+      "materials": {
+        "oak_log": 40,
+        "oak_planks": 80,
+        "cobblestone": 32,
+        "hay_block": 12,
+        "lantern": 4
+      },
+      "requires": ["barn_2"],
+      "optional": true
+    },
+    "field_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "wheat_seeds": 32,
+        "dirt": 32,
+        "oak_fence": 16,
+        "torch": 4
+      },
+      "requires": ["field"],
+      "optional": true
+    },
+    "field_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "wheat_seeds": 48,
+        "dirt": 48,
+        "oak_fence": 24,
+        "torch": 8,
+        "composter": 2
+      },
+      "requires": ["field_2"],
+      "optional": true
+    },
+    "pen_2": {
+      "case": "BUILD_PEN",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "oak_fence": 32,
+        "oak_fence_gate": 2,
+        "torch": 4,
+        "hay_block": 2
+      },
+      "requires": ["pen_cow"],
+      "optional": true
+    },
+    "pen_3": {
+      "case": "BUILD_PEN",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "oak_fence": 48,
+        "oak_fence_gate": 2,
+        "torch": 6,
+        "hay_block": 4
+      },
+      "requires": ["pen_2"],
+      "optional": true
+    },
+    "pen_4": {
+      "case": "BUILD_PEN",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "oak_fence": 64,
+        "oak_fence_gate": 3,
+        "torch": 8,
+        "hay_block": 8
+      },
+      "requires": ["pen_3"],
+      "optional": true
+    },
+    "plaza_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 38,
+      "materials": {
+        "cobblestone": 128,
+        "stone_bricks": 32,
+        "lantern": 4,
+        "bell": 1
+      },
+      "requires": ["plaza"],
+      "optional": true
+    },
+    "plaza_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 38,
+      "materials": {
+        "stone_bricks": 192,
+        "polished_andesite": 64,
+        "lantern": 8,
+        "bell": 1,
+        "flowering_azalea": 4
+      },
+      "requires": ["plaza_2"],
+      "optional": true
+    },
+    "workshop_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 42,
+      "materials": {
+        "oak_planks": 64,
+        "cobblestone": 48,
+        "crafting_table": 2,
+        "cartography_table": 1,
+        "fletching_table": 1
+      },
+      "requires": ["workshop"],
+      "optional": true
+    },
+    "workshop_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 42,
+      "materials": {
+        "oak_planks": 80,
+        "stone_bricks": 48,
+        "crafting_table": 2,
+        "cartography_table": 1,
+        "fletching_table": 1,
+        "grindstone": 1
+      },
+      "requires": ["workshop_2"],
+      "optional": true
+    },
+    "forge_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "cobblestone": 96,
+        "bricks": 32,
+        "anvil": 1,
+        "smithing_table": 1,
+        "furnace": 2
+      },
+      "requires": ["forge"],
+      "optional": true
+    },
+    "forge_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "cobblestone": 128,
+        "bricks": 64,
+        "anvil": 1,
+        "smithing_table": 1,
+        "furnace": 4,
+        "grindstone": 1
+      },
+      "requires": ["forge_2"],
+      "optional": true
+    },
+    "apiary_2": {
+      "case": "PLACE_BEEHIVE",
+      "stage": 3,
+      "base": 38,
+      "materials": {
+        "oak_planks": 24,
+        "beehive": 4,
+        "campfire": 2
+      },
+      "requires": ["apiary"],
+      "optional": true
+    },
+    "kennel_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 32,
+      "materials": {
+        "oak_planks": 32,
+        "hay_block": 4,
+        "water_bucket": 1
+      },
+      "requires": ["kennel"],
+      "optional": true
+    },
+    "stable_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 32,
+      "materials": {
+        "oak_planks": 64,
+        "oak_fence": 24,
+        "hay_block": 6
+      },
+      "requires": ["stable"],
+      "optional": true
+    },
+    "stable_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 32,
+      "materials": {
+        "oak_planks": 96,
+        "oak_fence": 32,
+        "hay_block": 8,
+        "oak_fence_gate": 2
+      },
+      "requires": ["stable_2"],
+      "optional": true
+    },
+    "well_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 35,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 24,
+        "water_bucket": 1,
+        "lantern": 1
+      },
+      "requires": ["well"],
+      "optional": true
+    },
+    "lumber_yard_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 42,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 48,
+        "cobblestone": 24,
+        "crafting_table": 2
+      },
+      "requires": ["lumber_yard"],
+      "optional": true
+    },
+    "bakery_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "bricks": 64,
+        "stone_bricks": 48,
+        "smoker": 2,
+        "furnace": 1,
+        "barrel": 2
+      },
+      "requires": ["bakery"],
+      "optional": true
+    },
+    "bakery_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "bricks": 96,
+        "stone_bricks": 64,
+        "smoker": 3,
+        "furnace": 2,
+        "barrel": 4
+      },
+      "requires": ["bakery_2"],
+      "optional": true
+    },
+    "weaver_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 38,
+      "materials": {
+        "bricks": 64,
+        "oak_planks": 48,
+        "loom": 2,
+        "red_carpet": 8
+      },
+      "requires": ["weaver"],
+      "optional": true
+    },
+    "barracks_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 42,
+      "materials": {
+        "oak_planks": 96,
+        "cobblestone": 48,
+        "bed": 8,
+        "barrel": 4
+      },
+      "requires": ["barracks"],
+      "optional": true
+    },
+    "barracks_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 42,
+      "materials": {
+        "oak_planks": 128,
+        "stone_bricks": 48,
+        "bed": 12,
+        "barrel": 6,
+        "grindstone": 1
+      },
+      "requires": ["barracks_2"],
+      "optional": true
+    },
+    "outpost_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 32,
+        "cobblestone": 16,
+        "bed": 4
+      },
+      "optional": true,
+      "estimate": true
+    },
+    "outpost_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 48,
+        "cobblestone": 48,
+        "bed": 4
+      },
+      "requires": ["outpost_1"],
+      "optional": true,
+      "estimate": true
+    },
+    "outpost_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 35,
+      "materials": {
+        "oak_log": 48,
+        "oak_planks": 64,
+        "cobblestone": 96,
+        "bed": 4,
+        "oak_fence": 32
+      },
+      "requires": ["outpost_2"],
+      "optional": true,
+      "estimate": true
+    },
+    "wall_2": {
+      "case": "BUILD_FENCE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_log": 64,
+        "oak_planks": 16
+      },
+      "requires": ["fence"],
+      "optional": true,
+      "estimate": true
+    },
+    "wall_3": {
+      "case": "BUILD_FENCE",
+      "stage": 2,
+      "base": 50,
+      "materials": {
+        "cobblestone": 128,
+        "stone_bricks": 32
+      },
+      "requires": ["wall_2"],
+      "optional": true,
+      "estimate": true
+    },
+    "wall_4": {
+      "case": "BUILD_FENCE",
+      "stage": 3,
+      "base": 50,
+      "materials": {
+        "stone_bricks": 192,
+        "lantern": 8
+      },
+      "requires": ["wall_3"],
+      "optional": true,
+      "estimate": true
+    },
+    "gate_1": {
+      "case": "BUILD_FENCE",
+      "stage": 1,
+      "base": 50,
+      "materials": {
+        "oak_fence_gate": 3,
+        "oak_fence": 8,
+        "torch": 2
+      },
+      "optional": true,
+      "estimate": true
+    },
+    "gate_2": {
+      "case": "BUILD_FENCE",
+      "stage": 2,
+      "base": 50,
+      "materials": {
+        "oak_log": 24,
+        "oak_fence_gate": 3,
+        "torch": 4
+      },
+      "requires": ["gate_1"],
+      "optional": true,
+      "estimate": true
+    },
+    "gate_3": {
+      "case": "BUILD_FENCE",
+      "stage": 3,
+      "base": 50,
+      "materials": {
+        "stone_bricks": 64,
+        "oak_fence_gate": 3,
+        "lantern": 4
+      },
+      "requires": ["gate_2"],
+      "optional": true,
+      "estimate": true
+    },
+    "gate_4": {
+      "case": "BUILD_FENCE",
+      "stage": 4,
+      "base": 50,
+      "materials": {
+        "stone_bricks": 128,
+        "oak_fence_gate": 4,
+        "lantern": 8
+      },
+      "requires": ["gate_3"],
+      "optional": true,
+      "estimate": true
+    },
+    "archer_tower_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 35,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 32
+      },
+      "optional": true,
+      "estimate": true
+    },
+    "archer_tower_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 35,
+      "materials": {
+        "cobblestone": 64,
+        "oak_planks": 32
+      },
+      "requires": ["archer_tower_1"],
+      "optional": true,
+      "estimate": true
+    },
+    "archer_tower_3": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "stone_bricks": 96,
+        "oak_planks": 32,
+        "lantern": 4
+      },
+      "requires": ["archer_tower_2"],
+      "optional": true,
+      "estimate": true
+    },
+    "bridge_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 1,
+      "base": 35,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 48
+      },
+      "optional": true,
+      "estimate": true
+    },
+    "bridge_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 35,
+      "materials": {
+        "stone_bricks": 96,
+        "lantern": 4
+      },
+      "requires": ["bridge_1"],
+      "optional": true,
+      "estimate": true
+    },
+    "lighthouse_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 35,
+      "materials": {
+        "cobblestone": 96,
+        "torch": 8
+      },
+      "optional": true,
+      "estimate": true
+    },
+    "lighthouse_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 35,
+      "materials": {
+        "stone_bricks": 128,
+        "lantern": 8,
+        "glass": 16
+      },
+      "requires": ["lighthouse_1"],
+      "optional": true,
+      "estimate": true
+    },
+    "pier_1": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 35,
+      "materials": {
+        "oak_log": 24,
+        "oak_planks": 32
+      },
+      "optional": true,
+      "estimate": true
+    },
+    "pier_2": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 35,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 64,
+        "barrel": 4
+      },
+      "requires": ["pier_1"],
+      "optional": true,
+      "estimate": true
+    },
+    "composter": {
+      "case": "CRAFTING_STATION",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "#planks": 7
+      }
+    },
+    "town_hall": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 45,
+      "materials": {
+        "stone_bricks": 128,
+        "oak_planks": 96,
+        "glass_pane": 24,
+        "bell": 1,
+        "lectern": 1,
+        "lantern": 8
+      },
+      "estimate": true
+    },
+    "tavern": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 42,
+      "materials": {
+        "oak_log": 32,
+        "oak_planks": 96,
+        "bricks": 32,
+        "barrel": 6,
+        "campfire": 1,
+        "lantern": 4
+      },
+      "estimate": true
+    },
+    "infirmary": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 42,
+      "materials": {
+        "stone_bricks": 64,
+        "oak_planks": 64,
+        "bed": 4,
+        "water_bucket": 1,
+        "glass_pane": 12,
+        "lantern": 4
+      },
+      "estimate": true
+    },
+    "training_yard": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "oak_fence": 48,
+        "hay_block": 8,
+        "pumpkin": 4,
+        "torch": 8
+      },
+      "estimate": true
+    },
+    "enchant_room": {
+      "case": "ENCHANT_ROOM",
+      "stage": 4,
+      "base": 45,
+      "materials": {
+        "oak_planks": 64,
+        "oak_log": 12,
+        "bookshelf": 5,
+        "enchanting_table": 1,
+        "glass_pane": 3,
+        "torch": 4
+      }
+    },
+    "enchant_room_2": {
+      "case": "ENCHANT_ROOM",
+      "stage": 4,
+      "base": 45,
+      "materials": {
+        "stone_bricks": 128,
+        "oak_planks": 72,
+        "bookshelf": 10,
+        "enchanting_table": 1,
+        "glass_pane": 10,
+        "lantern": 4
+      },
+      "requires": ["enchant_room"],
+      "optional": true
+    },
+    "enchant_room_3": {
+      "case": "ENCHANT_ROOM",
+      "stage": 4,
+      "base": 45,
+      "materials": {
+        "stone_bricks": 192,
+        "oak_planks": 96,
+        "bookshelf": 15,
+        "enchanting_table": 1,
+        "glass_pane": 16,
+        "lantern": 8
+      },
+      "requires": ["enchant_room_2"],
+      "optional": true
+    },
+    "alchemy": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 42,
+      "materials": {
+        "bricks": 48,
+        "oak_planks": 32,
+        "glass": 16,
+        "water_bucket": 1,
+        "glass_bottle": 8,
+        "nether_wart": 4,
+        "lantern": 2
+      },
+      "estimate": true
+    },
+    "library": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 42,
+      "materials": {
+        "oak_planks": 96,
+        "bookshelf": 24,
+        "lectern": 4,
+        "glass_pane": 16,
+        "lantern": 4
+      },
+      "estimate": true
+    },
+    "trading_post": {
+      "case": "BUILD_HOUSE",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 48,
+        "oak_fence": 16,
+        "barrel": 4,
+        "torch": 4
+      },
+      "estimate": true
+    },
+    "path_desert": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "sand": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false
+    },
+    "path_plains": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false
+    },
+    "path_forest": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false
+    },
+    "path_snowy": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false
     }
   },
   "ways": [
@@ -1695,7 +3391,8 @@
       "consumes": {
         "stick": 1,
         "#coals": 1
-      }
+      },
+      "ticks": 40
     },
     {
       "id": "mine_iron",
@@ -1736,7 +3433,8 @@
         "#planks": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_stone_pickaxe",
@@ -1748,7 +3446,8 @@
         "stick": 2,
         "#stone_crafting": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_pickaxe",
@@ -1760,7 +3459,8 @@
         "iron_ingot": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_wooden_axe",
@@ -1772,7 +3472,8 @@
         "#planks": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_stone_axe",
@@ -1784,7 +3485,8 @@
         "stick": 2,
         "#stone_crafting": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_axe",
@@ -1796,7 +3498,8 @@
         "iron_ingot": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_wooden_shovel",
@@ -1808,7 +3511,8 @@
         "#planks": 1,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_stone_shovel",
@@ -1820,7 +3524,8 @@
         "stick": 2,
         "#stone_crafting": 1
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_shovel",
@@ -1832,7 +3537,8 @@
         "iron_ingot": 1,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "lumber",
@@ -2343,7 +4049,8 @@
         "stick": 1,
         "#stone_crafting": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_sword",
@@ -2355,7 +4062,8 @@
         "iron_ingot": 2,
         "stick": 1
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "mine_lapis",
@@ -2479,7 +4187,8 @@
         "diamond": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_axe",
@@ -2491,7 +4200,8 @@
         "diamond": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_shovel",
@@ -2503,7 +4213,8 @@
         "diamond": 1,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_sword",
@@ -2515,7 +4226,8 @@
         "diamond": 2,
         "stick": 1
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_hoe",
@@ -2862,7 +4574,8 @@
         "white_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_orange_wool",
@@ -2885,7 +4598,8 @@
         "orange_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_magenta_wool",
@@ -2908,7 +4622,8 @@
         "magenta_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_light_blue_wool",
@@ -2931,7 +4646,8 @@
         "light_blue_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_yellow_wool",
@@ -2954,7 +4670,8 @@
         "yellow_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_lime_wool",
@@ -2977,7 +4694,8 @@
         "lime_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_pink_wool",
@@ -3000,7 +4718,8 @@
         "pink_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_gray_wool",
@@ -3023,7 +4742,8 @@
         "gray_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_light_gray_wool",
@@ -3046,7 +4766,8 @@
         "light_gray_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_cyan_wool",
@@ -3069,7 +4790,8 @@
         "cyan_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_purple_wool",
@@ -3092,7 +4814,8 @@
         "purple_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_blue_wool",
@@ -3115,7 +4838,8 @@
         "blue_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_brown_wool",
@@ -3138,7 +4862,8 @@
         "brown_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_green_wool",
@@ -3161,7 +4886,8 @@
         "green_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_red_wool",
@@ -3184,7 +4910,8 @@
         "red_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_black_wool",
@@ -3207,7 +4934,8 @@
         "black_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "pick_poppy",
@@ -4345,6 +6073,1545 @@
       "needs": {
         "fortune_pickaxe": 1
       }
+    },
+    {
+      "id": "gather_allium",
+      "case": "GATHER_MATERIALS",
+      "makes": "allium",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:allium"
+    },
+    {
+      "id": "gather_azure_bluet",
+      "case": "GATHER_MATERIALS",
+      "makes": "azure_bluet",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:azure_bluet"
+    },
+    {
+      "id": "gather_oxeye_daisy",
+      "case": "GATHER_MATERIALS",
+      "makes": "oxeye_daisy",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:oxeye_daisy"
+    },
+    {
+      "id": "gather_red_tulip",
+      "case": "GATHER_MATERIALS",
+      "makes": "red_tulip",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:red_tulip"
+    },
+    {
+      "id": "mine_calcite",
+      "case": "GATHER_MATERIALS",
+      "makes": "calcite",
+      "yield": 8,
+      "weight": 1.0,
+      "world": "calcite"
+    },
+    {
+      "id": "gather_flowering_azalea",
+      "case": "GATHER_MATERIALS",
+      "makes": "flowering_azalea",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "azalea"
+    },
+    {
+      "id": "gather_bell",
+      "case": "GATHER_MATERIALS",
+      "makes": "bell",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "village"
+    },
+    {
+      "id": "harvest_honeycomb",
+      "case": "GATHER_MATERIALS",
+      "makes": "honeycomb",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "bee_nest"
+    },
+    {
+      "id": "mine_andesite",
+      "case": "GATHER_MATERIALS",
+      "makes": "andesite",
+      "yield": 8,
+      "weight": 1.0,
+      "world": "andesite"
+    },
+    {
+      "id": "smelt_stone",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "cobblestone": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "smelt_smooth_stone",
+      "case": "GATHER_MATERIALS",
+      "makes": "smooth_stone",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "craft_iron_block",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_block",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 9
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_nugget",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_nugget",
+      "yield": 9,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_anvil",
+      "case": "GATHER_MATERIALS",
+      "makes": "anvil",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_block": 3,
+        "iron_ingot": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_bricks",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_bricks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_brick_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_brick_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "stone_bricks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_brick_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_brick_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "stone_bricks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_chiseled_stone_bricks",
+      "case": "GATHER_MATERIALS",
+      "makes": "chiseled_stone_bricks",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone_brick_slab": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cobblestone_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "cobblestone_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "cobblestone": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cobblestone_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "cobblestone_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "cobblestone": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cobblestone_wall",
+      "case": "GATHER_MATERIALS",
+      "makes": "cobblestone_wall",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "cobblestone": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_brick_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "brick_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "bricks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_brick_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "brick_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "bricks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_polished_andesite",
+      "case": "GATHER_MATERIALS",
+      "makes": "polished_andesite",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "andesite": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_polished_deepslate",
+      "case": "GATHER_MATERIALS",
+      "makes": "polished_deepslate",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "cobbled_deepslate": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_deepslate_bricks",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_bricks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "polished_deepslate": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_deepslate_tiles",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_tiles",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "deepslate_bricks": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_deepslate_brick_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_brick_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "deepslate_bricks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_deepslate_brick_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_brick_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "deepslate_bricks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_deepslate_tile_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_tile_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "deepslate_tiles": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_deepslate_tile_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "deepslate_tile_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "deepslate_tiles": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_crafting_table",
+      "case": "GATHER_MATERIALS",
+      "makes": "crafting_table",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_furnace",
+      "case": "GATHER_MATERIALS",
+      "makes": "furnace",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "cobblestone": 8
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_barrel",
+      "case": "GATHER_MATERIALS",
+      "makes": "barrel",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 6,
+        "#wooden_slabs": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_beehive",
+      "case": "GATHER_MATERIALS",
+      "makes": "beehive",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 6,
+        "honeycomb": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_bookshelf",
+      "case": "GATHER_MATERIALS",
+      "makes": "bookshelf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 6,
+        "book": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_brown_carpet",
+      "case": "GATHER_MATERIALS",
+      "makes": "brown_carpet",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "brown_wool": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_campfire",
+      "case": "GATHER_MATERIALS",
+      "makes": "campfire",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#logs": 3,
+        "stick": 3,
+        "#coals": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_candle",
+      "case": "GATHER_MATERIALS",
+      "makes": "candle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "string": 1,
+        "honeycomb": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cartography_table",
+      "case": "GATHER_MATERIALS",
+      "makes": "cartography_table",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "paper": 2,
+        "#planks": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_chain",
+      "case": "GATHER_MATERIALS",
+      "makes": "chain",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 1,
+        "iron_nugget": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_composter",
+      "case": "GATHER_MATERIALS",
+      "makes": "composter",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#wooden_slabs": 7
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_dark_oak_pressure_plate",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_pressure_plate",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_enchanting_table",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanting_table",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "diamond": 2,
+        "obsidian": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_fletching_table",
+      "case": "GATHER_MATERIALS",
+      "makes": "fletching_table",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "flint": 2,
+        "#planks": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_glass_pane",
+      "case": "GATHER_MATERIALS",
+      "makes": "glass_pane",
+      "yield": 16,
+      "weight": 1.0,
+      "consumes": {
+        "glass": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_grindstone",
+      "case": "GATHER_MATERIALS",
+      "makes": "grindstone",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stick": 2,
+        "stone_slab": 1,
+        "#planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_hay_block",
+      "case": "GATHER_MATERIALS",
+      "makes": "hay_block",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 9
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_lectern",
+      "case": "GATHER_MATERIALS",
+      "makes": "lectern",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#wooden_slabs": 4,
+        "bookshelf": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_light_gray_carpet",
+      "case": "GATHER_MATERIALS",
+      "makes": "light_gray_carpet",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "light_gray_wool": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_loom",
+      "case": "GATHER_MATERIALS",
+      "makes": "loom",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "string": 2,
+        "#planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_fence_gate",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_fence_gate",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 4,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_pressure_plate",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_pressure_plate",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_sign",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_sign",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 6,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_purple_carpet",
+      "case": "GATHER_MATERIALS",
+      "makes": "purple_carpet",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "purple_wool": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_red_carpet",
+      "case": "GATHER_MATERIALS",
+      "makes": "red_carpet",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "red_wool": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_smithing_table",
+      "case": "GATHER_MATERIALS",
+      "makes": "smithing_table",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 2,
+        "#planks": 4
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_smoker",
+      "case": "GATHER_MATERIALS",
+      "makes": "smoker",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#logs": 4,
+        "furnace": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_spruce_pressure_plate",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_pressure_plate",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_white_carpet",
+      "case": "GATHER_MATERIALS",
+      "makes": "white_carpet",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "white_wool": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_yellow_carpet",
+      "case": "GATHER_MATERIALS",
+      "makes": "yellow_carpet",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "yellow_wool": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "loot_experience",
+      "case": "GATHER_MATERIALS",
+      "makes": "experience",
+      "yield": 3,
+      "weight": 1.0,
+      "world": "mobs",
+      "implemented": false
+    },
+    {
+      "id": "enchant_efficiency",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_efficiency",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_unbreaking",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_unbreaking",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_fortune",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_fortune",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_mending",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_mending",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_protection",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_protection",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_sharpness",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_sharpness",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "enchant_silk_touch",
+      "case": "GATHER_MATERIALS",
+      "makes": "enchanted_book_silk_touch",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "book": 1,
+        "lapis_lazuli": 3,
+        "experience": 3
+      },
+      "building": "enchanting_table",
+      "implemented": false
+    },
+    {
+      "id": "fill_water_bottle",
+      "case": "GATHER_MATERIALS",
+      "makes": "water_bottle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "glass_bottle": 1
+      },
+      "world": "water",
+      "implemented": true
+    },
+    {
+      "id": "brew_regeneration",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_regeneration",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "ghast_tear": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_strength",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_strength",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "blaze_powder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_swiftness",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_swiftness",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "sugar": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_night_vision",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_night_vision",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "carrot": 1,
+        "gold_ingot": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "brew_water_breathing",
+      "case": "GATHER_MATERIALS",
+      "makes": "potion_water_breathing",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "water_bottle": 1,
+        "nether_wart": 1,
+        "pufferfish": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_healing",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_healing",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_healing": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_regeneration",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_regeneration",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_regeneration": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_fire_resistance",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_fire_resistance",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_fire_resistance": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_strength",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_strength",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_strength": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_swiftness",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_swiftness",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_swiftness": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_night_vision",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_night_vision",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_night_vision": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "splash_water_breathing",
+      "case": "GATHER_MATERIALS",
+      "makes": "splash_potion_water_breathing",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potion_water_breathing": 1,
+        "gunpowder": 1
+      },
+      "building": "brewing_stand",
+      "implemented": false
+    },
+    {
+      "id": "grind_blaze_powder",
+      "case": "GATHER_MATERIALS",
+      "makes": "blaze_powder",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "blaze_rod": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "gather_ghast_tear",
+      "case": "GATHER_MATERIALS",
+      "makes": "ghast_tear",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "catch_pufferfish",
+      "case": "GATHER_MATERIALS",
+      "makes": "pufferfish",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "water",
+      "implemented": false
+    },
+    {
+      "id": "mine_nether_quartz",
+      "case": "GATHER_MATERIALS",
+      "makes": "nether_quartz",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "mine_glowstone",
+      "case": "GATHER_MATERIALS",
+      "makes": "glowstone_dust",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "loot_slime",
+      "case": "GATHER_MATERIALS",
+      "makes": "slime_ball",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "swamp",
+      "implemented": false
+    },
+    {
+      "id": "craft_magma_cream",
+      "case": "GATHER_MATERIALS",
+      "makes": "magma_cream",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "blaze_powder": 1,
+        "slime_ball": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "mine_netherite_scrap",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherite_scrap",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "craft_netherite_ingot",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherite_ingot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "netherite_scrap": 4,
+        "gold_ingot": 4
+      },
+      "building": "smithing_table",
+      "implemented": false
+    },
+    {
+      "id": "loot_ender_pearl",
+      "case": "GATHER_MATERIALS",
+      "makes": "ender_pearl",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "end",
+      "implemented": false
+    },
+    {
+      "id": "craft_ender_eye",
+      "case": "GATHER_MATERIALS",
+      "makes": "ender_eye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "ender_pearl": 1,
+        "blaze_powder": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_repeater",
+      "case": "GATHER_MATERIALS",
+      "makes": "repeater",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 3,
+        "redstone": 2,
+        "torch": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_lever",
+      "case": "GATHER_MATERIALS",
+      "makes": "lever",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stick": 1,
+        "cobblestone": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_stone_button",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_button",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_stone_pressure_plate",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_pressure_plate",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 2
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_piston",
+      "case": "GATHER_MATERIALS",
+      "makes": "piston",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 3,
+        "cobblestone": 4,
+        "iron_ingot": 1,
+        "redstone": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_hopper",
+      "case": "GATHER_MATERIALS",
+      "makes": "hopper",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 5,
+        "chest": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_rail",
+      "case": "GATHER_MATERIALS",
+      "makes": "rail",
+      "yield": 16,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 6,
+        "stick": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_minecart",
+      "case": "GATHER_MATERIALS",
+      "makes": "minecart",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 5
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "mine_emerald",
+      "case": "GATHER_MATERIALS",
+      "makes": "emerald",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "emerald_ore",
+      "implemented": false
+    },
+    {
+      "id": "assign_farmer",
+      "case": "GATHER_MATERIALS",
+      "makes": "villager_farmer",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "emerald": 1
+      },
+      "building": "trading_post",
+      "implemented": false
+    },
+    {
+      "id": "assign_librarian",
+      "case": "GATHER_MATERIALS",
+      "makes": "villager_librarian",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "emerald": 1
+      },
+      "building": "trading_post",
+      "implemented": false
+    },
+    {
+      "id": "assign_smith",
+      "case": "GATHER_MATERIALS",
+      "makes": "villager_smith",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "emerald": 1
+      },
+      "building": "trading_post",
+      "implemented": false
+    },
+    {
+      "id": "assign_butcher",
+      "case": "GATHER_MATERIALS",
+      "makes": "villager_butcher",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "emerald": 1
+      },
+      "building": "trading_post",
+      "implemented": false
+    },
+    {
+      "id": "assign_cartographer",
+      "case": "GATHER_MATERIALS",
+      "makes": "villager_cartographer",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "emerald": 1
+      },
+      "building": "trading_post",
+      "implemented": false
+    },
+    {
+      "id": "craft_chainmail_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "chainmail_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 24
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_diamond_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "diamond_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "diamond": 24
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "smith_netherite_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherite_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "diamond_armor": 1,
+        "netherite_ingot": 1
+      },
+      "building": "smithing_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_crossbow",
+      "case": "GATHER_MATERIALS",
+      "makes": "crossbow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 2,
+        "stick": 3,
+        "string": 2,
+        "iron_ingot": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "loot_trident",
+      "case": "GATHER_MATERIALS",
+      "makes": "trident",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "drowned",
+      "implemented": false
+    },
+    {
+      "id": "craft_bread",
+      "case": "GATHER_MATERIALS",
+      "makes": "bread",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 3
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_cake",
+      "case": "GATHER_MATERIALS",
+      "makes": "cake",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "milk_bucket": 3,
+        "sugar": 2,
+        "egg": 1,
+        "wheat": 3
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_pumpkin_pie",
+      "case": "GATHER_MATERIALS",
+      "makes": "pumpkin_pie",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "pumpkin": 1,
+        "sugar": 1,
+        "egg": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_beetroot_soup",
+      "case": "GATHER_MATERIALS",
+      "makes": "beetroot_soup",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "beetroot": 6,
+        "bowl": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_cookie",
+      "case": "GATHER_MATERIALS",
+      "makes": "cookie",
+      "yield": 8,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2,
+        "cocoa_beans": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "bake_potato_cooked",
+      "case": "GATHER_MATERIALS",
+      "makes": "cooked_potato",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potato": 1,
+        "#coals": 1
+      },
+      "building": "furnace",
+      "implemented": true
+    },
+    {
+      "id": "cook_raw_cod",
+      "case": "GATHER_MATERIALS",
+      "makes": "cooked_fish",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 1,
+        "#coals": 1
+      },
+      "building": "furnace",
+      "implemented": true
+    },
+    {
+      "id": "craft_bowl",
+      "case": "GATHER_MATERIALS",
+      "makes": "bowl",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 3
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "catch_raw_cod",
+      "case": "GATHER_MATERIALS",
+      "makes": "raw_cod",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "water",
+      "implemented": true
+    },
+    {
+      "id": "fill_honey_bottle",
+      "case": "GATHER_MATERIALS",
+      "makes": "honey_bottle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "glass_bottle": 1
+      },
+      "world": "bee_nest",
+      "implemented": true
+    },
+    {
+      "id": "fill_lava_bucket",
+      "case": "GATHER_MATERIALS",
+      "makes": "lava_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      },
+      "world": "lava",
+      "implemented": false
+    },
+    {
+      "id": "craft_fuel_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "fuel_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "#logs": 1
+      },
+      "implemented": true
+    },
+    {
+      "id": "tame_wolf",
+      "case": "GATHER_MATERIALS",
+      "makes": "wolf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bone": 2
+      },
+      "building": "kennel",
+      "world": "animals",
+      "implemented": true
+    },
+    {
+      "id": "tame_cat",
+      "case": "GATHER_MATERIALS",
+      "makes": "cat",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 1
+      },
+      "building": "kennel",
+      "world": "animals",
+      "implemented": true
+    },
+    {
+      "id": "tame_horse",
+      "case": "GATHER_MATERIALS",
+      "makes": "horse",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "saddle": 1,
+        "hay_block": 1
+      },
+      "building": "stable",
+      "world": "animals",
+      "implemented": false
+    },
+    {
+      "id": "craft_saddle",
+      "case": "GATHER_MATERIALS",
+      "makes": "saddle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "leather": 3,
+        "iron_ingot": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "gather_bee_nest",
+      "case": "GATHER_MATERIALS",
+      "makes": "bee_nest",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "forest",
+      "implemented": true
+    },
+    {
+      "id": "relocate_beehive",
+      "case": "GATHER_MATERIALS",
+      "makes": "bee_nest",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bee_nest": 1
+      },
+      "building": "apiary",
+      "implemented": false
+    },
+    {
+      "id": "compost_crop",
+      "case": "GATHER_MATERIALS",
+      "makes": "bone_meal",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 1
+      },
+      "building": "composter",
+      "implemented": true
     }
   ],
   "edges": [
@@ -4499,12 +7766,16 @@
     },
     "night": {
       "push": {
-        "bed": 20,
         "building:lighting": 15,
-        "torch": 15
+        "torch": 15,
+        "tool:sword": 25,
+        "leather_armor": 20,
+        "iron_armor": 20,
+        "diamond_armor": 20
       },
       "advice": [
-        "sleep_or_guard"
+        "night_half_home_half_guard",
+        "player_sleeps_world_skips"
       ]
     },
     "armor_worn": {
@@ -4589,6 +7860,126 @@
       "advice": [
         "remember_ore_mine_only_with_iron_pickaxe"
       ]
+    },
+    "raid": {
+      "push": {
+        "building:fence": 20,
+        "building:gate_2": 15,
+        "tool:sword": 25,
+        "iron_armor": 20
+      },
+      "advice": [
+        "hide_or_fight"
+      ]
+    },
+    "thunderstorm": {
+      "push": {
+        "building:lighting": 10
+      },
+      "advice": [
+        "seek_shelter",
+        "lightning_starts_fire"
+      ]
+    },
+    "phantom": {
+      "push": {
+        "tool:sword": 20,
+        "building:lighting": 10
+      },
+      "advice": [
+        "sleep_or_guard"
+      ]
+    },
+    "poisoned": {
+      "tasks": [
+        {
+          "id": "drink_milk",
+          "case": "EAT_TO_FULL",
+          "base": 85,
+          "consumes": {
+            "milk_bucket": 1
+          }
+        }
+      ],
+      "advice": [
+        "drink_milk"
+      ]
+    },
+    "falling": {
+      "advice": [
+        "avoid_fall"
+      ]
+    },
+    "village_found": {
+      "advice": [
+        "mark_on_map"
+      ]
+    },
+    "biome_found:desert": {
+      "push": {
+        "building:path_desert": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "biome_found:plains": {
+      "push": {
+        "building:path_plains": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "biome_found:forest": {
+      "push": {
+        "building:path_forest": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "biome_found:snowy": {
+      "push": {
+        "building:path_snowy": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "player_request": {
+      "tasks": [
+        {
+          "id": "player_request",
+          "case": "GATHER_MATERIALS",
+          "base": 100,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "do_player_request"
+      ]
+    },
+    "bound_to_player": {
+      "advice": [
+        "release_tasks_while_bound"
+      ]
+    },
+    "rain": {
+      "push": {
+        "food": 10,
+        "wheat": 10,
+        "carrot": 10,
+        "potato": 10,
+        "beetroot": 10
+      },
+      "advice": [
+        "fish_and_crops_better"
+      ]
     }
   },
   "groups": {
@@ -4652,7 +8043,50 @@
       "green_wool",
       "red_wool",
       "black_wool"
+    ],
+    "#wooden_slabs": [
+      "oak_slab",
+      "birch_slab",
+      "spruce_slab",
+      "jungle_slab",
+      "acacia_slab",
+      "dark_oak_slab",
+      "cherry_slab",
+      "mangrove_slab"
     ]
+  },
+  "blockItems": {
+    "@floor": "cobblestone",
+    "air": null,
+    "cave_air": null,
+    "void_air": null,
+    "farmland": "dirt",
+    "dirt_path": "dirt",
+    "grass_block": "dirt",
+    "water": "water_bucket",
+    "water_cauldron": "water_bucket",
+    "wall_torch": "torch",
+    "wheat": "wheat_seeds",
+    "carrots": "carrot",
+    "potatoes": "potato",
+    "beetroots": "beetroot",
+    "melon_stem": "melon_slice",
+    "pumpkin_stem": "pumpkin",
+    "cocoa": "cocoa_beans",
+    "sweet_berry_bush": "sweet_berries",
+    "potted_azure_bluet": "azure_bluet",
+    "potted_dandelion": "dandelion",
+    "potted_poppy": "poppy",
+    "potted_red_tulip": "red_tulip",
+    "stripped_oak_log": "oak_log",
+    "stripped_spruce_log": "spruce_log",
+    "stripped_dark_oak_log": "dark_oak_log",
+    "red_bed": "bed",
+    "blue_bed": "bed",
+    "white_bed": "bed",
+    "yellow_stained_glass": "glass",
+    "yellow_stained_glass_pane": "glass_pane",
+    "orange_stained_glass_pane": "glass_pane"
   },
   "triggers": [
     {
@@ -4693,5 +8127,58 @@
     "herd_sheep": 10,
     "herd_pig": 10,
     "herd_chicken": 16
+  },
+  "costs": {
+    "defaultTicks": 100,
+    "caseTicks": {
+      "GATHER_MATERIALS": 120,
+      "SMELT_CHARCOAL": 200,
+      "CRAFT_TORCHES": 40,
+      "CRAFTING_STATION": 60,
+      "CRAFT_FURNACE": 80,
+      "CLEAR_GROUNDS": 2400,
+      "STOCK_CHESTS": 200,
+      "BUILD_MINE": 3000,
+      "LIGHTING": 600,
+      "BUILD_FENCE": 1600,
+      "BUILD_HOUSE": 2400,
+      "BUILD_ORCHARD": 900,
+      "BUILD_STREETS": 1200,
+      "BUILD_WAREHOUSE": 2400,
+      "BUILD_PEN": 900,
+      "HARVEST_ORCHARD": 400,
+      "CAPTURE_ANIMAL": 600,
+      "BREED_ANIMALS": 200,
+      "HERD_CULL": 200,
+      "SHEAR_SHEEP": 200,
+      "HUNT_WILD_SHEEP": 600,
+      "FISH": 800,
+      "MINE_LEFT_ORE": 300,
+      "COLLECT_DROPS": 200,
+      "REPAIR_BUILDING": 600,
+      "REPAIR_FENCE": 300,
+      "FILL_CRATER": 400,
+      "REPAIR_TOOL": 100,
+      "CRAFT_BED": 40,
+      "EAT_TO_FULL": 40,
+      "PLACE_BEEHIVE": 300,
+      "ENCHANT_ROOM": 2400,
+      "CRAFT_SMOKER": 80,
+      "CRAFT_ANVIL": 80,
+      "CRAFT_SMITHING_TABLE": 60
+    },
+    "ticksPerBlock": 5,
+    "travelScaleTicks": 1200,
+    "toolDurability": {
+      "wooden": 59,
+      "stone": 131,
+      "iron": 250,
+      "diamond": 1561
+    },
+    "stationCapacity": {
+      "furnace": 2,
+      "crafting_table": 4,
+      "smoker": 2
+    }
   }
 }
