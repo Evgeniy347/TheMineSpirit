@@ -149,7 +149,7 @@ public final class DataTables {
                 ProtectionConfig::readClasspath);
         this.presets = registry.registerLazy(presetsDefinition(), () -> PresetLibrary.parse(loadPresetBodies()));
         this.board = single("board", BoardConfig.RESOURCE, BoardConfig::fromJson, BoardConfig::readFromClasspath);
-        this.graph = single("graph", SupplyGraph.RESOURCE, SupplyGraph::parse, SupplyGraph::loadDefault);
+        this.graph = graphDefinition();
         this.building = single("building", BuildData.RESOURCE, BuildData::parse, BuildData::load);
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
@@ -188,6 +188,19 @@ public final class DataTables {
     private <T> TableHolder<T> single(
             String id, String resourcePath, TableDefinition.SingleParser<T> parser, Supplier<T> seed) {
         return registry.registerLazy(TableDefinition.single(id, resourcePath, parser), seed);
+    }
+
+    private TableHolder<SupplyGraph> graphDefinition() {
+        return registry.registerLazy(
+                TableDefinition.composite(
+                        "graph",
+                        List.of(SupplyGraph.RESOURCE, SupplyGraph.RECIPES),
+                        contents -> SupplyGraph.merge(
+                                contents.get(0).json(),
+                                contents.get(0).origin(),
+                                contents.get(1).json(),
+                                contents.get(1).origin())),
+                SupplyGraph::loadDefault);
     }
 
     private static TableDefinition<TacticsConfig> tacticsDefinition() {
