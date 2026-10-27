@@ -49,7 +49,12 @@ final class GraphChaos {
                 .forEach((id, item) -> items.put(
                         id,
                         new SupplyGraph.Item(
-                                id, item.xmin(), item.k(), scale(item.base(), random, spread), item.stage())));
+                                id,
+                                item.xmin(),
+                                item.k(),
+                                scale(item.base(), random, spread),
+                                item.stage(),
+                                item.perSpirit())));
         Map<String, SupplyGraph.Building> buildings = new LinkedHashMap<>();
         graph.buildings()
                 .forEach((id, building) -> buildings.put(
@@ -76,7 +81,8 @@ final class GraphChaos {
                     way.tool(),
                     way.tier(),
                     way.building(),
-                    way.world()));
+                    way.world(),
+                    way.needs()));
         }
         return new SupplyGraph(
                 Math.min(0.95, graph.decay() * factor(random, spread)),

@@ -34,7 +34,7 @@ public record SupplyGraph(
     private static final String STAGE = "stage";
     private static final String KIT = "kit";
 
-    public record Item(String id, int xmin, double k, int base, int stage) {}
+    public record Item(String id, int xmin, double k, int base, int stage, boolean perSpirit) {}
 
     public record Building(
             String id,
@@ -84,9 +84,11 @@ public record SupplyGraph(
             @Nullable String tool,
             @Nullable String tier,
             @Nullable String building,
-            @Nullable String world) {
+            @Nullable String world,
+            Map<String, Integer> needs) {
         public Way {
             consumes = Map.copyOf(consumes);
+            needs = Map.copyOf(needs);
         }
     }
 
@@ -122,7 +124,8 @@ public record SupplyGraph(
                                 entry.getValue().path("xmin").asInt(),
                                 entry.getValue().path("k").asDouble(1.0),
                                 entry.getValue().path(BASE).asInt(),
-                                entry.getValue().path(STAGE).asInt(1))));
+                                entry.getValue().path(STAGE).asInt(1),
+                                entry.getValue().path("perSpirit").asBoolean(false))));
         Map<String, Building> buildings = buildings(root);
         List<Way> ways = ways(root);
         List<Edge> edges = new ArrayList<>();
@@ -209,7 +212,8 @@ public record SupplyGraph(
                     text(node, "tool"),
                     text(node, "tier"),
                     text(node, "building"),
-                    text(node, "world")));
+                    text(node, "world"),
+                    GraphEvent.counts(node.path("needs"))));
         }
         return ways;
     }

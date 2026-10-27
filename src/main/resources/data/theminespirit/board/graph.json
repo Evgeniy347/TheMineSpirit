@@ -78,12 +78,6 @@
       "k": 1,
       "base": 55
     },
-    "wool": {
-      "xmin": 4,
-      "k": 1,
-      "base": 25,
-      "stage": 2
-    },
     "wheat_seeds": {
       "xmin": 8,
       "k": 1,
@@ -100,7 +94,8 @@
       "xmin": 1,
       "k": 1,
       "base": 30,
-      "stage": 3
+      "stage": 3,
+      "perSpirit": true
     },
     "bricks": {
       "xmin": 0,
@@ -238,25 +233,29 @@
       "xmin": 1,
       "k": 1,
       "base": 40,
-      "stage": 2
+      "stage": 2,
+      "perSpirit": true
     },
     "shield": {
       "xmin": 1,
       "k": 1,
       "base": 40,
-      "stage": 2
+      "stage": 2,
+      "perSpirit": true
     },
     "iron_armor": {
       "xmin": 1,
       "k": 1,
       "base": 40,
-      "stage": 3
+      "stage": 3,
+      "perSpirit": true
     },
     "leather_armor": {
       "xmin": 1,
       "k": 1,
       "base": 35,
-      "stage": 2
+      "stage": 2,
+      "perSpirit": true
     },
     "bucket": {
       "xmin": 1,
@@ -268,7 +267,8 @@
       "xmin": 1,
       "k": 1,
       "base": 40,
-      "stage": 2
+      "stage": 2,
+      "perSpirit": true
     },
     "sand": {
       "xmin": 16,
@@ -472,6 +472,554 @@
       "xmin": 2,
       "k": 1,
       "base": 30
+    },
+    "cobbled_deepslate": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "blackstone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3,
+      "implemented": false
+    },
+    "charcoal": {
+      "xmin": 0,
+      "k": 1,
+      "base": 35,
+      "stage": 1
+    },
+    "red_sand": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "white_wool": {
+      "xmin": 4,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "white_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "orange_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "orange_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "magenta_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "magenta_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "light_blue_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "light_blue_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "yellow_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "yellow_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "lime_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "lime_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "pink_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "pink_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "gray_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "gray_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "light_gray_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "light_gray_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "cyan_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "cyan_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "purple_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "purple_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "blue_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "blue_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "brown_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "brown_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "green_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "green_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "red_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "red_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "black_wool": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "black_dye": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "poppy": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "dandelion": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "cornflower": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "ink_sac": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "cactus": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "cow": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "sheep": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "chicken": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "pig": {
+      "xmin": 2,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "milk_bucket": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2,
+      "perSpirit": true
+    },
+    "rotten_flesh": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "gunpowder": {
+      "xmin": 0,
+      "k": 1,
+      "base": 15,
+      "stage": 1
+    },
+    "oak_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "oak_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "oak_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "oak_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "oak_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "birch_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "birch_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "birch_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "birch_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "birch_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "spruce_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "spruce_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "spruce_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "spruce_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "spruce_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "jungle_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "jungle_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "jungle_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "jungle_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "jungle_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "acacia_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "acacia_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "acacia_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "acacia_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "acacia_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "dark_oak_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "dark_oak_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "dark_oak_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "dark_oak_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "dark_oak_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cherry_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cherry_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cherry_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cherry_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "cherry_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "mangrove_door": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "mangrove_fence": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "mangrove_stairs": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "mangrove_slab": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "mangrove_trapdoor": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "ladder": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "chest": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 1
+    },
+    "lantern": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
     }
   },
   "buildings": {
@@ -488,7 +1036,7 @@
       "stage": 1,
       "base": 55,
       "materials": {
-        "cobblestone": 8
+        "#stone_crafting": 8
       }
     },
     "clearing": {
@@ -961,6 +1509,42 @@
         "dirt": 8
       },
       "optional": true
+    },
+    "mine_level_2": {
+      "case": "BUILD_MINE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "torch": 8
+      },
+      "tool": "pickaxe",
+      "requires": [
+        "mine"
+      ]
+    },
+    "mine_level_3": {
+      "case": "BUILD_MINE",
+      "stage": 2,
+      "base": 45,
+      "materials": {
+        "torch": 8
+      },
+      "tool": "pickaxe",
+      "requires": [
+        "mine_level_2"
+      ]
+    },
+    "mine_level_4": {
+      "case": "BUILD_MINE",
+      "stage": 3,
+      "base": 45,
+      "materials": {
+        "torch": 8
+      },
+      "tool": "pickaxe",
+      "requires": [
+        "mine_level_3"
+      ]
     }
   },
   "ways": [
@@ -1003,7 +1587,7 @@
     {
       "id": "smelt_charcoal",
       "case": "SMELT_CHARCOAL",
-      "makes": "coal",
+      "makes": "charcoal",
       "yield": 1,
       "weight": 0.9,
       "consumes": {
@@ -1018,8 +1602,8 @@
       "yield": 4,
       "weight": 1.0,
       "consumes": {
-        "coal": 1,
-        "stick": 1
+        "stick": 1,
+        "#coals": 1
       }
     },
     {
@@ -1030,7 +1614,7 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "stone",
-      "building": "mine"
+      "building": "mine_level_2"
     },
     {
       "id": "smelt_iron",
@@ -1040,7 +1624,7 @@
       "weight": 0.8,
       "consumes": {
         "raw_iron": 1,
-        "coal": 1
+        "#coals": 1
       },
       "building": "furnace"
     },
@@ -1058,14 +1642,6 @@
       "makes": "food",
       "yield": 2,
       "weight": 0.6
-    },
-    {
-      "id": "shear",
-      "case": "SHEAR_SHEEP",
-      "makes": "wool",
-      "yield": 2,
-      "weight": 1.0,
-      "building": "pen"
     },
     {
       "id": "craft_wooden_pickaxe",
@@ -1086,8 +1662,8 @@
       "yield": 1,
       "weight": 0.8,
       "consumes": {
-        "cobblestone": 3,
-        "stick": 2
+        "stick": 2,
+        "#stone_crafting": 3
       },
       "building": "crafting_table"
     },
@@ -1122,8 +1698,8 @@
       "yield": 1,
       "weight": 0.8,
       "consumes": {
-        "cobblestone": 3,
-        "stick": 2
+        "stick": 2,
+        "#stone_crafting": 3
       },
       "building": "crafting_table"
     },
@@ -1158,8 +1734,8 @@
       "yield": 1,
       "weight": 0.8,
       "consumes": {
-        "cobblestone": 1,
-        "stick": 2
+        "stick": 2,
+        "#stone_crafting": 1
       },
       "building": "crafting_table"
     },
@@ -1228,7 +1804,10 @@
       "makes": "food",
       "yield": 3,
       "weight": 0.9,
-      "building": "pen"
+      "building": "pen",
+      "needs": {
+        "pig": 3
+      }
     },
     {
       "id": "harvest_honey",
@@ -1239,30 +1818,6 @@
       "building": "apiary"
     },
     {
-      "id": "craft_bed",
-      "case": "CRAFT_BED",
-      "makes": "bed",
-      "yield": 1,
-      "weight": 0.8,
-      "consumes": {
-        "wool": 3,
-        "#planks": 3
-      },
-      "building": "crafting_table"
-    },
-    {
-      "id": "weave_bed",
-      "case": "CRAFT_BED",
-      "makes": "bed",
-      "yield": 1,
-      "weight": 1.0,
-      "consumes": {
-        "wool": 3,
-        "#planks": 3
-      },
-      "building": "weaver"
-    },
-    {
       "id": "forge_iron",
       "case": "GATHER_MATERIALS",
       "makes": "iron_ingot",
@@ -1270,7 +1825,7 @@
       "weight": 1.0,
       "consumes": {
         "raw_iron": 1,
-        "coal": 1
+        "#coals": 1
       },
       "building": "forge"
     },
@@ -1282,7 +1837,7 @@
       "weight": 1.0,
       "consumes": {
         "clay_ball": 4,
-        "coal": 1
+        "#coals": 1
       },
       "building": "furnace"
     },
@@ -1434,7 +1989,7 @@
       "weight": 0.7,
       "consumes": {
         "potato": 1,
-        "coal": 1
+        "#coals": 1
       },
       "building": "furnace"
     },
@@ -1497,7 +2052,10 @@
       "makes": "leather",
       "yield": 2,
       "weight": 1.0,
-      "building": "pen"
+      "building": "pen",
+      "needs": {
+        "cow": 3
+      }
     },
     {
       "id": "collect_feathers",
@@ -1505,7 +2063,10 @@
       "makes": "feather",
       "yield": 3,
       "weight": 1.0,
-      "building": "chicken_coop"
+      "building": "chicken_coop",
+      "needs": {
+        "chicken": 1
+      }
     },
     {
       "id": "collect_eggs",
@@ -1513,7 +2074,10 @@
       "makes": "egg",
       "yield": 4,
       "weight": 1.0,
-      "building": "chicken_coop"
+      "building": "chicken_coop",
+      "needs": {
+        "chicken": 1
+      }
     },
     {
       "id": "loot_bones",
@@ -1655,8 +2219,8 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "sand": 1,
-        "coal": 1
+        "#coals": 1,
+        "#sand": 1
       },
       "building": "furnace"
     },
@@ -1679,8 +2243,8 @@
       "yield": 1,
       "weight": 0.8,
       "consumes": {
-        "cobblestone": 2,
-        "stick": 2
+        "stick": 2,
+        "#stone_crafting": 2
       },
       "building": "crafting_table"
     },
@@ -1715,8 +2279,8 @@
       "yield": 1,
       "weight": 0.8,
       "consumes": {
-        "cobblestone": 2,
-        "stick": 1
+        "stick": 1,
+        "#stone_crafting": 2
       },
       "building": "crafting_table"
     },
@@ -1740,7 +2304,7 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "stone",
-      "building": "mine"
+      "building": "mine_level_2"
     },
     {
       "id": "mine_diamond",
@@ -1750,7 +2314,7 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "iron",
-      "building": "mine"
+      "building": "mine_level_4"
     },
     {
       "id": "mine_gold",
@@ -1760,7 +2324,7 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "iron",
-      "building": "mine"
+      "building": "mine_level_3"
     },
     {
       "id": "mine_redstone",
@@ -1770,7 +2334,7 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "iron",
-      "building": "mine"
+      "building": "mine_level_3"
     },
     {
       "id": "cast_obsidian",
@@ -2187,6 +2751,1276 @@
       "yield": 2,
       "weight": 1.0,
       "world": "tree:mangrove"
+    },
+    {
+      "id": "mine_deepslate",
+      "case": "GATHER_MATERIALS",
+      "makes": "cobbled_deepslate",
+      "yield": 16,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "building": "mine_level_3"
+    },
+    {
+      "id": "mine_blackstone",
+      "case": "GATHER_MATERIALS",
+      "makes": "blackstone",
+      "yield": 16,
+      "weight": 1.0,
+      "implemented": false,
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "building": "portal_lit"
+    },
+    {
+      "id": "dig_red_sand",
+      "case": "GATHER_MATERIALS",
+      "makes": "red_sand",
+      "yield": 8,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden",
+      "world": "red_sand"
+    },
+    {
+      "id": "shear",
+      "case": "SHEAR_SHEEP",
+      "makes": "white_wool",
+      "yield": 2,
+      "weight": 1.0,
+      "building": "pen",
+      "needs": {
+        "sheep": 1
+      }
+    },
+    {
+      "id": "shear_black",
+      "case": "SHEAR_SHEEP",
+      "makes": "black_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen",
+      "world": "sheep:black",
+      "needs": {
+        "sheep": 1
+      }
+    },
+    {
+      "id": "shear_gray",
+      "case": "SHEAR_SHEEP",
+      "makes": "gray_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen",
+      "world": "sheep:gray",
+      "needs": {
+        "sheep": 1
+      }
+    },
+    {
+      "id": "shear_light_gray",
+      "case": "SHEAR_SHEEP",
+      "makes": "light_gray_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen",
+      "world": "sheep:light_gray",
+      "needs": {
+        "sheep": 1
+      }
+    },
+    {
+      "id": "shear_brown",
+      "case": "SHEAR_SHEEP",
+      "makes": "brown_wool",
+      "yield": 1,
+      "weight": 0.3,
+      "building": "pen",
+      "world": "sheep:brown",
+      "needs": {
+        "sheep": 1
+      }
+    },
+    {
+      "id": "craft_white_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "white_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_orange_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "orange_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "orange_dye": 1
+      }
+    },
+    {
+      "id": "craft_orange_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "orange_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_magenta_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "magenta_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "magenta_dye": 1
+      }
+    },
+    {
+      "id": "craft_magenta_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "magenta_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_light_blue_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "light_blue_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "light_blue_dye": 1
+      }
+    },
+    {
+      "id": "craft_light_blue_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "light_blue_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_yellow_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "yellow_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "yellow_dye": 1
+      }
+    },
+    {
+      "id": "craft_yellow_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "yellow_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_lime_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "lime_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "lime_dye": 1
+      }
+    },
+    {
+      "id": "craft_lime_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "lime_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_pink_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "pink_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "pink_dye": 1
+      }
+    },
+    {
+      "id": "craft_pink_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "pink_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_gray_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "gray_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "gray_dye": 1
+      }
+    },
+    {
+      "id": "craft_gray_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "gray_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_light_gray_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "light_gray_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "light_gray_dye": 1
+      }
+    },
+    {
+      "id": "craft_light_gray_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "light_gray_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_cyan_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "cyan_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "cyan_dye": 1
+      }
+    },
+    {
+      "id": "craft_cyan_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "cyan_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_purple_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "purple_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "purple_dye": 1
+      }
+    },
+    {
+      "id": "craft_purple_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "purple_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_blue_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "blue_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "blue_dye": 1
+      }
+    },
+    {
+      "id": "craft_blue_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "blue_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_brown_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "brown_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "brown_dye": 1
+      }
+    },
+    {
+      "id": "craft_brown_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "brown_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_green_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "green_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "green_dye": 1
+      }
+    },
+    {
+      "id": "craft_green_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "green_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_red_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "red_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "red_dye": 1
+      }
+    },
+    {
+      "id": "craft_red_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "red_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "dye_black_wool",
+      "case": "GATHER_MATERIALS",
+      "makes": "black_wool",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "white_wool": 1,
+        "black_dye": 1
+      }
+    },
+    {
+      "id": "craft_black_bed",
+      "case": "CRAFT_BED",
+      "makes": "bed",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "black_wool": 3,
+        "#planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "pick_poppy",
+      "case": "GATHER_MATERIALS",
+      "makes": "poppy",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:poppy"
+    },
+    {
+      "id": "craft_red_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "red_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "poppy": 1
+      }
+    },
+    {
+      "id": "pick_dandelion",
+      "case": "GATHER_MATERIALS",
+      "makes": "dandelion",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:dandelion"
+    },
+    {
+      "id": "craft_yellow_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "yellow_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "dandelion": 1
+      }
+    },
+    {
+      "id": "pick_cornflower",
+      "case": "GATHER_MATERIALS",
+      "makes": "cornflower",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "flower:cornflower"
+    },
+    {
+      "id": "craft_blue_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "blue_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "cornflower": 1
+      }
+    },
+    {
+      "id": "craft_blue_dye_lapis",
+      "case": "GATHER_MATERIALS",
+      "makes": "blue_dye",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "lapis_lazuli": 1
+      }
+    },
+    {
+      "id": "craft_white_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "white_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bone_meal": 1
+      }
+    },
+    {
+      "id": "craft_brown_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "brown_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "cocoa_beans": 1
+      }
+    },
+    {
+      "id": "hunt_squid",
+      "case": "GATHER_MATERIALS",
+      "makes": "ink_sac",
+      "yield": 1,
+      "weight": 0.6,
+      "world": "squid"
+    },
+    {
+      "id": "craft_black_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "black_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "ink_sac": 1
+      }
+    },
+    {
+      "id": "gather_cactus",
+      "case": "GATHER_MATERIALS",
+      "makes": "cactus",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "cactus"
+    },
+    {
+      "id": "smelt_green_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "green_dye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "cactus": 1,
+        "#coals": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "mix_orange_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "orange_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "red_dye": 1,
+        "yellow_dye": 1
+      }
+    },
+    {
+      "id": "mix_pink_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "pink_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "red_dye": 1,
+        "white_dye": 1
+      }
+    },
+    {
+      "id": "mix_lime_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "lime_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "green_dye": 1,
+        "white_dye": 1
+      }
+    },
+    {
+      "id": "mix_light_blue_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "light_blue_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "blue_dye": 1,
+        "white_dye": 1
+      }
+    },
+    {
+      "id": "mix_cyan_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "cyan_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "blue_dye": 1,
+        "green_dye": 1
+      }
+    },
+    {
+      "id": "mix_purple_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "purple_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "red_dye": 1,
+        "blue_dye": 1
+      }
+    },
+    {
+      "id": "mix_magenta_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "magenta_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "purple_dye": 1,
+        "pink_dye": 1
+      }
+    },
+    {
+      "id": "mix_gray_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "gray_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "black_dye": 1,
+        "white_dye": 1
+      }
+    },
+    {
+      "id": "mix_light_gray_dye",
+      "case": "GATHER_MATERIALS",
+      "makes": "light_gray_dye",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "gray_dye": 1,
+        "white_dye": 1
+      }
+    },
+    {
+      "id": "capture_cow",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "cow",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "pen"
+    },
+    {
+      "id": "breed_cow",
+      "case": "BREED_ANIMALS",
+      "makes": "cow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2
+      },
+      "building": "pen",
+      "needs": {
+        "cow": 2
+      }
+    },
+    {
+      "id": "capture_sheep",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "sheep",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "pen"
+    },
+    {
+      "id": "breed_sheep",
+      "case": "BREED_ANIMALS",
+      "makes": "sheep",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2
+      },
+      "building": "pen",
+      "needs": {
+        "sheep": 2
+      }
+    },
+    {
+      "id": "capture_chicken",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "chicken",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "chicken_coop"
+    },
+    {
+      "id": "breed_chicken",
+      "case": "BREED_ANIMALS",
+      "makes": "chicken",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat_seeds": 2
+      },
+      "building": "chicken_coop",
+      "needs": {
+        "chicken": 2
+      }
+    },
+    {
+      "id": "capture_pig",
+      "case": "CAPTURE_ANIMAL",
+      "makes": "pig",
+      "yield": 1,
+      "weight": 0.8,
+      "world": "animals",
+      "building": "pen"
+    },
+    {
+      "id": "breed_pig",
+      "case": "BREED_ANIMALS",
+      "makes": "pig",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "carrot": 2
+      },
+      "building": "pen",
+      "needs": {
+        "pig": 2
+      }
+    },
+    {
+      "id": "milk_cow",
+      "case": "GATHER_MATERIALS",
+      "makes": "milk_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      },
+      "building": "pen",
+      "needs": {
+        "cow": 1
+      }
+    },
+    {
+      "id": "loot_rotten_flesh",
+      "case": "COLLECT_DROPS",
+      "makes": "rotten_flesh",
+      "yield": 1,
+      "weight": 0.5
+    },
+    {
+      "id": "loot_gunpowder",
+      "case": "COLLECT_DROPS",
+      "makes": "gunpowder",
+      "yield": 1,
+      "weight": 0.5
+    },
+    {
+      "id": "craft_oak_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_oak_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_birch_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "birch_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_birch_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "birch_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_birch_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "birch_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_birch_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "birch_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_birch_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "birch_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_spruce_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_spruce_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_spruce_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_spruce_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_spruce_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_jungle_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_jungle_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_jungle_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_jungle_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_jungle_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_acacia_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_acacia_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_acacia_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_acacia_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_acacia_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_dark_oak_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_dark_oak_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_dark_oak_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_dark_oak_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_dark_oak_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cherry_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cherry_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cherry_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cherry_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_cherry_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_mangrove_door",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_door",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_planks": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_mangrove_fence",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_fence",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_mangrove_stairs",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_stairs",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_planks": 6
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_mangrove_slab",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_slab",
+      "yield": 6,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_mangrove_trapdoor",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_trapdoor",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_planks": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_ladder",
+      "case": "GATHER_MATERIALS",
+      "makes": "ladder",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "stick": 7
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_chest",
+      "case": "GATHER_MATERIALS",
+      "makes": "chest",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 8
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_lantern",
+      "case": "GATHER_MATERIALS",
+      "makes": "lantern",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "torch": 1,
+        "iron_ingot": 1
+      },
+      "building": "crafting_table"
     }
   ],
   "edges": [
@@ -2387,6 +4221,22 @@
       "advice": [
         "collect_saplings_under_trees"
       ]
+    },
+    "tool_worn": {
+      "tasks": [
+        {
+          "id": "repair_tool",
+          "case": "REPAIR_TOOL",
+          "base": 85,
+          "consumes": {
+            "iron_ingot": 1
+          },
+          "building": "anvil"
+        }
+      ],
+      "push": {
+        "iron_ingot": 20
+      }
     }
   },
   "groups": {
@@ -2419,6 +4269,37 @@
       "dark_oak_sapling",
       "cherry_sapling",
       "mangrove_sapling"
+    ],
+    "#stone_crafting": [
+      "cobblestone",
+      "cobbled_deepslate",
+      "blackstone"
+    ],
+    "#coals": [
+      "coal",
+      "charcoal"
+    ],
+    "#sand": [
+      "sand",
+      "red_sand"
+    ],
+    "#wool": [
+      "white_wool",
+      "orange_wool",
+      "magenta_wool",
+      "light_blue_wool",
+      "yellow_wool",
+      "lime_wool",
+      "pink_wool",
+      "gray_wool",
+      "light_gray_wool",
+      "cyan_wool",
+      "purple_wool",
+      "blue_wool",
+      "brown_wool",
+      "green_wool",
+      "red_wool",
+      "black_wool"
     ]
   },
   "triggers": [

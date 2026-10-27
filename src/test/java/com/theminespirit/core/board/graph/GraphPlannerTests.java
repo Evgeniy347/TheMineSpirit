@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphState.Built;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class GraphPlannerTests {
@@ -403,5 +404,120 @@ class GraphPlannerTests {
         assertTrue(
                 plan.task("event:leaf_decay:collect_saplings").isPresent(),
                 "Листва опадает, падают саженцы — задание подобрать саженцы: " + plan.advice());
+    }
+
+    @Test
+    void plan_OnlyCharcoal_TorchesFeasible() {
+        GraphPlan plan = GraphWorld.settled()
+                .with("coal", 0)
+                .with("charcoal", 4)
+                .with("torch", 0)
+                .plan();
+
+        assertTrue(
+                plan.task("craft_torch").map(GraphPlan.Task::feasible).orElse(false),
+                "Факелы — из каменного или древесного угля: один древесный годится — " + plan.task("craft_torch"));
+    }
+
+    @Test
+    void plan_OnlyDeepslate_StoneToolsFeasible() {
+        GraphPlan plan = GraphWorld.settled()
+                .tools("spirit-1", 0)
+                .with("cobblestone", 0)
+                .with("cobbled_deepslate", 8)
+                .plan();
+
+        assertTrue(
+                plan.task("craft_stone_pickaxe@spirit-1")
+                        .map(GraphPlan.Task::feasible)
+                        .orElse(false),
+                "Каменные инструменты — из любого камня группы: сланец годится — "
+                        + plan.task("craft_stone_pickaxe@spirit-1"));
+    }
+
+    @Test
+    void plan_MixedWoolColors_BedNeedsThreeOfOneColor() {
+        GraphWorld world = GraphWorld.settled().with("red_wool", 1).with("white_wool", 2);
+        world.stage = 3;
+        GraphPlan mixed = world.plan();
+        GraphPlan red = world.copy().with("red_wool", 3).plan();
+
+        assertTrue(
+                mixed.tasks().stream().noneMatch(task -> task.id().endsWith("_bed") && task.feasible())
+                        && red.task("craft_red_bed")
+                                .map(GraphPlan.Task::feasible)
+                                .orElse(false),
+                "Кровать — три шерсти одного цвета: 1 красная + 2 белые не годятся, 3 красные — годятся");
+    }
+
+    @Test
+    void plan_HutOfBirchNoBirchNearby_ExploreTask() {
+        GraphWorld world = GraphWorld.settled().with("birch_planks", 0).with("birch_log", 0);
+        world.materials.put("hut", Map.of("birch_planks", 30));
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("explore:tree:birch").isPresent()
+                        && plan.notices().stream().anyMatch(notice -> "birch_log".equals(notice.building())),
+                "Хижина из берёзы, берёзы рядом нет — задание разведать и просьба стратегу сменить породу: "
+                        + plan.notices());
+    }
+
+    @Test
+    void plan_MineLevelOne_IronNeedsLevelTwo() {
+        GraphWorld world = GraphWorld.settled().tools("spirit-1", 1).built("mine_level_2", Built.PLANNED);
+        world.stage = 2;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("mine_iron").map(task -> !task.feasible()).orElse(false)
+                        && plan.task("building:mine_level_2").isPresent(),
+                "Железо — со второго уровня шахты: пока его нет, добыча ждёт, а уровень строится — "
+                        + plan.task("mine_iron"));
+    }
+
+    @Test
+    void plan_OneCowInPen_BreedingWaitsForPair() {
+        GraphWorld world =
+                GraphWorld.settled().built("pen", Built.BUILT).with("cow", 1).with("wheat", 10);
+        world.stage = 2;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("breed_cow").map(task -> !task.feasible()).orElse(false)
+                        && plan.task("capture_cow").isPresent(),
+                "Разведение — от пары: одна корова — ловим вторую, разведение ждёт — " + plan.task("breed_cow"));
+    }
+
+    @Test
+    void threshold_BedPerSpirit_NotMultipliedByStage() {
+        GraphWorld world = GraphWorld.settled();
+        world.stage = 3;
+
+        assertEquals(
+                1,
+                GraphPlanner.threshold(GraphWorld.GRAPH.items().get("bed"), world.state()),
+                "Кровать — одна на духа, без умножения на этап");
+    }
+
+    @Test
+    void plan_LogsLacking_NoOrchardNoticesForAbsentSpecies() {
+        GraphPlan plan =
+                GraphWorld.settled().with("oak_log", 0).with("jungle_log", 0).plan();
+
+        assertTrue(
+                plan.notices().stream().noneMatch(notice -> notice.building().startsWith("orchard_")),
+                "Брёвен мало — сады пород без саженцев и не из плана не просим (8 лишних просьб стратегу): "
+                        + plan.notices());
+    }
+
+    @Test
+    void plan_StageOneFoodLacking_NoNoticesForLaterStageBuildings() {
+        GraphPlan plan = GraphWorld.settled().with("food", 0).plan();
+
+        assertTrue(
+                plan.notices().isEmpty(),
+                "Этап 1, еды мало — поле, пекарня, загон и пасека этапов 2–3 не источник и не повод просить стратега: "
+                        + plan.notices());
     }
 }

@@ -18,7 +18,11 @@ final class GraphMutations {
         GraphWorld second = GraphWorld.settled();
         second.stage = 2;
         GraphWorld.GRAPH.buildings().keySet().forEach(id -> second.built(id, Built.PLANNED));
-        return List.of(empty, settled, crowded, second);
+        GraphWorld ten = GraphWorld.settled();
+        for (int index = 2; index <= 10; index++) {
+            ten.tools("spirit-" + index, -1);
+        }
+        return List.of(empty, settled, crowded, second, ten);
     }
 
     static List<Mutation> single() {

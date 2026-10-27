@@ -6,9 +6,15 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice) {
-    public record Task(String id, BoardCase boardCase, int base, Map<String, Integer> consumes) {
+    public record Task(
+            String id,
+            BoardCase boardCase,
+            int base,
+            Map<String, Integer> consumes,
+            @Nullable String building) {
         public Task {
             consumes = Map.copyOf(consumes);
         }
@@ -29,7 +35,8 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         task.path("id").asText(),
                         BoardCase.valueOf(task.path("case").asText()),
                         task.path("base").asInt(),
-                        counts(task.path("consumes"))));
+                        counts(task.path("consumes")),
+                        task.hasNonNull("building") ? task.path("building").asText() : null));
             }
             List<String> advice = new ArrayList<>();
             entry.getValue().path("advice").forEach(rule -> advice.add(rule.asText()));
