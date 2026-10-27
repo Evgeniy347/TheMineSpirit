@@ -20,6 +20,7 @@ import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -46,16 +47,17 @@ final class GraphInputs {
         int stage = SettlementStage.of(service.board().ledger());
         Map<String, Built> buildings = buildings(level, service.board().ledger(), scan, graph);
         return new GraphState(
-                GraphNames.stock(
-                        stock.available(),
-                        StockCatalog.defaultTable().nutrition().keySet()),
-                stage,
-                kits(spirits, graph),
-                buildings,
-                materials(level, service, stock, scan, graph, buildings, stage),
-                ChestSpaceWatch.space(level).freePercent(),
-                around.events(),
-                around.world());
+                        GraphNames.stock(
+                                stock.available(),
+                                StockCatalog.defaultTable().nutrition().keySet()),
+                        stage,
+                        kits(spirits, graph),
+                        buildings,
+                        materials(level, service, stock, scan, graph, buildings, stage),
+                        ChestSpaceWatch.space(level).freePercent(),
+                        around.events(),
+                        around.world())
+                .withOrders(GraphNames.need(CraftOrders.shortage(level)));
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

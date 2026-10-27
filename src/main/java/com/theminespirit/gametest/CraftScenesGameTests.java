@@ -12,7 +12,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class CraftScenesGameTests {
     private CraftScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_craft_arena", timeoutTicks = 11613)
+    @GameTest(template = "arena", batch = "scene_craft_arena", timeoutTicks = 11818)
     public static void craftScene_ArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(
                 helper,
@@ -22,6 +22,7 @@ public final class CraftScenesGameTests {
                 FirstToolsGameTests.class,
                 RecipeKnowledgeGameTests.class,
                 RepairGameTests.class,
-                StationGameTests.class);
+                StationGameTests.class,
+                CraftTabGameTests.class);
     }
 }

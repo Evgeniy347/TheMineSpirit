@@ -15,6 +15,7 @@ import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ final class GraphPost {
     private static final int CHARCOAL_LOGS = 4;
     private static final int CHARCOAL_BATCH = 2;
     private static final String EAT = "eat";
+    private static final String ORDER = "craft_player_order";
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
 
     private final ServerLevel level;
@@ -84,10 +86,20 @@ final class GraphPost {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
             case BUILDING -> StageBuilt.ids().contains(ticket.node()) && building(ticket);
-            case EVENT ->
-                EAT.equals(ticket.node()) ? hungry(ticket) : COLLECT.contains(ticket.node()) && collect(ticket);
+            case EVENT -> event(ticket);
             case WAY -> way(ticket, task);
         };
+    }
+
+    private boolean event(GraphTickets.Ticket ticket) {
+        if (EAT.equals(ticket.node())) {
+            return hungry(ticket);
+        }
+        if (ORDER.equals(ticket.node())) {
+            CraftOrders.refresh(level);
+            return true;
+        }
+        return COLLECT.contains(ticket.node()) && collect(ticket);
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {

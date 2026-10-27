@@ -57,6 +57,12 @@ sourceSets.main.resources {
 
 repositories {
     mavenCentral()
+    maven {
+        url = "https://maven.blamejared.com"
+        content {
+            includeGroup "mezz.jei"
+        }
+    }
 }
 
 base {
@@ -156,6 +162,7 @@ dependencies {
     errorprone "com.uber.nullaway:nullaway:${nullaway_version}"
     compileOnly "org.jspecify:jspecify:${jspecify_version}"
     testCompileOnly "org.jspecify:jspecify:${jspecify_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
 
 
 
