@@ -384,7 +384,10 @@
       "base": 55,
       "materials": {
         "cobblestone": 8
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "clearing": {
       "case": "CLEAR_GROUNDS",
@@ -399,7 +402,10 @@
       "base": 50,
       "materials": {
         "oak_planks": 16
-      }
+      },
+      "requires": [
+        "clearing"
+      ]
     },
     "mine": {
       "case": "BUILD_MINE",
@@ -408,7 +414,10 @@
       "materials": {
         "torch": 6
       },
-      "tool": "pickaxe"
+      "tool": "pickaxe",
+      "requires": [
+        "clearing"
+      ]
     },
     "lighting": {
       "case": "LIGHTING",
@@ -416,7 +425,10 @@
       "base": 50,
       "materials": {
         "torch": 8
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "fence": {
       "case": "BUILD_FENCE",
@@ -424,7 +436,10 @@
       "base": 50,
       "materials": {
         "oak_log": 40
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "hut": {
       "case": "BUILD_HOUSE",
@@ -434,7 +449,10 @@
         "oak_log": 12,
         "oak_planks": 30,
         "cobblestone": 16
-      }
+      },
+      "requires": [
+        "chests"
+      ]
     },
     "orchard": {
       "case": "BUILD_ORCHARD",
@@ -444,7 +462,10 @@
         "oak_sapling": 4,
         "torch": 4,
         "dirt": 8
-      }
+      },
+      "requires": [
+        "clearing"
+      ]
     },
     "streets": {
       "case": "BUILD_STREETS",
@@ -452,7 +473,10 @@
       "base": 40,
       "materials": {
         "dirt": 40
-      }
+      },
+      "requires": [
+        "clearing"
+      ]
     },
     "warehouse": {
       "case": "BUILD_WAREHOUSE",
@@ -824,7 +848,8 @@
       "yield": 16,
       "weight": 1.0,
       "tool": "pickaxe",
-      "tier": "wooden"
+      "tier": "wooden",
+      "building": "mine"
     },
     {
       "id": "dig_dirt",

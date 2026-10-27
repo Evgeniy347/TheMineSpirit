@@ -126,6 +126,7 @@ public final class GraphPlanner {
             Map<String, Integer> needs = materials(id);
             if (building != null
                     && stocked(needs)
+                    && building.requires().stream().allMatch(required -> state.built(required) == Built.BUILT)
                     && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
                 add(node, graph.buildReadyBoost());
             }
