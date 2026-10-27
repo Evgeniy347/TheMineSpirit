@@ -381,6 +381,57 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_Night_HalfGuardNoBedPush() {
+        GraphPlan day = GraphWorld.settled().plan();
+        GraphPlan night = GraphWorld.settled().event("night").plan();
+
+        assertTrue(
+                night.advice().stream().anyMatch(advice -> "night_half_home_half_guard".equals(advice.rule()))
+                        && night.advice().stream()
+                                .anyMatch(advice -> "player_sleeps_world_skips".equals(advice.rule())),
+                "Ночь: половина дома, половина в дозоре; сон игрока пропускает мир: " + night.advice());
+        assertEquals(
+                day.priority("craft_white_bed"),
+                night.priority("craft_white_bed"),
+                "Ночь больше не толкает кровать как обязательную нужду сна");
+    }
+
+    @Test
+    void plan_Rain_FishingAndCropsRaised() {
+        GraphWorld dryWorld = GraphWorld.settled().built("field_carrot", Built.BUILT);
+        dryWorld.stage = 2;
+        GraphWorld rainWorld = GraphWorld.settled().built("field_carrot", Built.BUILT);
+        rainWorld.stage = 2;
+        rainWorld.event("rain");
+        GraphPlan dry = dryWorld.plan();
+        GraphPlan rain = rainWorld.plan();
+
+        assertTrue(
+                rain.priority("fish") > dry.priority("fish")
+                        && rain.priority("harvest_carrot") > dry.priority("harvest_carrot"),
+                "Дождь делает рыбалку и посевы выгоднее: рыба " + dry.priority("fish") + "→"
+                        + rain.priority("fish") + ", морковь " + dry.priority("harvest_carrot") + "→"
+                        + rain.priority("harvest_carrot"));
+    }
+
+    @Test
+    void plan_PlayerAndBiomeEvents_PostRequestsAndPaths() {
+        GraphWorld world = GraphWorld.settled().built("path_desert", Built.PLANNED);
+        world.event("player_request").event("biome_found:desert");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("event:player_request:player_request").isPresent(),
+                "Просьба игрока — задание высшего приоритета: " + plan.task("event:player_request:player_request"));
+        assertTrue(
+                plan.task("building:path_desert")
+                        .map(task -> !task.implemented())
+                        .orElse(false),
+                "Открытый биом без ресурса ставит тропинку до него (прокладка — «в разработке»): "
+                        + plan.task("building:path_desert"));
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;

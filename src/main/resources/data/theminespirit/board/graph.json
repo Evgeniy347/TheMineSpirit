@@ -3272,7 +3272,8 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true
+      "estimate": true,
+      "implemented": false
     },
     "path_plains": {
       "case": "BUILD_STREETS",
@@ -3283,7 +3284,8 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true
+      "estimate": true,
+      "implemented": false
     },
     "path_forest": {
       "case": "BUILD_STREETS",
@@ -3294,7 +3296,8 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true
+      "estimate": true,
+      "implemented": false
     },
     "path_snowy": {
       "case": "BUILD_STREETS",
@@ -3305,7 +3308,8 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true
+      "estimate": true,
+      "implemented": false
     }
   },
   "ways": [
@@ -7700,12 +7704,16 @@
     },
     "night": {
       "push": {
-        "bed": 20,
         "building:lighting": 15,
-        "torch": 15
+        "torch": 15,
+        "tool:sword": 25,
+        "leather_armor": 20,
+        "iron_armor": 20,
+        "diamond_armor": 20
       },
       "advice": [
-        "sleep_or_guard"
+        "night_half_home_half_guard",
+        "player_sleeps_world_skips"
       ]
     },
     "armor_worn": {
@@ -7789,6 +7797,126 @@
       },
       "advice": [
         "remember_ore_mine_only_with_iron_pickaxe"
+      ]
+    },
+    "raid": {
+      "push": {
+        "building:fence": 20,
+        "building:gate_2": 15,
+        "tool:sword": 25,
+        "iron_armor": 20
+      },
+      "advice": [
+        "hide_or_fight"
+      ]
+    },
+    "thunderstorm": {
+      "push": {
+        "building:lighting": 10
+      },
+      "advice": [
+        "seek_shelter",
+        "lightning_starts_fire"
+      ]
+    },
+    "phantom": {
+      "push": {
+        "tool:sword": 20,
+        "building:lighting": 10
+      },
+      "advice": [
+        "sleep_or_guard"
+      ]
+    },
+    "poisoned": {
+      "tasks": [
+        {
+          "id": "drink_milk",
+          "case": "EAT_TO_FULL",
+          "base": 85,
+          "consumes": {
+            "milk_bucket": 1
+          }
+        }
+      ],
+      "advice": [
+        "drink_milk"
+      ]
+    },
+    "falling": {
+      "advice": [
+        "avoid_fall"
+      ]
+    },
+    "village_found": {
+      "advice": [
+        "mark_on_map"
+      ]
+    },
+    "biome_found:desert": {
+      "push": {
+        "building:path_desert": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "biome_found:plains": {
+      "push": {
+        "building:path_plains": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "biome_found:forest": {
+      "push": {
+        "building:path_forest": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "biome_found:snowy": {
+      "push": {
+        "building:path_snowy": 50
+      },
+      "advice": [
+        "mark_on_map",
+        "path_to_biome"
+      ]
+    },
+    "player_request": {
+      "tasks": [
+        {
+          "id": "player_request",
+          "case": "GATHER_MATERIALS",
+          "base": 100,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "do_player_request"
+      ]
+    },
+    "bound_to_player": {
+      "advice": [
+        "release_tasks_while_bound"
+      ]
+    },
+    "rain": {
+      "push": {
+        "food": 10,
+        "wheat": 10,
+        "carrot": 10,
+        "potato": 10,
+        "beetroot": 10
+      },
+      "advice": [
+        "fish_and_crops_better"
       ]
     }
   },
