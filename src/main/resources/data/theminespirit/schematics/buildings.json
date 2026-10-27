@@ -112,6 +112,8 @@
   {"id": "barracks", "name": "Казарма", "type": "housing", "levels": [
    {"level": 1, "scheme": "barracks_1"}]},
   {"id": "weaver", "name": "Ткацкая", "type": "craft", "levels": [
-   {"level": 1, "scheme": "weaver_1"}]}
+   {"level": 1, "scheme": "weaver_1"}]},
+  {"id": "portal_hall", "name": "Зал портала", "type": "fortified", "levels": [
+   {"level": 1, "scheme": "portal_hall_1"}]}
  ]
 }

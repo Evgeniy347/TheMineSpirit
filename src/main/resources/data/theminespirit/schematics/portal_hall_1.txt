@@ -1,0 +1,200 @@
+# portal_hall_1 — зал портала в Нижний мир, этап 3 (решение владельца 27.10): отдельная укреплённая
+# постройка. Каменный корпус, внутри зала 13×14×7, крыша закрыта, окон наружу нет. Вход — шлюз из двух
+# дверей с тамбуром между ними: наружная дверь ведёт в тамбур 2×1, из тамбура вторая дверь — в зал.
+# Внутри обсидиановая рамка портала 4×5 (не зажжённая), вокруг неё свободно не меньше двух блоков.
+# Свет — факелы, тёмных клеток нет.
+name: "Зал портала, уровень 1"
+type: fortified
+stage: 3
+level: 1
+size: 15x9x19   # Ш×В×Д, внутри зала 13×14×7
+entrance: 7,1,1
+legend:
+  'f': stone
+  'p': stone_slab[type=bottom]
+  'S': stone_bricks
+  'D': oak_door[facing=south,hinge=left]
+  'E': oak_door[facing=west,hinge=left]
+  'O': obsidian
+  'T': torch
+layers:
+  - y0 пол и крыльцо: |
+      ppppppppppppppp
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+      fffffffffffffff
+  - y1: |
+      ...............
+      SSSSSSSDSSSSSSS
+      S.....E.TS....S
+      S.....SSSS....S
+      S.............S
+      S..T.......T..S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.T...........S
+      S..........T..S
+      S.............S
+      S....OOOO.....S
+      S.............S
+      S.............S
+      S......T......S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y2: |
+      ...............
+      SSSSSSSDSSSSSSS
+      S.....E..S....S
+      S.....SSSS....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S....O..O.....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y3: |
+      ...............
+      SSSSSSSSSSSSSSS
+      S........S....S
+      S.....SSSS....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S....O..O.....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y4: |
+      ...............
+      SSSSSSSSSSSSSSS
+      S.....S..S....S
+      S.....SSSS....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S....O..O.....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y5: |
+      ...............
+      SSSSSSSSSSSSSSS
+      S.....S..S....S
+      S.....SSSS....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S....OOOO.....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y6: |
+      ...............
+      SSSSSSSSSSSSSSS
+      S.....S..S....S
+      S.....SSSS....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y7: |
+      ...............
+      SSSSSSSSSSSSSSS
+      S.....S..S....S
+      S.....SSSS....S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      S.............S
+      SSSSSSSSSSSSSSS
+  - y8: |
+      ...............
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
+      SSSSSSSSSSSSSSS
