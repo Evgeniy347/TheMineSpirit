@@ -1,0 +1,82 @@
+# field_3 — пашня уровня 3 (docs/settlement/catalog.md): поле 17×17, четыре поля разных культур,
+# межи-тропы, пугало, компостер и фонарные столбы по углам и сторонам.
+name: "Пашня, уровень 3 (четыре поля)"
+type: farm
+stage: 2
+level: 3
+requires: field_2
+size: 17x3x17   # Ш×В×Д
+entrance: 8,1,1
+exemptions:
+  - rule: roof
+    reason: "пашня под открытым небом: грядкам нужны свет и дождь, крыши у поля нет"
+legend:
+  'p': dirt_path
+  'e': farmland[moisture=7]
+  '~': water
+  'w': wheat[age=0] ~
+  'r': carrots[age=0] ~
+  'q': potatoes[age=0] ~
+  'b': beetroots[age=0] ~
+  'F': oak_fence
+  'G': oak_fence_gate[facing=south]
+  'H': hay_block
+  'P': pumpkin
+  'm': composter
+  'L': lantern
+  '_': oak_slab[type=bottom]
+layers:
+  - y0: |
+      ........_........
+      ppppppppppppppppp
+      ppeeeeeepeeeeeepp
+      ppeeeeeepeeeeeepp
+      ppee~eeepeee~eepp
+      ppeeeeeepeeeeeepp
+      ppeeeeeepeeeeeepp
+      ppeeeeeepeeeeeepp
+      ppppppppppppppppp
+      ppeeeeeepeeeeeepp
+      ppeeeeeepeeeeeepp
+      ppeeeeeepeeeeeepp
+      ppee~eeepeee~eepp
+      ppeeeeeepeeeeeepp
+      ppeeeeeepeeeeeepp
+      ppppppppppppppppp
+      ppppppppppppppppp
+  - y1: |
+      .................
+      FFFFFFFGGGFFFFFFF
+      F.wwwwww.rrrrrr.F
+      F.wwwwwwmrrrrrr.F
+      F.ww.www.rrr.rr.F
+      F.wwwHww.rrrrrr.F
+      F.wwwwww.rrrrrr.F
+      F.wwwwww.rrrrrr.F
+      F...............F
+      F.qqqqqq.bbbbbb.F
+      F.qqqqqq.bbbbbb.F
+      F.qqqqqq.bbbbbb.F
+      F.qq.qqq.bbb.bb.F
+      F.qqqqqq.bbbbbb.F
+      F.qqqqqq.bbbbbb.F
+      F...............F
+      FFFFFFFFFFFFFFFFF
+  - y2: |
+      .................
+      L...............L
+      .................
+      .................
+      .................
+      .....P...........
+      .................
+      .................
+      L...............L
+      .................
+      .................
+      .................
+      .................
+      .................
+      .................
+      .................
+      L.......L.......L
