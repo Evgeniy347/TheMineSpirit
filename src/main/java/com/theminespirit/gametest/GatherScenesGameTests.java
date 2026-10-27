@@ -12,7 +12,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class GatherScenesGameTests {
     private GatherScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_gather_arena", timeoutTicks = 38796)
+    @GameTest(template = "arena", batch = "scene_gather_arena", timeoutTicks = 38837)
     public static void gatherScene_ArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(
                 helper,

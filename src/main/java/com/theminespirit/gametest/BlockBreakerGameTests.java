@@ -193,7 +193,7 @@ public final class BlockBreakerGameTests {
     @SceneStep(template = "arena", timeoutTicks = 40)
     public static void blockBreaker_CrackStage_IsShownWhileBreakingAndClearedOnCancelAndGone(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
-        BlockBreaker breaker = new BlockBreaker(spirit);
+        BlockBreaker breaker = BlockBreaker.escaping(spirit);
         BlockPos target = helper.absolutePos(TARGET);
 
         breaker.begin(target);
