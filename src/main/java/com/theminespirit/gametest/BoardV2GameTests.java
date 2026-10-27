@@ -157,7 +157,7 @@ public final class BoardV2GameTests {
         BoardService board = BoardRegistry.get(level);
         drainForeignTickets(board);
         board.rebuild(level, level.getGameTime());
-        String id = "food:" + hungry.getUUID();
+        String id = "graph:event:hungry:eat@" + hungry.getUUID();
         helper.assertTrue(
                 board.board().find(id).isPresent(),
                 "Голодный дух без личной еды обязан получить RESTOCK_FOOD " + id

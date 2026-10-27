@@ -31,6 +31,7 @@ final class GraphPost {
     private static final String PART = ":2";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
     private static final int TORCHES_PER_CRAFT = 4;
+    private static final int TORCH_BATCH = 16;
     private static final int CHARCOAL_LOGS = 4;
     private static final int CHARCOAL_BATCH = 2;
     private static final String EAT = "eat";
@@ -156,7 +157,8 @@ final class GraphPost {
         int coal = stock.available().getOrDefault("coal", 0);
         int charcoal = stock.available().getOrDefault("charcoal", 0);
         String fuel = coal >= charcoal ? "coal" : "charcoal";
-        int crafts = Math.min((ticket.count() + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT, Math.max(coal, charcoal));
+        int torches = Math.min(ticket.count(), TORCH_BATCH);
+        int crafts = Math.min((torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT, Math.max(coal, charcoal));
         if (crafts <= 0) {
             return true;
         }

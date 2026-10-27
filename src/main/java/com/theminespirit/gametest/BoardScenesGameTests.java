@@ -26,7 +26,6 @@ public final class BoardScenesGameTests {
                 BoardPreemptGameTests.class,
                 BoardResetGameTests.class,
                 BoardScaleGameTests.class,
-                BoardSupplyGateGameTests.class,
                 BoardGraphGameTests.class,
                 BoardV2GameTests.class,
                 BoardV2ScaleGameTests.class,

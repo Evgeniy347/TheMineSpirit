@@ -83,9 +83,10 @@ class GraphWiringTests {
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> task.implemented() && !task.feasible() && task.priority() > 0)
+                        .filter(task -> !laterStage(world, task))
                         .allMatch(task -> result.live().contains(GraphTickets.id(task))),
-                "Невыполнимое задание остаётся живой причиной: поставленный раньше тикет не снимается, пока граф "
-                        + "его держит: " + result.live());
+                "Невыполнимое задание своего этапа остаётся живой причиной: поставленный раньше тикет не снимается, "
+                        + "пока граф его держит: " + result.live());
         assertTrue(
                 result.post().stream().allMatch(ticket -> ticket.id().startsWith(GraphTickets.PREFIX)),
                 "id заданий графа стабильны и с префиксом graph: — доска дедуплицирует по id: " + result.post());
@@ -113,7 +114,7 @@ class GraphWiringTests {
 
         assertTrue(
                 result.post().stream()
-                        .anyMatch(ticket -> ticket.id().equals("graph:craft_wooden_pickaxe@spirit-1")
+                        .anyMatch(ticket -> "graph:craft_wooden_pickaxe@spirit-1".equals(ticket.id())
                                 && ticket.task()
                                         .spirit()
                                         .filter("spirit-1"::equals)
@@ -168,5 +169,42 @@ class GraphWiringTests {
                 built.get("chests"),
                 "Сундуков двора меньше двух — двор не готов, даже если шаг в журнале сделан: " + built);
         assertEquals(StageBuilt.ids(), built.keySet(), "Каждая постройка этапа 1 получает состояние для графа");
+    }
+
+    @Test
+    void tickets_StageOneNoFood_NoForagingOfStageTwoCrops() {
+        GraphWorld world = GraphWorld.settled().with("food", 0);
+
+        GraphTickets.Result result = GraphTickets.of(GraphWorld.GRAPH, world.state(), world.plan());
+
+        assertTrue(
+                result.post().stream()
+                        .noneMatch(ticket -> "carrot".equals(ticket.task().makes())),
+                "Морковь — предмет этапа 2: на этапе 1 голод её не собирает, духи не тратят время на поиск грядок: "
+                        + result.post());
+    }
+
+    @Test
+    void tickets_StageOneLaterStageItem_NotLive() {
+        GraphWorld world = GraphWorld.settled().with("food", 0);
+        GraphPlan plan = world.plan();
+
+        GraphTickets.Result result = GraphTickets.of(GraphWorld.GRAPH, world.state(), plan);
+
+        List<GraphPlan.Task> later = plan.tasks().stream()
+                .filter(task -> task.implemented() && task.priority() > 0 && laterStage(world, task))
+                .toList();
+        assertFalse(later.isEmpty(), "Голод этапа 1 поднимает и предметы этапа 2 — иначе проверка пуста: " + plan);
+        assertTrue(
+                later.stream().noneMatch(task -> result.live().contains(GraphTickets.id(task))),
+                "Предмет следующего этапа — не живая причина: доска закрывает его задание, а не держит вечно: "
+                        + result.live());
+    }
+
+    private static boolean laterStage(GraphWorld world, GraphPlan.Task task) {
+        SupplyGraph.Item item = GraphWorld.GRAPH.items().get(task.makes());
+        return !task.id().contains(":")
+                && item != null
+                && item.stage() > world.state().stage();
     }
 }

@@ -475,7 +475,7 @@
         "dirt": 40
       },
       "requires": [
-        "clearing"
+        "hut"
       ]
     },
     "warehouse": {
@@ -895,7 +895,8 @@
       "case": "GATHER_MATERIALS",
       "makes": "oak_sapling",
       "yield": 2,
-      "weight": 1.0
+      "weight": 1.0,
+      "implemented": false
     },
     {
       "id": "mine_iron",

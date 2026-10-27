@@ -56,7 +56,8 @@ public final class GraphSource {
                 GraphPost.ticketIds(task, graph).forEach(id -> service.board().reprioritize(id, task.priority()));
             }
         }
-        report(level, plan, result, unconnected, now);
+        report(plan, result, unconnected, now);
+        tellStrategist(level, graph, state, plan, now);
         return result.live();
     }
 
@@ -102,8 +103,23 @@ public final class GraphSource {
                 || status == BoardStatus.ASSIGNED;
     }
 
-    private void report(
-            ServerLevel level, GraphPlan plan, GraphTickets.Result result, List<String> unconnected, long now) {
+    private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {
+        for (GraphPlan.Notice notice : plan.notices()) {
+            if (!notes.due("notice:" + notice.building(), now)) {
+                continue;
+            }
+            String text = "[поселение] " + notice.reason();
+            LOGGER.info("[graph] просьба стратегу: {}", text);
+            SupplyGraph.Building building = graph.buildings().get(notice.building());
+            if (building != null && building.stage() <= state.stage()) {
+                for (ServerPlayer player : level.players()) {
+                    player.sendSystemMessage(Component.literal(text));
+                }
+            }
+        }
+    }
+
+    private void report(GraphPlan plan, GraphTickets.Result result, List<String> unconnected, long now) {
         List<String> missing = result.unimplemented().stream()
                 .filter(task -> task.priority() > 0)
                 .map(GraphPlan.Task::id)
@@ -115,15 +131,6 @@ public final class GraphSource {
             LOGGER.info(
                     "[graph] задания графа без подключения к доске (их ставит свой сторож или нет цели): {}",
                     unconnected);
-        }
-        for (GraphPlan.Notice notice : plan.notices()) {
-            if (notes.due("notice:" + notice.building(), now)) {
-                String text = "[поселение] " + notice.reason();
-                LOGGER.info("[graph] просьба стратегу: {}", text);
-                for (ServerPlayer player : level.players()) {
-                    player.sendSystemMessage(Component.literal(text));
-                }
-            }
         }
         for (GraphPlan.Advice advice : plan.advice()) {
             if (notes.due("advice:" + advice.event() + ":" + advice.rule(), now)) {

@@ -54,7 +54,7 @@ public final class GraphTickets {
                 unimplemented.add(task);
                 continue;
             }
-            if (task.priority() <= 0) {
+            if (task.priority() <= 0 || early(graph, state, task)) {
                 continue;
             }
             live.add(id(task));
@@ -70,6 +70,11 @@ public final class GraphTickets {
                 .reversed()
                 .thenComparing(Ticket::id));
         return new Result(post, live, unimplemented);
+    }
+
+    private static boolean early(SupplyGraph graph, GraphState state, GraphPlan.Task task) {
+        SupplyGraph.Item item = graph.items().get(task.makes());
+        return kind(task) == Kind.WAY && item != null && item.stage() > state.stage();
     }
 
     private static Kind kind(GraphPlan.Task task) {
