@@ -30,7 +30,8 @@ public record SupplyGraph(
         Map<String, List<String>> groups,
         List<Trigger> triggers,
         Map<String, Integer> herdCaps,
-        double buildStartShare) {
+        double buildStartShare,
+        GraphCosts costs) {
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
     private static final String BASE = "base";
     private static final String STAGE = "stage";
@@ -174,7 +175,8 @@ public record SupplyGraph(
                 groups(root),
                 triggers(root),
                 GraphEvent.counts(root.path("herdCaps")),
-                root.path("buildStartShare").asDouble(1.0));
+                root.path("buildStartShare").asDouble(1.0),
+                GraphCosts.parse(root));
         graph.validate(origin);
         return graph;
     }

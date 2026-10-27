@@ -17,6 +17,8 @@ public final class GraphPlanner {
     private static final String TOOL = "tool:";
     private static final String EVENT = "event:";
     private static final String EXPLORE = "explore:";
+    private static final String STATION = "station:";
+    private static final int EXPLORE_TICKS = 2400;
     private static final char AT = '@';
 
     private final SupplyGraph graph;
@@ -355,12 +357,61 @@ public final class GraphPlanner {
 
     private GraphPlan result(Map<String, Double> scores) {
         List<GraphPlan.Task> tasks = new ArrayList<>();
+        Map<String, Double> load = new LinkedHashMap<>();
         for (Map.Entry<String, Double> score : scores.entrySet()) {
             if (score.getValue() > 0 && task(score.getKey())) {
-                tasks.add(task(score.getKey(), GraphFlow.priority(score.getValue(), graph.maxPriority())));
+                double value = score.getValue() * graph.costs().travelFactor(travel(score.getKey()));
+                GraphPlan.Task task = task(score.getKey(), GraphFlow.priority(value, graph.maxPriority()));
+                tasks.add(task);
+                station(score.getKey())
+                        .filter(ignored -> task.feasible())
+                        .ifPresent(building -> load.merge(building, value, Math::max));
             }
         }
+        load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
         return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
+    }
+
+    private Optional<String> station(String key) {
+        int at = key.indexOf(AT);
+        return graph.way(at < 0 ? key : key.substring(0, at))
+                .map(SupplyGraph.Way::building)
+                .filter(building -> graph.costs().stationCapacity().containsKey(building));
+    }
+
+    private Optional<GraphPlan.Task> stationTask(String building, double value, Map<String, Double> scores) {
+        long busy = scores.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0 && task(entry.getKey()))
+                .filter(entry ->
+                        station(entry.getKey()).filter(building::equals).isPresent())
+                .filter(entry -> task(entry.getKey(), 0).feasible())
+                .count();
+        int capacity = graph.costs().stationCapacity().getOrDefault(building, Integer.MAX_VALUE);
+        if (state.built(building) != Built.BUILT || busy <= (long) state.stations(building) * capacity) {
+            return Optional.empty();
+        }
+        SupplyGraph.Building known = Objects.requireNonNull(
+                graph.buildings().get(building), "Станция " + building + " не описана среди построек графа");
+        Map<String, Integer> materials = materials(building);
+        return Optional.of(new GraphPlan.Task(
+                STATION + building,
+                known.boardCase(),
+                building,
+                Optional.empty(),
+                GraphFlow.priority(value * graph.decay(), graph.maxPriority()),
+                materials,
+                stocked(materials),
+                false,
+                graph.implemented(building),
+                graph.costs().ticks(STATION + building, known.boardCase())));
+    }
+
+    private int travel(String key) {
+        int at = key.indexOf(AT);
+        return graph.way(at < 0 ? key : key.substring(0, at))
+                .map(SupplyGraph.Way::world)
+                .map(resource -> graph.costs().travel(state.distances().getOrDefault(resource, 0)))
+                .orElse(0);
     }
 
     private GraphPlan.Task task(String key, int priority) {
@@ -374,7 +425,8 @@ public final class GraphPlanner {
                     Map.of(),
                     true,
                     false,
-                    false);
+                    false,
+                    EXPLORE_TICKS);
         }
         if (key.startsWith(EVENT)) {
             String[] parts = key.split(":", 3);
@@ -395,7 +447,8 @@ public final class GraphPlanner {
                     stocked(event.consumes())
                             && (event.building() == null || state.built(event.building()) == Built.BUILT),
                     false,
-                    true);
+                    true,
+                    graph.costs().ticks(key, event.boardCase()));
         }
         if (key.startsWith(BUILDING)) {
             String id = key.substring(BUILDING.length());
@@ -413,7 +466,8 @@ public final class GraphPlanner {
                     materials,
                     tooled && share(materials) >= graph.buildStartShare(),
                     false,
-                    graph.implemented(id));
+                    graph.implemented(id),
+                    graph.costs().ticks(key, building.boardCase()));
         }
         int at = key.indexOf(AT);
         String wayId = at < 0 ? key : key.substring(0, at);
@@ -430,7 +484,8 @@ public final class GraphPlanner {
                 way.consumes(),
                 tooled && housed(way) && available(way) && stocked(way.consumes()) && stocked(way.needs()),
                 chances.contains(key),
-                graph.implemented(wayId));
+                graph.implemented(wayId),
+                graph.costs().ticks(wayId, way.boardCase()) + travel(key));
     }
 
     private Map<String, Integer> materials(String building) {

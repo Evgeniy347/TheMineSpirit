@@ -20,6 +20,8 @@ final class GraphWorld {
     final Set<String> events = new HashSet<>();
     SupplyGraph graph = GRAPH;
     final Map<String, Map<String, Integer>> materials = new HashMap<>();
+    final Map<String, Integer> stations = new HashMap<>();
+    final Map<String, Integer> distances = new HashMap<>();
     final Set<String> world = new HashSet<>(
             Set.of("tree:oak", "tree:jungle", "sand", "clay", "animals", "flower:poppy", "flower:dandelion"));
 
@@ -81,13 +83,16 @@ final class GraphWorld {
         world.events.addAll(events);
         world.graph = graph;
         world.materials.putAll(materials);
+        world.stations.putAll(stations);
+        world.distances.putAll(distances);
         world.world.clear();
         world.world.addAll(this.world);
         return world;
     }
 
     GraphState state() {
-        return new GraphState(stock, stage, kits, buildings, materials, storageFree, events, world);
+        return new GraphState(
+                stock, stage, kits, buildings, materials, storageFree, events, world, distances, stations);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {

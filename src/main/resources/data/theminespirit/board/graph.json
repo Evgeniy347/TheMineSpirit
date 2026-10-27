@@ -2067,7 +2067,8 @@
       "consumes": {
         "stick": 1,
         "#coals": 1
-      }
+      },
+      "ticks": 40
     },
     {
       "id": "mine_iron",
@@ -2108,7 +2109,8 @@
         "#planks": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_stone_pickaxe",
@@ -2120,7 +2122,8 @@
         "stick": 2,
         "#stone_crafting": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_pickaxe",
@@ -2132,7 +2135,8 @@
         "iron_ingot": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_wooden_axe",
@@ -2144,7 +2148,8 @@
         "#planks": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_stone_axe",
@@ -2156,7 +2161,8 @@
         "stick": 2,
         "#stone_crafting": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_axe",
@@ -2168,7 +2174,8 @@
         "iron_ingot": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_wooden_shovel",
@@ -2180,7 +2187,8 @@
         "#planks": 1,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_stone_shovel",
@@ -2192,7 +2200,8 @@
         "stick": 2,
         "#stone_crafting": 1
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_shovel",
@@ -2204,7 +2213,8 @@
         "iron_ingot": 1,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "lumber",
@@ -2715,7 +2725,8 @@
         "stick": 1,
         "#stone_crafting": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_iron_sword",
@@ -2727,7 +2738,8 @@
         "iron_ingot": 2,
         "stick": 1
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "mine_lapis",
@@ -2851,7 +2863,8 @@
         "diamond": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_axe",
@@ -2863,7 +2876,8 @@
         "diamond": 3,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_shovel",
@@ -2875,7 +2889,8 @@
         "diamond": 1,
         "stick": 2
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_sword",
@@ -2887,7 +2902,8 @@
         "diamond": 2,
         "stick": 1
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "craft_diamond_hoe",
@@ -3234,7 +3250,8 @@
         "white_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_orange_wool",
@@ -3257,7 +3274,8 @@
         "orange_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_magenta_wool",
@@ -3280,7 +3298,8 @@
         "magenta_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_light_blue_wool",
@@ -3303,7 +3322,8 @@
         "light_blue_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_yellow_wool",
@@ -3326,7 +3346,8 @@
         "yellow_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_lime_wool",
@@ -3349,7 +3370,8 @@
         "lime_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_pink_wool",
@@ -3372,7 +3394,8 @@
         "pink_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_gray_wool",
@@ -3395,7 +3418,8 @@
         "gray_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_light_gray_wool",
@@ -3418,7 +3442,8 @@
         "light_gray_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_cyan_wool",
@@ -3441,7 +3466,8 @@
         "cyan_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_purple_wool",
@@ -3464,7 +3490,8 @@
         "purple_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_blue_wool",
@@ -3487,7 +3514,8 @@
         "blue_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_brown_wool",
@@ -3510,7 +3538,8 @@
         "brown_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_green_wool",
@@ -3533,7 +3562,8 @@
         "green_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_red_wool",
@@ -3556,7 +3586,8 @@
         "red_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "dye_black_wool",
@@ -3579,7 +3610,8 @@
         "black_wool": 3,
         "#planks": 3
       },
-      "building": "crafting_table"
+      "building": "crafting_table",
+      "ticks": 40
     },
     {
       "id": "pick_poppy",
@@ -5785,5 +5817,58 @@
     "herd_sheep": 10,
     "herd_pig": 10,
     "herd_chicken": 16
+  },
+  "costs": {
+    "defaultTicks": 100,
+    "caseTicks": {
+      "GATHER_MATERIALS": 120,
+      "SMELT_CHARCOAL": 200,
+      "CRAFT_TORCHES": 40,
+      "CRAFTING_STATION": 60,
+      "CRAFT_FURNACE": 80,
+      "CLEAR_GROUNDS": 2400,
+      "STOCK_CHESTS": 200,
+      "BUILD_MINE": 3000,
+      "LIGHTING": 600,
+      "BUILD_FENCE": 1600,
+      "BUILD_HOUSE": 2400,
+      "BUILD_ORCHARD": 900,
+      "BUILD_STREETS": 1200,
+      "BUILD_WAREHOUSE": 2400,
+      "BUILD_PEN": 900,
+      "HARVEST_ORCHARD": 400,
+      "CAPTURE_ANIMAL": 600,
+      "BREED_ANIMALS": 200,
+      "HERD_CULL": 200,
+      "SHEAR_SHEEP": 200,
+      "HUNT_WILD_SHEEP": 600,
+      "FISH": 800,
+      "MINE_LEFT_ORE": 300,
+      "COLLECT_DROPS": 200,
+      "REPAIR_BUILDING": 600,
+      "REPAIR_FENCE": 300,
+      "FILL_CRATER": 400,
+      "REPAIR_TOOL": 100,
+      "CRAFT_BED": 40,
+      "EAT_TO_FULL": 40,
+      "PLACE_BEEHIVE": 300,
+      "ENCHANT_ROOM": 2400,
+      "CRAFT_SMOKER": 80,
+      "CRAFT_ANVIL": 80,
+      "CRAFT_SMITHING_TABLE": 60
+    },
+    "ticksPerBlock": 5,
+    "travelScaleTicks": 1200,
+    "toolDurability": {
+      "wooden": 59,
+      "stone": 131,
+      "iron": 250,
+      "diamond": 1561
+    },
+    "stationCapacity": {
+      "furnace": 2,
+      "crafting_table": 4,
+      "smoker": 2
+    }
   }
 }

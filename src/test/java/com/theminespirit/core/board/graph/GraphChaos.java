@@ -101,7 +101,8 @@ final class GraphChaos {
                 graph.groups(),
                 graph.triggers(),
                 graph.herdCaps(),
-                graph.buildStartShare());
+                graph.buildStartShare(),
+                graph.costs());
     }
 
     static List<GraphMutations.Mutation> combo(Random random, int size) {
