@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -31,6 +32,14 @@ public final class TransferTicket {
         String from = value(ticket, FROM);
         UUID source = from == null || WAREHOUSE.equals(from) ? null : UUID.fromString(from);
         return target.withTransfer(source, UUID.fromString(to), item, Integer.parseInt(count));
+    }
+
+    public static Optional<UUID> recipient(BoardTicket ticket) {
+        if (ticket.boardCase() != BoardCase.TRANSFER_ITEM) {
+            return Optional.empty();
+        }
+        String to = value(ticket, TO);
+        return to == null ? Optional.empty() : Optional.of(UUID.fromString(to));
     }
 
     private static @Nullable String value(BoardTicket ticket, String prefix) {

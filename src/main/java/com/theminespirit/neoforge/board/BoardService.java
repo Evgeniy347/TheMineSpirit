@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.AbsentOwners;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
@@ -96,6 +97,7 @@ public final class BoardService {
     private final TaskStall stall = new TaskStall();
     private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
+    private final AbsentOwners absentOwners = new AbsentOwners();
     private final StageProgressWatch progress = new StageProgressWatch();
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
@@ -246,6 +248,7 @@ public final class BoardService {
         issue(level, spirits, now);
         reconcileActivities(spirits, true);
         releaseDeadHolders(level, spirits, now);
+        dropAbsentOwners(spirits, now);
         flushBlockNotes();
         rebuilds++;
         lastRebuild = now;
@@ -525,6 +528,15 @@ public final class BoardService {
         }
         if (!census) {
             return;
+        }
+    }
+
+    private void dropAbsentOwners(List<SpiritEntity> spirits, long now) {
+        Set<UUID> live = new HashSet<>();
+        spirits.forEach(spirit -> live.add(spirit.getUUID()));
+        for (String id : absentOwners.sweep(board, live, now)) {
+            LOGGER.info(
+                    "[board] задание {} снято: его дух удалён или не появлялся {} тиков", id, AbsentOwners.GRACE_TICKS);
         }
     }
 
