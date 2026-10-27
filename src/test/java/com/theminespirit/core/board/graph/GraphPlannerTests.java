@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphState.Built;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class GraphPlannerTests {
@@ -233,6 +235,200 @@ class GraphPlannerTests {
                         .orElse(false),
                 "Зелья ещё не реализованы — задание стоит с пометкой «не реализовано»: "
                         + plan.task("brew_fire_resistance"));
+    }
+
+    @Test
+    void plan_StageThree_FullPotionLineInDevelopment() {
+        GraphWorld world = GraphWorld.settled()
+                .built("brewing_stand", Built.BUILT)
+                .with("water_bottle", 8)
+                .with("nether_wart", 8)
+                .with("ghast_tear", 2)
+                .with("blaze_powder", 2)
+                .with("gunpowder", 2);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("brew_regeneration").map(task -> !task.implemented()).orElse(false)
+                        && plan.task("splash_regeneration")
+                                .map(task -> !task.implemented())
+                                .orElse(false),
+                "Регенерация и взрывное зелье стоят на доске с пометкой «в разработке»: "
+                        + plan.task("brew_regeneration") + ", " + plan.task("splash_regeneration"));
+    }
+
+    @Test
+    void plan_NetherAndEnd_ChainsMarkedInDevelopment() {
+        GraphWorld world = GraphWorld.settled()
+                .built("smithing_table", Built.BUILT)
+                .with("netherite_scrap", 8)
+                .with("gold_ingot", 8)
+                .with("blaze_powder", 4)
+                .with("ender_pearl", 4);
+        world.stage = 4;
+        world.world.add("nether");
+        world.world.add("end");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_netherite_ingot")
+                                .map(task -> !task.implemented())
+                                .orElse(false)
+                        && plan.task("craft_ender_eye")
+                                .map(task -> !task.implemented())
+                                .orElse(false),
+                "Незерит и око Края стоят на доске как «в разработке»: " + plan.task("craft_netherite_ingot") + ", "
+                        + plan.task("craft_ender_eye"));
+    }
+
+    @Test
+    void plan_Redstone_MachinesInDevelopment() {
+        GraphWorld world = GraphWorld.settled()
+                .with("iron_ingot", 32)
+                .with("redstone", 16)
+                .with("stone", 16)
+                .with("cobblestone", 16)
+                .with("oak_planks", 16)
+                .with("stick", 16);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_piston").map(task -> !task.implemented()).orElse(false)
+                        && plan.task("craft_rail")
+                                .map(task -> !task.implemented())
+                                .orElse(false),
+                "Редстоун-механики (поршень, рельсы) стоят на доске как «в разработке»: " + plan.task("craft_piston")
+                        + ", " + plan.task("craft_rail"));
+    }
+
+    @Test
+    void plan_TradingPost_VillagerJobsInDevelopment() {
+        GraphWorld world =
+                GraphWorld.settled().built("trading_post", Built.BUILT).with("emerald", 8);
+        world.stage = 4;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("assign_librarian").map(task -> !task.implemented()).orElse(false),
+                "Занятия жителей (библиотекарь) стоят как «в разработке»: " + plan.task("assign_librarian"));
+    }
+
+    @Test
+    void plan_ArmorNorms_PerSpiritAndByStage() {
+        GraphWorld one = GraphWorld.settled();
+        one.stage = 3;
+        GraphWorld two = GraphWorld.settled().tools("spirit-2", 1);
+        two.stage = 3;
+        SupplyGraph.Item diamond = GraphWorld.GRAPH.items().get("diamond_armor");
+        SupplyGraph.Item netherite = GraphWorld.GRAPH.items().get("netherite_armor");
+
+        assertEquals(
+                GraphPlanner.threshold(diamond, one.state()) * 2,
+                GraphPlanner.threshold(diamond, two.state()),
+                "Норма алмазной брони — на духа: два духа требуют вдвое больше");
+        assertTrue(
+                diamond.perSpirit() && netherite.stage() == 4,
+                "Броня задана нормой на духа и открывается по этапам: " + diamond + ", " + netherite);
+    }
+
+    @Test
+    void plan_FoodAndFuel_FullLineCloses() {
+        GraphWorld world = GraphWorld.settled()
+                .with("milk_bucket", 4)
+                .with("sugar", 8)
+                .with("egg", 4)
+                .with("wheat", 16)
+                .with("pumpkin", 4)
+                .with("beetroot", 8)
+                .with("potato", 8)
+                .with("raw_cod", 4)
+                .with("bucket", 2);
+        world.stage = 3;
+        world.world.add("lava");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_cake").map(GraphPlan.Task::feasible).orElse(false)
+                        && plan.task("craft_cookie").isPresent(),
+                "Торт и печенье собираются из запасов: " + plan.task("craft_cake") + ", " + plan.task("craft_cookie"));
+        assertTrue(
+                plan.task("fill_lava_bucket").map(task -> !task.implemented()).orElse(false),
+                "Лава в ведре — топливо с пометкой «в разработке»: " + plan.task("fill_lava_bucket"));
+    }
+
+    @Test
+    void plan_PetsBeesComposter_AskForResources() {
+        GraphWorld world = GraphWorld.settled()
+                .built("kennel", Built.BUILT)
+                .built("composter", Built.BUILT)
+                .with("bone", 8)
+                .with("wheat", 16);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("tame_wolf").map(GraphPlan.Task::feasible).orElse(false)
+                        && plan.task("compost_crop")
+                                .map(GraphPlan.Task::feasible)
+                                .orElse(false),
+                "Волк приручается костью, излишки урожая идут в компостер: " + plan.task("tame_wolf") + ", "
+                        + plan.task("compost_crop"));
+        assertTrue(
+                plan.task("relocate_beehive").map(task -> !task.implemented()).orElse(false),
+                "Перенос улья (шёлковое касание) — «в разработке»: " + plan.task("relocate_beehive"));
+    }
+
+    @Test
+    void plan_Night_HalfGuardNoBedPush() {
+        GraphPlan day = GraphWorld.settled().plan();
+        GraphPlan night = GraphWorld.settled().event("night").plan();
+
+        assertTrue(
+                night.advice().stream().anyMatch(advice -> "night_half_home_half_guard".equals(advice.rule()))
+                        && night.advice().stream()
+                                .anyMatch(advice -> "player_sleeps_world_skips".equals(advice.rule())),
+                "Ночь: половина дома, половина в дозоре; сон игрока пропускает мир: " + night.advice());
+        assertEquals(
+                day.priority("craft_white_bed"),
+                night.priority("craft_white_bed"),
+                "Ночь больше не толкает кровать как обязательную нужду сна");
+    }
+
+    @Test
+    void plan_Rain_FishingAndCropsRaised() {
+        GraphWorld dryWorld = GraphWorld.settled().built("field_carrot", Built.BUILT);
+        dryWorld.stage = 2;
+        GraphWorld rainWorld = GraphWorld.settled().built("field_carrot", Built.BUILT);
+        rainWorld.stage = 2;
+        rainWorld.event("rain");
+        GraphPlan dry = dryWorld.plan();
+        GraphPlan rain = rainWorld.plan();
+
+        assertTrue(
+                rain.priority("fish") > dry.priority("fish")
+                        && rain.priority("harvest_carrot") > dry.priority("harvest_carrot"),
+                "Дождь делает рыбалку и посевы выгоднее: рыба " + dry.priority("fish") + "→"
+                        + rain.priority("fish") + ", морковь " + dry.priority("harvest_carrot") + "→"
+                        + rain.priority("harvest_carrot"));
+    }
+
+    @Test
+    void plan_PlayerAndBiomeEvents_PostRequestsAndPaths() {
+        GraphWorld world = GraphWorld.settled().built("path_desert", Built.PLANNED);
+        world.event("player_request").event("biome_found:desert");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("event:player_request:player_request").isPresent(),
+                "Просьба игрока — задание высшего приоритета: " + plan.task("event:player_request:player_request"));
+        assertTrue(
+                plan.task("building:path_desert")
+                        .map(task -> !task.implemented())
+                        .orElse(false),
+                "Открытый биом без ресурса ставит тропинку до него (прокладка — «в разработке»): "
+                        + plan.task("building:path_desert"));
     }
 
     @Test
@@ -638,5 +834,69 @@ class GraphPlannerTests {
                 plan.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
                 "Стройка начинается с четверти материалов (16 из 58), остальное подвозят по ходу, как в main: "
                         + plan.task("building:hut"));
+    }
+
+    @Test
+    void plan_StageFour_SocialBuildingsAppearOnlyInStageFour() {
+        GraphWorld before = GraphWorld.settled().built("town_hall", Built.PLANNED);
+        GraphWorld after = GraphWorld.settled();
+        after.stage = 4;
+        for (String id : List.of("town_hall", "library", "alchemy")) {
+            after.built(id, Built.PLANNED);
+        }
+
+        assertEquals(
+                Optional.empty(),
+                before.plan().task("building:town_hall"),
+                "Ратуша — постройка четвёртого этапа: до него задания нет, иначе доска тянет камень впустую");
+        assertTrue(
+                after.plan().task("building:town_hall").isPresent()
+                        && after.plan().task("building:library").isPresent()
+                        && after.plan().task("building:alchemy").isPresent(),
+                "На четвёртом этапе ратуша, библиотека и алхимия стоят на доске: "
+                        + after.plan().tasks());
+    }
+
+    @Test
+    void plan_StageFour_TownHallHasMaterialsFromSchema() {
+        GraphWorld world = GraphWorld.settled().built("town_hall", Built.PLANNED);
+        world.stage = 4;
+
+        GraphPlan.Task hall = world.plan().task("building:town_hall").orElseThrow();
+        assertTrue(
+                !hall.consumes().isEmpty() && hall.consumes().containsKey("stone_bricks"),
+                "Материалы ратуши берутся из схемы (каменный кирпич и прочее), а не пустой оценкой: "
+                        + hall.consumes());
+    }
+
+    @Test
+    void plan_StageFour_EnchantedBooksMarkedInDevelopment() {
+        GraphWorld world = GraphWorld.settled()
+                .built("enchanting_table", Built.BUILT)
+                .built("enchant_room", Built.PLANNED)
+                .with("book", 16)
+                .with("lapis_lazuli", 48)
+                .with("experience", 48);
+        world.stage = 4;
+        GraphPlan plan = world.plan();
+
+        GraphPlan.Task book = plan.task("enchant_efficiency")
+                .orElseThrow(() -> new AssertionError("Нет задания на книгу чар «эффективность»: " + plan.tasks()));
+        assertTrue(
+                !book.implemented() && plan.task("enchant_silk_touch").isPresent(),
+                "Книги чар внесены как «в разработке» (implemented=false), но стоят на доске: " + book);
+    }
+
+    @Test
+    void plan_PlayerHouse_OutranksFamilyHouses() {
+        GraphWorld world =
+                GraphWorld.settled().built("player_house", Built.PLANNED).built("family_house_a", Built.PLANNED);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.priority("building:player_house") > plan.priority("building:family_house_a"),
+                "Дом игрока важнее домов семей: " + plan.priority("building:player_house") + " против "
+                        + plan.priority("building:family_house_a"));
     }
 }
