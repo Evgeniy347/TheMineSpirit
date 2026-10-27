@@ -666,6 +666,8 @@ public final class FirstStepsRunner {
         return miners;
     }
 
+    record GatherNeed(String item, int shortage, int helpers, int priority) {}
+
     static void postGather(
             BoardService service,
             MaterialSource source,
@@ -674,14 +676,29 @@ public final class FirstStepsRunner {
             int shortage,
             int helpers,
             long now) {
+        postGather(
+                service,
+                source,
+                home,
+                new GatherNeed(item, shortage, helpers, BoardRules.priorityOf(BoardCase.GATHER_MATERIALS)),
+                now);
+    }
+
+    static void postGather(BoardService service, MaterialSource source, BlockCoord home, GatherNeed need, long now) {
+        String item = need.item();
         String id = GATHER_PREFIX + item;
         if (active(service, id) || active(service, id + GATHER_PART_SUFFIX)) {
             return;
         }
-        int batch = GatherBatch.round(shortage, source.outputCount(item));
-        List<Integer> portions = GatherBatch.split(batch, source.outputCount(item), helpers);
+        int batch = GatherBatch.round(need.shortage(), source.outputCount(item));
+        List<Integer> portions = GatherBatch.split(batch, source.outputCount(item), need.helpers());
         for (int part = 0; part < portions.size(); part++) {
-            submitGather(service, home, part == 0 ? id : id + GATHER_PART_SUFFIX, item, portions.get(part), now);
+            submitGather(
+                    service,
+                    home,
+                    part == 0 ? id : id + GATHER_PART_SUFFIX,
+                    new GatherNeed(item, portions.get(part), 1, need.priority()),
+                    now);
         }
     }
 
@@ -692,21 +709,20 @@ public final class FirstStepsRunner {
                 || status == BoardStatus.ASSIGNED;
     }
 
-    private static void submitGather(
-            BoardService service, BlockCoord home, String id, String item, int batch, long now) {
-        LOGGER.info("Поставлено: добыть {} ×{} (кейс первых шагов ждёт)", item, batch);
+    private static void submitGather(BoardService service, BlockCoord home, String id, GatherNeed need, long now) {
+        LOGGER.info("Поставлено: добыть {} ×{} (кейс первых шагов ждёт)", need.item(), need.shortage());
         service.submit(
                 new BoardTicket(
                         id,
                         BoardCase.GATHER_MATERIALS,
                         Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                        need.priority(),
                         now,
                         1,
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of()),
-                TicketTarget.at(home).withSupply(item, batch));
+                TicketTarget.at(home).withSupply(need.item(), need.shortage()));
     }
 
     static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
@@ -757,6 +773,7 @@ public final class FirstStepsRunner {
         if (!gated || !nobody || active(service, BoardService.PICKAXE_TICKET)) {
             return;
         }
+        int priority = Math.max(BoardRules.priorityOf(BoardCase.CRAFT_WOODEN_PICKAXE), waitingForPickaxe(service));
         MaterialSource source = materialSource(level);
         TicketTarget target = targetFor(level, BoardCase.CRAFT_WOODEN_PICKAXE, site.stage(), site.wood());
         Map<String, Integer> need = new HashMap<>();
@@ -765,7 +782,8 @@ public final class FirstStepsRunner {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         if (!missing.isEmpty()) {
             LOGGER.info("[tool] кирки нет ни у одного духа: на кирку не хватает {} — добыча", missing);
-            missing.forEach((item, count) -> postGather(service, source, site.home(), item, count, 1, now));
+            missing.forEach((item, count) ->
+                    postGather(service, source, site.home(), new GatherNeed(item, count, 1, priority), now));
             return;
         }
         BoardOutcome outcome = service.submit(
@@ -773,7 +791,7 @@ public final class FirstStepsRunner {
                         BoardService.PICKAXE_TICKET,
                         BoardCase.CRAFT_WOODEN_PICKAXE,
                         Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.CRAFT_WOODEN_PICKAXE),
+                        priority,
                         now,
                         1,
                         BoardTicket.ALWAYS_CAUSE,
@@ -783,6 +801,15 @@ public final class FirstStepsRunner {
         if (outcome == BoardOutcome.ACCEPTED) {
             LOGGER.info("[tool] кирки нет ни у одного духа: поставлено {}", BoardService.PICKAXE_TICKET);
         }
+    }
+
+    private static int waitingForPickaxe(BoardService service) {
+        return service.board().all().stream()
+                .filter(t -> ToolGate.required(t.boardCase()).isPresent())
+                .filter(t -> active(service, t.id()))
+                .mapToInt(BoardTicket::priority)
+                .max()
+                .orElse(0);
     }
 
     private static boolean hasActive(BoardService service, BoardCase boardCase) {

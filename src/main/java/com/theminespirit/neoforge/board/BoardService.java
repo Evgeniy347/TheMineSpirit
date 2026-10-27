@@ -27,6 +27,7 @@ import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolLossRelease;
 import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
@@ -782,6 +783,7 @@ public final class BoardService {
                 continue;
             }
             RunStatus status = spirit.taskStatus().orElse(null);
+            dropUntooled(spirit);
             List<BoardTicket> held = board.assignedTo(spirit.getUUID());
             if (held.isEmpty()) {
                 continue;
@@ -803,6 +805,27 @@ public final class BoardService {
                 case RUNNING -> checkStall(spirit, ticket);
                 case DISPLACED -> {}
             }
+        }
+    }
+
+    private void dropUntooled(SpiritEntity spirit) {
+        boolean walledIn = DIG_OUT.equals(spirit.currentTaskScript().orElse(null));
+        for (ToolLossRelease.Released freed :
+                ToolLossRelease.apply(board, spirit.getUUID(), itemIds(spirit), walledIn)) {
+            Long issued = issuedGenerations.remove(freed.ticketId());
+            if (issued != null
+                    && issued == spirit.taskGeneration()
+                    && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
+                spirit.cancelTask();
+            }
+            LOGGER.info("[tool] дух {}: {}", spirit.displayName(), freed.reason());
+            journal.recordEntry(BoardLog.note(
+                    freed.ticketId(),
+                    freed.boardCase(),
+                    board.now(),
+                    List.of(freed.reason()),
+                    spirit.getUUID().toString(),
+                    ConfigStamp.current()));
         }
     }
 
