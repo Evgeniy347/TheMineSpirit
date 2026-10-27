@@ -53,7 +53,7 @@ public final class DigOutScript implements ScriptInstance {
         this.level = spirit.level();
         this.target = target;
         this.fromPit = open(level, spirit.blockPosition());
-        this.breaker = new BlockBreaker(spirit);
+        this.breaker = BlockBreaker.escaping(spirit);
         this.placer = new BlockPlacer(spirit);
     }
 

@@ -92,13 +92,29 @@ public final class BlockBreakerGameTests {
     }
 
     @SceneStep(template = "arena", timeoutTicks = 40)
-    public static void blockBreaker_HandOnStone_BreaksSlowlyWithoutDrop(GameTestHelper helper) {
+    public static void blockBreaker_HandOnStone_RefusedAsNeedPickaxe(GameTestHelper helper) {
         SpiritEntity spirit = prepare(helper, Blocks.STONE);
         BlockBreaker breaker = new BlockBreaker(spirit);
 
+        BlockBreaker.Begin begin = breaker.begin(helper.absolutePos(TARGET));
+
+        helper.assertTrue(
+                refusedWith(begin, BlockBreaker.RefuseReason.NEED_TOOL),
+                "камень без кирки руками не копается (владелец 27.10, INC-94): ожидается отказ "
+                        + BlockBreaker.RefuseReason.NEED_TOOL + ", получено " + begin);
+        helper.assertTrue(helper.getBlockState(TARGET).is(Blocks.STONE), "отказанный камень обязан остаться в клетке");
+        GameTestFixtures.reset(helper);
+        helper.succeed();
+    }
+
+    @SceneStep(template = "arena", timeoutTicks = 40)
+    public static void blockBreaker_HandOnStoneEscaping_BreaksSlowlyWithoutDrop(GameTestHelper helper) {
+        SpiritEntity spirit = prepare(helper, Blocks.STONE);
+        BlockBreaker breaker = BlockBreaker.escaping(spirit);
+
         helper.assertTrue(
                 breaker.begin(helper.absolutePos(TARGET)) instanceof BlockBreaker.Started,
-                "камень обязан ломаться и рукой");
+                "замурованный дух без кирки обязан ломать камень рукой, чтобы выбраться");
         helper.assertTrue(
                 breaker.choice().slot() == ToolChoice.HAND && !breaker.choice().dropsAllowed(),
                 "без кирки обязана выбраться рука без дропа, а выбрано " + breaker.choice());

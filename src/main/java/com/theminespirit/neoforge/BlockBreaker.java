@@ -14,6 +14,7 @@ import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -59,6 +60,7 @@ public final class BlockBreaker {
     public record Protected(PolicyId policy, String reason) implements Begin {}
 
     private final SpiritEntity spirit;
+    private final boolean escaping;
     private BlockPos pos;
     private BlockState state;
     private Choice choice;
@@ -74,7 +76,16 @@ public final class BlockBreaker {
     private int maxHitsPerTick;
 
     public BlockBreaker(SpiritEntity spirit) {
+        this(spirit, false);
+    }
+
+    private BlockBreaker(SpiritEntity spirit, boolean escaping) {
         this.spirit = spirit;
+        this.escaping = escaping;
+    }
+
+    public static BlockBreaker escaping(SpiritEntity spirit) {
+        return new BlockBreaker(spirit, true);
     }
 
     public Begin begin(BlockPos target) {
@@ -159,6 +170,14 @@ public final class BlockBreaker {
         choice = ToolChoice.best(options, reserve, MiningTables.repairTiers());
         if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
             return new Refused(RefuseReason.NEED_TOOL, needToolReason(targetState));
+        }
+        boolean pickaxeBlock =
+                targetState.requiresCorrectToolForDrops() && targetState.is(BlockTags.MINEABLE_WITH_PICKAXE);
+        if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, escaping)) {
+            return new Refused(
+                    RefuseReason.NEED_TOOL,
+                    "нужна кирка для " + blockId(targetState)
+                            + ": руками без дропа не копаем — кирки нет, дух не замурован");
         }
         tool = choice.slot() == ToolChoice.HAND
                 ? ItemStack.EMPTY

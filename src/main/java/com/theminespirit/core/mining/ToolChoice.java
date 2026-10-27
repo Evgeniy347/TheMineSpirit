@@ -1,5 +1,6 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolsConfig;
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,16 @@ public final class ToolChoice {
         Objects.requireNonNull(choice, "Выбор не может быть null: по нему решается, нужен ли отказ");
         Objects.requireNonNull(options, "Набор инструментов не может быть null: по нему видно, есть ли правильный");
         return !choice.dropsAllowed() && options.stream().anyMatch(ToolOption::correctForDrops);
+    }
+
+    public static boolean refusesHandDig(
+            Choice choice, List<ToolOption> options, boolean pickaxeBlock, boolean escaping) {
+        Objects.requireNonNull(choice, "Выбор не может быть null: по нему решается, копает ли дух руками");
+        Objects.requireNonNull(options, "Набор инструментов не может быть null: по нему видно, есть ли кирка");
+        return pickaxeBlock
+                && !escaping
+                && !choice.dropsAllowed()
+                && options.stream().noneMatch(option -> option.itemId().endsWith(ToolGate.PICKAXE));
     }
 
     public static Choice best(List<ToolOption> options, ToolReserve reserve, Collection<String> repairTiers) {
