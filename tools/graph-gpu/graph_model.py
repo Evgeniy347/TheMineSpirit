@@ -5,6 +5,7 @@
 (выгрузка: ./gradlew graphExport -> TestResults/graph-export/graph.json)
 """
 
+import copy
 import json
 import math
 
@@ -15,6 +16,7 @@ TOOL = "tool:"
 BUILDING = "building:"
 EVENT = "event:"
 EXPLORE = "explore:"
+STATION = "station:"
 AT = "@"
 
 BUILT = "BUILT"
@@ -22,6 +24,7 @@ PLANNED = "PLANNED"
 ABSENT = "ABSENT"
 
 HERD_CULL_BOOST = 70
+EXPLORE_TICKS = 2400
 
 
 class Flow:
@@ -82,6 +85,84 @@ def priority(score, maximum):
     return int(min(maximum, math.floor(maximum * (1.0 - math.exp(-score / maximum)) + 0.5)))
 
 
+class Costs:
+    """GraphCosts: длительность заданий, дорога, износ, ёмкость станций."""
+
+    __slots__ = ("default_ticks", "case_ticks", "way_ticks", "way_uses",
+                 "ticks_per_block", "travel_scale_ticks", "tool_durability",
+                 "station_capacity")
+
+    def __init__(self, data, ways):
+        costs = data.get("costs")
+        if costs is None:
+            self.default_ticks = 1
+            self.case_ticks = {}
+            self.way_ticks = {}
+            self.way_uses = {}
+            self.ticks_per_block = 0
+            self.travel_scale_ticks = 1
+            self.tool_durability = {}
+            self.station_capacity = {}
+            return
+        self.default_ticks = int(costs.get("defaultTicks", 100))
+        self.case_ticks = dict(costs.get("caseTicks") or {})
+        self.way_ticks = {}
+        self.way_uses = {}
+        for way in ways:
+            if "ticks" in way:
+                self.way_ticks[way.get("id", "")] = int(way["ticks"])
+            if "uses" in way:
+                self.way_uses[way.get("id", "")] = int(way["uses"])
+        self.ticks_per_block = int(costs.get("ticksPerBlock", 0))
+        self.travel_scale_ticks = int(costs.get("travelScaleTicks", 1200))
+        self.tool_durability = dict(costs.get("toolDurability") or {})
+        self.station_capacity = dict(costs.get("stationCapacity") or {})
+
+    def ticks(self, way_id, board_case):
+        if way_id in self.way_ticks:
+            return self.way_ticks[way_id]
+        return int(self.case_ticks.get(board_case, self.default_ticks))
+
+    def uses(self, way_id, yield_):
+        return int(self.way_uses.get(way_id, max(1, yield_)))
+
+    def travel(self, distance_blocks):
+        return 2 * distance_blocks * self.ticks_per_block
+
+    def travel_factor(self, travel_ticks):
+        return self.travel_scale_ticks / (self.travel_scale_ticks + max(0, travel_ticks))
+
+    def durability(self, tier):
+        return int(self.tool_durability.get(tier, 2 ** 31 - 1))
+
+
+def merge(manual, generated):
+    """SupplyGraph.merge: ручное главнее, из сгенерированного добавляется недостающее."""
+    merged = copy.deepcopy(manual)
+    for field in ("items", "buildings", "groups"):
+        source = generated.get(field)
+        if not isinstance(source, dict):
+            continue
+        section = merged.get(field)
+        if not isinstance(section, dict):
+            section = {}
+            merged[field] = section
+        for key, value in source.items():
+            if key not in section:
+                section[key] = copy.deepcopy(value)
+    source = generated.get("ways")
+    if isinstance(source, list) and source:
+        manual_makes = {way.get("makes") for way in (merged.get("ways") or [])}
+        ways = merged.get("ways")
+        if not isinstance(ways, list):
+            ways = []
+            merged["ways"] = ways
+        for way in source:
+            if way.get("makes") not in manual_makes:
+                ways.append(copy.deepcopy(way))
+    return merged
+
+
 class Item:
     __slots__ = ("id", "xmin", "k", "base", "stage", "per_spirit")
 
@@ -133,6 +214,7 @@ class Graph:
         self.decay = float(data.get("decay", 0.5))
         self.urgent_boost = int(data.get("urgentBoost", 0))
         self.build_ready_boost = int(data.get("buildReadyBoost", 0))
+        self.build_start_share = float(data.get("buildStartShare", 1.0))
         self.max_priority = int(data.get("maxPriority", 100))
         self.tiers = list(data.get("tiers") or [])
         kit = data.get("kit") or {}
@@ -169,12 +251,24 @@ class Graph:
         self._producers = {}
         for way in self.ways:
             self._producers.setdefault(way.makes, []).append(way)
-        self._way_by_id = {way.id: way for way in self.ways}
+        self._way_by_id = {}
+        for way in self.ways:
+            self._way_by_id.setdefault(way.id, way)
+        self.costs = Costs(data, data.get("ways") or [])
 
     @classmethod
     def load(cls, path):
         with open(path, "r", encoding="utf-8") as handle:
             return cls(json.load(handle))
+
+    @classmethod
+    def load_merged(cls, manual_path, recipes_path):
+        """SupplyGraph.loadDefault: ручной graph.json + сгенерированный graph-recipes.json."""
+        with open(manual_path, "r", encoding="utf-8") as handle:
+            manual = json.load(handle)
+        with open(recipes_path, "r", encoding="utf-8") as handle:
+            generated = json.load(handle)
+        return cls(merge(manual, generated))
 
     def scaled(self, weights):
         """Копия графа с множителями весов в пределах, заданных поиском.
@@ -200,10 +294,9 @@ class Graph:
             node = data.get("buildings", {}).get(building_id)
             if node is not None:
                 node["base"] = int(math.floor(float(node.get("base", 0)) * factor + 0.5))
-        ways = {way["id"]: way for way in data.get("ways", [])}
-        for way_id, factor in (weights.get("ways") or {}).items():
-            way = ways.get(way_id)
-            if way is not None:
+        for way in data.get("ways", []):
+            factor = (weights.get("ways") or {}).get(way.get("id", ""))
+            if factor is not None:
                 way["weight"] = float(way.get("weight", 1.0)) * factor
         return Graph(data)
 
@@ -252,6 +345,8 @@ class State:
         self.storage_free_percent = int(data.get("storageFreePercent", 0))
         self.events = list(data.get("events") or [])
         self.world = list(data.get("world") or [])
+        self.distances = dict(data.get("distances") or {})
+        self.stations = dict(data.get("stations") or {})
 
     def copy(self):
         return State({
@@ -263,10 +358,15 @@ class State:
             "storageFreePercent": self.storage_free_percent,
             "events": self.events,
             "world": self.world,
+            "distances": self.distances,
+            "stations": self.stations,
         })
 
     def spirits(self):
         return len(self.kits)
+
+    def station_count(self, building):
+        return int(self.stations.get(building, 1 if self.built(building) == BUILT else 0))
 
     def count(self, item):
         return int(self.stock.get(item, 0))
@@ -372,6 +472,13 @@ class Planner:
 
     def stocked(self, needs):
         return all(self.count(item) >= value for item, value in needs.items())
+
+    def share(self, needs):
+        total = sum(needs.values())
+        if total == 0:
+            return 1.0
+        have = sum(min(value, max(0, self.count(item))) for item, value in needs.items())
+        return have / total
 
     def materials(self, building):
         known = self.graph.buildings.get(building)
@@ -586,10 +693,56 @@ class Planner:
 
     def result(self, scores):
         tasks = []
+        load = {}
         for key, value in scores.items():
             if value > 0 and self.is_task(key):
-                tasks.append(self.task(key, value))
+                value *= self.graph.costs.travel_factor(self.travel(key))
+                task = self.task(key, value)
+                tasks.append(task)
+                building = self.station(key)
+                if building is not None and task["feasible"]:
+                    load[building] = max(load.get(building, 0.0), value)
+        for building, value in load.items():
+            extra = self.station_task(building, value, scores)
+            if extra is not None:
+                tasks.append(extra)
         return {"tasks": tasks, "notices": list(self.notices.values()), "advice": list(self.advice)}
+
+    def station(self, key):
+        at = key.find(AT)
+        way = self.graph.way(key if at < 0 else key[:at])
+        if way is not None and way.building in self.graph.costs.station_capacity:
+            return way.building
+        return None
+
+    def station_task(self, building, value, scores):
+        busy = 0
+        for key, score in scores.items():
+            if score <= 0 or not self.is_task(key):
+                continue
+            if self.station(key) != building:
+                continue
+            if self.task(key, 0)["feasible"]:
+                busy += 1
+        capacity = self.graph.costs.station_capacity.get(building, 2 ** 31 - 1)
+        if self.state.built(building) != BUILT or busy <= self.state.station_count(building) * capacity:
+            return None
+        known = self.graph.buildings.get(building)
+        if known is None:
+            raise KeyError("Станция " + building + " не описана среди построек графа")
+        materials = self.materials(building)
+        return {"id": STATION + building, "makes": building, "spirit": None,
+                "priority": priority(value * self.graph.decay, self.graph.max_priority),
+                "consumes": dict(materials), "feasible": self.stocked(materials),
+                "chance": False, "implemented": self.graph.implemented(building),
+                "ticks": self.graph.costs.ticks(STATION + building, known.board_case)}
+
+    def travel(self, key):
+        at = key.find(AT)
+        way = self.graph.way(key if at < 0 else key[:at])
+        if way is None or way.world is None:
+            return 0
+        return self.graph.costs.travel(self.state.distances.get(way.world, 0))
 
     def is_task(self, key):
         if key.startswith(BUILDING) or key.startswith(EVENT) or key.startswith(EXPLORE):
@@ -603,7 +756,8 @@ class Planner:
         prio = priority(value, graph.max_priority)
         if key.startswith(EXPLORE):
             return {"id": key, "makes": key[len(EXPLORE):], "spirit": None, "priority": prio,
-                    "consumes": {}, "feasible": True, "chance": False, "implemented": False}
+                    "consumes": {}, "feasible": True, "chance": False, "implemented": False,
+                    "ticks": EXPLORE_TICKS}
         if key.startswith(EVENT):
             parts = key.split(":", 2)
             event = graph.events.get(parts[1], {"tasks": []})
@@ -614,7 +768,8 @@ class Planner:
             building = task.get("building")
             feasible = self.stocked(consumes) and (building is None or state.built(building) == BUILT)
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,
-                    "consumes": consumes, "feasible": feasible, "chance": False, "implemented": True}
+                    "consumes": consumes, "feasible": feasible, "chance": False, "implemented": True,
+                    "ticks": graph.costs.ticks(key, task.get("case"))}
         if key.startswith(BUILDING):
             building_id = key[len(BUILDING):]
             building = graph.buildings.get(building_id)
@@ -624,8 +779,10 @@ class Planner:
             tooled = (building.tool is None or state.best_tier(building.tool) >= 0) and \
                 all(state.built(required) == BUILT for required in building.requires)
             return {"id": key, "makes": building_id, "spirit": None, "priority": prio,
-                    "consumes": dict(materials), "feasible": tooled and self.stocked(materials),
-                    "chance": False, "implemented": graph.implemented(building_id)}
+                    "consumes": dict(materials),
+                    "feasible": tooled and self.share(materials) >= graph.build_start_share,
+                    "chance": False, "implemented": graph.implemented(building_id),
+                    "ticks": graph.costs.ticks(key, building.board_case)}
         at = key.find(AT)
         way_id = key if at < 0 else key[:at]
         way = graph.way(way_id)
@@ -635,7 +792,8 @@ class Planner:
             and self.stocked(way.consumes) and self.stocked(way.needs)
         return {"id": key, "makes": way.makes, "spirit": spirit, "priority": prio,
                 "consumes": dict(way.consumes), "feasible": feasible,
-                "chance": key in self.chances, "implemented": graph.implemented(way_id)}
+                "chance": key in self.chances, "implemented": graph.implemented(way_id),
+                "ticks": graph.costs.ticks(way_id, way.board_case) + self.travel(key)}
 
     def plan(self):
         self.prepare()
