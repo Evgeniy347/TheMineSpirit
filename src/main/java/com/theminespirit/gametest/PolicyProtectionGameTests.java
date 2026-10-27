@@ -242,6 +242,7 @@ public final class PolicyProtectionGameTests {
         helper.setBlock(inside, Blocks.COBBLESTONE);
         helper.setBlock(outside, Blocks.COBBLESTONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT_AT);
+        spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
         BlockPos from = helper.absolutePos(new BlockPos(5, 0, 3));
         BlockPos to = helper.absolutePos(new BlockPos(6, 3, 5));
         String dimension = helper.getLevel().dimension().location().toString();

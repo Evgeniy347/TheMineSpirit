@@ -981,7 +981,7 @@ public final class InventoryGameTests {
         helper.setBlock(6, 1, 4, Blocks.STONE);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
         BlockPos stone = helper.absolutePos(new BlockPos(6, 1, 4));
-        BlockBreaker breaker = new BlockBreaker(spirit);
+        BlockBreaker breaker = BlockBreaker.escaping(spirit);
         helper.assertTrue(
                 breaker.begin(stone) instanceof BlockBreaker.Started, "камень в досягаемости обязан начинать ломаться");
         int bareTicks = breaker.requiredTicks();
