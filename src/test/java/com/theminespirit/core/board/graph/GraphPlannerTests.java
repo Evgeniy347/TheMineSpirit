@@ -304,6 +304,18 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_TradingPost_VillagerJobsInDevelopment() {
+        GraphWorld world =
+                GraphWorld.settled().built("trading_post", Built.BUILT).with("emerald", 8);
+        world.stage = 4;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("assign_librarian").map(task -> !task.implemented()).orElse(false),
+                "Занятия жителей (библиотекарь) стоят как «в разработке»: " + plan.task("assign_librarian"));
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;
