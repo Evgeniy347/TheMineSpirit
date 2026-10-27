@@ -1617,6 +1617,54 @@
       "k": 1,
       "base": 35,
       "stage": 4
+    },
+    "repeater": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "lever": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "stone_button": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "stone_pressure_plate": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "piston": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "hopper": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "rail": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "minecart": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
     }
   },
   "buildings": {
@@ -6853,6 +6901,110 @@
       "consumes": {
         "ender_pearl": 1,
         "blaze_powder": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_repeater",
+      "case": "GATHER_MATERIALS",
+      "makes": "repeater",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 3,
+        "redstone": 2,
+        "torch": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_lever",
+      "case": "GATHER_MATERIALS",
+      "makes": "lever",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stick": 1,
+        "cobblestone": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_stone_button",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_button",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_stone_pressure_plate",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_pressure_plate",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "stone": 2
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_piston",
+      "case": "GATHER_MATERIALS",
+      "makes": "piston",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 3,
+        "cobblestone": 4,
+        "iron_ingot": 1,
+        "redstone": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_hopper",
+      "case": "GATHER_MATERIALS",
+      "makes": "hopper",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 5,
+        "chest": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_rail",
+      "case": "GATHER_MATERIALS",
+      "makes": "rail",
+      "yield": 16,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 6,
+        "stick": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "craft_minecart",
+      "case": "GATHER_MATERIALS",
+      "makes": "minecart",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 5
       },
       "building": "crafting_table",
       "implemented": false
