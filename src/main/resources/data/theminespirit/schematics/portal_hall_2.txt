@@ -1,0 +1,226 @@
+# portal_hall_2 — схема этапа 3 (docs/settlement/catalog-2.md, style.md): уровень 2 больше и наряднее предыдущего.
+name: "Зал портала, уровень 2"
+type: fortified
+stage: 3
+level: 2
+requires: portal_hall_1
+size: 19x9x22
+entrance: 8,1,2
+legend:
+  'A': stone_bricks
+  'B': chiseled_stone_bricks
+  'C': oak_door[facing=south,hinge=right]
+  'D': oak_door[facing=south,hinge=left]
+  'E': stone_brick_stairs[facing=south,half=bottom]
+  'F': torch
+  'G': obsidian
+  'H': lantern[hanging=true]
+  'I': stone_bricks_slab
+layers:
+  - y0: |
+      ...................
+      ........EE.........
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      ...................
+  - y1: |
+      ...................
+      ...................
+      .BAAAABACDABAAAAAB.
+      .A...............A.
+      .A.......F.......A.
+      .AF.............FA.
+      .A...............A.
+      .B...B.......B...B.
+      .A.......F.......A.
+      .A...............A.
+      .A...............A.
+      .AF.....GGGG....FA.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .A...B.......B...A.
+      .A.......F.......A.
+      .B...............B.
+      .A...............A.
+      .AF.............FA.
+      .BAAAABAAAABAAAAAB.
+      ...................
+  - y2: |
+      ...................
+      ...................
+      .BAAAABACDABAAAAAB.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .B...B.......B...B.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A......G..G.....A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .A...B.......B...A.
+      .A...............A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .BAAAABAAAABAAAAAB.
+      ...................
+  - y3: |
+      ...................
+      ...................
+      .BAAAABAAAABAAAAAB.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .B...B.......B...B.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A......G..G.....A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .A...B.......B...A.
+      .A...............A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .BAAAABAAAABAAAAAB.
+      ...................
+  - y4: |
+      ...................
+      ...................
+      .BAAAABAAAABAAAAAB.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .B...B.......B...B.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A......G..G.....A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .A...B.......B...A.
+      .A...............A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .BAAAABAAAABAAAAAB.
+      ...................
+  - y5: |
+      ...................
+      ...................
+      .BAAAABAAAABAAAAAB.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .B...B.......B...B.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A......GGGG.....A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .A...B.......B...A.
+      .A...............A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .BAAAABAAAABAAAAAB.
+      ...................
+  - y6: |
+      ...................
+      ...................
+      .BAAAABAAAABAAAAAB.
+      .A...............A.
+      .A.H...H...H...H.A.
+      .A...............A.
+      .A...............A.
+      .B...............B.
+      .A.H...........H.A.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .B.H...........H.B.
+      .A...............A.
+      .A...............A.
+      .A...............A.
+      .A.H...H...H...H.A.
+      .B...............B.
+      .A...............A.
+      .A...............A.
+      .BAAAABAAAABAAAAAB.
+      ...................
+  - y7: |
+      ...................
+      ...................
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      .AAAAAAAAAAAAAAAAA.
+      ...................
+  - y8: |
+      ...................
+      ...................
+      .IBIBIBIBIBIBIBIBI.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IIIIIIIIIIIIIIIII.
+      .BIIIIIIIIIIIIIIIB.
+      .IBIBIBIBIBIBIBIBI.
+      ...................

@@ -96,7 +96,21 @@ class PresetLibraryTests {
             "stable_1",
             "barracks_1",
             "weaver_1",
-            "portal_hall_1");
+            "portal_hall_1",
+            "forge_2",
+            "forge_3",
+            "bakery_2",
+            "bakery_3",
+            "apiary_2",
+            "kennel_2",
+            "stable_2",
+            "stable_3",
+            "barracks_2",
+            "barracks_3",
+            "weaver_2",
+            "portal_hall_2",
+            "portal_hall_3",
+            "portal_hall_4");
 
     private static PresetLibrary loadReal() {
         List<LoadedContent> contents = new ArrayList<>();
@@ -137,7 +151,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                79,
+                93,
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
@@ -359,7 +373,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                79,
+                93,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(
@@ -404,7 +418,10 @@ class PresetLibraryTests {
                         "lumber_yard_1",
                         "workshop_1",
                         "forge_1",
-                        "weaver_1"),
+                        "weaver_1",
+                        "forge_2",
+                        "forge_3",
+                        "weaver_2"),
                 library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),
                 "Чаровальня обязана лежать в типе «ремесло»: по типу стратег находит постройку под стол чарования");
     }

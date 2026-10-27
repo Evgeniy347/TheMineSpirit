@@ -100,20 +100,25 @@
   {"id": "workshop", "name": "Мастерская", "type": "craft", "levels": [
    {"level": 1, "scheme": "workshop_1"}]},
   {"id": "forge", "name": "Кузница", "type": "craft", "levels": [
-   {"level": 1, "scheme": "forge_1"}]},
+   {"level": 1, "scheme": "forge_1"}, {"level": 2, "scheme": "forge_2"},
+   {"level": 3, "scheme": "forge_3"}]},
   {"id": "bakery", "name": "Пекарня", "type": "food", "levels": [
-   {"level": 1, "scheme": "bakery_1"}]},
+   {"level": 1, "scheme": "bakery_1"}, {"level": 2, "scheme": "bakery_2"},
+   {"level": 3, "scheme": "bakery_3"}]},
   {"id": "apiary", "name": "Пасека", "type": "farm", "levels": [
-   {"level": 1, "scheme": "apiary_1"}]},
+   {"level": 1, "scheme": "apiary_1"}, {"level": 2, "scheme": "apiary_2"}]},
   {"id": "kennel", "name": "Псарня", "type": "pet", "levels": [
-   {"level": 1, "scheme": "kennel_1"}]},
+   {"level": 1, "scheme": "kennel_1"}, {"level": 2, "scheme": "kennel_2"}]},
   {"id": "stable", "name": "Конюшня", "type": "pet", "levels": [
-   {"level": 1, "scheme": "stable_1"}]},
+   {"level": 1, "scheme": "stable_1"}, {"level": 2, "scheme": "stable_2"},
+   {"level": 3, "scheme": "stable_3"}]},
   {"id": "barracks", "name": "Казарма", "type": "housing", "levels": [
-   {"level": 1, "scheme": "barracks_1"}]},
+   {"level": 1, "scheme": "barracks_1"}, {"level": 2, "scheme": "barracks_2"},
+   {"level": 3, "scheme": "barracks_3"}]},
   {"id": "weaver", "name": "Ткацкая", "type": "craft", "levels": [
-   {"level": 1, "scheme": "weaver_1"}]},
+   {"level": 1, "scheme": "weaver_1"}, {"level": 2, "scheme": "weaver_2"}]},
   {"id": "portal_hall", "name": "Зал портала", "type": "fortified", "levels": [
-   {"level": 1, "scheme": "portal_hall_1"}]}
+   {"level": 1, "scheme": "portal_hall_1"}, {"level": 2, "scheme": "portal_hall_2"},
+   {"level": 3, "scheme": "portal_hall_3"}, {"level": 4, "scheme": "portal_hall_4"}]}
  ]
 }
