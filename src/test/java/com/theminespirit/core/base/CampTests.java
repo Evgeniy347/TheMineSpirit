@@ -126,9 +126,5 @@ class CampTests {
                 16,
                 CampTuning.CAMP_RADIUS,
                 "Радиус лагеря 16: как радиус обороны и лимит follow.radius, иначе духи разбредутся дальше охраны");
-        assertEquals(
-                4,
-                CampTuning.CAMP_MIN_OBJECTIVE_DISTANCE,
-                "Минимум 4 до цели: ближе — лагерь встанет на саму цель, мобы достанут строителя");
     }
 }

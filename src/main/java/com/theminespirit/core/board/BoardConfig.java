@@ -19,7 +19,6 @@ public record BoardConfig(
         Map<String, Integer> levels,
         Map<String, Integer> herd,
         List<String> immovable,
-        Map<String, Integer> supplies,
         Map<String, Map<String, Integer>> products,
         ToolsConfig tools,
         Map<String, Integer> wool,
@@ -43,8 +42,6 @@ public record BoardConfig(
         Objects.requireNonNull(
                 immovable, "Неподвижные постройки не могут быть null: пустой список задают пустым списком, а не null");
         immovable = List.copyOf(immovable);
-        Objects.requireNonNull(supplies, "Запасы не могут быть null: пустую таблицу задают пустой картой, а не null");
-        supplies = Map.copyOf(supplies);
         Objects.requireNonNull(products, "Продукты не могут быть null: пустую таблицу задают пустой картой, а не null");
         Map<String, Map<String, Integer>> checkedProducts = new LinkedHashMap<>();
         for (Map.Entry<String, Map<String, Integer>> entry : products.entrySet()) {
@@ -74,7 +71,6 @@ public record BoardConfig(
                 Map.of(),
                 List.of(),
                 Map.of(),
-                Map.of(),
                 ToolsConfig.defaults(),
                 Map.of(),
                 Map.of());
@@ -94,16 +90,13 @@ public record BoardConfig(
                 integers(root.get("modifiers"), origin, "modifiers", BoardPriorities::modifierKey, true);
         Map<String, Long> intervals = longs(root.get("intervals"), origin, "intervals", BoardTuning::intervalKey);
         Map<String, Integer> levels = integers(root.get("levels"), origin, "levels", BoardCase::valueOf, false);
-        Map<String, Integer> supplies =
-                integers(root.get("supplies"), origin, "supplies", BoardConfig::supplyKey, false);
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
         List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
         Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
         ToolsConfig tools = ToolsConfig.fromJson(root.get("tools"), origin);
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
-        return new BoardConfig(
-                priorities, modifiers, intervals, levels, herd, immovable, supplies, products, tools, wool, hive);
+        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, products, tools, wool, hive);
     }
 
     public static BoardConfig readFromClasspath() {
@@ -246,13 +239,6 @@ public record BoardConfig(
             values.put(speciesName, Map.copyOf(perCapita));
         }
         return Map.copyOf(values);
-    }
-
-    private static String supplyKey(String key) {
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("пустое имя предмета");
-        }
-        return key;
     }
 
     private static void checkKey(Consumer<String> known, String key, String origin, String field) {

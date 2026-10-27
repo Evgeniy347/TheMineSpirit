@@ -41,7 +41,8 @@ public final class SpiritGameTests {
         ScriptCatalog restricted = SpiritScripts.catalogFor(spirit);
         helper.assertTrue(
                 !restricted.all().isEmpty(),
-                "catalogFor должен возвращать непустой каталог для реализованных скриптов: иначе LlmPlanner получит пустой каталог");
+                "catalogFor должен возвращать непустой каталог для реализованных скриптов: иначе планировщик "
+                        + "REST получит пустой каталог и не соберёт задачу");
         helper.succeed();
     }
 
