@@ -64,17 +64,13 @@ class ApplicabilityTests {
     }
 
     @Test
-    void restock_BelowThreshold_Applicable() {
-        assertTrue(
-                Applicability.applicable(BoardCase.RESTOCK_FOOD, new EatNeed(16, 20, 20, 20), FREE),
-                "Личной еды 16 меньше половины стака (32) — дух идёт пополнять запас");
-    }
-
-    @Test
-    void restock_AtThreshold_NotApplicable() {
-        assertFalse(
-                Applicability.applicable(BoardCase.RESTOCK_FOOD, new EatNeed(32, 20, 20, 20), FREE),
-                "Личной еды ровно половина стака — пополнять не нужно: порог Reached, а не перейдён");
+    void restock_AnyHunger_ApplicableWhenFree() {
+        for (int food : List.of(0, 16, 20)) {
+            assertTrue(
+                    Applicability.applicable(BoardCase.RESTOCK_FOOD, new EatNeed(food, 20, 20, 20), FREE),
+                    "Нужду в пополнении еды решает FoodWatch по личному запасу; применимость не сравнивает сытость "
+                            + food + " (0..20) с порогом стака — такое сравнение всегда истинно");
+        }
     }
 
     @Test

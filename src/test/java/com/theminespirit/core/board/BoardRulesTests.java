@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -13,6 +15,13 @@ import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
 
 class BoardRulesTests {
+    private static final Set<BoardCase> KIT_TOOLS = EnumSet.of(
+            BoardCase.CRAFT_WOODEN_PICKAXE,
+            BoardCase.CRAFT_WOODEN_AXE,
+            BoardCase.CRAFT_WOODEN_SHOVEL,
+            BoardCase.CRAFT_STONE_PICKAXE,
+            BoardCase.CRAFT_STONE_AXE,
+            BoardCase.CRAFT_STONE_SHOVEL);
 
     @Test
     void repairFence_Higher_ThanCrater() {
@@ -122,7 +131,8 @@ class BoardRulesTests {
                 || boardCase == BoardCase.DISMANTLE_SHELTER
                 || boardCase == BoardCase.RESTOCK_FOOD
                 || boardCase == BoardCase.CRAFT_TORCHES
-                || boardCase == BoardCase.SMELT_CHARCOAL) {
+                || boardCase == BoardCase.SMELT_CHARCOAL
+                || KIT_TOOLS.contains(boardCase)) {
             return 2;
         }
         if (boardCase == BoardCase.SUPPLY_SITE

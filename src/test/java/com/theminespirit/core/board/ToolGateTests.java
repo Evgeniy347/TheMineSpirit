@@ -28,14 +28,14 @@ class ToolGateTests {
     }
 
     @Test
-    void table_PickaxeCasesExplicit_ClearAndMineOnly() {
+    void table_PickaxeCasesExplicit_ClearMineAndOre() {
         assertEquals(
-                Set.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE),
+                Set.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE, BoardCase.MINE_LEFT_ORE),
                 ToolGate.table().entrySet().stream()
                         .filter(entry -> entry.getValue() == ToolGate.Hands.PICKAXE)
                         .map(Map.Entry::getKey)
                         .collect(Collectors.toSet()),
-                "Кирку требуют расчистка и шахта — таблица ToolGate; новый кейс с камнем добавляется в неё, иначе "
+                "Кирку требуют расчистка, шахта и добыча оставшейся руды — таблица ToolGate; новый кейс с камнем добавляется в неё, иначе "
                         + "дух возьмёт его без кирки и будет копать руками без дропа");
     }
 
