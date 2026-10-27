@@ -13,6 +13,7 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.CarriedItems;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.DispatchRound;
@@ -1153,7 +1154,13 @@ public final class BoardService {
                 ids.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
             }
         }
-        return ids;
+        ItemStack hand = spirit.getMainHandItem();
+        return CarriedItems.of(
+                ids,
+                spirit.mainHandOwned() && !hand.isEmpty()
+                        ? Optional.of(
+                                BuiltInRegistries.ITEM.getKey(hand.getItem()).toString())
+                        : Optional.empty());
     }
 
     private void ensureSupply(List<SpiritEntity> spirits, StockView stock, long now) {
