@@ -156,4 +156,18 @@ class GraphPlannerTests {
                 "Склад построен, а места нет — не строим склад заново по кругу, просим стратега расширить: "
                         + plan.task("building:warehouse") + ", " + plan.notices());
     }
+
+    @Test
+    void plan_WoodenHoeAndSword_OnlySwordUpgraded() {
+        GraphPlan plan = GraphWorld.settled().tools("spirit-1", 0).plan();
+
+        assertTrue(
+                plan.task("craft_stone_hoe@spirit-1").isEmpty()
+                        && plan.task("craft_stone_sword@spirit-1").isPresent(),
+                "Набор по видам: мотыге хватает деревянной, мечу нужен каменный — "
+                        + plan.tasks().stream()
+                                .map(GraphPlan.Task::id)
+                                .filter(id -> id.contains("hoe") || id.contains("sword"))
+                                .toList());
+    }
 }

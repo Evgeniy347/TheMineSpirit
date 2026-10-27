@@ -59,9 +59,9 @@ public final class GraphPlanner {
                 push(item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0), new HashSet<>());
             }
         }
-        int target = graph.rank(graph.kit().tier());
         for (String spirit : state.kits().keySet()) {
             for (String kind : graph.kit().kinds()) {
+                int target = graph.rank(graph.kit().tier(kind));
                 int tier = state.tier(spirit, kind);
                 if (tier < target) {
                     push(
@@ -105,7 +105,7 @@ public final class GraphPlanner {
                 if (graph.rank(tier) <= state.tier(spirit, kind)) {
                     continue;
                 }
-                boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier());
+                boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier(kind));
                 for (SupplyGraph.Way way : graph.producers(tier + "_" + kind)) {
                     if (!aboveKit) {
                         activate(way, way.id() + AT + spirit, value * way.weight(), path);

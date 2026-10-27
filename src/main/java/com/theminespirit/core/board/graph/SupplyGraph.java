@@ -39,7 +39,19 @@ public record SupplyGraph(
         }
     }
 
-    public record Kit(List<String> kinds, String tier, int base) {}
+    public record Kit(Map<String, String> tiers, int base) {
+        public Kit {
+            tiers = Map.copyOf(tiers);
+        }
+
+        public List<String> kinds() {
+            return tiers.keySet().stream().sorted().toList();
+        }
+
+        public String tier(String kind) {
+            return tiers.getOrDefault(kind, "wooden");
+        }
+    }
 
     public record Storage(int minFreePercent, String building, int base) {}
 
@@ -96,8 +108,11 @@ public record SupplyGraph(
         }
         List<String> tiers = new ArrayList<>();
         root.path("tiers").forEach(tier -> tiers.add(tier.asText()));
-        List<String> kinds = new ArrayList<>();
-        root.path("kit").path("kinds").forEach(kind -> kinds.add(kind.asText()));
+        Map<String, String> kitTiers = new LinkedHashMap<>();
+        root.path("kit")
+                .path("tiers")
+                .properties()
+                .forEach(entry -> kitTiers.put(entry.getKey(), entry.getValue().asText()));
         JsonNode storage = root.path("storage");
         SupplyGraph graph = new SupplyGraph(
                 root.path("decay").asDouble(0.5),
@@ -105,10 +120,7 @@ public record SupplyGraph(
                 root.path("buildReadyBoost").asInt(),
                 root.path("maxPriority").asInt(100),
                 tiers,
-                new Kit(
-                        kinds,
-                        root.path("kit").path("tier").asText(),
-                        root.path("kit").path("base").asInt()),
+                new Kit(kitTiers, root.path("kit").path("base").asInt()),
                 new Storage(
                         storage.path("minFreePercent").asInt(),
                         storage.path("building").asText(),

@@ -10,12 +10,13 @@
     "diamond"
   ],
   "kit": {
-    "kinds": [
-      "pickaxe",
-      "axe",
-      "shovel"
-    ],
-    "tier": "stone",
+    "tiers": {
+      "pickaxe": "stone",
+      "axe": "stone",
+      "shovel": "stone",
+      "sword": "stone",
+      "hoe": "wooden"
+    },
     "base": 60
   },
   "storage": {
@@ -113,6 +114,174 @@
     },
     "clay_ball": {
       "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "carrot": {
+      "xmin": 8,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "potato": {
+      "xmin": 8,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "beetroot": {
+      "xmin": 8,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "sugar_cane": {
+      "xmin": 8,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "melon_slice": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "pumpkin": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "cocoa_beans": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "sweet_berries": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 1
+    },
+    "paper": {
+      "xmin": 8,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "book": {
+      "xmin": 4,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "sugar": {
+      "xmin": 4,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "leather": {
+      "xmin": 4,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "feather": {
+      "xmin": 8,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "egg": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "bone": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 1
+    },
+    "bone_meal": {
+      "xmin": 8,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "string": {
+      "xmin": 4,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "gravel": {
+      "xmin": 8,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "flint": {
+      "xmin": 4,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "arrow": {
+      "xmin": 16,
+      "k": 2,
+      "base": 35,
+      "stage": 2
+    },
+    "bow": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 2
+    },
+    "shield": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 2
+    },
+    "iron_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 3
+    },
+    "leather_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "bucket": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 2
+    },
+    "water_bucket": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 2
+    },
+    "sand": {
+      "xmin": 16,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "glass": {
+      "xmin": 8,
       "k": 1,
       "base": 25,
       "stage": 3
@@ -401,6 +570,87 @@
         "oak_planks": 32,
         "cobblestone": 16
       }
+    },
+    "field_carrot": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "carrot": 8,
+        "dirt": 16
+      }
+    },
+    "field_potato": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "potato": 8,
+        "dirt": 16
+      }
+    },
+    "field_beetroot": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "beetroot": 8,
+        "dirt": 16
+      }
+    },
+    "sugar_cane_bed": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 40,
+      "materials": {
+        "sugar_cane": 8,
+        "dirt": 8
+      }
+    },
+    "melon_patch": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 30,
+      "materials": {
+        "melon_slice": 1,
+        "dirt": 16
+      }
+    },
+    "pumpkin_patch": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 30,
+      "materials": {
+        "pumpkin": 1,
+        "dirt": 16
+      }
+    },
+    "cocoa_grove": {
+      "case": "BUILD_HOUSE",
+      "stage": 3,
+      "base": 25,
+      "materials": {
+        "cocoa_beans": 4,
+        "oak_log": 8
+      }
+    },
+    "berry_patch": {
+      "case": "BUILD_HOUSE",
+      "stage": 2,
+      "base": 30,
+      "materials": {
+        "sweet_berries": 4,
+        "dirt": 8
+      }
+    },
+    "chicken_coop": {
+      "case": "BUILD_PEN",
+      "stage": 2,
+      "base": 35,
+      "materials": {
+        "oak_log": 16,
+        "oak_planks": 8
+      }
     }
   },
   "ways": [
@@ -667,7 +917,9 @@
       "makes": "wheat",
       "yield": 16,
       "weight": 1.0,
-      "building": "field"
+      "building": "field",
+      "tool": "hoe",
+      "tier": "wooden"
     },
     {
       "id": "craft_bread",
@@ -763,6 +1015,441 @@
       "weight": 1.0,
       "tool": "shovel",
       "tier": "wooden"
+    },
+    {
+      "id": "harvest_carrot",
+      "case": "GATHER_MATERIALS",
+      "makes": "carrot",
+      "yield": 8,
+      "weight": 1.0,
+      "building": "field_carrot"
+    },
+    {
+      "id": "harvest_potato",
+      "case": "GATHER_MATERIALS",
+      "makes": "potato",
+      "yield": 8,
+      "weight": 1.0,
+      "building": "field_potato"
+    },
+    {
+      "id": "harvest_beetroot",
+      "case": "GATHER_MATERIALS",
+      "makes": "beetroot",
+      "yield": 8,
+      "weight": 1.0,
+      "building": "field_beetroot"
+    },
+    {
+      "id": "forage_carrot",
+      "case": "GATHER_MATERIALS",
+      "makes": "carrot",
+      "yield": 1,
+      "weight": 0.3
+    },
+    {
+      "id": "forage_potato",
+      "case": "GATHER_MATERIALS",
+      "makes": "potato",
+      "yield": 1,
+      "weight": 0.3
+    },
+    {
+      "id": "forage_beetroot",
+      "case": "GATHER_MATERIALS",
+      "makes": "beetroot",
+      "yield": 1,
+      "weight": 0.3
+    },
+    {
+      "id": "forage_cane",
+      "case": "GATHER_MATERIALS",
+      "makes": "sugar_cane",
+      "yield": 3,
+      "weight": 0.6
+    },
+    {
+      "id": "harvest_cane",
+      "case": "GATHER_MATERIALS",
+      "makes": "sugar_cane",
+      "yield": 16,
+      "weight": 1.0,
+      "building": "sugar_cane_bed"
+    },
+    {
+      "id": "harvest_melon",
+      "case": "GATHER_MATERIALS",
+      "makes": "melon_slice",
+      "yield": 9,
+      "weight": 1.0,
+      "building": "melon_patch"
+    },
+    {
+      "id": "harvest_pumpkin",
+      "case": "GATHER_MATERIALS",
+      "makes": "pumpkin",
+      "yield": 4,
+      "weight": 1.0,
+      "building": "pumpkin_patch"
+    },
+    {
+      "id": "forage_melon",
+      "case": "GATHER_MATERIALS",
+      "makes": "melon_slice",
+      "yield": 3,
+      "weight": 0.3
+    },
+    {
+      "id": "forage_pumpkin",
+      "case": "GATHER_MATERIALS",
+      "makes": "pumpkin",
+      "yield": 1,
+      "weight": 0.3
+    },
+    {
+      "id": "harvest_cocoa",
+      "case": "GATHER_MATERIALS",
+      "makes": "cocoa_beans",
+      "yield": 6,
+      "weight": 1.0,
+      "building": "cocoa_grove"
+    },
+    {
+      "id": "forage_cocoa",
+      "case": "GATHER_MATERIALS",
+      "makes": "cocoa_beans",
+      "yield": 2,
+      "weight": 0.4
+    },
+    {
+      "id": "pick_berries",
+      "case": "GATHER_MATERIALS",
+      "makes": "sweet_berries",
+      "yield": 3,
+      "weight": 0.6
+    },
+    {
+      "id": "harvest_berries",
+      "case": "GATHER_MATERIALS",
+      "makes": "sweet_berries",
+      "yield": 12,
+      "weight": 1.0,
+      "building": "berry_patch"
+    },
+    {
+      "id": "eat_carrots",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 1,
+      "weight": 0.6,
+      "consumes": {
+        "carrot": 1
+      }
+    },
+    {
+      "id": "bake_potato",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 1,
+      "weight": 0.7,
+      "consumes": {
+        "potato": 1,
+        "coal": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "eat_berries",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "sweet_berries": 2
+      }
+    },
+    {
+      "id": "eat_melon",
+      "case": "GATHER_MATERIALS",
+      "makes": "food",
+      "yield": 1,
+      "weight": 0.4,
+      "consumes": {
+        "melon_slice": 2
+      }
+    },
+    {
+      "id": "craft_paper",
+      "case": "GATHER_MATERIALS",
+      "makes": "paper",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "sugar_cane": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_book",
+      "case": "GATHER_MATERIALS",
+      "makes": "book",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "paper": 3,
+        "leather": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_sugar",
+      "case": "GATHER_MATERIALS",
+      "makes": "sugar",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "sugar_cane": 1
+      }
+    },
+    {
+      "id": "cull_cows",
+      "case": "HERD_CULL",
+      "makes": "leather",
+      "yield": 2,
+      "weight": 1.0,
+      "building": "pen"
+    },
+    {
+      "id": "collect_feathers",
+      "case": "GATHER_MATERIALS",
+      "makes": "feather",
+      "yield": 3,
+      "weight": 1.0,
+      "building": "chicken_coop"
+    },
+    {
+      "id": "collect_eggs",
+      "case": "GATHER_MATERIALS",
+      "makes": "egg",
+      "yield": 4,
+      "weight": 1.0,
+      "building": "chicken_coop"
+    },
+    {
+      "id": "loot_bones",
+      "case": "COLLECT_DROPS",
+      "makes": "bone",
+      "yield": 2,
+      "weight": 0.5
+    },
+    {
+      "id": "grind_bone_meal",
+      "case": "GATHER_MATERIALS",
+      "makes": "bone_meal",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+        "bone": 1
+      }
+    },
+    {
+      "id": "loot_string",
+      "case": "COLLECT_DROPS",
+      "makes": "string",
+      "yield": 2,
+      "weight": 0.5
+    },
+    {
+      "id": "dig_gravel",
+      "case": "GATHER_MATERIALS",
+      "makes": "gravel",
+      "yield": 8,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden"
+    },
+    {
+      "id": "sift_flint",
+      "case": "GATHER_MATERIALS",
+      "makes": "flint",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "gravel": 3
+      }
+    },
+    {
+      "id": "craft_arrow",
+      "case": "GATHER_MATERIALS",
+      "makes": "arrow",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "flint": 1,
+        "stick": 1,
+        "feather": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_bow",
+      "case": "GATHER_MATERIALS",
+      "makes": "bow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "string": 3,
+        "stick": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_shield",
+      "case": "GATHER_MATERIALS",
+      "makes": "shield",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "oak_planks": 6,
+        "iron_ingot": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 24
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_leather_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "leather_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "leather": 24
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_bucket",
+      "case": "GATHER_MATERIALS",
+      "makes": "bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 3
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "fill_water_bucket",
+      "case": "GATHER_MATERIALS",
+      "makes": "water_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      }
+    },
+    {
+      "id": "dig_sand",
+      "case": "GATHER_MATERIALS",
+      "makes": "sand",
+      "yield": 8,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden"
+    },
+    {
+      "id": "smelt_glass",
+      "case": "GATHER_MATERIALS",
+      "makes": "glass",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "sand": 1,
+        "coal": 1
+      },
+      "building": "furnace"
+    },
+    {
+      "id": "craft_wooden_hoe",
+      "case": "GATHER_MATERIALS",
+      "makes": "wooden_hoe",
+      "yield": 1,
+      "weight": 0.6,
+      "consumes": {
+        "oak_planks": 2,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_hoe",
+      "case": "GATHER_MATERIALS",
+      "makes": "stone_hoe",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "cobblestone": 2,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_hoe",
+      "case": "GATHER_MATERIALS",
+      "makes": "iron_hoe",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 2,
+        "stick": 2
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_wooden_sword",
+      "case": "GATHER_MATERIALS",
+      "makes": "wooden_sword",
+      "yield": 1,
+      "weight": 0.6,
+      "consumes": {
+        "oak_planks": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_stone_sword",
+      "case": "CRAFT_STONE_SWORD",
+      "makes": "stone_sword",
+      "yield": 1,
+      "weight": 0.8,
+      "consumes": {
+        "cobblestone": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
+    },
+    {
+      "id": "craft_iron_sword",
+      "case": "CRAFT_IRON_SWORD",
+      "makes": "iron_sword",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 2,
+        "stick": 1
+      },
+      "building": "crafting_table"
     }
   ],
   "edges": [
