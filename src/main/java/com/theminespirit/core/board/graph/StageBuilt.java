@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public final class StageBuilt {
+    public static final String ORCHARD = "orchard_oak";
     private static final int YARD_CHESTS = 2;
     private static final Map<String, Predicate<SettlementFacts>> BUILT = built();
 
@@ -40,7 +41,7 @@ public final class StageBuilt {
         built.put("lighting", SettlementFacts::lighting);
         built.put("fence", SettlementFacts::fence);
         built.put("hut", SettlementFacts::houses);
-        built.put("orchard", SettlementFacts::orchard);
+        built.put(ORCHARD, SettlementFacts::orchard);
         built.put("streets", SettlementFacts::streets);
         built.put("smithing_table", facts -> done(facts, BoardCase.CRAFT_SMITHING_TABLE) || facts.smithingTable());
         built.put("anvil", facts -> done(facts, BoardCase.CRAFT_ANVIL) || facts.anvil());

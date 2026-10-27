@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 final class GraphMutations {
@@ -40,6 +41,18 @@ final class GraphMutations {
         }
         for (String event : GraphWorld.GRAPH.events().keySet()) {
             all.add(new Mutation("event=" + event, world -> world.copy().event(event)));
+        }
+        GraphWorld.GRAPH.ways().stream()
+                .map(SupplyGraph.Way::world)
+                .filter(Objects::nonNull)
+                .distinct()
+                .forEach(resource -> all.add(new Mutation("нет " + resource, world -> {
+                    GraphWorld copy = world.copy();
+                    copy.world.remove(resource);
+                    return copy;
+                })));
+        for (String sapling : GraphWorld.GRAPH.members("#saplings")) {
+            all.add(new Mutation(sapling + "=2", world -> world.copy().with(sapling, 2)));
         }
         for (int free : List.of(0, 19, 20, 100)) {
             all.add(new Mutation("free=" + free, world -> {

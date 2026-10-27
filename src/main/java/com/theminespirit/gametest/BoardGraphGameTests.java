@@ -36,6 +36,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class BoardGraphGameTests {
     private static final Map<String, Integer> WOOD = Map.of("oak_planks", 64, "stick", 64, "oak_log", 16);
     private static final String TABLE = "first:crafting_station";
+    private static final int TREE_HEIGHT = 3;
 
     private BoardGraphGameTests() {}
 
@@ -49,11 +50,12 @@ public final class BoardGraphGameTests {
         Set<String> live = new GraphSource()
                 .tick(level, board, List.of(spirit), new StockView(Map.of()), Set.of(), level.getGameTime());
 
+        String chop = "graph:chop_oak_log";
         helper.assertTrue(
-                board.board().statusOf("graph:chop_log").orElse(null) == BoardStatus.PENDING
-                        && live.contains("graph:chop_log"),
-                "Пустой склад и нет инструментов — граф ставит рубку руками (выполнима сразу), статус "
-                        + board.board().statusOf("graph:chop_log") + ", живые причины " + live);
+                board.board().statusOf(chop).orElse(null) == BoardStatus.PENDING && live.contains(chop),
+                "Пустой склад, нет инструментов, рядом дуб — граф ставит рубку руками (выполнима сразу), статус "
+                        + board.board().statusOf(chop) + ", живые причины " + live + ", доска "
+                        + board.board().all());
         helper.assertTrue(
                 board.board().statusOf(TABLE).isEmpty(),
                 "Без досок верстак невыполним и на доску не ставится — он давит приоритетом на доски, статус "
@@ -118,6 +120,9 @@ public final class BoardGraphGameTests {
 
     private static SpiritEntity settlement(GameTestHelper helper) {
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        for (int y = 1; y <= TREE_HEIGHT; y++) {
+            helper.setBlock(new BlockPos(7, y, 7), Blocks.OAK_LOG);
+        }
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
         BlockPos home = helper.absolutePos(new BlockPos(4, 1, 4));
         spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));

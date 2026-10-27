@@ -26,7 +26,9 @@ public record SupplyGraph(
         List<Way> ways,
         List<Edge> edges,
         Set<String> unimplemented,
-        Map<String, GraphEvent> events) {
+        Map<String, GraphEvent> events,
+        Map<String, List<String>> groups,
+        List<Trigger> triggers) {
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
     private static final String BASE = "base";
     private static final String STAGE = "stage";
@@ -42,7 +44,8 @@ public record SupplyGraph(
             @Nullable String tool,
             Map<String, Integer> materials,
             List<String> requires,
-            List<String> advice) {
+            List<String> advice,
+            boolean optional) {
         public Building {
             materials = Map.copyOf(materials);
             requires = List.copyOf(requires);
@@ -80,13 +83,16 @@ public record SupplyGraph(
             Map<String, Integer> consumes,
             @Nullable String tool,
             @Nullable String tier,
-            @Nullable String building) {
+            @Nullable String building,
+            @Nullable String world) {
         public Way {
             consumes = Map.copyOf(consumes);
         }
     }
 
     public record Edge(String lack, String way, int weight) {}
+
+    public record Trigger(String have, String build) {}
 
     public SupplyGraph {
         tiers = List.copyOf(tiers);
@@ -96,6 +102,8 @@ public record SupplyGraph(
         edges = List.copyOf(edges);
         unimplemented = Set.copyOf(unimplemented);
         events = Map.copyOf(events);
+        groups = Map.copyOf(groups);
+        triggers = List.copyOf(triggers);
     }
 
     public static SupplyGraph loadDefault() {
@@ -151,7 +159,9 @@ public record SupplyGraph(
                 ways,
                 edges,
                 unimplemented(root),
-                GraphEvent.parse(root));
+                GraphEvent.parse(root),
+                groups(root),
+                triggers(root));
         graph.validate(origin);
         return graph;
     }
@@ -175,7 +185,8 @@ public record SupplyGraph(
                             text(entry.getValue(), "tool"),
                             materials,
                             texts(entry.getValue().path("requires")),
-                            texts(entry.getValue().path("advice"))));
+                            texts(entry.getValue().path("advice")),
+                            entry.getValue().path("optional").asBoolean(false)));
         });
         return buildings;
     }
@@ -197,7 +208,8 @@ public record SupplyGraph(
                     consumes,
                     text(node, "tool"),
                     text(node, "tier"),
-                    text(node, "building")));
+                    text(node, "building"),
+                    text(node, "world")));
         }
         return ways;
     }
@@ -212,6 +224,29 @@ public record SupplyGraph(
             stages.put(Integer.parseInt(entry.getKey()), tiers);
         });
         return stages;
+    }
+
+    private static Map<String, List<String>> groups(JsonNode root) {
+        Map<String, List<String>> groups = new LinkedHashMap<>();
+        root.path("groups").properties().forEach(entry -> groups.put(entry.getKey(), texts(entry.getValue())));
+        return groups;
+    }
+
+    private static List<Trigger> triggers(JsonNode root) {
+        List<Trigger> triggers = new ArrayList<>();
+        for (JsonNode node : root.path("triggers")) {
+            triggers.add(
+                    new Trigger(node.path("have").asText(), node.path("build").asText()));
+        }
+        return triggers;
+    }
+
+    public List<String> members(String node) {
+        return groups.getOrDefault(node, List.of());
+    }
+
+    public boolean isGroup(String node) {
+        return groups.containsKey(node);
     }
 
     private static Set<String> unimplemented(JsonNode root) {
@@ -261,7 +296,7 @@ public record SupplyGraph(
                         + "', которого нет среди предметов и инструментов графа");
             }
             for (String input : way.consumes().keySet()) {
-                if (!items.containsKey(input)) {
+                if (!items.containsKey(input) && !groups.containsKey(input)) {
                     throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " расходует '" + input
                             + "', которого нет среди предметов графа");
                 }
@@ -273,7 +308,7 @@ public record SupplyGraph(
         }
         for (Building building : buildings.values()) {
             for (String input : building.materials().keySet()) {
-                if (!items.containsKey(input)) {
+                if (!items.containsKey(input) && !groups.containsKey(input)) {
                     throw new IllegalStateException("Файл '" + origin + "': постройка " + building.id() + " расходует '"
                             + input + "', которого нет среди предметов графа");
                 }

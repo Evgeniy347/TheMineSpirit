@@ -36,16 +36,6 @@
     "base": 55
   },
   "items": {
-    "oak_log": {
-      "xmin": 16,
-      "k": 1,
-      "base": 45
-    },
-    "oak_planks": {
-      "xmin": 16,
-      "k": 1,
-      "base": 40
-    },
     "stick": {
       "xmin": 8,
       "k": 1,
@@ -70,11 +60,6 @@
       "xmin": 16,
       "k": 2,
       "base": 50
-    },
-    "oak_sapling": {
-      "xmin": 4,
-      "k": 1,
-      "base": 30
     },
     "raw_iron": {
       "xmin": 0,
@@ -367,6 +352,126 @@
       "k": 1,
       "base": 30,
       "stage": 3
+    },
+    "oak_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "oak_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "oak_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "birch_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "birch_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "birch_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "spruce_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "spruce_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "spruce_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "jungle_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "jungle_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "jungle_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "acacia_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "acacia_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "acacia_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "dark_oak_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "dark_oak_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "dark_oak_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "cherry_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "cherry_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "cherry_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
+    },
+    "mangrove_log": {
+      "xmin": 8,
+      "k": 1,
+      "base": 45
+    },
+    "mangrove_planks": {
+      "xmin": 8,
+      "k": 1,
+      "base": 40
+    },
+    "mangrove_sapling": {
+      "xmin": 2,
+      "k": 1,
+      "base": 30
     }
   },
   "buildings": {
@@ -375,7 +480,7 @@
       "stage": 1,
       "base": 70,
       "materials": {
-        "oak_planks": 4
+        "#planks": 4
       }
     },
     "furnace": {
@@ -401,7 +506,7 @@
       "stage": 1,
       "base": 50,
       "materials": {
-        "oak_planks": 16
+        "#planks": 16
       },
       "requires": [
         "clearing"
@@ -454,19 +559,6 @@
         "chests"
       ]
     },
-    "orchard": {
-      "case": "BUILD_ORCHARD",
-      "stage": 1,
-      "base": 45,
-      "materials": {
-        "oak_sapling": 4,
-        "torch": 4,
-        "dirt": 8
-      },
-      "requires": [
-        "clearing"
-      ]
-    },
     "streets": {
       "case": "BUILD_STREETS",
       "stage": 1,
@@ -493,7 +585,7 @@
       "base": 40,
       "materials": {
         "iron_ingot": 2,
-        "oak_planks": 4
+        "#planks": 4
       }
     },
     "anvil": {
@@ -633,7 +725,7 @@
       "stage": 3,
       "base": 35,
       "materials": {
-        "oak_planks": 16
+        "#planks": 16
       }
     },
     "kennel": {
@@ -803,34 +895,96 @@
         "portal_hall"
       ],
       "implemented": false
+    },
+    "orchard_oak": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "oak_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      }
+    },
+    "orchard_birch": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "birch_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
+    },
+    "orchard_spruce": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "spruce_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
+    },
+    "orchard_jungle": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "jungle_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
+    },
+    "orchard_acacia": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "acacia_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
+    },
+    "orchard_dark_oak": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "dark_oak_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
+    },
+    "orchard_cherry": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "cherry_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
+    },
+    "orchard_mangrove": {
+      "case": "BUILD_ORCHARD",
+      "stage": 1,
+      "base": 45,
+      "materials": {
+        "mangrove_sapling": 4,
+        "torch": 4,
+        "dirt": 8
+      },
+      "optional": true
     }
   },
   "ways": [
-    {
-      "id": "chop_log",
-      "case": "GATHER_MATERIALS",
-      "makes": "oak_log",
-      "yield": 4,
-      "weight": 1.0
-    },
-    {
-      "id": "harvest_orchard",
-      "case": "HARVEST_ORCHARD",
-      "makes": "oak_log",
-      "yield": 16,
-      "weight": 0.9,
-      "building": "orchard"
-    },
-    {
-      "id": "craft_planks",
-      "case": "GATHER_MATERIALS",
-      "makes": "oak_planks",
-      "yield": 4,
-      "weight": 1.0,
-      "consumes": {
-        "oak_log": 1
-      }
-    },
     {
       "id": "craft_stick",
       "case": "GATHER_MATERIALS",
@@ -838,7 +992,7 @@
       "yield": 4,
       "weight": 1.0,
       "consumes": {
-        "oak_planks": 2
+        "#planks": 2
       }
     },
     {
@@ -875,7 +1029,7 @@
       "yield": 1,
       "weight": 0.9,
       "consumes": {
-        "oak_log": 1
+        "#logs": 1
       },
       "building": "furnace"
     },
@@ -889,14 +1043,6 @@
         "coal": 1,
         "stick": 1
       }
-    },
-    {
-      "id": "gather_sapling",
-      "case": "GATHER_MATERIALS",
-      "makes": "oak_sapling",
-      "yield": 2,
-      "weight": 1.0,
-      "implemented": false
     },
     {
       "id": "mine_iron",
@@ -925,7 +1071,8 @@
       "case": "HUNT_WILD_SHEEP",
       "makes": "food",
       "yield": 2,
-      "weight": 0.8
+      "weight": 0.8,
+      "world": "animals"
     },
     {
       "id": "fish",
@@ -949,7 +1096,7 @@
       "yield": 1,
       "weight": 0.6,
       "consumes": {
-        "oak_planks": 3,
+        "#planks": 3,
         "stick": 2
       },
       "building": "crafting_table"
@@ -985,7 +1132,7 @@
       "yield": 1,
       "weight": 0.6,
       "consumes": {
-        "oak_planks": 3,
+        "#planks": 3,
         "stick": 2
       },
       "building": "crafting_table"
@@ -1021,7 +1168,7 @@
       "yield": 1,
       "weight": 0.6,
       "consumes": {
-        "oak_planks": 1,
+        "#planks": 1,
         "stick": 2
       },
       "building": "crafting_table"
@@ -1121,7 +1268,7 @@
       "weight": 0.8,
       "consumes": {
         "wool": 3,
-        "oak_planks": 3
+        "#planks": 3
       },
       "building": "crafting_table"
     },
@@ -1133,7 +1280,7 @@
       "weight": 1.0,
       "consumes": {
         "wool": 3,
-        "oak_planks": 3
+        "#planks": 3
       },
       "building": "weaver"
     },
@@ -1168,7 +1315,8 @@
       "yield": 8,
       "weight": 1.0,
       "tool": "shovel",
-      "tier": "wooden"
+      "tier": "wooden",
+      "world": "clay"
     },
     {
       "id": "harvest_carrot",
@@ -1464,7 +1612,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "oak_planks": 6,
+        "#planks": 6,
         "iron_ingot": 1
       },
       "building": "crafting_table"
@@ -1519,7 +1667,8 @@
       "yield": 8,
       "weight": 1.0,
       "tool": "shovel",
-      "tier": "wooden"
+      "tier": "wooden",
+      "world": "sand"
     },
     {
       "id": "smelt_glass",
@@ -1540,7 +1689,7 @@
       "yield": 1,
       "weight": 0.6,
       "consumes": {
-        "oak_planks": 2,
+        "#planks": 2,
         "stick": 2
       },
       "building": "crafting_table"
@@ -1576,7 +1725,7 @@
       "yield": 1,
       "weight": 0.6,
       "consumes": {
-        "oak_planks": 2,
+        "#planks": 2,
         "stick": 1
       },
       "building": "crafting_table"
@@ -1788,21 +1937,301 @@
         "flint": 1
       },
       "building": "crafting_table"
+    },
+    {
+      "id": "chop_oak_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:oak"
+    },
+    {
+      "id": "harvest_orchard_oak",
+      "case": "HARVEST_ORCHARD",
+      "makes": "oak_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_oak"
+    },
+    {
+      "id": "craft_oak_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "oak_log": 1
+      }
+    },
+    {
+      "id": "gather_oak_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "oak_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:oak",
+      "implemented": false
+    },
+    {
+      "id": "chop_birch_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:birch"
+    },
+    {
+      "id": "harvest_orchard_birch",
+      "case": "HARVEST_ORCHARD",
+      "makes": "birch_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_birch"
+    },
+    {
+      "id": "craft_birch_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "birch_log": 1
+      }
+    },
+    {
+      "id": "gather_birch_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "birch_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:birch",
+      "implemented": false
+    },
+    {
+      "id": "chop_spruce_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:spruce"
+    },
+    {
+      "id": "harvest_orchard_spruce",
+      "case": "HARVEST_ORCHARD",
+      "makes": "spruce_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_spruce"
+    },
+    {
+      "id": "craft_spruce_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "spruce_log": 1
+      }
+    },
+    {
+      "id": "gather_spruce_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "spruce_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:spruce",
+      "implemented": false
+    },
+    {
+      "id": "chop_jungle_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:jungle"
+    },
+    {
+      "id": "harvest_orchard_jungle",
+      "case": "HARVEST_ORCHARD",
+      "makes": "jungle_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_jungle"
+    },
+    {
+      "id": "craft_jungle_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "jungle_log": 1
+      }
+    },
+    {
+      "id": "gather_jungle_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "jungle_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:jungle",
+      "implemented": false
+    },
+    {
+      "id": "chop_acacia_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:acacia"
+    },
+    {
+      "id": "harvest_orchard_acacia",
+      "case": "HARVEST_ORCHARD",
+      "makes": "acacia_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_acacia"
+    },
+    {
+      "id": "craft_acacia_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "acacia_log": 1
+      }
+    },
+    {
+      "id": "gather_acacia_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "acacia_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:acacia",
+      "implemented": false
+    },
+    {
+      "id": "chop_dark_oak_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:dark_oak"
+    },
+    {
+      "id": "harvest_orchard_dark_oak",
+      "case": "HARVEST_ORCHARD",
+      "makes": "dark_oak_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_dark_oak"
+    },
+    {
+      "id": "craft_dark_oak_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "dark_oak_log": 1
+      }
+    },
+    {
+      "id": "gather_dark_oak_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "dark_oak_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:dark_oak",
+      "implemented": false
+    },
+    {
+      "id": "chop_cherry_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:cherry"
+    },
+    {
+      "id": "harvest_orchard_cherry",
+      "case": "HARVEST_ORCHARD",
+      "makes": "cherry_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_cherry"
+    },
+    {
+      "id": "craft_cherry_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "cherry_log": 1
+      }
+    },
+    {
+      "id": "gather_cherry_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "cherry_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:cherry",
+      "implemented": false
+    },
+    {
+      "id": "chop_mangrove_log",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_log",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "tree:mangrove"
+    },
+    {
+      "id": "harvest_orchard_mangrove",
+      "case": "HARVEST_ORCHARD",
+      "makes": "mangrove_log",
+      "yield": 16,
+      "weight": 0.9,
+      "building": "orchard_mangrove"
+    },
+    {
+      "id": "craft_mangrove_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "mangrove_log": 1
+      }
+    },
+    {
+      "id": "gather_mangrove_sapling",
+      "case": "GATHER_MATERIALS",
+      "makes": "mangrove_sapling",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "tree:mangrove",
+      "implemented": false
     }
   ],
   "edges": [
     {
-      "lack": "oak_log",
+      "lack": "#logs",
       "way": "craft_iron_axe",
       "weight": 15
     },
     {
-      "lack": "oak_log",
+      "lack": "#logs",
       "way": "craft_stone_axe",
       "weight": 10
     },
     {
-      "lack": "oak_log",
+      "lack": "#logs",
       "way": "craft_wooden_axe",
       "weight": 5
     },
@@ -1965,6 +2394,95 @@
       "advice": [
         "no_jump_over_three"
       ]
+    },
+    "drops_nearby": {
+      "tasks": [
+        {
+          "id": "collect_drops",
+          "case": "COLLECT_DROPS",
+          "base": 55,
+          "consumes": {}
+        }
+      ]
+    },
+    "leaf_decay": {
+      "tasks": [
+        {
+          "id": "collect_saplings",
+          "case": "COLLECT_DROPS",
+          "base": 50,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "collect_saplings_under_trees"
+      ]
     }
-  }
+  },
+  "groups": {
+    "#logs": [
+      "oak_log",
+      "birch_log",
+      "spruce_log",
+      "jungle_log",
+      "acacia_log",
+      "dark_oak_log",
+      "cherry_log",
+      "mangrove_log"
+    ],
+    "#planks": [
+      "oak_planks",
+      "birch_planks",
+      "spruce_planks",
+      "jungle_planks",
+      "acacia_planks",
+      "dark_oak_planks",
+      "cherry_planks",
+      "mangrove_planks"
+    ],
+    "#saplings": [
+      "oak_sapling",
+      "birch_sapling",
+      "spruce_sapling",
+      "jungle_sapling",
+      "acacia_sapling",
+      "dark_oak_sapling",
+      "cherry_sapling",
+      "mangrove_sapling"
+    ]
+  },
+  "triggers": [
+    {
+      "have": "oak_sapling",
+      "build": "orchard_oak"
+    },
+    {
+      "have": "birch_sapling",
+      "build": "orchard_birch"
+    },
+    {
+      "have": "spruce_sapling",
+      "build": "orchard_spruce"
+    },
+    {
+      "have": "jungle_sapling",
+      "build": "orchard_jungle"
+    },
+    {
+      "have": "acacia_sapling",
+      "build": "orchard_acacia"
+    },
+    {
+      "have": "dark_oak_sapling",
+      "build": "orchard_dark_oak"
+    },
+    {
+      "have": "cherry_sapling",
+      "build": "orchard_cherry"
+    },
+    {
+      "have": "mangrove_sapling",
+      "build": "orchard_mangrove"
+    }
+  ]
 }

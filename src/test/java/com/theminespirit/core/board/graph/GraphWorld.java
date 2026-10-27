@@ -18,14 +18,16 @@ final class GraphWorld {
     int stage = 1;
     int storageFree = 60;
     final Set<String> events = new HashSet<>();
+    SupplyGraph graph = GRAPH;
+    final Set<String> world = new HashSet<>(Set.of("tree:oak", "tree:jungle", "sand", "clay", "animals"));
 
     static GraphWorld empty() {
         GraphWorld world = new GraphWorld();
         world.kits.put("spirit-1", new HashMap<>());
         GRAPH.buildings()
                 .values()
-                .forEach(building ->
-                        world.buildings.put(building.id(), building.stage() == 1 ? Built.PLANNED : Built.ABSENT));
+                .forEach(building -> world.buildings.put(
+                        building.id(), building.stage() == 1 && !building.optional() ? Built.PLANNED : Built.ABSENT));
         return world;
     }
 
@@ -43,7 +45,7 @@ final class GraphWorld {
 
     GraphWorld tools(String spirit, int tier) {
         Map<String, Integer> kit = new HashMap<>();
-        for (String kind : GRAPH.kit().kinds()) {
+        for (String kind : graph.kit().kinds()) {
             if (tier >= 0) {
                 kit.put(kind, tier);
             }
@@ -75,11 +77,14 @@ final class GraphWorld {
         world.stage = stage;
         world.storageFree = storageFree;
         world.events.addAll(events);
+        world.graph = graph;
+        world.world.clear();
+        world.world.addAll(this.world);
         return world;
     }
 
     GraphState state() {
-        return new GraphState(stock, stage, kits, buildings, Map.of(), storageFree, events);
+        return new GraphState(stock, stage, kits, buildings, Map.of(), storageFree, events, world);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {
@@ -92,6 +97,6 @@ final class GraphWorld {
     }
 
     GraphPlan plan() {
-        return GraphPlanner.plan(GRAPH, state());
+        return GraphPlanner.plan(graph, state());
     }
 }

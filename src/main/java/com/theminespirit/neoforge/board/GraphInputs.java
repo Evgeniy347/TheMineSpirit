@@ -26,12 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
 final class GraphInputs {
+    private static final String ORCHARD = "orchard_";
+
     private GraphInputs() {}
 
     static GraphState state(
@@ -41,20 +42,20 @@ final class GraphInputs {
             StockView stock,
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph,
-            Set<String> events) {
+            GraphSurroundings.Around around) {
         int stage = SettlementStage.of(service.board().ledger());
         Map<String, Built> buildings = buildings(level, service.board().ledger(), scan, graph);
         return new GraphState(
                 GraphNames.stock(
                         stock.available(),
-                        scan.wood(),
                         StockCatalog.defaultTable().nutrition().keySet()),
                 stage,
                 kits(spirits, graph),
                 buildings,
                 materials(level, service, stock, scan, graph, buildings, stage),
                 ChestSpaceWatch.space(level).freePercent(),
-                events);
+                around.events(),
+                around.world());
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
@@ -92,6 +93,7 @@ final class GraphInputs {
     private static Map<String, Built> buildings(
             ServerLevel level, BoardLedger ledger, FirstStepsRunner.StageScan scan, SupplyGraph graph) {
         Map<String, Built> buildings = new HashMap<>(StageBuilt.of(scan.facts()));
+        buildings.putIfAbsent(ORCHARD + scan.wood(), buildings.get(StageBuilt.ORCHARD));
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
         graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
@@ -129,7 +131,7 @@ final class GraphInputs {
                 continue;
             }
             Map<String, Integer> need = FirstStepsRunner.materialsOf(level, stock, scan, building.boardCase());
-            materials.put(id, known(graph, source, need, scan.wood()));
+            materials.put(id, known(graph, source, need));
         }
         return materials;
     }
@@ -144,18 +146,17 @@ final class GraphInputs {
                         .isPresent());
     }
 
-    private static Map<String, Integer> known(
-            SupplyGraph graph, MaterialSource source, Map<String, Integer> need, String wood) {
+    private static Map<String, Integer> known(SupplyGraph graph, MaterialSource source, Map<String, Integer> need) {
         Map<String, Integer> raw = new HashMap<>();
         need.forEach((item, count) -> {
-            if (graph.items().containsKey(GraphNames.graphItem(item, wood))) {
+            if (graph.items().containsKey(GraphNames.graphItem(item))) {
                 raw.merge(item, count, Integer::sum);
             } else {
                 FirstStepsRunner.expand(source, item, count, raw, 0);
             }
         });
         Map<String, Integer> known = new HashMap<>();
-        GraphNames.need(raw, wood).forEach((item, count) -> {
+        GraphNames.need(raw).forEach((item, count) -> {
             if (graph.items().containsKey(item)) {
                 known.put(item, count);
             }

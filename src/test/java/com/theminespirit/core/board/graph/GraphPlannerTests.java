@@ -75,10 +75,10 @@ class GraphPlannerTests {
                 .plan();
 
         assertTrue(
-                lacks.priority("chop_log") > has.priority("chop_log")
+                lacks.priority("chop_oak_log") > has.priority("chop_oak_log")
                         && lacks.priority("craft_stick") > has.priority("craft_stick"),
-                "Нет деревянной кирки и топора — дерево и палки важнее: " + lacks.priority("chop_log") + " против "
-                        + has.priority("chop_log"));
+                "Нет деревянной кирки и топора — дерево и палки важнее: " + lacks.priority("chop_oak_log") + " против "
+                        + has.priority("chop_oak_log"));
     }
 
     @Test
@@ -117,9 +117,9 @@ class GraphPlannerTests {
                 GraphWorld.settled().with("oak_log", 0).with("oak_sapling", 4).plan();
 
         assertTrue(
-                lacking.priority("building:orchard") > without.priority("building:orchard"),
-                "Брёвен нет, саженцы есть — сад важнее: " + lacking.priority("building:orchard") + " против "
-                        + without.priority("building:orchard"));
+                lacking.priority("building:orchard_oak") > without.priority("building:orchard_oak"),
+                "Брёвен нет, саженцы есть — сад важнее: " + lacking.priority("building:orchard_oak") + " против "
+                        + without.priority("building:orchard_oak"));
     }
 
     @Test
@@ -325,5 +325,83 @@ class GraphPlannerTests {
         assertTrue(
                 plan.task("building:portal_lit").map(GraphPlan.Task::feasible).orElse(false),
                 "Зал готов и огниво есть — задание «зажечь портал» выполнимо: " + plan.task("building:portal_lit"));
+    }
+
+    @Test
+    void plan_OakAndJungleNearby_ChopsBothSpecies() {
+        GraphPlan plan =
+                GraphWorld.settled().with("oak_log", 0).with("jungle_log", 0).plan();
+
+        assertTrue(
+                plan.task("chop_oak_log").isPresent()
+                        && plan.task("chop_jungle_log").isPresent()
+                        && plan.task("chop_birch_log").isEmpty(),
+                "Рядом дуб и тропическое дерево — брёвна заготавливаются обеих пород, берёзы рядом нет — её не рубим: "
+                        + plan.tasks().stream()
+                                .map(GraphPlan.Task::id)
+                                .filter(id -> id.startsWith("chop_"))
+                                .toList());
+    }
+
+    @Test
+    void plan_BirchSaplingHeldNoBirchOrchard_NoticeForStrategist() {
+        GraphPlan plan = GraphWorld.settled().with("birch_sapling", 2).plan();
+
+        assertTrue(
+                plan.notices().stream().anyMatch(notice -> "orchard_birch".equals(notice.building())),
+                "Появились саженцы берёзы, сада под берёзу в плане нет — просьба стратегу поставить сад: "
+                        + plan.notices());
+    }
+
+    @Test
+    void plan_JungleSaplingsOrchardPlanned_SecondOrchardBuilt() {
+        GraphPlan plan = GraphWorld.settled()
+                .with("jungle_sapling", 4)
+                .built("orchard_jungle", Built.PLANNED)
+                .plan();
+
+        assertTrue(
+                plan.task("building:orchard_oak").isPresent()
+                        && plan.task("building:orchard_jungle").isPresent(),
+                "Дуб и тропическое дерево — два сада, под каждую породу: "
+                        + plan.tasks().stream()
+                                .map(GraphPlan.Task::id)
+                                .filter(id -> id.startsWith("building:orchard"))
+                                .toList());
+    }
+
+    @Test
+    void plan_OnlyJunglePlanks_SticksFromAnyPlanks() {
+        GraphPlan plan = GraphWorld.settled()
+                .with("oak_planks", 0)
+                .with("jungle_planks", 10)
+                .with("stick", 0)
+                .plan();
+
+        assertTrue(
+                plan.task("craft_stick").map(GraphPlan.Task::feasible).orElse(false),
+                "Палки делаются из досок любой породы: тропические доски годятся — " + plan.task("craft_stick"));
+    }
+
+    @Test
+    void plan_DropsNearby_CollectTask() {
+        GraphPlan plan = GraphWorld.settled().event("drops_nearby").plan();
+
+        assertTrue(
+                plan.task("event:drops_nearby:collect_drops").isPresent(),
+                "В поселении и округе лежат предметы — задание собрать: "
+                        + plan.tasks().stream()
+                                .map(GraphPlan.Task::id)
+                                .filter(id -> id.startsWith("event:"))
+                                .toList());
+    }
+
+    @Test
+    void plan_LeafDecay_CollectSaplingsTask() {
+        GraphPlan plan = GraphWorld.settled().event("leaf_decay").plan();
+
+        assertTrue(
+                plan.task("event:leaf_decay:collect_saplings").isPresent(),
+                "Листва опадает, падают саженцы — задание подобрать саженцы: " + plan.advice());
     }
 }

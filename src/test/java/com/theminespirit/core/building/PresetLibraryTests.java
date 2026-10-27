@@ -95,7 +95,8 @@ class PresetLibraryTests {
             "kennel_1",
             "stable_1",
             "barracks_1",
-            "weaver_1");
+            "weaver_1",
+            "portal_hall_1");
 
     private static PresetLibrary loadReal() {
         List<LoadedContent> contents = new ArrayList<>();
@@ -136,7 +137,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                78,
+                79,
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
@@ -358,7 +359,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                78,
+                79,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(

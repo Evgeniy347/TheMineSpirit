@@ -14,22 +14,21 @@ import org.junit.jupiter.api.Test;
 
 class GraphWiringTests {
     @Test
-    void stock_SpruceSettlement_OwnLogsCountForeignLogsDoNot() {
-        Map<String, Integer> stock = GraphNames.stock(
-                Map.of("minecraft:spruce_log", 10, "oak_log", 7, "spruce_planks", 3), "spruce", Set.of());
+    void stock_MixedSpecies_EachSpeciesOwnNode() {
+        Map<String, Integer> stock =
+                GraphNames.stock(Map.of("minecraft:spruce_log", 10, "oak_log", 7, "spruce_planks", 3), Set.of());
 
-        assertEquals(10, stock.get("oak_log"), "Брёвна породы поселения — узел oak_log графа: " + stock);
-        assertEquals(3, stock.get("oak_planks"), "Доски породы поселения — узел oak_planks графа: " + stock);
-        assertFalse(
-                stock.containsKey("other:spruce_log") || stock.getOrDefault("oak_log", 0) > 10,
-                "Дуб в еловом поселении — чужая порода: не закрывает нехватку брёвен постройки: " + stock);
+        assertEquals(
+                Map.of("spruce_log", 10, "oak_log", 7, "spruce_planks", 3),
+                stock,
+                "Каждая порода — свой узел графа: ель не закрывает нехватку дуба и наоборот, «любая порода» — группа "
+                        + "#logs/#planks графа");
     }
 
     @Test
     void stock_CharcoalBedsFood_FoldIntoGraphNodes() {
         Map<String, Integer> stock = GraphNames.stock(
                 Map.of("coal", 2, "charcoal", 3, "red_bed", 1, "white_bed", 1, "bread", 4, "cooked_beef", 2),
-                "oak",
                 Set.of("minecraft:bread", "minecraft:cooked_beef"));
 
         assertEquals(5, stock.get("coal"), "Уголь и древесный уголь — один узел топлива факелов: " + stock);
@@ -38,11 +37,26 @@ class GraphWiringTests {
     }
 
     @Test
-    void item_GraphOakInBirchSettlement_SwapsToBirch() {
+    void item_GroupInBirchSettlement_ResolvesToBirchMember() {
         assertEquals(
-                "birch_log",
-                GraphNames.item("oak_log", "birch"),
-                "Задание графа «рубить oak_log» в берёзовом поселении рубит берёзу: граф знает одну породу");
+                List.of("birch_log", "jungle_planks", "spruce_log"),
+                List.of(
+                        GraphNames.item(GraphWorld.GRAPH, "#logs", "birch"),
+                        GraphNames.item(GraphWorld.GRAPH, "#planks", "jungle"),
+                        GraphNames.item(GraphWorld.GRAPH, "spruce_log", "birch")),
+                "Группа «любая порода» в задании доски — порода поселения; предмет определённой породы — как есть");
+    }
+
+    @Test
+    void world_BlocksAndAnimals_TreeSpeciesSandClayAnimals() {
+        Set<String> world = GraphNames.world(
+                Set.of("jungle_log", "minecraft:birch_log", "stripped_oak_log", "red_sand", "clay", "stone"), true);
+
+        assertEquals(
+                Set.of("tree:jungle", "tree:birch", "sand", "clay", "animals"),
+                world,
+                "Округа для путей графа: породы по брёвнам (ободранные — не дерево), песок любого цвета, глина, "
+                        + "животные; иначе путь «world» не активируется: " + world);
     }
 
     @Test
@@ -101,7 +115,7 @@ class GraphWiringTests {
         int threshold = GraphPlanner.threshold(GraphWorld.GRAPH.items().get("oak_log"), world.state());
         assertTrue(
                 result.post().stream()
-                        .anyMatch(ticket -> "graph:chop_log".equals(ticket.id())
+                        .anyMatch(ticket -> "graph:chop_oak_log".equals(ticket.id())
                                 && ticket.count() == Math.min(GraphTickets.COUNT_MAX, threshold)),
                 "Рубка добирает запас до порога Xmin·P·S·K (" + threshold + "), не больше стака: " + result.post());
     }
@@ -206,5 +220,13 @@ class GraphWiringTests {
         return !task.id().contains(":")
                 && item != null
                 && item.stage() > world.state().stage();
+    }
+
+    @Test
+    void stageBuilt_Ids_AllAreGraphBuildings() {
+        assertTrue(
+                GraphWorld.GRAPH.buildings().keySet().containsAll(StageBuilt.ids()),
+                "Состояние постройки этапа 1 из фактов участка пишется под id графа; id без постройки в графе — "
+                        + "постройка навсегда «не построена» (сад теперь orchard_<порода>): " + StageBuilt.ids());
     }
 }

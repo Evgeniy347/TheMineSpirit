@@ -153,6 +153,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [docs/api/README.md](docs/api/README.md) | контракт REST-сервиса духов, формат плана и построек |
 | [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | тактика, стратег, горячая перезагрузка таблиц |
 | [docs/research/README.md](docs/research/README.md) | карта знаний о похожих проектах и лицензиях |
+| [docs/settlement/README.md](docs/settlement/README.md), [docs/SIMPLIFICATIONS.md](docs/SIMPLIFICATIONS.md) | каталог построек поселения и стиль; согласованные упрощения механик |
 | [opencode.json](opencode.json) | настройки opencode в проекте |
 
 ## Скрипты

@@ -11,7 +11,8 @@ public record GraphState(
         Map<String, Built> buildings,
         Map<String, Map<String, Integer>> materials,
         int storageFreePercent,
-        Set<String> events) {
+        Set<String> events,
+        Set<String> world) {
     public enum Built {
         BUILT,
         PLANNED,
@@ -26,6 +27,8 @@ public record GraphState(
         materials = Map.copyOf(Objects.requireNonNull(
                 materials, "Материалы построек не могут быть null: постройка без схемы — пустая карта"));
         events = Set.copyOf(Objects.requireNonNull(events, "События не могут быть null: без событий — пустой набор"));
+        world = Set.copyOf(
+                Objects.requireNonNull(world, "Ресурсы мира не могут быть null: в округе ничего нет — пустой набор"));
         if (stage < 1) {
             throw new IllegalArgumentException("Этап " + stage + " меньше 1: поселение начинается с этапа 1");
         }

@@ -41,10 +41,13 @@ public final class GraphSource {
             return Set.of();
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
-        GraphState state = GraphInputs.state(level, service, spirits, stock, scan.orElseThrow(), graph, events);
+        GraphSurroundings.Around around =
+                GraphSurroundings.of(level, service, scan.orElseThrow().home()).with(events);
+        GraphState state = GraphInputs.state(level, service, spirits, stock, scan.orElseThrow(), graph, around);
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
-        GraphPost post = new GraphPost(level, service, spirits, stock, scan.orElseThrow(), graph, now);
+        GraphPost post = new GraphPost(
+                level, service, spirits, stock, new GraphPost.Site(scan.orElseThrow(), around), graph, now);
         List<String> unconnected = new ArrayList<>();
         for (GraphTickets.Ticket ticket : result.post()) {
             if (!post.post(ticket)) {
@@ -110,13 +113,19 @@ public final class GraphSource {
             }
             String text = "[поселение] " + notice.reason();
             LOGGER.info("[graph] просьба стратегу: {}", text);
-            SupplyGraph.Building building = graph.buildings().get(notice.building());
-            if (building != null && building.stage() <= state.stage()) {
+            if (current(graph, state, notice.building())) {
                 for (ServerPlayer player : level.players()) {
                     player.sendSystemMessage(Component.literal(text));
                 }
             }
         }
+    }
+
+    private static boolean current(SupplyGraph graph, GraphState state, String node) {
+        SupplyGraph.Building building = graph.buildings().get(node);
+        SupplyGraph.Item item = graph.items().get(node);
+        int stage = building != null ? building.stage() : item != null ? item.stage() : 1;
+        return stage <= state.stage();
     }
 
     private void report(GraphPlan plan, GraphTickets.Result result, List<String> unconnected, long now) {

@@ -13,6 +13,7 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ final class GraphPost {
     private static final int CHARCOAL_LOGS = 4;
     private static final int CHARCOAL_BATCH = 2;
     private static final String EAT = "eat";
+    private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
 
     private final ServerLevel level;
     private final BoardService service;
@@ -43,6 +45,7 @@ final class GraphPost {
     private final FirstStepsRunner.StageScan scan;
     private final SupplyGraph graph;
     private final MaterialSource source;
+    private final GraphSurroundings.Around around;
     private final long now;
 
     GraphPost(
@@ -50,18 +53,21 @@ final class GraphPost {
             BoardService service,
             List<SpiritEntity> spirits,
             StockView stock,
-            FirstStepsRunner.StageScan scan,
+            Site site,
             SupplyGraph graph,
             long now) {
         this.level = level;
         this.service = service;
         this.spirits = spirits;
         this.stock = stock;
-        this.scan = scan;
+        this.scan = site.scan();
         this.graph = graph;
         this.source = FirstStepsRunner.materialSource(level);
+        this.around = site.around();
         this.now = now;
     }
+
+    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around) {}
 
     static List<String> ticketIds(GraphPlan.Task task, SupplyGraph graph) {
         String id = GraphTickets.id(task);
@@ -76,7 +82,8 @@ final class GraphPost {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
             case BUILDING -> StageBuilt.ids().contains(ticket.node()) && building(ticket);
-            case EVENT -> EAT.equals(ticket.node()) && hungry(ticket);
+            case EVENT ->
+                EAT.equals(ticket.node()) ? hungry(ticket) : COLLECT.contains(ticket.node()) && collect(ticket);
             case WAY -> way(ticket, task);
         };
     }
@@ -84,6 +91,23 @@ final class GraphPost {
     private boolean hungry(GraphTickets.Ticket ticket) {
         GraphFood.post(
                 level, service, spirits, stock, ticket.id(), ticket.task().priority(), now);
+        return true;
+    }
+
+    private boolean collect(GraphTickets.Ticket ticket) {
+        Optional<BlockCoord> at = "collect_drops".equals(ticket.node()) ? around.drop() : around.decay();
+        if (at.isEmpty()) {
+            return false;
+        }
+        submit(
+                ticket(
+                        ticket.id(),
+                        BoardCase.COLLECT_DROPS,
+                        Optional.empty(),
+                        ticket.task().priority(),
+                        ticket.id(),
+                        Map.of()),
+                TicketTarget.at(at.orElseThrow()));
         return true;
     }
 
@@ -117,7 +141,7 @@ final class GraphPost {
                 new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
                 now);
         missing.forEach((item, count) -> {
-            if (!graph.items().containsKey(GraphNames.graphItem(item, scan.wood())) && known(item)) {
+            if (!graph.items().containsKey(GraphNames.graphItem(item)) && known(item)) {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count);
             }
         });
@@ -125,7 +149,7 @@ final class GraphPost {
     }
 
     private boolean gather(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        String item = GraphNames.item(task.makes(), scan.wood());
+        String item = GraphNames.item(graph, task.makes(), scan.wood());
         if (!graph.items().containsKey(task.makes()) || !known(item)) {
             return false;
         }
@@ -175,7 +199,7 @@ final class GraphPost {
     }
 
     private boolean charcoal(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        String log = GraphNames.item("oak_log", scan.wood());
+        String log = GraphNames.item(graph, "#logs", scan.wood());
         Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : furnaceHolder();
         submit(
                 ticket(ticket.id(), task.boardCase(), holder, task.priority(), ticket.id(), Map.of(log, CHARCOAL_LOGS)),
@@ -185,7 +209,8 @@ final class GraphPost {
 
     private Map<String, Integer> items(GraphPlan.Task task) {
         Map<String, Integer> items = new HashMap<>();
-        task.consumes().forEach((item, count) -> items.merge(GraphNames.item(item, scan.wood()), count, Integer::sum));
+        task.consumes()
+                .forEach((item, count) -> items.merge(GraphNames.item(graph, item, scan.wood()), count, Integer::sum));
         return Map.copyOf(items);
     }
 
