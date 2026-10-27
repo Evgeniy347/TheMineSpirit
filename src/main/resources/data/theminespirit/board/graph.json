@@ -1815,6 +1815,18 @@
       "base": 25,
       "stage": 2
     },
+    "ocelot": {
+      "xmin": 1,
+      "k": 1,
+      "base": 20,
+      "stage": 2
+    },
+    "raw_salmon": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
     "cat": {
       "xmin": 1,
       "k": 1,
@@ -7648,6 +7660,99 @@
       "implemented": true
     },
     {
+      "id": "catch_raw_salmon",
+      "case": "GATHER_MATERIALS",
+      "makes": "raw_salmon",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "water",
+      "implemented": false
+    },
+    {
+      "id": "trust_ocelot",
+      "case": "GATHER_MATERIALS",
+      "makes": "ocelot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 2
+      },
+      "world": "biome:jungle",
+      "implemented": false
+    },
+    {
+      "id": "trust_ocelot_salmon",
+      "case": "GATHER_MATERIALS",
+      "makes": "ocelot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_salmon": 2
+      },
+      "world": "biome:jungle",
+      "implemented": false
+    },
+    {
+      "id": "breed_wolf",
+      "case": "BREED_ANIMALS",
+      "makes": "wolf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "beef": 2
+      },
+      "building": "kennel",
+      "needs": {
+        "wolf": 2
+      },
+      "implemented": false
+    },
+    {
+      "id": "breed_wolf_pork",
+      "case": "BREED_ANIMALS",
+      "makes": "wolf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "porkchop": 2
+      },
+      "building": "kennel",
+      "needs": {
+        "wolf": 2
+      },
+      "implemented": false
+    },
+    {
+      "id": "breed_cat",
+      "case": "BREED_ANIMALS",
+      "makes": "cat",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 2
+      },
+      "building": "kennel",
+      "needs": {
+        "cat": 2
+      },
+      "implemented": false
+    },
+    {
+      "id": "breed_ocelot",
+      "case": "BREED_ANIMALS",
+      "makes": "ocelot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 2
+      },
+      "needs": {
+        "ocelot": 2
+      },
+      "world": "biome:jungle",
+      "implemented": false
+    },
+    {
       "id": "tame_cat",
       "case": "GATHER_MATERIALS",
       "makes": "cat",
@@ -8263,6 +8368,63 @@
       },
       "advice": [
         "move_route_marker"
+      ]
+    },
+    "player_died": {
+      "tasks": [
+        {
+          "id": "collect_player_drops",
+          "case": "COLLECT_DROPS",
+          "base": 95,
+          "consumes": {}
+        },
+        {
+          "id": "guard_death_site",
+          "case": "ACTIVITY_GUARD",
+          "base": 90,
+          "consumes": {}
+        },
+        {
+          "id": "build_death_shelter",
+          "case": "BUILD_FENCE",
+          "base": 85,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "push": {
+        "food": 20,
+        "tool:sword": 20,
+        "dirt": 15,
+        "cobblestone": 10
+      },
+      "advice": [
+        "death_site_bound_spirits_only",
+        "guard_death_site_radius_20_50",
+        "one_builds_others_guard",
+        "wait_strategist_return_or_wait_player"
+      ]
+    },
+    "player_died_near_base": {
+      "tasks": [
+        {
+          "id": "collect_player_drops",
+          "case": "COLLECT_DROPS",
+          "base": 95,
+          "consumes": {}
+        },
+        {
+          "id": "return_to_base",
+          "case": "ACTIVITY_RETURN",
+          "base": 90,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "death_site_bound_spirits_only",
+        "return_to_base_if_under_100_blocks"
       ]
     },
     "nether_expedition": {

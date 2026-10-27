@@ -455,6 +455,50 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_PlayerDiedFar_CollectGuardShelter() {
+        GraphPlan plan = GraphWorld.settled().event("player_died").plan();
+
+        for (String task : List.of("collect_player_drops", "guard_death_site", "build_death_shelter")) {
+            assertTrue(
+                    plan.task("event:player_died:" + task).isPresent(),
+                    "Гибель игрока вдали от базы — задание " + task + ": " + plan.tasks());
+        }
+        assertTrue(
+                plan.advice().stream().anyMatch(advice -> "death_site_bound_spirits_only".equals(advice.rule()))
+                        && plan.advice().stream()
+                                .anyMatch(advice -> "wait_strategist_return_or_wait_player".equals(advice.rule())),
+                "Место гибели держат только духи похода, дальше решает стратег: " + plan.advice());
+    }
+
+    @Test
+    void plan_PlayerDiedNearBase_CollectAndReturn() {
+        GraphPlan plan = GraphWorld.settled().event("player_died_near_base").plan();
+
+        assertTrue(
+                plan.task("event:player_died_near_base:collect_player_drops").isPresent()
+                        && plan.task("event:player_died_near_base:return_to_base")
+                                .isPresent()
+                        && plan.task("event:player_died_near_base:guard_death_site")
+                                .isEmpty(),
+                "Ближе 100 блоков к базе — собрать вещи и вернуться, без укрытия: " + plan.tasks());
+    }
+
+    @Test
+    void plan_OcelotLacking_TrustWithRawFishInDevelopment() {
+        GraphWorld world = GraphWorld.settled().with("raw_cod", 4).with("ocelot", 0);
+        world.stage = 2;
+        world.world.add("biome:jungle");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("trust_ocelot").map(task -> !task.implemented()).orElse(false),
+                "Оцелоту не хватает — доверие сырой рыбой в джунглях, «в разработке»: " + plan.task("trust_ocelot"));
+        assertTrue(
+                !GraphWorld.GRAPH.implemented("breed_ocelot") && !GraphWorld.GRAPH.implemented("breed_wolf"),
+                "Размножение питомцев внесено как «в разработке»");
+    }
+
+    @Test
     void plan_NetherExpedition_NeedsPartyArmorPotionsFood() {
         GraphWorld world = GraphWorld.settled()
                 .built("portal_lit", Built.BUILT)
