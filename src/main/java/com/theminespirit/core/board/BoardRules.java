@@ -93,12 +93,12 @@ public final class BoardRules {
         priorities.put(BoardCase.SMELT_CHARCOAL, 70);
         priorities.put(BoardCase.FISH, 50);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
-        priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 40);
-        priorities.put(BoardCase.CRAFT_WOODEN_AXE, 40);
-        priorities.put(BoardCase.CRAFT_WOODEN_SHOVEL, 40);
-        priorities.put(BoardCase.CRAFT_STONE_PICKAXE, 40);
-        priorities.put(BoardCase.CRAFT_STONE_AXE, 40);
-        priorities.put(BoardCase.CRAFT_STONE_SHOVEL, 40);
+        priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 65);
+        priorities.put(BoardCase.CRAFT_WOODEN_AXE, 65);
+        priorities.put(BoardCase.CRAFT_WOODEN_SHOVEL, 65);
+        priorities.put(BoardCase.CRAFT_STONE_PICKAXE, 65);
+        priorities.put(BoardCase.CRAFT_STONE_AXE, 65);
+        priorities.put(BoardCase.CRAFT_STONE_SHOVEL, 65);
         priorities.put(BoardCase.CRAFT_STONE_SWORD, 40);
         priorities.put(BoardCase.CRAFT_IRON_PICKAXE, 40);
         priorities.put(BoardCase.CRAFT_IRON_AXE, 40);

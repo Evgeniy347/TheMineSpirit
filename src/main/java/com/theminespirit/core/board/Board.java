@@ -25,11 +25,6 @@ public final class Board {
             "supply:",
             "mine_level_",
             "repair_tool:");
-    private static final Comparator<BoardTicket> QUEUE_ORDER = Comparator.<BoardTicket>comparingInt(
-                    ticket -> BoardRules.priorityOf(ticket.boardCase()))
-            .reversed()
-            .thenComparingLong(BoardTicket::createdAt)
-            .thenComparing(BoardTicket::id);
 
     private final Map<String, BoardStatus> statuses = new LinkedHashMap<>();
     private final Map<String, BoardTicket> tickets = new LinkedHashMap<>();
@@ -112,6 +107,9 @@ public final class Board {
 
     public BoardOutcome submit(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, " + "а не пустую заявку");
+        if (BoardActivities.isActivity(ticket.boardCase())) {
+            return BoardOutcome.NOT_A_TICKET;
+        }
         if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger)) {
             return BoardOutcome.STAGE_LOCKED;
         }
@@ -171,7 +169,7 @@ public final class Board {
             }
             ready.add(ticket);
         }
-        ready.sort(QUEUE_ORDER);
+        ready.sort(QueueOrder.of(tickets.values(), statuses));
         return List.copyOf(ready);
     }
 
@@ -502,6 +500,9 @@ public final class Board {
             }
         }
         for (String id : removableIds) {
+            cancelDependants(id);
+        }
+        for (String id : removableIds) {
             tickets.remove(id);
             statuses.remove(id);
             removed++;
@@ -524,7 +525,7 @@ public final class Board {
                 pending.add(ticket);
             }
         }
-        pending.sort(QUEUE_ORDER);
+        pending.sort(QueueOrder.of(tickets.values(), statuses));
         return List.copyOf(pending);
     }
 
@@ -538,7 +539,7 @@ public final class Board {
                 held.add(ticket);
             }
         }
-        held.sort(QUEUE_ORDER);
+        held.sort(QueueOrder.of(tickets.values(), statuses));
         return List.copyOf(held);
     }
 
@@ -573,7 +574,7 @@ public final class Board {
 
     public List<BoardTicket> all() {
         List<BoardTicket> all = new ArrayList<>(tickets.values());
-        all.sort(QUEUE_ORDER);
+        all.sort(QueueOrder.of(tickets.values(), statuses));
         return List.copyOf(all);
     }
 
@@ -648,6 +649,16 @@ public final class Board {
             }
         }
         return false;
+    }
+
+    private void cancelDependants(String ticketId) {
+        Set<String> cancelled = new HashSet<>();
+        cancelled.add(ticketId);
+        for (BoardTicket dependant : List.copyOf(tickets.values())) {
+            if (dependant.dependsOn().contains(ticketId)) {
+                cancelWithDependants(dependant.id(), cancelled, BoardLog.Event.CANCELLED);
+            }
+        }
     }
 
     private void cancelWithDependants(String ticketId, Set<String> cancelled, BoardLog.Event event) {
