@@ -18,6 +18,7 @@ final class GraphWorld {
     int stage = 1;
     int storageFree = 60;
     final Set<String> events = new HashSet<>();
+    SupplyGraph graph = GRAPH;
 
     static GraphWorld empty() {
         GraphWorld world = new GraphWorld();
@@ -43,7 +44,7 @@ final class GraphWorld {
 
     GraphWorld tools(String spirit, int tier) {
         Map<String, Integer> kit = new HashMap<>();
-        for (String kind : GRAPH.kit().kinds()) {
+        for (String kind : graph.kit().kinds()) {
             if (tier >= 0) {
                 kit.put(kind, tier);
             }
@@ -75,6 +76,7 @@ final class GraphWorld {
         world.stage = stage;
         world.storageFree = storageFree;
         world.events.addAll(events);
+        world.graph = graph;
         return world;
     }
 
@@ -92,6 +94,6 @@ final class GraphWorld {
     }
 
     GraphPlan plan() {
-        return GraphPlanner.plan(GRAPH, state());
+        return GraphPlanner.plan(graph, state());
     }
 }
