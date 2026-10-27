@@ -1761,7 +1761,7 @@
       "base": 20,
       "stage": 1
     },
-    "raw_cod": {
+    "cod": {
       "xmin": 0,
       "k": 1,
       "base": 25,
@@ -1791,7 +1791,7 @@
       "base": 20,
       "stage": 2
     },
-    "raw_salmon": {
+    "salmon": {
       "xmin": 0,
       "k": 1,
       "base": 25,
@@ -7499,7 +7499,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "raw_cod": 1,
+        "cod": 1,
         "#coals": 1
       },
       "building": "furnace",
@@ -7520,7 +7520,7 @@
     {
       "id": "catch_raw_cod",
       "case": "GATHER_MATERIALS",
-      "makes": "raw_cod",
+      "makes": "cod",
       "yield": 2,
       "weight": 1.0,
       "world": "water",
@@ -7577,7 +7577,7 @@
     {
       "id": "catch_raw_salmon",
       "case": "GATHER_MATERIALS",
-      "makes": "raw_salmon",
+      "makes": "salmon",
       "yield": 2,
       "weight": 1.0,
       "world": "water",
@@ -7590,7 +7590,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "raw_cod": 2
+        "cod": 2
       },
       "world": "biome:jungle",
       "implemented": false
@@ -7602,7 +7602,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "raw_salmon": 2
+        "salmon": 2
       },
       "world": "biome:jungle",
       "implemented": false
@@ -7644,7 +7644,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "raw_cod": 2
+        "cod": 2
       },
       "building": "kennel",
       "needs": {
@@ -7659,7 +7659,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "raw_cod": 2
+        "cod": 2
       },
       "needs": {
         "ocelot": 2
@@ -7703,7 +7703,7 @@
       "yield": 1,
       "weight": 1.0,
       "consumes": {
-        "raw_cod": 1
+        "cod": 1
       },
       "building": "kennel",
       "world": "animals",

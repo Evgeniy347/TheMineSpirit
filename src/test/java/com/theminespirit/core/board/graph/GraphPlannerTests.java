@@ -331,7 +331,7 @@ class GraphPlannerTests {
                 .with("pumpkin", 4)
                 .with("beetroot", 8)
                 .with("potato", 8)
-                .with("raw_cod", 4)
+                .with("cod", 4)
                 .with("bucket", 2);
         world.stage = 3;
         world.world.add("lava");
@@ -487,7 +487,7 @@ class GraphPlannerTests {
 
     @Test
     void plan_OcelotLacking_TrustWithRawFishInDevelopment() {
-        GraphWorld world = GraphWorld.settled().with("raw_cod", 4).with("ocelot", 0);
+        GraphWorld world = GraphWorld.settled().with("cod", 4).with("ocelot", 0);
         world.stage = 2;
         world.world.add("biome:jungle");
         GraphPlan plan = world.plan();
