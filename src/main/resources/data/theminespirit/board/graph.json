@@ -1,7 +1,7 @@
 {
   "decay": 0.5,
   "urgentBoost": 20,
-  "buildReadyBoost": 40,
+  "buildReadyBoost": 60,
   "maxPriority": 100,
   "tiers": [
     "wooden",
