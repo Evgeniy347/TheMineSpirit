@@ -322,14 +322,14 @@
       "stage": 3
     },
     "nether_wart": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 25,
       "stage": 3,
       "implemented": false
     },
     "blaze_rod": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 25,
       "stage": 3,
@@ -1838,6 +1838,19 @@
       "k": 1,
       "base": 25,
       "stage": 2
+    },
+    "expedition_party": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "expedition_sword": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3,
+      "perSpirit": true
     }
   },
   "buildings": {
@@ -3331,6 +3344,100 @@
       "optional": true,
       "estimate": true,
       "implemented": false
+    },
+    "route_desert": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "sand": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "biome:desert"
+    },
+    "route_snow": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "biome:snowy"
+    },
+    "route_dirt": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 30,
+      "materials": {
+        "dirt": 16,
+        "cobblestone": 8
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "biome:plains"
+    },
+    "route_nether_fortress": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 16
+      },
+      "requires": ["portal_lit"],
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "nether"
+    },
+    "route_blaze_spawner": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 16
+      },
+      "requires": ["portal_lit"],
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "nether"
+    },
+    "route_bastion": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "stone_bricks": 16
+      },
+      "requires": ["portal_lit"],
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "nether"
+    },
+    "route_end_fortress": {
+      "case": "BUILD_STREETS",
+      "stage": 4,
+      "base": 40,
+      "materials": {
+        "cobblestone": 32,
+        "ender_eye": 1
+      },
+      "optional": true,
+      "estimate": true,
+      "implemented": false,
+      "world": "end"
     }
   },
   "ways": [
@@ -7612,6 +7719,90 @@
       },
       "building": "composter",
       "implemented": true
+    },
+    {
+      "id": "form_expedition_party",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "expedition_party",
+      "yield": 1,
+      "weight": 1.0,
+      "implemented": false
+    },
+    {
+      "id": "craft_expedition_sword",
+      "case": "GATHER_MATERIALS",
+      "makes": "expedition_sword",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 2,
+        "stick": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "expedition_blaze_rod",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "blaze_rod",
+      "yield": 2,
+      "weight": 1.0,
+      "consumes": {
+
+      },
+      "needs": {
+        "expedition_party": 3,
+        "#armor": 3,
+        "expedition_sword": 3,
+        "potion_fire_resistance": 2,
+        "potion_healing": 2,
+        "food": 8
+      },
+      "building": "route_blaze_spawner",
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "expedition_nether_wart",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "nether_wart",
+      "yield": 3,
+      "weight": 1.0,
+      "consumes": {
+
+      },
+      "needs": {
+        "expedition_party": 3,
+        "#armor": 3,
+        "expedition_sword": 3,
+        "potion_fire_resistance": 2,
+        "potion_healing": 2,
+        "food": 8
+      },
+      "building": "route_nether_fortress",
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "expedition_quartz",
+      "case": "ACTIVITY_EXPEDITION",
+      "makes": "nether_quartz",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+
+      },
+      "needs": {
+        "expedition_party": 3,
+        "#armor": 3,
+        "expedition_sword": 3,
+        "potion_fire_resistance": 2,
+        "potion_healing": 2,
+        "food": 8
+      },
+      "building": "route_nether_fortress",
+      "world": "nether",
+      "implemented": false
     }
   ],
   "edges": [
@@ -7917,7 +8108,8 @@
     },
     "biome_found:desert": {
       "push": {
-        "building:path_desert": 50
+        "building:path_desert": 50,
+        "building:route_desert": 40
       },
       "advice": [
         "mark_on_map",
@@ -7926,7 +8118,8 @@
     },
     "biome_found:plains": {
       "push": {
-        "building:path_plains": 50
+        "building:path_plains": 50,
+        "building:route_dirt": 40
       },
       "advice": [
         "mark_on_map",
@@ -7935,7 +8128,8 @@
     },
     "biome_found:forest": {
       "push": {
-        "building:path_forest": 50
+        "building:path_forest": 50,
+        "building:route_dirt": 40
       },
       "advice": [
         "mark_on_map",
@@ -7944,7 +8138,8 @@
     },
     "biome_found:snowy": {
       "push": {
-        "building:path_snowy": 50
+        "building:path_snowy": 50,
+        "building:route_snow": 40
       },
       "advice": [
         "mark_on_map",
@@ -7979,6 +8174,96 @@
       },
       "advice": [
         "fish_and_crops_better"
+      ]
+    },
+    "source_depleted:sand": {
+      "push": {
+        "building:route_desert": 60
+      },
+      "advice": [
+        "retarget_route",
+        "mark_on_map"
+      ]
+    },
+    "source_depleted:snow": {
+      "push": {
+        "building:route_snow": 60
+      },
+      "advice": [
+        "retarget_route",
+        "mark_on_map"
+      ]
+    },
+    "source_depleted:dirt": {
+      "push": {
+        "building:route_dirt": 60
+      },
+      "advice": [
+        "retarget_route",
+        "mark_on_map"
+      ]
+    },
+    "route_retarget": {
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "route_retarget_desert": {
+      "tasks": [
+        {
+          "id": "rebuild_route_desert",
+          "case": "BUILD_STREETS",
+          "base": 60,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "route_retarget_snow": {
+      "tasks": [
+        {
+          "id": "rebuild_route_snow",
+          "case": "BUILD_STREETS",
+          "base": 60,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "route_retarget_dirt": {
+      "tasks": [
+        {
+          "id": "rebuild_route_dirt",
+          "case": "BUILD_STREETS",
+          "base": 60,
+          "consumes": {
+            "dirt": 16,
+            "cobblestone": 8
+          }
+        }
+      ],
+      "advice": [
+        "move_route_marker"
+      ]
+    },
+    "nether_expedition": {
+      "push": {
+        "blaze_rod": 60,
+        "nether_wart": 60,
+        "nether_quartz": 60
+      },
+      "advice": [
+        "expedition_only_with_player"
       ]
     }
   },
@@ -8053,6 +8338,13 @@
       "dark_oak_slab",
       "cherry_slab",
       "mangrove_slab"
+    ],
+    "#armor": [
+      "leather_armor",
+      "chainmail_armor",
+      "iron_armor",
+      "diamond_armor",
+      "netherite_armor"
     ]
   },
   "blockItems": {

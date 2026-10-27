@@ -432,6 +432,60 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_SourceDepleted_AsksRouteMarker() {
+        GraphPlan plan = GraphWorld.settled().event("source_depleted:sand").plan();
+
+        assertTrue(
+                plan.notices().stream().anyMatch(notice -> "route_desert".equals(notice.building())),
+                "Песок кончился — стратегу уходит просьба перенести маршрут route_desert: " + plan.notices());
+    }
+
+    @Test
+    void plan_RouteRetarget_PostsRebuildTask() {
+        GraphPlan plan = GraphWorld.settled().event("route_retarget_desert").plan();
+        GraphPlan.Task task = plan.task("event:route_retarget_desert:rebuild_route_desert")
+                .orElseThrow(() -> new AssertionError("Нет задания перестроить дорогу: " + plan.tasks()));
+
+        assertTrue(
+                task.consumes().containsKey("dirt") && task.consumes().containsKey("cobblestone"),
+                "Перестройка маршрута — задание BUILD_STREETS по земле и булыжнику: " + task);
+    }
+
+    @Test
+    void plan_NetherExpedition_NeedsPartyArmorPotionsFood() {
+        GraphWorld world = GraphWorld.settled()
+                .built("portal_lit", Built.BUILT)
+                .built("route_blaze_spawner", Built.BUILT)
+                .with("blaze_rod", 0);
+        world.stage = 4;
+        world.world.add("nether");
+        world.event("nether_expedition");
+        GraphPlan plan = world.plan();
+        SupplyGraph.Way expedition =
+                GraphWorld.GRAPH.way("expedition_blaze_rod").orElseThrow();
+
+        assertTrue(
+                plan.task("expedition_blaze_rod")
+                        .map(task -> !task.implemented())
+                        .orElse(false),
+                "Экспедиция за стержнем ифрита стоит как «в разработке»: " + plan.task("expedition_blaze_rod"));
+        assertTrue(
+                expedition.needs().keySet().containsAll(List.of("expedition_party", "#armor", "food")),
+                "Экспедиции нужны отряд, броня на каждого, мечи, зелья и еда: " + expedition.needs());
+        assertTrue(
+                plan.advice().stream().anyMatch(advice -> "expedition_only_with_player".equals(advice.rule())),
+                "Пока экспедиции идут только с игроком: " + plan.advice());
+        assertTrue(
+                !GraphWorld.GRAPH.implemented("route_end_fortress")
+                        && GraphWorld.GRAPH
+                                        .buildings()
+                                        .get("route_end_fortress")
+                                        .stage()
+                                == 4,
+                "Маршрут до крепости Края внесён на этап 4 и помечен «в разработке»");
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;
