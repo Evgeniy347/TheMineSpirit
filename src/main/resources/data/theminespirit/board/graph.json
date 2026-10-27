@@ -1736,6 +1736,78 @@
       "base": 50,
       "stage": 4,
       "perSpirit": true
+    },
+    "bread": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "cake": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 3
+    },
+    "pumpkin_pie": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "beetroot_soup": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "cookie": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "cooked_potato": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "cooked_fish": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "honey_bottle": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "bowl": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 1
+    },
+    "raw_cod": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "lava_bucket": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "fuel_planks": {
+      "xmin": 16,
+      "k": 1,
+      "base": 30,
+      "stage": 1
     }
   },
   "buildings": {
@@ -7209,6 +7281,155 @@
       "weight": 1.0,
       "world": "drowned",
       "implemented": false
+    },
+    {
+      "id": "craft_bread",
+      "case": "GATHER_MATERIALS",
+      "makes": "bread",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 3
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_cake",
+      "case": "GATHER_MATERIALS",
+      "makes": "cake",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "milk_bucket": 3,
+        "sugar": 2,
+        "egg": 1,
+        "wheat": 3
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_pumpkin_pie",
+      "case": "GATHER_MATERIALS",
+      "makes": "pumpkin_pie",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "pumpkin": 1,
+        "sugar": 1,
+        "egg": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_beetroot_soup",
+      "case": "GATHER_MATERIALS",
+      "makes": "beetroot_soup",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "beetroot": 6,
+        "bowl": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_cookie",
+      "case": "GATHER_MATERIALS",
+      "makes": "cookie",
+      "yield": 8,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2,
+        "cocoa_beans": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "bake_potato_cooked",
+      "case": "GATHER_MATERIALS",
+      "makes": "cooked_potato",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "potato": 1,
+        "#coals": 1
+      },
+      "building": "furnace",
+      "implemented": true
+    },
+    {
+      "id": "cook_raw_cod",
+      "case": "GATHER_MATERIALS",
+      "makes": "cooked_fish",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 1,
+        "#coals": 1
+      },
+      "building": "furnace",
+      "implemented": true
+    },
+    {
+      "id": "craft_bowl",
+      "case": "GATHER_MATERIALS",
+      "makes": "bowl",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 3
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "catch_raw_cod",
+      "case": "GATHER_MATERIALS",
+      "makes": "raw_cod",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "water",
+      "implemented": true
+    },
+    {
+      "id": "fill_honey_bottle",
+      "case": "GATHER_MATERIALS",
+      "makes": "honey_bottle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "glass_bottle": 1
+      },
+      "world": "bee_nest",
+      "implemented": true
+    },
+    {
+      "id": "fill_lava_bucket",
+      "case": "GATHER_MATERIALS",
+      "makes": "lava_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      },
+      "world": "lava",
+      "implemented": false
+    },
+    {
+      "id": "craft_fuel_planks",
+      "case": "GATHER_MATERIALS",
+      "makes": "fuel_planks",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {
+        "#logs": 1
+      },
+      "implemented": true
     }
   ],
   "edges": [

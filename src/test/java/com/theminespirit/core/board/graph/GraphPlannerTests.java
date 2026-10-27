@@ -334,6 +334,31 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_FoodAndFuel_FullLineCloses() {
+        GraphWorld world = GraphWorld.settled()
+                .with("milk_bucket", 4)
+                .with("sugar", 8)
+                .with("egg", 4)
+                .with("wheat", 16)
+                .with("pumpkin", 4)
+                .with("beetroot", 8)
+                .with("potato", 8)
+                .with("raw_cod", 4)
+                .with("bucket", 2);
+        world.stage = 3;
+        world.world.add("lava");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_cake").map(GraphPlan.Task::feasible).orElse(false)
+                        && plan.task("craft_cookie").isPresent(),
+                "Торт и печенье собираются из запасов: " + plan.task("craft_cake") + ", " + plan.task("craft_cookie"));
+        assertTrue(
+                plan.task("fill_lava_bucket").map(task -> !task.implemented()).orElse(false),
+                "Лава в ведре — топливо с пометкой «в разработке»: " + plan.task("fill_lava_bucket"));
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;
