@@ -2,6 +2,7 @@
   "decay": 0.5,
   "urgentBoost": 20,
   "buildReadyBoost": 60,
+  "buildStartShare": 0.25,
   "maxPriority": 100,
   "tiers": [
     "wooden",

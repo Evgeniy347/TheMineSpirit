@@ -411,7 +411,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     materials,
-                    tooled && stocked(materials),
+                    tooled && share(materials) >= graph.buildStartShare(),
                     false,
                     graph.implemented(id));
         }
@@ -485,6 +485,17 @@ public final class GraphPlanner {
 
     private boolean housed(SupplyGraph.Way way) {
         return way.building() == null || state.built(way.building()) == Built.BUILT;
+    }
+
+    private double share(Map<String, Integer> needs) {
+        int total = needs.values().stream().mapToInt(Integer::intValue).sum();
+        if (total == 0) {
+            return 1.0;
+        }
+        int have = needs.entrySet().stream()
+                .mapToInt(entry -> Math.min(entry.getValue(), Math.max(0, count(entry.getKey()))))
+                .sum();
+        return (double) have / total;
     }
 
     private boolean stocked(Map<String, Integer> needs) {
