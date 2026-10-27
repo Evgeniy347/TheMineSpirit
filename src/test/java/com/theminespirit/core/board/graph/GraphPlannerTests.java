@@ -316,6 +316,24 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_ArmorNorms_PerSpiritAndByStage() {
+        GraphWorld one = GraphWorld.settled();
+        one.stage = 3;
+        GraphWorld two = GraphWorld.settled().tools("spirit-2", 1);
+        two.stage = 3;
+        SupplyGraph.Item diamond = GraphWorld.GRAPH.items().get("diamond_armor");
+        SupplyGraph.Item netherite = GraphWorld.GRAPH.items().get("netherite_armor");
+
+        assertEquals(
+                GraphPlanner.threshold(diamond, one.state()) * 2,
+                GraphPlanner.threshold(diamond, two.state()),
+                "Норма алмазной брони — на духа: два духа требуют вдвое больше");
+        assertTrue(
+                diamond.perSpirit() && netherite.stage() == 4,
+                "Броня задана нормой на духа и открывается по этапам: " + diamond + ", " + netherite);
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;

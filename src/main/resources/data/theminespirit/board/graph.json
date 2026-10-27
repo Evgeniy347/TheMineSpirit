@@ -1701,6 +1701,41 @@
       "k": 1,
       "base": 20,
       "stage": 4
+    },
+    "chainmail_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 2,
+      "perSpirit": true
+    },
+    "diamond_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 45,
+      "stage": 3,
+      "perSpirit": true
+    },
+    "netherite_armor": {
+      "xmin": 1,
+      "k": 1,
+      "base": 50,
+      "stage": 4,
+      "perSpirit": true
+    },
+    "crossbow": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 3,
+      "perSpirit": true
+    },
+    "trident": {
+      "xmin": 1,
+      "k": 1,
+      "base": 50,
+      "stage": 4,
+      "perSpirit": true
     }
   },
   "buildings": {
@@ -7112,6 +7147,67 @@
         "emerald": 1
       },
       "building": "trading_post",
+      "implemented": false
+    },
+    {
+      "id": "craft_chainmail_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "chainmail_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "iron_ingot": 24
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_diamond_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "diamond_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "diamond": 24
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "smith_netherite_armor",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherite_armor",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "diamond_armor": 1,
+        "netherite_ingot": 1
+      },
+      "building": "smithing_table",
+      "implemented": true
+    },
+    {
+      "id": "craft_crossbow",
+      "case": "GATHER_MATERIALS",
+      "makes": "crossbow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 2,
+        "stick": 3,
+        "string": 2,
+        "iron_ingot": 1
+      },
+      "building": "crafting_table",
+      "implemented": true
+    },
+    {
+      "id": "loot_trident",
+      "case": "GATHER_MATERIALS",
+      "makes": "trident",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "drowned",
       "implemented": false
     }
   ],
