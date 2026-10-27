@@ -10,6 +10,7 @@ public enum BuildingType {
     FOOD("еда"),
     FARM("ферма"),
     DEFENSE("оборона"),
+    FORTIFIED("укреплённое"),
     CRAFT("ремесло"),
     INFRASTRUCTURE("инфраструктура"),
     SOCIAL("социальное"),
