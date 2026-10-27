@@ -12,6 +12,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -41,12 +43,20 @@ final class GraphSurroundings {
     static Around of(ServerLevel level, BoardService service, BlockCoord home) {
         Scan scan = blocks(level, home);
         AABB box = new AABB(new BlockPos(home.x(), home.y(), home.z())).inflate(RADIUS);
-        boolean animals = !level.getEntitiesOfClass(Animal.class, box).isEmpty();
+        Set<String> creatures = new HashSet<>();
+        if (!level.getEntitiesOfClass(Animal.class, box).isEmpty()) {
+            creatures.add("animals");
+        }
+        if (!level.getEntitiesOfClass(Squid.class, box).isEmpty()) {
+            creatures.add("squid");
+        }
+        level.getEntitiesOfClass(Sheep.class, box)
+                .forEach(sheep -> creatures.add("sheep:" + sheep.getColor().getName()));
         Optional<BlockCoord> drop = drops(level, service, home);
         Set<String> events = new HashSet<>();
         drop.ifPresent(at -> events.add(DROPS));
         scan.decay().ifPresent(at -> events.add(LEAF_DECAY));
-        return new Around(GraphNames.world(scan.blocks(), animals), Set.copyOf(events), drop, scan.decay());
+        return new Around(GraphNames.world(scan.blocks(), creatures), Set.copyOf(events), drop, scan.decay());
     }
 
     private static Optional<BlockCoord> drops(ServerLevel level, BoardService service, BlockCoord home) {

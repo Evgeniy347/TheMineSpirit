@@ -2,10 +2,11 @@ package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 final class GraphSimulation {
     static final int LAST_STAGE = 3;
@@ -50,12 +51,12 @@ final class GraphSimulation {
             }
             GraphPlan plan = world.plan();
             answer(world, plan, strategist);
-            Optional<GraphPlan.Task> next = GraphWorld.issueOrder(plan).stream().findFirst();
-            if (next.isEmpty()) {
+            List<GraphPlan.Task> round = pick(world, GraphWorld.issueOrder(plan));
+            if (round.isEmpty()) {
                 plan = world.plan();
-                next = GraphWorld.issueOrder(plan).stream().findFirst();
+                round = pick(world, GraphWorld.issueOrder(plan));
             }
-            if (next.isEmpty()) {
+            if (round.isEmpty()) {
                 return new Outcome(
                         world.stage,
                         step,
@@ -64,12 +65,16 @@ final class GraphSimulation {
                         strategist,
                         stageSteps);
             }
-            GraphPlan.Task task = next.orElseThrow();
-            trail.add(new Step(world.stage, task.id(), task.priority()));
             stageSteps.merge(world.stage, 1, Integer::sum);
-            apply(world, task);
-            streak.merge(task.id(), 1, Integer::sum);
-            disturbance.after(world, task);
+            for (GraphPlan.Task task : round) {
+                if (!stocked(world, task)) {
+                    continue;
+                }
+                trail.add(new Step(world.stage, task.id(), task.priority()));
+                apply(world, task);
+                streak.merge(task.id(), 1, Integer::sum);
+                disturbance.after(world, task);
+            }
         }
         return new Outcome(
                 world.stage,
@@ -79,6 +84,38 @@ final class GraphSimulation {
                         + "; не построено " + unbuilt(world),
                 strategist,
                 stageSteps);
+    }
+
+    static List<GraphPlan.Task> pick(GraphWorld world, List<GraphPlan.Task> order) {
+        List<GraphPlan.Task> chosen = new ArrayList<>();
+        Set<String> busy = new HashSet<>();
+        int free = world.kits.size();
+        for (GraphPlan.Task task : order) {
+            if (chosen.size() >= free) {
+                break;
+            }
+            if (task.spirit().isPresent()) {
+                if (busy.add(task.spirit().orElseThrow())) {
+                    chosen.add(task);
+                }
+            } else {
+                chosen.add(task);
+            }
+        }
+        return chosen;
+    }
+
+    private static boolean stocked(GraphWorld world, GraphPlan.Task task) {
+        return task.consumes().entrySet().stream().allMatch(entry -> have(world, entry.getKey()) >= entry.getValue());
+    }
+
+    private static int have(GraphWorld world, String item) {
+        if (world.graph.isGroup(item)) {
+            return world.graph.members(item).stream()
+                    .mapToInt(member -> Math.max(0, world.stock.getOrDefault(member, 0)))
+                    .sum();
+        }
+        return world.stock.getOrDefault(item, 0);
     }
 
     private static void answer(GraphWorld world, GraphPlan plan, List<String> strategist) {
@@ -111,6 +148,10 @@ final class GraphSimulation {
 
     private static void apply(GraphWorld world, GraphPlan.Task task) {
         task.consumes().forEach((item, count) -> consume(world, item, count));
+        if (task.id().startsWith("explore:")) {
+            world.world.add(task.makes());
+            return;
+        }
         if (task.id().startsWith("event:")) {
             world.events.remove(task.id().split(":", 3)[1]);
             return;

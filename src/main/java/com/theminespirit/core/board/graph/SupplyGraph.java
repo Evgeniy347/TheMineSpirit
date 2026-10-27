@@ -28,13 +28,15 @@ public record SupplyGraph(
         Set<String> unimplemented,
         Map<String, GraphEvent> events,
         Map<String, List<String>> groups,
-        List<Trigger> triggers) {
+        List<Trigger> triggers,
+        Map<String, Integer> herdCaps) {
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
     private static final String BASE = "base";
     private static final String STAGE = "stage";
     private static final String KIT = "kit";
+    private static final int HERD_CULL_BOOST = 70;
 
-    public record Item(String id, int xmin, double k, int base, int stage) {}
+    public record Item(String id, int xmin, double k, int base, int stage, boolean perSpirit) {}
 
     public record Building(
             String id,
@@ -53,7 +55,8 @@ public record SupplyGraph(
         }
     }
 
-    public record Kit(Map<String, String> tiers, Map<Integer, Map<String, String>> stageTiers, int base) {
+    public record Kit(
+            Map<String, String> tiers, Map<Integer, Map<String, String>> stageTiers, int base, int secondaryBase) {
         public Kit {
             tiers = Map.copyOf(tiers);
             stageTiers = Map.copyOf(stageTiers);
@@ -84,9 +87,11 @@ public record SupplyGraph(
             @Nullable String tool,
             @Nullable String tier,
             @Nullable String building,
-            @Nullable String world) {
+            @Nullable String world,
+            Map<String, Integer> needs) {
         public Way {
             consumes = Map.copyOf(consumes);
+            needs = Map.copyOf(needs);
         }
     }
 
@@ -104,6 +109,7 @@ public record SupplyGraph(
         events = Map.copyOf(events);
         groups = Map.copyOf(groups);
         triggers = List.copyOf(triggers);
+        herdCaps = Map.copyOf(herdCaps);
     }
 
     public static SupplyGraph loadDefault() {
@@ -122,7 +128,8 @@ public record SupplyGraph(
                                 entry.getValue().path("xmin").asInt(),
                                 entry.getValue().path("k").asDouble(1.0),
                                 entry.getValue().path(BASE).asInt(),
-                                entry.getValue().path(STAGE).asInt(1))));
+                                entry.getValue().path(STAGE).asInt(1),
+                                entry.getValue().path("perSpirit").asBoolean(false))));
         Map<String, Building> buildings = buildings(root);
         List<Way> ways = ways(root);
         List<Edge> edges = new ArrayList<>();
@@ -149,7 +156,10 @@ public record SupplyGraph(
                 new Kit(
                         kitTiers,
                         stageTiers(root.path(KIT)),
-                        root.path(KIT).path(BASE).asInt()),
+                        root.path(KIT).path(BASE).asInt(),
+                        root.path(KIT)
+                                .path("secondaryBase")
+                                .asInt(root.path(KIT).path(BASE).asInt())),
                 new Storage(
                         storage.path("minFreePercent").asInt(),
                         storage.path("building").asText(),
@@ -161,7 +171,8 @@ public record SupplyGraph(
                 unimplemented(root),
                 GraphEvent.parse(root),
                 groups(root),
-                triggers(root));
+                triggers(root),
+                GraphEvent.counts(root.path("herdCaps")));
         graph.validate(origin);
         return graph;
     }
@@ -209,7 +220,8 @@ public record SupplyGraph(
                     text(node, "tool"),
                     text(node, "tier"),
                     text(node, "building"),
-                    text(node, "world")));
+                    text(node, "world"),
+                    GraphEvent.counts(node.path("needs"))));
         }
         return ways;
     }
@@ -243,6 +255,10 @@ public record SupplyGraph(
 
     public List<String> members(String node) {
         return groups.getOrDefault(node, List.of());
+    }
+
+    public int herdCullBoost() {
+        return HERD_CULL_BOOST;
     }
 
     public boolean isGroup(String node) {

@@ -11,12 +11,20 @@ import java.util.Set;
 public final class GraphNames {
     public static final String FOOD = "food";
     private static final String NAMESPACE = "minecraft:";
-    private static final Map<String, String> SUFFIXES = Map.of("_bed", "bed", "_wool", "wool");
-    private static final Map<String, String> ALIASES = Map.of("charcoal", "coal");
-    private static final Map<String, String> GROUND = Map.of("sand", "sand", "red_sand", "sand", "clay", "clay");
+    private static final Map<String, String> SUFFIXES = Map.of("_bed", "bed");
+    private static final String DIAMOND_FOUND = "ore:diamond_found";
+    private static final Map<String, String> GROUND = Map.of(
+            "sand", "sand",
+            "red_sand", "red_sand",
+            "clay", "clay",
+            "cactus", "cactus",
+            "poppy", "flower:poppy",
+            "dandelion", "flower:dandelion",
+            "cornflower", "flower:cornflower",
+            "diamond_ore", DIAMOND_FOUND,
+            "deepslate_diamond_ore", DIAMOND_FOUND);
     private static final String TREE = "tree:";
     private static final String LOG = "_log";
-    private static final String ANIMALS = "animals";
 
     private GraphNames() {}
 
@@ -46,7 +54,7 @@ public final class GraphNames {
                 return suffix.getValue();
             }
         }
-        return ALIASES.getOrDefault(name, name);
+        return name;
     }
 
     public static Map<String, Integer> stock(Map<String, Integer> available, Set<String> foods) {
@@ -70,9 +78,10 @@ public final class GraphNames {
         return Map.copyOf(counts);
     }
 
-    public static Set<String> world(Set<String> blocks, boolean animals) {
+    public static Set<String> world(Set<String> blocks, Set<String> creatures) {
         Objects.requireNonNull(blocks, "Блоки округи не могут быть null: в округе ничего нет — пустой набор");
-        Set<String> world = new HashSet<>();
+        Objects.requireNonNull(creatures, "Живность округи не может быть null: никого нет — пустой набор");
+        Set<String> world = new HashSet<>(creatures);
         for (String block : blocks) {
             String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
             if (name.endsWith(LOG)) {
@@ -81,9 +90,6 @@ public final class GraphNames {
             if (GROUND.containsKey(name)) {
                 world.add(GROUND.get(name));
             }
-        }
-        if (animals) {
-            world.add(ANIMALS);
         }
         return Set.copyOf(world);
     }

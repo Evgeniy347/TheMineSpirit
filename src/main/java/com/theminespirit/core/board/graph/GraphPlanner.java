@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,6 +15,7 @@ public final class GraphPlanner {
     private static final String BUILDING = "building:";
     private static final String TOOL = "tool:";
     private static final String EVENT = "event:";
+    private static final String EXPLORE = "explore:";
     private static final char AT = '@';
     private static final double NEGLIGIBLE = 0.5;
 
@@ -40,7 +42,8 @@ public final class GraphPlanner {
     }
 
     public static int threshold(SupplyGraph.Item item, GraphState state) {
-        return (int) Math.ceil(item.xmin() * state.spirits() * state.stage() * item.k());
+        int stage = item.perSpirit() ? 1 : state.stage();
+        return (int) Math.ceil(item.xmin() * state.spirits() * stage * item.k());
     }
 
     public static boolean lacking(SupplyGraph graph, GraphState state, String node) {
@@ -78,7 +81,10 @@ public final class GraphPlanner {
                 if (tier < target) {
                     push(
                             toolKey(kind, spirit),
-                            graph.kit().base() + (tier < 0 ? graph.urgentBoost() : 0),
+                            (state.bestTier(kind) >= target
+                                            ? graph.kit().secondaryBase()
+                                            : graph.kit().base())
+                                    + (tier < 0 ? graph.urgentBoost() : 0),
                             new HashSet<>());
                 }
             }
@@ -90,6 +96,15 @@ public final class GraphPlanner {
                 requireBuilding(building.id(), building.base(), "постройка этапа " + building.stage(), new HashSet<>());
             }
         }
+        graph.herdCaps().forEach((herd, cap) -> {
+            if (count(herd) > cap) {
+                for (SupplyGraph.Way way : graph.ways()) {
+                    if (way.consumes().containsKey(herd) && available(way)) {
+                        add(way.id(), graph.herdCullBoost());
+                    }
+                }
+            }
+        });
         for (SupplyGraph.Trigger trigger : graph.triggers()) {
             SupplyGraph.Building wanted = graph.buildings().get(trigger.build());
             if (wanted != null && count(trigger.have()) > 0 && state.built(trigger.build()) != Built.BUILT) {
@@ -175,13 +190,19 @@ public final class GraphPlanner {
                     activate(way, way.id(), value * way.weight(), path);
                 }
             }
-            if (!producers.isEmpty() && !sourced(node)) {
+            List<String> missing = producers.stream()
+                    .map(SupplyGraph.Way::world)
+                    .filter(resource -> resource != null && !state.world().contains(resource))
+                    .distinct()
+                    .toList();
+            if (!missing.isEmpty() && !sourced(node)) {
                 notices.putIfAbsent(
                         node,
                         new GraphPlan.Notice(
                                 node,
-                                "нет источника " + node
-                                        + " в округе (ресурс или порода недоступны): сменить материал или породу постройки"));
+                                "нет источника " + node + " в округе (нет " + missing
+                                        + "): разведать или сменить материал/породу постройки"));
+                missing.forEach(resource -> add(EXPLORE + resource, value * graph.decay()));
             }
         }
         path.remove(node);
@@ -191,6 +212,11 @@ public final class GraphPlanner {
         add(key, value);
         double down = value * graph.decay();
         for (Map.Entry<String, Integer> input : way.consumes().entrySet()) {
+            if (count(input.getKey()) < input.getValue()) {
+                push(input.getKey(), down, path);
+            }
+        }
+        for (Map.Entry<String, Integer> input : way.needs().entrySet()) {
             if (count(input.getKey()) < input.getValue()) {
                 push(input.getKey(), down, path);
             }
@@ -277,10 +303,16 @@ public final class GraphPlanner {
             if (!lacking(graph, state, edge.lack())) {
                 continue;
             }
+            boolean active = false;
             for (String key : List.copyOf(scores.keySet())) {
                 if (key.equals(edge.way()) || key.startsWith(edge.way() + AT)) {
                     add(key, edge.weight());
+                    active = true;
                 }
+            }
+            SupplyGraph.Way way = graph.way(edge.way()).orElse(null);
+            if (!active && edge.weight() > 0 && way != null && !graph.isTool(way.makes()) && available(way)) {
+                activate(way, way.id(), edge.weight(), new HashSet<>());
             }
         }
     }
@@ -302,6 +334,18 @@ public final class GraphPlanner {
     }
 
     private GraphPlan.Task task(String key, int priority) {
+        if (key.startsWith(EXPLORE)) {
+            return new GraphPlan.Task(
+                    key,
+                    BoardCase.GATHER_MATERIALS,
+                    key.substring(EXPLORE.length()),
+                    Optional.empty(),
+                    priority,
+                    Map.of(),
+                    true,
+                    false,
+                    false);
+        }
         if (key.startsWith(EVENT)) {
             String[] parts = key.split(":", 3);
             GraphEvent.Task event = Objects.requireNonNull(
@@ -318,7 +362,8 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     event.consumes(),
-                    stocked(event.consumes()),
+                    stocked(event.consumes())
+                            && (event.building() == null || state.built(event.building()) == Built.BUILT),
                     false,
                     true);
         }
@@ -353,7 +398,7 @@ public final class GraphPlanner {
                 spirit,
                 priority,
                 way.consumes(),
-                tooled && housed(way) && available(way) && stocked(way.consumes()),
+                tooled && housed(way) && available(way) && stocked(way.consumes()) && stocked(way.needs()),
                 chances.contains(key),
                 graph.implemented(wayId));
     }
@@ -371,7 +416,22 @@ public final class GraphPlanner {
     }
 
     private boolean available(SupplyGraph.Way way) {
-        return way.world() == null || state.world().contains(way.world());
+        if (way.world() != null && !state.world().contains(way.world())) {
+            return false;
+        }
+        for (String input : way.consumes().keySet()) {
+            SupplyGraph.Item item = graph.items().get(input);
+            if (item != null && item.stage() > state.stage()) {
+                return false;
+            }
+        }
+        SupplyGraph.Building building =
+                way.building() == null ? null : graph.buildings().get(way.building());
+        if (building == null) {
+            return true;
+        }
+        boolean planned = !building.optional() || state.built(building.id()) != Built.ABSENT;
+        return building.stage() <= state.stage() && planned;
     }
 
     private boolean sourced(String node) {
