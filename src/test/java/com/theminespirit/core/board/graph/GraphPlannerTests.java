@@ -259,6 +259,30 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_NetherAndEnd_ChainsMarkedInDevelopment() {
+        GraphWorld world = GraphWorld.settled()
+                .built("smithing_table", Built.BUILT)
+                .with("netherite_scrap", 8)
+                .with("gold_ingot", 8)
+                .with("blaze_powder", 4)
+                .with("ender_pearl", 4);
+        world.stage = 4;
+        world.world.add("nether");
+        world.world.add("end");
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_netherite_ingot")
+                                .map(task -> !task.implemented())
+                                .orElse(false)
+                        && plan.task("craft_ender_eye")
+                                .map(task -> !task.implemented())
+                                .orElse(false),
+                "Незерит и око Края стоят на доске как «в разработке»: " + plan.task("craft_netherite_ingot") + ", "
+                        + plan.task("craft_ender_eye"));
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;

@@ -1569,6 +1569,54 @@
       "k": 1,
       "base": 25,
       "stage": 3
+    },
+    "nether_quartz": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "glowstone_dust": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "magma_cream": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "slime_ball": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 3
+    },
+    "netherite_scrap": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 4
+    },
+    "netherite_ingot": {
+      "xmin": 1,
+      "k": 1,
+      "base": 40,
+      "stage": 4
+    },
+    "ender_pearl": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 4
+    },
+    "ender_eye": {
+      "xmin": 1,
+      "k": 1,
+      "base": 35,
+      "stage": 4
     }
   },
   "buildings": {
@@ -6724,6 +6772,89 @@
       "yield": 1,
       "weight": 1.0,
       "world": "water",
+      "implemented": false
+    },
+    {
+      "id": "mine_nether_quartz",
+      "case": "GATHER_MATERIALS",
+      "makes": "nether_quartz",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "mine_glowstone",
+      "case": "GATHER_MATERIALS",
+      "makes": "glowstone_dust",
+      "yield": 4,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "loot_slime",
+      "case": "GATHER_MATERIALS",
+      "makes": "slime_ball",
+      "yield": 2,
+      "weight": 1.0,
+      "world": "swamp",
+      "implemented": false
+    },
+    {
+      "id": "craft_magma_cream",
+      "case": "GATHER_MATERIALS",
+      "makes": "magma_cream",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "blaze_powder": 1,
+        "slime_ball": 1
+      },
+      "implemented": false
+    },
+    {
+      "id": "mine_netherite_scrap",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherite_scrap",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "nether",
+      "implemented": false
+    },
+    {
+      "id": "craft_netherite_ingot",
+      "case": "GATHER_MATERIALS",
+      "makes": "netherite_ingot",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "netherite_scrap": 4,
+        "gold_ingot": 4
+      },
+      "building": "smithing_table",
+      "implemented": false
+    },
+    {
+      "id": "loot_ender_pearl",
+      "case": "GATHER_MATERIALS",
+      "makes": "ender_pearl",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "end",
+      "implemented": false
+    },
+    {
+      "id": "craft_ender_eye",
+      "case": "GATHER_MATERIALS",
+      "makes": "ender_eye",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "ender_pearl": 1,
+        "blaze_powder": 1
+      },
+      "building": "crafting_table",
       "implemented": false
     }
   ],
