@@ -26,6 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
+import org.jspecify.annotations.Nullable;
 
 final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
@@ -47,6 +48,7 @@ final class GraphPost {
     private final MaterialSource source;
     private final GraphSurroundings.Around around;
     private final long now;
+    private @Nullable BlockCoord craft;
 
     GraphPost(
             ServerLevel level,
@@ -142,7 +144,7 @@ final class GraphPost {
                 now);
         missing.forEach((item, count) -> {
             if (!graph.items().containsKey(GraphNames.graphItem(item)) && known(item)) {
-                gather(MAKE + item, ticket.id(), task.priority(), item, count);
+                gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
             }
         });
         return true;
@@ -153,11 +155,32 @@ final class GraphPost {
         if (!graph.items().containsKey(task.makes()) || !known(item)) {
             return false;
         }
-        gather(ticket.id(), ticket.id(), task.priority(), item, ticket.count());
+        gather(ticket.id(), ticket.id(), task.priority(), item, ticket.count(), source(ticket.node()));
         return true;
     }
 
-    private void gather(String id, String cause, int priority, String item, int count) {
+    private BlockCoord source(String wayId) {
+        Optional<SupplyGraph.Way> way = graph.way(wayId);
+        Optional<BlockCoord> resource = way.map(SupplyGraph.Way::world).flatMap(around::resource);
+        if (resource.isPresent()) {
+            return GraphTargets.stand(level, resource.orElseThrow());
+        }
+        if (way.map(SupplyGraph.Way::building).filter("mine"::equals).isPresent()) {
+            return GraphTargets.stand(level, scan.stage().mineEntrance());
+        }
+        return craftPoint();
+    }
+
+    private BlockCoord craftPoint() {
+        if (craft == null) {
+            boolean yard = scan.facts().done().contains(BoardCase.STOCK_CHESTS);
+            craft = GraphTargets.craft(
+                    level, yard ? scan.stage().workYard() : scan.stage().anchor());
+        }
+        return craft;
+    }
+
+    private void gather(String id, String cause, int priority, String item, int count, BlockCoord at) {
         int output = source.outputCount(item);
         int helpers = MINED.contains(item) ? miners() : spirits.size();
         List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
@@ -165,7 +188,7 @@ final class GraphPost {
             String partId = part == 0 ? id : id + PART;
             submit(
                     ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),
-                    TicketTarget.at(scan.home()).withSupply(item, portions.get(part)));
+                    TicketTarget.at(at).withSupply(item, portions.get(part)));
         }
     }
 
@@ -173,7 +196,7 @@ final class GraphPost {
         UUID spirit = UUID.fromString(task.spirit().orElseThrow());
         submit(
                 ticket(ticket.id(), task.boardCase(), Optional.of(spirit), task.priority(), ticket.id(), items(task)),
-                FirstStepsRunner.targetFor(level, task.boardCase(), scan.stage(), scan.wood()));
+                TicketTarget.at(craftPoint()).withToolCount(1));
         return true;
     }
 
@@ -194,7 +217,7 @@ final class GraphPost {
                         task.priority(),
                         ticket.id(),
                         Map.of(fuel, crafts)),
-                TicketTarget.at(scan.home()).withCount(crafts * TORCHES_PER_CRAFT));
+                TicketTarget.at(craftPoint()).withCount(crafts * TORCHES_PER_CRAFT));
         return true;
     }
 
@@ -203,7 +226,7 @@ final class GraphPost {
         Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : furnaceHolder();
         submit(
                 ticket(ticket.id(), task.boardCase(), holder, task.priority(), ticket.id(), Map.of(log, CHARCOAL_LOGS)),
-                TicketTarget.at(scan.home()).withSupply(log, CHARCOAL_LOGS).withCount(CHARCOAL_BATCH));
+                TicketTarget.at(craftPoint()).withSupply(log, CHARCOAL_LOGS).withCount(CHARCOAL_BATCH));
         return true;
     }
 

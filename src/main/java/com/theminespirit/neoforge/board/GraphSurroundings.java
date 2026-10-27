@@ -5,7 +5,9 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -27,18 +29,29 @@ final class GraphSurroundings {
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
+    private static final String LOG = "_log";
+    private static final Set<String> RESOURCES = Set.of("sand", "red_sand", "clay");
 
     private GraphSurroundings() {}
 
-    record Around(Set<String> world, Set<String> events, Optional<BlockCoord> drop, Optional<BlockCoord> decay) {
+    record Around(
+            Set<String> world,
+            Set<String> events,
+            Optional<BlockCoord> drop,
+            Optional<BlockCoord> decay,
+            Map<String, BlockCoord> nearest) {
         Around with(Set<String> more) {
             Set<String> all = new HashSet<>(events);
             all.addAll(more);
-            return new Around(world, Set.copyOf(all), drop, decay);
+            return new Around(world, Set.copyOf(all), drop, decay, nearest);
+        }
+
+        Optional<BlockCoord> resource(String world) {
+            return Optional.ofNullable(nearest.get(world));
         }
     }
 
-    private record Scan(Set<String> blocks, Optional<BlockCoord> decay) {}
+    private record Scan(Set<String> blocks, Optional<BlockCoord> decay, Map<String, BlockCoord> nearest) {}
 
     static Around of(ServerLevel level, BoardService service, BlockCoord home) {
         Scan scan = blocks(level, home);
@@ -56,7 +69,8 @@ final class GraphSurroundings {
         Set<String> events = new HashSet<>();
         drop.ifPresent(at -> events.add(DROPS));
         scan.decay().ifPresent(at -> events.add(LEAF_DECAY));
-        return new Around(GraphNames.world(scan.blocks(), creatures), Set.copyOf(events), drop, scan.decay());
+        return new Around(
+                GraphNames.world(scan.blocks(), creatures), Set.copyOf(events), drop, scan.decay(), scan.nearest());
     }
 
     private static Optional<BlockCoord> drops(ServerLevel level, BoardService service, BlockCoord home) {
@@ -81,6 +95,8 @@ final class GraphSurroundings {
     private static Scan blocks(ServerLevel level, BlockCoord home) {
         Set<String> blocks = new HashSet<>();
         BlockCoord decay = null;
+        Map<String, BlockCoord> nearest = new HashMap<>();
+        Map<String, Integer> distances = new HashMap<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx += STEP) {
             for (int dz = -RADIUS; dz <= RADIUS; dz += STEP) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
@@ -89,14 +105,24 @@ final class GraphSurroundings {
                         continue;
                     }
                     BlockState state = level.getBlockState(pos);
-                    blocks.add(BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath());
+                    String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
+                    blocks.add(id);
+                    if (id.endsWith(LOG) || RESOURCES.contains(id)) {
+                        int distance = dx * dx + dy * dy + dz * dz;
+                        for (String tag : GraphNames.world(Set.of(id), Set.of())) {
+                            if (distance < distances.getOrDefault(tag, Integer.MAX_VALUE)) {
+                                distances.put(tag, distance);
+                                nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+                            }
+                        }
+                    }
                     if (decay == null && decaying(state)) {
                         decay = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
                     }
                 }
             }
         }
-        return new Scan(Set.copyOf(blocks), Optional.ofNullable(decay));
+        return new Scan(Set.copyOf(blocks), Optional.ofNullable(decay), Map.copyOf(nearest));
     }
 
     private static boolean decaying(BlockState state) {
