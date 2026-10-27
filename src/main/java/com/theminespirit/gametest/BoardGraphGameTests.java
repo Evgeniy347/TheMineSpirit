@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HerdCycles;
@@ -114,6 +115,30 @@ public final class BoardGraphGameTests {
                         .isEmpty(),
                 "Дух с деревянной киркой вторую деревянную не получает: граф тянет только уровни выше набора");
         bare.discard();
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
+    public static void graph_ItemLyingNearHome_CollectDropsPosted(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        SpiritEntity spirit = settlement(helper);
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-graph-drops.jsonl");
+        GameTestFixtures.dropAt(helper, Items.APPLE, 1, 5.5, 1, 6.5);
+
+        Set<String> live = new GraphSource()
+                .tick(level, board, List.of(spirit), new StockView(WOOD), Set.of(), level.getGameTime());
+
+        String collect = "graph:event:drops_nearby:collect_drops";
+        helper.assertTrue(
+                board.board()
+                                .find(collect)
+                                .filter(ticket -> ticket.boardCase() == BoardCase.COLLECT_DROPS)
+                                .isPresent()
+                        && live.contains(collect),
+                "Предмет лежит у дома — событие drops_nearby ставит сбор выпавшего COLLECT_DROPS и держит его "
+                        + "живой причиной, статус " + board.board().statusOf(collect) + ", живые причины " + live);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

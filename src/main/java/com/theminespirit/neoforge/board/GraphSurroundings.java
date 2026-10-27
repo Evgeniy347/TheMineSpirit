@@ -21,7 +21,7 @@ final class GraphSurroundings {
     static final String DROPS = "drops_nearby";
     static final String LEAF_DECAY = "leaf_decay";
     private static final int RADIUS = 32;
-    private static final int STEP = 2;
+    private static final int STEP = 1;
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
