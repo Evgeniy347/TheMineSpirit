@@ -79,7 +79,10 @@ public final class GraphPlanner {
                 if (tier < target) {
                     push(
                             toolKey(kind, spirit),
-                            graph.kit().base() + (tier < 0 ? graph.urgentBoost() : 0),
+                            (state.bestTier(kind) >= target
+                                            ? graph.kit().secondaryBase()
+                                            : graph.kit().base())
+                                    + (tier < 0 ? graph.urgentBoost() : 0),
                             new HashSet<>());
                 }
             }

@@ -28,7 +28,8 @@
       "3": {
         "pickaxe": "diamond"
       }
-    }
+    },
+    "secondaryBase": 40
   },
   "storage": {
     "minFreePercent": 20,
@@ -4407,7 +4408,7 @@
           "case": "REPAIR_BUILDING",
           "base": 85,
           "consumes": {
-            "oak_planks": 8,
+            "#planks": 8,
             "cobblestone": 8
           }
         }
@@ -4420,7 +4421,7 @@
           "case": "REPAIR_FENCE",
           "base": 95,
           "consumes": {
-            "oak_log": 4
+            "#logs": 4
           }
         }
       ]
@@ -4441,7 +4442,7 @@
           "case": "REPAIR_BUILDING",
           "base": 70,
           "consumes": {
-            "oak_planks": 16
+            "#planks": 16
           }
         }
       ],

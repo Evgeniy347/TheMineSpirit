@@ -605,4 +605,24 @@ class GraphPlannerTests {
                 "С железной киркой найденные алмазы копаются; кирка «на удачу» — чары, пока не реализованы: "
                         + plan.task("mine_found_diamond"));
     }
+
+    @Test
+    void plan_OneSpiritKitted_ChestsBeforeSecondSpiritTools() {
+        GraphWorld world = GraphWorld.empty()
+                .built("crafting_table", Built.BUILT)
+                .built("clearing", Built.BUILT)
+                .tools("spirit-1", 1)
+                .tools("spirit-2", 0)
+                .tools("spirit-3", 0)
+                .with("jungle_planks", 64)
+                .with("stick", 16)
+                .with("cobblestone", 64);
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.priority("building:chests") > plan.priority("craft_stone_axe@spirit-2"),
+                "У поселения каменный набор уже есть (spirit-1) — сундуки этапа раньше каменного набора каждому духу: "
+                        + "сундуки " + plan.priority("building:chests") + ", топор spirit-2 "
+                        + plan.priority("craft_stone_axe@spirit-2"));
+    }
 }

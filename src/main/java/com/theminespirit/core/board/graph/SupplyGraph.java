@@ -55,7 +55,8 @@ public record SupplyGraph(
         }
     }
 
-    public record Kit(Map<String, String> tiers, Map<Integer, Map<String, String>> stageTiers, int base) {
+    public record Kit(
+            Map<String, String> tiers, Map<Integer, Map<String, String>> stageTiers, int base, int secondaryBase) {
         public Kit {
             tiers = Map.copyOf(tiers);
             stageTiers = Map.copyOf(stageTiers);
@@ -155,7 +156,10 @@ public record SupplyGraph(
                 new Kit(
                         kitTiers,
                         stageTiers(root.path(KIT)),
-                        root.path(KIT).path(BASE).asInt()),
+                        root.path(KIT).path(BASE).asInt(),
+                        root.path(KIT)
+                                .path("secondaryBase")
+                                .asInt(root.path(KIT).path(BASE).asInt())),
                 new Storage(
                         storage.path("minFreePercent").asInt(),
                         storage.path("building").asText(),
