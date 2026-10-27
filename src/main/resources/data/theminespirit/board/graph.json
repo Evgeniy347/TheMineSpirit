@@ -1808,6 +1808,36 @@
       "k": 1,
       "base": 30,
       "stage": 1
+    },
+    "wolf": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "cat": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
+    },
+    "horse": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "saddle": {
+      "xmin": 1,
+      "k": 1,
+      "base": 30,
+      "stage": 3
+    },
+    "bee_nest": {
+      "xmin": 1,
+      "k": 1,
+      "base": 25,
+      "stage": 2
     }
   },
   "buildings": {
@@ -7429,6 +7459,92 @@
       "consumes": {
         "#logs": 1
       },
+      "implemented": true
+    },
+    {
+      "id": "tame_wolf",
+      "case": "GATHER_MATERIALS",
+      "makes": "wolf",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bone": 2
+      },
+      "building": "kennel",
+      "world": "animals",
+      "implemented": true
+    },
+    {
+      "id": "tame_cat",
+      "case": "GATHER_MATERIALS",
+      "makes": "cat",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "raw_cod": 1
+      },
+      "building": "kennel",
+      "world": "animals",
+      "implemented": true
+    },
+    {
+      "id": "tame_horse",
+      "case": "GATHER_MATERIALS",
+      "makes": "horse",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "saddle": 1,
+        "hay_block": 1
+      },
+      "building": "stable",
+      "world": "animals",
+      "implemented": false
+    },
+    {
+      "id": "craft_saddle",
+      "case": "GATHER_MATERIALS",
+      "makes": "saddle",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "leather": 3,
+        "iron_ingot": 1
+      },
+      "building": "crafting_table",
+      "implemented": false
+    },
+    {
+      "id": "gather_bee_nest",
+      "case": "GATHER_MATERIALS",
+      "makes": "bee_nest",
+      "yield": 1,
+      "weight": 1.0,
+      "world": "forest",
+      "implemented": true
+    },
+    {
+      "id": "relocate_beehive",
+      "case": "GATHER_MATERIALS",
+      "makes": "bee_nest",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bee_nest": 1
+      },
+      "building": "apiary",
+      "implemented": false
+    },
+    {
+      "id": "compost_crop",
+      "case": "GATHER_MATERIALS",
+      "makes": "bone_meal",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 1
+      },
+      "building": "composter",
       "implemented": true
     }
   ],

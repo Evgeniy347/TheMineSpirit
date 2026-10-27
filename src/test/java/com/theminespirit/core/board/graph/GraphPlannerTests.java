@@ -359,6 +359,28 @@ class GraphPlannerTests {
     }
 
     @Test
+    void plan_PetsBeesComposter_AskForResources() {
+        GraphWorld world = GraphWorld.settled()
+                .built("kennel", Built.BUILT)
+                .built("composter", Built.BUILT)
+                .with("bone", 8)
+                .with("wheat", 16);
+        world.stage = 3;
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("tame_wolf").map(GraphPlan.Task::feasible).orElse(false)
+                        && plan.task("compost_crop")
+                                .map(GraphPlan.Task::feasible)
+                                .orElse(false),
+                "Волк приручается костью, излишки урожая идут в компостер: " + plan.task("tame_wolf") + ", "
+                        + plan.task("compost_crop"));
+        assertTrue(
+                plan.task("relocate_beehive").map(task -> !task.implemented()).orElse(false),
+                "Перенос улья (шёлковое касание) — «в разработке»: " + plan.task("relocate_beehive"));
+    }
+
+    @Test
     void plan_StageTwo_IronPickaxeIsKitNotChance() {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;
