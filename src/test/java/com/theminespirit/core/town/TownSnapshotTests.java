@@ -29,7 +29,7 @@ class TownSnapshotTests {
                 .findFirst()
                 .orElseThrow();
         assertEquals(
-                List.of("Хижина с палисадником", 75, true),
+                List.of("Хижина", 75, true),
                 List.of(hut.name(), hut.progress().percent(), hut.progress().damaged()),
                 "Подпись и готовность хижины — из каталога и аудита: 75 из 100 клеток, повреждена — к восстановлению");
         assertEquals(1, snapshot.paths().size(), "Сеть тропинок передаётся в снимок как есть");

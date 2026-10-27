@@ -3,7 +3,7 @@
   "streets": {"main": 7, "side": 5, "ring": 5, "ringInset": 2, "blockSize": 40},
   "spacing": {"gap": 2, "stageMargin": 1, "chestFreePercent": 20, "fenceStrip": 1},
   "buildings": [
-    {"id": "hut", "name": "Хижина с палисадником", "width": 7, "depth": 9, "quarter": "nw", "level": true, "rotate": false},
+    {"id": "hut", "name": "Хижина", "width": 7, "depth": 9, "quarter": "nw", "level": true, "rotate": false},
     {"id": "yard", "name": "Двор", "width": 7, "depth": 5, "quarter": "any", "level": true, "rotate": false},
     {"id": "mine", "name": "Спуск в шахту", "width": 5, "depth": 15, "quarter": "any", "level": true, "rotate": false},
     {"id": "plaza", "name": "Площадь", "width": 27, "depth": 27, "quarter": "center", "level": true, "rotate": false},

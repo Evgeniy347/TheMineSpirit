@@ -170,8 +170,8 @@ src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] та ж
 src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
 src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
 src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	[флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина с палисадником и
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	факелы тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
+src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	[флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина и факелы
+src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] три acquire подряд (кирка, топор, лопата), запас 2× к замеру цепочки
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] четыре acquire подряд (кирка, топор, лопата, меч), запас 2× к замеру цепочки
