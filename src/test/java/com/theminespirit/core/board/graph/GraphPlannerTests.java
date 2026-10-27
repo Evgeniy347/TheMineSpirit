@@ -449,6 +449,9 @@ class GraphPlannerTests {
         assertTrue(
                 task.consumes().containsKey("dirt") && task.consumes().containsKey("cobblestone"),
                 "Перестройка маршрута — задание BUILD_STREETS по земле и булыжнику: " + task);
+        assertTrue(
+                plan.notices().stream().anyMatch(notice -> "route_desert".equals(notice.building())),
+                "Просьба игрока двигает точку маршрута notice-ом стратегу: " + plan.notices());
     }
 
     @Test

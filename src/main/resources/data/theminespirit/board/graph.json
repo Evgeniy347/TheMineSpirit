@@ -8220,6 +8220,9 @@
           }
         }
       ],
+      "push": {
+        "building:route_desert": 50
+      },
       "advice": [
         "move_route_marker"
       ]
@@ -8236,6 +8239,9 @@
           }
         }
       ],
+      "push": {
+        "building:route_snow": 50
+      },
       "advice": [
         "move_route_marker"
       ]
@@ -8252,6 +8258,9 @@
           }
         }
       ],
+      "push": {
+        "building:route_dirt": 50
+      },
       "advice": [
         "move_route_marker"
       ]
