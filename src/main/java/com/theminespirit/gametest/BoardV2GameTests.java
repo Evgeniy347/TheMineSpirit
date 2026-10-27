@@ -190,7 +190,10 @@ public final class BoardV2GameTests {
                         + "доска: " + board.board().all());
         StageFixture.reach(board.board().ledger(), 2, BoardCase.BUILD_MINE);
         board.rebuild(level, now + 2);
-        helper.assertTrue(board.board().find("mine_level_2").isPresent(), "Этап 1 достроен — этап 2 открывает шахту 2");
+        helper.assertTrue(
+                board.board().find("mine_level_2").isPresent(),
+                "Этап 1 достроен — этап 2 открывает шахту 2; доска: "
+                        + board.board().all());
         spirit.discard();
         close(board, log, helper);
         helper.succeed();
