@@ -56,7 +56,7 @@ final class DispatchPick {
         List<DispatchRound.Candidate> all = new ArrayList<>(candidates.values());
         boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket.boardCase(), spirit.items()));
         if (!all.isEmpty() && !tooled && ToolGate.required(ticket.boardCase()).isPresent()) {
-            return "нет духа с киркой: ждёт кирку (задание " + BoardService.PICKAXE_TICKET + ")";
+            return "нет духа с киркой: ждёт кирку (граф ставит её крафт духу без кирки)";
         }
         return round.why(ticket, all);
     }

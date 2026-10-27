@@ -8,8 +8,6 @@ import com.theminespirit.core.reload.TableHolder;
 import com.theminespirit.core.reload.TableStatus;
 import java.time.Clock;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ToolsConfigTests {
@@ -70,7 +68,7 @@ class ToolsConfigTests {
     void reload_NewBoardTools_ChangesSpiritSet() {
         TableHolder<BoardConfig> holder = DataTables.INSTANCE.board();
         BoardConfig original = holder.current();
-        List<String> before = ToolSet.missing(Map.of(), Set.of("minecraft:stone_sword"));
+        List<String> before = holder.current().tools().set();
         try {
             holder.replace(
                     BoardConfig.fromJson(
@@ -82,14 +80,14 @@ class ToolsConfigTests {
                     Clock.systemUTC());
 
             assertEquals(
-                    List.of("minecraft:stone_sword"),
-                    ToolSet.missing(Map.of(), Set.of("minecraft:stone_sword")),
+                    List.of("sword"),
+                    holder.current().tools().set(),
                     "После /reload набор духа читается из новой таблицы: меч вместо кирки, топора и лопаты");
         } finally {
             holder.replace(original, TableStatus.Source.MOD, "classpath (мод)", "restore", Clock.systemUTC());
         }
         assertFalse(
-                before.contains("minecraft:stone_sword"),
+                before.contains("sword"),
                 "До подмены таблицы меч не входил в набор: тест доказывает смену набора, а не случайное совпадение");
     }
 }

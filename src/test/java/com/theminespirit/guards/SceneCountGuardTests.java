@@ -21,8 +21,7 @@ class SceneCountGuardTests {
 
     private static final Map<String, Integer> OUTSIDE_SCENES = Map.of(
             "DemoAuditGameTests", 110,
-            "BoardFirstStepsGameTests", 11,
-            "BoardSettlementStartGameTests", 4,
+            "BoardJournalGameTests", 1,
             "SettlementChestGameTests", 3,
             "SettlementWoodBoardGameTests", 1,
             "SettlementChunkGameTests", 1,

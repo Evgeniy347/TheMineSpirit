@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,97 +17,6 @@ class EvergreenRulesTests {
     private static final EatNeed HUNGRY = new EatNeed(10, 20, 20, 20);
     private static final EatNeed FULL = new EatNeed(20, 20, 20, 20);
     private static final SpiritView FREE = SpiritView.free();
-
-    @Test
-    void supplies_FromClasspath_MatchLiterals() {
-        assertEquals(
-                Map.of(
-                        "minecraft:bookshelf", 32,
-                        "minecraft:book", 32,
-                        "minecraft:paper", 128),
-                EvergreenRules.supplyThresholds(),
-                "Пороги постоянных запасов обязаны совпадать с литералами: полки — полстака (32), "
-                        + "книги — полстака (32), бумага — два стака (128). Поменянное число в файле "
-                        + "без правки теста молча изменило бы склад");
-        assertEquals(
-                32,
-                EvergreenRules.supplyThresholds().get("minecraft:bookshelf"),
-                "Предел в тесте, факт из production: полок держат полстака");
-        assertEquals(
-                128,
-                EvergreenRules.supplyThresholds().get("minecraft:paper"),
-                "Предел в тесте, факт из production: бумаги держат два стака");
-    }
-
-    @Test
-    void supplyNeeded_BeforeMine_EnchantItemsNotNeeded() {
-        Board board = new Board(() -> 0);
-
-        assertFalse(
-                EvergreenRules.supplyNeeded("minecraft:book", board),
-                "На старте книга не нужна: чаровальня не начата, вечная заявка на supply:book "
-                        + "висела бы без исполнителя");
-        assertFalse(
-                EvergreenRules.supplyNeeded("minecraft:paper", board),
-                "На старте бумага не нужна: доска не должна просить ресурсы будущего этапа");
-        assertFalse(
-                EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
-                "На старте полки не нужны: их расходует только чаровальня первого уровня");
-    }
-
-    @Test
-    void supplyNeeded_AfterHouse_BookAndPaperNeeded() {
-        Board board = new Board(() -> 0);
-        board.ledger().note(BoardCase.BUILD_HOUSE, 1);
-
-        assertTrue(
-                EvergreenRules.supplyNeeded("minecraft:book", board),
-                "После первого дома начинается цепочка чаровальни (шахта теперь в первых шагах, INC-4): книга нужна для её первого уровня");
-        assertTrue(
-                EvergreenRules.supplyNeeded("minecraft:paper", board),
-                "Бумага — часть той же цепочки книги: после дома запас поддерживается");
-        assertFalse(
-                EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
-                "Полки ждут первого уровня чаровальни, а не одного дома");
-    }
-
-    @Test
-    void supplyNeeded_AfterEnchantRoom_BookshelfNeeded() {
-        Board board = new Board(() -> 0);
-        board.ledger().note(BoardCase.ENCHANT_ROOM, 1);
-
-        assertTrue(
-                EvergreenRules.supplyNeeded("minecraft:bookshelf", board),
-                "Второй уровень чаровальни расходует полки: запас обязан поддерживаться");
-    }
-
-    @Test
-    void supplyNeeded_LiveTicketDemands_NeededBeforeStage() {
-        Board board = new Board(() -> 0);
-        board.submit(new BoardTicket(
-                "build_1",
-                BoardCase.BUILD_HOUSE,
-                Optional.empty(),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
-                0,
-                1,
-                BoardTicket.ALWAYS_CAUSE,
-                List.of(),
-                Map.of("minecraft:book", 1)));
-
-        assertTrue(
-                EvergreenRules.supplyNeeded("minecraft:book", board),
-                "Живое задание требует книгу по полному id — запас нужен сразу, даже до этапа "
-                        + "чаровальни: иначе задание ждало бы ресурс, который никто не принесёт");
-    }
-
-    @Test
-    void supplyNeeded_UnknownItem_AlwaysMaintained() {
-        assertTrue(
-                EvergreenRules.supplyNeeded("minecraft:dirt", new Board(() -> 0)),
-                "Предмет вне этапов доски держится по общему порогу: иначе новый запас в таблице "
-                        + "молча перестал бы пополняться");
-    }
 
     @Test
     void issuedTo_AssignedApplicableSpirit_Issued() {

@@ -10,8 +10,6 @@ src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	пересб�
 src/main/java/com/theminespirit/gametest/BoardGameTests.java	[флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
 src/main/java/com/theminespirit/gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
 src/main/java/com/theminespirit/gametest/BoardScaleGameTests.java	[флак] наблюдение 1000 тиков (откат провала 200 + период пересборки 100): запас 2×
-src/main/java/com/theminespirit/gametest/BoardSettlementStartGameTests.java	[флак] два духа рубят пять деревьев и крафтят верстак, сундуки (16 досок) и деревянные наборы через доску; запас
-src/main/java/com/theminespirit/gametest/BoardSettlementStartGameTests.java	~2× к замеру
 src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
 src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
 src/main/java/com/theminespirit/gametest/BoardV2ScaleGameTests.java	[флак] наблюдение 400 тиков (пересборки по 100, скан стада по 200) плюс старт сцены:

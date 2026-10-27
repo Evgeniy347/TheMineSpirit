@@ -68,7 +68,7 @@ class ApplicabilityTests {
         for (int food : List.of(0, 16, 20)) {
             assertTrue(
                     Applicability.applicable(BoardCase.RESTOCK_FOOD, new EatNeed(food, 20, 20, 20), FREE),
-                    "Нужду в пополнении еды решает FoodWatch по личному запасу; применимость не сравнивает сытость "
+                    "Нужду в пополнении еды решает граф (событие hungry) по личному запасу; применимость не сравнивает сытость "
                             + food + " (0..20) с порогом стака — такое сравнение всегда истинно");
         }
     }

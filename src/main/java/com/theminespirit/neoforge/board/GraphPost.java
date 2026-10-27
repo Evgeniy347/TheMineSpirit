@@ -1,0 +1,242 @@
+package com.theminespirit.neoforge.board;
+
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardOutcome;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.GatherBatch;
+import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolSet;
+import com.theminespirit.core.board.graph.GraphNames;
+import com.theminespirit.core.board.graph.GraphPlan;
+import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.board.graph.StageBuilt;
+import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.neoforge.SpiritEntity;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.PickaxeItem;
+
+final class GraphPost {
+    static final String MAKE = GraphTickets.PREFIX + "make:";
+    private static final String PART = ":2";
+    private static final Set<String> MINED = Set.of("cobblestone", "coal");
+    private static final int TORCHES_PER_CRAFT = 4;
+    private static final int CHARCOAL_LOGS = 4;
+    private static final int CHARCOAL_BATCH = 2;
+    private static final String EAT = "eat";
+
+    private final ServerLevel level;
+    private final BoardService service;
+    private final List<SpiritEntity> spirits;
+    private final StockView stock;
+    private final FirstStepsRunner.StageScan scan;
+    private final SupplyGraph graph;
+    private final MaterialSource source;
+    private final long now;
+
+    GraphPost(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            FirstStepsRunner.StageScan scan,
+            SupplyGraph graph,
+            long now) {
+        this.level = level;
+        this.service = service;
+        this.spirits = spirits;
+        this.stock = stock;
+        this.scan = scan;
+        this.graph = graph;
+        this.source = FirstStepsRunner.materialSource(level);
+        this.now = now;
+    }
+
+    static List<String> ticketIds(GraphPlan.Task task, SupplyGraph graph) {
+        String id = GraphTickets.id(task);
+        if (task.id().startsWith("building:") && StageBuilt.ids().contains(task.makes())) {
+            return FirstStepsRunner.ticketIds(
+                    graph.buildings().get(task.makes()).boardCase());
+        }
+        return List.of(id, id + PART);
+    }
+
+    boolean post(GraphTickets.Ticket ticket) {
+        GraphPlan.Task task = ticket.task();
+        return switch (ticket.kind()) {
+            case BUILDING -> StageBuilt.ids().contains(ticket.node()) && building(ticket);
+            case EVENT -> EAT.equals(ticket.node()) && hungry(ticket);
+            case WAY -> way(ticket, task);
+        };
+    }
+
+    private boolean hungry(GraphTickets.Ticket ticket) {
+        GraphFood.post(
+                level, service, spirits, stock, ticket.id(), ticket.task().priority(), now);
+        return true;
+    }
+
+    private boolean way(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        BoardCase boardCase = task.boardCase();
+        if (ToolSet.isTool(boardCase) && task.spirit().isPresent()) {
+            return tool(ticket, task);
+        }
+        if (task.spirit().isPresent()) {
+            return false;
+        }
+        return switch (boardCase) {
+            case GATHER_MATERIALS -> gather(ticket, task);
+            case CRAFT_TORCHES -> torches(ticket, task);
+            case SMELT_CHARCOAL -> charcoal(ticket, task);
+            default -> false;
+        };
+    }
+
+    private boolean building(GraphTickets.Ticket ticket) {
+        GraphPlan.Task task = ticket.task();
+        BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
+        if (FirstStepsRunner.ticketIds(boardCase).stream().anyMatch(this::open)) {
+            return true;
+        }
+        Map<String, Integer> missing = FirstStepsRunner.open(
+                level,
+                service,
+                stock,
+                scan,
+                new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
+                now);
+        missing.forEach((item, count) -> {
+            if (!graph.items().containsKey(GraphNames.graphItem(item, scan.wood())) && known(item)) {
+                gather(MAKE + item, ticket.id(), task.priority(), item, count);
+            }
+        });
+        return true;
+    }
+
+    private boolean gather(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        String item = GraphNames.item(task.makes(), scan.wood());
+        if (!graph.items().containsKey(task.makes()) || !known(item)) {
+            return false;
+        }
+        gather(ticket.id(), ticket.id(), task.priority(), item, ticket.count());
+        return true;
+    }
+
+    private void gather(String id, String cause, int priority, String item, int count) {
+        int output = source.outputCount(item);
+        int helpers = MINED.contains(item) ? miners() : spirits.size();
+        List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
+        for (int part = 0; part < portions.size(); part++) {
+            String partId = part == 0 ? id : id + PART;
+            submit(
+                    ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),
+                    TicketTarget.at(scan.home()).withSupply(item, portions.get(part)));
+        }
+    }
+
+    private boolean tool(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        UUID spirit = UUID.fromString(task.spirit().orElseThrow());
+        submit(
+                ticket(ticket.id(), task.boardCase(), Optional.of(spirit), task.priority(), ticket.id(), items(task)),
+                FirstStepsRunner.targetFor(level, task.boardCase(), scan.stage(), scan.wood()));
+        return true;
+    }
+
+    private boolean torches(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        int coal = stock.available().getOrDefault("coal", 0);
+        int charcoal = stock.available().getOrDefault("charcoal", 0);
+        String fuel = coal >= charcoal ? "coal" : "charcoal";
+        int crafts = Math.min((ticket.count() + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT, Math.max(coal, charcoal));
+        if (crafts <= 0) {
+            return true;
+        }
+        submit(
+                ticket(
+                        ticket.id(),
+                        task.boardCase(),
+                        Optional.empty(),
+                        task.priority(),
+                        ticket.id(),
+                        Map.of(fuel, crafts)),
+                TicketTarget.at(scan.home()).withCount(crafts * TORCHES_PER_CRAFT));
+        return true;
+    }
+
+    private boolean charcoal(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        String log = GraphNames.item("oak_log", scan.wood());
+        Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : furnaceHolder();
+        submit(
+                ticket(ticket.id(), task.boardCase(), holder, task.priority(), ticket.id(), Map.of(log, CHARCOAL_LOGS)),
+                TicketTarget.at(scan.home()).withSupply(log, CHARCOAL_LOGS).withCount(CHARCOAL_BATCH));
+        return true;
+    }
+
+    private Map<String, Integer> items(GraphPlan.Task task) {
+        Map<String, Integer> items = new HashMap<>();
+        task.consumes().forEach((item, count) -> items.merge(GraphNames.item(item, scan.wood()), count, Integer::sum));
+        return Map.copyOf(items);
+    }
+
+    private BoardTicket ticket(
+            String id,
+            BoardCase boardCase,
+            Optional<UUID> assignee,
+            int priority,
+            String cause,
+            Map<String, Integer> required) {
+        return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required);
+    }
+
+    private void submit(BoardTicket ticket, TicketTarget target) {
+        BoardOutcome outcome = service.submit(ticket, target);
+        if (outcome == BoardOutcome.DUPLICATE) {
+            service.board().reprioritize(ticket.id(), ticket.priority());
+        }
+    }
+
+    private boolean open(String id) {
+        return service.board()
+                .statusOf(id)
+                .filter(status -> switch (status) {
+                    case PENDING, WAITING_RESOURCES, ASSIGNED -> true;
+                    default -> false;
+                })
+                .isPresent();
+    }
+
+    private int miners() {
+        int miners = 0;
+        for (SpiritEntity spirit : spirits) {
+            var inventory = spirit.getInventory();
+            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+                if (inventory.getItem(slot).getItem() instanceof PickaxeItem) {
+                    miners++;
+                    break;
+                }
+            }
+        }
+        return miners;
+    }
+
+    private Optional<UUID> furnaceHolder() {
+        return spirits.stream()
+                .filter(spirit -> !spirit.isRemoved() && spirit.getInventory().countItem(Items.FURNACE) > 0)
+                .map(SpiritEntity::getUUID)
+                .findFirst();
+    }
+
+    private static boolean known(String item) {
+        String name = item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
+        return BuiltInRegistries.ITEM.containsKey(ResourceLocation.withDefaultNamespace(name));
+    }
+}

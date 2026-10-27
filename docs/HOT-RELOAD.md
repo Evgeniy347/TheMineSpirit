@@ -45,6 +45,7 @@
 | `protection` | `policy/protection.json` | защищённые и природные блоки, порог «здания» |
 | `presets` | `schematics/presets.json` + тела схем | библиотека построек (индекс и тела схем — одна таблица) |
 | `board` | `board/board.json` | расписание доски задач |
+| `graph` | `board/graph.json` | граф потребностей доски: пороги запасов, пути добычи, постройки, события |
 | `doors` | `doors/doors.json` | вечерний порог и параметры дверей |
 | `tactics` | `tactics/{enemies,weights,rules,modes}.json` | ядро тактики (четыре файла — одна таблица) |
 | `adapter` | `tactics/adapter.json` | интервал оценки тактики, радиус фактов и т. п. |

@@ -4,14 +4,11 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ConfigStamp;
-import com.theminespirit.core.board.FirstStepsPlan;
-import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.MineDescentBottom;
@@ -26,9 +23,7 @@ import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolSet;
-import com.theminespirit.core.board.TorchRules;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.MineLayout;
@@ -70,7 +65,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -86,18 +80,9 @@ public final class FirstStepsRunner {
             BoardCase.BUILD_ORCHARD,
             BoardCase.BUILD_HOUSE,
             BoardCase.BUILD_STREETS);
-    private static final Set<BoardCase> PREFETCH_DURING =
-            EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.LIGHTING, BoardCase.BUILD_FENCE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
-    private static final String GATHER_PART_SUFFIX = ":2";
-    private static final List<BoardCase> STONE_STEPS = List.of(
-            BoardCase.CRAFT_STONE_PICKAXE,
-            BoardCase.CRAFT_STONE_AXE,
-            BoardCase.CRAFT_STONE_SHOVEL,
-            BoardCase.CRAFT_STONE_SWORD,
-            BoardCase.CRAFT_FURNACE);
     private static final Set<BoardCase> BEFORE_YARD = EnumSet.of(
             BoardCase.CRAFTING_STATION,
             BoardCase.CRAFT_WOODEN_PICKAXE,
@@ -105,16 +90,25 @@ public final class FirstStepsRunner {
             BoardCase.CRAFT_WOODEN_SHOVEL);
     private static final Set<BoardCase> EXACT_STEPS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
-    private static final Set<BoardCase> AT_YARD_TABLE =
-            EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.CRAFT_FURNACE);
     private static final String FIRST_PREFIX = "first:";
+    private static final List<BoardCase> STAGE_STEPS = List.of(
+            BoardCase.CRAFTING_STATION,
+            BoardCase.CLEAR_GROUNDS,
+            BoardCase.STOCK_CHESTS,
+            BoardCase.BUILD_MINE,
+            BoardCase.CRAFT_FURNACE,
+            BoardCase.LIGHTING,
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_ORCHARD,
+            BoardCase.BUILD_STREETS,
+            BoardCase.CRAFT_SMITHING_TABLE,
+            BoardCase.CRAFT_ANVIL);
     private static final String MINECRAFT = "minecraft:";
     private static final String CLEAR_PART_PREFIX = "clear:";
-    private static final String STONE_PART_PREFIX = "stone:";
     private static final String FENCE_PART_PREFIX = "fence:";
     private static final String COBBLESTONE = "cobblestone";
     private static final String FURNACE_ITEM = "furnace";
-    private static final String SAPLING = "_sapling";
     private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
     private static final int LEVELING_SHOWN = 6;
@@ -126,12 +120,17 @@ public final class FirstStepsRunner {
         JOURNAL
     }
 
-    public static void tick(
+    public record StageScan(
+            StageSite stage, String wood, BlockCoord home, SettlementFacts facts, boolean furnaceBlock) {}
+
+    public record StepOrder(BoardCase caseValue, int priority, String cause) {}
+
+    public static Optional<StageScan> tick(
             ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
-        tick(level, service, spirits, stock, now, PlanWorld.AUDIT);
+        return tick(level, service, spirits, stock, now, PlanWorld.AUDIT);
     }
 
-    public static void tick(
+    public static Optional<StageScan> tick(
             ServerLevel level,
             BoardService service,
             List<SpiritEntity> spirits,
@@ -139,13 +138,13 @@ public final class FirstStepsRunner {
             long now,
             PlanWorld world) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
-            return;
+            return Optional.empty();
         }
         if (spirits.stream().noneMatch(spirit -> spirit.home().isPresent())) {
-            return;
+            return Optional.empty();
         }
         if (plotOf(level, service, spirits, now).isEmpty()) {
-            return;
+            return Optional.empty();
         }
         StageSite stage = SettlementPlotStore.get(level)
                 .site()
@@ -161,43 +160,8 @@ public final class FirstStepsRunner {
         String wood = woodOf(level, home, stock);
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
-        SettlementFacts facts = scan.facts();
-        boolean mine = facts.mineEntrance();
-        boolean yardTable = facts.done().contains(BoardCase.STOCK_CHESTS);
-        boolean clearing = clearing(service);
-        List<BoardCase> ready = FirstStepsPlan.ready(facts).stream()
-                .filter(step -> yardTable || !AT_YARD_TABLE.contains(step))
-                .filter(step -> !clearing || step == BoardCase.CLEAR_GROUNDS)
-                .toList();
-        Optional<BoardCase> next = ready.stream().findFirst();
-        String log = WoodSpecies.swap("oak_log", wood);
         dropOtherWood(level, service, BuildingWoodChoice.allowed(level, wood));
-        ensurePickaxe(level, service, spirits, stock, site, next, now);
-        if (ready.size() == 1 && STONE_STEPS.contains(next.orElseThrow())) {
-            parallelStone(level, service, facts, site, stock, next.orElseThrow(), now);
-        }
-        next.filter(PREFETCH_DURING::contains)
-                .filter(current -> hasActive(service, current))
-                .ifPresent(current -> prefetch(level, service, facts, site, stock, current, now));
-        int torches = 0;
-        for (BoardCase caseValue : ready) {
-            if (!hasActive(service, caseValue)) {
-                StepContext context = new StepContext(level, service, spirits, stock, facts, stage, wood, now);
-                torches = Math.max(torches, openIfStocked(context, caseValue, false));
-            }
-        }
-        for (BoardCase caseValue : FirstStepsPlan.blockedStageOne(facts)) {
-            StepContext context = new StepContext(level, service, spirits, stock, facts, stage, wood, now);
-            openIfStocked(context, caseValue, true);
-        }
-        WoodWatch.tick(level, service, spirits, stock, home, wood, now);
-        TorchWatch.tick(
-                service,
-                spirits,
-                stage.workYard(),
-                stock,
-                new TorchWatch.Site(scan.furnaceBlock(), mine, torches, log),
-                now);
+        return Optional.of(new StageScan(stage, wood, home, scan.facts(), scan.furnaceBlock()));
     }
 
     private static void dropOwnWood(Map<String, Integer> need, StockView stock, String wood) {
@@ -227,33 +191,48 @@ public final class FirstStepsRunner {
         }
     }
 
-    private record StepContext(
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            StockView stock,
-            SettlementFacts facts,
-            StageSite stage,
-            String wood,
-            long now) {}
+    public static Map<String, Integer> materialsOf(
+            ServerLevel level, StockView stock, StageScan scan, BoardCase caseValue) {
+        String wood = BuildingWoodChoice.stored(level, caseValue, scan.stage(), scan.wood());
+        TicketTarget target = targetFor(level, caseValue, scan.stage(), wood);
+        return need(level, stock, scan.stage(), new OpenStep(caseValue, target, Map.of(), wood), false);
+    }
 
-    private static int openIfStocked(StepContext context, BoardCase caseValue, boolean blocked) {
-        ServerLevel level = context.level();
-        BoardService service = context.service();
-        List<SpiritEntity> spirits = context.spirits();
-        StockView stock = context.stock();
-        SettlementFacts facts = context.facts();
-        StageSite stage = context.stage();
-        long now = context.now();
+    public static Map<String, Integer> open(
+            ServerLevel level, BoardService service, StockView stock, StageScan scan, StepOrder order, long now) {
+        BoardCase caseValue = order.caseValue();
+        StageSite stage = scan.stage();
+        boolean blocked = scan.facts().blocked().contains(caseValue);
         String wood = blocked
-                ? BuildingWoodChoice.stored(level, caseValue, stage, context.wood())
-                : BuildingWoodChoice.settle(level, service, caseValue, stage, stock.available(), context.wood(), now);
-        BlockCoord home = new BlockCoord(
-                stage.anchor().x(), homeY(spirits), stage.anchor().z());
+                ? BuildingWoodChoice.stored(level, caseValue, stage, scan.wood())
+                : BuildingWoodChoice.settle(level, service, caseValue, stage, stock.available(), scan.wood(), now);
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, stage, stock));
         }
+        Map<String, Integer> need = need(level, stock, stage, new OpenStep(caseValue, target, Map.of(), wood), blocked);
+        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
+        if (!missing.isEmpty()) {
+            LOGGER.info("Постройка этапа {} ждёт: не хватает {}", caseValue, missing);
+            return missing;
+        }
+        openStep(level, service, new OpenStep(caseValue, target, need, wood), order, now);
+        return Map.of();
+    }
+
+    public static List<String> ticketIds(BoardCase caseValue) {
+        List<String> ids = new ArrayList<>();
+        for (int part = 1; part <= partsOf(caseValue); part++) {
+            ids.add(partId(caseValue, part));
+        }
+        return List.copyOf(ids);
+    }
+
+    private static Map<String, Integer> need(
+            ServerLevel level, StockView stock, StageSite stage, OpenStep step, boolean blocked) {
+        BoardCase caseValue = step.caseValue();
+        TicketTarget target = step.target();
+        String wood = step.wood();
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
         materials(source, caseValue, target)
@@ -282,29 +261,13 @@ public final class FirstStepsRunner {
                 dropOwnWood(need, stock, wood);
             }
         }
-        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
-        int torches = need.getOrDefault(TorchRules.TORCH, 0);
-        if (!missing.isEmpty()) {
-            LOGGER.info("Кейс первых шагов {} ждёт: не хватает {}", caseValue, missing);
-            for (Map.Entry<String, Integer> entry : missing.entrySet()) {
-                if (gatherable(entry.getKey(), facts)) {
-                    int shortage = entry.getValue();
-                    if (COBBLESTONE.equals(entry.getKey())) {
-                        shortage = Math.max(shortage, stoneAhead(level, source, facts, stage, wood, stock));
-                    }
-                    postGather(service, source, home, entry.getKey(), shortage, helpers(entry.getKey(), spirits), now);
-                }
-            }
-            return torches;
-        }
-        openStep(level, service, new OpenStep(caseValue, target, need, wood), source, now);
-        return torches;
+        return need;
     }
 
     private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
 
-    private static void openStep(
-            ServerLevel level, BoardService service, OpenStep step, MaterialSource source, long now) {
+    private static void openStep(ServerLevel level, BoardService service, OpenStep step, StepOrder order, long now) {
+        MaterialSource source = materialSource(level);
         BoardCase caseValue = step.caseValue();
         TicketTarget target = step.target();
         Map<String, Integer> need = step.need();
@@ -335,19 +298,22 @@ public final class FirstStepsRunner {
                             partId(caseValue, part),
                             caseValue,
                             Optional.empty(),
-                            BoardRules.priorityOf(caseValue),
+                            order.priority(),
                             now + part - 1,
                             1,
-                            BoardTicket.ALWAYS_CAUSE,
+                            order.cause(),
                             List.of(),
                             Map.copyOf(reserve)),
                     partTarget);
+            if (submitted == BoardOutcome.DUPLICATE) {
+                service.board().reprioritize(partId(caseValue, part), order.priority());
+            }
             if (part == 1) {
                 outcome = submitted;
             }
         }
         if (outcome == BoardOutcome.ACCEPTED) {
-            LOGGER.info("Кейс первых шагов {} открыт: материалы на месте", caseValue);
+            LOGGER.info("Постройка этапа {} открыта: материалы на месте", caseValue);
         }
     }
 
@@ -427,12 +393,6 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static boolean clearing(BoardService service) {
-        return service.board().all().stream()
-                .filter(ticket -> ticket.boardCase() == BoardCase.CLEAR_GROUNDS)
-                .anyMatch(ticket -> active(service, ticket.id()));
-    }
-
     public static boolean stageOneBuilding(BoardService service) {
         return service.board().all().stream()
                 .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
@@ -464,54 +424,6 @@ public final class FirstStepsRunner {
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         minusPlaced(level, TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target), wood, need);
         return need;
-    }
-
-    private static void parallelStone(
-            ServerLevel level,
-            BoardService service,
-            SettlementFacts facts,
-            StoneSite site,
-            StockView stock,
-            BoardCase current,
-            long now) {
-        String wood = site.wood();
-        MaterialSource source = materialSource(level);
-        Map<String, Integer> booked = new HashMap<>();
-        boolean after = false;
-        for (BoardCase step : STONE_STEPS) {
-            TicketTarget target = targetFor(level, step, site.stage(), wood);
-            Map<String, Integer> need = new HashMap<>();
-            materials(source, step, target)
-                    .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
-            if (step == current) {
-                after = true;
-            }
-            if (facts.done().contains(step)) {
-                continue;
-            }
-            need.forEach((item, count) -> booked.merge(item, count, Integer::sum));
-            if (!after || step == current || hasActive(service, step)) {
-                continue;
-            }
-            if (!ResourceGate.missing(new StockNeed(booked), stock).isEmpty()) {
-                return;
-            }
-            BoardOutcome outcome = service.submit(
-                    new BoardTicket(
-                            STONE_PART_PREFIX + step.name().toLowerCase(Locale.ROOT),
-                            step,
-                            Optional.empty(),
-                            BoardRules.priorityOf(step),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.copyOf(need)),
-                    target);
-            if (outcome == BoardOutcome.ACCEPTED) {
-                LOGGER.info("Каменный шаг {} открыт вместе с {}: булыжника хватает на оба", step, current);
-            }
-        }
     }
 
     private static PlotLeveling leveling(ServerLevel level, StageSite site, StockView stock) {
@@ -569,43 +481,7 @@ public final class FirstStepsRunner {
         };
     }
 
-    private static void prefetch(
-            ServerLevel level,
-            BoardService service,
-            SettlementFacts facts,
-            StoneSite site,
-            StockView stock,
-            BoardCase current,
-            long now) {
-        BlockCoord home = site.home();
-        Optional<BoardCase> building = FirstStepsPlan.nextAfter(facts, current, WOODEN_BUILDINGS);
-        if (building.isEmpty() || hasActive(service, building.orElseThrow())) {
-            return;
-        }
-        String wood = BuildingWoodChoice.settle(
-                level,
-                service,
-                building.orElseThrow(),
-                site.stage(),
-                stock.available(),
-                woodOf(level, home, stock),
-                now);
-        MaterialSource source = materialSource(level);
-        Map<String, Integer> need = new HashMap<>();
-        materials(source, building.orElseThrow(), targetFor(level, building.orElseThrow(), site.stage(), wood))
-                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
-        Map<String, Integer> raw = new HashMap<>();
-        ResourceGate.missing(new StockNeed(need), stock).forEach((item, count) -> expand(source, item, count, raw, 0));
-        Map<String, Integer> rawNeed = new HashMap<>();
-        raw.forEach((item, count) -> rawNeed.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
-        ResourceGate.missing(new StockNeed(rawNeed), stock).forEach((item, count) -> {
-            if (gatherable(item, facts)) {
-                postGather(service, source, home, item, count, 1, now);
-            }
-        });
-    }
-
-    private static void expand(MaterialSource source, String item, int count, Map<String, Integer> raw, int depth) {
+    static void expand(MaterialSource source, String item, int count, Map<String, Integer> raw, int depth) {
         List<Ingredient> ingredients = depth < EXPAND_DEPTH ? source.ingredientsFor(item) : List.of();
         int output = source.outputCount(item);
         if (ingredients.isEmpty() || output <= 0) {
@@ -632,97 +508,11 @@ public final class FirstStepsRunner {
         return ToolSet.isTool(caseValue) ? target.withToolCount(1) : target;
     }
 
-    private static int stoneAhead(
-            ServerLevel level,
-            MaterialSource source,
-            SettlementFacts facts,
-            StageSite stage,
-            String wood,
-            StockView stock) {
-        int need = 0;
-        for (BoardCase step : STONE_STEPS) {
-            if (!facts.done().contains(step)) {
-                need += materials(source, step, targetFor(level, step, stage, wood))
-                        .getOrDefault(COBBLESTONE, 0);
-            }
-        }
-        return Math.max(0, need - stock.available().getOrDefault(COBBLESTONE, 0));
-    }
-
-    private static int helpers(String item, List<SpiritEntity> spirits) {
-        if (!COBBLESTONE.equals(item) && !TorchRules.COAL.equals(item)) {
-            return spirits.size();
-        }
-        int miners = 0;
-        for (SpiritEntity spirit : spirits) {
-            var inventory = spirit.getInventory();
-            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-                if (inventory.getItem(slot).getItem() instanceof PickaxeItem) {
-                    miners++;
-                    break;
-                }
-            }
-        }
-        return miners;
-    }
-
-    record GatherNeed(String item, int shortage, int helpers, int priority) {}
-
-    static void postGather(
-            BoardService service,
-            MaterialSource source,
-            BlockCoord home,
-            String item,
-            int shortage,
-            int helpers,
-            long now) {
-        postGather(
-                service,
-                source,
-                home,
-                new GatherNeed(item, shortage, helpers, BoardRules.priorityOf(BoardCase.GATHER_MATERIALS)),
-                now);
-    }
-
-    static void postGather(BoardService service, MaterialSource source, BlockCoord home, GatherNeed need, long now) {
-        String item = need.item();
-        String id = GATHER_PREFIX + item;
-        if (active(service, id) || active(service, id + GATHER_PART_SUFFIX)) {
-            return;
-        }
-        int batch = GatherBatch.round(need.shortage(), source.outputCount(item));
-        List<Integer> portions = GatherBatch.split(batch, source.outputCount(item), need.helpers());
-        for (int part = 0; part < portions.size(); part++) {
-            submitGather(
-                    service,
-                    home,
-                    part == 0 ? id : id + GATHER_PART_SUFFIX,
-                    new GatherNeed(item, portions.get(part), 1, need.priority()),
-                    now);
-        }
-    }
-
     private static boolean active(BoardService service, String id) {
         BoardStatus status = service.board().statusOf(id).orElse(null);
         return status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
-    }
-
-    private static void submitGather(BoardService service, BlockCoord home, String id, GatherNeed need, long now) {
-        LOGGER.info("Поставлено: добыть {} ×{} (кейс первых шагов ждёт)", need.item(), need.shortage());
-        service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.GATHER_MATERIALS,
-                        Optional.empty(),
-                        need.priority(),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(home).withSupply(need.item(), need.shortage()));
     }
 
     static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
@@ -755,79 +545,6 @@ public final class FirstStepsRunner {
                         () -> PresetLibrary.countMaterials(SchematicResources.load(file)));
             }
         };
-    }
-
-    private static void ensurePickaxe(
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            StockView stock,
-            StoneSite site,
-            Optional<BoardCase> next,
-            long now) {
-        boolean gated = next.filter(step -> ToolGate.required(step).isPresent()).isPresent()
-                || hasActive(service, BoardCase.CLEAR_GROUNDS)
-                || hasActive(service, BoardCase.BUILD_MINE);
-        boolean nobody = spirits.stream()
-                .noneMatch(spirit -> ToolGate.allows(BoardCase.CLEAR_GROUNDS, BoardService.itemIds(spirit)));
-        if (!gated || !nobody || active(service, BoardService.PICKAXE_TICKET)) {
-            return;
-        }
-        int priority = Math.max(BoardRules.priorityOf(BoardCase.CRAFT_WOODEN_PICKAXE), waitingForPickaxe(service));
-        MaterialSource source = materialSource(level);
-        TicketTarget target = targetFor(level, BoardCase.CRAFT_WOODEN_PICKAXE, site.stage(), site.wood());
-        Map<String, Integer> need = new HashMap<>();
-        materials(source, BoardCase.CRAFT_WOODEN_PICKAXE, target)
-                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, site.wood()), count, Integer::sum));
-        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
-        if (!missing.isEmpty()) {
-            LOGGER.info("[tool] кирки нет ни у одного духа: на кирку не хватает {} — добыча", missing);
-            missing.forEach((item, count) ->
-                    postGather(service, source, site.home(), new GatherNeed(item, count, 1, priority), now));
-            return;
-        }
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
-                        BoardService.PICKAXE_TICKET,
-                        BoardCase.CRAFT_WOODEN_PICKAXE,
-                        Optional.empty(),
-                        priority,
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.copyOf(need)),
-                target);
-        if (outcome == BoardOutcome.ACCEPTED) {
-            LOGGER.info("[tool] кирки нет ни у одного духа: поставлено {}", BoardService.PICKAXE_TICKET);
-        }
-    }
-
-    private static int waitingForPickaxe(BoardService service) {
-        return service.board().all().stream()
-                .filter(t -> ToolGate.required(t.boardCase()).isPresent())
-                .filter(t -> active(service, t.id()))
-                .mapToInt(BoardTicket::priority)
-                .max()
-                .orElse(0);
-    }
-
-    private static boolean hasActive(BoardService service, BoardCase boardCase) {
-        return service.board().all().stream()
-                .filter(t -> t.boardCase() == boardCase)
-                .anyMatch(t -> service.board()
-                        .statusOf(t.id())
-                        .map(s -> s == BoardStatus.PENDING
-                                || s == BoardStatus.WAITING_RESOURCES
-                                || s == BoardStatus.ASSIGNED)
-                        .orElse(false));
-    }
-
-    private static boolean gatherable(String item, SettlementFacts facts) {
-        if (TorchRules.handles(item) || item.endsWith(SAPLING)) {
-            return false;
-        }
-        return !COBBLESTONE.equals(item) || facts.mineEntrance();
     }
 
     public static void minusPlaced(ServerLevel level, TaskNode plan, String wood, Map<String, Integer> need) {
@@ -1086,7 +803,7 @@ public final class FirstStepsRunner {
 
     private static Set<BoardCase> journalSteps(BoardService service, boolean blocked) {
         Set<BoardCase> steps = EnumSet.noneOf(BoardCase.class);
-        for (BoardCase step : FirstStepsPlan.chain()) {
+        for (BoardCase step : STAGE_STEPS) {
             String id = FIRST_PREFIX + step.name().toLowerCase(Locale.ROOT);
             boolean match = blocked
                     ? service.board().statusOf(id).orElse(null) == BoardStatus.BLOCKED

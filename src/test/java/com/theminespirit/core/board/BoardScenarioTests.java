@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 class BoardScenarioTests {
+    private static final Pattern STAGE_ONE_TOOLS = Pattern.compile(":(wooden|stone)_");
+
     private static final int SEEDS = 2000;
     private static final int ROUNDS = 24;
 
@@ -121,7 +124,11 @@ class BoardScenarioTests {
             if (tool.isEmpty()) {
                 continue;
             }
-            for (BoardCase craft : ToolSet.chain()) {
+            for (BoardCase craft : BoardCase.values()) {
+                if (!ToolSet.isTool(craft)
+                        || !STAGE_ONE_TOOLS.matcher(ToolSet.itemId(craft)).find()) {
+                    continue;
+                }
                 if (ToolSet.itemId(craft).endsWith(tool.orElseThrow())
                         && BoardRules.priorityOf(craft) < BoardRules.priorityOf(user)) {
                     inverted.add(craft + "=" + BoardRules.priorityOf(craft) + " < " + user + "="

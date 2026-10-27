@@ -16,6 +16,7 @@ public final class BoardSources {
     private final WoolWatch wool = new WoolWatch();
     private final FishingWatch fishing = new FishingWatch();
     private final HiveWatch hive = new HiveWatch();
+    private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
     private int herdScans;
@@ -56,10 +57,21 @@ public final class BoardSources {
         }
         Set<String> live = new HashSet<>();
         guard.startRound();
-        guard.run("first_steps", () -> FirstStepsRunner.tick(level, service, spirits, stock, now));
-        guard.run("tool_stock", () -> ToolStockWatch.tick(level, service, spirits, stock, now));
+        Set<String> craters = guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of());
+        Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level, service), Set.of());
+        live.addAll(craters);
+        live.addAll(fences);
+        live.addAll(guard.call(
+                "graph",
+                () -> graph.tick(
+                        level,
+                        service,
+                        spirits,
+                        stock,
+                        GraphSource.events(level, service, spirits, craters, fences),
+                        now),
+                Set.of()));
         guard.run("evergreen", () -> EvergreenWatch.tick(level, service, spirits, now));
-        guard.run("food", () -> FoodWatch.tick(level, service, spirits, stock, now));
         guard.run("fishing", () -> fishing.tick(level, service, spirits, stock, now));
         guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
         guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));
@@ -83,8 +95,6 @@ public final class BoardSources {
         if (hive.live()) {
             live.add(HiveWatch.CAUSE);
         }
-        live.addAll(guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of()));
-        live.addAll(guard.call("fence", () -> FenceWatch.liveCauses(level, service), Set.of()));
         live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level, service, spirits, now), Set.of()));
         return live;
     }
