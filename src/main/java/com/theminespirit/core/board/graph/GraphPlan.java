@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> advice, int pushes) {
+public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> advice) {
     public record Task(
             String id,
             BoardCase boardCase,

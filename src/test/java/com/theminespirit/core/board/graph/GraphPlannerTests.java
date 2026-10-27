@@ -625,4 +625,18 @@ class GraphPlannerTests {
                         + "сундуки " + plan.priority("building:chests") + ", топор spirit-2 "
                         + plan.priority("craft_stone_axe@spirit-2"));
     }
+
+    @Test
+    void plan_HutQuarterOfMaterials_StartsBuilding() {
+        GraphPlan plan = GraphWorld.settled()
+                .with("oak_log", 12)
+                .with("oak_planks", 0)
+                .with("cobblestone", 4)
+                .plan();
+
+        assertTrue(
+                plan.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
+                "Стройка начинается с четверти материалов (16 из 58), остальное подвозят по ходу, как в main: "
+                        + plan.task("building:hut"));
+    }
 }

@@ -232,26 +232,4 @@ class GraphWiringTests {
                 "Состояние постройки этапа 1 из фактов участка пишется под id графа; id без постройки в графе — "
                         + "постройка навсегда «не построена» (сад теперь orchard_<порода>): " + StageBuilt.ids());
     }
-
-    @Test
-    void plan_TwentySpiritsWithoutTools_PushesGrowAtMostLinearly() {
-        GraphPlan one = bare(1).plan();
-        GraphPlan twenty = bare(20).plan();
-
-        assertTrue(
-                twenty.pushes() <= 20 * one.pushes(),
-                "Расчёт графа на тике доски: 20 духов без инструментов не должны множить обход путей (каждый дух — "
-                        + "своя ветка инструмента, ветки с ничтожным вкладом отсекаются), иначе тик сервера встаёт "
-                        + "на минуты: 1 дух — " + one.pushes() + ", 20 — " + twenty.pushes());
-    }
-
-    private static GraphWorld bare(int spirits) {
-        GraphWorld world = GraphWorld.empty();
-        for (int i = 0; i < spirits; i++) {
-            world.tools("spirit-" + (i + 1), -1);
-        }
-        world.events.add("hungry");
-        world.events.add("night");
-        return world;
-    }
 }

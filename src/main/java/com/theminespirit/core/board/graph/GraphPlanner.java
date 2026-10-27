@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class GraphPlanner {
     private static final String BUILDING = "building:";
@@ -17,15 +18,14 @@ public final class GraphPlanner {
     private static final String EVENT = "event:";
     private static final String EXPLORE = "explore:";
     private static final char AT = '@';
-    private static final double NEGLIGIBLE = 0.5;
 
     private final SupplyGraph graph;
     private final GraphState state;
-    private final Map<String, Double> scores = new LinkedHashMap<>();
+    private final GraphFlow flow = new GraphFlow();
+    private final Set<String> expanded = new HashSet<>();
     private final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
-    private int pushes;
 
     private GraphPlanner(SupplyGraph graph, GraphState state) {
         this.graph = Objects.requireNonNull(graph, "Граф не может быть null: без него не из чего выводить задания");
@@ -37,8 +37,15 @@ public final class GraphPlanner {
         planner.roots();
         planner.events();
         planner.standing();
+        return planner.result(planner.edges());
+    }
+
+    public static GraphFlow flow(SupplyGraph graph, GraphState state) {
+        GraphPlanner planner = new GraphPlanner(graph, state);
+        planner.roots();
+        planner.events();
         planner.edges();
-        return planner.result();
+        return planner.flow;
     }
 
     public static int threshold(SupplyGraph.Item item, GraphState state) {
@@ -71,7 +78,7 @@ public final class GraphPlanner {
             }
             int have = count(item.id());
             if (have < threshold(item, state) && sourced(item.id())) {
-                push(item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0), new HashSet<>());
+                push(null, item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0));
             }
         }
         for (String spirit : state.kits().keySet()) {
@@ -79,13 +86,10 @@ public final class GraphPlanner {
                 int target = graph.rank(graph.kit().tier(kind, state.stage()));
                 int tier = state.tier(spirit, kind);
                 if (tier < target) {
-                    push(
-                            toolKey(kind, spirit),
-                            (state.bestTier(kind) >= target
-                                            ? graph.kit().secondaryBase()
-                                            : graph.kit().base())
-                                    + (tier < 0 ? graph.urgentBoost() : 0),
-                            new HashSet<>());
+                    double base = state.bestTier(kind) >= target
+                            ? graph.kit().secondaryBase()
+                            : graph.kit().base();
+                    push(null, toolKey(kind, spirit), base + (tier < 0 ? graph.urgentBoost() : 0));
                 }
             }
         }
@@ -93,14 +97,15 @@ public final class GraphPlanner {
             if (!building.optional()
                     && building.stage() <= state.stage()
                     && state.built(building.id()) != Built.BUILT) {
-                requireBuilding(building.id(), building.base(), "постройка этапа " + building.stage(), new HashSet<>());
+                requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
             }
         }
         graph.herdCaps().forEach((herd, cap) -> {
             if (count(herd) > cap) {
                 for (SupplyGraph.Way way : graph.ways()) {
                     if (way.consumes().containsKey(herd) && available(way)) {
-                        add(way.id(), graph.herdCullBoost());
+                        flow.local(way.id(), graph.herdCullBoost());
+                        expandWay(way.id(), way);
                     }
                 }
             }
@@ -108,7 +113,7 @@ public final class GraphPlanner {
         for (SupplyGraph.Trigger trigger : graph.triggers()) {
             SupplyGraph.Building wanted = graph.buildings().get(trigger.build());
             if (wanted != null && count(trigger.have()) > 0 && state.built(trigger.build()) != Built.BUILT) {
-                requireBuilding(trigger.build(), wanted.base(), "есть " + trigger.have(), new HashSet<>());
+                requireBuilding(null, trigger.build(), wanted.base(), "есть " + trigger.have());
             }
         }
         if (state.storageFreePercent() < graph.storage().minFreePercent()
@@ -121,19 +126,31 @@ public final class GraphPlanner {
                                     + "%: нужен ещё сундук или расширение"));
         } else if (state.storageFreePercent() < graph.storage().minFreePercent()) {
             requireBuilding(
+                    null,
                     graph.storage().building(),
                     graph.storage().base(),
                     "на складе свободно " + state.storageFreePercent() + "% (< "
-                            + graph.storage().minFreePercent() + "%)",
-                    new HashSet<>());
+                            + graph.storage().minFreePercent() + "%)");
         }
     }
 
-    private void push(String node, double value, Set<String> path) {
-        if (Math.abs(value) < NEGLIGIBLE || !path.add(node)) {
+    private void push(@Nullable String from, String node, double amount) {
+        if (amount == 0) {
             return;
         }
-        pushes++;
+        if (from == null) {
+            flow.root(node, amount);
+        } else {
+            flow.link(from, node, amount);
+        }
+        expand(node);
+    }
+
+    private void expand(String node) {
+        if (!expanded.add(node)) {
+            return;
+        }
+        double decay = graph.decay();
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
             String spirit = node.substring(node.indexOf(AT) + 1);
@@ -143,51 +160,53 @@ public final class GraphPlanner {
                 }
                 boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier(kind, state.stage()));
                 for (SupplyGraph.Way way : graph.producers(tier + "_" + kind)) {
-                    if (!aboveKit) {
-                        activate(way, way.id() + AT + spirit, value * way.weight(), path);
+                    String key = way.id() + AT + spirit;
+                    flow.link(node, key, way.weight());
+                    if (aboveKit) {
+                        chances.add(key);
                     } else {
-                        chances.add(way.id() + AT + spirit);
-                        add(way.id() + AT + spirit, value * way.weight());
+                        expandWay(key, way);
                     }
                 }
             }
         } else if (node.startsWith(BUILDING)) {
             String id = node.substring(BUILDING.length());
-            add(node, value);
             SupplyGraph.Building building = graph.buildings().get(id);
             Map<String, Integer> needs = materials(id);
             if (building != null
                     && stocked(needs)
-                    && building.requires().stream().allMatch(required -> state.built(required) == Built.BUILT)
                     && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
-                add(node, graph.buildReadyBoost());
+                flow.local(node, graph.buildReadyBoost());
             }
-            for (Map.Entry<String, Integer> input : materials(id).entrySet()) {
+            for (Map.Entry<String, Integer> input : needs.entrySet()) {
                 if (count(input.getKey()) < input.getValue()) {
-                    push(input.getKey(), value * graph.decay(), path);
+                    push(node, input.getKey(), decay);
                 }
             }
             if (building != null) {
                 for (String required : building.requires()) {
                     if (state.built(required) != Built.BUILT) {
-                        requireBuilding(required, value * graph.decay(), "нужна постройке " + id, path);
+                        requireBuilding(node, required, decay, "нужна постройке " + id);
                     }
                 }
+                if (building.tool() != null && state.bestTier(building.tool()) < 0) {
+                    pushTool(node, building.tool(), decay);
+                }
             }
-            if (building != null && building.tool() != null && state.bestTier(building.tool()) < 0) {
-                pushTool(building.tool(), value * graph.decay(), path);
-            }
+        } else if (node.startsWith(EVENT) || node.startsWith(EXPLORE)) {
+            return;
         } else if (graph.isGroup(node)) {
             for (String member : graph.members(node)) {
                 if (sourced(member)) {
-                    push(member, value, path);
+                    push(node, member, 1.0);
                 }
             }
         } else {
             List<SupplyGraph.Way> producers = graph.producers(node);
             for (SupplyGraph.Way way : producers) {
                 if (available(way)) {
-                    activate(way, way.id(), value * way.weight(), path);
+                    flow.link(node, way.id(), way.weight());
+                    expandWay(way.id(), way);
                 }
             }
             List<String> missing = producers.stream()
@@ -202,40 +221,41 @@ public final class GraphPlanner {
                                 node,
                                 "нет источника " + node + " в округе (нет " + missing
                                         + "): разведать или сменить материал/породу постройки"));
-                missing.forEach(resource -> add(EXPLORE + resource, value * graph.decay()));
+                missing.forEach(resource -> flow.link(node, EXPLORE + resource, decay));
             }
         }
-        path.remove(node);
     }
 
-    private void activate(SupplyGraph.Way way, String key, double value, Set<String> path) {
-        add(key, value);
-        double down = value * graph.decay();
+    private void expandWay(String key, SupplyGraph.Way way) {
+        if (!expanded.add(key)) {
+            return;
+        }
+        double decay = graph.decay();
         for (Map.Entry<String, Integer> input : way.consumes().entrySet()) {
             if (count(input.getKey()) < input.getValue()) {
-                push(input.getKey(), down, path);
+                push(key, input.getKey(), decay);
             }
         }
         for (Map.Entry<String, Integer> input : way.needs().entrySet()) {
             if (count(input.getKey()) < input.getValue()) {
-                push(input.getKey(), down, path);
+                push(key, input.getKey(), decay);
             }
         }
         if (way.tool() != null && state.bestTier(way.tool()) < graph.rank(way.tier() == null ? "wooden" : way.tier())) {
-            pushTool(way.tool(), down, path);
+            pushTool(key, way.tool(), decay);
         }
         if (way.building() != null && state.built(way.building()) != Built.BUILT) {
-            requireBuilding(way.building(), down, "нужна пути " + way.id(), path);
+            requireBuilding(key, way.building(), decay, "нужна пути " + way.id());
         }
     }
 
-    private void pushTool(String kind, double value, Set<String> path) {
+    private void pushTool(@Nullable String from, String kind, double amount) {
         for (String spirit : state.kits().keySet()) {
-            push(toolKey(kind, spirit), value / Math.max(1, state.spirits()), path);
+            push(from, toolKey(kind, spirit), amount / Math.max(1, state.spirits()));
         }
     }
 
-    private void requireBuilding(String id, double value, String why, Set<String> path) {
+    private void requireBuilding(@Nullable String from, String id, double amount, String why) {
         SupplyGraph.Building building = graph.buildings().get(id);
         if (building == null || state.built(id) == Built.ABSENT || building.stage() > state.stage()) {
             notices.putIfAbsent(
@@ -248,7 +268,7 @@ public final class GraphPlanner {
                                             : "")));
             return;
         }
-        push(BUILDING + id, value, path);
+        push(from, BUILDING + id, amount);
     }
 
     private void events() {
@@ -259,10 +279,10 @@ public final class GraphPlanner {
             }
             for (GraphEvent.Task task : event.tasks()) {
                 String key = EVENT + name + ":" + task.id();
-                add(key, task.base());
+                flow.root(key, task.base());
                 for (Map.Entry<String, Integer> input : task.consumes().entrySet()) {
                     if (count(input.getKey()) < input.getValue()) {
-                        push(input.getKey(), task.base() * graph.decay(), new HashSet<>());
+                        push(key, input.getKey(), graph.decay());
                     }
                 }
             }
@@ -285,52 +305,62 @@ public final class GraphPlanner {
             int target = graph.rank(graph.kit().tier(kind, state.stage()));
             for (String spirit : state.kits().keySet()) {
                 if (state.tier(spirit, kind) < target) {
-                    push(toolKey(kind, spirit), weight, new HashSet<>());
+                    push(null, toolKey(kind, spirit), weight);
                 }
             }
         } else if (node.startsWith(BUILDING)) {
             String id = node.substring(BUILDING.length());
             if (state.built(id) != Built.BUILT) {
-                requireBuilding(id, weight, "событие " + event, new HashSet<>());
+                requireBuilding(null, id, weight, "событие " + event);
             }
         } else if (lacking(graph, state, node)) {
-            push(node, weight, new HashSet<>());
+            push(null, node, weight);
         }
     }
 
-    private void edges() {
+    private Map<String, Double> edges() {
+        Map<String, Double> scores = flow.solve();
+        boolean changed = false;
         for (SupplyGraph.Edge edge : graph.edges()) {
             if (!lacking(graph, state, edge.lack())) {
                 continue;
             }
             boolean active = false;
             for (String key : List.copyOf(scores.keySet())) {
-                if (key.equals(edge.way()) || key.startsWith(edge.way() + AT)) {
-                    add(key, edge.weight());
+                if ((key.equals(edge.way()) || key.startsWith(edge.way() + AT)) && scores.getOrDefault(key, 0.0) > 0) {
+                    flow.local(key, edge.weight());
                     active = true;
                 }
             }
             SupplyGraph.Way way = graph.way(edge.way()).orElse(null);
             if (!active && edge.weight() > 0 && way != null && !graph.isTool(way.makes()) && available(way)) {
-                activate(way, way.id(), edge.weight(), new HashSet<>());
+                flow.root(way.id(), edge.weight());
+                expandWay(way.id(), way);
+                changed = true;
+            } else if (active) {
+                changed = true;
             }
         }
+        return changed ? flow.solve() : scores;
     }
 
-    private void add(String key, double value) {
-        double top = graph.maxPriority();
-        double bounded = Math.max(-top, Math.min(top, value));
-        scores.merge(
-                key, bounded, (before, more) -> more < 0 ? before + more : top - (top - before) * (top - more) / top);
+    private boolean task(String key) {
+        if (key.startsWith(BUILDING) || key.startsWith(EVENT) || key.startsWith(EXPLORE)) {
+            return true;
+        }
+        int at = key.indexOf(AT);
+        return !key.startsWith(TOOL)
+                && graph.way(at < 0 ? key : key.substring(0, at)).isPresent();
     }
 
-    private GraphPlan result() {
+    private GraphPlan result(Map<String, Double> scores) {
         List<GraphPlan.Task> tasks = new ArrayList<>();
         for (Map.Entry<String, Double> score : scores.entrySet()) {
-            int priority = (int) Math.max(0, Math.min(graph.maxPriority(), Math.round(score.getValue())));
-            tasks.add(task(score.getKey(), priority));
+            if (score.getValue() > 0 && task(score.getKey())) {
+                tasks.add(task(score.getKey(), GraphFlow.priority(score.getValue(), graph.maxPriority())));
+            }
         }
-        return new GraphPlan(tasks, List.copyOf(notices.values()), advice, pushes);
+        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
     }
 
     private GraphPlan.Task task(String key, int priority) {
@@ -381,7 +411,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     materials,
-                    tooled && stocked(materials),
+                    tooled && share(materials) >= graph.buildStartShare(),
                     false,
                     graph.implemented(id));
         }
@@ -455,6 +485,17 @@ public final class GraphPlanner {
 
     private boolean housed(SupplyGraph.Way way) {
         return way.building() == null || state.built(way.building()) == Built.BUILT;
+    }
+
+    private double share(Map<String, Integer> needs) {
+        int total = needs.values().stream().mapToInt(Integer::intValue).sum();
+        if (total == 0) {
+            return 1.0;
+        }
+        int have = needs.entrySet().stream()
+                .mapToInt(entry -> Math.min(entry.getValue(), Math.max(0, count(entry.getKey()))))
+                .sum();
+        return (double) have / total;
     }
 
     private boolean stocked(Map<String, Integer> needs) {

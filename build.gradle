@@ -279,7 +279,7 @@ tasks.named('check') {
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(4, Runtime.runtime.availableProcessors() - 2))}") as int
 tasks.named('test', Test) {
     useJUnitPlatform {
-        excludeTags 'slow', 'mutation'
+        excludeTags 'slow', 'mutation', 'export'
     }
     maxParallelForks = 1
     systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
@@ -330,6 +330,21 @@ tasks.register('mutationTest', Test) {
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/mutation/html')
     reports.junitXml.outputLocation = file('TestResults/mutation/xml')
+}
+
+tasks.register('graphExport', Test) {
+    group = 'verification'
+    description = 'Выгрузка графа и контрольных случаев для Python-модели (tools/graph-gpu): TestResults/graph-export'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'export'
+    }
+    maxParallelForks = 1
+    systemProperty 'theminespirit.modId', project.mod_id
+    failOnNoDiscoveredTests = true
+    reports.html.outputLocation = file('TestResults/graph-export/html')
+    reports.junitXml.outputLocation = file('TestResults/graph-export/xml')
 }
 
 tasks.register('propertyTest', Test) {

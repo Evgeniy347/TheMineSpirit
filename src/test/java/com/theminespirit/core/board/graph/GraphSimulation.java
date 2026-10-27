@@ -94,6 +94,9 @@ final class GraphSimulation {
             if (chosen.size() >= free) {
                 break;
             }
+            if (!stocked(world, task)) {
+                continue;
+            }
             if (task.spirit().isPresent()) {
                 if (busy.add(task.spirit().orElseThrow())) {
                     chosen.add(task);
