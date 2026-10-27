@@ -61,6 +61,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntBinaryOperator;
+import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -587,6 +588,12 @@ public final class FirstStepsRunner {
 
     private record StoneSite(BlockCoord home, String wood, StageSite stage) {}
 
+    private static List<BlockPos> factOrigins(BlockCoord home, StageSite stage) {
+        return Stream.of(home, stage.anchor(), stage.workYard())
+                .map(point -> new BlockPos(point.x(), point.y(), point.z()))
+                .toList();
+    }
+
     private static Scan buildFacts(
             ServerLevel level, StoneSite site, StockView stock, BoardService service, PlanWorld world) {
         StageSite stage = site.stage();
@@ -600,9 +607,7 @@ public final class FirstStepsRunner {
         boolean anvil = false;
         boolean furnace = false;
         Set<BlockPos> seen = new HashSet<>();
-        BlockCoord anchor = stage.anchor();
-        for (BlockPos start :
-                List.of(new BlockPos(home.x(), home.y(), home.z()), new BlockPos(anchor.x(), anchor.y(), anchor.z()))) {
+        for (BlockPos start : factOrigins(home, stage)) {
             for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
                 for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
                     if (dx * dx + dz * dz > SCAN_RADIUS * SCAN_RADIUS) {

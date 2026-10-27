@@ -12,6 +12,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
+import com.theminespirit.neoforge.board.FirstStepsRunner;
 import com.theminespirit.neoforge.board.GraphSource;
 import com.theminespirit.neoforge.board.JournalService;
 import com.theminespirit.neoforge.board.StockReader;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -139,6 +141,38 @@ public final class BoardGraphGameTests {
                         && live.contains(collect),
                 "Предмет лежит у дома — событие drops_nearby ставит сбор выпавшего COLLECT_DROPS и держит его "
                         + "живой причиной, статус " + board.board().statusOf(collect) + ", живые причины " + live);
+        GameTestFixtures.finish(helper);
+        helper.succeed();
+    }
+
+    @SceneStep(template = "arena", timeoutTicks = 100, board = true)
+    public static void facts_ChestsAtWorkYard_YardCounted(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        SpiritEntity spirit = settlement(helper);
+        ServerLevel level = helper.getLevel();
+        BoardService board = isolatedBoard(level, "gametest-graph-yard.jsonl");
+        StockView stock = new StockView(WOOD);
+        FirstStepsRunner.StageScan before = FirstStepsRunner.tick(
+                        level, board, List.of(spirit), stock, level.getGameTime())
+                .orElseThrow(() -> new GameTestAssertException("Участок у дома духа обязан размечаться"));
+        BlockCoord yard = before.stage().workYard();
+        BlockPos first = new BlockPos(yard.x() + 1, yard.y(), yard.z());
+        level.setBlockAndUpdate(first, Blocks.CHEST.defaultBlockState());
+        level.setBlockAndUpdate(first.east(2), Blocks.CHEST.defaultBlockState());
+
+        int chests = FirstStepsRunner.tick(level, board, List.of(spirit), stock, level.getGameTime())
+                .orElseThrow()
+                .facts()
+                .chests();
+
+        level.setBlockAndUpdate(first, Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(first.east(2), Blocks.AIR.defaultBlockState());
+        helper.assertTrue(
+                chests >= 2,
+                "Сундуки двора стоят у рабочего двора (" + yard + "), а не у якоря "
+                        + before.stage().anchor()
+                        + ": факты поселения обязаны их видеть, иначе двор навсегда «не готов» и хижина, ограда, "
+                        + "свет не ставятся; сундуков в фактах " + chests);
         GameTestFixtures.finish(helper);
         helper.succeed();
     }

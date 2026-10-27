@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,6 +29,7 @@ public final class GraphSource {
     private static final double HOSTILE_RADIUS = 16;
 
     private final GraphNotes notes = new GraphNotes();
+    private String lastBuildings = "";
 
     public Set<String> tick(
             ServerLevel level,
@@ -60,6 +62,22 @@ public final class GraphSource {
             }
         }
         report(plan, result, unconnected, now);
+        String buildings = new TreeMap<>(state.buildings()) + " "
+                + plan.tasks().stream()
+                        .filter(task -> task.id().startsWith("building:"))
+                        .map(task -> task.makes() + "=" + task.priority() + (task.feasible() ? "" : "?"))
+                        .toList()
+                + " сундуков двора " + scan.orElseThrow().facts().chests() + " у "
+                + scan.orElseThrow().stage().workYard()
+                + " на доску "
+                + result.post().stream()
+                        .map(GraphTickets.Ticket::id)
+                        .filter(id -> id.contains("building:"))
+                        .toList();
+        if (!buildings.equals(lastBuildings)) {
+            lastBuildings = buildings;
+            LOGGER.info("[graph] постройки {}", buildings);
+        }
         tellStrategist(level, graph, state, plan, now);
         return result.live();
     }
