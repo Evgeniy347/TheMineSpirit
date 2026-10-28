@@ -128,6 +128,8 @@ public final class GraphNames {
         tag(tags, "mangrove_roots", "mangrove_swamp");
         tag(tags, "diamond_ore", DIAMOND_FOUND);
         tag(tags, "deepslate_diamond_ore", DIAMOND_FOUND);
+        tag(tags, "emerald_ore", "emerald_ore");
+        tag(tags, "deepslate_emerald_ore", "emerald_ore");
         for (String block : List.of(
                 "amethyst_block",
                 "budding_amethyst",

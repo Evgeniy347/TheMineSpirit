@@ -283,27 +283,6 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_Redstone_MachinesInDevelopment() {
-        GraphWorld world = GraphWorld.settled()
-                .with("iron_ingot", 32)
-                .with("redstone", 16)
-                .with("stone", 16)
-                .with("cobblestone", 16)
-                .with("oak_planks", 16)
-                .with("stick", 16);
-        world.stage = 3;
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("craft_piston").map(task -> !task.implemented()).orElse(false)
-                        && plan.task("craft_rail")
-                                .map(task -> !task.implemented())
-                                .orElse(false),
-                "Редстоун-механики (поршень, рельсы) стоят на доске как «в разработке»: " + plan.task("craft_piston")
-                        + ", " + plan.task("craft_rail"));
-    }
-
-    @Test
     void plan_ArmorNorms_PerSpiritAndByStage() {
         GraphWorld one = GraphWorld.settled();
         one.stage = 3;

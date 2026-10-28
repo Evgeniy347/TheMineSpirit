@@ -95,6 +95,18 @@ class GraphWorldTagTests {
     }
 
     @Test
+    void blockWorld_EmeraldOre_TagForMineEmerald() {
+        assertEquals(
+                Set.of("emerald_ore"),
+                GraphNames.blockWorld("emerald_ore"),
+                "Изумрудная руда — метка мира emerald_ore: без неё путь mine_emerald не активируется");
+        assertEquals(
+                Set.of("emerald_ore"),
+                GraphNames.blockWorld("deepslate_emerald_ore"),
+                "Глубинносланцевая изумрудная руда — та же метка мира emerald_ore");
+    }
+
+    @Test
     void world_GeodeDripstoneLushBlocks_Tags() {
         assertEquals(
                 List.of(Set.of("geode"), Set.of("geode"), Set.of("dripstone_caves"), Set.of("lush_caves")),

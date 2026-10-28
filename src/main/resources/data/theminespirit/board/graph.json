@@ -7890,8 +7890,7 @@
       "consumes": {
         "blaze_powder": 1,
         "slime_ball": 1
-      },
-      "implemented": false
+      }
     },
     {
       "id": "mine_netherite_scrap",
@@ -7948,8 +7947,7 @@
         "redstone": 2,
         "torch": 1
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_lever",
@@ -7961,8 +7959,7 @@
         "stick": 1,
         "cobblestone": 1
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_stone_button",
@@ -7973,8 +7970,7 @@
       "consumes": {
         "stone": 1
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_stone_pressure_plate",
@@ -7985,8 +7981,7 @@
       "consumes": {
         "stone": 2
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_piston",
@@ -8000,8 +7995,7 @@
         "iron_ingot": 1,
         "redstone": 1
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_hopper",
@@ -8013,8 +8007,7 @@
         "iron_ingot": 5,
         "chest": 1
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_rail",
@@ -8026,8 +8019,7 @@
         "iron_ingot": 6,
         "stick": 1
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "craft_minecart",
@@ -8038,8 +8030,7 @@
       "consumes": {
         "iron_ingot": 5
       },
-      "building": "crafting_table",
-      "implemented": false
+      "building": "crafting_table"
     },
     {
       "id": "mine_emerald",
@@ -8048,7 +8039,8 @@
       "yield": 2,
       "weight": 1.0,
       "world": "emerald_ore",
-      "implemented": false
+      "tool": "pickaxe",
+      "tier": "iron"
     },
     {
       "id": "craft_chainmail_armor",
@@ -9444,16 +9436,12 @@
       "implemented": false
     },
     {
-      "id": "craft_saddle",
+      "id": "loot_saddle",
       "case": "GATHER_MATERIALS",
       "makes": "saddle",
       "yield": 1,
       "weight": 1.0,
-      "consumes": {
-        "leather": 3,
-        "iron_ingot": 1
-      },
-      "building": "crafting_table",
+      "world": "dungeon_chest",
       "implemented": false
     },
     {
