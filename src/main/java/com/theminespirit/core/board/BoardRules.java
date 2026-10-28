@@ -68,6 +68,7 @@ public final class BoardRules {
         priorities.put(BoardCase.DISMANTLE_SHELTER, 65);
         priorities.put(BoardCase.RELOCATE_BUILDING, 60);
         priorities.put(BoardCase.BREED_ANIMALS, 55);
+        priorities.put(BoardCase.BREW_POTION, 45);
         priorities.put(BoardCase.SHEAR_SHEEP, 55);
         priorities.put(BoardCase.HARVEST_ORCHARD, 30);
         priorities.put(BoardCase.HARVEST_HIVE, 55);
@@ -89,9 +90,12 @@ public final class BoardRules {
         priorities.put(BoardCase.CRAFT_SMITHING_TABLE, 50);
         priorities.put(BoardCase.CRAFT_SMOKER, 50);
         priorities.put(BoardCase.CRAFT_FURNACE, 40);
+        priorities.put(BoardCase.CRAFT_BREWING_STAND, 40);
         priorities.put(BoardCase.CRAFT_TORCHES, 70);
         priorities.put(BoardCase.SMELT_CHARCOAL, 70);
         priorities.put(BoardCase.FISH, 50);
+        priorities.put(BoardCase.GRIND_BLAZE_POWDER, 40);
+        priorities.put(BoardCase.HARVEST_NETHER_WART, 40);
         priorities.put(BoardCase.STOCK_CHESTS, 40);
         priorities.put(BoardCase.CRAFT_WOODEN_PICKAXE, 65);
         priorities.put(BoardCase.CRAFT_WOODEN_AXE, 65);

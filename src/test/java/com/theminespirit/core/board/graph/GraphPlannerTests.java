@@ -224,41 +224,6 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_StageThree_PotionTasksMarkedUnimplemented() {
-        GraphWorld world = GraphWorld.settled().event("lava_seen");
-        world.stage = 3;
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("brew_fire_resistance")
-                        .map(task -> !task.implemented())
-                        .orElse(false),
-                "Зелья ещё не реализованы — задание стоит с пометкой «не реализовано»: "
-                        + plan.task("brew_fire_resistance"));
-    }
-
-    @Test
-    void plan_StageThree_FullPotionLineInDevelopment() {
-        GraphWorld world = GraphWorld.settled()
-                .built("brewing_stand", Built.BUILT)
-                .with("water_bottle", 8)
-                .with("nether_wart", 8)
-                .with("ghast_tear", 2)
-                .with("blaze_powder", 2)
-                .with("gunpowder", 2);
-        world.stage = 3;
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("brew_regeneration").map(task -> !task.implemented()).orElse(false)
-                        && plan.task("splash_regeneration")
-                                .map(task -> !task.implemented())
-                                .orElse(false),
-                "Регенерация и взрывное зелье стоят на доске с пометкой «в разработке»: "
-                        + plan.task("brew_regeneration") + ", " + plan.task("splash_regeneration"));
-    }
-
-    @Test
     void plan_NetherAndEnd_ChainsMarkedInDevelopment() {
         GraphWorld world = GraphWorld.settled()
                 .built("smithing_table", Built.BUILT)

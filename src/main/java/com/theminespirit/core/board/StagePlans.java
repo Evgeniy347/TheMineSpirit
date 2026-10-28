@@ -45,6 +45,7 @@ public final class StagePlans {
             case BUILD_FENCE, LIGHTING -> Optional.of(PlanSteps.placeAll(target, work.blocks(), work.builds()));
             case STOCK_CHESTS -> Optional.of(chests(target, site, work.builds()));
             case CRAFT_FURNACE -> Optional.of(station(target, site.workYard(), work.builds()));
+            case CRAFT_BREWING_STAND -> Optional.of(brewStand(site.workYard()));
             case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site)) : Optional.empty();
             case BUILD_STREETS -> Optional.of(PlanSteps.buildsOnly(target, work.builds()));
             case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
@@ -96,6 +97,25 @@ public final class StagePlans {
                             : PlanSteps.craft("minecraft:chest", 2));
             steps.add(PlanSteps.build(build, target.wood()));
         }
+        return new SequenceNode(steps);
+    }
+
+    private static TaskNode brewStand(BlockCoord yard) {
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(PlanSteps.gotoPoint(yard));
+        steps.add(PlanSteps.withdraw("minecraft:blaze_rod", 1));
+        steps.add(PlanSteps.withdraw("minecraft:cobblestone", 3));
+        steps.add(new ScriptCall(
+                "craft",
+                Map.of(
+                        "item",
+                        "minecraft:brewing_stand",
+                        "count",
+                        1,
+                        "radius",
+                        CatalogLimits.STATION_RADIUS_DEFAULT,
+                        "place",
+                        true)));
         return new SequenceNode(steps);
     }
 

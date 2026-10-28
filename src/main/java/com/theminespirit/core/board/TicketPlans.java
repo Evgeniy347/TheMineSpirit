@@ -157,22 +157,10 @@ public final class TicketPlans {
             case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
             case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
             case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
-            case CRAFT_TORCHES ->
-                sequence(
-                        gotoTarget(target),
-                        takeFrom("minecraft:coal", (torchCount(target) + 3) / 4),
-                        takeFrom("minecraft:charcoal", (torchCount(target) + 3) / 4),
-                        new FallbackNode(List.of(
-                                new ScriptCall(
-                                        ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, (torchCount(target) + 3) / 4)),
-                                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                        craft(TORCH, torchCount(target), target),
-                        store(
-                                target,
-                                LEFTOVERS.stream()
-                                        .filter(item -> !TORCH.equals(item))
-                                        .toArray(String[]::new)));
+            case CRAFT_TORCHES -> TorchPlans.plan(target);
             case SMELT_CHARCOAL -> smeltCharcoal(target);
+            case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART, CRAFT_BREWING_STAND ->
+                BrewPlans.plan(boardCase, target);
             case FISH -> fishWorkPoint(target);
             case CRAFT_WOODEN_PICKAXE,
                     CRAFT_WOODEN_AXE,
@@ -250,7 +238,7 @@ public final class TicketPlans {
                                 MINE_DESCENT_ROTATION)));
     }
 
-    private static TaskNode takeFrom(String item, int count) {
+    static TaskNode takeFrom(String item, int count) {
         return new FallbackNode(List.of(
                 new ScriptCall(
                         WITHDRAW,
@@ -440,7 +428,7 @@ public final class TicketPlans {
                 schematic(scheme, target.target(), target));
     }
 
-    private static TaskNode placeInYard(String item, int count, TicketTarget target) {
+    static TaskNode placeInYard(String item, int count, TicketTarget target) {
         return withLeftovers(
                 sequence(
                         gotoTarget(target),
@@ -494,7 +482,7 @@ public final class TicketPlans {
                 target);
     }
 
-    private static TaskNode craft(String item, int count, TicketTarget target) {
+    static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(CRAFT, Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
@@ -514,7 +502,7 @@ public final class TicketPlans {
                                 CatalogLimits.FISH_RADIUS_DEFAULT)));
     }
 
-    private static int torchCount(TicketTarget target) {
+    static int torchCount(TicketTarget target) {
         int count = target.count() > 0 ? target.count() : TORCHES_PER_CRAFT;
         return Math.min(count, CatalogLimits.COUNT_MAX);
     }
@@ -532,7 +520,7 @@ public final class TicketPlans {
                 store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
-    private static TaskNode store(TicketTarget target, String... items) {
+    static TaskNode store(TicketTarget target, String... items) {
         List<TaskNode> steps = new ArrayList<>(items.length + 1);
         steps.add(gotoTarget(target));
         for (String item : items) {

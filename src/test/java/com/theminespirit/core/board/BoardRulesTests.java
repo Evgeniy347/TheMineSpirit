@@ -145,7 +145,11 @@ class BoardRulesTests {
                 || ToolSet.isTool(boardCase)
                 || boardCase == BoardCase.CRAFT_SHEARS
                 || boardCase == BoardCase.CRAFT_BED
-                || boardCase == BoardCase.WEAVE_WOOL) {
+                || boardCase == BoardCase.WEAVE_WOOL
+                || boardCase == BoardCase.BREW_POTION
+                || boardCase == BoardCase.CRAFT_BREWING_STAND
+                || boardCase == BoardCase.GRIND_BLAZE_POWDER
+                || boardCase == BoardCase.HARVEST_NETHER_WART) {
             return 4;
         }
         if (boardCase == BoardCase.FILL_CRATER) {

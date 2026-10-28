@@ -48,7 +48,7 @@ public final class CoreScripts {
         specs.addAll(huntingSpecs());
         specs.addAll(fishingSpecs());
         specs.addAll(itemSpecs());
-        specs.add(acquireAtSpec());
+        specs.add(ItemScriptSpecs.acquireAt());
         specs.addAll(combatAndClimbSpecs());
         specs.addAll(placementSpecs());
         specs.addAll(fillAndClearSpecs());
@@ -58,7 +58,7 @@ public final class CoreScripts {
         specs.addAll(campSpecs());
         specs.addAll(interactionSpecs());
         specs.addAll(exchangeSpecs());
-        specs.add(GatherScriptSpecs.stripLog());
+        specs.addAll(BrewScriptSpecs.all());
         return ScriptCatalog.of(specs);
     }
 
@@ -944,25 +944,6 @@ public final class CoreScripts {
                                 ParamSpec.bool("fresh", false, false)),
                         List.of(),
                         List.of("предмет есть в инвентаре")));
-    }
-
-    private static ScriptSpec acquireAtSpec() {
-        return spec(
-                "acquire_at",
-                "иметь предмет в инвентаре; не хватает — добыть у заданного места (земля подсыпки за оградой)",
-                List.of(
-                        ParamSpec.text(ITEM, true),
-                        ParamSpec.integer(COUNT, true, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX),
-                        ParamSpec.integer(
-                                "x", true, -CatalogLimits.WORLD_HORIZONTAL_LIMIT, CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                        ParamSpec.integer("y", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
-                        ParamSpec.integer(
-                                "z",
-                                true,
-                                -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
-                List.of(),
-                List.of("предмет есть в инвентаре"));
     }
 
     private static List<ScriptSpec> combatAndClimbSpecs() {

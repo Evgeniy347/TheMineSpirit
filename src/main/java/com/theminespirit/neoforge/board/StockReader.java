@@ -19,7 +19,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.Block;
@@ -31,6 +33,8 @@ public final class StockReader {
     private static final int CONTAINER_RADIUS = 8;
     private static final int SCAN_HEIGHT = 4;
     private static final String MINECRAFT_PREFIX = "minecraft:";
+    private static final String POTION_PREFIX = "potion_";
+    private static final String SPLASH_PREFIX = "splash_potion_";
 
     private final int containerBudget;
     private final int blockBudget;
@@ -73,6 +77,9 @@ public final class StockReader {
                     if (stack != null) {
                         add(available, stack);
                     }
+                }
+                for (int slot = 0; slot < container.container().getContainerSize(); slot++) {
+                    addPotion(available, container.container().getItem(slot));
                 }
                 reads++;
             }
@@ -126,6 +133,7 @@ public final class StockReader {
             return;
         }
         available.merge(shortId(StackMapper.itemId(stack)), stack.getCount(), Integer::sum);
+        addPotion(available, stack);
         if (stack.getItem() instanceof PickaxeItem) {
             for (String key : pickaxeKeys(stack)) {
                 available.merge(key, 1, Integer::sum);
@@ -156,6 +164,20 @@ public final class StockReader {
 
     private static void add(Map<String, Integer> available, Stack stack) {
         available.merge(shortId(stack.item()), stack.count(), Integer::sum);
+    }
+
+    private static void addPotion(Map<String, Integer> available, ItemStack stack) {
+        if (!stack.is(Items.POTION) && !stack.is(Items.SPLASH_POTION)) {
+            return;
+        }
+        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+        if (contents == null) {
+            return;
+        }
+        String prefix = stack.is(Items.SPLASH_POTION) ? SPLASH_PREFIX : POTION_PREFIX;
+        contents.potion()
+                .flatMap(holder -> holder.unwrapKey())
+                .ifPresent(key -> available.merge(prefix + key.location().getPath(), stack.getCount(), Integer::sum));
     }
 
     private static String shortId(String itemId) {

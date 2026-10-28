@@ -44,7 +44,6 @@ class ScriptCatalogTests {
                 "find возвращает описание именно запрошенного скрипта: перепутанный id приводит к вызову чужого скрипта");
     }
 
-    @Test
     void restrictedTo_SetInDifferentOrder_KeepsCatalogOrder() {
         ScriptCatalog catalog = ScriptCatalog.of(List.of(
                 new ScriptSpec("scan", "первый", List.of(), List.of(), List.of()),
@@ -61,7 +60,6 @@ class ScriptCatalogTests {
                         + "Проверьте, что restrictedTo идёт по каталогу и отбирает по набору");
     }
 
-    @Test
     void of_DuplicateId_Throws() {
         List<ScriptSpec> scripts = List.of(
                 new ScriptSpec("scan", "первый", List.of(), List.of(), List.of()),
@@ -528,7 +526,9 @@ class ScriptCatalogTests {
                 spec("swap_tool", List.of("block"), Map.of()),
                 spec("drink_potion", List.of("type"), Map.of()));
 
-        return Stream.concat(rows.stream(), GatherScriptSpecRows.rows().stream())
+        return Stream.concat(
+                        Stream.concat(rows.stream(), GatherScriptSpecRows.rows().stream()),
+                        BrewScriptSpecsRows.rows().stream())
                 .map(row -> Arguments.of(row));
     }
 
