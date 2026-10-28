@@ -22,6 +22,7 @@ import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
@@ -38,6 +39,7 @@ import com.theminespirit.core.movement.PitEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.core.town.StageWork;
@@ -92,6 +94,7 @@ public final class BoardService {
     private final TaskStall stall = new TaskStall();
     private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
+    private final Map<String, Long> supplyClosed = new HashMap<>();
     private final AbsentOwners absentOwners = new AbsentOwners();
     private final StageProgressWatch progress = new StageProgressWatch();
     private final Map<UUID, String> orphans = new HashMap<>();
@@ -907,6 +910,9 @@ public final class BoardService {
 
     private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success, @Nullable String verdict) {
         issuedGenerations.remove(ticket.id());
+        if (ticket.boardCase() == BoardCase.SUPPLY_SITE) {
+            supplyClosed.put(ticket.id(), spirit.level().getGameTime());
+        }
         if (success) {
             board.complete(ticket.id());
             switch (ticket.boardCase()) {
@@ -1199,29 +1205,19 @@ public final class BoardService {
                 }
             });
         }
-        for (Map.Entry<String, Integer> entry : missing.entrySet()) {
-            String item = entry.getKey();
-            int count = entry.getValue();
-            String id = "supply:" + item;
-            if (active(id) || board.recentlyFailed(id, now)) {
-                continue;
-            }
-            TicketTarget target = targets.values().stream()
-                    .filter(supply -> item.equals(supply.supplyItem()))
-                    .findFirst()
-                    .orElse(TicketTarget.at(homeOf(spirits)));
-            submit(
-                    new BoardTicket(
-                            id,
-                            BoardCase.SUPPLY_SITE,
-                            Optional.empty(),
-                            BoardRules.priorityOf(BoardCase.SUPPLY_SITE),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    target.withSupply(item, count));
+        SupplyGate.Decision decision = SupplyGate.decide(
+                missing,
+                stock.available(),
+                DataTables.INSTANCE.leveling().current().chestKeep(),
+                supplyClosed,
+                now,
+                BoardTuning.failBackoffTicks());
+        BlockCoord home = homeOf(spirits);
+        for (SupplyGate.Request request : decision.supply()) {
+            SupplyTickets.issue(this, targets, home, request, BoardCase.SUPPLY_SITE, "supply:", now);
+        }
+        for (SupplyGate.Request request : decision.gather()) {
+            SupplyTickets.issue(this, targets, home, request, BoardCase.GATHER_MATERIALS, "supply_gather:", now);
         }
     }
 
