@@ -6,14 +6,16 @@ import java.util.Optional;
 import java.util.Set;
 
 public enum RouteResource {
-    SAND("sand", "desert", "route_desert", "path_desert", Set.of("sand", "red_sand")),
+    SAND("sand", "sand", "desert", "route_desert", "path_desert", Set.of("sand", "red_sand")),
     SNOW(
             "snowball",
+            "snow",
             "snowy",
             "route_snow",
             "path_snowy",
             Set.of("snow", "snow_block", "powder_snow", "ice", "packed_ice", "blue_ice")),
     DIRT(
+            "dirt",
             "dirt",
             "plains",
             "route_dirt",
@@ -21,14 +23,17 @@ public enum RouteResource {
             Set.of("dirt", "grass_block", "coarse_dirt", "podzol", "rooted_dirt", "mycelium", "moss_block"));
 
     private final String item;
+    private final String event;
     private final String family;
     private final String routeBuilding;
     private final String pathBuilding;
     private final Set<String> blocks;
 
-    RouteResource(String item, String family, String routeBuilding, String pathBuilding, Set<String> blocks) {
+    RouteResource(
+            String item, String event, String family, String routeBuilding, String pathBuilding, Set<String> blocks) {
         this.item = Objects.requireNonNull(item, "Предмет ресурса не может быть null: из него собирают задание");
-        this.family = Objects.requireNonNull(family, "Семейство биома не может быть null: по нему событие графа");
+        this.event = Objects.requireNonNull(event, "Имя события не может быть null: по нему граф просит маршрут");
+        this.family = Objects.requireNonNull(family, "Семейство биома не может быть null: по нему тег мира");
         this.routeBuilding =
                 Objects.requireNonNull(routeBuilding, "Постройка маршрута не может быть null: точку ставит граф");
         this.pathBuilding =
@@ -61,11 +66,11 @@ public enum RouteResource {
     }
 
     public String depletedEvent() {
-        return "source_depleted:" + item;
+        return "source_depleted:" + event;
     }
 
     public String retargetEvent() {
-        return "route_retarget_" + family;
+        return "route_retarget_" + event;
     }
 
     public Set<String> blocks() {

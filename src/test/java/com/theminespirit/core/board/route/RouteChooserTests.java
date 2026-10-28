@@ -83,6 +83,26 @@ class RouteChooserTests {
     }
 
     @Test
+    void events_SnowAndDirt_UseGraphNames() {
+        assertEquals(
+                "source_depleted:snow",
+                RouteResource.SNOW.depletedEvent(),
+                "Граф знает источник снега как source_depleted:snow, а не snowball");
+        assertEquals(
+                "source_depleted:dirt",
+                RouteResource.DIRT.depletedEvent(),
+                "Граф знает источник земли как source_depleted:dirt");
+        assertEquals(
+                "route_retarget_snow",
+                RouteResource.SNOW.retargetEvent(),
+                "Событие переноса снежного маршрута — route_retarget_snow");
+        assertEquals(
+                "route_retarget_dirt",
+                RouteResource.DIRT.retargetEvent(),
+                "Событие переноса земляного маршрута — route_retarget_dirt");
+    }
+
+    @Test
     void ofBuilding_RouteAndPath_MapToResource() {
         assertEquals(
                 Optional.of(RouteResource.SAND),
