@@ -1,9 +1,9 @@
 """Эволюционный поиск весов графа поселения на видеокарте.
 
-Параметры поиска (каждый множитель в пределах ±50 %, 0.5…1.5):
-  * база каждого предмета,
-  * база каждой постройки,
-  * вес каждого пути,
+Параметры — КАТЕГОРИИ, а не каждый путь (каждый множитель в пределах ±50 %, 0.5…1.5):
+  * базы предметов по виду: perSpirit или этап,
+  * базы построек по этапу,
+  * веса путей по BoardCase,
   * decay, urgentBoost, buildReadyBoost.
 
 Метрика — сумма шагов до конца этапа 3 по стартовым мирам; застрявший мир
@@ -35,55 +35,47 @@ PENALTY = 500
 SCALARS = ("decay", "urgentBoost", "buildReadyBoost")
 
 
+def item_category(item):
+    return "item:perSpirit" if item.per_spirit else "item:stage" + str(item.stage)
+
+
+def building_category(building):
+    return "building:stage" + str(building.stage)
+
+
+def way_category(way):
+    return "way:" + str(way.board_case or "other")
+
+
 def parameters(graph):
-    """Список параметров поиска: (вид, id)."""
-    params = [("item", item.id) for item in graph.items.values()]
-    params += [("building", building.id) for building in graph.buildings.values()]
-    params += [("way", way.id) for way in graph.ways]
-    params += [("scalar", name) for name in SCALARS]
-    return params
+    """Список категорий поиска: баз несколько десятков, а не по пути."""
+    categories = set(SCALARS)
+    categories.update(item_category(item) for item in graph.items.values())
+    categories.update(building_category(building) for building in graph.buildings.values())
+    categories.update(way_category(way) for way in graph.ways)
+    scalars = [name for name in SCALARS if name in categories]
+    rest = sorted(categories.difference(SCALARS))
+    return scalars + rest
 
 
 def vector_to_weights(graph, vector, params):
-    """Вектор множителей -> множители конкретных весов для Graph.scaled."""
+    """Вектор множителей категорий -> множители конкретных весов для Graph.scaled."""
+    factors = {name: float(value) for name, value in zip(params, vector)}
     weights = {"items": {}, "buildings": {}, "ways": {}}
-    for value, (kind, key) in zip(vector, params):
-        factor = float(value)
-        if kind == "item":
-            weights["items"][key] = factor
-        elif kind == "building":
-            weights["buildings"][key] = factor
-        elif kind == "way":
-            weights["ways"][key] = factor
-        else:
-            weights[key] = factor
+    for name in SCALARS:
+        weights[name] = factors.get(name, 1.0)
+    for item_id, item in graph.items.items():
+        weights["items"][item_id] = factors.get(item_category(item), 1.0)
+    for building_id, building in graph.buildings.items():
+        weights["buildings"][building_id] = factors.get(building_category(building), 1.0)
+    for way in graph.ways:
+        weights["ways"][way.id] = factors.get(way_category(way), 1.0)
     return weights
 
 
-def group_of(graph, kind, key):
-    if kind == "item":
-        item = graph.items[key]
-        return "item_per_spirit" if item.per_spirit else "item_stage" + str(item.stage)
-    if kind == "building":
-        return "building_stage" + str(graph.buildings[key].stage)
-    if kind == "way":
-        way = graph.way(key)
-        if graph.is_tool(way.makes):
-            return "way_tool"
-        item = graph.items.get(way.makes)
-        return "way_stage" + str(item.stage) if item is not None else "way_other"
-    return key
-
-
-def groups(graph, params):
-    return sorted({group_of(graph, kind, key) for kind, key in params})
-
-
-def group_vector(graph, params, group, factor):
+def group_vector(params, index, factor):
     vector = np.ones(len(params))
-    for index, (kind, key) in enumerate(params):
-        if group_of(graph, kind, key) == group:
-            vector[index] = factor
+    vector[index] = factor
     return vector
 
 
@@ -183,9 +175,9 @@ def sensitivity(base_graph, builders, params, limit, device):
     base = np.ones(len(params))
     vectors = [base]
     names = ["base"]
-    for group in groups(base_graph, params):
+    for index, group in enumerate(params):
         for direction, factor in (("+", 1.3), ("-", 0.7)):
-            vectors.append(group_vector(base_graph, params, group, factor))
+            vectors.append(group_vector(params, index, factor))
             names.append(group + direction)
     scores, detail = evaluate_population(base_graph, vectors, builders, params, limit, device)
     rows = sorted(zip(scores, names, detail))
@@ -204,8 +196,8 @@ def save(path, base_graph, best, params, limit, device):
         "score": best["normalized"],
         "seed": best["seed"],
         "generation": best["generation"],
-        "parameters": {f"{kind}:{key}": round(float(value), 6)
-                       for (kind, key), value in zip(params, best["vector"])},
+        "parameters": {name: round(float(value), 6)
+                       for name, value in zip(params, best["vector"])},
         "weights": weights,
         "absolute": absolute(base_graph, weights),
     }
@@ -217,8 +209,8 @@ def load_vector(path, params):
     with open(path, "r", encoding="utf-8") as handle:
         saved = json.load(handle).get("parameters", {})
     vector = np.ones(len(params))
-    for index, (kind, key) in enumerate(params):
-        value = saved.get(kind + ":" + key)
+    for index, name in enumerate(params):
+        value = saved.get(name)
         if value is not None:
             vector[index] = float(value)
     return np.clip(vector, LOW, HIGH)

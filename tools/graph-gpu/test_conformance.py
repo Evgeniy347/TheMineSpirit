@@ -15,6 +15,8 @@ from graph_model import Graph, State, plan
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 EXPORT = os.path.join(ROOT, "TestResults", "graph-export")
+RECIPES = os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board",
+                       "graph-recipes.json")
 
 
 def compare_case(graph, case, index):
@@ -42,8 +44,7 @@ def compare_case(graph, case, index):
 
 
 def test_conformance():
-    with open(os.path.join(EXPORT, "graph.json"), "r", encoding="utf-8") as handle:
-        graph = Graph(json.load(handle))
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
         cases = json.load(handle)
     failures = []
