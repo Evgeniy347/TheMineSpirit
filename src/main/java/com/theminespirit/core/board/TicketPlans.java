@@ -678,7 +678,7 @@ public final class TicketPlans {
                 .scheme(BoardCase.BUILD_ORCHARD, 1)
                 .orElseThrow(() -> new IllegalStateException(
                         "stages.json: нет схемы сада уровня 1 — постройке сада не по чему строиться"));
-        BlockCoord origin = site == null ? target.target() : site.orchardOrigin();
+        BlockCoord origin = site == null ? target.target() : site.orchardOrigin(target.building());
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         List<TaskNode> steps = new ArrayList<>();
         steps.add(gotoPoint(site == null ? target.target() : site.workYard()));

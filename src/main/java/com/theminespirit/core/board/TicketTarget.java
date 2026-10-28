@@ -29,6 +29,7 @@ public record TicketTarget(
         @Nullable String craftItem,
         int count,
         @Nullable String wood,
+        @Nullable String building,
         @Nullable PlotLeveling leveling,
         @Nullable StageWork work,
         SelfEscape.@Nullable Plan rescue) {
@@ -127,6 +128,13 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public TicketTarget withBuilding(String buildingId) {
+        Builder builder = new Builder(this);
+        builder.building =
+                Objects.requireNonNull(buildingId, "Постройка графа не может быть null: по ней берут участок");
+        return builder.build();
+    }
+
     public TicketTarget withLeveling(PlotLeveling plan) {
         Builder builder = new Builder(this);
         builder.leveling = Objects.requireNonNull(
@@ -165,6 +173,7 @@ public record TicketTarget(
         private @Nullable String craftItem;
         private int count;
         private @Nullable String wood;
+        private @Nullable String building;
         private @Nullable PlotLeveling leveling;
         private @Nullable StageWork work;
         private SelfEscape.@Nullable Plan rescue;
@@ -192,6 +201,7 @@ public record TicketTarget(
             craftItem = source.craftItem;
             count = source.count;
             wood = source.wood;
+            building = source.building;
             leveling = source.leveling;
             work = source.work;
             rescue = source.rescue;
@@ -217,6 +227,7 @@ public record TicketTarget(
                     craftItem,
                     count,
                     wood,
+                    building,
                     leveling,
                     work,
                     rescue);

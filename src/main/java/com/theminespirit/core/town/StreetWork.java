@@ -56,10 +56,14 @@ public final class StreetWork {
             }
         }
         ColumnMask posts = new ColumnMask(level.minX(), level.minZ(), level.width(), level.depth(), bits);
-        return level.minus(posts)
+        ColumnMask work = level.minus(posts)
                 .minus(site.hut().mask())
                 .minus(site.yard().mask())
                 .minus(site.mine().mask())
                 .minus(site.orchard().mask());
+        for (OrchardPlot plot : site.extraOrchards()) {
+            work = work.minus(plot.place().mask());
+        }
+        return work;
     }
 }

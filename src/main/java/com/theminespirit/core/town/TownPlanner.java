@@ -2,8 +2,10 @@ package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public final class TownPlanner {
@@ -50,5 +52,103 @@ public final class TownPlanner {
                 streets.ring().minus(reserved));
         FenceLine fence = FenceGates.around(region, open);
         return new TownPlan(anchor, region, open, placed, fence, unplaced);
+    }
+
+    public static TownPlan plant(
+            TerrainGrid grid,
+            TownPlan plan,
+            TownRules rules,
+            List<List<String>> stages,
+            List<String> demanded,
+            int stage) {
+        Objects.requireNonNull(grid, "Рельеф не может быть null: новый участок кладётся по нему");
+        Objects.requireNonNull(plan, "План не может быть null: к нему добавляется место");
+        Objects.requireNonNull(demanded, "Требуемые места не могут быть null: пустые задают пустым списком");
+        BuildingPlacer placer = new BuildingPlacer(
+                grid,
+                plan.region(),
+                plan.streets(),
+                plan.anchor().x(),
+                plan.anchor().z(),
+                rules,
+                plan.placements());
+        List<String> unplaced = new ArrayList<>(plan.unplaced());
+        Set<String> failed = new HashSet<>(unplaced);
+        Set<String> have =
+                new HashSet<>(plan.placements().stream().map(Placement::id).toList());
+        for (String id : stageEntries(stages, stage)) {
+            if (have.add(id)
+                    && !failed.contains(id)
+                    && place(placer, rules, id, stage).isEmpty()) {
+                unplaced.add(id);
+                failed.add(id);
+            }
+        }
+        boolean bound = false;
+        for (String id : demanded) {
+            if (failed.contains(id) || !have.add(id)) {
+                continue;
+            }
+            if (!bound && have.remove(StageSites.ORCHARD_EXTRA)) {
+                bound = true;
+                continue;
+            }
+            TownEntry template = rules.template(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Нет шаблона участка для '" + id
+                            + "': этап берёт его из каталога town.json, иначе место не разметить"));
+            if (placer.placeAs(template, id, stage).isEmpty()) {
+                unplaced.add(id);
+                failed.add(id);
+            }
+        }
+        List<Placement> placed = bindSlots(placer.placed(), demanded);
+        return new TownPlan(plan.anchor(), plan.region(), plan.streets(), placed, plan.fence(), unplaced);
+    }
+
+    private static List<String> stageEntries(List<List<String>> stages, int stage) {
+        if (stage < 1 || stage > stages.size()) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        for (String id : stages.get(stage - 1)) {
+            if (!LINE_ELEMENTS.contains(id)) {
+                out.add(id);
+            }
+        }
+        return out;
+    }
+
+    private static Optional<Placement> place(BuildingPlacer placer, TownRules rules, String id, int stage) {
+        TownEntry entry = rules.entry(id)
+                .orElseThrow(() -> new IllegalArgumentException("Этап ссылается на постройку '" + id
+                        + "', которой нет в каталоге town.json: этап не возьмёт её место из плана"));
+        return placer.place(entry, stage);
+    }
+
+    private static List<Placement> bindSlots(List<Placement> placed, List<String> demanded) {
+        List<Placement> out = new ArrayList<>(placed);
+        for (String id : demanded) {
+            if (out.stream().anyMatch(place -> place.id().equals(id))) {
+                continue;
+            }
+            for (int index = 0; index < out.size(); index++) {
+                Placement place = out.get(index);
+                if (StageSites.ORCHARD_EXTRA.equals(place.id())) {
+                    out.set(
+                            index,
+                            new Placement(
+                                    id,
+                                    place.name(),
+                                    place.stage(),
+                                    place.x(),
+                                    place.z(),
+                                    place.width(),
+                                    place.depth(),
+                                    place.facing()));
+                    break;
+                }
+            }
+        }
+        return List.copyOf(out);
     }
 }

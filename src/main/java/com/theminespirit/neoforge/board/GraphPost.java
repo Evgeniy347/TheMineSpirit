@@ -44,12 +44,12 @@ final class GraphPost {
     final ServerLevel level;
     final FirstStepsRunner.StageScan scan;
     final GraphSurroundings.Around around;
+    final StockView stock;
+    final long now;
     private final BoardService service;
     private final List<SpiritEntity> spirits;
-    private final StockView stock;
     private final SupplyGraph graph;
     private final MaterialSource source;
-    private final long now;
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -87,7 +87,11 @@ final class GraphPost {
         return switch (ticket.kind()) {
             case BUILDING ->
                 PortalPost.building(this, ticket)
-                        || (StageBuilt.ids().contains(ticket.node()) ? building(ticket) : routes().building(ticket));
+                        || (ExtraOrchardPost.handles(ticket.node())
+                                ? ExtraOrchardPost.post(this, ticket, task)
+                                : StageBuilt.ids().contains(ticket.node())
+                                        ? building(ticket)
+                                        : routes().building(ticket));
             case EVENT -> event(ticket);
             case WAY -> way(ticket, task);
         };
@@ -192,7 +196,7 @@ final class GraphPost {
         return craft;
     }
 
-    private void gather(String id, String cause, int priority, String item, int count, BlockCoord at) {
+    void gather(String id, String cause, int priority, String item, int count, BlockCoord at) {
         int output = source.outputCount(item);
         int helpers = MINED.contains(item) ? GraphCrew.miners(spirits) : spirits.size();
         List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);

@@ -19,6 +19,7 @@ public final class StageSites {
     public static final String YARD = "yard";
     public static final String MINE = "mine";
     public static final String ORCHARD = "orchard";
+    public static final String ORCHARD_EXTRA = "orchard_extra";
 
     private StageSites() {}
 
@@ -38,8 +39,10 @@ public final class StageSites {
         BlockCoord anchor =
                 new BlockCoord(plan.anchor().x(), levelY, plan.anchor().z());
         List<Placement> own = plan.ofStage(stage);
+        List<OrchardPlot> extraOrchards = extraOrchards(own, levelY);
         ColumnMask pads = own.stream()
-                .filter(place -> rules.entry(place.id()).map(TownEntry::level).orElse(false))
+                .filter(place ->
+                        rules.template(place.id()).map(TownEntry::level).orElse(false))
                 .map(Placement::mask)
                 .reduce(ColumnMask::union)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -71,9 +74,21 @@ public final class StageSites {
                 minePlot(mine, levelY),
                 orchard,
                 orchardSaplings(orchard, levelY),
+                extraOrchards,
                 level,
                 enclosure,
                 ring);
+    }
+
+    private static List<OrchardPlot> extraOrchards(List<Placement> own, int levelY) {
+        List<OrchardPlot> plots = new ArrayList<>();
+        for (Placement place : own) {
+            if (OrchardSites.isSite(place.id())) {
+                String wood = OrchardSites.speciesOfBuilding(place.id()).orElseThrow();
+                plots.add(new OrchardPlot(place, place.id(), wood, orchardSaplings(place, levelY)));
+            }
+        }
+        return List.copyOf(plots);
     }
 
     private static List<BlockCoord> orchardSaplings(Placement orchard, int levelY) {
@@ -137,6 +152,24 @@ public final class StageSites {
             z2 = Math.max(z2, cell.z());
         }
         return ColumnMask.rect(x1 - margin, z1 - margin, x2 + margin, z2 + margin);
+    }
+
+    public static boolean insideEnclosure(StageSite site) {
+        for (Placement place : List.of(site.hut(), site.yard(), site.mine(), site.orchard())) {
+            for (ColumnMask.Cell cell : place.mask().cells()) {
+                if (!site.inside(cell.x(), cell.z())) {
+                    return false;
+                }
+            }
+        }
+        for (OrchardPlot plot : site.extraOrchards()) {
+            for (ColumnMask.Cell cell : plot.place().mask().cells()) {
+                if (!site.inside(cell.x(), cell.z())) {
+                    return false;
+                }
+            }
+        }
+        return site.inside(site.anchor().x(), site.anchor().z());
     }
 
     private static ColumnMask connected(ColumnMask mask, BlockCoord anchor) {

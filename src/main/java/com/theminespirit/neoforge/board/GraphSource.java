@@ -39,11 +39,11 @@ public final class GraphSource {
             StockView stock,
             Set<String> events,
             long now) {
+        SupplyGraph graph = DataTables.INSTANCE.graph().current();
         Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
         if (scan.isEmpty()) {
             return Set.of();
         }
-        SupplyGraph graph = DataTables.INSTANCE.graph().current();
         RouteWatch.Result routes = RouteWatch.tick(level, scan.orElseThrow().home());
         GraphSurroundings.Around around = GraphSurroundings.of(
                         level, service, scan.orElseThrow().home())

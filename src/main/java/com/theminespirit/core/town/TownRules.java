@@ -75,6 +75,15 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
         return buildings.stream().filter(entry -> entry.id().equals(id)).findFirst();
     }
 
+    public Optional<TownEntry> template(String placementId) {
+        Objects.requireNonNull(placementId, "id места не может быть null: шаблон берут по нему");
+        Optional<TownEntry> exact = entry(placementId);
+        if (exact.isPresent() || !placementId.startsWith("orchard_")) {
+            return exact;
+        }
+        return entry(OrchardSites.TEMPLATE);
+    }
+
     public static TownRules parse(String json, String origin) {
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, ROOT, origin, "town.json");

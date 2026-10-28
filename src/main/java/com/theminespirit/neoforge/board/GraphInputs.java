@@ -12,6 +12,7 @@ import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
+import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteMarker;
@@ -20,6 +21,7 @@ import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;
+import com.theminespirit.core.town.OrchardSites;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
@@ -34,8 +36,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
 final class GraphInputs {
-    private static final String ORCHARD = "orchard_";
-
     private GraphInputs() {}
 
     static GraphState state(
@@ -47,7 +47,7 @@ final class GraphInputs {
             SupplyGraph graph,
             GraphSurroundings.Around around) {
         int stage = SettlementStage.of(service.board().ledger());
-        Map<String, Built> buildings = buildings(level, service.board().ledger(), scan, graph);
+        Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         return new GraphState(
                         GraphNames.stock(
                                 stock.available(),
@@ -95,9 +95,12 @@ final class GraphInputs {
     }
 
     private static Map<String, Built> buildings(
-            ServerLevel level, BoardLedger ledger, FirstStepsRunner.StageScan scan, SupplyGraph graph) {
+            ServerLevel level,
+            BoardService service,
+            BoardLedger ledger,
+            FirstStepsRunner.StageScan scan,
+            SupplyGraph graph) {
         Map<String, Built> buildings = new HashMap<>(StageBuilt.of(scan.facts()));
-        buildings.putIfAbsent(ORCHARD + scan.wood(), buildings.get(StageBuilt.ORCHARD));
         RoutePlan routes = RouteStore.get(level).plan();
         for (RouteMarker marker : routes.markers().values()) {
             buildings.put(marker.resource().pathBuilding(), marker.pathBuilt() ? Built.BUILT : Built.PLANNED);
@@ -117,11 +120,20 @@ final class GraphInputs {
             boolean ownCase = sharing.get(building.boardCase()) == 1;
             if (ownCase && ledger.has(building.boardCase(), 1)) {
                 buildings.put(building.id(), Built.BUILT);
-            } else if (town.flatMap(plan -> plan.placement(building.id())).isPresent()) {
-                buildings.put(building.id(), Built.PLANNED);
+            } else if (town.flatMap(plan -> OrchardSites.placement(plan, building.id()))
+                    .isPresent()) {
+                buildings.put(building.id(), orchardDone(service, building) ? Built.BUILT : Built.PLANNED);
             }
         }
         return buildings;
+    }
+
+    private static boolean orchardDone(BoardService service, SupplyGraph.Building building) {
+        return building.boardCase() == BoardCase.BUILD_ORCHARD
+                && service.board()
+                        .statusOf(GraphTickets.PREFIX + "building:" + building.id())
+                        .filter(BoardStatus.DONE::equals)
+                        .isPresent();
     }
 
     private static Map<String, Map<String, Integer>> materials(
