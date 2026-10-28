@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardStatus;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.TreeMap;
+import org.jspecify.annotations.Nullable;
 
 public final class BoardText {
     private BoardText() {}
@@ -29,10 +30,26 @@ public final class BoardText {
         if (!task.missing().isEmpty()) {
             text.append(", не хватает: ").append(missing(task.missing()));
         }
+        String supply = supply(task);
+        if (supply != null) {
+            text.append(", ").append(supply);
+        }
         if (!task.dependsOn().isEmpty()) {
             text.append(", после: ").append(String.join(", ", task.dependsOn()));
         }
         return text.toString();
+    }
+
+    public static @Nullable String supply(BoardTask task) {
+        if (task.supplyItem() == null || task.supplyCount() <= 0) {
+            return null;
+        }
+        String verb = switch (task.boardCase()) {
+            case "GATHER_MATERIALS" -> "добыть";
+            case "SUPPLY_SITE" -> "подвезти";
+            default -> null;
+        };
+        return verb == null ? null : verb + ": " + task.supplyItem() + " ×" + task.supplyCount();
     }
 
     public static String missing(Map<String, Integer> missing) {

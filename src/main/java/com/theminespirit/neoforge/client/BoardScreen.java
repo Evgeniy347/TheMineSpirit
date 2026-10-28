@@ -1,19 +1,16 @@
 package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.ui.BoardClock;
 import com.theminespirit.core.ui.BoardColumns;
 import com.theminespirit.core.ui.BoardFilter;
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
-import com.theminespirit.core.ui.BoardTimeView;
 import com.theminespirit.core.ui.BoardWaitReasons;
 import com.theminespirit.core.ui.ScreenTabs;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,9 +20,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -41,21 +36,11 @@ public final class BoardScreen extends Screen {
     private static final int WINDOW_CONTENT_WIDTH = 252;
     private static final int WINDOW_CONTENT_HEIGHT = 140;
     private static final int WINDOW_TEXTURE = 256;
-    private static final int TEXT_PAD = 4;
-    private static final int STRIPE = 2;
     private static final int SCROLL_STEP = 12;
     private static final int TITLE_COLOR = 0xFF404040;
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int MUTED_COLOR = 0xFFA0A0A0;
-    private static final int TILE_COLOR = 0xC0101010;
-    private static final int TILE_HOVER_COLOR = 0xE0303030;
     private static final int HEADER_BG_COLOR = 0xE0101010;
-    private static final int UNRESOLVED_COLOR = 0xFFFFAAAA;
-    private static final int FAILED_COLOR = 0xFFFF5555;
-    private static final Map<BoardTileGroup, Integer> GROUP_COLORS = Map.of(
-            BoardTileGroup.DONE, 0xFF55AA55,
-            BoardTileGroup.ACTIVE, 0xFFFFAA00,
-            BoardTileGroup.AVAILABLE, 0xFF55AAFF);
 
     private BoardLayout layout = BoardLayout.of(0, 0);
     private @Nullable List<BoardTile> tiles;
@@ -123,7 +108,7 @@ public final class BoardScreen extends Screen {
         BoardLayout.Rect inner = layout.inner();
         blitPanel(graphics, window);
         drawBackground(graphics, inner);
-        BoardTile hovered = null;
+        BoardTileView.Hover hovered = null;
         if (tiles == null || shown.isEmpty()) {
             Component message = Component.translatable(
                     KEY + (offline ? "offline" : tiles == null ? "loading" : tiles.isEmpty() ? "empty" : "filtered"));
@@ -135,7 +120,10 @@ public final class BoardScreen extends Screen {
         graphics.drawString(font, title, inner.x(), window.y() + 6, TITLE_COLOR, false);
         drawVersion(graphics, inner, window, "v" + BuildFingerprint.version());
         if (hovered != null) {
-            graphics.renderComponentTooltip(font, tooltip(hovered), mouseX, mouseY);
+            List<Component> lines = hovered.material() == null
+                    ? BoardTileView.tooltip(hovered.tile(), waitReasons, tilesById)
+                    : BoardTileView.materialTooltip(hovered.material());
+            graphics.renderComponentTooltip(font, lines, mouseX, mouseY);
         }
     }
 
@@ -159,8 +147,8 @@ public final class BoardScreen extends Screen {
         }
     }
 
-    private @Nullable BoardTile renderColumns(GuiGraphics graphics, int mouseX, int mouseY) {
-        BoardTile hovered = null;
+    private BoardTileView.@Nullable Hover renderColumns(GuiGraphics graphics, int mouseX, int mouseY) {
+        BoardTileView.Hover hovered = null;
         BoardLayout.Rect list = layout.list();
         List<BoardLayout.Rect> columnRects = layout.columns();
         List<BoardLayout.Rect> headers = layout.headers();
@@ -179,7 +167,7 @@ public final class BoardScreen extends Screen {
                     headerLine,
                     header.x() + BoardLayout.CONTENT_PAD,
                     header.y() + BoardLayout.CONTENT_PAD,
-                    GROUP_COLORS.get(column.group()),
+                    BoardTileView.groupColor(column.group()),
                     true);
             graphics.enableScissor(area.x(), list.y(), area.right(), list.bottom());
             for (int j = 0; j < column.tiles().size(); j++) {
@@ -193,9 +181,19 @@ public final class BoardScreen extends Screen {
                         && mouseY >= Math.max(y, list.y())
                         && mouseY < Math.min(y + rect.height(), list.bottom());
                 BoardTile tile = column.tiles().get(j);
-                renderTile(graphics, tile, rect.x(), y, rect.width(), over);
-                if (over) {
-                    hovered = tile;
+                BoardLayout.Rect row = new BoardLayout.Rect(rect.x(), y, rect.width(), rect.height());
+                BoardTileView.Hover hover = BoardTileView.render(
+                        graphics,
+                        font,
+                        tile,
+                        row,
+                        over,
+                        new BoardTileView.Cursor(mouseX, mouseY),
+                        new BoardTileView.Context(waitReasons, tilesById));
+                if (hover != null) {
+                    hovered = hover;
+                } else if (over) {
+                    hovered = new BoardTileView.Hover(tile, null);
                 }
             }
             graphics.disableScissor();
@@ -263,147 +261,6 @@ public final class BoardScreen extends Screen {
         int count = columns.get(column).tiles().size();
         int content = count * (BoardLayout.TILE_HEIGHT + BoardLayout.TILE_GAP) - BoardLayout.TILE_GAP;
         return Math.max(0, content - layout.list().height());
-    }
-
-    private void renderTile(GuiGraphics graphics, BoardTile tile, int x, int y, int width, boolean over) {
-        graphics.fill(x, y, x + width, y + BoardLayout.TILE_HEIGHT, over ? TILE_HOVER_COLOR : TILE_COLOR);
-        graphics.fill(
-                x,
-                y,
-                x + STRIPE,
-                y + BoardLayout.TILE_HEIGHT,
-                tile.unfinished() ? FAILED_COLOR : GROUP_COLORS.get(tile.group()));
-        int textWidth = width - 2 * TEXT_PAD;
-        int lineStep = BoardLayout.TILE_LINE_STEP;
-        int lineY = y + BoardLayout.TILE_TEXT_TOP;
-        String text = font.plainSubstrByWidth(taskText(tile).getString(), textWidth);
-        graphics.drawString(font, text, x + TEXT_PAD, lineY, TEXT_COLOR);
-        lineY += lineStep;
-        String details = font.plainSubstrByWidth(detailsText(tile).getString(), textWidth);
-        graphics.drawString(font, details, x + TEXT_PAD, lineY, MUTED_COLOR);
-        lineY += lineStep;
-        Component time = timeText(tile);
-        if (time != null) {
-            graphics.drawString(
-                    font, font.plainSubstrByWidth(time.getString(), textWidth), x + TEXT_PAD, lineY, MUTED_COLOR);
-            lineY += lineStep;
-        }
-        Component spent = spentText(tile);
-        if (spent != null) {
-            graphics.drawString(
-                    font, font.plainSubstrByWidth(spent.getString(), textWidth), x + TEXT_PAD, lineY, MUTED_COLOR);
-            lineY += lineStep;
-        }
-        List<BoardWaitReasons.Wait> waits = waitReasons.get(tile.id());
-        String third = null;
-        int thirdColor = UNRESOLVED_COLOR;
-        if (tile.unfinished()) {
-            third = Component.translatable(KEY + "unfinished").getString();
-            thirdColor = FAILED_COLOR;
-        } else if (waits != null && !waits.isEmpty()) {
-            third = waitText(waits.get(0)).getString();
-        }
-        if (third != null) {
-            String reason = font.plainSubstrByWidth(third, textWidth);
-            graphics.drawString(font, reason, x + TEXT_PAD, lineY, thirdColor);
-        }
-    }
-
-    private static @Nullable Component timeText(BoardTile tile) {
-        BoardTimeView time = BoardTimeView.of(tile);
-        if (!time.showsMoment()) {
-            return null;
-        }
-        MutableComponent started = Component.translatable(KEY + "time.started", momentText(time.startedAt()));
-        if (time.showsFinish()) {
-            started.append(" · ").append(Component.translatable(KEY + "time.finished", momentText(time.finishedAt())));
-        }
-        return started;
-    }
-
-    private static @Nullable Component spentText(BoardTile tile) {
-        BoardTimeView time = BoardTimeView.of(tile);
-        if (!time.showsSpent()) {
-            return null;
-        }
-        return Component.translatable(KEY + (time.running() ? "time.running" : "time.spent"), time.minutes());
-    }
-
-    private static Component momentText(long tick) {
-        BoardClock.Moment moment = BoardClock.moment(tick);
-        return Component.translatable(
-                KEY + "time.moment",
-                moment.day(),
-                BoardClock.twoDigits(moment.hour()),
-                BoardClock.twoDigits(moment.minute()));
-    }
-
-    private static MutableComponent taskText(BoardTile tile) {
-        String name = tile.boardCase().toLowerCase(Locale.ROOT);
-        MutableComponent text = Component.translatableWithFallback(KEY + "case." + name, tile.boardCase());
-        if (tile.level() > 1) {
-            text.append(" ").append(Component.translatable(KEY + "level", tile.level()));
-        }
-        return text;
-    }
-
-    private static Component detailsText(BoardTile tile) {
-        Component spirit = tile.spirit() == null ? Component.literal("…") : Component.literal(tile.spirit());
-        return Component.translatable(KEY + "details", tile.priority(), spirit);
-    }
-
-    private List<Component> tooltip(BoardTile tile) {
-        List<Component> lines = new ArrayList<>();
-        lines.add(taskText(tile));
-        lines.add(Component.translatable(KEY + "group." + tile.group().name().toLowerCase(Locale.ROOT)));
-        if (tile.unfinished()) {
-            lines.add(Component.translatable(KEY + "unfinished"));
-        }
-        lines.add(Component.translatableWithFallback(
-                KEY + "status." + tile.status().toLowerCase(Locale.ROOT), tile.status()));
-        lines.add(detailsText(tile));
-        Component time = timeText(tile);
-        if (time != null) {
-            lines.add(time);
-        }
-        Component spent = spentText(tile);
-        if (spent != null) {
-            lines.add(spent);
-        }
-        for (BoardWaitReasons.Wait wait : waitReasons.getOrDefault(tile.id(), List.of())) {
-            lines.add(waitText(wait));
-        }
-        return lines;
-    }
-
-    private Component waitText(BoardWaitReasons.Wait wait) {
-        return switch (wait.kind()) {
-            case FREE_SPIRIT -> Component.translatable(KEY + "wait.free_spirit");
-            case SPIRIT -> Component.translatable(KEY + "wait.spirit", Component.literal(wait.subject()));
-            case RESOURCE ->
-                Component.translatable(
-                        KEY + "wait.resource",
-                        itemName(wait.subject()),
-                        Component.literal(String.valueOf(wait.count())));
-            case TOOL ->
-                Component.translatable(
-                        KEY + "wait.tool", itemName(wait.subject()), Component.literal(String.valueOf(wait.count())));
-            case DEPENDENCY -> Component.translatable(KEY + "wait.dependency", dependencyText(wait.subject()));
-            case BLOCKED -> Component.translatable(KEY + "wait.blocked");
-        };
-    }
-
-    private Component dependencyText(String id) {
-        BoardTile dependency = tilesById.get(id);
-        return dependency == null ? Component.literal(id) : taskText(dependency);
-    }
-
-    private static Component itemName(String id) {
-        ResourceLocation key = ResourceLocation.tryParse(id);
-        if (key == null || !BuiltInRegistries.ITEM.containsKey(key)) {
-            return Component.literal(id);
-        }
-        return BuiltInRegistries.ITEM.get(key).getDescription();
     }
 
     private Component statusLabel() {
