@@ -23,6 +23,7 @@ final class TreeChop {
 
     private enum Phase {
         APPROACH,
+        CLEAR,
         CHOP,
         COLLECT,
         REPLANT
@@ -34,6 +35,7 @@ final class TreeChop {
     private final boolean orchard;
     private final TreeView view;
     private final Approach approach;
+    private final LeafClearing clearing;
     private final BlockBreaker breaker;
     private Tree tree;
     private TreeSpecies species;
@@ -58,19 +60,13 @@ final class TreeChop {
         this.orchard = orchard;
         this.view = view;
         this.approach = new Approach(spirit);
+        this.clearing = new LeafClearing(spirit, view);
         this.breaker = new BlockBreaker(spirit);
-    }
-
-    Tree tree() {
-        return tree;
     }
 
     void begin(Tree target) {
         tree = target;
         species = speciesOf(target);
-        BlockPos stand = ChopStand.first(spirit, target);
-        BlockCoord from = stand == null ? target.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
-        plan = ChopPlan.of(target, from);
         planIndex = 0;
         standingLogs = 0;
         plantedSaplings = 0;
@@ -79,15 +75,29 @@ final class TreeChop {
         breaking = false;
         guarded = false;
         secondStand = false;
-        Vec3 approachPoint = stand == null ? Vec3.atCenterOf(toPos(target.base())) : Vec3.atBottomCenterOf(stand);
-        this.stand = stand;
-        approach.begin(approachPoint, stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
+        clearing.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
+        startApproach();
+    }
+
+    private void startApproach() {
+        stand = ChopStand.first(spirit, tree);
+        if (stand == null && clearing.active()) {
+            phase = Phase.CLEAR;
+            return;
+        }
+        BlockCoord from = stand == null ? tree.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
+        plan = ChopPlan.of(tree, from);
+        planIndex = 0;
+        approach.begin(
+                stand == null ? Vec3.atCenterOf(toPos(tree.base())) : Vec3.atBottomCenterOf(stand),
+                stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
     }
 
     ChopOutcome tick() {
         return switch (phase) {
             case APPROACH -> approach();
+            case CLEAR -> clear();
             case CHOP -> chop();
             case COLLECT -> collect();
             case REPLANT -> replant();
@@ -97,6 +107,7 @@ final class TreeChop {
     void cancel() {
         breaker.cancel();
         approach.cancel();
+        clearing.cancel();
         if (collector != null) {
             collector.cancel();
         }
@@ -107,6 +118,7 @@ final class TreeChop {
 
     void suspend() {
         approach.suspend();
+        clearing.suspend();
         if (breaking) {
             breaker.cancel();
             breaking = false;
@@ -125,6 +137,14 @@ final class TreeChop {
             case ARRIVED -> resumeChop();
             case STUCK, TIMEOUT -> secondStand ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
         };
+    }
+
+    private ChopOutcome clear() {
+        if (clearing.tick()) {
+            return ChopOutcome.running();
+        }
+        startApproach();
+        return ChopOutcome.running();
     }
 
     private ChopOutcome resumeChop() {
