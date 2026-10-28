@@ -100,10 +100,6 @@ public record StageSite(
         return level.contains(x, z) && !mineColumn(x, z);
     }
 
-    public List<ColumnMask.Cell> enclosureCells() {
-        return enclosure.cells();
-    }
-
     public boolean inside(int x, int z) {
         return enclosure.contains(x, z);
     }
