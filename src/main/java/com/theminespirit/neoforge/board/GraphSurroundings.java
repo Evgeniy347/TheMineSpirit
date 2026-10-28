@@ -13,15 +13,19 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.Squid;
+import net.minecraft.world.entity.animal.armadillo.Armadillo;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-final class GraphSurroundings {
+public final class GraphSurroundings {
     static final String DROPS = "drops_nearby";
     static final String LEAF_DECAY = "leaf_decay";
     private static final int RADIUS = 32;
@@ -29,12 +33,10 @@ final class GraphSurroundings {
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
-    private static final String LOG = "_log";
-    private static final Set<String> RESOURCES = Set.of("sand", "red_sand", "clay");
 
     private GraphSurroundings() {}
 
-    record Around(
+    public record Around(
             Set<String> world,
             Set<String> events,
             Optional<BlockCoord> drop,
@@ -54,31 +56,59 @@ final class GraphSurroundings {
             return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drop, decay, nearest);
         }
 
-        Optional<BlockCoord> resource(String world) {
+        public Optional<BlockCoord> resource(String world) {
             return Optional.ofNullable(nearest.get(world));
         }
     }
 
     private record Scan(Set<String> blocks, Optional<BlockCoord> decay, Map<String, BlockCoord> nearest) {}
 
-    static Around of(ServerLevel level, BoardService service, BlockCoord home) {
+    public static Around of(ServerLevel level, BoardService service, BlockCoord home) {
+        Around around = scanned(level, home);
+        Optional<BlockCoord> drop = drops(level, service, home);
+        Set<String> events = new HashSet<>(around.events());
+        drop.ifPresent(at -> events.add(DROPS));
+        around.decay().ifPresent(at -> events.add(LEAF_DECAY));
+        return new Around(around.world(), Set.copyOf(events), drop, around.decay(), around.nearest());
+    }
+
+    static Around scanned(ServerLevel level, BlockCoord home) {
         Scan scan = blocks(level, home);
-        AABB box = new AABB(new BlockPos(home.x(), home.y(), home.z())).inflate(RADIUS);
+        BlockPos center = new BlockPos(home.x(), home.y(), home.z());
+        AABB box = new AABB(center).inflate(RADIUS);
         Set<String> creatures = new HashSet<>();
-        if (!level.getEntitiesOfClass(Animal.class, box).isEmpty()) {
-            creatures.add("animals");
-        }
-        if (!level.getEntitiesOfClass(Squid.class, box).isEmpty()) {
-            creatures.add("squid");
-        }
+        Map<String, BlockCoord> nearest = new HashMap<>(scan.nearest());
+        marked(level, box, Animal.class, "animals", creatures, nearest, center);
+        marked(level, box, Squid.class, "squid", creatures, nearest, center);
+        marked(level, box, Rabbit.class, "rabbits", creatures, nearest, center);
+        marked(level, box, GlowSquid.class, "glow_squid", creatures, nearest, center);
+        marked(level, box, Armadillo.class, "armadillo", creatures, nearest, center);
         level.getEntitiesOfClass(Sheep.class, box)
                 .forEach(sheep -> creatures.add("sheep:" + sheep.getColor().getName()));
-        Optional<BlockCoord> drop = drops(level, service, home);
-        Set<String> events = new HashSet<>();
-        drop.ifPresent(at -> events.add(DROPS));
-        scan.decay().ifPresent(at -> events.add(LEAF_DECAY));
         return new Around(
-                GraphNames.world(scan.blocks(), creatures), Set.copyOf(events), drop, scan.decay(), scan.nearest());
+                GraphNames.world(scan.blocks(), creatures),
+                Set.of(),
+                Optional.empty(),
+                scan.decay(),
+                Map.copyOf(nearest));
+    }
+
+    private static <T extends Entity> void marked(
+            ServerLevel level,
+            AABB box,
+            Class<T> type,
+            String tag,
+            Set<String> creatures,
+            Map<String, BlockCoord> nearest,
+            BlockPos center) {
+        level.getEntitiesOfClass(type, box).stream()
+                .filter(entity -> !entity.isRemoved())
+                .min(Comparator.comparingDouble(entity -> entity.blockPosition().distSqr(center)))
+                .ifPresent(entity -> {
+                    BlockPos pos = entity.blockPosition();
+                    creatures.add(tag);
+                    nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+                });
     }
 
     private static Optional<BlockCoord> drops(ServerLevel level, BoardService service, BlockCoord home) {
@@ -115,13 +145,12 @@ final class GraphSurroundings {
                     BlockState state = level.getBlockState(pos);
                     String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
                     blocks.add(id);
-                    if (id.endsWith(LOG) || RESOURCES.contains(id)) {
+                    Optional<String> tag = GraphNames.blockTag(id);
+                    if (tag.isPresent()) {
                         int distance = dx * dx + dy * dy + dz * dz;
-                        for (String tag : GraphNames.world(Set.of(id), Set.of())) {
-                            if (distance < distances.getOrDefault(tag, Integer.MAX_VALUE)) {
-                                distances.put(tag, distance);
-                                nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-                            }
+                        if (distance < distances.getOrDefault(tag.orElseThrow(), Integer.MAX_VALUE)) {
+                            distances.put(tag.orElseThrow(), distance);
+                            nearest.put(tag.orElseThrow(), new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
                         }
                     }
                     if (decay == null && decaying(state)) {

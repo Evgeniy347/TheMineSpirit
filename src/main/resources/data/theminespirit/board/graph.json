@@ -8546,8 +8546,7 @@
       "weight": 1.0,
       "world": "mangrove_swamp",
       "tool": "shovel",
-      "tier": "wooden",
-      "implemented": false
+      "tier": "wooden"
     },
     {
       "id": "chop_mangrove_roots",
@@ -8555,8 +8554,7 @@
       "makes": "mangrove_roots",
       "yield": 2,
       "weight": 1.0,
-      "world": "mangrove_swamp",
-      "implemented": false
+      "world": "mangrove_swamp"
     },
     {
       "id": "mine_netherrack",
@@ -8628,8 +8626,7 @@
       "makes": "bamboo",
       "yield": 6,
       "weight": 1.0,
-      "world": "bamboo_jungle",
-      "implemented": false
+      "world": "bamboo_jungle"
     },
     {
       "id": "harvest_kelp",
@@ -8637,8 +8634,7 @@
       "makes": "kelp",
       "yield": 6,
       "weight": 1.0,
-      "world": "ocean",
-      "implemented": false
+      "world": "ocean"
     },
     {
       "id": "harvest_sea_pickle",
@@ -8658,8 +8654,7 @@
       "world": "biome:jungle",
       "needs": {
         "shears": 1
-      },
-      "implemented": false
+      }
     },
     {
       "id": "forage_brown_mushroom",
@@ -8667,8 +8662,7 @@
       "makes": "brown_mushroom",
       "yield": 2,
       "weight": 1.0,
-      "world": "mushrooms",
-      "implemented": false
+      "world": "mushrooms"
     },
     {
       "id": "forage_red_mushroom",
@@ -8676,8 +8670,7 @@
       "makes": "red_mushroom",
       "yield": 2,
       "weight": 1.0,
-      "world": "mushrooms",
-      "implemented": false
+      "world": "mushrooms"
     },
     {
       "id": "pick_blue_orchid",
@@ -8685,8 +8678,7 @@
       "makes": "blue_orchid",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:blue_orchid",
-      "implemented": false
+      "world": "flower:blue_orchid"
     },
     {
       "id": "pick_lilac",
@@ -8694,8 +8686,7 @@
       "makes": "lilac",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:lilac",
-      "implemented": false
+      "world": "flower:lilac"
     },
     {
       "id": "pick_peony",
@@ -8703,8 +8694,7 @@
       "makes": "peony",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:peony",
-      "implemented": false
+      "world": "flower:peony"
     },
     {
       "id": "pick_sunflower",
@@ -8712,8 +8702,7 @@
       "makes": "sunflower",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:sunflower",
-      "implemented": false
+      "world": "flower:sunflower"
     },
     {
       "id": "pick_lily_of_the_valley",
@@ -8721,8 +8710,7 @@
       "makes": "lily_of_the_valley",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:lily_of_the_valley",
-      "implemented": false
+      "world": "flower:lily_of_the_valley"
     },
     {
       "id": "pick_orange_tulip",
@@ -8730,8 +8718,7 @@
       "makes": "orange_tulip",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:orange_tulip",
-      "implemented": false
+      "world": "flower:orange_tulip"
     },
     {
       "id": "pick_pink_petals",
@@ -8739,8 +8726,7 @@
       "makes": "pink_petals",
       "yield": 2,
       "weight": 1.0,
-      "world": "flower:pink_petals",
-      "implemented": false
+      "world": "flower:pink_petals"
     },
     {
       "id": "harvest_chorus_fruit",
@@ -9004,8 +8990,7 @@
       "makes": "rabbit",
       "yield": 1,
       "weight": 1.0,
-      "world": "rabbits",
-      "implemented": false
+      "world": "rabbits"
     },
     {
       "id": "loot_rabbit_hide",
@@ -9013,8 +8998,7 @@
       "makes": "rabbit_hide",
       "yield": 1,
       "weight": 1.0,
-      "world": "rabbits",
-      "implemented": false
+      "world": "rabbits"
     },
     {
       "id": "loot_spider_eye",
@@ -9031,8 +9015,7 @@
       "makes": "glow_ink_sac",
       "yield": 1,
       "weight": 1.0,
-      "world": "glow_squid",
-      "implemented": false
+      "world": "glow_squid"
     },
     {
       "id": "collect_turtle_scute",
