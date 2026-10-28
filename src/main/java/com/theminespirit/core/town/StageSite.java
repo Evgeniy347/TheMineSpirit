@@ -15,6 +15,7 @@ public record StageSite(
         List<BlockCoord> orchardSaplings,
         ColumnMask level,
         ColumnMask enclosure,
+        ColumnMask fenceStrip,
         FenceLine ring) {
     public static final int BUILDING_HEIGHT = 7;
     public static final int CAVE_DEPTH = 3;
@@ -43,6 +44,7 @@ public record StageSite(
                 orchardSaplings, "Места деревьев сада не могут быть null: пусто — пустой список"));
         Objects.requireNonNull(level, "Площадки выравнивания не могут быть null");
         Objects.requireNonNull(enclosure, "Огороженная область не может быть null");
+        Objects.requireNonNull(fenceStrip, "Полоса ограды не может быть null: по ней сносится старая ограда");
         Objects.requireNonNull(ring, "Ограда этапа не может быть null");
     }
 
