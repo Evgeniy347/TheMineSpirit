@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public final class LeafObstacles {
     private static final int STAND_HEIGHT = 2;
@@ -18,7 +19,7 @@ public final class LeafObstacles {
         Objects.requireNonNull(view, "TreeView не может быть null: по нему отличают листву от прочих блоков");
         Objects.requireNonNull(from, "Точка отсчёта не может быть null: от неё считается порядок ломки листвы");
         int baseY = tree.base().y();
-        LinkedHashSet<BlockCoord> cells = new LinkedHashSet<>();
+        Set<BlockCoord> cells = new LinkedHashSet<>();
         for (BlockCoord log : tree.logs()) {
             if (log.y() != baseY) {
                 continue;
