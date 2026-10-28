@@ -24,6 +24,17 @@ final class BuildingPlacer {
 
     BuildingPlacer(
             TerrainGrid grid, ColumnMask region, TownStreets streets, int centerX, int centerZ, TownRules rules) {
+        this(grid, region, streets, centerX, centerZ, rules, List.of());
+    }
+
+    BuildingPlacer(
+            TerrainGrid grid,
+            ColumnMask region,
+            TownStreets streets,
+            int centerX,
+            int centerZ,
+            TownRules rules,
+            List<Placement> existing) {
         this.grid = grid;
         this.region = region;
         this.streets = streets;
@@ -42,6 +53,8 @@ final class BuildingPlacer {
             }
         }
         this.streetSum = prefix(street);
+        placed.addAll(existing);
+        existing.forEach(place -> seeds.putIfAbsent(place.stage(), place));
     }
 
     List<Placement> placed() {
@@ -49,9 +62,13 @@ final class BuildingPlacer {
     }
 
     Optional<Placement> place(TownEntry entry, int stage) {
+        return placeAs(entry, entry.id(), stage);
+    }
+
+    Optional<Placement> placeAs(TownEntry entry, String id, int stage) {
         Objects.requireNonNull(entry, "Постройка не может быть null");
         Optional<Placement> chosen =
-                entry.quarter() == TownEntry.Quarter.CENTER ? centered(entry, stage) : best(entry, stage);
+                entry.quarter() == TownEntry.Quarter.CENTER ? centered(entry, id, stage) : best(entry, id, stage);
         chosen.ifPresent(found -> {
             placed.add(found);
             seeds.putIfAbsent(stage, found);
@@ -59,11 +76,11 @@ final class BuildingPlacer {
         return chosen;
     }
 
-    private Optional<Placement> centered(TownEntry entry, int stage) {
+    private Optional<Placement> centered(TownEntry entry, String id, int stage) {
         int x = centerX - entry.width() / 2;
         int z = centerZ - entry.depth() / 2;
-        Placement candidate = new Placement(
-                entry.id(), entry.name(), stage, x, z, entry.width(), entry.depth(), Placement.Facing.SOUTH);
+        Placement candidate =
+                new Placement(id, entry.name(), stage, x, z, entry.width(), entry.depth(), Placement.Facing.SOUTH);
         for (int px = x; px < x + entry.width(); px++) {
             for (int pz = z; pz < z + entry.depth(); pz++) {
                 if (!region.contains(px, pz) || grid.water(px, pz)) {
@@ -78,7 +95,7 @@ final class BuildingPlacer {
                 : Optional.of(candidate);
     }
 
-    private Optional<Placement> best(TownEntry entry, int stage) {
+    private Optional<Placement> best(TownEntry entry, String id, int stage) {
         int[] blockedSum = prefix(blocked());
         Placement seed = seeds.get(stage);
         int targetX = seed == null ? centerX : seed.centerX();
@@ -112,7 +129,7 @@ final class BuildingPlacer {
                             + (inQuarter ? 0 : QUARTER_PENALTY);
                     if (score < bestScore) {
                         bestScore = score;
-                        best = new Placement(entry.id(), entry.name(), stage, wx, wz, w, d, facing.orElseThrow());
+                        best = new Placement(id, entry.name(), stage, wx, wz, w, d, facing.orElseThrow());
                     }
                 }
             }

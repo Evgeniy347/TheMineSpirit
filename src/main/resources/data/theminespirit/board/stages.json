@@ -3,7 +3,7 @@
     {"stage": 1, "buildings": {"CLEAR_GROUNDS": 1, "BUILD_MINE": 1, "BUILD_FENCE": 1, "BUILD_ORCHARD": 1,
                               "BUILD_HOUSE": 1, "STOCK_CHESTS": 1, "LIGHTING": 1,
                               "BUILD_STREETS": 1},
-     "plan": ["hut", "yard", "mine", "orchard", "fence", "torches"]},
+     "plan": ["hut", "yard", "mine", "orchard", "orchard_extra", "fence", "torches"]},
     {"stage": 2, "buildings": {"BUILD_MINE": 2, "BUILD_WAREHOUSE": 2, "BUILD_STREETS": 2},
      "plan": ["plaza", "family_house_a", "family_house_b", "family_house_c", "storage", "barn", "field_a", "field_b",
               "pen", "well", "lumber_yard", "workshop"]},

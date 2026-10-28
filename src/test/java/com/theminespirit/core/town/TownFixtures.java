@@ -1,5 +1,8 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.board.StageRules;
+import java.util.List;
+
 public final class TownFixtures {
     public static final int LEVEL = 70;
     private static final TownPlan FLAT = TownPlannerTests.plan((x, z) -> LEVEL, (x, z) -> 0);
@@ -21,6 +24,17 @@ public final class TownFixtures {
 
     public static StageSite site(TownPlan plan) {
         return StageSites.of(plan, 1, plan.anchor().y(), TownRules.load());
+    }
+
+    public static TownPlan planWithOrchard(String building) {
+        TownRules rules = TownRules.load();
+        return TownPlanner.plant(
+                TownPlannerTests.grid((x, z) -> LEVEL, (x, z) -> 0),
+                flatPlan(),
+                rules,
+                StageRules.load().plans(),
+                List.of(OrchardSites.siteId(building)),
+                1);
     }
 
     private record Relief(long seed) {
