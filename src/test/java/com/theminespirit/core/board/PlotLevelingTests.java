@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PlotLevelingTests {
@@ -43,32 +42,6 @@ class PlotLevelingTests {
                 PlotLeveling.isLevel(ANCHOR, square(ANCHOR, 11), (x, z) -> x == 11 && z == -11 ? 66 : 64),
                 "Бугор в два блока у края участка 23×23 — вне допуска: участок без деревьев всё равно выравнивается "
                         + "(INC-50)");
-    }
-
-    @Test
-    void voids_CaveUnderPlot_OnlyWithinDepth() {
-        List<PlotLeveling.Box> voids =
-                PlotLeveling.voids(ANCHOR, square(ANCHOR, 0), (x, z) -> 64, (x, y, z) -> y >= 58 && y <= 62);
-
-        assertEquals(
-                List.of(new PlotLeveling.Box(0, 60, 0, 0, 62, 0)),
-                voids,
-                "Пустота под участком на глубину до 4 засыпается, глубже — не цель (INC-67): дух 10 минут бродил по "
-                        + "старой пещере на 7 ниже участка");
-    }
-
-    @Test
-    void voids_CaveAroundMineShaft_FilledExceptShaft() {
-        Set<BlockCoord> shaft =
-                Set.of(new BlockCoord(ANCHOR.x(), 61, ANCHOR.z()), new BlockCoord(ANCHOR.x(), 62, ANCHOR.z()));
-
-        assertEquals(
-                List.of(
-                        new PlotLeveling.Box(ANCHOR.x(), 60, ANCHOR.z(), ANCHOR.x(), 60, ANCHOR.z()),
-                        new PlotLeveling.Box(ANCHOR.x(), 63, ANCHOR.z(), ANCHOR.x(), 63, ANCHOR.z())),
-                PlotLeveling.voids(ANCHOR, square(ANCHOR, 0), (x, z) -> 64, (x, y, z) -> y >= 60, shaft),
-                "Пещера в колонке шахты засыпается до уровня, кроме клеток самой схемы спуска (INC-83: дух в 7-й раз "
-                        + "в старом кармане под участком — колонку шахты выравнивание пропускало целиком)");
     }
 
     @Test

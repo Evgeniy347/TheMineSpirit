@@ -144,7 +144,7 @@ public final class GroundsPlan {
         int y1 = frame.y();
         int y2 = frame.y() + CLEAR_HEIGHT;
         if (work != null) {
-            return LevelLayers.rectangles(work.site().level(), y1, y2);
+            return List.of();
         }
         List<PlotLeveling.Box> chunks = new ArrayList<>();
         int band = (frame.x2() - frame.x1() + 1) / CLEAR_GRID;

@@ -40,6 +40,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.StageWork;
@@ -209,7 +210,7 @@ public final class FirstStepsRunner {
                 : BuildingWoodChoice.settle(level, service, caseValue, stage, stock.available(), scan.wood(), now);
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
-            target = target.withLeveling(leveling(level, stage, stock));
+            target = target.withLeveling(leveling(level, stage));
         }
         Map<String, Integer> need = need(level, stock, stage, new OpenStep(caseValue, target, Map.of(), wood), blocked);
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
@@ -427,34 +428,17 @@ public final class FirstStepsRunner {
         return need;
     }
 
-    private static PlotLeveling leveling(ServerLevel level, StageSite site, StockView stock) {
-        BlockCoord anchor = site.anchor();
-        PlotLeveling plan = PlotLeveling.plan(anchor, site.level(), plotFeet(level, site));
-        IntBinaryOperator feet = (x, z) -> GroundProbe.feet(level, x, z, anchor.y());
-        Set<BlockCoord> shaft = new HashSet<>();
-        mineLayout(site).ifPresent(mine -> {
-            shaft.addAll(mine.air());
-            shaft.addAll(mine.floors());
-        });
-        plan = plan.withVoids(PlotLeveling.voids(
-                anchor,
-                site.level(),
-                feet,
-                (x, y, z) -> level.getBlockState(new BlockPos(x, y, z)).isAir(),
-                shaft));
-        if (plan.fillVolume() > 0 && stock.available().getOrDefault(COBBLESTONE, 0) >= plan.fillVolume()) {
-            plan = plan.withBlock(COBBLESTONE);
-        }
-        if (!plan.cut().isEmpty() || !plan.fill().isEmpty()) {
+    private static PlotLeveling leveling(ServerLevel level, StageSite site) {
+        IntBinaryOperator tops =
+                (x, z) -> GroundProbe.top(level, x, z, site.anchor().y() + 1);
+        PlotLeveling plan = SiteLevels.leveling(site, tops);
+        if (!plan.cut().isEmpty()) {
             LOGGER.info(
-                    "Выравнивание участка на y={}: срезка {} ящиков, подсыпка {} блоков {}, пустот под участком {}",
-                    anchor.y(),
-                    plan.cut().size(),
-                    plan.fillVolume(),
-                    plan.block(),
-                    plan.voids().size());
-            if (plan.cut().size() + plan.fill().size() <= LEVELING_SHOWN) {
-                LOGGER.info("[plot] остаток выравнивания: срезка {}, подсыпка {}", plan.cut(), plan.fill());
+                    "Расчистка на y={}: лишнего выше уровня {} ящиков, подсыпки нет",
+                    site.anchor().y(),
+                    plan.cut().size());
+            if (plan.cut().size() <= LEVELING_SHOWN) {
+                LOGGER.info("[plot] срезка выше уровня: {}", plan.cut());
             }
         }
         return plan;
