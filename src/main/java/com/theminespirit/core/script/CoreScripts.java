@@ -41,6 +41,7 @@ public final class CoreScripts {
         specs.addAll(waterAndFleeSpecs());
         specs.addAll(forestryAndMiningSpecs());
         specs.addAll(descentSpecs());
+        specs.add(stripLogSpec());
         specs.addAll(gatheringSpecs());
         specs.addAll(cropCareSpecs());
         specs.addAll(breedingSpecs());
@@ -577,6 +578,26 @@ public final class CoreScripts {
                                 "проход 1×2 пройден до целевого этажа или заданной длины",
                                 "опасные клетки заложены блоком из инвентаря, сыпучее осыпано и выкопано",
                                 "проход освещён факелами через интервал")));
+    }
+
+    private static ScriptSpec stripLogSpec() {
+        return spec(
+                "strip_log",
+                "обтесать брёвна топором и забрать обтёсанные",
+                List.of(
+                        ParamSpec.enumeration(
+                                SPECIES,
+                                true,
+                                TreeSpecies.ALL.stream().map(TreeSpecies::id).toList()),
+                        ParamSpec.integer(COUNT, false, CatalogLimits.COUNT_MIN, CatalogLimits.COUNT_MAX, 1),
+                        ParamSpec.integer(
+                                RADIUS,
+                                false,
+                                CatalogLimits.CHOP_RADIUS_MIN,
+                                CatalogLimits.CHOP_RADIUS_MAX,
+                                CatalogLimits.HARVEST_RADIUS_DEFAULT)),
+                List.of("в инвентаре есть топор", "в радиусе есть брёвна породы"),
+                List.of("брёвна обтёсаны", "обтёсанные брёвна подобраны в инвентарь"));
     }
 
     private static List<ScriptSpec> gatheringSpecs() {

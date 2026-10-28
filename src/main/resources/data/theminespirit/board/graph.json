@@ -1946,7 +1946,7 @@
       "implemented": false
     },
     "apple": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
@@ -2065,49 +2065,49 @@
       "implemented": false
     },
     "stripped_oak_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_birch_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_spruce_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_jungle_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_acacia_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_dark_oak_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_cherry_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
     },
     "stripped_mangrove_log": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
@@ -2223,7 +2223,7 @@
       "stage": 2
     },
     "spider_eye": {
-      "xmin": 0,
+      "xmin": 1,
       "k": 1,
       "base": 15,
       "stage": 1
@@ -4352,7 +4352,7 @@
       "tier": "wooden"
     },
     {
-      "id": "craft_bread",
+      "id": "craft_food",
       "case": "GATHER_MATERIALS",
       "makes": "food",
       "yield": 1,
@@ -5081,8 +5081,7 @@
       "makes": "oak_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:oak",
-      "implemented": false
+      "world": "tree:oak"
     },
     {
       "id": "chop_birch_log",
@@ -5116,8 +5115,7 @@
       "makes": "birch_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:birch",
-      "implemented": false
+      "world": "tree:birch"
     },
     {
       "id": "chop_spruce_log",
@@ -5151,8 +5149,7 @@
       "makes": "spruce_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:spruce",
-      "implemented": false
+      "world": "tree:spruce"
     },
     {
       "id": "chop_jungle_log",
@@ -5186,8 +5183,7 @@
       "makes": "jungle_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:jungle",
-      "implemented": false
+      "world": "tree:jungle"
     },
     {
       "id": "chop_acacia_log",
@@ -5221,8 +5217,7 @@
       "makes": "acacia_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:acacia",
-      "implemented": false
+      "world": "tree:acacia"
     },
     {
       "id": "chop_dark_oak_log",
@@ -5256,8 +5251,7 @@
       "makes": "dark_oak_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:dark_oak",
-      "implemented": false
+      "world": "tree:dark_oak"
     },
     {
       "id": "chop_cherry_log",
@@ -5291,8 +5285,7 @@
       "makes": "cherry_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:cherry",
-      "implemented": false
+      "world": "tree:cherry"
     },
     {
       "id": "chop_mangrove_log",
@@ -5326,8 +5319,7 @@
       "makes": "mangrove_sapling",
       "yield": 2,
       "weight": 1.0,
-      "world": "tree:mangrove",
-      "implemented": false
+      "world": "tree:mangrove"
     },
     {
       "id": "mine_deepslate",
@@ -8620,8 +8612,7 @@
       "makes": "apple",
       "yield": 1,
       "weight": 0.5,
-      "world": "tree:oak",
-      "implemented": false
+      "world": "tree:oak"
     },
     {
       "id": "harvest_bamboo",
@@ -8788,7 +8779,7 @@
       "consumes": {
         "oak_log": 1
       },
-      "implemented": false
+      "world": "tree:oak"
     },
     {
       "id": "strip_birch_log",
@@ -8799,7 +8790,7 @@
       "consumes": {
         "birch_log": 1
       },
-      "implemented": false
+      "world": "tree:birch"
     },
     {
       "id": "strip_spruce_log",
@@ -8810,7 +8801,7 @@
       "consumes": {
         "spruce_log": 1
       },
-      "implemented": false
+      "world": "tree:spruce"
     },
     {
       "id": "strip_jungle_log",
@@ -8821,7 +8812,7 @@
       "consumes": {
         "jungle_log": 1
       },
-      "implemented": false
+      "world": "tree:jungle"
     },
     {
       "id": "strip_acacia_log",
@@ -8832,7 +8823,7 @@
       "consumes": {
         "acacia_log": 1
       },
-      "implemented": false
+      "world": "tree:acacia"
     },
     {
       "id": "strip_dark_oak_log",
@@ -8843,7 +8834,7 @@
       "consumes": {
         "dark_oak_log": 1
       },
-      "implemented": false
+      "world": "tree:dark_oak"
     },
     {
       "id": "strip_cherry_log",
@@ -8854,7 +8845,7 @@
       "consumes": {
         "cherry_log": 1
       },
-      "implemented": false
+      "world": "tree:cherry"
     },
     {
       "id": "strip_mangrove_log",
@@ -8865,7 +8856,7 @@
       "consumes": {
         "mangrove_log": 1
       },
-      "implemented": false
+      "world": "tree:mangrove"
     },
     {
       "id": "strip_crimson_stem",
@@ -9023,8 +9014,7 @@
       "makes": "spider_eye",
       "yield": 1,
       "weight": 0.5,
-      "world": "mobs",
-      "implemented": false
+      "world": "mobs"
     },
     {
       "id": "loot_glow_ink_sac",

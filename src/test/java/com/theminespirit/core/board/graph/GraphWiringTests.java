@@ -40,6 +40,26 @@ class GraphWiringTests {
     }
 
     @Test
+    void stock_MangrovePropagule_CountsAsGraphSapling() {
+        Map<String, Integer> stock = GraphNames.stock(Map.of("minecraft:mangrove_propagule", 3), Set.of());
+
+        assertEquals(
+                3,
+                stock.get("mangrove_sapling"),
+                "Саженец мангрового дерева в игре — mangrove_propagule: без перевода в узел графа "
+                        + "gather_mangrove_sapling никогда не закроет нехватку, а склад не увидит саженцы: " + stock);
+    }
+
+    @Test
+    void item_GroupInMangroveSettlement_ResolvesToPropagule() {
+        assertEquals(
+                "mangrove_propagule",
+                GraphNames.item(GraphWorld.GRAPH, "#saplings", "mangrove"),
+                "Узел графа mangrove_sapling обязан превращаться в настоящий предмет mangrove_propagule: "
+                        + "иначе задание доски просит несуществующий предмет");
+    }
+
+    @Test
     void item_GroupInBirchSettlement_ResolvesToBirchMember() {
         assertEquals(
                 List.of("birch_log", "jungle_planks", "spruce_log"),
