@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.SettlementPlot;
+import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.StageSite;
@@ -60,6 +61,12 @@ public final class TownSnapshots {
         };
         include(box, plan.fence().posts());
         include(box, site.orElseThrow().ring().posts());
+        for (RouteMarker route : RouteStore.get(level).plan().markers().values()) {
+            box[0] = Math.min(box[0], route.point().x());
+            box[1] = Math.min(box[1], route.point().z());
+            box[2] = Math.max(box[2], route.point().x());
+            box[3] = Math.max(box[3], route.point().z());
+        }
         return Optional.of(new TownMapView.Bounds(box[0], box[1], box[2], box[3]));
     }
 

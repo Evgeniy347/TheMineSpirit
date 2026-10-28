@@ -18,6 +18,7 @@ public final class GraphPlanner {
     private static final String EVENT = "event:";
     private static final String EXPLORE = "explore:";
     private static final String STATION = "station:";
+    private static final String ORDER = "order:";
     private static final int EXPLORE_TICKS = 2400;
     private static final char AT = '@';
 
@@ -38,6 +39,7 @@ public final class GraphPlanner {
         GraphPlanner planner = new GraphPlanner(graph, state);
         planner.roots();
         planner.events();
+        planner.orders();
         planner.standing();
         return planner.result(planner.edges());
     }
@@ -46,31 +48,9 @@ public final class GraphPlanner {
         GraphPlanner planner = new GraphPlanner(graph, state);
         planner.roots();
         planner.events();
+        planner.orders();
         planner.edges();
         return planner.flow;
-    }
-
-    public static int threshold(SupplyGraph.Item item, GraphState state) {
-        int stage = item.perSpirit() ? 1 : state.stage();
-        return (int) Math.ceil(item.xmin() * state.spirits() * stage * item.k());
-    }
-
-    public static boolean lacking(SupplyGraph graph, GraphState state, String node) {
-        if (graph.isGroup(node)) {
-            List<String> members = graph.members(node);
-            SupplyGraph.Item first = graph.items().get(members.get(0));
-            int have = members.stream().mapToInt(state::count).sum();
-            return first != null && have < threshold(first, state);
-        }
-        SupplyGraph.Item item = graph.items().get(node);
-        if (item != null && item.stage() <= state.stage()) {
-            return state.count(node) < threshold(item, state);
-        }
-        if (graph.isTool(node)) {
-            int split = node.indexOf('_');
-            return state.bestTier(node.substring(split + 1)) < graph.rank(node.substring(0, split));
-        }
-        return false;
     }
 
     private void roots() {
@@ -79,7 +59,7 @@ public final class GraphPlanner {
                 continue;
             }
             int have = count(item.id());
-            if (have < threshold(item, state) && sourced(item.id())) {
+            if (have < GraphLack.threshold(item, state) && sourced(item.id())) {
                 push(null, item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0));
             }
         }
@@ -102,8 +82,8 @@ public final class GraphPlanner {
                 requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
             }
         }
-        graph.herdCaps().forEach((herd, cap) -> {
-            if (count(herd) > cap) {
+        graph.herdCaps().forEach((herd, herdCap) -> {
+            if (count(herd) > herdCap.limit(state.spirits())) {
                 for (SupplyGraph.Way way : graph.ways()) {
                     if (way.consumes().containsKey(herd) && available(way)) {
                         flow.local(way.id(), graph.herdCullBoost());
@@ -293,6 +273,22 @@ public final class GraphPlanner {
         }
     }
 
+    private void orders() {
+        for (Map.Entry<String, Integer> lack : state.orders().entrySet()) {
+            String item = lack.getKey();
+            if (graph.items().containsKey(item) || graph.isGroup(item)) {
+                push(null, item, graph.maxPriority());
+            } else {
+                notices.putIfAbsent(
+                        ORDER + item,
+                        new GraphPlan.Notice(
+                                item,
+                                "заказ игрока ждёт «" + item + "» ×" + lack.getValue()
+                                        + ", а граф не знает, как его добыть: добавьте предмет в граф"));
+            }
+        }
+    }
+
     private void standing() {
         for (SupplyGraph.Building building : graph.buildings().values()) {
             if (state.built(building.id()) == Built.BUILT) {
@@ -315,7 +311,7 @@ public final class GraphPlanner {
             if (state.built(id) != Built.BUILT) {
                 requireBuilding(null, id, weight, "событие " + event);
             }
-        } else if (lacking(graph, state, node)) {
+        } else if (GraphLack.lacking(graph, state, node)) {
             push(null, node, weight);
         }
     }
@@ -324,7 +320,7 @@ public final class GraphPlanner {
         Map<String, Double> scores = flow.solve();
         boolean changed = false;
         for (SupplyGraph.Edge edge : graph.edges()) {
-            if (!lacking(graph, state, edge.lack())) {
+            if (!GraphLack.lacking(graph, state, edge.lack())) {
                 continue;
             }
             boolean active = false;
@@ -369,7 +365,10 @@ public final class GraphPlanner {
             }
         }
         load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
-        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
+        return new GraphPlan(
+                GraphBuildOrder.buildingsFirst(graph, tasks, id -> GraphLack.ready(graph, state, id)),
+                List.copyOf(notices.values()),
+                advice);
     }
 
     private Optional<String> station(String key) {
@@ -464,7 +463,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     materials,
-                    tooled && share(materials) >= graph.buildStartShare(),
+                    tooled && GraphLack.share(graph, state, building.materials()) >= graph.buildStartShare(),
                     false,
                     graph.implemented(id),
                     graph.costs().ticks(key, building.boardCase()));
@@ -494,10 +493,7 @@ public final class GraphPlanner {
     }
 
     private int count(String node) {
-        if (graph.isGroup(node)) {
-            return graph.members(node).stream().mapToInt(state::count).sum();
-        }
-        return state.count(node);
+        return GraphLack.count(graph, state, node);
     }
 
     private boolean available(SupplyGraph.Way way) {
@@ -540,17 +536,6 @@ public final class GraphPlanner {
 
     private boolean housed(SupplyGraph.Way way) {
         return way.building() == null || state.built(way.building()) == Built.BUILT;
-    }
-
-    private double share(Map<String, Integer> needs) {
-        int total = needs.values().stream().mapToInt(Integer::intValue).sum();
-        if (total == 0) {
-            return 1.0;
-        }
-        int have = needs.entrySet().stream()
-                .mapToInt(entry -> Math.min(entry.getValue(), Math.max(0, count(entry.getKey()))))
-                .sum();
-        return (double) have / total;
     }
 
     private boolean stocked(Map<String, Integer> needs) {

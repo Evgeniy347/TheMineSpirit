@@ -20,11 +20,11 @@ src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] Д�
 src/main/java/com/theminespirit/gametest/BuildPaceGameTests.java	[флак] 17 блоков по 10 тиков = 170 тиков стройки плюс подход; потолок ≈ 2× замера.
 src/main/java/com/theminespirit/gametest/BuildRetreatGameTests.java	[флак] 18 блоков ниши и выход наружу перед последним — ≈ 300 тиков, запас под нагрузкой полного прогона.
 src/main/java/com/theminespirit/gametest/CaptureGameTests.java	[флак] овца идёт за кормом шагом ванильной навигации; потолок ≈ 2× замера ~300 тиков.
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	[флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
-src/main/java/com/theminespirit/gametest/ChopTreeGameTests.java	потолок с запасом на флаки полного прогона
-src/main/java/com/theminespirit/gametest/CombatGameTests.java	[флак] тайм-аут скрипта FLEE_SAFE/FLEE_TIMEOUT_TICKS=600 тиков: ловушка честно ждёт отказ по тайм-ауту
+src/main/java/com/theminespirit/gametest/ChopStructuresGameTests.java	[флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
+src/main/java/com/theminespirit/gametest/ChopBigTreesGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
+src/main/java/com/theminespirit/gametest/ChopReplantGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
+src/main/java/com/theminespirit/gametest/ChopReplantGameTests.java	потолок с запасом на флаки полного прогона
+src/main/java/com/theminespirit/gametest/CombatFleeGameTests.java	[флак] тайм-аут скрипта FLEE_SAFE/FLEE_TIMEOUT_TICKS=600 тиков: ловушка честно ждёт отказ по тайм-ауту
 src/main/java/com/theminespirit/gametest/CombatRallyGameTests.java	[флак] зов повторяется не раньше 200 тиков: первый и второй разнесены на интервал, наблюдение
 src/main/java/com/theminespirit/gametest/CombatRallyGameTests.java	занимает ~300 тиков со сдвигом набора игрока — потолок 500 держит двукратный запас.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
@@ -165,9 +165,9 @@ src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147
 src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
-src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
-src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
-src/main/java/com/theminespirit/gametest/FarmGameTests.java	[флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
+src/main/java/com/theminespirit/gametest/FarmSafetyGameTests.java	[флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
+src/main/java/com/theminespirit/gametest/FarmSafetyGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
+src/main/java/com/theminespirit/gametest/FarmSessionGameTests.java	[флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	[флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина и факелы
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
@@ -191,12 +191,12 @@ src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] сп
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с обходом руды: 9 ступеней + 3 колонки обхода и выход наверх; замерено ~850 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] 1200 тиков HARVEST_NO_PROGRESS_TICKS: отказ обязан прийти не позже предела простоя
-src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
-src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
-src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
-src/main/java/com/theminespirit/gametest/MineGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
-src/main/java/com/theminespirit/gametest/MineGameTests.java	потолок 1000 ≈ 1.7× замера
+src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	[флак] 1200 тиков HARVEST_NO_PROGRESS_TICKS: отказ обязан прийти не позже предела простоя
+src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	[флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
+src/main/java/com/theminespirit/gametest/GatherProgressGameTests.java	[флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
+src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	[флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
+src/main/java/com/theminespirit/gametest/MineVeinDurabilityGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
+src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	потолок 1000 ≈ 1.7× замера
 src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	[флак] три задачи подряд (спуск, расширение 60+ клеток, 8 ступенек): подход к каждой клетке,
 src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	замер духа на порядок больше базового; запас 2× к ожидаемым тикам.
 src/main/java/com/theminespirit/gametest/PersonalSpaceGameTests.java	[флак] 17 блоков по 10 тиков плюс шаги в сторону; потолок ≈ 2× замера.

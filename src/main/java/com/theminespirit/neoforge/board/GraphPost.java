@@ -13,8 +13,10 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,19 +26,18 @@ import java.util.UUID;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.PickaxeItem;
 import org.jspecify.annotations.Nullable;
 
 final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
-    private static final String PART = ":2";
+    static final String PART = ":2";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
     private static final int TORCHES_PER_CRAFT = 4;
     private static final int TORCH_BATCH = 16;
     private static final int CHARCOAL_LOGS = 4;
     private static final int CHARCOAL_BATCH = 2;
     private static final String EAT = "eat";
+    private static final String ORDER = "craft_player_order";
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
 
     private final ServerLevel level;
@@ -83,11 +84,21 @@ final class GraphPost {
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
-            case BUILDING -> StageBuilt.ids().contains(ticket.node()) && building(ticket);
-            case EVENT ->
-                EAT.equals(ticket.node()) ? hungry(ticket) : COLLECT.contains(ticket.node()) && collect(ticket);
+            case BUILDING -> StageBuilt.ids().contains(ticket.node()) ? building(ticket) : routes().building(ticket);
+            case EVENT -> event(ticket);
             case WAY -> way(ticket, task);
         };
+    }
+
+    private boolean event(GraphTickets.Ticket ticket) {
+        if (EAT.equals(ticket.node())) {
+            return hungry(ticket);
+        }
+        if (ORDER.equals(ticket.node())) {
+            CraftOrders.refresh(level);
+            return true;
+        }
+        return COLLECT.contains(ticket.node()) && collect(ticket);
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {
@@ -144,7 +155,7 @@ final class GraphPost {
                 new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
                 now);
         missing.forEach((item, count) -> {
-            if (!graph.items().containsKey(GraphNames.graphItem(item)) && known(item)) {
+            if (known(item)) {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
             }
         });
@@ -174,6 +185,11 @@ final class GraphPost {
         if (!graph.items().containsKey(task.makes()) || !known(item)) {
             return false;
         }
+        Optional<RouteResource> route =
+                graph.way(ticket.node()).map(SupplyGraph.Way::building).flatMap(RouteResource::ofBuilding);
+        if (route.isPresent()) {
+            return routes().gather(ticket, item, route.orElseThrow());
+        }
         gather(ticket.id(), ticket.id(), task.priority(), item, ticket.count(), source(ticket.node()));
         return true;
     }
@@ -201,7 +217,7 @@ final class GraphPost {
 
     private void gather(String id, String cause, int priority, String item, int count, BlockCoord at) {
         int output = source.outputCount(item);
-        int helpers = MINED.contains(item) ? miners() : spirits.size();
+        int helpers = MINED.contains(item) ? GraphCrew.miners(spirits) : spirits.size();
         List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
         for (int part = 0; part < portions.size(); part++) {
             String partId = part == 0 ? id : id + PART;
@@ -242,7 +258,7 @@ final class GraphPost {
 
     private boolean charcoal(GraphTickets.Ticket ticket, GraphPlan.Task task) {
         String log = GraphNames.item(graph, "#logs", scan.wood());
-        Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : furnaceHolder();
+        Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : GraphCrew.furnaceHolder(spirits);
         submit(
                 ticket(ticket.id(), task.boardCase(), holder, task.priority(), ticket.id(), Map.of(log, CHARCOAL_LOGS)),
                 TicketTarget.at(craftPoint()).withSupply(log, CHARCOAL_LOGS).withCount(CHARCOAL_BATCH));
@@ -256,7 +272,7 @@ final class GraphPost {
         return Map.copyOf(items);
     }
 
-    private BoardTicket ticket(
+    BoardTicket ticket(
             String id,
             BoardCase boardCase,
             Optional<UUID> assignee,
@@ -266,14 +282,14 @@ final class GraphPost {
         return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required);
     }
 
-    private void submit(BoardTicket ticket, TicketTarget target) {
+    void submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = service.submit(ticket, target);
         if (outcome == BoardOutcome.DUPLICATE) {
             service.board().reprioritize(ticket.id(), ticket.priority());
         }
     }
 
-    private boolean open(String id) {
+    boolean open(String id) {
         return service.board()
                 .statusOf(id)
                 .filter(status -> switch (status) {
@@ -283,25 +299,8 @@ final class GraphPost {
                 .isPresent();
     }
 
-    private int miners() {
-        int miners = 0;
-        for (SpiritEntity spirit : spirits) {
-            var inventory = spirit.getInventory();
-            for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-                if (inventory.getItem(slot).getItem() instanceof PickaxeItem) {
-                    miners++;
-                    break;
-                }
-            }
-        }
-        return miners;
-    }
-
-    private Optional<UUID> furnaceHolder() {
-        return spirits.stream()
-                .filter(spirit -> !spirit.isRemoved() && spirit.getInventory().countItem(Items.FURNACE) > 0)
-                .map(SpiritEntity::getUUID)
-                .findFirst();
+    private GraphRoutes routes() {
+        return new GraphRoutes(this, level, service, scan, graph, source, spirits.size());
     }
 
     private static boolean known(String item) {

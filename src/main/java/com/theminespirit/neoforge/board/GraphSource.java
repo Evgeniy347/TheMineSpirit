@@ -12,6 +12,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,8 +44,11 @@ public final class GraphSource {
             return Set.of();
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
-        GraphSurroundings.Around around =
-                GraphSurroundings.of(level, service, scan.orElseThrow().home()).with(events);
+        RouteWatch.Result routes = RouteWatch.tick(level, scan.orElseThrow().home());
+        GraphSurroundings.Around around = GraphSurroundings.of(
+                        level, service, scan.orElseThrow().home())
+                .with(events)
+                .withRoutes(routes.events(), routes.world());
         GraphState state = GraphInputs.state(level, service, spirits, stock, scan.orElseThrow(), graph, around);
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
@@ -114,6 +118,9 @@ public final class GraphSource {
         }
         if (GraphFood.hungry(spirits)) {
             events.add("hungry");
+        }
+        if (CraftOrders.waiting(level)) {
+            events.add(CraftOrders.EVENT);
         }
         return Set.copyOf(events);
     }

@@ -30,6 +30,8 @@ import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.respawn.SpiritRespawnService;
 import com.theminespirit.neoforge.rest.RestConfig;
 import com.theminespirit.neoforge.rest.RestLifecycle;
+import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
+import com.theminespirit.neoforge.terminal.TerminalMenus;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -47,6 +49,8 @@ public final class TheMineSpirit {
         ModProtocolHandshake.register(modEventBus);
         BoardViewChannel.register(modEventBus);
         TownMapChannel.register(modEventBus);
+        TerminalMenus.register(modEventBus);
+        CraftTerminalChannel.register(modEventBus);
         modEventBus.addListener(ModEntities::registerAttributes);
         modEventBus.addListener(SpiritChunkTickets::registerControllers);
         modEventBus.addListener(SettlementChunkTickets::registerControllers);

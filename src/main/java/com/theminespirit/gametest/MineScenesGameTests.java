@@ -19,7 +19,13 @@ public final class MineScenesGameTests {
                 List.of("arena", "empty"),
                 CraterGameTests.class,
                 MineBuildGameTests.class,
-                MineGameTests.class,
+                GatherTerrainGameTests.class,
+                MineVeinGameTests.class,
+                MineVeinSpaceGameTests.class,
+                MineVeinDurabilityGameTests.class,
+                MineToolsGameTests.class,
+                GatherRulesGameTests.class,
+                GatherProgressGameTests.class,
                 SafeMineGameTests.class);
     }
 

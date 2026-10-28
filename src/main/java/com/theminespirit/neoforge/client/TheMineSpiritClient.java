@@ -5,6 +5,8 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.MineMapChannel;
 import com.theminespirit.neoforge.net.TownMapChannel;
+import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
+import com.theminespirit.neoforge.terminal.TerminalMenus;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -12,6 +14,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.common.NeoForge;
 
@@ -27,6 +30,17 @@ public final class TheMineSpiritClient {
 
     public TheMineSpiritClient(IEventBus modBus) {
         modBus.addListener(TheMineSpiritClient::registerKeys);
+        modBus.addListener(TheMineSpiritClient::registerScreens);
+        CraftTerminalChannel.onClientSnapshot(snapshot -> {
+            if (Minecraft.getInstance().screen instanceof CraftTerminalScreen screen) {
+                screen.show(snapshot);
+            }
+        });
+        CraftTerminalChannel.onClientChain(reply -> {
+            if (Minecraft.getInstance().screen instanceof CraftTerminalScreen screen) {
+                screen.show(reply);
+            }
+        });
         NeoForge.EVENT_BUS.addListener(TheMineSpiritClient::onClientTick);
         BoardViewChannel.onClientStage(stage -> {
             if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
@@ -58,6 +72,10 @@ public final class TheMineSpiritClient {
                 screen.show(tiles);
             }
         });
+    }
+
+    private static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(TerminalMenus.CRAFT_TERMINAL.get(), CraftTerminalScreen::new);
     }
 
     private static void registerKeys(RegisterKeyMappingsEvent event) {

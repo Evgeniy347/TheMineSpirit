@@ -2610,7 +2610,7 @@
         "oak_log": 40
       },
       "requires": [
-        "chests"
+        "clearing"
       ]
     },
     "hut": {
@@ -2623,7 +2623,7 @@
         "cobblestone": 16
       },
       "requires": [
-        "chests"
+        "clearing"
       ]
     },
     "streets": {
@@ -2963,7 +2963,8 @@
         "oak_sapling": 4,
         "torch": 4,
         "dirt": 8
-      }
+      },
+      "requires": ["hut"]
     },
     "orchard_birch": {
       "case": "BUILD_ORCHARD",
@@ -3981,8 +3982,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "path_plains": {
       "case": "BUILD_STREETS",
@@ -3993,8 +3993,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "path_forest": {
       "case": "BUILD_STREETS",
@@ -4005,8 +4004,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "path_snowy": {
       "case": "BUILD_STREETS",
@@ -4017,8 +4015,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "route_desert": {
       "case": "BUILD_STREETS",
@@ -4030,7 +4027,6 @@
       },
       "optional": true,
       "estimate": true,
-      "implemented": false,
       "world": "biome:desert"
     },
     "route_snow": {
@@ -4043,7 +4039,6 @@
       },
       "optional": true,
       "estimate": true,
-      "implemented": false,
       "world": "biome:snowy"
     },
     "route_dirt": {
@@ -4056,7 +4051,6 @@
       },
       "optional": true,
       "estimate": true,
-      "implemented": false,
       "world": "biome:plains"
     },
     "route_nether_fortress": {
@@ -4142,6 +4136,16 @@
       "makes": "dirt",
       "yield": 16,
       "weight": 1.0
+    },
+    {
+      "id": "dig_dirt_route",
+      "case": "GATHER_MATERIALS",
+      "makes": "dirt",
+      "yield": 16,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden",
+      "building": "route_dirt"
     },
     {
       "id": "mine_coal",
@@ -4760,6 +4764,16 @@
       "tool": "shovel",
       "tier": "wooden",
       "world": "sand"
+    },
+    {
+      "id": "dig_sand_route",
+      "case": "GATHER_MATERIALS",
+      "makes": "sand",
+      "yield": 8,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden",
+      "building": "route_desert"
     },
     {
       "id": "smelt_glass",
@@ -8261,7 +8275,7 @@
       "yield": 2,
       "weight": 1.0,
       "world": "water",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "trust_ocelot",
@@ -8273,7 +8287,7 @@
         "cod": 2
       },
       "world": "biome:jungle",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "trust_ocelot_salmon",
@@ -8285,7 +8299,7 @@
         "salmon": 2
       },
       "world": "biome:jungle",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_wolf",
@@ -8300,7 +8314,7 @@
       "needs": {
         "wolf": 2
       },
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_wolf_pork",
@@ -8315,7 +8329,7 @@
       "needs": {
         "wolf": 2
       },
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_cat",
@@ -8330,7 +8344,7 @@
       "needs": {
         "cat": 2
       },
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_ocelot",
@@ -8345,7 +8359,7 @@
         "ocelot": 2
       },
       "world": "biome:jungle",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "shear_oak_leaves",
@@ -8505,7 +8519,6 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "wooden",
-      "implemented": false,
       "building": "route_snow"
     },
     {
@@ -8516,7 +8529,6 @@
       "weight": 1.0,
       "tool": "shovel",
       "tier": "wooden",
-      "implemented": false,
       "building": "route_snow"
     },
     {
@@ -10298,7 +10310,16 @@
     "herd_cow": 10,
     "herd_sheep": 10,
     "herd_pig": 10,
-    "herd_chicken": 16
+    "herd_chicken": 16,
+    "wolf": {
+      "perSpirit": 0.5
+    },
+    "cat": {
+      "perSpirit": 0.5
+    },
+    "ocelot": {
+      "perSpirit": 0.5
+    }
   },
   "costs": {
     "defaultTicks": 100,

@@ -11,7 +11,6 @@ import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritTaskStore;
 import com.theminespirit.neoforge.board.BoardRegistry;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.respawn.SpiritRespawnStore;
@@ -76,7 +75,7 @@ final class GameTestFixtures {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
         sweepEntities(helper);
-        SettlementPlotStore.get(helper.getLevel()).clear();
+        SceneStores.clearSettlement(helper.getLevel());
         SpiritRespawnStore.get(helper.getLevel()).clear();
     }
 
@@ -95,7 +94,7 @@ final class GameTestFixtures {
         clearBlocks(helper, clearHeight);
         clearEntities(helper, clearHeight);
         ServerLevel level = helper.getLevel();
-        SettlementPlotStore.get(level).clear();
+        SceneStores.clearSettlement(level);
         CoordinatorRegistry.clear();
         forgetChests(level);
         SpiritRespawnStore.get(level).clear();

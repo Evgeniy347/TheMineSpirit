@@ -50,7 +50,23 @@ public final class SpiritPlanCommand {
             }
         }
         streets(source);
+        routes(source);
         return plan.lots().size();
+    }
+
+    private static void routes(CommandSourceStack source) {
+        RouteStore.get(source.getLevel())
+                .plan()
+                .markers()
+                .values()
+                .forEach(marker -> source.sendSuccess(
+                        () -> Component.literal("  маршрут " + marker.resource().family() + " ("
+                                + marker.point().x() + ", "
+                                + marker.point().y() + ", " + marker.point().z() + "): "
+                                + (marker.routeBuilt()
+                                        ? "готов"
+                                        : marker.pathBuilt() ? "тропа проложена" : "точка отмечена")),
+                        false));
     }
 
     private static void streets(CommandSourceStack source) {

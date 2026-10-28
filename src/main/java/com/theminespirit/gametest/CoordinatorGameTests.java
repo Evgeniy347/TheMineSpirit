@@ -416,8 +416,8 @@ public final class CoordinatorGameTests {
         TacticsScene.prepare(helper);
         helper.setBlock(1, 0, 1, Blocks.DIRT);
         helper.setBlock(9, 0, 9, Blocks.DIRT);
-        ChopTreeGameTests.buildBirchTree(helper, 1, 1, 5);
-        ChopTreeGameTests.buildBirchTree(helper, 9, 9, 5);
+        ChopSceneSupport.buildBirchTree(helper, 1, 1, 5);
+        ChopSceneSupport.buildBirchTree(helper, 9, 9, 5);
         SpiritEntity first = TacticsScene.spirit(helper, new BlockPos(2, 1, 1));
         SpiritEntity second = TacticsScene.spirit(helper, new BlockPos(8, 1, 9));
         first.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));

@@ -63,9 +63,7 @@ public final class BoardTuning {
             "caseFailPauseCapTicks",
             "caseFailLimit",
             "ticketFailLimit",
-            "fencePatrolInterval",
             "enchantCheckInterval",
-            "enchantShelvesMin",
             "transferRadiusBlocks",
             "transferMaxCount",
             "rebuildPercent");

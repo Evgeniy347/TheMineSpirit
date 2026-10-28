@@ -315,8 +315,8 @@ class GraphPlannerTests {
         SupplyGraph.Item netherite = GraphWorld.GRAPH.items().get("netherite_armor");
 
         assertEquals(
-                GraphPlanner.threshold(diamond, one.state()) * 2,
-                GraphPlanner.threshold(diamond, two.state()),
+                GraphLack.threshold(diamond, one.state()) * 2,
+                GraphLack.threshold(diamond, two.state()),
                 "Норма алмазной брони — на духа: два духа требуют вдвое больше");
         assertTrue(
                 diamond.perSpirit() && netherite.stage() == 4,
@@ -415,10 +415,9 @@ class GraphPlannerTests {
                 "Просьба игрока — задание высшего приоритета: " + plan.task("event:player_request:player_request"));
         assertTrue(
                 plan.task("building:path_desert")
-                        .map(task -> !task.implemented())
+                        .map(GraphPlan.Task::implemented)
                         .orElse(false),
-                "Открытый биом без ресурса ставит тропинку до него (прокладка — «в разработке»): "
-                        + plan.task("building:path_desert"));
+                "Открытый биом ставит тропинку до него, её механика реализована: " + plan.task("building:path_desert"));
     }
 
     @Test
@@ -485,21 +484,6 @@ class GraphPlannerTests {
                         && plan.task("event:player_died_near_base:guard_death_site")
                                 .isEmpty(),
                 "Ближе 100 блоков к базе — собрать вещи и вернуться, без укрытия: " + plan.tasks());
-    }
-
-    @Test
-    void plan_OcelotLacking_TrustWithRawFishInDevelopment() {
-        GraphWorld world = GraphWorld.settled().with("cod", 4).with("ocelot", 0);
-        world.stage = 2;
-        world.world.add("biome:jungle");
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("trust_ocelot").map(task -> !task.implemented()).orElse(false),
-                "Оцелоту не хватает — доверие сырой рыбой в джунглях, «в разработке»: " + plan.task("trust_ocelot"));
-        assertTrue(
-                !GraphWorld.GRAPH.implemented("breed_ocelot") && !GraphWorld.GRAPH.implemented("breed_wolf"),
-                "Размножение питомцев внесено как «в разработке»");
     }
 
     @Test
@@ -851,7 +835,7 @@ class GraphPlannerTests {
 
         assertEquals(
                 1,
-                GraphPlanner.threshold(GraphWorld.GRAPH.items().get("bed"), world.state()),
+                GraphLack.threshold(GraphWorld.GRAPH.items().get("bed"), world.state()),
                 "Кровать — одна на духа, без умножения на этап");
     }
 
