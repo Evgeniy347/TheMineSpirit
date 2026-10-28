@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import java.util.List;
+import java.util.Map;
 
 public final class GraphLack {
     private GraphLack() {}
@@ -26,5 +27,28 @@ public final class GraphLack {
             return state.bestTier(node.substring(split + 1)) < graph.rank(node.substring(0, split));
         }
         return false;
+    }
+
+    static int count(SupplyGraph graph, GraphState state, String node) {
+        if (graph.isGroup(node)) {
+            return graph.members(node).stream().mapToInt(state::count).sum();
+        }
+        return state.count(node);
+    }
+
+    static double share(SupplyGraph graph, GraphState state, Map<String, Integer> needs) {
+        int total = needs.values().stream().mapToInt(Integer::intValue).sum();
+        if (total == 0) {
+            return 1.0;
+        }
+        int have = needs.entrySet().stream()
+                .mapToInt(entry -> Math.min(entry.getValue(), Math.max(0, count(graph, state, entry.getKey()))))
+                .sum();
+        return (double) have / total;
+    }
+
+    static boolean ready(SupplyGraph graph, GraphState state, String building) {
+        SupplyGraph.Building known = graph.buildings().get(building);
+        return known != null && share(graph, state, known.materials()) >= graph.buildStartShare();
     }
 }

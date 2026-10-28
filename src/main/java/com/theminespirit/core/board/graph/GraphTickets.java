@@ -2,8 +2,10 @@ package com.theminespirit.core.board.graph;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -49,6 +51,7 @@ public final class GraphTickets {
         List<Ticket> post = new ArrayList<>();
         Set<String> live = new LinkedHashSet<>();
         List<GraphPlan.Task> unimplemented = new ArrayList<>();
+        Map<String, Integer> demand = buildingDemand(graph, plan);
         for (GraphPlan.Task task : plan.tasks()) {
             if (!task.implemented()) {
                 unimplemented.add(task);
@@ -63,7 +66,7 @@ public final class GraphTickets {
             }
             Kind kind = kind(task);
             String node = kind == Kind.WAY ? wayId(task) : task.makes();
-            int count = kind == Kind.WAY ? count(graph, state, task) : 1;
+            int count = kind == Kind.WAY ? count(graph, state, task, demand) : 1;
             post.add(new Ticket(id(task), kind, node, task, count));
         }
         post.sort(Comparator.comparingInt((Ticket ticket) -> ticket.task().priority())
@@ -89,15 +92,33 @@ public final class GraphTickets {
         return at < 0 ? task.id() : task.id().substring(0, at);
     }
 
-    private static int count(SupplyGraph graph, GraphState state, GraphPlan.Task task) {
+    private static int count(SupplyGraph graph, GraphState state, GraphPlan.Task task, Map<String, Integer> demand) {
         SupplyGraph.Item item = graph.items().get(task.makes());
         if (item == null) {
             return 1;
         }
         int yield = graph.way(wayId(task)).map(SupplyGraph.Way::yield).orElse(1);
+        int have = state.count(item.id());
         int shortage = Math.max(
-                GraphLack.threshold(item, state) - state.count(item.id()),
+                Math.max(GraphLack.threshold(item, state), demand.getOrDefault(item.id(), 0)) - have,
                 state.orders().getOrDefault(item.id(), 0));
         return Math.max(1, Math.min(COUNT_MAX, Math.max(yield, shortage)));
+    }
+
+    private static Map<String, Integer> buildingDemand(SupplyGraph graph, GraphPlan plan) {
+        Map<String, Integer> demand = new LinkedHashMap<>();
+        for (GraphPlan.Task task : plan.tasks()) {
+            if (!task.id().startsWith(BUILDING)) {
+                continue;
+            }
+            task.consumes().forEach((item, count) -> {
+                if (graph.isGroup(item)) {
+                    graph.members(item).forEach(member -> demand.merge(member, count, Integer::sum));
+                } else {
+                    demand.merge(item, count, Integer::sum);
+                }
+            });
+        }
+        return demand;
     }
 }

@@ -83,7 +83,9 @@ final class PlotAudit {
                         id,
                         BoardCase.REPAIR_BUILDING,
                         Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.REPAIR_BUILDING),
+                        Math.max(
+                                BoardRules.priorityOf(BoardCase.REPAIR_BUILDING),
+                                BoardRules.priorityOf(BoardCase.REPAIR_FENCE)),
                         now,
                         1,
                         BoardTicket.ALWAYS_CAUSE,

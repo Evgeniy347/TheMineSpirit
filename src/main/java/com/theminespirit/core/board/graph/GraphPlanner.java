@@ -365,7 +365,10 @@ public final class GraphPlanner {
             }
         }
         load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
-        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
+        return new GraphPlan(
+                GraphBuildOrder.buildingsFirst(graph, tasks, id -> GraphLack.ready(graph, state, id)),
+                List.copyOf(notices.values()),
+                advice);
     }
 
     private Optional<String> station(String key) {
@@ -460,7 +463,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     materials,
-                    tooled && share(materials) >= graph.buildStartShare(),
+                    tooled && GraphLack.share(graph, state, building.materials()) >= graph.buildStartShare(),
                     false,
                     graph.implemented(id),
                     graph.costs().ticks(key, building.boardCase()));
@@ -490,10 +493,7 @@ public final class GraphPlanner {
     }
 
     private int count(String node) {
-        if (graph.isGroup(node)) {
-            return graph.members(node).stream().mapToInt(state::count).sum();
-        }
-        return state.count(node);
+        return GraphLack.count(graph, state, node);
     }
 
     private boolean available(SupplyGraph.Way way) {
@@ -536,17 +536,6 @@ public final class GraphPlanner {
 
     private boolean housed(SupplyGraph.Way way) {
         return way.building() == null || state.built(way.building()) == Built.BUILT;
-    }
-
-    private double share(Map<String, Integer> needs) {
-        int total = needs.values().stream().mapToInt(Integer::intValue).sum();
-        if (total == 0) {
-            return 1.0;
-        }
-        int have = needs.entrySet().stream()
-                .mapToInt(entry -> Math.min(entry.getValue(), Math.max(0, count(entry.getKey()))))
-                .sum();
-        return (double) have / total;
     }
 
     private boolean stocked(Map<String, Integer> needs) {

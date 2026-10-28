@@ -9,21 +9,22 @@ import org.junit.jupiter.api.Test;
 
 class GraphRequiresTests {
     @Test
-    void plan_ChestsNotBuiltHutMaterialsStocked_HutWaitsChestsRaised() {
-        GraphPlan plan = GraphWorld.settled()
-                .built("chests", Built.PLANNED)
+    void plan_ClearingNotBuiltHutMaterialsStocked_HutWaitsClearingRaised() {
+        GraphWorld world = GraphWorld.settled()
+                .built("clearing", Built.PLANNED)
                 .with("oak_log", 64)
                 .with("oak_planks", 64)
-                .with("cobblestone", 64)
-                .plan();
+                .with("cobblestone", 64);
+        GraphPlan before = world.plan();
+        GraphPlan after = world.built("clearing", Built.BUILT).plan();
 
         assertFalse(
-                plan.task("building:hut").map(GraphPlan.Task::feasible).orElse(true),
-                "Хижина ставится у стола двора: без сундуков двора её не открывать, даже когда материалы есть: "
-                        + plan.task("building:hut"));
+                before.task("building:hut").map(GraphPlan.Task::feasible).orElse(true),
+                "Хижина ждёт выровненной площадки, а не сундуков: стройка этапа идёт вместе с двором, как в цепочке: "
+                        + before.task("building:hut"));
         assertTrue(
-                plan.priority("building:chests") > 0,
-                "Хижина ждёт двор — сундуки двора получают её давление, а не стоят без задания: " + plan.tasks());
+                after.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
+                "Площадка выровнена и материалы на складе — хижина выполнима: " + after.task("building:hut"));
     }
 
     @Test
@@ -37,6 +38,27 @@ class GraphRequiresTests {
         assertTrue(
                 plan.task("building:hut").map(GraphPlan.Task::feasible).orElse(false),
                 "Двор готов и материалы на складе — хижина выполнима: " + plan.task("building:hut"));
+    }
+
+    @Test
+    void plan_HutNotBuiltOrchardMaterialsStocked_OrchardWaitsHutRaised() {
+        GraphWorld world = GraphWorld.settled()
+                .built("hut", Built.PLANNED)
+                .with("oak_sapling", 4)
+                .with("torch", 8)
+                .with("dirt", 16);
+        GraphPlan before = world.plan();
+        GraphPlan after = world.built("hut", Built.BUILT).plan();
+
+        assertFalse(
+                before.task("building:orchard_oak")
+                        .map(GraphPlan.Task::feasible)
+                        .orElse(true),
+                "Сад идёт после хижины: пока её нет, его цветы и дорожки не отвлекают духов от ограды и дома: "
+                        + before.task("building:orchard_oak"));
+        assertTrue(
+                after.task("building:orchard_oak").map(GraphPlan.Task::feasible).orElse(false),
+                "Хижина построена и материалы сада на складе — сад выполним: " + after.task("building:orchard_oak"));
     }
 
     @Test

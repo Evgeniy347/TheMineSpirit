@@ -61,9 +61,10 @@ public final class FirstStageGameTests {
     private static final int STARTING_LOGS = 64;
     private static final int PIT_DEPTH = 3;
     private static final long NOON = 6000;
-    private static final int SPIRITS = 3;
+    private static final int SPIRITS = 4;
     private static final int REPORT_EVERY = 500;
     private static final int COPY_SHIFT = 46;
+    private static final long FIXED_SEED = 1L;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<BoardCase> WORK = EnumSet.of(
             BoardCase.CLEAR_GROUNDS,
@@ -84,10 +85,11 @@ public final class FirstStageGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
         GameTestClock.align(helper);
-        long seed = GeneratedScene.seed();
+        long seed = GeneratedScene.fixedSeed() ? GeneratedScene.seed() : FIXED_SEED;
         ScenePlan scene = GeneratedScene.place(helper, seed, BATCH);
         GameTestChunks.hold(helper, GeneratedScene.at(0, 0, 0), scene.radius() + HELD_MARGIN);
         ServerLevel level = helper.getLevel();
+        level.random.setSeed(seed);
         BoardService board = BoardRegistry.get(level);
         board.board().restore(new BoardState(List.of(), Set.of()));
         BlockPos home = GeneratedScene.at(0, scene.height(0, 0) + 1, 0);
@@ -171,44 +173,18 @@ public final class FirstStageGameTests {
                 differ.add(cell.toShortString() + " " + original.getBlock());
             }
         }
-        int items = countItems(copy);
+        int items = SpiritHoldings.countItems(copy);
         copy.discard();
         BlockPos back = helper.absolutePos(corner);
         before.placeInWorld(level, back, back, new StructurePlaceSettings(), level.getRandom(), 2);
         helper.assertTrue(
                 differ.isEmpty()
-                        && items == countItems(source)
+                        && items == SpiritHoldings.countItems(source)
                         && loaded.spirit().equals(Optional.of(note.spirit())),
                 "Снимок инцидента не повторяет место: расходится блоков " + differ.size() + " "
                         + differ.stream().limit(4).toList() + ", предметов у духа из снимка " + items + " вместо "
-                        + countItems(source)
+                        + SpiritHoldings.countItems(source)
                         + ", дух " + loaded.spirit() + " — сцену из живого мира в тест не загрузить");
-    }
-
-    private static String woodHeld(SpiritEntity spirit) {
-        int logs = 0;
-        int planks = 0;
-        int sticks = 0;
-        int stone = 0;
-        int coal = 0;
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = spirit.getInventory().getItem(slot);
-            String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
-            logs += id.endsWith("_log") ? stack.getCount() : 0;
-            planks += id.endsWith("_planks") ? stack.getCount() : 0;
-            sticks += "stick".equals(id) ? stack.getCount() : 0;
-            stone += "cobblestone".equals(id) ? stack.getCount() : 0;
-            coal += id.endsWith("coal") ? stack.getCount() : 0;
-        }
-        return "log" + logs + "/pl" + planks + "/st" + sticks + "/cb" + stone + "/c" + coal;
-    }
-
-    private static int countItems(SpiritEntity spirit) {
-        int count = 0;
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            count += spirit.getInventory().getItem(slot).getCount();
-        }
-        return count;
     }
 
     private static SpiritEntity spirit(GameTestHelper helper, BlockPos at, BlockPos home, String wood, UUID id) {
@@ -300,9 +276,13 @@ public final class FirstStageGameTests {
             }
             pitDug = true;
             ColumnMask.Cell spot = site.level().cells().stream()
+                    .filter(cell -> site.inside(cell.x(), cell.z()))
                     .filter(cell -> !site.planCell(cell.x(), anchor.y(), cell.z()))
                     .findFirst()
-                    .orElse(site.level().cells().get(0));
+                    .orElseGet(() -> site.level().cells().stream()
+                            .filter(cell -> !site.planCell(cell.x(), anchor.y(), cell.z()))
+                            .findFirst()
+                            .orElse(site.level().cells().get(0)));
             BlockPos top = new BlockPos(spot.x(), anchor.y() - 1, spot.z());
             for (int depth = 0; depth < PIT_DEPTH; depth++) {
                 helper.getLevel().setBlockAndUpdate(top.below(depth), Blocks.AIR.defaultBlockState());
@@ -371,7 +351,7 @@ public final class FirstStageGameTests {
             List<String> spiritsNow = spirits.stream()
                     .map(spirit ->
                             spirit.displayName() + "@" + spirit.blockPosition().toShortString() + "="
-                                    + spirit.currentTaskScript().orElse("-") + " " + woodHeld(spirit))
+                                    + spirit.currentTaskScript().orElse("-") + " " + SpiritHoldings.woodHeld(spirit))
                     .toList();
             List<String> open = board.board().all().stream()
                     .filter(ticket -> board.board()

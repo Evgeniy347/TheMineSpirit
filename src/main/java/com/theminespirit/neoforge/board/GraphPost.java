@@ -154,7 +154,7 @@ final class GraphPost {
                 new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
                 now);
         missing.forEach((item, count) -> {
-            if (!graph.items().containsKey(GraphNames.graphItem(item)) && known(item)) {
+            if (known(item)) {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
             }
         });
