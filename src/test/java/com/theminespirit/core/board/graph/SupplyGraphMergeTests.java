@@ -2,9 +2,12 @@ package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SupplyGraphMergeTests {
@@ -73,6 +76,42 @@ class SupplyGraphMergeTests {
               ]
             }
             """;
+
+    private static final String DUPLICATE_IDS = """
+            {
+              "items": {"stick": {"xmin": 0, "base": 20}},
+              "ways": [
+                {"id": "same", "case": "GATHER_MATERIALS", "makes": "stick", "yield": 1, "weight": 1.0},
+                {"id": "same", "case": "GATHER_MATERIALS", "makes": "stick", "yield": 2, "weight": 1.0}
+              ]
+            }
+            """;
+
+    @Test
+    void parse_DuplicateWayIds_Rejected() {
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> SupplyGraph.parse(DUPLICATE_IDS, "duplicate.json"),
+                "Повтор id путей обязан отклоняться: иначе причины заданий и дедупликация доски путаются");
+
+        assertTrue(
+                error.getMessage().contains("same"),
+                "Сторож обязан назвать повторяющийся id пути: " + error.getMessage());
+    }
+
+    @Test
+    void loadDefault_MergedWays_HaveUniqueIds() {
+        List<String> ids = SupplyGraph.loadDefault().ways().stream()
+                .map(SupplyGraph.Way::id)
+                .toList();
+        Set<String> unique = new LinkedHashSet<>(ids);
+
+        assertEquals(
+                ids.size(),
+                unique.size(),
+                "id путей графа обязаны быть уникальны: повтор путает причины заданий, найдено "
+                        + (ids.size() - unique.size()) + " повторов");
+    }
 
     @Test
     void merge_ManualAndGenerated_ManualWinsForSameMakes() {

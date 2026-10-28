@@ -35,7 +35,6 @@ class ScriptCatalogTests {
                 new ScriptSpec("goto", "пройти", List.of(), List.of(), List.of())));
 
         Optional<ScriptSpec> found = catalog.find("goto");
-
         assertTrue(
                 found.isPresent(),
                 "Каталог обязан находить скрипт по id: иначе планировщик не сможет вызвать известный скрипт");
@@ -529,7 +528,8 @@ class ScriptCatalogTests {
                 spec("swap_tool", List.of("block"), Map.of()),
                 spec("drink_potion", List.of("type"), Map.of()));
 
-        return rows.stream().map(row -> Arguments.of(row));
+        return Stream.concat(rows.stream(), GatherScriptSpecRows.rows().stream())
+                .map(row -> Arguments.of(row));
     }
 
     @ParameterizedTest(name = "{0}")

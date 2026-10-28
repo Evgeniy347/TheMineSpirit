@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -360,6 +359,7 @@ public record SupplyGraph(
     }
 
     private void validate(String origin) {
+        GraphChecks.requireUniqueWays(ways, origin);
         for (Way way : ways) {
             if (!items.containsKey(way.makes()) && !isTool(way.makes())) {
                 throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " делает '" + way.makes()
@@ -392,11 +392,7 @@ public record SupplyGraph(
                 }
             }
         }
-        for (Edge edge : edges) {
-            Objects.requireNonNull(
-                    way(edge.way()).orElse(null),
-                    "Файл '" + origin + "': ребро от '" + edge.lack() + "' ведёт к неизвестному пути " + edge.way());
-        }
+        GraphChecks.requireKnownEdges(this, origin);
     }
 
     private static List<String> texts(JsonNode node) {

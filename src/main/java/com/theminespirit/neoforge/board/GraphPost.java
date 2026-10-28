@@ -108,7 +108,7 @@ final class GraphPost {
     }
 
     private boolean collect(GraphTickets.Ticket ticket) {
-        Optional<BlockCoord> at = "collect_drops".equals(ticket.node()) ? around.drop() : around.decay();
+        Optional<BlockCoord> at = "collect_drops".equals(ticket.node()) ? around.anyDrop() : around.decay();
         if (at.isEmpty()) {
             return false;
         }
@@ -134,6 +134,7 @@ final class GraphPost {
         }
         return switch (boardCase) {
             case GATHER_MATERIALS -> gather(ticket, task);
+            case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
             case CRAFT_TORCHES -> torches(ticket, task);
             case SMELT_CHARCOAL -> charcoal(ticket, task);
             default -> false;

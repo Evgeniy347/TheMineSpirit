@@ -58,6 +58,7 @@ public final class CoreScripts {
         specs.addAll(campSpecs());
         specs.addAll(interactionSpecs());
         specs.addAll(exchangeSpecs());
+        specs.add(GatherScriptSpecs.stripLog());
         return ScriptCatalog.of(specs);
     }
 
@@ -75,25 +76,25 @@ public final class CoreScripts {
                 spec(
                         "scan_blocks",
                         "просканировать только блоки вокруг духа",
-                        List.of(perceptionRadius(), ParamSpec.textList(FILTER, false)),
+                        List.of(CommonScriptSpecs.perceptionRadius(), ParamSpec.textList(FILTER, false)),
                         List.of(),
                         List.of("блоки по фильтру в радиусе найдены, сущности и контейнеры не собирались")),
                 spec(
                         "scan_entities",
                         "просканировать только сущности вокруг духа",
-                        List.of(perceptionRadius(), ParamSpec.textList(FILTER, false)),
+                        List.of(CommonScriptSpecs.perceptionRadius(), ParamSpec.textList(FILTER, false)),
                         List.of(),
                         List.of("сущности по фильтру в радиусе найдены, блоки и контейнеры не собирались")),
                 spec(
                         "sense_hazard",
                         "узнать об опасностях вокруг духа: лава, вода, обрыв",
-                        List.of(perceptionRadius()),
+                        List.of(CommonScriptSpecs.perceptionRadius()),
                         List.of(),
                         List.of("факты об опасностях в радиусе найдены, дух не двигался")),
                 spec(
                         "locate_block",
                         "найти ближайший блок по фильтру",
-                        List.of(ParamSpec.textList(FILTER, true), perceptionRadius()),
+                        List.of(ParamSpec.textList(FILTER, true), CommonScriptSpecs.perceptionRadius()),
                         List.of(),
                         List.of("позиция ближайшего блока найдена или сообщено, что блока нет")),
                 spec(
@@ -101,13 +102,13 @@ public final class CoreScripts {
                         "найти ближайшее дерево заданной породы",
                         List.of(
                                 ParamSpec.enumeration(SPECIES, false, TreeSpecies.names(), TreeSpecies.ANY),
-                                perceptionRadius()),
+                                CommonScriptSpecs.perceptionRadius()),
                         List.of(),
                         List.of("позиция ближайшего ствола найдена или сообщено, что дерева нет")),
                 spec(
                         "locate_container",
                         "найти ближайший контейнер",
-                        List.of(perceptionRadius()),
+                        List.of(CommonScriptSpecs.perceptionRadius()),
                         List.of(),
                         List.of("позиция ближайшего контейнера найдена или сообщено, что контейнера нет")),
                 spec(
@@ -1489,15 +1490,6 @@ public final class CoreScripts {
 
     private static List<ScriptRequirement> pickaxeForBlock() {
         return List.of(ScriptRequirement.pickaxe(BLOCK, PickaxeTiers.blockTiers(), ScriptRequirement.NO_TIER));
-    }
-
-    private static ParamSpec perceptionRadius() {
-        return ParamSpec.integer(
-                RADIUS,
-                false,
-                CatalogLimits.PERCEPTION_RADIUS_MIN,
-                CatalogLimits.PERCEPTION_RADIUS_MAX,
-                CatalogLimits.PERCEPTION_RADIUS_DEFAULT);
     }
 
     private static List<String> herdCheckValues() {
