@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
@@ -40,14 +41,14 @@ final class GraphPost {
     private static final String ORDER = "craft_player_order";
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
 
-    private final ServerLevel level;
+    final ServerLevel level;
+    final FirstStepsRunner.StageScan scan;
+    final GraphSurroundings.Around around;
     private final BoardService service;
     private final List<SpiritEntity> spirits;
     private final StockView stock;
-    private final FirstStepsRunner.StageScan scan;
     private final SupplyGraph graph;
     private final MaterialSource source;
-    private final GraphSurroundings.Around around;
     private final long now;
     private @Nullable BlockCoord craft;
 
@@ -84,7 +85,9 @@ final class GraphPost {
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
-            case BUILDING -> StageBuilt.ids().contains(ticket.node()) ? building(ticket) : routes().building(ticket);
+            case BUILDING ->
+                PortalPost.building(this, ticket)
+                        || (StageBuilt.ids().contains(ticket.node()) ? building(ticket) : routes().building(ticket));
             case EVENT -> event(ticket);
             case WAY -> way(ticket, task);
         };
@@ -133,7 +136,7 @@ final class GraphPost {
             return false;
         }
         return switch (boardCase) {
-            case GATHER_MATERIALS -> gather(ticket, task);
+            case GATHER_MATERIALS -> PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
             case CRAFT_TORCHES -> torches(ticket, task);
             case SMELT_CHARCOAL -> charcoal(ticket, task);
@@ -176,7 +179,7 @@ final class GraphPost {
         return true;
     }
 
-    private BlockCoord source(String wayId) {
+    BlockCoord source(String wayId) {
         Optional<SupplyGraph.Way> way = graph.way(wayId);
         Optional<BlockCoord> resource = way.map(SupplyGraph.Way::world).flatMap(around::resource);
         if (resource.isPresent()) {
@@ -269,6 +272,10 @@ final class GraphPost {
         if (outcome == BoardOutcome.DUPLICATE) {
             service.board().reprioritize(ticket.id(), ticket.priority());
         }
+    }
+
+    boolean done(String id) {
+        return service.board().statusOf(id).filter(BoardStatus.DONE::equals).isPresent();
     }
 
     boolean open(String id) {

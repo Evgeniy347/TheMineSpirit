@@ -35,7 +35,7 @@ final class GraphSurroundings {
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
     private static final String LOG = "_log";
-    private static final Set<String> RESOURCES = Set.of("sand", "red_sand", "clay");
+    private static final Set<String> RESOURCES = Set.of("sand", "red_sand", "clay", "lava");
 
     private GraphSurroundings() {}
 
@@ -94,6 +94,9 @@ final class GraphSurroundings {
             events.add(DROPS);
         }
         scan.decay().ifPresent(at -> events.add(LEAF_DECAY));
+        if (scan.nearest().containsKey("lava")) {
+            events.add("lava_seen");
+        }
         return new Around(
                 GraphNames.world(scan.blocks(), creatures),
                 Set.copyOf(events),

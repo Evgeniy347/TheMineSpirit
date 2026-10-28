@@ -19,6 +19,10 @@ final class GatherPlans {
     private GatherPlans() {}
 
     static Optional<TaskNode> plan(TicketTarget target, String item, int batch) {
+        Optional<TaskNode> portal = PortalPlans.special(target, item, batch);
+        if (portal.isPresent()) {
+            return portal;
+        }
         Optional<TaskNode> saplings = saplingPlan(target, item, batch);
         if (saplings.isPresent()) {
             return saplings;

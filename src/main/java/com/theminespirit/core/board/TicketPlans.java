@@ -250,7 +250,7 @@ public final class TicketPlans {
                                 MINE_DESCENT_ROTATION)));
     }
 
-    private static TaskNode takeFrom(String item, int count) {
+    static TaskNode takeFrom(String item, int count) {
         return new FallbackNode(List.of(
                 new ScriptCall(
                         WITHDRAW,
@@ -532,7 +532,7 @@ public final class TicketPlans {
                 store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
-    private static TaskNode store(TicketTarget target, String... items) {
+    static TaskNode store(TicketTarget target, String... items) {
         List<TaskNode> steps = new ArrayList<>(items.length + 1);
         steps.add(gotoTarget(target));
         for (String item : items) {

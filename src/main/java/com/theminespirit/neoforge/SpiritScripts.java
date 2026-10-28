@@ -271,6 +271,7 @@ public final class SpiritScripts {
         table.put("pillar_up", spirit -> params -> new PillarUpScript(spirit, PillarUpParams.from(params)));
         table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
         table.put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));
+        PortalRegistrations.register(table);
         table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
         table.put(
                 "fill_crater",
@@ -371,10 +372,6 @@ public final class SpiritScripts {
 
     public static ScriptCatalog catalog() {
         return CoreScripts.defaultCatalog().restrictedTo(IMPLEMENTED.keySet());
-    }
-
-    public static ScriptCatalog catalogFor(SpiritEntity spirit) {
-        return catalog();
     }
 
     private static RecipeKnowledge acquireKnowledge(SpiritEntity spirit, Map<String, Integer> inventory) {
