@@ -9,7 +9,7 @@ PROBE_INTERVAL="${OPENCODE_PROBE_INTERVAL:-120}"
 PROBE_TIMEOUT="${OPENCODE_PROBE_TIMEOUT:-60}"
 WAIT_LIMIT="${OPENCODE_WAIT_LIMIT:-7200}"
 PROBE_PROMPT="ответь OK"
-if command -v pgrep >/dev/null; then SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"; else SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-1200}"; fi
+if command -v pgrep >/dev/null || command -v powershell.exe >/dev/null; then SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-300}"; else SILENCE_LIMIT="${OPENCODE_IDLE_LIMIT:-1200}"; fi
 HEARTBEAT_FRESH="${OPENCODE_HEARTBEAT_FRESH:-120}"
 PROVIDER_PATTERN='free usage exceeded|freeusagelimiterror|free.?tier|rate.?limit|usage.?limit|quota|too many requests|resource.?exhausted|(model|модель).{0,40}(unavailable|not available|недоступн)|[^0-9]429[^0-9]|upstream|idle.?timeout|[^0-9]50[234][^0-9]|server_error|stream interrupted|readtimeout'
 NETWORK_PATTERN='cannot connect|unable to connect|econnrefused|econnreset|enotfound|etimedout|fetch failed|socket hang up|network is unreachable|endpoint.{0,40}unavailable'
@@ -32,7 +32,7 @@ POLL_SECONDS=2
 current_pid=""
 trap '[ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null' EXIT
 trap 'exit 143' TERM HUP INT
-PYTHON="${PYTHON:-python3}"
+PYTHON="${PYTHON:-$(python3 -c "" >/dev/null 2>&1 && echo python3 || echo python)}"
 EXIT_PROVIDER_EXHAUSTED=75
 EXIT_DIRTY_TREE=3
 ATTEMPT_PROVIDER=200
@@ -112,8 +112,18 @@ waiting_for_model() {
     if [ -f "$hb" ] && [ $(( $(date +%s) - $(stat -c %Y "$hb" 2>/dev/null || echo 0) )) -lt "$HEARTBEAT_FRESH" ]; then
         return 1
     fi
-    { [ -z "${OPENCODE_NO_PGREP:-}" ] && command -v pgrep >/dev/null; } || return 0
-    ! pgrep -a -P "$pid" 2>/dev/null | grep -qvE 'lsp|language.?server|jdtls|mcp'
+    ! child_commands "$pid" | grep -qvE 'lsp|language.?server|jdtls|mcp'
+}
+
+child_commands() {
+    local pid="$1" winpid
+    [ -z "${OPENCODE_NO_PGREP:-}" ] || return 0
+    if command -v pgrep >/dev/null; then
+        pgrep -a -P "$pid" 2>/dev/null
+    elif command -v powershell.exe >/dev/null && winpid="$(cat "/proc/$pid/winpid" 2>/dev/null)"; then
+        ps -ef | awk -v p="$pid" '$3 == p'
+        powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process -Filter 'ParentProcessId=$winpid' | ForEach-Object { \"\$(\$_.ProcessId) \$(\$_.CommandLine)\" }" 2>/dev/null | tr -d '\r'
+    fi
 }
 
 record_failure() {
