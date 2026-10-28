@@ -56,10 +56,10 @@ usage() {
   scripts/test.sh gametest
   scripts/test.sh gametest --full
   scripts/test.sh gametest demo_audit_familyhouse
-  scripts/test.sh gametest CombatGameTests
-  scripts/test.sh gametest combat_directive
+  scripts/test.sh gametest TacticsScenesGameTests
+  scripts/test.sh gametest scene_tactics_arena
   scripts/test.sh gametest --seed 42 first_stage
-  scripts/test.sh gametest CombatGameTests.combat_target_spirit
+  scripts/test.sh gametest CraftScenesGameTests.craftScene_ArenaSteps_AllPass
 
 Переменные окружения:
   THEMINESPIRIT_GRADLEW              команда запуска gradle (по умолчанию ./gradlew)

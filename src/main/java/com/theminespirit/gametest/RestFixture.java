@@ -2,8 +2,6 @@ package com.theminespirit.gametest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.rest.SseSlots;
 import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.neoforge.ModEntities;
@@ -32,7 +30,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -45,7 +42,6 @@ final class RestFixture {
     // считается в секундах (REPLY_DEADLINE = 30 с), потолок тиков только запасной и заведомо больше любого
     // честного ожидания. Потолок не тиковый, поэтому правило «timeoutTicks ≈ 2× тиков духа» к нему не применимо.
     static final int TIMEOUT_TICKS = 20_000;
-    static final int FOLLOW_RADIUS = 2;
     static final Duration REPLY_DEADLINE = Duration.ofSeconds(30);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -165,7 +161,6 @@ final class RestFixture {
     private final List<SpiritEntity> spirits = new ArrayList<>();
     private final List<ServerPlayer> players = new ArrayList<>();
     private int playerCounter;
-    private final SseSlots slots;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ExecutorService readers = Executors.newCachedThreadPool(task -> {
         Thread thread = new Thread(task, "rest-gametest-sse-reader");
@@ -173,10 +168,8 @@ final class RestFixture {
         return thread;
     });
 
-    private RestFixture(
-            MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server, SseSlots slots) {
+    private RestFixture(MinecraftServer minecraft, SpiritIndex index, SpiritBotGateway gateway, RestServer server) {
         this.minecraft = minecraft;
-        this.slots = slots;
         this.index = index;
         this.gateway = gateway;
         this.server = server;
@@ -192,7 +185,7 @@ final class RestFixture {
         SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index, NeoForge.EVENT_BUS, new TaskRegistry());
         SseSlots slots = new SseSlots();
         RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway, slots), gateway::stop);
-        return new RestFixture(minecraft, index, gateway, server, slots);
+        return new RestFixture(minecraft, index, gateway, server);
     }
 
     static void await(GameTestHelper helper, RestFixture rest, CompletableFuture<List<String>> scenario) {
@@ -256,10 +249,6 @@ final class RestFixture {
         return send(HttpRequest.newBuilder(uri(path)).DELETE().build());
     }
 
-    <T> CompletableFuture<T> onServer(Supplier<T> read) {
-        return CompletableFuture.supplyAsync(read, minecraft);
-    }
-
     SseCapture stream(String path, Map<String, String> headers) {
         HttpRequest.Builder request = HttpRequest.newBuilder(uri(path)).GET();
         headers.forEach(request::header);
@@ -282,18 +271,6 @@ final class RestFixture {
         return spirit;
     }
 
-    SpiritEntity spawnHeldUntilStreamsOpen(GameTestHelper helper, BlockPos relative, int streams) {
-        SpiritEntity spirit = spawn(helper, relative);
-        spirit.setNoAi(true);
-        AtomicBoolean released = new AtomicBoolean();
-        helper.onEachTick(() -> {
-            if (slots.open() >= streams && released.compareAndSet(false, true)) {
-                spirit.setNoAi(false);
-            }
-        });
-        return spirit;
-    }
-
     ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
         ServerPlayer player = GameTestFixtures.mockPlayer(helper, relative, "gt_rest_player_" + playerCounter++);
         players.add(player);
@@ -303,15 +280,6 @@ final class RestFixture {
     static void moveTo(GameTestHelper helper, ServerPlayer player, BlockPos relative) {
         BlockPos absolute = helper.absolutePos(relative);
         player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-    }
-
-    static String followGoalBody(String requestId, ServerPlayer player) {
-        return "{\"request_id\":\"" + requestId + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\""
-                + player.getName().getString() + "\"}}";
-    }
-
-    static TaskNode followPlan(ServerPlayer player) {
-        return new ScriptCall("follow", Map.of("target", player.getName().getString(), "radius", FOLLOW_RADIUS));
     }
 
     SpiritEntity track(SpiritEntity spirit) {

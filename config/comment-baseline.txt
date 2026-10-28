@@ -1,32 +1,13 @@
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	[флак] REST: HTTP ходит другим потоком, предел берём из общего шаблона (ResultGameTests),
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	[флак] deepslate_iron_ore: тот же цикл добычи и плавки, запас 2×
 src/main/java/com/theminespirit/gametest/AcquireGameTests.java	[флак] добыча железа с нуля без дерева: верстак и печь в мире, каменная кирка снабжается
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	[флак] добыча руды, крафт печи и плавка; замерено ~340 тиков духа, запас 2×
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	где 20_000 — потолок на медленной машине
 src/main/java/com/theminespirit/gametest/AcquireGameTests.java	заранее (резолвер не планирует крафт инструментов — RequiredTier вне ResourceKnowledge),
 src/main/java/com/theminespirit/gametest/AcquireGameTests.java	остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	[флак] заделка 3×3: путь к яме, добыча из инвентаря и 9 постановок плюс ожидание двух
-src/main/java/com/theminespirit/gametest/BoardCraterGameTests.java	пересборок (выдача и учёт): под нагрузкой машины в 400 тиков не укладывается, запас двойной.
 src/main/java/com/theminespirit/gametest/BoardGameTests.java	[флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
 src/main/java/com/theminespirit/gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
-src/main/java/com/theminespirit/gametest/BoardScaleGameTests.java	[флак] наблюдение 1000 тиков (откат провала 200 + период пересборки 100): запас 2×
 src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
 src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
-src/main/java/com/theminespirit/gametest/BoardV2ScaleGameTests.java	[флак] наблюдение 400 тиков (пересборки по 100, скан стада по 200) плюс старт сцены:
-src/main/java/com/theminespirit/gametest/BoardV2ScaleGameTests.java	под нагрузкой машины 400 тиков тайм-аута мало, запас 2,5×.
-src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] 17 блоков плиты и одна очистка клетки от земли: с запасом на подходы.
-src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] Восемь блоков с поворотом: дух подходит к каждой клетке с запасом.
-src/main/java/com/theminespirit/gametest/BuildAuditGameTests.java	[флак] Дом из 17 блоков с одной занятой клеткой: перебор стоянок и повторный проход перед провалом.
-src/main/java/com/theminespirit/gametest/BuildPaceGameTests.java	[флак] 17 блоков по 10 тиков = 170 тиков стройки плюс подход; потолок ≈ 2× замера.
-src/main/java/com/theminespirit/gametest/BuildRetreatGameTests.java	[флак] 18 блоков ниши и выход наружу перед последним — ≈ 300 тиков, запас под нагрузкой полного прогона.
-src/main/java/com/theminespirit/gametest/CaptureGameTests.java	[флак] овца идёт за кормом шагом ванильной навигации; потолок ≈ 2× замера ~300 тиков.
-src/main/java/com/theminespirit/gametest/ChopStructuresGameTests.java	[флак] далёкая ветка за стеной: дух рубит её с одной стоянки через стену; потолок с запасом
 src/main/java/com/theminespirit/gametest/ChopBigTreesGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
 src/main/java/com/theminespirit/gametest/ChopReplantGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
 src/main/java/com/theminespirit/gametest/ChopReplantGameTests.java	потолок с запасом на флаки полного прогона
-src/main/java/com/theminespirit/gametest/CombatFleeGameTests.java	[флак] тайм-аут скрипта FLEE_SAFE/FLEE_TIMEOUT_TICKS=600 тиков: ловушка честно ждёт отказ по тайм-ауту
-src/main/java/com/theminespirit/gametest/CombatRallyGameTests.java	[флак] зов повторяется не раньше 200 тиков: первый и второй разнесены на интервал, наблюдение
-src/main/java/com/theminespirit/gametest/CombatRallyGameTests.java	занимает ~300 тиков со сдвигом набора игрока — потолок 500 держит двукратный запас.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
@@ -156,76 +137,28 @@ src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результ�
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	[флак] 82 блока склада дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
-src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	[флак] Загон строится двумя уровнями: дух проходит подход к 4+7 клеткам забора с лесами; потолок с запасом,
-src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/DemoBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом,
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	[флак] 147 блоков дома семьи дух ставит по одному за тик с подходом к каждой клетке; потолок с запасом.
-src/main/java/com/theminespirit/gametest/DemoLayoutGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
-src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
-src/main/java/com/theminespirit/gametest/FarmSafetyGameTests.java	[флак] замер 278 тиков: падение с высоты и сбор 9 клеток с пересадкой; потолок 420 ≈ 1.5× замера
 src/main/java/com/theminespirit/gametest/FarmSafetyGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
-src/main/java/com/theminespirit/gametest/FarmSessionGameTests.java	[флак] полный инвентарь, путь до сундука и сбор двух клеток: под нагрузкой машины запас двойной.
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	[флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина и факелы
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] три acquire подряд (кирка, топор, лопата), запас 2× к замеру цепочки
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] четыре acquire подряд (кирка, топор, лопата, меч), запас 2× к замеру цепочки
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
-src/main/java/com/theminespirit/gametest/FishingGameTests.java	[флак] поклёвка случайна (ванильное ожидание до ~380 тиков), плюс подход к берегу — потолок с запасом
 src/main/java/com/theminespirit/gametest/FullCycleGameTests.java	[флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
-src/main/java/com/theminespirit/gametest/FullCycleGameTests.java	[флак] три добычи брёвен голыми руками и пять крафтов подряд; замерено 270 тиков духа, запас 2×
 src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	[флак] путь из глубины дома — до 60 шагов по лестнице (≈ 600 тиков), под нагрузкой полного прогона запас 4×.
-src/main/java/com/theminespirit/gametest/HungerGameTests.java	[флак] сцена длиннее прочих сцен голода: сперва бой под тактикой, затем обед после него
-src/main/java/com/theminespirit/gametest/HusbandryProduceGameTests.java	[флак] овца может выйти из загона после первого возврата и приманка повторится (каждая укладка
-src/main/java/com/theminespirit/gametest/HusbandryProduceGameTests.java	ограничена 150 тиками): замер 395 тиков работы духа, потолок 500 с запасом, сам тест 800 ≈ 2×
 src/main/java/com/theminespirit/gametest/IntellectForageGameTests.java	[флак] охота длиннее прочих сцен интеллекта: подход к дикой корове вне домашнего загона и добивание
-src/main/java/com/theminespirit/gametest/IntellectScaleGameTests.java	[флак] замер 1150 тиков наблюдения: окно отката 200 и фаза пересчёта 100 видны только на дистанции
-src/main/java/com/theminespirit/gametest/IntellectScaleGameTests.java	[флак] замер ~410 тиков: провал, окно отката 200 и фаза пересчёта 100
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] 27 блоков камня железной киркой, 9 ступеней вниз и выход назад пешком; замерено ~700 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск 9 ступеней, добыча камня поселением ×12 и возврат домой наверх; запас 2× к ~900 тиков
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск 9 ступеней, затем возврат тактики (Approach) со дна к якорю наверху; запас 2× к ~900 тиков
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с обходом руды: 9 ступеней + 3 колонки обхода и выход наверх; замерено ~850 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	[флак] 1200 тиков HARVEST_NO_PROGRESS_TICKS: отказ обязан прийти не позже предела простоя
-src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	[флак] 18 камня деревянной киркой (твёрдость 1.5) и разлёт дропа: запас 2× к ~600 тикам
-src/main/java/com/theminespirit/gametest/GatherProgressGameTests.java	[флак] 2400 тиков общего подбора при задержке подъёма дропа и разлёте: запас 2× к ожиданию
-src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	[флак] замер 584 тика: 18 земли, подбор дропа зависит от случайного разлёта предметов;
 src/main/java/com/theminespirit/gametest/MineVeinDurabilityGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
-src/main/java/com/theminespirit/gametest/GatherTerrainGameTests.java	потолок 1000 ≈ 1.7× замера
 src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	[флак] три задачи подряд (спуск, расширение 60+ клеток, 8 ступенек): подход к каждой клетке,
 src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	замер духа на порядок больше базового; запас 2× к ожидаемым тикам.
-src/main/java/com/theminespirit/gametest/PersonalSpaceGameTests.java	[флак] 17 блоков по 10 тиков плюс шаги в сторону; потолок ≈ 2× замера.
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	5-й блок»). Столб обязан возвращать духа в центр клетки, а не оставлять его у ствола.
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	[флак] Клетка столба прижата к стволу: тело духа 0.6 шириной, сдвиг к стволу больше 0.2 задевает
-src/main/java/com/theminespirit/gametest/PillarGameTests.java	бревно на прыжке (CellCentering.TOLERANCE) и подъём встаёт (флак chop_tree_tall: «не поднялся на
-src/main/java/com/theminespirit/gametest/PolicyLayerGameTests.java	[флак] слои и приостановка: сценарий в сотни тиков духа, запас под нагрузкой
-src/main/java/com/theminespirit/gametest/PolicySuspendGameTests.java	[флак] ломка блока с приостановкой: сотни тиков духа, запас под нагрузкой
-src/main/java/com/theminespirit/gametest/PolicyWaterGameTests.java	[флак] переправа через озеро вброд: goto до 480 тиков духа, запас под нагрузкой
 src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] каменный дом с места, с запасом на подходы; тест меряет результат, а не скорость.
-src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] склад-хижина с места, с запасом на подходы; тест меряет результат, а не скорость.
-src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] чаровальня уровня 1 дух ставит по одному за тик с подходом к каждой клетке и лесами; потолок с запасом,
-src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/RestFixture.java	[флак] Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа
 src/main/java/com/theminespirit/gametest/RestFixture.java	считается в секундах (REPLY_DEADLINE = 30 с), потолок тиков только запасной и заведомо больше любого
 src/main/java/com/theminespirit/gametest/RestFixture.java	честного ожидания. Потолок не тиковый, поэтому правило «timeoutTicks ≈ 2× тиков духа» к нему не применимо.
 src/main/java/com/theminespirit/gametest/SafeMineGameTests.java	[флак] восемь ступеней (14 блоков), подход и сбор дропа на каждой ступени: запас 2× к ожидаемым тикам.
-src/main/java/com/theminespirit/gametest/ScriptProgressGameTests.java	[флак] дух рубит два дуба, сценарий в сотни тиков духа; запас под нагрузкой
 src/main/java/com/theminespirit/gametest/SettlementChestGameTests.java	[флак] дух идёт 60 блоков до склада и обратно: замер ~600 тиков, запас 2× на движение и заходы.
 src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	[флак] полная схема 6×6: расчистка 36 клеток земли, план, 130 блоков корпуса, полублок и факел;
 src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	запас на подходы полного прогона
-src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] две руды за стеной и дроп в инвентарь: ломка деревянной киркой с запасом.
-src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] застревание детектируется за 40 тиков, затем перенос и спуск к цели.
-src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] открытие сундука и перенос пяти блоков с места: запас под нагрузкой полного прогона.
-src/main/java/com/theminespirit/gametest/SimplificationGameTests.java	[флак] три зрелые клетки пшеницы с места и подбор урожая в инвентарь.
-src/main/java/com/theminespirit/gametest/SpiritGameTests.java	[флак] дух идёт к недостижимой цели, ждём тайм-аут задачи
-src/main/java/com/theminespirit/gametest/SpiritTickingGameTests.java	[флак] дух идёт за габариты структуры, ждём тики духа и сдвиг чанков
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	[флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] заплыв через глубокий пруд: всплытия и подход за плавание под нагрузкой дольше
-src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] заплыв через канал в пять блоков плюс переход: под нагрузкой полного прогона заплыв тянется
-src/main/java/com/theminespirit/gametest/WaterCrossGameTests.java	[флак] четыре клетки моста и переход: запас под нагрузкой соседних сцен полного прогона

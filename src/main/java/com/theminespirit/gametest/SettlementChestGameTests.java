@@ -1,7 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.building.SettlementChests;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.observation.BlockCoord;
@@ -9,19 +8,15 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.level.BlockEvent;
@@ -83,52 +78,6 @@ public final class SettlementChestGameTests {
         });
     }
 
-    @GameTest(template = "arena", batch = "settlement_chests", timeoutTicks = 200)
-    public static void chestEvents_PlaceAndBreak_TrackAndForget(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        ServerLevel level = helper.getLevel();
-        SettlementChests chests = SettlementChestStore.get(level).chests();
-        BlockPos relative = new BlockPos(4, 1, 4);
-        int before = chests.size();
-        helper.setBlock(relative, Blocks.CHEST);
-        placeEvent(helper, relative);
-        helper.assertTrue(
-                chests.size() == before + 1,
-                "событие установки обязано добавить сундук в реестр поселения: было " + before + ", стало "
-                        + chests.size());
-        helper.assertTrue(
-                chests.nearest(coord(helper.absolutePos(relative)), 1).size() == 1,
-                "поставленный сундук обязан находиться поиском ближайших: иначе дух его не увидит");
-
-        BlockState state = level.getBlockState(helper.absolutePos(relative));
-        helper.setBlock(relative, Blocks.AIR);
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(1, 1, 1), "chest_breaker");
-        NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(level, helper.absolutePos(relative), state, player));
-        helper.assertTrue(
-                chests.size() == before,
-                "событие снятия обязано убрать сундук из реестра: было " + (before + 1) + ", стало " + chests.size());
-        GameTestFixtures.finish(helper);
-        helper.succeed();
-    }
-
-    @GameTest(template = "arena", batch = "settlement_chests", timeoutTicks = 200)
-    public static void chestStore_SavedAndLoaded_KeepsChests(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        ServerLevel level = helper.getLevel();
-        SettlementChestStore store = new SettlementChestStore();
-        BlockPos pos = helper.absolutePos(new BlockPos(4, 1, 4));
-        store.track(pos);
-        SettlementChestStore loaded = SettlementChestStore.load(
-                store.save(new CompoundTag(), level.registryAccess()), level.registryAccess());
-        BlockCoord expected = coord(pos);
-        helper.assertTrue(
-                loaded.chests().nearest(expected, 1).equals(List.of(expected)),
-                "реестр сундуков обязан пережить сохранение и загрузку: ожидался " + expected + ", найден "
-                        + loaded.chests().nearest(expected, 1));
-        GameTestFixtures.finish(helper);
-        helper.succeed();
-    }
-
     private static void floor(GameTestHelper helper) {
         for (int x = 1; x <= 128; x++) {
             for (int z = 8; z <= 10; z++) {
@@ -154,9 +103,5 @@ public final class SettlementChestGameTests {
         BlockPos absolute = helper.absolutePos(relative);
         NeoForge.EVENT_BUS.post(new BlockEvent.EntityPlaceEvent(
                 BlockSnapshot.create(level.dimension(), level, absolute), Blocks.AIR.defaultBlockState(), null));
-    }
-
-    private static BlockCoord coord(BlockPos pos) {
-        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 }

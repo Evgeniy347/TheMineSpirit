@@ -20,7 +20,6 @@ final class FullCycleScene {
     static final BlockPos CHEST = new BlockPos(1, 1, 6);
     static final BlockPos TREE = new BlockPos(6, 1, 6);
     static final BlockPos COBBLESTONE_ROW = new BlockPos(0, 1, 8);
-    static final int TREE_LOGS = 3;
     static final int INGOTS_BEFORE = 7;
     private static final int SCENE_HEIGHT = 8;
     private static final int DIRT_IN_CHEST = 10;

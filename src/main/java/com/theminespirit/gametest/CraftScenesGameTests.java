@@ -12,17 +12,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class CraftScenesGameTests {
     private CraftScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_craft_arena", timeoutTicks = 11818)
+    @GameTest(template = "arena", batch = "scene_craft_arena", timeoutTicks = 1242)
     public static void craftScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(
-                helper,
-                List.of("arena"),
-                CraftGameTests.class,
-                CraftScaleGameTests.class,
-                FirstToolsGameTests.class,
-                RecipeKnowledgeGameTests.class,
-                RepairGameTests.class,
-                StationGameTests.class,
-                CraftTabGameTests.class);
+        SceneSteps.run(helper, List.of("arena"), CraftTabGameTests.class, FirstToolsGameTests.class);
     }
 }

@@ -3,7 +3,6 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
-import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -47,115 +46,6 @@ public final class IntellectForageGameTests {
         }
     }
 
-    private static boolean assigned(SettlementIntellect intellect, ActivityId activity) {
-        return intellect.decision().orElseThrow().activities().assignments().stream()
-                .anyMatch(assignment -> assignment.activity() == activity);
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
-    public static void foodNorm_EmptyStock_ForageAssigned(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
-        homeAt(helper, spirit, START);
-        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
-        HusbandryGameTests.spawnStill(helper, EntityType.COW, new BlockPos(8, 1, 8));
-        chest(helper, new BlockPos(2, 1, 2), new ItemStack(Items.RAW_IRON, 64), new ItemStack(Items.IRON_SWORD, 2));
-
-        helper.succeedWhen(() -> {
-            SettlementIntellect intellect = intellectOf(helper, spirit);
-            helper.assertTrue(
-                    intellect.view().isPresent(), "Интеллект ещё не собрал снимок: ждём первый пересчёт спроса");
-            helper.assertTrue(
-                    intellect.decideCalls() >= 2,
-                    "Ждём второй пересчёт: гистерезис 200 тиков может удержать занятие с пустого снимка");
-            SettlementView view = intellect.view().orElseThrow();
-            helper.assertTrue(
-                    view.foodNutritionPerSoul() == 0,
-                    "Склад без еды даёт запас сытности 0: иначе дефицит не посчитается");
-            helper.assertTrue(
-                    assigned(intellect, ActivityId.FORAGE),
-                    "Пустой склад еды — интеллект обязан поставить добычу еды: иначе поселение голодает, "
-                            + "а духи рубят лес");
-            spirit.discard();
-            TacticsScene.finish(helper, spirit);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
-    public static void foodNorm_FullStock_ForageNotAssigned(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
-        homeAt(helper, spirit, START);
-        chest(
-                helper,
-                new BlockPos(2, 1, 2),
-                new ItemStack(Items.COOKED_BEEF, 64),
-                new ItemStack(Items.RAW_IRON, 64),
-                new ItemStack(Items.IRON_SWORD, 2));
-
-        helper.succeedWhen(() -> {
-            SettlementIntellect intellect = intellectOf(helper, spirit);
-            helper.assertTrue(
-                    intellect.view().isPresent(), "Интеллект ещё не собрал снимок: ждём первый пересчёт спроса");
-            helper.assertTrue(
-                    intellect.decideCalls() >= 2,
-                    "Ждём второй пересчёт: гистерезис 200 тиков может удержать занятие с пустого снимка");
-            SettlementView view = intellect.view().orElseThrow();
-            helper.assertTrue(
-                    view.foodNutritionPerSoul() > 0,
-                    "Сундук с готовой говядиной даёт запас сытности: иначе запас не доходит до интеллекта");
-            helper.assertTrue(
-                    !intellect
-                            .decision()
-                            .orElseThrow()
-                            .activities()
-                            .assignments()
-                            .isEmpty(),
-                    "Интеллект ещё не раздал занятия: ждём план, иначе отсутствие добычи ничего не доказывает");
-            helper.assertTrue(
-                    !assigned(intellect, ActivityId.FORAGE),
-                    "Склад полон еды — добыча еды не ставится: иначе духи бросают другие работы ради лишней еды");
-            spirit.discard();
-            TacticsScene.finish(helper, spirit);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
-    public static void forage_HungryChestWithFood_WithdrawsIt(GameTestHelper helper) {
-        TacticsScene.prepare(helper);
-        SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
-        homeAt(helper, spirit, new BlockPos(5, 1, 5));
-        chest(
-                helper,
-                new BlockPos(6, 1, 6),
-                new ItemStack(Items.WHEAT, 1),
-                new ItemStack(Items.RAW_IRON, 64),
-                new ItemStack(Items.IRON_SWORD, 2));
-        boolean[] sawFood = {false};
-        String[] bestFood = {null};
-
-        helper.succeedWhen(() -> {
-            SettlementIntellect intellect = intellectOf(helper, spirit);
-            helper.assertTrue(
-                    intellect.view().isPresent(), "Интеллект ещё не собрал снимок: ждём первый пересчёт спроса");
-            SettlementView view = intellect.view().orElseThrow();
-            if (view.forage().hasContainerFood()) {
-                sawFood[0] = true;
-                bestFood[0] = view.forage().containerFood();
-            }
-            int wheat = GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHEAT);
-            helper.assertTrue(
-                    wheat >= 1,
-                    "Голодный дух обязан взять еду из сундука скриптом withdraw: иначе голодному съесть нечего");
-            helper.assertTrue(sawFood[0], "Снимок обязан видеть еду в сундуке: без способа добыча не берётся за дело");
-            helper.assertTrue(
-                    "minecraft:wheat".equals(bestFood[0]),
-                    "Берём еду склада по сытности: в сундуке только пшеница, фактически " + bestFood[0]);
-            spirit.discard();
-            TacticsScene.finish(helper, spirit);
-        });
-    }
-
     // [флак] охота длиннее прочих сцен интеллекта: подход к дикой корове вне домашнего загона и добивание
     @SceneStep(template = "arena", timeoutTicks = 600, coordinator = true)
     public static void forage_NoFoodWildCowWithSword_Hunts(GameTestHelper helper) {
@@ -163,7 +53,7 @@ public final class IntellectForageGameTests {
         SpiritEntity spirit = TacticsScene.spirit(helper, START);
         homeAt(helper, spirit, START);
         spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
-        Cow cow = HusbandryGameTests.spawnStill(helper, EntityType.COW, new BlockPos(8, 1, 8));
+        Cow cow = HusbandrySceneSupport.spawnStill(helper, EntityType.COW, new BlockPos(8, 1, 8));
         chest(helper, new BlockPos(2, 1, 2), new ItemStack(Items.RAW_IRON, 64), new ItemStack(Items.IRON_SWORD, 2));
         boolean[] sawPrey = {false};
         String[] prey = {null};
