@@ -19,9 +19,10 @@ class SceneCountGuardTests {
     private static final String DEMO_AUDITS = "DemoAuditGameTests";
     private static final int MAX_SCENES_PER_MECHANIC = 3;
 
-    private static final int MAX_SCENES_TOTAL = 28;
+    private static final int MAX_SCENES_TOTAL = 29;
 
-    private static final Map<String, Integer> OUTSIDE_SCENES = Map.of(DEMO_AUDITS, 110, "SettlementChestGameTests", 1);
+    private static final Map<String, Integer> OUTSIDE_SCENES =
+            Map.of(DEMO_AUDITS, 110, "SettlementChestGameTests", 1, "FirstStageGameTests", 1);
 
     @Test
     void scenes_PerMechanicAndTotal_DoNotGrow() {
@@ -96,9 +97,9 @@ class SceneCountGuardTests {
                             @GameTest(template = "arena") public static void arena(GameTestHelper helper) {}
                         }
                         """,
-                Path.of("SettlementChestGameTests.java"),
+                Path.of("FirstStageGameTests.java"),
                 """
-                        class SettlementChestGameTests {
+                        class FirstStageGameTests {
                             @GameTest(template = "empty") public static void stage(GameTestHelper helper) {}
                         }
                         """,
