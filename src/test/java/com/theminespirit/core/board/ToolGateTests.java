@@ -40,6 +40,31 @@ class ToolGateTests {
     }
 
     @Test
+    void allows_ChopLogWithoutAxe_NotGiven() {
+        assertFalse(
+                ToolGate.allows(BoardCase.GATHER_MATERIALS, List.of("minecraft:wooden_shovel"), "jungle_log"),
+                "Бревно не рубят руками: духу без топора задание рубки не выдаётся, а ждёт топор (правило владельца "
+                        + "28.10)");
+        assertTrue(
+                ToolGate.allows(BoardCase.GATHER_MATERIALS, List.of("minecraft:wooden_axe"), "jungle_log"),
+                "Любой топор годится для рубки дерева");
+        assertTrue(
+                ToolGate.allows(BoardCase.GATHER_MATERIALS, List.of(), "dirt"),
+                "Землю и прочую добычу без дерева дух берёт руками — топор нужен только бревну");
+    }
+
+    @Test
+    void keep_ChopLogAxeLost_ReleasedToBoard() {
+        assertTrue(
+                ToolGate.keep(BoardCase.GATHER_MATERIALS, List.of("minecraft:wooden_axe"), false, "jungle_log")
+                        instanceof ToolGate.Keep,
+                "С топором задание рубки остаётся у духа");
+        assertTrue(
+                ToolGate.keep(BoardCase.GATHER_MATERIALS, List.of(), false, "jungle_log") instanceof ToolGate.Release,
+                "Потерял топор — задание возвращено доске и ждёт инструмент, а не рубит руками");
+    }
+
+    @Test
     void table_FirstWoodenToolsChain_BareHands() {
         for (BoardCase boardCase :
                 List.of(BoardCase.GATHER_MATERIALS, BoardCase.CRAFT_WOODEN_PICKAXE, BoardCase.REPAIR_TOOL)) {

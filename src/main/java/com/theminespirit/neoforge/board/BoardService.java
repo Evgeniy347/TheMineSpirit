@@ -13,7 +13,6 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
-import com.theminespirit.core.board.CarriedItems;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.DispatchRound;
@@ -27,6 +26,7 @@ import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolCraft;
 import com.theminespirit.core.board.ToolLossRelease;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
@@ -65,11 +65,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.LongSupplier;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -807,6 +805,11 @@ public final class BoardService {
                     spirit.tactics().wantsControl());
             switch (run) {
                 case SUCCEEDED, FAILED -> {
+                    if (run == TicketRun.SUCCEEDED
+                            && !ToolCraft.fulfilled(ticket.boardCase(), SpiritItems.ids(spirit))) {
+                        ToolWait.release(board, issuedGenerations, spirit, ticket);
+                        break;
+                    }
                     String empty = run == TicketRun.SUCCEEDED && spirit.level() instanceof ServerLevel level
                             ? progress.emptyResult(level, ticket, targets.get(ticket.id()))
                             : null;
@@ -822,7 +825,7 @@ public final class BoardService {
     private void dropUntooled(SpiritEntity spirit) {
         boolean walledIn = DIG_OUT.equals(spirit.currentTaskScript().orElse(null));
         for (ToolLossRelease.Released freed :
-                ToolLossRelease.apply(board, spirit.getUUID(), itemIds(spirit), walledIn)) {
+                ToolLossRelease.apply(board, spirit.getUUID(), SpiritItems.ids(spirit), walledIn, this::supplyOf)) {
             Long issued = issuedGenerations.remove(freed.ticketId());
             if (issued != null
                     && issued == spirit.taskGeneration()
@@ -838,6 +841,11 @@ public final class BoardService {
                     spirit.getUUID().toString(),
                     ConfigStamp.current()));
         }
+    }
+
+    private @Nullable String supplyOf(BoardTicket ticket) {
+        TicketTarget target = targets.get(ticket.id());
+        return target == null ? null : target.supplyItem();
     }
 
     private void checkStall(SpiritEntity spirit, BoardTicket ticket) {
@@ -990,7 +998,7 @@ public final class BoardService {
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             if (spirit == null) {
-                String why = pick.why(ticket);
+                String why = pick.why(ticket, targets.get(ticket.id()));
                 board.noteWait(ticket.id(), why);
                 LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(), why);
                 continue;
@@ -1170,23 +1178,6 @@ public final class BoardService {
             centers.add(homeOf(spirits));
         }
         return centers;
-    }
-
-    static List<String> itemIds(SpiritEntity spirit) {
-        List<String> ids = new ArrayList<>();
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = spirit.getInventory().getItem(slot);
-            if (!stack.isEmpty()) {
-                ids.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
-            }
-        }
-        ItemStack hand = spirit.getMainHandItem();
-        return CarriedItems.of(
-                ids,
-                spirit.mainHandOwned() && !hand.isEmpty()
-                        ? Optional.of(
-                                BuiltInRegistries.ITEM.getKey(hand.getItem()).toString())
-                        : Optional.empty());
     }
 
     private void ensureSupply(List<SpiritEntity> spirits, StockView stock, long now) {

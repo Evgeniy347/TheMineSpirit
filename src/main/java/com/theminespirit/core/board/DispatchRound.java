@@ -43,6 +43,10 @@ public final class DispatchRound {
     }
 
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit) {
+        return refusal(ticket, spirit, null);
+    }
+
+    public Optional<String> refusal(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
         if (spirit.busyWith() != null) {
             return Optional.of("занят: " + spirit.busyWith());
         }
@@ -60,9 +64,9 @@ public final class DispatchRound {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }
-        if (!ToolGate.allows(ticket.boardCase(), spirit.items())) {
-            return Optional.of(
-                    "нет инструмента " + ToolGate.required(ticket.boardCase()).orElse("?"));
+        if (!ToolGate.allows(ticket.boardCase(), spirit.items(), supplyItem)) {
+            return Optional.of("нет инструмента "
+                    + ToolGate.required(ticket.boardCase(), supplyItem).orElse("?"));
         }
         if (!EvergreenRules.issuedTo(ticket, spirit.id(), spirit.eat(), spirit.view())) {
             return Optional.of("кейс " + ticket.boardCase() + " ему сейчас не к месту");
@@ -71,12 +75,20 @@ public final class DispatchRound {
     }
 
     public boolean fits(BoardTicket ticket, Candidate spirit) {
-        return refusal(ticket, spirit).isEmpty();
+        return fits(ticket, spirit, null);
+    }
+
+    public boolean fits(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
+        return refusal(ticket, spirit, supplyItem).isEmpty();
     }
 
     public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference) {
+        return choose(ticket, preference, null);
+    }
+
+    public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference, @Nullable String supplyItem) {
         for (Candidate spirit : preference) {
-            if (fits(ticket, spirit)) {
+            if (fits(ticket, spirit, supplyItem)) {
                 return Optional.of(spirit);
             }
         }
@@ -100,12 +112,17 @@ public final class DispatchRound {
     }
 
     public String why(BoardTicket ticket, List<Candidate> spirits) {
+        return why(ticket, spirits, null);
+    }
+
+    public String why(BoardTicket ticket, List<Candidate> spirits, @Nullable String supplyItem) {
         List<String> parts = new ArrayList<>();
         for (Candidate spirit : spirits) {
             if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()) {
                 continue;
             }
-            parts.add(spirit.name() + " — " + refusal(ticket, spirit).orElse("свободен, но выдача отложена"));
+            parts.add(
+                    spirit.name() + " — " + refusal(ticket, spirit, supplyItem).orElse("свободен, но выдача отложена"));
         }
         if (parts.isEmpty()) {
             return ticket.assignee().isPresent() ? "своего духа нет в мире" : "нет духов";

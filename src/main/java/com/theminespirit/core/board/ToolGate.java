@@ -1,13 +1,17 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.forestry.TreeSpecies;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class ToolGate {
     public static final String PICKAXE = "_pickaxe";
+    public static final String AXE = "_axe";
+    private static final String MINECRAFT = "minecraft:";
 
     public enum Hands {
         PICKAXE,
@@ -53,23 +57,47 @@ public final class ToolGate {
         return TABLE.get(boardCase) == Hands.PICKAXE ? Optional.of(PICKAXE) : Optional.empty();
     }
 
+    public static Optional<String> required(BoardCase boardCase, @Nullable String supplyItem) {
+        if (boardCase == BoardCase.GATHER_MATERIALS && isLog(supplyItem)) {
+            return Optional.of(AXE);
+        }
+        return required(boardCase);
+    }
+
     public static boolean allows(BoardCase boardCase, Collection<String> items) {
+        return allows(boardCase, items, null);
+    }
+
+    public static boolean allows(BoardCase boardCase, Collection<String> items, @Nullable String supplyItem) {
         Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
-        return required(boardCase)
+        return required(boardCase, supplyItem)
                 .map(suffix -> items.stream().anyMatch(item -> item.endsWith(suffix)))
                 .orElse(true);
     }
 
+    private static boolean isLog(@Nullable String item) {
+        if (item == null) {
+            return false;
+        }
+        String id = item.startsWith(MINECRAFT) ? item : MINECRAFT + item;
+        return TreeSpecies.ofLog(id).isPresent();
+    }
+
     public static Verdict keep(BoardCase boardCase, Collection<String> items, boolean walledIn) {
-        if (allows(boardCase, items)) {
+        return keep(boardCase, items, walledIn, null);
+    }
+
+    public static Verdict keep(
+            BoardCase boardCase, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
+        if (allows(boardCase, items, supplyItem)) {
             return new Keep();
         }
+        String tool = required(boardCase, supplyItem).orElse("?");
         if (walledIn) {
-            return new Release("дух замурован и кирки нет: задание " + boardCase
-                    + " возвращено доске, дух выбирается руками, кирка — первым делом после выхода");
+            return new Release("дух замурован и " + tool + " нет: задание " + boardCase
+                    + " возвращено доске, дух выбирается руками, инструмент — первым делом после выхода");
         }
-        return new Release(
-                "кирки нет: задание " + boardCase
-                        + " возвращено доске и ждёт кирку, руками камень не копаем — сначала добыть, сделать или починить кирку");
+        return new Release(tool + " нет: задание " + boardCase
+                + " возвращено доске и ждёт инструмент, руками не работаем — сначала добыть, сделать или починить");
     }
 }

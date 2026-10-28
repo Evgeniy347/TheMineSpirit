@@ -7,6 +7,7 @@ import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.CaveStand;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.ClearOrder;
@@ -115,6 +116,7 @@ public class ClearAreaSession {
         this.reservations = BuildReservationHub.forLevel(level);
         this.demolish = demolish;
         this.keepGround = keepGround;
+        new TreeFelling(new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.ALL))).extend(remaining);
     }
 
     public Outcome tick() {
@@ -163,7 +165,7 @@ public class ClearAreaSession {
     }
 
     public ScriptInstance.Progress progress() {
-        int total = Math.max(boxVolume(), 1);
+        int total = Math.max(ClearSummary.volume(box), 1);
         return new ScriptInstance.Progress(Math.min(removed + skippedTotal(), total), total);
     }
 
@@ -196,10 +198,6 @@ public class ClearAreaSession {
         for (int i = 0; i < state.failed(); i++) {
             tally.failed();
         }
-    }
-
-    protected int boxVolume() {
-        return (int) Math.min(box.volume(), Integer.MAX_VALUE);
     }
 
     private void pick() {
@@ -526,17 +524,18 @@ public class ClearAreaSession {
     }
 
     private String summary() {
-        String counts = "убрано " + removed + " из " + boxVolume() + "; пропущено: " + skippedTotal()
-                + " (небезопасных: " + unsafe
-                + ", без стоянки: " + noStand + ", защищено: " + protectedSkipped + ", неразрушимых: " + unbreakable
-                + ", занято другим духом: " + foreignSkipped + ")";
-        if (unreachable > 0) {
-            counts += "; недостижимо: " + unreachable;
-        }
-        if (!leftover.isEmpty()) {
-            counts += "; не взяты " + leftover;
-        }
-        return counts;
+        return ClearSummary.of(
+                box,
+                new ClearSummary.Tally(
+                        removed,
+                        skippedTotal(),
+                        unsafe,
+                        noStand,
+                        protectedSkipped,
+                        unbreakable,
+                        foreignSkipped,
+                        unreachable),
+                leftover);
     }
 
     private void releaseCurrent() {
