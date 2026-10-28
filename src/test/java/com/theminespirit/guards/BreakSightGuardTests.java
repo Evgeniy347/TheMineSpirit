@@ -15,6 +15,7 @@ class BreakSightGuardTests {
     private static final Path NEOFORGE = Path.of("src/main/java/com/theminespirit/neoforge");
     private static final Pattern DIRECT_DESTROY = Pattern.compile("\\b(?:destroyBlock|destroyBlockProgress)\\s*\\(");
     private static final Pattern UNLIMITED = Pattern.compile("\\.begin(?:AnyDistance|Chop)\\s*\\(");
+    private static final Pattern CLEAR_AIR = Pattern.compile("setBlock\\([^;]*Blocks\\.AIR\\b");
     private static final List<String> UNLIMITED_ALLOWED =
             List.of("TreeChop.java", "HarvestSession.java", "FarmSession.java");
     private static final String BREAKER = "BlockBreaker.java";
@@ -57,6 +58,21 @@ class BreakSightGuardTests {
     }
 
     @Test
+    void patternSource_ClearingAirWithoutSight_IsReported() {
+        Map<Path, String> sources = new LinkedHashMap<>();
+        sources.put(
+                Path.of("neoforge/Other.java"),
+                "class Other { void f() { level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3); } }");
+        sources.put(
+                Path.of("neoforge/" + BREAKER), breaker("BreakSight.visible(spirit, target, false);\nactive = true;"));
+
+        assertEquals(
+                List.of("neoforge/Other.java:1 setBlock(AIR)"),
+                violations(sources),
+                "Сторож ослеп: удаление блока воздухом мимо проверки видимости обязано ловиться");
+    }
+
+    @Test
     void patternSource_ChopAndHarvestUnlimited_AreAccepted() {
         Map<Path, String> sources = new LinkedHashMap<>();
         sources.put(
@@ -94,6 +110,9 @@ class BreakSightGuardTests {
             String name = path.getFileName().toString();
             if (!name.equals(BREAKER) && !text.contains("BreakSight.visible(")) {
                 collect(found, path, text, DIRECT_DESTROY, "destroyBlock(");
+                if (!path.toString().replace('\\', '/').contains("/demo/")) {
+                    collect(found, path, text, CLEAR_AIR, "setBlock(AIR)");
+                }
             }
             if (!UNLIMITED_ALLOWED.contains(name)) {
                 collect(found, path, text, UNLIMITED, "begin");
