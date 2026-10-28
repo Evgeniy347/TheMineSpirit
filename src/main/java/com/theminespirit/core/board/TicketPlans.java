@@ -744,7 +744,8 @@ public final class TicketPlans {
     private static Optional<TreeSpecies> saplingSpeciesOf(String item) {
         String name = pathOf(item);
         return TreeSpecies.ALL.stream()
-                .filter(tree -> (tree.id() + "_sapling").equals(name))
+                .filter(tree -> (tree.id() + "_sapling").equals(name)
+                        || pathOf(tree.saplingId()).equals(name))
                 .findFirst();
     }
 
