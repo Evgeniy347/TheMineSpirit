@@ -36,7 +36,7 @@ final class OrchardHarvest {
         if (now % rules.orchardCheckTicks() != 0) {
             return;
         }
-        for (BlockCoord spot : stage.orchardSaplings()) {
+        for (BlockCoord spot : stage.allOrchardSaplings()) {
             String id = OrchardPlans.id(spot);
             if (OPEN.contains(service.board().statusOf(id).orElse(BoardStatus.DONE))) {
                 continue;

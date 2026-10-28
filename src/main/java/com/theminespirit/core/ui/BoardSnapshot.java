@@ -53,7 +53,9 @@ public final class BoardSnapshot {
                     doneAt,
                     task.startedAt(),
                     task.finishedAt(),
-                    task.durationTicks());
+                    task.durationTicks(),
+                    task.supplyItem(),
+                    task.supplyCount());
             ranked.add(new Ranked(tile, task.createdAt()));
         }
         ranked.sort(ORDER);

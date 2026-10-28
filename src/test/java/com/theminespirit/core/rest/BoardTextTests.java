@@ -38,6 +38,37 @@ class BoardTextTests {
     }
 
     @Test
+    void line_GatherTaskWithoutIcons_NamesItemAndCount() {
+        BoardTask task = new BoardTask(
+                "board-4",
+                "GATHER_MATERIALS",
+                50,
+                null,
+                "PENDING",
+                Map.of(),
+                Map.of(),
+                List.of(),
+                7,
+                1,
+                "graph:make:oak_log",
+                50,
+                List.of(),
+                false,
+                0,
+                0,
+                0,
+                null,
+                "oak_log",
+                7);
+
+        String line = BoardText.line(task);
+
+        assertTrue(
+                line.contains("добыть: oak_log ×7"),
+                "Без иконок (REST/журнал) задание добычи обязано называть предмет и число: " + line);
+    }
+
+    @Test
     void line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing() {
         String line = BoardText.line(task(Map.of(), List.of(), null));
 

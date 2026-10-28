@@ -137,6 +137,70 @@ class TownPlannerTests {
     }
 
     @Test
+    void plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled() {
+        TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
+        TownPlan grown = TownPlanner.plant(
+                grid((x, z) -> 70, (x, z) -> 0),
+                base,
+                RULES,
+                STAGES,
+                List.of(OrchardSites.siteId("orchard_jungle")),
+                1);
+        Placement extra = grown.placement(OrchardSites.siteId("orchard_jungle"))
+                .orElseThrow(() -> new AssertionError("Сад джунглей не появился в плане: " + grown.unplaced()));
+        assertTrue(
+                grown.placement(StageSites.ORCHARD_EXTRA).isEmpty(),
+                "Готовое место orchard_extra занято породой, а не осталось вторым садом-двойником");
+        for (Placement other : grown.placements()) {
+            assertFalse(
+                    !other.equals(extra)
+                            && other.overlaps(extra, RULES.spacing().gap()),
+                    "Сад джунглей пересекает '" + other.id() + "': у каждой породы своё место");
+        }
+        StageSite site = StageSites.of(grown, 1, grown.anchor().y(), RULES);
+        assertTrue(
+                site.inside(extra.x(), extra.z()) && site.inside(extra.x() + extra.width() - 1, extra.z()),
+                "Сад джунглей " + extra + " оказался вне ограды этапа: всё поселение внутри контура");
+        assertTrue(StageSites.insideEnclosure(site), "Каждый участок плана этапа обязан быть внутри ограды");
+        for (ColumnMask.Cell cell : extra.mask().cells()) {
+            assertTrue(
+                    site.level().contains(cell.x(), cell.z()) || site.mineColumn(cell.x(), cell.z()),
+                    "Клетка " + cell + " сада не выравнивается: деревья повиснут или утонут");
+        }
+        assertEquals(
+                "jungle",
+                site.extraOrchard("orchard_jungle").orElseThrow().wood(),
+                "Порода сада берётся из постройки графа orchard_jungle");
+    }
+
+    @Test
+    void plan_ExtensionGrowsFence_OldPlotsStayInside() {
+        TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
+        TownPlan old = new TownPlan(
+                base.anchor(),
+                base.region(),
+                base.streets(),
+                base.placements().stream()
+                        .filter(place -> !StageSites.ORCHARD_EXTRA.equals(place.id()))
+                        .toList(),
+                base.fence(),
+                base.unplaced());
+        StageSite before = StageSites.of(old, 1, old.anchor().y(), RULES);
+        TownPlan grown = TownPlanner.plant(
+                grid((x, z) -> 70, (x, z) -> 0), old, RULES, STAGES, List.of(OrchardSites.siteId("orchard_jungle")), 1);
+        StageSite after = StageSites.of(grown, 1, grown.anchor().y(), RULES);
+
+        assertTrue(
+                after.enclosure().count() >= before.enclosure().count(),
+                "Контур ограды при росте плана не вырос: новый сад остался бы за забором");
+        assertTrue(StageSites.insideEnclosure(after), "После роста плана все старые и новые участки внутри ограды");
+        assertTrue(
+                after.ring().posts().containsAll(before.ring().posts())
+                        || after.enclosure().count() > before.enclosure().count(),
+                "Ограда этапа не охватывает старый и новый контур: старые куски остались бы за забором");
+    }
+
+    @Test
     void stages_EveryCatalogEntry_InExactlyOneStage() {
         Set<String> seen = new HashSet<>();
         for (List<String> stage : STAGES) {

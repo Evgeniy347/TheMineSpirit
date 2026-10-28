@@ -1,8 +1,11 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public record StageSite(
         int stage,
@@ -13,6 +16,7 @@ public record StageSite(
         MinePlot minePlot,
         Placement orchard,
         List<BlockCoord> orchardSaplings,
+        List<OrchardPlot> extraOrchards,
         ColumnMask level,
         ColumnMask enclosure,
         FenceLine ring) {
@@ -41,6 +45,8 @@ public record StageSite(
         Objects.requireNonNull(orchard, "Место сада не может быть null");
         orchardSaplings = List.copyOf(Objects.requireNonNull(
                 orchardSaplings, "Места деревьев сада не могут быть null: пусто — пустой список"));
+        extraOrchards = List.copyOf(
+                Objects.requireNonNull(extraOrchards, "Дополнительные сады не могут быть null: пусто — пустой список"));
         Objects.requireNonNull(level, "Площадки выравнивания не могут быть null");
         Objects.requireNonNull(enclosure, "Огороженная область не может быть null");
         Objects.requireNonNull(ring, "Ограда этапа не может быть null");
@@ -80,12 +86,41 @@ public record StageSite(
         return new BlockCoord(orchard.x(), anchor.y(), orchard.z());
     }
 
+    public BlockCoord orchardOrigin(@Nullable String building) {
+        if (building != null) {
+            for (OrchardPlot plot : extraOrchards) {
+                if (plot.building().equals(building)) {
+                    return plot.origin(anchor.y());
+                }
+            }
+        }
+        return orchardOrigin();
+    }
+
+    public Optional<OrchardPlot> extraOrchard(String building) {
+        Objects.requireNonNull(building, "Постройка сада не может быть null: по ней ищут площадку");
+        return extraOrchards.stream()
+                .filter(plot -> plot.building().equals(building))
+                .findFirst();
+    }
+
+    public List<BlockCoord> allOrchardSaplings() {
+        List<BlockCoord> spots = new ArrayList<>(orchardSaplings);
+        extraOrchards.forEach(plot -> spots.addAll(plot.saplings()));
+        return List.copyOf(spots);
+    }
+
     public boolean orchardTree(int x, int y, int z) {
         if (y < anchor.y() - 1 || y > anchor.y() + ORCHARD_TREE_HEIGHT) {
             return false;
         }
         for (BlockCoord spot : orchardSaplings) {
             if (spot.x() == x && spot.z() == z) {
+                return true;
+            }
+        }
+        for (OrchardPlot plot : extraOrchards) {
+            if (plot.tree(x, y, z, anchor.y())) {
                 return true;
             }
         }
@@ -115,11 +150,22 @@ public record StageSite(
         if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
             return false;
         }
-        return hut.covers(x, z) || yard.covers(x, z) || orchard.covers(x, z) || mine.covers(x, z);
+        return hut.covers(x, z)
+                || yard.covers(x, z)
+                || orchard.covers(x, z)
+                || extraOrchardCell(x, z)
+                || mine.covers(x, z);
     }
 
     public boolean planned(int x, int y, int z) {
-        return planCell(x, y, z) || orchard.covers(x, z) || (levelColumn(x, z) && y < anchor.y());
+        return planCell(x, y, z)
+                || orchard.covers(x, z)
+                || extraOrchardCell(x, z)
+                || (levelColumn(x, z) && y < anchor.y());
+    }
+
+    private boolean extraOrchardCell(int x, int z) {
+        return extraOrchards.stream().anyMatch(plot -> plot.place().covers(x, z));
     }
 
     public boolean gatherForbidden(BlockCoord target, int depthBelowSurface) {

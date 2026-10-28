@@ -67,6 +67,12 @@ public final class SettlementPlotStore extends SavedData {
         setDirty();
     }
 
+    public void refitTown(TownPlan next) {
+        town = Objects.requireNonNull(next, "План поселения не может быть null: фиксируется расширенный план");
+        site = null;
+        setDirty();
+    }
+
     public Optional<StageSite> site() {
         SettlementPlot current = plot;
         TownPlan plan = town;
@@ -84,6 +90,10 @@ public final class SettlementPlotStore extends SavedData {
                 return Optional.empty();
             }
             cached = found.orElseThrow();
+            if (!StageSites.insideEnclosure(cached)) {
+                LOGGER.warn("[plot] место этапа вышло за ограду: участок обрезан контуром поселения — "
+                        + "проверьте план и ограду");
+            }
             site = cached;
         }
         return Optional.of(cached);

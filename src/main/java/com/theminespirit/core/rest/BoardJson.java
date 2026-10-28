@@ -50,6 +50,8 @@ public final class BoardJson {
         map.put("finishedAt", task.finishedAt());
         map.put("durationTicks", task.durationTicks());
         map.put("waitReason", task.waitReason());
+        map.put("supplyItem", task.supplyItem());
+        map.put("supplyCount", task.supplyCount());
         return map;
     }
 }
