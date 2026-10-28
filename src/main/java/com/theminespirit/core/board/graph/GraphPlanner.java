@@ -82,8 +82,8 @@ public final class GraphPlanner {
                 requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
             }
         }
-        graph.herdCaps().forEach((herd, cap) -> {
-            if (count(herd) > cap) {
+        graph.herdCaps().forEach((herd, herdCap) -> {
+            if (count(herd) > herdCap.limit(state.spirits())) {
                 for (SupplyGraph.Way way : graph.ways()) {
                     if (way.consumes().containsKey(herd) && available(way)) {
                         flow.local(way.id(), graph.herdCullBoost());

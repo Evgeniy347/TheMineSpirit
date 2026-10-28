@@ -485,21 +485,6 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_OcelotLacking_TrustWithRawFishInDevelopment() {
-        GraphWorld world = GraphWorld.settled().with("cod", 4).with("ocelot", 0);
-        world.stage = 2;
-        world.world.add("biome:jungle");
-        GraphPlan plan = world.plan();
-
-        assertTrue(
-                plan.task("trust_ocelot").map(task -> !task.implemented()).orElse(false),
-                "Оцелоту не хватает — доверие сырой рыбой в джунглях, «в разработке»: " + plan.task("trust_ocelot"));
-        assertTrue(
-                !GraphWorld.GRAPH.implemented("breed_ocelot") && !GraphWorld.GRAPH.implemented("breed_wolf"),
-                "Размножение питомцев внесено как «в разработке»");
-    }
-
-    @Test
     void plan_NetherExpedition_NeedsPartyArmorPotionsFood() {
         GraphWorld world = GraphWorld.settled()
                 .built("portal_lit", Built.BUILT)

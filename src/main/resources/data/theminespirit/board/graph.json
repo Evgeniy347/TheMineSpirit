@@ -8282,7 +8282,7 @@
       "yield": 2,
       "weight": 1.0,
       "world": "water",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "trust_ocelot",
@@ -8294,7 +8294,7 @@
         "cod": 2
       },
       "world": "biome:jungle",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "trust_ocelot_salmon",
@@ -8306,7 +8306,7 @@
         "salmon": 2
       },
       "world": "biome:jungle",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_wolf",
@@ -8321,7 +8321,7 @@
       "needs": {
         "wolf": 2
       },
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_wolf_pork",
@@ -8336,7 +8336,7 @@
       "needs": {
         "wolf": 2
       },
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_cat",
@@ -8351,7 +8351,7 @@
       "needs": {
         "cat": 2
       },
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "breed_ocelot",
@@ -8366,7 +8366,7 @@
         "ocelot": 2
       },
       "world": "biome:jungle",
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "shear_oak_leaves",
@@ -10319,7 +10319,16 @@
     "herd_cow": 10,
     "herd_sheep": 10,
     "herd_pig": 10,
-    "herd_chicken": 16
+    "herd_chicken": 16,
+    "wolf": {
+      "perSpirit": 0.5
+    },
+    "cat": {
+      "perSpirit": 0.5
+    },
+    "ocelot": {
+      "perSpirit": 0.5
+    }
   },
   "costs": {
     "defaultTicks": 100,
