@@ -25,26 +25,32 @@ public final class SiteLevels {
     }
 
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops) {
+        return leveling(site, tops, at -> building(site, at.x(), at.y(), at.z()));
+    }
+
+    public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
+        Objects.requireNonNull(planned, "Признак плана не может быть null: без него расчистка срежет постройку");
         BlockCoord chest = chestSpot(site);
         return new PlotLeveling(
-                extra(site, tops, cell -> cell.x() == chest.x() && cell.z() == chest.z(), false),
+                extra(site, tops, cell -> cell.x() == chest.x() && cell.z() == chest.z(), planned),
                 List.of(),
                 PlotLeveling.DEFAULT_BLOCK);
     }
 
     public static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops) {
-        return extra(site, tops, cell -> false);
+        return extra(site, tops, cell -> false, at -> building(site, at.x(), at.y(), at.z()));
     }
 
     public static List<PlotLeveling.Box> extra(
             StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip) {
-        return extra(site, tops, skip, true);
+        return extra(site, tops, skip, at -> building(site, at.x(), at.y(), at.z()));
     }
 
     private static List<PlotLeveling.Box> extra(
-            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip, boolean protectBuildings) {
+            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip, Predicate<BlockCoord> planned) {
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них лишнего над уровнем не найти");
         Objects.requireNonNull(skip, "Пропускаемые колонки не могут быть null: нет таких — всегда false");
+        Objects.requireNonNull(planned, "Признак плана не может быть null: постройки плана не срезают");
         int level = level(site);
         Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
         for (ColumnMask.Cell column : site.level().cells()) {
@@ -53,7 +59,7 @@ public final class SiteLevels {
             }
             int top = tops.applyAsInt(column.x(), column.z());
             for (int y = level + 1; y < top; y++) {
-                if (!protectBuildings || !building(site, column.x(), y, column.z())) {
+                if (!planned.test(new BlockCoord(column.x(), y, column.z()))) {
                     layers.computeIfAbsent(y, key -> new TreeMap<>())
                             .computeIfAbsent(column.z(), key -> new ArrayList<>())
                             .add(column.x());

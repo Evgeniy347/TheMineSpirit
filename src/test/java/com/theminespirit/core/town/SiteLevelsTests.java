@@ -8,6 +8,7 @@ import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.function.IntBinaryOperator;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class SiteLevelsTests {
@@ -122,6 +123,30 @@ class SiteLevelsTests {
                 List.of(),
                 SiteLevels.extra(SITE, tops(built, LEVEL + 5)),
                 "Блоки построек по плану не срезают: расчистка не ломает уже стоящую хижину или двор");
+    }
+
+    @Test
+    void leveling_ForeignObjectAbovePlanColumn_IsCutBeforeItsSupport() {
+        ColumnMask.Cell built = SITE.level().cells().stream()
+                .filter(cell -> SITE.planCell(cell.x(), LEVEL + 2, cell.z()))
+                .filter(cell -> !SITE.ringPost(cell.x(), cell.z()))
+                .findFirst()
+                .orElseThrow();
+        Predicate<BlockCoord> plan = at -> at.equals(new BlockCoord(built.x(), LEVEL, built.z()));
+
+        PlotLeveling cut = SiteLevels.leveling(SITE, tops(built, LEVEL + 3), plan);
+
+        assertEquals(
+                List.of(
+                        new PlotLeveling.Box(built.x(), LEVEL + 1, built.z(), built.x(), LEVEL + 1, built.z()),
+                        new PlotLeveling.Box(built.x(), LEVEL + 2, built.z(), built.x(), LEVEL + 2, built.z())),
+                cut.cut(),
+                "Схема плана защищает только свои блоки: чужой сундук над площадкой двора попадает в срезку, "
+                        + "а не прячется за широкой колонкой постройки");
+        assertEquals(
+                LEVEL + 2,
+                cut.cutTopDown().get(0).y1(),
+                "Срезка идёт сверху вниз: чужой объект снимается до блока-опоры и не остаётся висеть");
     }
 
     @Test
