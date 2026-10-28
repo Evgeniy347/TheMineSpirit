@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public final class GraphNames {
@@ -13,16 +14,31 @@ public final class GraphNames {
     private static final String NAMESPACE = "minecraft:";
     private static final Map<String, String> SUFFIXES = Map.of("_bed", "bed");
     private static final String DIAMOND_FOUND = "ore:diamond_found";
-    private static final Map<String, String> GROUND = Map.of(
-            "sand", "sand",
-            "red_sand", "red_sand",
-            "clay", "clay",
-            "cactus", "cactus",
-            "poppy", "flower:poppy",
-            "dandelion", "flower:dandelion",
-            "cornflower", "flower:cornflower",
-            "diamond_ore", DIAMOND_FOUND,
-            "deepslate_diamond_ore", DIAMOND_FOUND);
+    private static final Map<String, String> GROUND = Map.ofEntries(
+            Map.entry("sand", "sand"),
+            Map.entry("red_sand", "red_sand"),
+            Map.entry("clay", "clay"),
+            Map.entry("cactus", "cactus"),
+            Map.entry("poppy", "flower:poppy"),
+            Map.entry("dandelion", "flower:dandelion"),
+            Map.entry("cornflower", "flower:cornflower"),
+            Map.entry("blue_orchid", "flower:blue_orchid"),
+            Map.entry("lilac", "flower:lilac"),
+            Map.entry("peony", "flower:peony"),
+            Map.entry("sunflower", "flower:sunflower"),
+            Map.entry("lily_of_the_valley", "flower:lily_of_the_valley"),
+            Map.entry("orange_tulip", "flower:orange_tulip"),
+            Map.entry("pink_petals", "flower:pink_petals"),
+            Map.entry("brown_mushroom", "mushrooms"),
+            Map.entry("red_mushroom", "mushrooms"),
+            Map.entry("bamboo", "bamboo_jungle"),
+            Map.entry("kelp", "ocean"),
+            Map.entry("kelp_plant", "ocean"),
+            Map.entry("vine", "biome:jungle"),
+            Map.entry("mud", "mangrove_swamp"),
+            Map.entry("mangrove_roots", "mangrove_swamp"),
+            Map.entry("diamond_ore", DIAMOND_FOUND),
+            Map.entry("deepslate_diamond_ore", DIAMOND_FOUND));
     private static final String TREE = "tree:";
     private static final String LOG = "_log";
     private static final String MANGROVE_SAPLING = "mangrove_sapling";
@@ -88,19 +104,20 @@ public final class GraphNames {
         return Map.copyOf(counts);
     }
 
+    public static Optional<String> blockTag(String block) {
+        Objects.requireNonNull(block, "Блок округи не может быть null: по нему узнают метку мира");
+        String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
+        if (name.endsWith(LOG)) {
+            return WoodSpecies.speciesOf(name).map(species -> TREE + species);
+        }
+        return Optional.ofNullable(GROUND.get(name));
+    }
+
     public static Set<String> world(Set<String> blocks, Set<String> creatures) {
         Objects.requireNonNull(blocks, "Блоки округи не могут быть null: в округе ничего нет — пустой набор");
         Objects.requireNonNull(creatures, "Живность округи не может быть null: никого нет — пустой набор");
         Set<String> world = new HashSet<>(creatures);
-        for (String block : blocks) {
-            String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
-            if (name.endsWith(LOG)) {
-                WoodSpecies.speciesOf(name).ifPresent(species -> world.add(TREE + species));
-            }
-            if (GROUND.containsKey(name)) {
-                world.add(GROUND.get(name));
-            }
-        }
+        blocks.forEach(block -> blockTag(block).ifPresent(world::add));
         return Set.copyOf(world);
     }
 }

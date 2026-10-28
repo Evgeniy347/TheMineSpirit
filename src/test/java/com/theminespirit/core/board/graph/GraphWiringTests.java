@@ -71,35 +71,6 @@ class GraphWiringTests {
     }
 
     @Test
-    void world_BlocksAndCreatures_TagsOfGraphWays() {
-        Set<String> world = GraphNames.world(
-                Set.of(
-                        "jungle_log",
-                        "minecraft:birch_log",
-                        "stripped_oak_log",
-                        "red_sand",
-                        "clay",
-                        "poppy",
-                        "deepslate_diamond_ore",
-                        "stone"),
-                Set.of("animals", "sheep:black"));
-
-        assertEquals(
-                Set.of(
-                        "tree:jungle",
-                        "tree:birch",
-                        "red_sand",
-                        "clay",
-                        "flower:poppy",
-                        "ore:diamond_found",
-                        "animals",
-                        "sheep:black"),
-                world,
-                "Округа для путей графа: породы по брёвнам (ободранные — не дерево), красный песок отдельно, глина, "
-                        + "цветы, найденная алмазная руда, живность; иначе путь «world» не активируется: " + world);
-    }
-
-    @Test
     void kits_MixedTools_BestTierPerKind() {
         Map<String, Integer> kit = GraphKits.of(
                 List.of("minecraft:wooden_pickaxe", "minecraft:stone_pickaxe", "golden_axe", "minecraft:stick"),

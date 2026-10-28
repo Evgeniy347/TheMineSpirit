@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,9 +13,13 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.Squid;
+import net.minecraft.world.entity.animal.armadillo.Armadillo;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.block.LeavesBlock;
@@ -71,17 +76,16 @@ final class GraphSurroundings {
 
     static Around of(ServerLevel level, BoardService service, BlockCoord home) {
         Scan scan = blocks(level, home);
-        AABB box = new AABB(new BlockPos(home.x(), home.y(), home.z())).inflate(RADIUS);
+        BlockPos center = new BlockPos(home.x(), home.y(), home.z());
+        AABB box = new AABB(center).inflate(RADIUS);
         Set<String> creatures = new HashSet<>();
-        if (!level.getEntitiesOfClass(Animal.class, box).isEmpty()) {
-            creatures.add("animals");
-        }
-        if (!level.getEntitiesOfClass(Squid.class, box).isEmpty()) {
-            creatures.add("squid");
-        }
-        if (!level.getEntitiesOfClass(Monster.class, box).isEmpty()) {
-            creatures.add("mobs");
-        }
+        Map<String, BlockCoord> nearest = new HashMap<>(scan.nearest());
+        marked(level, box, Animal.class, "animals", creatures, nearest, center);
+        marked(level, box, Squid.class, "squid", creatures, nearest, center);
+        marked(level, box, Monster.class, "mobs", creatures, nearest, center);
+        marked(level, box, Rabbit.class, "rabbits", creatures, nearest, center);
+        marked(level, box, GlowSquid.class, "glow_squid", creatures, nearest, center);
+        marked(level, box, Armadillo.class, "armadillo", creatures, nearest, center);
         level.getEntitiesOfClass(Sheep.class, box)
                 .forEach(sheep -> creatures.add("sheep:" + sheep.getColor().getName()));
         Map<String, BlockCoord> drops = drops(level, service, home);
@@ -91,7 +95,29 @@ final class GraphSurroundings {
         }
         scan.decay().ifPresent(at -> events.add(LEAF_DECAY));
         return new Around(
-                GraphNames.world(scan.blocks(), creatures), Set.copyOf(events), drops, scan.decay(), scan.nearest());
+                GraphNames.world(scan.blocks(), creatures),
+                Set.copyOf(events),
+                drops,
+                scan.decay(),
+                Map.copyOf(nearest));
+    }
+
+    private static <T extends Entity> void marked(
+            ServerLevel level,
+            AABB box,
+            Class<T> type,
+            String tag,
+            Set<String> creatures,
+            Map<String, BlockCoord> nearest,
+            BlockPos center) {
+        level.getEntitiesOfClass(type, box).stream()
+                .filter(entity -> !entity.isRemoved())
+                .min(Comparator.comparingDouble(entity -> entity.blockPosition().distSqr(center)))
+                .ifPresent(entity -> {
+                    BlockPos pos = entity.blockPosition();
+                    creatures.add(tag);
+                    nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+                });
     }
 
     private static Map<String, BlockCoord> drops(ServerLevel level, BoardService service, BlockCoord home) {
