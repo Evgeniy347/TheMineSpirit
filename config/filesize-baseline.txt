@@ -12,10 +12,10 @@ src/main/java/com/theminespirit/core/building/SchematicTextParser.java	655
 src/main/java/com/theminespirit/core/engine/TaskSnapshotCodec.java	549
 src/main/java/com/theminespirit/core/inventory/BaseKit.java	323
 src/main/java/com/theminespirit/core/planner/AcquireScript.java	321
-src/main/java/com/theminespirit/core/planner/ResourceResolver.java	338
+src/main/java/com/theminespirit/core/planner/ResourceResolver.java	329
 src/main/java/com/theminespirit/core/reload/DataTables.java	447
 src/main/java/com/theminespirit/core/rest/BoardTaskRequest.java	412
-src/main/java/com/theminespirit/core/script/CoreScripts.java	1523
+src/main/java/com/theminespirit/core/script/CoreScripts.java	1472
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	1101
 src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	368
 src/main/java/com/theminespirit/gametest/GameTestFilter.java	327
@@ -35,7 +35,7 @@ src/main/java/com/theminespirit/neoforge/MineBuildScript.java	548
 src/main/java/com/theminespirit/neoforge/SafeMineSession.java	512
 src/main/java/com/theminespirit/neoforge/SchematicSite.java	365
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	767
-src/main/java/com/theminespirit/neoforge/SpiritScripts.java	400
+src/main/java/com/theminespirit/neoforge/SpiritScripts.java	389
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
 src/main/java/com/theminespirit/neoforge/board/BoardService.java	1265
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	910
@@ -57,7 +57,6 @@ src/test/java/com/theminespirit/core/board/BoardTests.java	1075
 src/test/java/com/theminespirit/core/board/BoardTicketTests.java	401
 src/test/java/com/theminespirit/core/board/TicketPlansTests.java	1216
 src/test/java/com/theminespirit/core/board/graph/GraphPlannerTests.java	989
-src/test/java/com/theminespirit/core/building/DemoPlacementTests.java	342
 src/test/java/com/theminespirit/core/building/PresetLibraryTests.java	576
 src/test/java/com/theminespirit/core/engine/TaskRunnerRestoreTests.java	333
 src/test/java/com/theminespirit/core/engine/TaskRunnerTests.java	743

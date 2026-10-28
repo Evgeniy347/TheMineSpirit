@@ -90,6 +90,11 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     @Override
+    public boolean isBrushed(String item) {
+        return "armadillo_scute".equals(ItemIds.normalize(item));
+    }
+
+    @Override
     public String gatherBlockFor(String item) {
         String id = ItemIds.normalize(item);
         return DropTable.shared()

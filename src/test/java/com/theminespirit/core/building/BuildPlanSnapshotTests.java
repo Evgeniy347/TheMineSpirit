@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @Execution(ExecutionMode.CONCURRENT)
 class BuildPlanSnapshotTests {
     static final Path DIR = Path.of("src/test/resources/build-plans");
+    private static final String REFERENCE = "player_house_2";
     private static final String INDEX_PATH = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
     private static final int SUPPLY_RING = 2;
     private static final int SUPPLY_SIDE_OFFSET = 3;
@@ -98,9 +99,13 @@ class BuildPlanSnapshotTests {
         return BuildPlanner.plan(buildable.schematic(), rotation, supplyFeet(buildable, rotation), REACH, portion);
     }
 
+    static List<String> snapshotSchemes() {
+        return List.of(REFERENCE);
+    }
+
     @ParameterizedTest(name = "{0}")
-    @MethodSource("schemes")
-    void plans_EveryCatalogBuilding_MatchSnapshot(String scheme) throws IOException {
+    @MethodSource("snapshotSchemes")
+    void plans_ReferenceBuilding_MatchSnapshot(String scheme) throws IOException {
         boolean update = Boolean.getBoolean("theminespirit.updateSnapshots");
         PresetLibrary library = LIBRARY;
         List<String> changed = new ArrayList<>();

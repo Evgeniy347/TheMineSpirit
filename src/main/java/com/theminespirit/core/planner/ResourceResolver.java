@@ -20,6 +20,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class ResourceResolver {
     private static final String COUNT = "count";
+    private static final String RADIUS = "radius";
 
     private ResourceResolver() {}
 
@@ -122,9 +123,6 @@ public final class ResourceResolver {
             @Nullable AcquireSupplies chests) {}
 
     private static final class Resolution {
-        private static final List<String> PICKAXES =
-                List.of("wooden_pickaxe", "stone_pickaxe", "iron_pickaxe", "diamond_pickaxe", "netherite_pickaxe");
-
         private final ResourceKnowledge knowledge;
         private final Map<String, Integer> remaining;
         private final Set<String> presentStations;
@@ -157,6 +155,9 @@ public final class ResourceResolver {
                 if (knowledge.isCraftable(item)) {
                     return craftPlan(item, count, topLevel);
                 }
+                if (knowledge.isBrushed(item)) {
+                    return batched("brush", item, count, topLevel);
+                }
                 if (dropsFromAnotherBlock(item)) {
                     return gatherPlan(item, count, topLevel);
                 }
@@ -188,30 +189,20 @@ public final class ResourceResolver {
 
         private Optional<TaskNode> toolStep(String block) {
             Optional<String> tool = knowledge.toolForBlock(block);
-            if (tool.isEmpty() || hasInInventory(tool.get()) || !plannedTools.add(normalize(tool.get()))) {
+            if (tool.isEmpty() || hasInInventory(tool.get()) || !plannedTools.add(ToolTiers.normalize(tool.get()))) {
                 return Optional.empty();
             }
             return Optional.of(resolve(tool.get(), 1, false));
         }
 
         private boolean hasInInventory(String item) {
-            List<String> acceptable = acceptableTools(item);
+            List<String> acceptable = ToolTiers.acceptable(item);
             for (Map.Entry<String, Integer> entry : remaining.entrySet()) {
-                if (entry.getValue() > 0 && acceptable.contains(normalize(entry.getKey()))) {
+                if (entry.getValue() > 0 && acceptable.contains(ToolTiers.normalize(entry.getKey()))) {
                     return true;
                 }
             }
             return false;
-        }
-
-        private static List<String> acceptableTools(String item) {
-            String wanted = normalize(item);
-            int tier = PICKAXES.indexOf(wanted);
-            return tier < 0 ? List.of(wanted) : PICKAXES.subList(tier, PICKAXES.size());
-        }
-
-        private static String normalize(String id) {
-            return id.startsWith("minecraft:") ? id.substring("minecraft:".length()) : id;
         }
 
         private TaskNode batched(String script, String item, int count, boolean topLevel) {
@@ -231,7 +222,7 @@ public final class ResourceResolver {
         private static ScriptCall gather(String block, int count) {
             int radius =
                     block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
-            return new ScriptCall("gather", Map.of("block", block, COUNT, count, "radius", radius));
+            return new ScriptCall("gather", Map.of("block", block, COUNT, count, RADIUS, radius));
         }
 
         private ScriptCall single(String script, String item, int count) {
@@ -239,12 +230,12 @@ public final class ResourceResolver {
                 case "gather" -> gather(knowledge.gatherBlockFor(item), count);
                 case "craft" ->
                     new ScriptCall(
-                            "craft",
-                            Map.of("item", item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                            "craft", Map.of("item", item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT));
                 case "smelt" ->
                     new ScriptCall(
-                            "smelt",
-                            Map.of("item", item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                            "smelt", Map.of("item", item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT));
+                case "brush" ->
+                    new ScriptCall("brush", Map.of(COUNT, count, RADIUS, CatalogLimits.HERD_RADIUS_DEFAULT));
                 default ->
                     throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
                             + "батчинг знает только gather, craft и smelt");
@@ -273,7 +264,7 @@ public final class ResourceResolver {
         private Optional<TaskNode> ingredient(String item, int count) {
             int left = count - takeFromInventory(item, count);
             List<TaskNode> steps = new ArrayList<>();
-            if (left > 0 && chests != null && withdrawn.add(normalize(item))) {
+            if (left > 0 && chests != null && withdrawn.add(ToolTiers.normalize(item))) {
                 for (ScriptCall call : chests.withdraw(item, left)) {
                     left -= call.params().get(COUNT) instanceof Integer taken ? taken : 0;
                     steps.add(call);
@@ -289,10 +280,10 @@ public final class ResourceResolver {
         }
 
         private int takeFromInventory(String item, int count) {
-            String wanted = normalize(item);
+            String wanted = ToolTiers.normalize(item);
             int taken = 0;
             for (Map.Entry<String, Integer> entry : remaining.entrySet()) {
-                if (taken >= count || !normalize(entry.getKey()).equals(wanted) || entry.getValue() <= 0) {
+                if (taken >= count || !ToolTiers.normalize(entry.getKey()).equals(wanted) || entry.getValue() <= 0) {
                     continue;
                 }
                 int take = Math.min(count - taken, entry.getValue());

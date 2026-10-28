@@ -19,8 +19,10 @@ class TestTimeLimitGuardTests {
             "^([A-Z_]+_(?:WARN|STOP))=\"\\$\\{THEMINESPIRIT_[A-Z_]+_SECONDS:-(\\d+)}\"", Pattern.MULTILINE);
 
     private static final Map<String, Integer> AGREED = Map.of(
-            "UNIT_WARN", 90,
-            "UNIT_STOP", 200,
+            "UNIT_WARN", 600,
+            "UNIT_STOP", 900,
+            "UNIT_CPU_WARN", 90,
+            "UNIT_CPU_STOP", 200,
             "GAMETEST_WARN", 120,
             "GAMETEST_STOP", 200,
             "GAMETEST_FULL_WARN", 180,

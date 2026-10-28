@@ -193,6 +193,29 @@ for parser in default none; do
 done
 rm -f TestResults/unit/xml/TEST-*.xml
 
+cat >"$work/bin/unit-cpu-heavy" <<'FAKE'
+#!/usr/bin/env bash
+mkdir -p TestResults/unit/xml
+cat >TestResults/unit/xml/TEST-com.example.Heavy.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.Heavy" tests="2" failures="0" errors="0" skipped="0">
+  <testcase name="test1" classname="com.example.Heavy"/>
+  <testcase name="test2" classname="com.example.Heavy"/>
+</testsuite>
+XML
+printf 'class,test,kind,cpu_ms,wall_ms,gc_ms,warmup
+com.example.Heavy,test1,junit,150000,1,0,false
+com.example.Heavy,test2,junit,60000,1,0,false
+'     >TestResults/unit/test-cost.csv
+echo "BUILD SUCCESSFUL"
+exit 0
+FAKE
+chmod +x "$work/bin/unit-cpu-heavy"
+out=$(THEMINESPIRIT_GRADLEW="$work/bin/unit-cpu-heavy" bash scripts/test.sh unit 2>&1)
+code=$?
+[ "$code" = 1 ] && echo "$out" | grep -q "FAIL cpu: 2 тестов зелёные, но время процессора тестов 210 с больше предела 200 с"     && ok "unit-cpu: 210 с процессора тестов — красный при зелёных тестах"     || fail "unit-cpu: код=$code, вывод: $out"
+rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
+
 export THEMINESPIRIT_GRADLEW="$work/bin/slow"
 export THEMINESPIRIT_UNIT_WARN_SECONDS=1
 export THEMINESPIRIT_UNIT_STOP_SECONDS=2
