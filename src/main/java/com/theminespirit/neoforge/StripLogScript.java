@@ -7,6 +7,7 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.StripLogParams;
+import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.neoforge.blocks.BlockReach;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -156,6 +157,10 @@ public final class StripLogScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         if (spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos)) > BlockBreaker.REACH) {
+            skipTarget();
+            return ScriptStatus.RUNNING;
+        }
+        if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
             skipTarget();
             return ScriptStatus.RUNNING;
         }
