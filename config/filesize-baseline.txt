@@ -50,7 +50,7 @@ src/main/java/com/theminespirit/neoforge/movement/ExploreScript.java	309
 src/main/java/com/theminespirit/neoforge/repair/RepairScript.java	304
 src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java	672
 src/test/java/com/theminespirit/core/board/AnimalLifecycleTests.java	303
-src/test/java/com/theminespirit/core/board/BoardConfigTests.java	505
+src/test/java/com/theminespirit/core/board/BoardConfigTests.java	427
 src/test/java/com/theminespirit/core/board/BoardLogTests.java	422
 src/test/java/com/theminespirit/core/board/BoardTests.java	1075
 src/test/java/com/theminespirit/core/board/BoardTicketTests.java	401

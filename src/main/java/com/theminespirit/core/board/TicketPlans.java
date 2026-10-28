@@ -124,7 +124,7 @@ public final class TicketPlans {
             throw new IllegalArgumentException("Уровень " + level + " кейса " + boardCase + " выше максимального " + max
                     + ": уровень постройки не существует и выдавать его нельзя");
         }
-        Optional<TaskNode> staged = StagePlans.plan(boardCase, level, target);
+        var staged = StagePlans.plan(boardCase, level, target).or(() -> RescuePlans.plan(boardCase, target));
         if (staged.isPresent()) {
             return staged.orElseThrow();
         }

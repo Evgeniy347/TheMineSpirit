@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.ResourceKnowledge;
 import com.theminespirit.core.town.StageWork;
@@ -29,7 +30,8 @@ public record TicketTarget(
         int count,
         @Nullable String wood,
         @Nullable PlotLeveling leveling,
-        @Nullable StageWork work) {
+        @Nullable StageWork work,
+        SelfEscape.@Nullable Plan rescue) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -138,6 +140,12 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public TicketTarget withRescue(SelfEscape.Plan plan) {
+        Builder builder = new Builder(this);
+        builder.rescue = Objects.requireNonNull(plan, "План спасения не может быть null: иначе задают at()");
+        return builder.build();
+    }
+
     private static final class Builder {
         private BlockCoord target;
         private @Nullable String schemeFile;
@@ -159,6 +167,7 @@ public record TicketTarget(
         private @Nullable String wood;
         private @Nullable PlotLeveling leveling;
         private @Nullable StageWork work;
+        private SelfEscape.@Nullable Plan rescue;
 
         Builder(BlockCoord target) {
             this.target = Objects.requireNonNull(target, "Цель задания не может быть null: от неё строится план");
@@ -185,6 +194,7 @@ public record TicketTarget(
             wood = source.wood;
             leveling = source.leveling;
             work = source.work;
+            rescue = source.rescue;
         }
 
         TicketTarget build() {
@@ -208,7 +218,8 @@ public record TicketTarget(
                     count,
                     wood,
                     leveling,
-                    work);
+                    work,
+                    rescue);
         }
     }
 }

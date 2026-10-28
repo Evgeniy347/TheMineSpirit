@@ -98,6 +98,7 @@ public final class BoardSources {
             live.add(HiveWatch.CAUSE);
         }
         live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level, service, spirits, now), Set.of()));
+        live.addAll(guard.call("rescue", () -> RescueWatch.tick(level, service, spirits, now), Set.of()));
         return live;
     }
 }
