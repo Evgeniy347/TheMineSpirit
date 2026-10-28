@@ -50,7 +50,7 @@ PYTHONIOENCODING=utf-8 py -3.9 sim_gpu.py
 
 Сверка — с Java-прогоном `GraphSimulationTests.simulate_Baselines_WriteTrailReport`
 (`TestResults/mutation/graph-trail.md`): шаги, тики и порядок заданий по 5 базовым мирам
-`GraphMutations.baselines()` совпадают точно.
+`GraphMutations.baselines()` совпадают точно (78/2077/4302/2266/6729 шагов).
 
 ## Поиск весов
 
@@ -69,6 +69,10 @@ PYTHONIOENCODING=utf-8 py -3.9 search.py --mode es --generations 10 --population
 Результат — `best-weights.json`: множители категорий (`parameters`), они же по конкретным весам
 (`weights`) и готовые абсолютные значения (`absolute`). Файл `graph.json` скрипт не меняет.
 Длинный поиск запускает главный агент; `--limit` задаёт предел решений на мир (по умолчанию 4000).
+
+Текущий прогон (`--generations 10 --population 16 --seeds 1`): доля 0.5735, все 4 старта дошли
+до этапа 3, сумма шагов 6536 → 3752. В `board/graph.json` перенесены абсолютные значения;
+`decay` внесён 0.55 (не 0.659), иначе два правила `GraphPlannerTests` упираются в `maxPriority`.
 
 ## Файлы
 
