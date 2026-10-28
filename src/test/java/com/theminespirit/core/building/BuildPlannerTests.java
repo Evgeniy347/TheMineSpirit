@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -73,6 +74,7 @@ class BuildPlannerTests {
     }
 
     @Test
+    @Tag("slow")
     void plans_EveryCatalogBuilding_PlaceEverythingFromInsideWithoutRoofStands() {
         List<String> problems = new ArrayList<>();
         for (String scheme : BuildPlanSnapshotTests.schemes()) {
