@@ -30,6 +30,14 @@ public final class StockScan {
 
     private StockScan() {}
 
+    public static List<BlockCoord> knownFirst(List<BlockCoord> known, List<BlockCoord> scanned) {
+        Objects.requireNonNull(known, "Реестр сундуков не может быть null: пустой задают пустым списком");
+        Objects.requireNonNull(scanned, "Найденные контейнеры не могут быть null: пустой задают пустым списком");
+        Set<BlockCoord> all = new LinkedHashSet<>(known);
+        all.addAll(scanned);
+        return List.copyOf(all);
+    }
+
     public static Result containers(
             List<BlockCoord> centers, int radiusBlocks, int heightBlocks, int blockBudget, Blocks blocks) {
         Objects.requireNonNull(centers, "centers не может быть null: обход идёт вокруг центров заявок");

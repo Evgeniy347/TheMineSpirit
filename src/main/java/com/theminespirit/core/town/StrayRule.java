@@ -3,14 +3,18 @@ package com.theminespirit.core.town;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.policy.BlockProtection;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 public final class StrayRule {
+    private static final IdFilter STATIONS = IdFilter.of(List.of("minecraft:crafting_table", "minecraft:furnace"));
+
     public enum Fact {
         PLANNED,
         PLAYER,
@@ -28,6 +32,9 @@ public final class StrayRule {
         Objects.requireNonNull(blockId, "Блок не может быть null: снос решается по его имени");
         Objects.requireNonNull(facts, "Признаки клетки не могут быть null: пустые задают пустым набором");
         if (facts.contains(Fact.PLANNED) || facts.contains(Fact.PLAYER)) {
+            return false;
+        }
+        if (STATIONS.matches(blockId)) {
             return false;
         }
         if (facts.contains(Fact.LOG)) {

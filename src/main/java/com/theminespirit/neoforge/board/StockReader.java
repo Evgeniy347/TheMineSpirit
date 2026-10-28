@@ -6,6 +6,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -62,11 +63,16 @@ public final class StockReader {
         StockScan.Result found =
                 StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT, blockBudget, blocks(level));
         int reads = 0;
-        for (BlockCoord pos : found.containers()) {
+        List<BlockCoord> known = SettlementChestStore.get(level).chests().all();
+        for (BlockCoord pos : StockScan.knownFirst(known, found.containers())) {
             if (reads >= containerBudget) {
                 break;
             }
-            ContainerAccess.Open open = ContainerAccess.open(level, new BlockPos(pos.x(), pos.y(), pos.z()));
+            BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
+            if (!level.isLoaded(at)) {
+                continue;
+            }
+            ContainerAccess.Open open = ContainerAccess.open(level, at);
             if (open instanceof ContainerAccess.Opened container) {
                 StackMapper mapper = new StackMapper();
                 for (Stack stack : mapper.map(container.container())) {

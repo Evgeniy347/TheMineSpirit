@@ -41,6 +41,19 @@ class StockScanTests {
     }
 
     @Test
+    void knownFirst_ChestOutsideScanRadius_IsStillRead() {
+        BlockCoord far = new BlockCoord(100, 64, 100);
+        List<BlockCoord> merged = StockScan.knownFirst(List.of(far), List.of(new BlockCoord(0, 64, 3)));
+
+        assertEquals(
+                far,
+                merged.get(0),
+                "Сундук из реестра поселения читается первым, даже если он вне радиуса обхода: иначе материалы "
+                        + "в нём для гейта «не хватает» и задание хижины стоит");
+        assertEquals(2, merged.size(), "Реестр и обход не раздувают список: оба вклада остаются по разу");
+    }
+
+    @Test
     void containers_AreFound_WithinRadius() {
         FakeBlocks blocks = new FakeBlocks()
                 .containerAt(new BlockCoord(0, 64, 3))

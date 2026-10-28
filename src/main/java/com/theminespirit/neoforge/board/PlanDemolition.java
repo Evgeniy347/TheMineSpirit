@@ -21,10 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
 final class PlanDemolition {
@@ -42,10 +39,7 @@ final class PlanDemolition {
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1) || busy(service, now)) {
             return;
         }
-        boolean yardReady = service.board().ledger().has(BoardCase.STOCK_CHESTS, 1)
-                && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
         List<BlockCoord> stray = StrayBlocks.find(level, site, town.region()).stream()
-                .filter(cell -> yardReady || !station(level.getBlockState(pos(cell))))
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
                 .limit(BATCH)
                 .toList();
@@ -92,13 +86,5 @@ final class PlanDemolition {
                 .anyMatch(ticket ->
                         OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE))
                                 || now - ticket.createdAt() < COOLDOWN);
-    }
-
-    private static boolean station(BlockState state) {
-        return state.is(Blocks.CRAFTING_TABLE) || state.is(Blocks.FURNACE);
-    }
-
-    private static BlockPos pos(BlockCoord cell) {
-        return new BlockPos(cell.x(), cell.y(), cell.z());
     }
 }
