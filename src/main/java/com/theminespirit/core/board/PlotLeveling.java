@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.IntBinaryOperator;
 import org.jspecify.annotations.Nullable;
 
@@ -15,13 +14,7 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
     public static final int MAX_SHIFT = 10;
     public static final String DEFAULT_BLOCK = "dirt";
     public static final int TOLERANCE = 1;
-    public static final int VOID_DEPTH = 4;
     public static final PlotLeveling FLAT = new PlotLeveling(List.of(), List.of(), DEFAULT_BLOCK);
-
-    @FunctionalInterface
-    public interface AirProbe {
-        boolean air(int x, int y, int z);
-    }
 
     public PlotLeveling(List<Box> cut, List<Box> fill, String block) {
         this(cut, fill, block, List.of());
@@ -40,10 +33,6 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         voids = List.copyOf(Objects.requireNonNull(voids, "Пустоты не могут быть null: нет пустот — пустой список"));
     }
 
-    public PlotLeveling withVoids(List<Box> found) {
-        return new PlotLeveling(cut, fill, block, found);
-    }
-
     public static boolean topLayer(int y, int level) {
         return y >= level - 1;
     }
@@ -53,43 +42,8 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return topLayer(y, level) ? DEFAULT_BLOCK : deep;
     }
 
-    public static List<Box> voids(BlockCoord anchor, ColumnMask area, IntBinaryOperator feet, AirProbe probe) {
-        return voids(anchor, area, feet, probe, Set.of());
-    }
-
-    public static List<Box> voids(
-            BlockCoord anchor, ColumnMask area, IntBinaryOperator feet, AirProbe probe, Set<BlockCoord> kept) {
-        Objects.requireNonNull(kept, "Оставляемые пустоты не могут быть null: нет таких — пустое множество");
-        Objects.requireNonNull(anchor, "Якорь участка не может быть null: пустоты ищутся под ним");
-        Objects.requireNonNull(feet, "Высоты колонок не могут быть null: пустота — воздух под поверхностью");
-        Objects.requireNonNull(probe, "Проба воздуха не может быть null: без неё пустот не найти");
-        List<Box> found = new ArrayList<>();
-        int bottom = anchor.y() - VOID_DEPTH;
-        Objects.requireNonNull(area, "Площадки не могут быть null: пустоты ищутся под ними");
-        for (ColumnMask.Cell column : area.cells()) {
-            int x = column.x();
-            int z = column.z();
-            int surface = Math.min(feet.applyAsInt(x, z), anchor.y());
-            Integer start = null;
-            for (int y = bottom; y <= surface; y++) {
-                boolean hole = y < surface && probe.air(x, y, z) && !kept.contains(new BlockCoord(x, y, z));
-                if (hole && start == null) {
-                    start = y;
-                } else if (!hole && start != null) {
-                    found.add(new Box(x, start, z, x, y - 1, z));
-                    start = null;
-                }
-            }
-        }
-        return List.copyOf(found);
-    }
-
     public int fillVolume() {
         return fill.stream().mapToInt(Box::volume).sum();
-    }
-
-    public PlotLeveling withBlock(String material) {
-        return new PlotLeveling(cut, fill, material, voids);
     }
 
     public static int level(BlockCoord anchor, int half, IntBinaryOperator feet) {

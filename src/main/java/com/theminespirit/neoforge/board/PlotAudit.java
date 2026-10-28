@@ -10,7 +10,6 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.PlotCells;
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
@@ -45,36 +44,30 @@ final class PlotAudit {
     private PlotAudit() {}
 
     static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
-        BlockCoord anchor = site.anchor();
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)
                 || open(service, EXCLUSIVE)
-                || recent(service, now)) {
+                || recent(service, now)
+                || open(service, WORKS)) {
             return;
         }
-        boolean building = open(service, WORKS);
-        List<BlockCoord> holes = new ArrayList<>();
+        BlockCoord anchor = site.anchor();
         List<BlockCoord> extras = new ArrayList<>();
         for (ColumnMask.Cell column : site.level().cells()) {
             int x = column.x();
             int z = column.z();
+            if (site.ringPost(x, z)) {
+                continue;
+            }
             boolean mine = site.mineColumn(x, z);
             boolean planned = site.houseColumn(x, z);
             for (int dy = -1; dy < PlotCells.FREE_HEIGHT; dy++) {
                 BlockCoord cell = new BlockCoord(x, anchor.y() + dy, z);
-                Optional<PlotCells.Defect> defect =
-                        PlotCells.defect(new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))));
-                defect.filter(PlotCells.Defect.HOLE::equals).ifPresent(hole -> holes.addAll(down(level, cell)));
-                defect.filter(PlotCells.Defect.EXTRA::equals)
-                        .filter(extra -> !building)
-                        .ifPresent(extra -> {
-                            extras.add(cell);
-                            if (cell.y() == anchor.y() - 1) {
-                                holes.add(cell);
-                            }
-                        });
+                PlotCells.defect(new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))))
+                        .filter(PlotCells.Defect.EXTRA::equals)
+                        .ifPresent(defect -> extras.add(cell));
             }
         }
-        if (holes.isEmpty() && extras.isEmpty()) {
+        if (extras.isEmpty()) {
             return;
         }
         String id = LevelRepair.ID + ":" + now;
@@ -93,38 +86,23 @@ final class PlotAudit {
                         Map.of()),
                 TicketTarget.at(site.workYard())
                         .withWork(new StageWork(site, List.of()))
-                        .withLeveling(LevelRepair.leveling(holes, extras)));
+                        .withLeveling(LevelRepair.leveling(List.of(), extras)));
         if (outcome != BoardOutcome.ACCEPTED) {
             return;
         }
         LOGGER.info(
-                "[plot] восстановление выравнивания {}: дыр {}, лишних блоков {}, первые {} {}",
+                "[plot] восстановление выравнивания {}: лишних блоков выше уровня {}, первые {}",
                 id,
-                holes.size(),
                 extras.size(),
-                holes.stream().limit(3).toList(),
                 extras.stream().limit(3).toList());
         service.journal()
                 .recordEntry(BoardLog.note(
                         LevelRepair.ID,
                         BoardCase.REPAIR_BUILDING,
                         now,
-                        List.of("holes=" + holes.size(), "extras=" + extras.size()),
+                        List.of("extras=" + extras.size()),
                         null,
                         ConfigStamp.current()));
-    }
-
-    private static List<BlockCoord> down(ServerLevel level, BlockCoord top) {
-        List<BlockCoord> column = new ArrayList<>();
-        column.add(top);
-        for (int depth = 1; depth <= PlotLeveling.MAX_SHIFT; depth++) {
-            BlockCoord below = new BlockCoord(top.x(), top.y() - depth, top.z());
-            if (found(level.getBlockState(pos(below))) != PlotCells.Found.OPEN) {
-                break;
-            }
-            column.add(below);
-        }
-        return column;
     }
 
     private static boolean recent(BoardService service, long now) {

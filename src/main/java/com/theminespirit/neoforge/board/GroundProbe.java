@@ -30,6 +30,13 @@ public final class GroundProbe {
         return fallback;
     }
 
+    public static int top(ServerLevel level, int x, int z, int fallback) {
+        if (!level.isLoaded(new BlockPos(x, level.getMinBuildHeight(), z))) {
+            return fallback;
+        }
+        return level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+    }
+
     public static TerrainGrid terrain(ServerLevel level, BlockCoord anchor, int radius) {
         int side = 2 * radius + 1;
         int[] feet = new int[side * side];

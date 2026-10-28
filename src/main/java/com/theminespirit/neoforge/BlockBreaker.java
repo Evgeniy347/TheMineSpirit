@@ -121,7 +121,7 @@ public final class BlockBreaker {
         return demolish ? Intent.DEMOLISH : tended ? Intent.HARVEST : Intent.BREAK;
     }
 
-    private Begin begin(BlockPos target, Intent intent, boolean reachLimited) {
+    Begin begin(BlockPos target, Intent intent, boolean reachLimited) {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {

@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.town.ColumnMask;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -23,24 +22,6 @@ public final class LevelLayers {
             out.addAll(merged(rows));
         }
         return out;
-    }
-
-    public static List<PlotLeveling.Box> rectangles(ColumnMask mask, int y1, int y2) {
-        Objects.requireNonNull(mask, "Маска площадок не может быть null");
-        List<PlotLeveling.Box> rows = new ArrayList<>();
-        for (int z = mask.minZ(); z < mask.minZ() + mask.depth(); z++) {
-            int start = Integer.MIN_VALUE;
-            for (int x = mask.minX(); x <= mask.minX() + mask.width(); x++) {
-                boolean in = x < mask.minX() + mask.width() && mask.contains(x, z);
-                if (in && start == Integer.MIN_VALUE) {
-                    start = x;
-                } else if (!in && start != Integer.MIN_VALUE) {
-                    rows.add(new PlotLeveling.Box(start, y1, z, x - 1, y2, z));
-                    start = Integer.MIN_VALUE;
-                }
-            }
-        }
-        return merged(rows);
     }
 
     private static List<PlotLeveling.Box> merged(List<PlotLeveling.Box> rows) {
