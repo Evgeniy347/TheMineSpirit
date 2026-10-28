@@ -360,7 +360,12 @@ public record SupplyGraph(
     }
 
     private void validate(String origin) {
+        Set<String> wayIds = new HashSet<>();
         for (Way way : ways) {
+            if (!wayIds.add(way.id())) {
+                throw new IllegalStateException("Файл '" + origin + "': id пути '" + way.id()
+                        + "' повторяется — разные пути с одним id путают причины заданий и дедупликацию доски");
+            }
             if (!items.containsKey(way.makes()) && !isTool(way.makes())) {
                 throw new IllegalStateException("Файл '" + origin + "': путь " + way.id() + " делает '" + way.makes()
                         + "', которого нет среди предметов и инструментов графа");

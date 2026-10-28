@@ -357,6 +357,9 @@ class ScriptCatalogTests {
                                 new long[] {
                                     MiningTuning.DESCENT_TORCH_INTERVAL_MIN, MiningTuning.DESCENT_TORCH_INTERVAL_MAX
                                 })),
+                spec("strip_log", List.of("species"), Map.of("count", new long[] {1, 256}, "radius", new long[] {
+                    1, CatalogLimits.CHOP_RADIUS_MAX
+                })),
                 spec("gather", List.of("block", "count"), Map.of("count", new long[] {1, 256})),
                 spec("collect_drops", List.of(), Map.of("radius", new long[] {1, 16})),
                 spec("harvest_crop", List.of(), Map.of("radius", new long[] {1, 16})),
