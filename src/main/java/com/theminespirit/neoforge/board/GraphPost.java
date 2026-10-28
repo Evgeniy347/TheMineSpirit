@@ -144,6 +144,7 @@ final class GraphPost {
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
             case CRAFT_TORCHES -> torches(ticket, task);
             case SMELT_CHARCOAL -> charcoal(ticket, task);
+            case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             default -> false;
         };
     }
@@ -187,7 +188,7 @@ final class GraphPost {
         return GraphTargets.source(level, graph.way(wayId), around, scan, this::craftPoint);
     }
 
-    private BlockCoord craftPoint() {
+    BlockCoord craftPoint() {
         if (craft == null) {
             boolean yard = scan.facts().done().contains(BoardCase.STOCK_CHESTS);
             craft = GraphTargets.craft(
@@ -246,7 +247,7 @@ final class GraphPost {
         return true;
     }
 
-    private Map<String, Integer> items(GraphPlan.Task task) {
+    Map<String, Integer> items(GraphPlan.Task task) {
         Map<String, Integer> items = new HashMap<>();
         task.consumes()
                 .forEach((item, count) -> items.merge(GraphNames.item(graph, item, scan.wood()), count, Integer::sum));

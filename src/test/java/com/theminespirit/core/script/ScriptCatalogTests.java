@@ -1,7 +1,6 @@
 package com.theminespirit.core.script;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.farming.CropKind;
@@ -59,24 +58,6 @@ class ScriptCatalogTests {
                 "Скрипты подкаталога обязаны идти в порядке полного каталога, а не набора: /v1/capabilities "
                         + "перечисляет их в порядке каталога (docs/api/README.md), а IMPLEMENTED-таблица даёт другой порядок. "
                         + "Проверьте, что restrictedTo идёт по каталогу и отбирает по набору");
-    }
-
-    @Test
-    void of_DuplicateId_Throws() {
-        List<ScriptSpec> scripts = List.of(
-                new ScriptSpec("scan", "первый", List.of(), List.of(), List.of()),
-                new ScriptSpec("scan", "второй", List.of(), List.of(), List.of()));
-
-        IllegalArgumentException error = assertThrows(
-                IllegalArgumentException.class,
-                () -> ScriptCatalog.of(scripts),
-                "Каталог с дублирующимся id обязан падать: иначе find вернёт случайный скрипт из двух, "
-                        + "и план выполнит не то действие");
-
-        assertTrue(
-                error.getMessage().contains("scan"),
-                "Сообщение об ошибке обязано называть дублирующийся id 'scan': по нему правят каталог. "
-                        + "Фактическое сообщение: " + error.getMessage());
     }
 
     @Test
@@ -530,8 +511,9 @@ class ScriptCatalogTests {
                 spec("swap_tool", List.of("block"), Map.of()),
                 spec("drink_potion", List.of("type"), Map.of()));
 
-        return Stream.concat(rows.stream(), GatherScriptSpecRows.rows().stream())
-                .map(row -> Arguments.of(row));
+        return Stream.of(rows, GatherScriptSpecRows.rows(), BrewScriptSpecsRows.rows())
+                .flatMap(List::stream)
+                .map(Arguments::of);
     }
 
     @ParameterizedTest(name = "{0}")

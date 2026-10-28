@@ -141,6 +141,18 @@
       "base": 18,
       "stage": 2
     },
+    "glistering_melon_slice": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
+    "golden_carrot": {
+      "xmin": 0,
+      "k": 1,
+      "base": 25,
+      "stage": 3
+    },
     "pumpkin": {
       "xmin": 0,
       "k": 1,
@@ -324,8 +336,7 @@
       "xmin": 1,
       "k": 1,
       "base": 28,
-      "stage": 3,
-      "implemented": false
+      "stage": 3
     },
     "blaze_rod": {
       "xmin": 1,
@@ -2917,14 +2928,13 @@
       }
     },
     "brewing_stand": {
-      "case": "BUILD_HOUSE",
+      "case": "CRAFT_BREWING_STAND",
       "stage": 3,
       "base": 49,
       "materials": {
         "blaze_rod": 1,
         "cobblestone": 3
-      },
-      "implemented": false
+      }
     },
     "enchanting_table": {
       "case": "ENCHANT_ROOM",
@@ -5037,12 +5047,14 @@
     },
     {
       "id": "harvest_nether_wart",
-      "case": "GATHER_MATERIALS",
+      "case": "HARVEST_NETHER_WART",
       "makes": "nether_wart",
       "yield": 3,
       "weight": 1.063134726,
-      "building": "portal_lit",
-      "implemented": false
+      "consumes": {
+        "soul_sand": 1,
+        "nether_wart": 1
+      }
     },
     {
       "id": "loot_blaze_rod",
@@ -5055,32 +5067,31 @@
     },
     {
       "id": "brew_healing",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_healing",
       "yield": 3,
       "weight": 1.063134726,
       "consumes": {
-        "nether_wart": 1,
         "glass_bottle": 3,
-        "gold_ingot": 1,
-        "melon_slice": 1
+        "nether_wart": 1,
+        "glistering_melon_slice": 1,
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "brew_fire_resistance",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_fire_resistance",
       "yield": 3,
       "weight": 1.063134726,
       "consumes": {
-        "nether_wart": 1,
         "glass_bottle": 3,
-        "blaze_rod": 1
+        "nether_wart": 1,
+        "magma_cream": 1,
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "craft_diamond_pickaxe",
@@ -7769,176 +7780,186 @@
     },
     {
       "id": "brew_regeneration",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_regeneration",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "water_bottle": 1,
+        "glass_bottle": 1,
         "nether_wart": 1,
-        "ghast_tear": 1
+        "ghast_tear": 1,
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "brew_strength",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_strength",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "water_bottle": 1,
+        "glass_bottle": 1,
         "nether_wart": 1,
-        "blaze_powder": 1
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "brew_swiftness",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_swiftness",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "water_bottle": 1,
+        "glass_bottle": 1,
         "nether_wart": 1,
-        "sugar": 1
+        "sugar": 1,
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "brew_night_vision",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_night_vision",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "water_bottle": 1,
+        "glass_bottle": 1,
         "nether_wart": 1,
-        "carrot": 1,
-        "gold_ingot": 1
+        "golden_carrot": 1,
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "brew_water_breathing",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "potion_water_breathing",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "water_bottle": 1,
+        "glass_bottle": 1,
         "nether_wart": 1,
-        "pufferfish": 1
+        "pufferfish": 1,
+        "blaze_powder": 2
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_healing",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_healing",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_healing": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "glistering_melon_slice": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_regeneration",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_regeneration",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_regeneration": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "ghast_tear": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_fire_resistance",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_fire_resistance",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_fire_resistance": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "magma_cream": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_strength",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_strength",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_strength": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_swiftness",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_swiftness",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_swiftness": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "sugar": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_night_vision",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_night_vision",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_night_vision": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "golden_carrot": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "splash_water_breathing",
-      "case": "GATHER_MATERIALS",
+      "case": "BREW_POTION",
       "makes": "splash_potion_water_breathing",
       "yield": 1,
       "weight": 1.063134726,
       "consumes": {
-        "potion_water_breathing": 1,
+        "glass_bottle": 1,
+        "nether_wart": 1,
+        "pufferfish": 1,
+        "blaze_powder": 3,
         "gunpowder": 1
       },
-      "building": "brewing_stand",
-      "implemented": false
+      "building": "brewing_stand"
     },
     {
       "id": "grind_blaze_powder",
-      "case": "GATHER_MATERIALS",
+      "case": "GRIND_BLAZE_POWDER",
       "makes": "blaze_powder",
       "yield": 2,
       "weight": 1.063134726,
       "consumes": {
         "blaze_rod": 1
-      },
-      "implemented": false
+      }
     },
     {
       "id": "gather_ghast_tear",

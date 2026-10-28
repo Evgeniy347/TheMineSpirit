@@ -33,6 +33,7 @@ class BoardCaseTests {
             "STOCK_CHESTS",
             "CRAFTING_STATION",
             "CRAFT_BED",
+            "CRAFT_BREWING_STAND",
             "CRAFT_DIAMOND_AXE",
             "CRAFT_DIAMOND_PICKAXE",
             "CRAFT_DIAMOND_SHOVEL",
@@ -78,6 +79,7 @@ class BoardCaseTests {
             "ENCHANT_ROOM",
             "ENCHANT_SHELVES",
             "BREED_ANIMALS",
+            "BREW_POTION",
             "EAT_TO_FULL",
             "HERD_CULL",
             "HUNT_WILD_SHEEP",
@@ -88,6 +90,8 @@ class BoardCaseTests {
             "WEAVE_WOOL",
             "HARVEST_ORCHARD",
             "HARVEST_HIVE",
+            "HARVEST_NETHER_WART",
+            "GRIND_BLAZE_POWDER",
             "PLACE_BEEHIVE");
 
     @Test

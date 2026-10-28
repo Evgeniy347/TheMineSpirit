@@ -16,7 +16,14 @@ public enum StationType {
             Stations.CRAFTING_TABLE, Blocks.CRAFTING_TABLE, Items.CRAFTING_TABLE, false, "верстак", "нужен верстак"),
     FURNACE(Stations.FURNACE, Blocks.FURNACE, Items.FURNACE, true, "печь", "нужна печь"),
     SMOKER(Stations.SMOKER, Blocks.SMOKER, Items.SMOKER, true, "коптильня", "нужна коптильня"),
-    CAMPFIRE(Stations.CAMPFIRE, Blocks.CAMPFIRE, Items.CAMPFIRE, false, "костёр", "нужен костёр");
+    CAMPFIRE(Stations.CAMPFIRE, Blocks.CAMPFIRE, Items.CAMPFIRE, false, "костёр", "нужен костёр"),
+    BREWING_STAND(
+            "minecraft:brewing_stand",
+            Blocks.BREWING_STAND,
+            Items.BREWING_STAND,
+            false,
+            "варочная стойка",
+            "нужна варочная стойка");
 
     private final String id;
     private final Block block;

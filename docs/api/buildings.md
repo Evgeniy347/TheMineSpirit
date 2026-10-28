@@ -115,6 +115,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
   return_to_base — сдать лишнее на склад и продолжить. По умолчанию by_value
 - `harvest_crop` (`crop`, `radius`, `replant`) — собрать урожай
 - `plant_crop` (`crop`, `radius`, `count`) — посадить культуру
+- `farm_nether_wart` (`count`, `radius`) — посадить адский нарост на песок душ и собрать урожай
 - `till` (`radius`, `count`) — вспахать землю под грядку
 - `bone_meal` (`crop`, `radius`, `count`) — подкормить посевы костной мукой
 - `breed` (`species`, `radius`, `pairs`) — свести пару животных
@@ -136,6 +137,7 @@ blocks_dug — сколько блоков выкопано, reason — пуст
 - `bucket_fish` (`count`, `radius`) — поймать рыбу ведром у открытой воды (не больше предела из `fishing.json`)
 - `craft` (`item`, `count`, `radius`) — скрафтить предмет
 - `smelt` (`item`, `count`, `radius`) — переплавить предмет
+- `brew` (`item`, `count`, `radius`) — сварить зелье в варочной стойке (бутылки воды, ингредиенты и топливо)
 - `equip` (`item`) — надеть предмет
 - `acquire` (`item`, `count`) — добыть предмет любым способом
 - `acquire_at` (`item`, `count`, `x`, `y`, `z`) — иметь предмет; не хватает — добыть у заданного места

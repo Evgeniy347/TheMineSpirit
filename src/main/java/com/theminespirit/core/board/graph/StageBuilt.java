@@ -38,6 +38,7 @@ public final class StageBuilt {
         built.put("chests", facts -> facts.chests() >= YARD_CHESTS);
         built.put("mine", SettlementFacts::mineEntrance);
         built.put("furnace", facts -> done(facts, BoardCase.CRAFT_FURNACE) || facts.furnace());
+        built.put("brewing_stand", facts -> done(facts, BoardCase.CRAFT_BREWING_STAND));
         built.put("lighting", SettlementFacts::lighting);
         built.put("fence", SettlementFacts::fence);
         built.put("hut", SettlementFacts::houses);
