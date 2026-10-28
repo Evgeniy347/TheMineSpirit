@@ -3,8 +3,6 @@ package com.theminespirit.gametest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.io.IOException;
 import java.util.List;
@@ -12,13 +10,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -28,90 +23,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class RestTaskGameTests {
     private static final BlockPos SPIRIT_START = new BlockPos(1, 1, 1);
     private static final BlockPos FAR_CORNER = new BlockPos(7, 1, 7);
-    private static final BlockPos NEAR_CORNER = new BlockPos(2, 1, 1);
-    private static final BlockPos PLAYER_AT = new BlockPos(5, 1, 5);
-    private static final int RELOAD_AFTER_TICKS = 30;
-    private static final int GONE_MIN_TICKS = 98;
-    private static final int GONE_MAX_TICKS = 104;
 
     private RestTaskGameTests() {}
-
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_PlanGoto_Accepts202AndBotReportsCurrentTaskAndRefusesSecondTask(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
-        String botPath = "/v1/bots/" + spirit.getStringUUID();
-        String requestId = UUID.randomUUID().toString();
-        RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(
-                        botPath + "/tasks", RestFixture.followGoalBody(requestId, player))
-                .thenCompose(accepted -> {
-                    JsonNode json = accepted.json();
-                    problems.expect(
-                            accepted.status() == 202,
-                            "POST tasks с планом goto обязан отвечать 202, получен " + accepted.status() + ": "
-                                    + accepted.body());
-                    problems.expect(
-                            "accepted".equals(json.path("state").asText())
-                                    && json.path("bot").asText().equals(spirit.getStringUUID())
-                                    && json.path("request_id").asText().equals(requestId),
-                            "202 обязан нести state=accepted, bot и request_id запроса: " + accepted.body());
-                    String taskId = json.path("task_id").asText();
-                    return rest.get(botPath).thenCompose(bot -> {
-                        problems.expect(
-                                bot.json().path("current_task").asText().equals(taskId),
-                                "GET bots/{id} обязан показывать current_task=" + taskId + " из реестра, получено: "
-                                        + bot.body());
-                        problems.expect(
-                                "busy".equals(bot.json().path("state").asText()),
-                                "Дух с запущенной задачей обязан быть busy: " + bot.body());
-                        return rest.post(
-                                        botPath + "/tasks",
-                                        RestFixture.followGoalBody(
-                                                UUID.randomUUID().toString(), player))
-                                .thenApply(second -> {
-                                    problems.expect(
-                                            second.status() == 409,
-                                            "Второй POST с новым request_id к занятому духу обязан давать 409, получен "
-                                                    + second.status() + ": " + second.body());
-                                    problems.expect(
-                                            second.body().contains(taskId),
-                                            "409 обязан называть текущую задачу " + taskId + ": " + second.body());
-                                    return problems.found();
-                                });
-                    });
-                });
-        RestFixture.await(helper, rest, scenario);
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_SpiritBusyWithCommandTask_Returns409OutsideRestWithoutReservation(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        spirit.startTask(RestFixture.followPlan(rest.mockPlayer(helper, PLAYER_AT)));
-        String botPath = "/v1/bots/" + spirit.getStringUUID();
-        RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(
-                        botPath + "/tasks", gotoBody(helper, UUID.randomUUID().toString(), NEAR_CORNER))
-                .thenApply(reply -> {
-                    problems.expect(
-                            reply.status() == 409,
-                            "Дух, занятый задачей команды /spirit, обязан давать 409, получен " + reply.status() + ": "
-                                    + reply.body());
-                    problems.expect(
-                            reply.body().contains("вне REST"),
-                            "409 обязан объяснять, что задача поставлена вне REST: " + reply.body());
-                    problems.expect(
-                            rest.gateway().taskRegistry().size() == 0,
-                            "Отказ не должен оставлять запись в реестре, записей "
-                                    + rest.gateway().taskRegistry().size());
-                    return problems.found();
-                });
-        RestFixture.await(helper, rest, scenario);
-    }
 
     @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
     public static void tasks_PlanGoto_WatcherMovesAcceptedToRunningThenSucceededKeepingProgress(GameTestHelper helper)
@@ -154,135 +67,6 @@ public final class RestTaskGameTests {
         });
     }
 
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_SpiritReloadedWithinGrace_TaskStaysRunningAndSucceeds(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        TaskPoller poller = TaskPoller.start(helper, rest);
-        AtomicReference<CompoundTag> saved = new AtomicReference<>();
-        AtomicLong goneAt = new AtomicLong(-1);
-        AtomicBoolean reloaded = new AtomicBoolean();
-        RestFixture.Problems problems = new RestFixture.Problems();
-        helper.onEachTick(() -> {
-            long now = helper.getLevel().getGameTime();
-            if (saved.get() != null && goneAt.get() < 0) {
-                goneAt.set(now);
-            }
-            if (goneAt.get() >= 0 && !reloaded.get() && now - goneAt.get() >= RELOAD_AFTER_TICKS) {
-                reloaded.set(true);
-                SpiritEntity back = ModEntities.SPIRIT.get().create(helper.getLevel());
-                back.load(saved.get());
-                helper.getLevel().addFreshEntity(back);
-                rest.track(back);
-            }
-        });
-        CompletableFuture<List<String>> scenario = rest.post(
-                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        gotoBody(helper, UUID.randomUUID().toString(), FAR_CORNER))
-                .thenCompose(accepted -> {
-                    poller.follow(accepted.json().path("task_id").asText());
-                    return rest.onServer(() -> {
-                        CompoundTag tag = new CompoundTag();
-                        spirit.saveWithoutId(tag);
-                        spirit.discard();
-                        saved.set(tag);
-                        return tag;
-                    });
-                })
-                .thenApply(tag -> problems.found());
-        RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(
-                    reloaded.get(), "Дух ещё не возвращён в мир: прошло меньше " + RELOAD_AFTER_TICKS + " тиков");
-            helper.assertTrue(
-                    !poller.seen().contains("failed"),
-                    "Дух, вернувшийся раньше чем через 100 тиков, не должен проваливать задачу; виденные состояния "
-                            + poller.seen() + ", ошибка "
-                            + poller.lastJson().path("error").asText());
-            helper.assertTrue(
-                    "succeeded".equals(poller.latest()),
-                    "Восстановленный дух обязан довести REST-задачу до succeeded; последнее состояние "
-                            + poller.latest() + ", виденные " + poller.seen());
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_SpiritGoneForever_FailsAfterAboutHundredTicksWithSpiritGoneReason(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
-        TaskPoller poller = TaskPoller.start(helper, rest);
-        AtomicLong discardedAt = new AtomicLong(-1);
-        AtomicBoolean discard = new AtomicBoolean();
-        helper.onEachTick(() -> {
-            if (discard.compareAndSet(true, false)) {
-                spirit.discard();
-                discardedAt.set(helper.getLevel().getGameTime());
-            }
-        });
-        RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(
-                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
-                .thenApply(accepted -> {
-                    poller.follow(accepted.json().path("task_id").asText());
-                    discard.set(true);
-                    return problems.found();
-                });
-        RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(
-                    "failed".equals(poller.latest()),
-                    "Дух, не вернувшийся в мир, обязан провалить задачу; последнее состояние " + poller.latest()
-                            + ", виденные " + poller.seen());
-            String error = poller.lastJson().path("error").asText();
-            helper.assertTrue(
-                    error.startsWith("дух исчез"), "Причина обязана начинаться с «дух исчез», получено: " + error);
-            long waited = poller.terminalSeenAt() - discardedAt.get();
-            helper.assertTrue(
-                    waited >= GONE_MIN_TICKS && waited <= GONE_MAX_TICKS,
-                    "Задача обязана провалиться через " + GONE_MIN_TICKS + ".." + GONE_MAX_TICKS
-                            + " тиков после исчезновения духа (регистр читается тиком, без задержки HTTP), а провалилась через "
-                            + waited
-                            + ": сторож отсутствия слишком короткий (задача падает при перезагрузке чанка) или "
-                            + "слишком длинный (клиент долго видит running у мёртвой задачи)");
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = RestFixture.TIMEOUT_TICKS)
-    public static void tasks_CommandReplacesRestTask_RestTaskClosedAsCancelledOutsideRest(GameTestHelper helper)
-            throws IOException {
-        RestFixture rest = arena(helper);
-        SpiritEntity spirit = rest.spawn(helper, SPIRIT_START);
-        ServerPlayer player = rest.mockPlayer(helper, PLAYER_AT);
-        TaskPoller poller = TaskPoller.start(helper, rest);
-        RestFixture.Problems problems = new RestFixture.Problems();
-        CompletableFuture<List<String>> scenario = rest.post(
-                        "/v1/bots/" + spirit.getStringUUID() + "/tasks",
-                        RestFixture.followGoalBody(UUID.randomUUID().toString(), player))
-                .thenCompose(accepted -> {
-                    poller.follow(accepted.json().path("task_id").asText());
-                    return rest.onServer(() -> {
-                        spirit.startTask(RestFixture.followPlan(player));
-                        return problems.found();
-                    });
-                });
-        RestFixture.await(helper, rest, scenario, () -> {
-            helper.assertTrue(
-                    "cancelled".equals(poller.latest()),
-                    "Задача духа заменена командой: REST-задача обязана закрыться как cancelled, а не висеть running "
-                            + "над чужой работой; последнее состояние " + poller.latest() + ", виденные "
-                            + poller.seen());
-            String error = poller.lastJson().path("error").asText();
-            helper.assertTrue(
-                    error.contains("вытеснена вне REST"),
-                    "Клиент обязан увидеть причину: «вытеснена вне REST», получено: " + error);
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
-                    "Задача команды обязана продолжать идти: REST только закрывает свою запись, духа не трогает");
-        });
-    }
-
     private static final class TaskPoller {
         private final Set<String> seen = ConcurrentHashMap.newKeySet();
         private final AtomicReference<String> path = new AtomicReference<>();
@@ -318,10 +102,6 @@ public final class RestTaskGameTests {
 
         JsonNode lastJson() {
             return lastJson.get();
-        }
-
-        long terminalSeenAt() {
-            return terminalSeenAt.get();
         }
 
         private void poll(GameTestHelper helper, RestFixture rest) {

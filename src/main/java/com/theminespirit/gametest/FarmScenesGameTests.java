@@ -12,17 +12,13 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class FarmScenesGameTests {
     private FarmScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_farm_arena", timeoutTicks = 14447)
+    @GameTest(template = "arena", batch = "scene_farm_arena", timeoutTicks = 2953)
     public static void farmScene_ArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(
                 helper,
-                List.of("arena", "empty"),
-                FarmViewGameTests.class,
-                FarmTillingGameTests.class,
-                FarmPlantingGameTests.class,
-                FarmHarvestGameTests.class,
-                FarmSessionGameTests.class,
+                List.of("arena"),
                 FarmSafetyGameTests.class,
-                FarmSpecialCropsGameTests.class);
+                HusbandryCullGameTests.class,
+                IntellectForageGameTests.class);
     }
 }

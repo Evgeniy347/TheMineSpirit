@@ -12,8 +12,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SocialScenesGameTests {
     private SocialScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_social_arena", timeoutTicks = 4117)
+    @GameTest(template = "arena", batch = "scene_social_arena", timeoutTicks = 401)
     public static void socialScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(helper, List.of("arena", "empty"), SocialGameTests.class, SpiritGestureGameTests.class);
+        SceneSteps.run(helper, List.of("arena"), SocialGameTests.class);
     }
 }

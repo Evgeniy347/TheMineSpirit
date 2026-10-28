@@ -148,7 +148,7 @@ final class DeadCodeExemptions {
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(
                     "src/main/java/com/theminespirit/core/mining/GatherPolicy.java|method|GatherPolicy#forbiddenExactIds",
-                    "gatherPolicy_ExactIds_ExistInRegistries",
+                    "check_ForbiddenTable_MatchesProduction",
                     "список точных запретов gather обязан существовать в реестре блоков: опечатка ослепляет политику"),
             new Probe(
                     "src/main/java/com/theminespirit/core/policy/BlockProtection.java|method|BlockProtection#denyPatterns",
@@ -156,44 +156,12 @@ final class DeadCodeExemptions {
                     "deny не дублирует точные запреты GatherPolicy: списки не должны разъезжаться"),
             new Probe(
                     "src/main/java/com/theminespirit/core/rest/ServerThreadCall.java|method|ServerThreadCall#submittedCount",
-                    "concurrency_TwentyParallelBotsRequests_AllOkWithOneServerHopEach",
+                    "submittedCount_EachSubmit_CountsOneHop",
                     "счётчик переходов на серверный поток: один переход на запрос, отказы и чтения — без перехода"),
             new Probe(
                     "src/main/java/com/theminespirit/core/farming/FarmPlanner.java|field|FarmPlanner#MAX_SAFETY_READS_PER_TARGET",
                     "maxSafetyReadsPerTarget_SearchBoxVolume_Is324",
-                    "бюджет чтений безопасности на цель: масштаб планирования фермы"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#treeBlockReads",
-                    "chopTree_SixtyLogTree_ParsesWithinTwentySevenReadsPerLog",
-                    "счётчик чтений разбора дерева: бюджет на бревно и кеш LevelTreeView"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchExaminedPositions",
-                    "chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick",
-                    "счётчик прочитанных позиций поиска: только секции с брёвнами"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/ChopTreeScript.java|method|ChopTreeScript#searchMaxExaminedPositionsPerTick",
-                    "chopTree_Search_ReadsOnlySectionsWithLogsAndBoundedPerTick",
-                    "максимум прочитанных позиций за тик: не больше срезов ScanTuning"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#maxObserveReadsPerTick",
-                    "observe_Radius32_ReadsWithinPerTickBudget",
-                    "пик чтений observe за тик: одно наблюдение не должно ронять тик"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeActiveCount",
-                    "observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick",
-                    "число активных наблюдений: середина скана для остановки и удаления духа"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#observeTickCalls",
-                    "observe_MidScanServerStop_ReturnsStoppingErrorAndUnsubscribesTick",
-                    "счётчик тиков ObserveJobs: после stop() подписка снята, тик не дёргает мёртвый мост"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#peakObserveJobs",
-                    "observe_FiveAtOnce_FifthRateLimitedAndNeverMoreThanFourConcurrent",
-                    "пик одновременных наблюдений: параллельные запросы не превышают лимит"),
-            new Probe(
-                    "src/main/java/com/theminespirit/neoforge/rest/SpiritBotGateway.java|method|SpiritBotGateway#taskWatcher",
-                    "watcher_ThirtyBotsWithActiveTasks_PollsExactlyThirtyPerTickAndNothingWhenEmpty",
-                    "наблюдатель задач для теста масштаба: ровно один опрос на активную задачу за тик"));
+                    "бюджет чтений безопасности на цель: масштаб планирования фермы"));
 
     private DeadCodeExemptions() {}
 

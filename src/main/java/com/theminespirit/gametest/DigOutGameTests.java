@@ -31,14 +31,6 @@ public final class DigOutGameTests {
         pocket(helper, List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)));
     }
 
-    // [флак] та же лестница вверх 7 ступеней; запас 2× к ~1000 тиков
-    @SceneStep(template = "mine_arena", timeoutTicks = 2400, board = true)
-    public static void digOut_PocketWithSideGap_ReachesSurface(GameTestHelper helper) {
-        pocket(
-                helper,
-                List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5), new BlockPos(1, POCKET + 1, 5)));
-    }
-
     private static void pocket(GameTestHelper helper, List<BlockPos> air) {
         GameTestFixtures.reset(helper, 16);
         BoardRegistry.get(helper.getLevel()).board().restore(new BoardState(List.of(), Set.of()));

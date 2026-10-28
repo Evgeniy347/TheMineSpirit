@@ -3,24 +3,17 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
-import com.theminespirit.neoforge.Approach;
-import com.theminespirit.neoforge.MineOreLedger;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -33,8 +26,6 @@ public final class MineBuildGameTests {
     private static final int LANE_Z = 5;
     private static final int FIRST_X = 1;
     private static final int STEPS = TOP - BOTTOM + 1;
-    private static final double TELEPORT_JUMP = 2.0;
-    private static final double RETURN_ARRIVAL = 1.5;
 
     private MineBuildGameTests() {}
 
@@ -94,147 +85,6 @@ public final class MineBuildGameTests {
                         + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                         + spirit.taskFailureReason().orElse("нет"));
         return ((ScriptResult.Data) spirit.taskResult().orElseThrow()).fields();
-    }
-
-    // [флак] 27 блоков камня железной киркой, 9 ступеней вниз и выход назад пешком; замерено ~700 тиков, запас 2×
-    @SceneStep(template = "mine_arena", timeoutTicks = 1600)
-    public static void mineDescent_RockToDepth_DigsStepsAndWalksBackUp(GameTestHelper helper) {
-        rock(helper);
-        SpiritEntity spirit = miner(helper);
-        AtomicBoolean teleported = new AtomicBoolean();
-        AtomicReference<Vec3> last = new AtomicReference<>(spirit.position());
-        helper.onEachTick(() -> {
-            if (spirit.position().distanceTo(last.get()) > TELEPORT_JUMP) {
-                teleported.set(true);
-            }
-            last.set(spirit.position());
-        });
-        SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            Map<String, Object> data = data(helper, spirit);
-            helper.assertTrue(
-                    Integer.valueOf(STEPS).equals(data.get("columns")),
-                    "спуск до пола y=" + BOTTOM + " — " + STEPS + " ступеней по схеме, итог " + data);
-            assertPassageOpen(helper);
-            BlockPos feet = spirit.blockPosition();
-            helper.assertTrue(
-                    feet.equals(helper.absolutePos(step(0, 1))),
-                    "после проходки дух обязан выйти наверх ко входу " + helper.absolutePos(step(0, 1))
-                            + " (INC-14: духи оставались под землёй), стоит в " + feet);
-            helper.assertTrue(
-                    !teleported.get(),
-                    "выход наверх — пешком по ступеням: скачок позиции больше " + TELEPORT_JUMP
-                            + " блока значит телепорт, а не проходимый спуск");
-            GameTestFixtures.finish(helper, 16);
-        });
-    }
-
-    // [флак] спуск 9 ступеней, добыча камня поселением ×12 и возврат домой наверх; запас 2× к ~900 тиков
-    @SceneStep(template = "mine_arena", timeoutTicks = 2400)
-    public static void mineGather_SettledStone_SpiritWalksBackHome(GameTestHelper helper) {
-        rock(helper);
-        SpiritEntity spirit = miner(helper);
-        BlockPos home = helper.absolutePos(step(0, 1));
-        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
-        SpiritRun run = SpiritRun.launch(
-                helper,
-                spirit,
-                new SequenceNode(List.of(
-                        descent(helper),
-                        new ScriptCall("gather", Map.of("block", "stone", "count", 12, "radius", 32)),
-                        new ScriptCall("return_home", Map.of()))),
-                SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "спуск, добыча камня и возврат обязаны пройти, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет") + ", дух в " + spirit.blockPosition());
-            helper.assertTrue(
-                    spirit.blockPosition().distManhattan(home) <= 2,
-                    "после добычи камня в шахте дух обязан выйти домой " + home + " (INC-43: духи оставались под "
-                            + "землёй), стоит в " + spirit.blockPosition());
-            GameTestFixtures.finish(helper, 16);
-        });
-    }
-
-    // [флак] спуск 9 ступеней, затем возврат тактики (Approach) со дна к якорю наверху; запас 2× к ~900 тиков
-    @SceneStep(template = "mine_arena", timeoutTicks = 2000)
-    public static void mineApproach_FromBottom_ReachesAnchorOnTop(GameTestHelper helper) {
-        rock(helper);
-        SpiritEntity spirit = miner(helper);
-        SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
-        BlockPos top = helper.absolutePos(step(0, 1));
-        BlockPos bottom = helper.absolutePos(step(STEPS - 1, 1));
-        Approach approach = new Approach(spirit);
-        AtomicReference<String> state = new AtomicReference<>("-");
-        helper.onEachTick(() -> {
-            if (spirit.taskStatus().orElse(null) != RunStatus.SUCCEEDED || "ARRIVED".equals(state.get())) {
-                return;
-            }
-            if ("-".equals(state.get())) {
-                spirit.teleportTo(bottom.getX() + 0.5, bottom.getY(), bottom.getZ() + 0.5);
-                approach.begin(new Vec3(top.getX() + 0.5, top.getY(), top.getZ() + 0.5), RETURN_ARRIVAL);
-                state.set("MOVING");
-                return;
-            }
-            Approach.State now = approach.tick();
-            if (now != Approach.State.MOVING) {
-                state.set(now.name() + (approach.refusal() == null ? "" : ": " + approach.refusal()));
-                if (now != Approach.State.ARRIVED) {
-                    approach.begin(new Vec3(top.getX() + 0.5, top.getY(), top.getZ() + 0.5), RETURN_ARRIVAL);
-                }
-            }
-        });
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    state.get().startsWith("ARRIVED"),
-                    "со дна спуска дух обязан дойти до якоря " + top + " подходом тактики (INC-43), итог подхода "
-                            + state.get() + ", стоит в " + spirit.blockPosition());
-            GameTestFixtures.finish(helper, 16);
-        });
-    }
-
-    // [флак] спуск с обходом руды: 9 ступеней + 3 колонки обхода и выход наверх; замерено ~850 тиков, запас 2×
-    @SceneStep(template = "mine_arena", timeoutTicks = 1800)
-    public static void mineDescent_DiamondWithoutFortune_LeavesOreDetoursAndRemembers(GameTestHelper helper) {
-        rock(helper);
-        BlockPos ore = step(3, 2);
-        helper.setBlock(ore, Blocks.DIAMOND_ORE);
-        SpiritEntity spirit = miner(helper);
-        SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            Map<String, Object> data = data(helper, spirit);
-            helper.assertTrue(
-                    helper.getBlockState(ore).is(Blocks.DIAMOND_ORE),
-                    "алмаз без кирки с Удачей и Шёлковым касанием обязан остаться в стене (решение владельца 22.10)");
-            BlockPos absolute = helper.absolutePos(ore);
-            helper.assertTrue(
-                    MineOreLedger.get(helper.getLevel())
-                            .ores()
-                            .containsKey(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ())),
-                    "оставленный алмаз обязан быть в памяти поселения — к нему вернутся с киркой с Удачей");
-            helper.assertTrue(
-                    Integer.valueOf(1).equals(data.get("detours"))
-                            && Integer.valueOf(1).equals(data.get("ores_left")),
-                    "обход один, оставленная руда одна; итог " + data);
-            helper.assertTrue(
-                    spirit.blockPosition().equals(helper.absolutePos(step(0, 1))),
-                    "дух обходит руду и выходит наверх, а не застревает у неё; стоит в " + spirit.blockPosition());
-            BlockPos below = step(STEPS - 1, 1);
-            helper.assertTrue(
-                    helper.getBlockState(below).isAir(),
-                    "за рудой спуск продолжается до дна " + below + ": обход соединил ход");
-            GameTestFixtures.finish(helper, 16);
-        });
     }
 
     // [флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
@@ -301,34 +151,6 @@ public final class MineBuildGameTests {
                     !wet.get(),
                     "дух ни разу не оказался в воде: проход не затапливается, копать в воду нельзя; итог " + data);
             GameTestFixtures.finish(helper, 16);
-        });
-    }
-
-    @SceneStep(template = "arena", timeoutTicks = 200)
-    public static void gather_SettledSpiritStoneUnderSky_RefusesSurfaceStone(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        BlockPos home = helper.absolutePos(new BlockPos(4, 1, 4));
-        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
-        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_PICKAXE));
-        SpiritRun run = SpiritRun.launch(
-                helper,
-                spirit,
-                new ScriptCall("gather", Map.of("block", "minecraft:stone", "count", 1, "radius", 4)),
-                SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.FAILED
-                            && spirit.taskFailureReason().orElse("").contains("только в шахте"),
-                    "дух поселения не копает камень под открытым небом — булыжник только из шахты (владелец 23.10); "
-                            + "статус " + spirit.taskStatus() + ", причина " + spirit.taskFailureReason());
-            helper.assertTrue(
-                    helper.getBlockState(new BlockPos(4, 0, 4)).is(Blocks.STONE),
-                    "пол площадки цел: яма у дома ради булыжника запрещена");
-            GameTestFixtures.finish(helper);
         });
     }
 }

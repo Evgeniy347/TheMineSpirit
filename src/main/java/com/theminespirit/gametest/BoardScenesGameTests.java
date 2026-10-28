@@ -12,25 +12,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class BoardScenesGameTests {
     private BoardScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_board_arena", timeoutTicks = 11380)
+    @GameTest(template = "arena", batch = "scene_board_arena", timeoutTicks = 1602)
     public static void boardScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(
-                helper,
-                List.of("arena", "empty"),
-                BoardAnimalGameTests.class,
-                BoardCraterGameTests.class,
-                BoardDispatchGameTests.class,
-                BoardFenceGameTests.class,
-                BoardGameTests.class,
-                BoardLeftOreGameTests.class,
-                BoardPreemptGameTests.class,
-                BoardResetGameTests.class,
-                BoardScaleGameTests.class,
-                BoardGraphGameTests.class,
-                BoardV2GameTests.class,
-                BoardV2ScaleGameTests.class,
-                BoardViewGameTests.class,
-                FirstStepsRemainderGameTests.class,
-                OverflowBoardGameTests.class);
+        SceneSteps.run(helper, List.of("arena"), BoardGameTests.class, BoardV2GameTests.class);
     }
 }

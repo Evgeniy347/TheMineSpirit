@@ -55,7 +55,6 @@ final class GameTestFixtures {
     private static final int SWEEP_BELOW = 16;
     private static final int SWEEP_ABOVE = 40;
     private static final int SWEEP_MIN_AGE_TICKS = 5;
-    private static final int MAX_CHUNKS_EAST = 256;
     private static final Map<GameTestInfo, AABB> ACTIVE_SCENES = new ConcurrentHashMap<>();
     private static final Map<GameTestInfo, TimeRestore> TIME_HOLDS = new ConcurrentHashMap<>();
 
@@ -223,16 +222,6 @@ final class GameTestFixtures {
         }
     }
 
-    static ItemEntity dropAt(GameTestHelper helper, Item item, int count, double x, double y, double z) {
-        Vec3 absolute = helper.absoluteVec(new Vec3(x, y, z));
-        ItemEntity drop =
-                new ItemEntity(helper.getLevel(), absolute.x, absolute.y, absolute.z, new ItemStack(item, count));
-        drop.setDeltaMovement(Vec3.ZERO);
-        drop.setNoPickUpDelay();
-        helper.getLevel().addFreshEntity(drop);
-        return drop;
-    }
-
     static List<ItemEntity> dropsInArea(GameTestHelper helper, Item item) {
         return helper.getLevel()
                 .getEntitiesOfClass(
@@ -307,17 +296,6 @@ final class GameTestFixtures {
             return;
         }
         helper.testInfo.addListener(new PlayerCleanup(server, player));
-    }
-
-    static BlockPos firstUnloadedChunkEast(GameTestHelper helper, BlockPos base) {
-        int chunkX = base.getX() >> 4;
-        int chunkZ = base.getZ() >> 4;
-        for (int k = 1; k <= MAX_CHUNKS_EAST; k++) {
-            if (!helper.getLevel().hasChunk(chunkX + k, chunkZ)) {
-                return new BlockPos((chunkX + k) * 16, base.getY(), base.getZ());
-            }
-        }
-        return null;
     }
 
     private static AABB area(GameTestHelper helper) {

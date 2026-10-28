@@ -8,8 +8,6 @@ import static com.theminespirit.gametest.FarmTestSupport.SETTLE_TICKS;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.engine.TaskProgress;
-import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -21,9 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -36,43 +32,15 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 final class FarmTestSupport {
-    static final int GROUND_Y = 1;
     static final int FLOOR_Y = 0;
     static final int SETTLE_TICKS = 5;
     static final int ARENA_SIZE = 11;
     static final int ARENA_HEIGHT = 8;
-    static final int CROP_MIN_LIGHT = 8;
     static final int FALL_SETTLE_TICKS = 30;
     static final BlockPos START = new BlockPos(1, 1, 1);
-    static final BlockPos TILL_SPIRIT = new BlockPos(5, 1, 7);
     static final BlockPos WATER = new BlockPos(1, FLOOR_Y, 4);
 
     private FarmTestSupport() {}
-
-    static void assertPerTickBudgets(GameTestHelper helper, FarmSession run) {
-        helper.assertTrue(
-                run.maxSlicesPerTick() <= 4,
-                "за тик поиск берёт не больше 4 срезов, максимум за тик: " + run.maxSlicesPerTick());
-        helper.assertTrue(
-                run.maxActionsPerTick() <= 1,
-                "за тик скрипт делает не больше одного действия (удар, вспашка, посадка, мука), максимум за тик: "
-                        + run.maxActionsPerTick());
-        helper.assertTrue(
-                run.maxEntityQueriesPerTick() <= 1,
-                "за тик запрос сущностей не больше одного, максимум за тик: " + run.maxEntityQueriesPerTick());
-    }
-
-    static int savedDone(GameTestHelper helper, SpiritEntity spirit) {
-        Optional<String> json = GameTestFixtures.taskSnapshot(spirit);
-        helper.assertTrue(json.isPresent(), "у восстановленного духа обязан быть снимок задачи");
-        TaskProgress progress = TaskSnapshotCodec.decode(json.get()).progress();
-        helper.assertTrue(
-                progress instanceof TaskProgress.ScriptAt,
-                "снимок одиночного скрипта обязан нести состояние скрипта, а там " + progress);
-        Object done = ((TaskProgress.ScriptAt) progress).state().get("done");
-        helper.assertTrue(done instanceof Number, "в состоянии скрипта обязан быть счётчик done, а там " + done);
-        return ((Number) done).intValue();
-    }
 
     static SpiritEntity reload(GameTestHelper helper, SpiritEntity original, CompoundTag tag) {
         original.discard();
@@ -84,19 +52,9 @@ final class FarmTestSupport {
         return reloaded;
     }
 
-    static int brightnessAbove(GameTestHelper helper, BlockPos ground) {
-        return helper.getLevel().getRawBrightness(helper.absolutePos(ground.above()), 0);
-    }
-
     static void arenaFloor(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
-    }
-
-    static void fillGround(GameTestHelper helper, Block block) {
-        for (BlockPos cell : bed()) {
-            helper.setBlock(cell, block);
-        }
     }
 
     static List<BlockPos> bed() {
@@ -148,34 +106,12 @@ final class FarmTestSupport {
         return crop.name().toLowerCase(Locale.ROOT);
     }
 
-    static ScriptCall tillCall(int radius, int count) {
-        return new ScriptCall("till", Map.of("radius", radius, "count", count));
-    }
-
     static SpiritEntity spawnWith(GameTestHelper helper, BlockPos relative, ItemStack... stacks) {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), relative);
         for (int slot = 0; slot < stacks.length; slot++) {
             spirit.getInventory().setItem(slot, stacks[slot]);
         }
         return spirit;
-    }
-
-    static AtomicReference<FarmSession> drive(
-            GameTestHelper helper, SpiritEntity spirit, Function<SpiritEntity, FarmSession> factory) {
-        AtomicReference<FarmSession> session = new AtomicReference<>();
-        helper.onEachTick(() -> {
-            FarmSession current = session.get();
-            if (current == null) {
-                if (spirit.tickCount >= SETTLE_TICKS) {
-                    session.set(factory.apply(spirit));
-                }
-                return;
-            }
-            if (current.outcome() == FarmSession.Outcome.RUNNING) {
-                current.tick();
-            }
-        });
-        return session;
     }
 
     static FarmSession finished(GameTestHelper helper, AtomicReference<FarmSession> session) {
@@ -198,15 +134,5 @@ final class FarmTestSupport {
             }
         }
         return blocks;
-    }
-
-    static int changedBlocks(GameTestHelper helper, Map<BlockPos, Block> before) {
-        int changed = 0;
-        for (Map.Entry<BlockPos, Block> entry : before.entrySet()) {
-            if (!helper.getBlockState(entry.getKey()).is(entry.getValue())) {
-                changed++;
-            }
-        }
-        return changed;
     }
 }

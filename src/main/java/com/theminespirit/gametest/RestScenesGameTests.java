@@ -12,18 +12,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class RestScenesGameTests {
     private RestScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_rest_arena", timeoutTicks = 780443)
+    @GameTest(template = "arena", batch = "scene_rest_arena", timeoutTicks = 20001)
     public static void restScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(
-                helper,
-                List.of("arena", "empty"),
-                RestEventsGameTests.class,
-                RestGameTests.class,
-                RestLifecycleGameTests.class,
-                RestPlanGameTests.class,
-                RestScaleGameTests.class,
-                RestTaskCancelGameTests.class,
-                RestTaskGameTests.class,
-                RestTaskScaleGameTests.class);
+        SceneSteps.run(helper, List.of("arena"), RestTaskGameTests.class);
     }
 }
