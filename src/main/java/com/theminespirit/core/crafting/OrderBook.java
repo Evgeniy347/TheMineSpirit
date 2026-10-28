@@ -114,7 +114,8 @@ public final class OrderBook {
         long finished = orders.stream()
                 .filter(order -> order.status() != Status.WAITING)
                 .count();
-        for (int index = 0; index < orders.size() && finished > KEEP_FINISHED; ) {
+        int index = 0;
+        while (index < orders.size() && finished > KEEP_FINISHED) {
             if (orders.get(index).status() == Status.WAITING) {
                 index++;
             } else {

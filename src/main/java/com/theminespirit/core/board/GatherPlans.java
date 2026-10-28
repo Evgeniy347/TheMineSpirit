@@ -12,6 +12,9 @@ import java.util.Optional;
 
 final class GatherPlans {
     private static final int LOGS_PER_TREE = 4;
+    private static final String COUNT = "count";
+    private static final String RADIUS = "radius";
+    private static final String MINECRAFT = "minecraft:";
 
     private GatherPlans() {}
 
@@ -29,7 +32,7 @@ final class GatherPlans {
             return Optional.empty();
         }
         int trees = Math.min(CatalogLimits.COUNT_MAX, (batch + LOGS_PER_TREE - 1) / LOGS_PER_TREE);
-        ScriptCall acquire = new ScriptCall("acquire", Map.of("item", item, "count", batch, "fresh", true));
+        ScriptCall acquire = new ScriptCall("acquire", Map.of("item", item, COUNT, batch, "fresh", true));
         return Optional.of(sequence(
                 TicketPlans.gotoTarget(target),
                 new FallbackNode(List.of(
@@ -38,9 +41,9 @@ final class GatherPlans {
                                 Map.of(
                                         "species",
                                         tree.get().id(),
-                                        "count",
+                                        COUNT,
                                         trees,
-                                        "radius",
+                                        RADIUS,
                                         BoardTuning.chopRadius(),
                                         "replant",
                                         true)),
@@ -62,9 +65,9 @@ final class GatherPlans {
                         Map.of(
                                 "species",
                                 species.id(),
-                                "count",
+                                COUNT,
                                 trees,
-                                "radius",
+                                RADIUS,
                                 BoardTuning.chopRadius(),
                                 "replant",
                                 false)),
@@ -73,9 +76,9 @@ final class GatherPlans {
                         Map.of(
                                 "block",
                                 pathOf(species.leavesId()),
-                                "count",
+                                COUNT,
                                 leaves,
-                                "radius",
+                                RADIUS,
                                 CatalogLimits.HARVEST_RADIUS_MAX))));
     }
 
@@ -88,16 +91,10 @@ final class GatherPlans {
                 TicketPlans.gotoTarget(target),
                 new ScriptCall(
                         "strip_log",
-                        Map.of(
-                                "species",
-                                stripped.get().id(),
-                                "count",
-                                batch,
-                                "radius",
-                                CatalogLimits.HARVEST_RADIUS_MAX)),
+                        Map.of("species", stripped.get().id(), COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)),
                 new ScriptCall(
                         "collect_drops",
-                        Map.of("radius", CatalogLimits.DROP_RADIUS_MAX, "filter", List.of(pathOf(item))))));
+                        Map.of(RADIUS, CatalogLimits.DROP_RADIUS_MAX, "filter", List.of(pathOf(item))))));
     }
 
     private static Optional<TreeSpecies> saplingSpeciesOf(String item) {
@@ -116,14 +113,14 @@ final class GatherPlans {
     }
 
     private static Optional<TreeSpecies> treeOf(String item) {
-        String full = item.startsWith("minecraft:") ? item : "minecraft:" + item;
+        String full = item.startsWith(MINECRAFT) ? item : MINECRAFT + item;
         return TreeSpecies.ALL.stream()
                 .filter(tree -> tree.logId().equals(full))
                 .findFirst();
     }
 
     private static String pathOf(String item) {
-        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
+        return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
     }
 
     private static TaskNode sequence(TaskNode... steps) {
