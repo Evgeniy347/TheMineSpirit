@@ -167,6 +167,7 @@
   "theminespirit.map.lot.damaged": "Damaged: %s%% intact, %s%% to restore",
   "theminespirit.map.player": "Player",
   "theminespirit.map.no_job": "No task",
+  "theminespirit.map.route": "Route",
   "theminespirit.mine.title": "Mine plan",
   "theminespirit.mine.loading": "Loading mine slice…",
   "theminespirit.mine.empty": "No mine yet",

@@ -13,6 +13,7 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
@@ -29,7 +30,7 @@ import org.jspecify.annotations.Nullable;
 
 final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
-    private static final String PART = ":2";
+    static final String PART = ":2";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
     private static final int TORCHES_PER_CRAFT = 4;
     private static final int TORCH_BATCH = 16;
@@ -83,7 +84,7 @@ final class GraphPost {
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
-            case BUILDING -> StageBuilt.ids().contains(ticket.node()) && building(ticket);
+            case BUILDING -> StageBuilt.ids().contains(ticket.node()) ? building(ticket) : routes().building(ticket);
             case EVENT -> event(ticket);
             case WAY -> way(ticket, task);
         };
@@ -164,6 +165,11 @@ final class GraphPost {
         String item = GraphNames.item(graph, task.makes(), scan.wood());
         if (!graph.items().containsKey(task.makes()) || !known(item)) {
             return false;
+        }
+        Optional<RouteResource> route =
+                graph.way(ticket.node()).map(SupplyGraph.Way::building).flatMap(RouteResource::ofBuilding);
+        if (route.isPresent()) {
+            return routes().gather(ticket, item, route.orElseThrow());
         }
         gather(ticket.id(), ticket.id(), task.priority(), item, ticket.count(), source(ticket.node()));
         return true;
@@ -247,7 +253,7 @@ final class GraphPost {
         return Map.copyOf(items);
     }
 
-    private BoardTicket ticket(
+    BoardTicket ticket(
             String id,
             BoardCase boardCase,
             Optional<UUID> assignee,
@@ -257,14 +263,14 @@ final class GraphPost {
         return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required);
     }
 
-    private void submit(BoardTicket ticket, TicketTarget target) {
+    void submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = service.submit(ticket, target);
         if (outcome == BoardOutcome.DUPLICATE) {
             service.board().reprioritize(ticket.id(), ticket.priority());
         }
     }
 
-    private boolean open(String id) {
+    boolean open(String id) {
         return service.board()
                 .statusOf(id)
                 .filter(status -> switch (status) {
@@ -272,6 +278,10 @@ final class GraphPost {
                     default -> false;
                 })
                 .isPresent();
+    }
+
+    private GraphRoutes routes() {
+        return new GraphRoutes(this, level, service, scan, graph, source, spirits.size());
     }
 
     private static boolean known(String item) {

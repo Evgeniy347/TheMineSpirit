@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.ui.MapMarker;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -43,6 +44,17 @@ public final class TownMarkers {
                         occupation(service, spirit.getUUID()),
                         spirit.getBlockX(),
                         spirit.getBlockZ()));
+            }
+        }
+        for (RouteMarker route : RouteStore.get(level).plan().markers().values()) {
+            if (inside(area, route.point().x(), route.point().z())
+                    && insideY(minY, maxY, route.point().y())) {
+                markers.add(new MapMarker(
+                        MapMarker.Kind.ROUTE,
+                        route.resource().family(),
+                        "",
+                        route.point().x(),
+                        route.point().z()));
             }
         }
         for (ServerPlayer player : level.players()) {

@@ -3981,8 +3981,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "path_plains": {
       "case": "BUILD_STREETS",
@@ -3993,8 +3992,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "path_forest": {
       "case": "BUILD_STREETS",
@@ -4005,8 +4003,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "path_snowy": {
       "case": "BUILD_STREETS",
@@ -4017,8 +4014,7 @@
         "cobblestone": 8
       },
       "optional": true,
-      "estimate": true,
-      "implemented": false
+      "estimate": true
     },
     "route_desert": {
       "case": "BUILD_STREETS",
@@ -4030,7 +4026,6 @@
       },
       "optional": true,
       "estimate": true,
-      "implemented": false,
       "world": "biome:desert"
     },
     "route_snow": {
@@ -4043,7 +4038,6 @@
       },
       "optional": true,
       "estimate": true,
-      "implemented": false,
       "world": "biome:snowy"
     },
     "route_dirt": {
@@ -4056,7 +4050,6 @@
       },
       "optional": true,
       "estimate": true,
-      "implemented": false,
       "world": "biome:plains"
     },
     "route_nether_fortress": {
@@ -4142,6 +4135,16 @@
       "makes": "dirt",
       "yield": 16,
       "weight": 1.0
+    },
+    {
+      "id": "dig_dirt_route",
+      "case": "GATHER_MATERIALS",
+      "makes": "dirt",
+      "yield": 16,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden",
+      "building": "route_dirt"
     },
     {
       "id": "mine_coal",
@@ -4760,6 +4763,16 @@
       "tool": "shovel",
       "tier": "wooden",
       "world": "sand"
+    },
+    {
+      "id": "dig_sand_route",
+      "case": "GATHER_MATERIALS",
+      "makes": "sand",
+      "yield": 8,
+      "weight": 1.0,
+      "tool": "shovel",
+      "tier": "wooden",
+      "building": "route_desert"
     },
     {
       "id": "smelt_glass",
@@ -8513,7 +8526,6 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "wooden",
-      "implemented": false,
       "building": "route_snow"
     },
     {
@@ -8524,7 +8536,6 @@
       "weight": 1.0,
       "tool": "shovel",
       "tier": "wooden",
-      "implemented": false,
       "building": "route_snow"
     },
     {

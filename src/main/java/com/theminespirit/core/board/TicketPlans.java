@@ -148,7 +148,7 @@ public final class TicketPlans {
             case CAPTURE_ANIMAL -> captureAnimal(target);
             case LURE_ANIMAL -> lureAnimal(target);
             case SUPPLY_SITE -> supplySite(target);
-            case GATHER_MATERIALS -> gatherMaterials(target);
+            case GATHER_MATERIALS -> target.leveling() == null ? gatherMaterials(target) : RoutePlans.dig(target);
             case CLEAR_GROUNDS -> withLeftovers(GroundsPlan.plan(target), target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
@@ -205,7 +205,7 @@ public final class TicketPlans {
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);
-            case BUILD_STREETS -> new SequenceNode(List.of(gotoPoint(target.target())));
+            case BUILD_STREETS -> RoutePlans.path(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
             case BREED_ANIMALS -> breedAnimals(target);

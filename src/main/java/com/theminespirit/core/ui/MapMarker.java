@@ -5,7 +5,8 @@ import java.util.Objects;
 public record MapMarker(Kind kind, String name, String occupation, int x, int z) {
     public enum Kind {
         SPIRIT,
-        PLAYER
+        PLAYER,
+        ROUTE
     }
 
     public MapMarker {

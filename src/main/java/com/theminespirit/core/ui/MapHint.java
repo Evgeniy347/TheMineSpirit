@@ -8,6 +8,7 @@ public record MapHint(String title, String key, List<Integer> args) {
     public static final String KEY_DAMAGED = "theminespirit.map.lot.damaged";
     public static final String KEY_PLAYER = "theminespirit.map.player";
     public static final String KEY_NO_JOB = "theminespirit.map.no_job";
+    public static final String KEY_ROUTE = "theminespirit.map.route";
     private static final int PERCENT = 100;
 
     public MapHint {
@@ -31,6 +32,9 @@ public record MapHint(String title, String key, List<Integer> args) {
         Objects.requireNonNull(marker, "Метка подсказки не может быть null");
         if (marker.kind() == MapMarker.Kind.PLAYER) {
             return new MapHint(marker.name(), KEY_PLAYER, List.of());
+        }
+        if (marker.kind() == MapMarker.Kind.ROUTE) {
+            return new MapHint(marker.name(), KEY_ROUTE, List.of());
         }
         String key = marker.occupation().isEmpty() ? KEY_NO_JOB : marker.occupation();
         return new MapHint(marker.name(), key, List.of());
