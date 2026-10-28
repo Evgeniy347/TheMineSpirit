@@ -66,6 +66,7 @@ class BoardCaseTests {
             "REPAIR_FENCE",
             "REPAIR_BUILDING",
             "REPAIR_TOOL",
+            "RESCUE_SPIRIT",
             "FILL_CRATER",
             "FISH",
             "CAPTURE_ANIMAL",

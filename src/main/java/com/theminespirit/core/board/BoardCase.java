@@ -71,6 +71,7 @@ public enum BoardCase {
     REPAIR_BUILDING,
     REPAIR_FENCE,
     REPAIR_TOOL,
+    RESCUE_SPIRIT,
     RESTOCK_FOOD,
     SHEAR_SHEEP,
     SMELT_CHARCOAL,
