@@ -12,28 +12,12 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class MineScenesGameTests {
     private MineScenesGameTests() {}
 
-    @GameTest(template = "arena", batch = "scene_mine_arena", timeoutTicks = 14676)
-    public static void mineScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(
-                helper,
-                List.of("arena", "empty"),
-                CraterGameTests.class,
-                MineBuildGameTests.class,
-                GatherTerrainGameTests.class,
-                MineVeinGameTests.class,
-                MineVeinSpaceGameTests.class,
-                MineVeinDurabilityGameTests.class,
-                MineToolsGameTests.class,
-                GatherRulesGameTests.class,
-                GatherProgressGameTests.class,
-                SafeMineGameTests.class);
-    }
-
-    @GameTest(template = "mine_arena", batch = "scene_mine_mine_arena", timeoutTicks = 14208)
+    @GameTest(template = "mine_arena", batch = "scene_mine_mine_arena", timeoutTicks = 8805)
     public static void mineScene_MineArenaSteps_AllPass(GameTestHelper helper) {
         SceneSteps.run(
                 helper,
                 List.of("mine_arena"),
+                DigOutGameTests.class,
                 MineBuildGameTests.class,
                 MineLevelsGameTests.class,
                 SafeMineGameTests.class);

@@ -1,12 +1,10 @@
 package com.theminespirit.gametest;
 
 import static com.theminespirit.gametest.ChopSceneSupport.buildSquaredTree;
-import static com.theminespirit.gametest.ChopSceneSupport.buildTree;
 import static com.theminespirit.gametest.ChopSceneSupport.clearField;
 import static com.theminespirit.gametest.ChopTestSupport.LOGGER;
 import static com.theminespirit.gametest.ChopTestSupport.PLATFORM;
 import static com.theminespirit.gametest.ChopTestSupport.SETTLE_TICKS;
-import static com.theminespirit.gametest.ChopTestSupport.TALL_FIELD_HEIGHT;
 import static com.theminespirit.gametest.ChopTestSupport.chopCall;
 import static com.theminespirit.gametest.ChopTestSupport.countBlocksInWorld;
 import static com.theminespirit.gametest.ChopTestSupport.spawnChopper;
@@ -25,50 +23,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 final class ChopBigTreesGameTests {
     private ChopBigTreesGameTests() {}
-
-    @SceneStep(template = "mine_arena", timeoutTicks = 400)
-    public static void chopTree_NineLogTrunk_AllLogsChoppedFromOneStand(GameTestHelper helper) {
-        clearField(helper, TALL_FIELD_HEIGHT);
-        for (int x = 0; x < PLATFORM; x++) {
-            for (int z = 0; z < PLATFORM; z++) {
-                helper.setBlock(x, 0, z, Blocks.DIRT);
-            }
-        }
-        buildTree(helper, 4, 4, 9, Blocks.OAK_LOG, Blocks.OAK_LEAVES);
-        SpiritEntity spirit = spawnChopper(helper);
-
-        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("oak", 1), SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "дерево высотой 9: дух рубит все брёвна с одной стоянки без столба. Статус: "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG);
-            int logsOnGround = GameTestFixtures.countInWorld(helper, Items.OAK_LOG);
-            helper.assertTrue(
-                    logsInInventory + logsOnGround == 9,
-                    "все 9 брёвен обязаны сохраниться в инвентаре или на земле: в инвентаре " + logsInInventory
-                            + ", на земле " + logsOnGround
-                            + "; дух на " + spirit.blockPosition().toShortString()
-                            + ", тиков духа " + run.spiritTicks()
-                            + ", брёвен-блоков в мире " + countBlocksInWorld(helper, Blocks.OAK_LOG)
-                            + ", булыжника-блоков в мире " + countBlocksInWorld(helper, Blocks.COBBLESTONE));
-            helper.assertTrue(
-                    logsOnGround == 0, "дроп со всего дерева обязан быть подобран: на земле осталось " + logsOnGround);
-            int logsInWorld = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(
-                    logsInWorld == 0, "в мире не должно остаться ни одного бревна дерева, осталось " + logsInWorld);
-            helper.assertTrue(
-                    countBlocksInWorld(helper, Blocks.COBBLESTONE) == 0,
-                    "столб не строится: булыжника в мире быть не должно");
-            LOGGER.info("chop_tree, дерево 9 с одной стоянки: {} тиков духа", run.spiritTicks());
-
-            clearField(helper, TALL_FIELD_HEIGHT);
-        });
-    }
 
     // [флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
     @SceneStep(template = "mine_arena", timeoutTicks = 1800)

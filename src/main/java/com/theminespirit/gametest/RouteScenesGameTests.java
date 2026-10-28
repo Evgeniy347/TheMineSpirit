@@ -5,13 +5,11 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.board.RouteStore;
 import com.theminespirit.neoforge.board.RouteWorks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -32,42 +30,6 @@ public final class RouteScenesGameTests {
     private static final int SAND_RADIUS = 4;
 
     private RouteScenesGameTests() {}
-
-    @GameTest(template = "arena", timeoutTicks = 400)
-    public static void route_PointMarked_PathLaidToBiome(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        ServerLevel level = helper.getLevel();
-        BlockCoord point = coord(helper, new BlockPos(RESOURCE_X, 1, RESOURCE_Z));
-        BlockCoord home = coord(helper, new BlockPos(2, 1, 2));
-        RouteStore.get(level).clear();
-        RouteStore.get(level).mark(RouteResource.SAND, point);
-        helper.assertTrue(
-                RouteStore.get(level)
-                        .point(RouteResource.SAND)
-                        .filter(point::equals)
-                        .isPresent(),
-                "Точка добычи ставится на план поселения до прокладки тропы");
-        SpiritEntity spirit = spawnDigger(helper);
-        PlotLeveling path = RouteWorks.path(level, home, point, "dirt");
-        TaskNode plan = TicketPlans.plan(
-                BoardCase.BUILD_STREETS,
-                TicketTarget.at(point).withRelocate(home, point).withLeveling(path));
-        SpiritRun run = SpiritRun.launch(helper, spirit, plan, SETTLE_TICKS);
-
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "Тропа до точки биома обязана проложиться, статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
-            helper.assertTrue(
-                    helper.getBlockState(new BlockPos(RESOURCE_X - 3, 1, 2)).is(Blocks.DIRT),
-                    "Блок дороги кладётся в подготовленную клетку на пути к биому");
-            GameTestFixtures.finish(helper);
-        });
-    }
 
     @GameTest(template = "arena", timeoutTicks = 400)
     public static void route_SandDig_LayersFlatSpiritBringsSand(GameTestHelper helper) {

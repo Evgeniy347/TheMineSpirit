@@ -45,22 +45,8 @@ final class MovementScene {
                 new ScriptCall(script, params), SpiritScripts.catalog(), SpiritScripts.conditionCatalog());
     }
 
-    static TaskNode pointCall(GameTestHelper helper, String script, BlockPos relative) {
-        return call(script, pointParams(helper, relative));
-    }
-
-    static Map<String, Object> pointParams(GameTestHelper helper, BlockPos relative) {
-        BlockCoord at = coord(helper, relative);
-        return Map.of("x", at.x(), "y", at.y(), "z", at.z());
-    }
-
     static double distanceTo(GameTestHelper helper, SpiritEntity spirit, BlockPos relative) {
         return spirit.position().distanceTo(Vec3.atBottomCenterOf(helper.absolutePos(relative)));
-    }
-
-    static double eyeDistanceTo(GameTestHelper helper, SpiritEntity spirit, BlockPos relative) {
-        Vec3 eye = spirit.position().add(0, EYE_HEIGHT, 0);
-        return eye.distanceTo(Vec3.atCenterOf(helper.absolutePos(relative)));
     }
 
     static String facts(GameTestHelper helper, SpiritEntity spirit, long sceneDayTime) {
@@ -90,10 +76,6 @@ final class MovementScene {
 
     static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
         return GameTestFixtures.mockPlayer(helper, relative, "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());
-    }
-
-    static void removePlayer(GameTestHelper helper, ServerPlayer player) {
-        helper.getLevel().getServer().getPlayerList().remove(player);
     }
 
     static void finish(GameTestHelper helper) {

@@ -23,7 +23,6 @@ final class CraftTestSupport {
     static final int TIMEOUT = 200;
     private static final int SETTLE_TICKS = 1;
     private static final int SERVER_TICKS_PER_ITEM = 200;
-    private static final int CAMPFIRE_TICKS_PER_ITEM = 600;
 
     private CraftTestSupport() {}
 
@@ -99,13 +98,6 @@ final class CraftTestSupport {
         return report.length() == 0 ? "нет" : report.toString();
     }
 
-    static void assertReason(GameTestHelper helper, SpiritEntity spirit, String fragment) {
-        String reason = spirit.taskFailureReason().orElse("");
-        helper.assertTrue(
-                reason.contains(fragment),
-                "причина провала обязана содержать '" + fragment + "', фактическая: '" + reason + "'");
-    }
-
     static void assertCount(GameTestHelper helper, SpiritEntity spirit, Item item, int expected, String what) {
         int actual = GameTestFixtures.countInInventory(spirit.getInventory(), item);
         helper.assertTrue(actual == expected, what + ": ожидалось " + expected + ", в инвентаре " + actual);
@@ -121,23 +113,6 @@ final class CraftTestSupport {
                         for (int i = 0; i < SERVER_TICKS_PER_ITEM; i++) {
                             AbstractFurnaceBlockEntity.serverTick(
                                     helper.getLevel(), cell, helper.getLevel().getBlockState(cell), furnace);
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    static void speedUpCampfires(GameTestHelper helper) {
-        helper.onEachTick(() -> {
-            for (int x = 0; x < GameTestFixtures.FLOOR_SIZE; x++) {
-                for (int z = 0; z < GameTestFixtures.FLOOR_SIZE; z++) {
-                    BlockPos cell = helper.absolutePos(new BlockPos(x, 1, z));
-                    BlockEntity entity = helper.getLevel().getBlockEntity(cell);
-                    if (entity instanceof CampfireBlockEntity campfire) {
-                        for (int i = 0; i < CAMPFIRE_TICKS_PER_ITEM; i++) {
-                            CampfireBlockEntity.cookTick(
-                                    helper.getLevel(), cell, helper.getLevel().getBlockState(cell), campfire);
                         }
                     }
                 }

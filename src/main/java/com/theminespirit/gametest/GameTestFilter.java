@@ -1,7 +1,6 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.neoforge.SpiritConfig;
-import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
@@ -137,12 +136,6 @@ public final class GameTestFilter {
 
     public static void setMobsTargetSpirits(boolean value) {
         setSpiritValue("spirit.mobsTargetSpirits", value);
-    }
-
-    public static void setProtectedZones(List<String> lines) {
-        ModConfigSpec.ConfigValue<List<String>> value =
-                PolicyConfig.spec().getValues().get(List.of("policy", "protectedZones"));
-        value.set(List.copyOf(lines));
     }
 
     private static void setSpiritValue(String path, boolean value) {

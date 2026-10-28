@@ -30,10 +30,6 @@ public final class ObserveJobs {
     private final Consumer<ServerTickEvent.Post> tickListener = event -> tick();
     private final List<Job> active = new ArrayList<>();
     private final AtomicBoolean closed = new AtomicBoolean();
-    private final AtomicInteger tickCalls = new AtomicInteger();
-    private volatile int activeCount;
-    private volatile int peakActive;
-    private volatile int maxReadsPerTick;
 
     public ObserveJobs(IEventBus bus) {
         this.bus = bus;
@@ -54,25 +50,7 @@ public final class ObserveJobs {
                     Map.of("active", active.size(), "max", RestTuning.MAX_OBSERVES));
         }
         active.add(new Job(spirit, botId, request));
-        activeCount = active.size();
-        peakActive = Math.max(peakActive, activeCount);
         return active.get(active.size() - 1).future;
-    }
-
-    public int activeCount() {
-        return activeCount;
-    }
-
-    public int tickCalls() {
-        return tickCalls.get();
-    }
-
-    public int peakActive() {
-        return peakActive;
-    }
-
-    public int maxReadsPerTick() {
-        return maxReadsPerTick;
     }
 
     public void close() {
@@ -88,11 +66,9 @@ public final class ObserveJobs {
                     Map.of("id", job.botId)));
         }
         active.clear();
-        activeCount = 0;
     }
 
     private void tick() {
-        tickCalls.incrementAndGet();
         for (Job job : List.copyOf(active)) {
             if (job.future.isDone()) {
                 active.remove(job);
@@ -106,15 +82,12 @@ public final class ObserveJobs {
                 active.remove(job);
                 continue;
             }
-            int before = job.session.examinedPositions();
             job.session.step(ScanTuning.SLICES_PER_TICK);
-            maxReadsPerTick = Math.max(maxReadsPerTick, job.session.examinedPositions() - before);
             if (job.session.done()) {
                 job.complete();
                 active.remove(job);
             }
         }
-        activeCount = active.size();
     }
 
     private static final class Job {
