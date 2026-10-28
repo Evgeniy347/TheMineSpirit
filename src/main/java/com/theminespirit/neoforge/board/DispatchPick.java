@@ -34,9 +34,10 @@ final class DispatchPick {
     @Nullable
     SpiritEntity choose(BoardTicket ticket, @Nullable TicketTarget target, CrafterMemory crafters) {
         refresh();
+        String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            return own != null && round.fits(ticket, own) ? entities.get(own.id()) : null;
+            return own != null && round.fits(ticket, own, supply) ? entities.get(own.id()) : null;
         }
         Optional<UUID> crafter = crafters.remembered(ticket.id());
         if (crafter.filter(round::awaited).isPresent()) {
@@ -47,18 +48,21 @@ final class DispatchPick {
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))
                 .thenComparing(DispatchRound.Candidate::id));
-        return round.choose(ticket, preference)
+        return round.choose(ticket, preference, supply)
                 .map(spirit -> entities.get(spirit.id()))
                 .orElse(null);
     }
 
-    String why(BoardTicket ticket) {
+    String why(BoardTicket ticket, @Nullable TicketTarget target) {
+        String supply = target == null ? null : target.supplyItem();
         List<DispatchRound.Candidate> all = new ArrayList<>(candidates.values());
-        boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket.boardCase(), spirit.items()));
-        if (!all.isEmpty() && !tooled && ToolGate.required(ticket.boardCase()).isPresent()) {
-            return "нет духа с киркой: ждёт кирку (граф ставит её крафт духу без кирки)";
+        boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket.boardCase(), spirit.items(), supply));
+        if (!all.isEmpty()
+                && !tooled
+                && ToolGate.required(ticket.boardCase(), supply).isPresent()) {
+            return "нет духа с инструментом: ждёт инструмент (граф ставит его крафт духу без инструмента)";
         }
-        return round.why(ticket, all);
+        return round.why(ticket, all, supply);
     }
 
     private void refresh() {
@@ -89,7 +93,7 @@ final class DispatchPick {
                 spirit.getUUID(),
                 spirit.displayName(),
                 busyWith,
-                BoardService.itemIds(spirit),
+                SpiritItems.ids(spirit),
                 new EatNeed(
                         spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
                                 Math.ceil(spirit.getMaxHealth())),
