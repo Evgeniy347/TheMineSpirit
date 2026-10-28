@@ -2,7 +2,6 @@ package com.theminespirit.core.mining;
 
 import com.theminespirit.core.building.BlockSight;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.perception.Terrain;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -62,17 +61,9 @@ public final class StandSpots {
     }
 
     private static boolean visible(BlockCoord stand, BlockCoord target, SafetyView view) {
-        return BlockSight.visible(BlockSight.eyes(stand), target, coord -> terrain(view.cellAt(coord)), cell -> false)
+        return BlockSight.visible(
+                        BlockSight.eyes(stand), target, coord -> MineTerrain.of(view.cellAt(coord)), cell -> false)
                 == Visibility.CLEAR;
-    }
-
-    private static Terrain terrain(Cell cell) {
-        return switch (cell) {
-            case SOLID, FALLING, HAZARD, PORTAL -> Terrain.SOLID;
-            case WATER -> Terrain.WATER;
-            case LAVA -> Terrain.LAVA;
-            case PASSABLE, FIRE -> Terrain.AIR;
-        };
     }
 
     private static long distanceSquared(BlockCoord from, BlockCoord to) {

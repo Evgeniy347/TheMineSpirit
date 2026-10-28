@@ -10,10 +10,12 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.mining.MineColumn;
 import com.theminespirit.core.mining.MineDetour;
+import com.theminespirit.core.mining.MineDigOrder;
 import com.theminespirit.core.mining.MineFloor;
 import com.theminespirit.core.mining.MineFluids;
 import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.mining.MinePlan;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +58,7 @@ final class MineBuildScript implements ScriptInstance {
 
     private final SpiritEntity spirit;
     private final Level level;
+    private final SafetyView safety;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private final Approach approach;
@@ -87,6 +90,7 @@ final class MineBuildScript implements ScriptInstance {
     MineBuildScript(SpiritEntity spirit, MineLayout layout, BuildRotation rotation) {
         this.spirit = spirit;
         this.level = spirit.level();
+        this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
@@ -221,16 +225,12 @@ final class MineBuildScript implements ScriptInstance {
                     + " действий: сверху сыплется гравий или песок, проход не держится");
             return;
         }
-        if (!solidReady(column.floor(), "пол")) {
-            return;
-        }
-        for (BlockCoord wall : wallsOf(column)) {
-            if (!solidReady(wall, "стенка")) {
-                return;
-            }
-        }
-        for (BlockCoord cell : column.cells()) {
-            if (!cellReady(column, cell)) {
+        BlockCoord feet = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+        for (BlockCoord cell : MineDigOrder.column(column, wallsOf(column), feet, safety)) {
+            boolean ready = cell.equals(column.floor())
+                    ? solidReady(cell, "пол")
+                    : column.contains(cell) ? cellReady(column, cell) : solidReady(cell, "стенка");
+            if (!ready) {
                 return;
             }
         }

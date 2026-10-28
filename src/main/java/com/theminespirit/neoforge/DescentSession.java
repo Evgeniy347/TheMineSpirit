@@ -8,13 +8,13 @@ import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.DescentPlan;
 import com.theminespirit.core.mining.DescentStep;
 import com.theminespirit.core.mining.DescentStop;
+import com.theminespirit.core.mining.MineDigOrder;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -58,7 +58,6 @@ public final class DescentSession {
     private DescentPlan plan;
     private int stepIndex;
     private int blocksDug;
-    private int cellCursor;
     private boolean approachBegun;
 
     private State state = State.PLAN_CHECK;
@@ -165,7 +164,6 @@ public final class DescentSession {
         torchInterval = DescentData.loadDefault().torchInterval();
         plan = DescentPlan.from(safety, entry, direction, targetY, torchInterval);
         stepIndex = Math.min(number(saved, "step"), plan.steps().size());
-        cellCursor = 0;
         approachBegun = false;
         state = State.PLAN_CHECK;
     }
@@ -192,17 +190,14 @@ public final class DescentSession {
         for (BlockCoord cell : step.passage()) {
             reservations.reserve(cell, spirit.getUUID());
         }
-        cellCursor = 0;
         state = State.DIG_BEGIN;
     }
 
     private void digBegin() {
-        List<BlockCoord> passage = currentStep().passage();
-        while (cellCursor < passage.size()) {
-            BlockCoord cell = passage.get(cellCursor);
+        BlockCoord feet = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+        for (BlockCoord cell : MineDigOrder.from(feet, currentStep().passage(), safety)) {
             BlockPos pos = toPos(cell);
             if (level.getBlockState(pos).isAir()) {
-                cellCursor++;
                 continue;
             }
             BreakSafety safetyResult = MiningSafety.canBreak(cell, safety);
@@ -235,11 +230,9 @@ public final class DescentSession {
             case BREAKING -> {}
             case BROKEN -> {
                 blocksDug++;
-                cellCursor++;
                 state = State.DIG_BEGIN;
             }
             case GONE -> {
-                cellCursor++;
                 state = State.DIG_BEGIN;
             }
         }
