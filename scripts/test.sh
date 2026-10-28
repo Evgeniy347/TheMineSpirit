@@ -9,8 +9,10 @@ GRADLEW="${THEMINESPIRIT_GRADLEW:-./gradlew}"
 LOG_DIR="TestResults/logs"
 mkdir -p "$LOG_DIR"
 
-UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-90}"
-UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-200}"
+UNIT_WARN="${THEMINESPIRIT_UNIT_WARN_SECONDS:-600}"
+UNIT_STOP="${THEMINESPIRIT_UNIT_STOP_SECONDS:-900}"
+UNIT_CPU_WARN="${THEMINESPIRIT_UNIT_CPU_WARN_SECONDS:-90}"
+UNIT_CPU_STOP="${THEMINESPIRIT_UNIT_CPU_STOP_SECONDS:-200}"
 GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-120}"
 GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-200}"
 GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-180}"
@@ -63,8 +65,10 @@ usage() {
 
 Переменные окружения:
   THEMINESPIRIT_GRADLEW              команда запуска gradle (по умолчанию ./gradlew)
-  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit (по умолчанию 90)
-  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit (по умолчанию 200)
+  THEMINESPIRIT_UNIT_WARN_SECONDS    предупреждение unit по часам (по умолчанию 600)
+  THEMINESPIRIT_UNIT_STOP_SECONDS    стоп unit по часам — защита от зависания (по умолчанию 900)
+  THEMINESPIRIT_UNIT_CPU_WARN_SECONDS  предупреждение: время процессора всех тестов (по умолчанию 90)
+  THEMINESPIRIT_UNIT_CPU_STOP_SECONDS  предел: время процессора всех тестов, красный (по умолчанию 200)
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение быстрого gametest (по умолчанию 120)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп быстрого gametest (по умолчанию 200)
   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS  предупреждение --full (180)
@@ -659,7 +663,21 @@ analyze_unit() {
             echo "полный лог: $log"
             return 1
         fi
-        echo "OK unit: $total тестов, $ELAPSED с"
+        local cpu_ms=0
+        if [ -f TestResults/unit/test-cost.csv ]; then
+            cpu_ms=$(awk -F, 'NR > 1 { sum += $4 } END { print sum + 0 }' TestResults/unit/test-cost.csv)
+        fi
+        local cpu=$((cpu_ms / 1000))
+        if [ "$cpu" -gt "$UNIT_CPU_STOP" ]; then
+            echo "FAIL cpu: $total тестов зелёные, но время процессора тестов $cpu с больше предела $UNIT_CPU_STOP с"
+            echo "самые тяжёлые — TestResults/unit/test-cost.csv (cpu_ms); ищи, что замедлило тесты"
+            echo "полный лог: $log"
+            return 1
+        fi
+        if [ "$cpu" -gt "$UNIT_CPU_WARN" ]; then
+            echo "ВНИМАНИЕ: время процессора тестов $cpu с больше $UNIT_CPU_WARN с — повод задуматься" >&2
+        fi
+        echo "OK unit: $total тестов, $ELAPSED с, процессор тестов $cpu с"
         return 0
     fi
 
@@ -725,7 +743,7 @@ echo "Лог: $LOG_FILE" >&2
 start_heartbeat
 
 if [ "$MODE" = "unit" ]; then
-    rm -f TestResults/unit/xml/TEST-*.xml
+    rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
     start_monitor "unit"
 
     UNIT_EXTRA=()
