@@ -2,8 +2,8 @@ package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +33,9 @@ class GraphWorldTagTests {
                         "mud",
                         "mangrove_roots",
                         "deepslate_diamond_ore",
+                        "amethyst_block",
+                        "dripstone_block",
+                        "moss_block",
                         "stone"),
                 Set.of("rabbits", "glow_squid", "armadillo", "sheep:black"));
 
@@ -56,6 +59,9 @@ class GraphWorldTagTests {
                         "biome:jungle",
                         "mangrove_swamp",
                         "ore:diamond_found",
+                        "geode",
+                        "dripstone_caves",
+                        "lush_caves",
                         "rabbits",
                         "glow_squid",
                         "armadillo",
@@ -67,7 +73,7 @@ class GraphWorldTagTests {
     }
 
     @Test
-    void blockTag_FlowerMushroomAndBiomeBearing_ReturnsWayTag() {
+    void blockWorld_FlowerMushroomAndBiomeBearing_ReturnsWayTag() {
         Map<String, String> tags = Map.of(
                 "minecraft:blue_orchid", "flower:blue_orchid",
                 "lilac", "flower:lilac",
@@ -79,12 +85,25 @@ class GraphWorldTagTests {
                 "mangrove_roots", "mangrove_swamp");
 
         tags.forEach((block, tag) -> assertEquals(
-                Optional.of(tag),
-                GraphNames.blockTag(block),
+                Set.of(tag),
+                GraphNames.blockWorld(block),
                 "Блок " + block + " — метка мира " + tag + " для пути графа: иначе путь не активируется"));
         assertEquals(
-                Optional.empty(),
-                GraphNames.blockTag("stone"),
+                Set.of(),
+                GraphNames.blockWorld("stone"),
                 "Обычный камень не метка мира: лишние теги активировали бы пути там, где ресурса нет");
+    }
+
+    @Test
+    void world_GeodeDripstoneLushBlocks_Tags() {
+        assertEquals(
+                List.of(Set.of("geode"), Set.of("geode"), Set.of("dripstone_caves"), Set.of("lush_caves")),
+                List.of(
+                        GraphNames.blockWorld("amethyst_block"),
+                        GraphNames.blockWorld("minecraft:amethyst_cluster"),
+                        GraphNames.blockWorld("pointed_dripstone"),
+                        GraphNames.blockWorld("moss_block")),
+                "Жеода, карстовая пещера и пышная пещера узнаются по своим блокам: без метки мира пути "
+                        + "mine_amethyst, mine_dripstone и forage_moss_block не активируются");
     }
 }

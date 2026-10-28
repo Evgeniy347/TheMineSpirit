@@ -34,8 +34,6 @@ final class GraphSurroundings {
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
-    private static final String LOG = "_log";
-    private static final Set<String> RESOURCES = Set.of("sand", "red_sand", "clay");
 
     private GraphSurroundings() {}
 
@@ -155,6 +153,7 @@ final class GraphSurroundings {
         BlockCoord decay = null;
         Map<String, BlockCoord> nearest = new HashMap<>();
         Map<String, Integer> distances = new HashMap<>();
+        Map<String, Set<String>> tagCache = new HashMap<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx += STEP) {
             for (int dz = -RADIUS; dz <= RADIUS; dz += STEP) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
@@ -165,9 +164,10 @@ final class GraphSurroundings {
                     BlockState state = level.getBlockState(pos);
                     String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
                     blocks.add(id);
-                    if (id.endsWith(LOG) || RESOURCES.contains(id)) {
+                    Set<String> tags = tagCache.computeIfAbsent(id, GraphNames::blockWorld);
+                    if (!tags.isEmpty()) {
                         int distance = dx * dx + dy * dy + dz * dz;
-                        for (String tag : GraphNames.world(Set.of(id), Set.of())) {
+                        for (String tag : tags) {
                             if (distance < distances.getOrDefault(tag, Integer.MAX_VALUE)) {
                                 distances.put(tag, distance);
                                 nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));

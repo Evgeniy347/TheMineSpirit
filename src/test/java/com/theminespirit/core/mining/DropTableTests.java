@@ -62,6 +62,11 @@ class DropTableTests {
                 Optional.of(List.of("diamond_ore", "deepslate_diamond_ore")),
                 table.blocksFor("diamond"),
                 "Поставляемый drops.json обязан описывать алмаз через оба слоя руды");
+        assertEquals(
+                Optional.of(List.of("amethyst_block", "amethyst_cluster")),
+                table.blocksFor("amethyst_shard"),
+                "Поставляемый drops.json обязан описывать осколок аметиста через блок и друзу жеоды: без этого "
+                        + "mine_amethyst не резолвится в добычу");
     }
 
     @Test

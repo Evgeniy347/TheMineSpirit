@@ -111,11 +111,14 @@ public final class RecipeKnowledge implements ResourceKnowledge {
         if (location == null) {
             return Optional.empty();
         }
-        return BuiltInRegistries.BLOCK.getOptional(location).flatMap(RecipeKnowledge::requiredPickaxe);
+        return BuiltInRegistries.BLOCK.getOptional(location).flatMap(RecipeKnowledge::requiredTool);
     }
 
-    private static Optional<String> requiredPickaxe(Block block) {
+    private static Optional<String> requiredTool(Block block) {
         BlockState state = block.defaultBlockState();
+        if (state.is(BlockTags.LEAVES)) {
+            return Optional.of("shears");
+        }
         if (!state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
             return Optional.empty();
         }
