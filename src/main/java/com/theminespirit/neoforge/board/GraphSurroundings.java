@@ -51,7 +51,7 @@ final class GraphSurroundings {
             allEvents.addAll(moreEvents);
             Set<String> allWorld = new HashSet<>(world);
             allWorld.addAll(moreWorld);
-            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drop, decay, nearest);
+            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drops, decay, nearest);
         }
 
         Optional<BlockCoord> resource(String world) {

@@ -35,7 +35,6 @@ class ScriptCatalogTests {
                 new ScriptSpec("goto", "пройти", List.of(), List.of(), List.of())));
 
         Optional<ScriptSpec> found = catalog.find("goto");
-
         assertTrue(
                 found.isPresent(),
                 "Каталог обязан находить скрипт по id: иначе планировщик не сможет вызвать известный скрипт");
@@ -357,9 +356,6 @@ class ScriptCatalogTests {
                                 new long[] {
                                     MiningTuning.DESCENT_TORCH_INTERVAL_MIN, MiningTuning.DESCENT_TORCH_INTERVAL_MAX
                                 })),
-                spec("strip_log", List.of("species"), Map.of("count", new long[] {1, 256}, "radius", new long[] {
-                    1, CatalogLimits.CHOP_RADIUS_MAX
-                })),
                 spec("gather", List.of("block", "count"), Map.of("count", new long[] {1, 256})),
                 spec("collect_drops", List.of(), Map.of("radius", new long[] {1, 16})),
                 spec("harvest_crop", List.of(), Map.of("radius", new long[] {1, 16})),
@@ -532,7 +528,8 @@ class ScriptCatalogTests {
                 spec("swap_tool", List.of("block"), Map.of()),
                 spec("drink_potion", List.of("type"), Map.of()));
 
-        return rows.stream().map(row -> Arguments.of(row));
+        return Stream.concat(rows.stream(), GatherScriptSpecRows.rows().stream())
+                .map(row -> Arguments.of(row));
     }
 
     @ParameterizedTest(name = "{0}")

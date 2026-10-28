@@ -26,8 +26,6 @@ import com.theminespirit.core.script.BuildFenceParams;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CaptureParams;
 import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.script.ChopTargetParams;
-import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ClearCampParams;
 import com.theminespirit.core.script.ClimbParams;
@@ -90,7 +88,6 @@ import com.theminespirit.core.script.ShearParams;
 import com.theminespirit.core.script.SmeltParams;
 import com.theminespirit.core.script.SortChestParams;
 import com.theminespirit.core.script.StepOverParams;
-import com.theminespirit.core.script.StripLogParams;
 import com.theminespirit.core.script.SwapToolParams;
 import com.theminespirit.core.script.SwimParams;
 import com.theminespirit.core.script.TakeParams;
@@ -195,6 +192,7 @@ public final class SpiritScripts {
     }
 
     private static void putSensingMovementAndCombat(Map<String, Function<SpiritEntity, ScriptFactory>> table) {
+        HarvestScripts.register(table);
         table.put("scan", spirit -> params -> new ScanScript(spirit, ScanParams.from(params)));
         table.put("scan_blocks", spirit -> params -> new ScanScript(spirit, PerceptionParams.blocks(params)));
         table.put("scan_entities", spirit -> params -> new ScanScript(spirit, PerceptionParams.entities(params)));
@@ -209,9 +207,6 @@ public final class SpiritScripts {
         table.put("forget", spirit -> params -> new MemoryScript(spirit, MemoryParams.forget(params)));
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
-        table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
-        table.put("strip_log", spirit -> params -> new StripLogScript(spirit, StripLogParams.from(params)));
-        table.put("chop_target", spirit -> params -> new ChopTargetScript(spirit, ChopTargetParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
         table.put("escort", spirit -> params -> new EscortScript(spirit, EscortParams.from(params)));
         table.put("return_home", spirit -> params -> new ReturnHomeScript(spirit));

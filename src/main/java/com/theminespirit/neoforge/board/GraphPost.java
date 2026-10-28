@@ -134,7 +134,7 @@ final class GraphPost {
         }
         return switch (boardCase) {
             case GATHER_MATERIALS -> gather(ticket, task);
-            case COLLECT_DROPS -> collectWay(ticket, task);
+            case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
             case CRAFT_TORCHES -> torches(ticket, task);
             case SMELT_CHARCOAL -> charcoal(ticket, task);
             default -> false;
@@ -159,24 +159,6 @@ final class GraphPost {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
             }
         });
-        return true;
-    }
-
-    private boolean collectWay(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        String item = GraphNames.graphItem(task.makes());
-        Optional<BlockCoord> at = around.drop(item);
-        if (at.isEmpty()) {
-            return true;
-        }
-        submit(
-                ticket(
-                        ticket.id(),
-                        BoardCase.COLLECT_DROPS,
-                        Optional.empty(),
-                        ticket.task().priority(),
-                        ticket.id(),
-                        Map.of()),
-                TicketTarget.at(at.orElseThrow()).withDrops(List.of(item)));
         return true;
     }
 
