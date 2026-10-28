@@ -1,6 +1,7 @@
 package com.theminespirit.core.crafting;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -114,11 +115,10 @@ public final class OrderBook {
         long finished = orders.stream()
                 .filter(order -> order.status() != Status.WAITING)
                 .count();
-        for (int index = 0; index < orders.size() && finished > KEEP_FINISHED; ) {
-            if (orders.get(index).status() == Status.WAITING) {
-                index++;
-            } else {
-                orders.remove(index);
+        Iterator<Order> each = orders.iterator();
+        while (each.hasNext() && finished > KEEP_FINISHED) {
+            if (each.next().status() != Status.WAITING) {
+                each.remove();
                 finished--;
             }
         }

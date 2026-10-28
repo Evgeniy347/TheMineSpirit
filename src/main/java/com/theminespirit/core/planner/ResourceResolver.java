@@ -20,6 +20,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class ResourceResolver {
     private static final String COUNT = "count";
+    private static final String RADIUS = "radius";
 
     private ResourceResolver() {}
 
@@ -221,7 +222,7 @@ public final class ResourceResolver {
         private static ScriptCall gather(String block, int count) {
             int radius =
                     block.endsWith("_log") ? CatalogLimits.HARVEST_RADIUS_MAX : CatalogLimits.HARVEST_RADIUS_DEFAULT;
-            return new ScriptCall("gather", Map.of("block", block, COUNT, count, "radius", radius));
+            return new ScriptCall("gather", Map.of("block", block, COUNT, count, RADIUS, radius));
         }
 
         private ScriptCall single(String script, String item, int count) {
@@ -229,14 +230,12 @@ public final class ResourceResolver {
                 case "gather" -> gather(knowledge.gatherBlockFor(item), count);
                 case "craft" ->
                     new ScriptCall(
-                            "craft",
-                            Map.of("item", item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                            "craft", Map.of("item", item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT));
                 case "smelt" ->
                     new ScriptCall(
-                            "smelt",
-                            Map.of("item", item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT));
+                            "smelt", Map.of("item", item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT));
                 case "brush" ->
-                    new ScriptCall("brush", Map.of(COUNT, count, "radius", CatalogLimits.HERD_RADIUS_DEFAULT));
+                    new ScriptCall("brush", Map.of(COUNT, count, RADIUS, CatalogLimits.HERD_RADIUS_DEFAULT));
                 default ->
                     throw new IllegalArgumentException("Скрипт добычи '" + script + "' неизвестен: "
                             + "батчинг знает только gather, craft и smelt");
