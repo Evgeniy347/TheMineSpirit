@@ -8374,8 +8374,10 @@
       "makes": "oak_leaves",
       "yield": 4,
       "weight": 1.0,
-      "world": "trees",
-      "implemented": false
+      "world": "tree:oak",
+      "needs": {
+        "shears": 1
+      }
     },
     {
       "id": "carve_pumpkin",
@@ -8394,8 +8396,7 @@
       "makes": "moss_block",
       "yield": 4,
       "weight": 1.0,
-      "world": "lush_caves",
-      "implemented": false
+      "world": "lush_caves"
     },
     {
       "id": "silk_coal_ore",
@@ -8482,8 +8483,7 @@
       "weight": 1.0,
       "building": "mine_level_2",
       "tool": "pickaxe",
-      "tier": "stone",
-      "implemented": false
+      "tier": "stone"
     },
     {
       "id": "mine_amethyst",
@@ -8493,8 +8493,7 @@
       "weight": 1.0,
       "world": "geode",
       "tool": "pickaxe",
-      "tier": "wooden",
-      "implemented": false
+      "tier": "wooden"
     },
     {
       "id": "mine_dripstone",
@@ -8504,8 +8503,7 @@
       "weight": 1.0,
       "world": "dripstone_caves",
       "tool": "pickaxe",
-      "tier": "wooden",
-      "implemented": false
+      "tier": "wooden"
     },
     {
       "id": "mine_tuff",
@@ -8515,8 +8513,7 @@
       "weight": 1.0,
       "building": "mine_level_3",
       "tool": "pickaxe",
-      "tier": "wooden",
-      "implemented": false
+      "tier": "wooden"
     },
     {
       "id": "silk_ice",

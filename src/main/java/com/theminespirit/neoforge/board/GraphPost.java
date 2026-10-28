@@ -176,15 +176,7 @@ final class GraphPost {
     }
 
     private BlockCoord source(String wayId) {
-        Optional<SupplyGraph.Way> way = graph.way(wayId);
-        Optional<BlockCoord> resource = way.map(SupplyGraph.Way::world).flatMap(around::resource);
-        if (resource.isPresent()) {
-            return GraphTargets.stand(level, resource.orElseThrow());
-        }
-        if (way.map(SupplyGraph.Way::building).filter("mine"::equals).isPresent()) {
-            return GraphTargets.stand(level, scan.stage().mineEntrance());
-        }
-        return craftPoint();
+        return GraphTargets.source(level, graph.way(wayId), around, scan, this::craftPoint);
     }
 
     private BlockCoord craftPoint() {

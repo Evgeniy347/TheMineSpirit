@@ -1,8 +1,11 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
+import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Optional;
+import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -18,6 +21,37 @@ final class GraphTargets {
 
     static BlockCoord stand(ServerLevel level, BlockCoord point) {
         return WorkStand.near(point, ground(level)).orElse(point);
+    }
+
+    static BlockCoord source(
+            ServerLevel level,
+            Optional<SupplyGraph.Way> way,
+            GraphSurroundings.Around around,
+            FirstStepsRunner.StageScan scan,
+            Supplier<BlockCoord> fallback) {
+        Optional<BlockCoord> resource = way.map(SupplyGraph.Way::world).flatMap(around::resource);
+        if (resource.isPresent()) {
+            return stand(level, resource.orElseThrow());
+        }
+        String building = way.map(SupplyGraph.Way::building).orElse(null);
+        if (building == null) {
+            return fallback.get();
+        }
+        if ("mine".equals(building)) {
+            return stand(level, scan.stage().mineEntrance());
+        }
+        if (building.startsWith("mine_level_")) {
+            return mineBottom(level, scan).orElseGet(fallback);
+        }
+        return fallback.get();
+    }
+
+    private static Optional<BlockCoord> mineBottom(ServerLevel level, FirstStepsRunner.StageScan scan) {
+        try {
+            return MineDescentBottom.standOf(scan.stage().mineEntrance()).map(bottom -> stand(level, bottom));
+        } catch (IllegalStateException | IllegalArgumentException unbuildable) {
+            return Optional.empty();
+        }
     }
 
     static BlockCoord craft(ServerLevel level, BlockCoord center) {

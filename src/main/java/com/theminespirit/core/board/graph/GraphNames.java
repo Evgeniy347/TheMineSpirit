@@ -13,16 +13,10 @@ public final class GraphNames {
     private static final String NAMESPACE = "minecraft:";
     private static final Map<String, String> SUFFIXES = Map.of("_bed", "bed");
     private static final String DIAMOND_FOUND = "ore:diamond_found";
-    private static final Map<String, String> GROUND = Map.of(
-            "sand", "sand",
-            "red_sand", "red_sand",
-            "clay", "clay",
-            "cactus", "cactus",
-            "poppy", "flower:poppy",
-            "dandelion", "flower:dandelion",
-            "cornflower", "flower:cornflower",
-            "diamond_ore", DIAMOND_FOUND,
-            "deepslate_diamond_ore", DIAMOND_FOUND);
+    private static final String GEODE = "geode";
+    private static final String DRIPSTONE_CAVES = "dripstone_caves";
+    private static final String LUSH_CAVES = "lush_caves";
+    private static final Map<String, Set<String>> GROUND = worldTags();
     private static final String TREE = "tree:";
     private static final String LOG = "_log";
 
@@ -78,19 +72,64 @@ public final class GraphNames {
         return Map.copyOf(counts);
     }
 
+    public static Set<String> blockWorld(String block) {
+        Objects.requireNonNull(block, "Блок округи не может быть null: по нему ищется метка мира");
+        String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
+        if (name.endsWith(LOG)) {
+            return WoodSpecies.speciesOf(name)
+                    .map(species -> Set.of(TREE + species))
+                    .orElse(Set.of());
+        }
+        return GROUND.getOrDefault(name, Set.of());
+    }
+
     public static Set<String> world(Set<String> blocks, Set<String> creatures) {
         Objects.requireNonNull(blocks, "Блоки округи не могут быть null: в округе ничего нет — пустой набор");
         Objects.requireNonNull(creatures, "Живность округи не может быть null: никого нет — пустой набор");
         Set<String> world = new HashSet<>(creatures);
-        for (String block : blocks) {
-            String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
-            if (name.endsWith(LOG)) {
-                WoodSpecies.speciesOf(name).ifPresent(species -> world.add(TREE + species));
-            }
-            if (GROUND.containsKey(name)) {
-                world.add(GROUND.get(name));
-            }
-        }
+        blocks.forEach(block -> world.addAll(blockWorld(block)));
         return Set.copyOf(world);
+    }
+
+    private static Map<String, Set<String>> worldTags() {
+        Map<String, Set<String>> tags = new HashMap<>();
+        tag(tags, "sand", "sand");
+        tag(tags, "red_sand", "red_sand");
+        tag(tags, "clay", "clay");
+        tag(tags, "cactus", "cactus");
+        tag(tags, "poppy", "flower:poppy");
+        tag(tags, "dandelion", "flower:dandelion");
+        tag(tags, "cornflower", "flower:cornflower");
+        tag(tags, "diamond_ore", DIAMOND_FOUND);
+        tag(tags, "deepslate_diamond_ore", DIAMOND_FOUND);
+        for (String block : List.of(
+                "amethyst_block",
+                "budding_amethyst",
+                "amethyst_cluster",
+                "large_amethyst_bud",
+                "medium_amethyst_bud",
+                "small_amethyst_bud")) {
+            tag(tags, block, GEODE);
+        }
+        tag(tags, "pointed_dripstone", DRIPSTONE_CAVES);
+        tag(tags, "dripstone_block", DRIPSTONE_CAVES);
+        for (String block : List.of(
+                "moss_block",
+                "azalea_leaves",
+                "flowering_azalea_leaves",
+                "spore_blossom",
+                "moss_carpet",
+                "cave_vines",
+                "cave_vines_plant",
+                "glow_lichen")) {
+            tag(tags, block, LUSH_CAVES);
+        }
+        tag(tags, "azalea", "azalea", LUSH_CAVES);
+        tag(tags, "flowering_azalea", "azalea", LUSH_CAVES);
+        return Map.copyOf(tags);
+    }
+
+    private static void tag(Map<String, Set<String>> tags, String block, String... world) {
+        tags.put(block, Set.of(world));
     }
 }

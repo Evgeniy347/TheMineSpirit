@@ -42,6 +42,17 @@ public final class RecipeKnowledgeGameTests {
     }
 
     @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
+    public static void oakLeaves_ShearsTool_PlannedBeforeGather(GameTestHelper helper) {
+        RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
+
+        helper.assertTrue(
+                "shears".equals(knowledge.toolForBlock("oak_leaves").orElse(null)),
+                "Листва добывается ножницами: gather обязан сначала взять или скрафтить ножницы, иначе листья "
+                        + "не выпадут; знания вернули " + knowledge.toolForBlock("oak_leaves"));
+        helper.succeed();
+    }
+
+    @SceneStep(template = FIELD, timeoutTicks = TIMEOUT)
     public static void woodenPickaxe_ServerRecipes_NeedsCraftingTableAndThreePlanksTwoSticks(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
 

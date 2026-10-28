@@ -61,6 +61,9 @@ class GraphWiringTests {
                         "clay",
                         "poppy",
                         "deepslate_diamond_ore",
+                        "amethyst_block",
+                        "dripstone_block",
+                        "moss_block",
                         "stone"),
                 Set.of("animals", "sheep:black"));
 
@@ -72,11 +75,27 @@ class GraphWiringTests {
                         "clay",
                         "flower:poppy",
                         "ore:diamond_found",
+                        "geode",
+                        "dripstone_caves",
+                        "lush_caves",
                         "animals",
                         "sheep:black"),
                 world,
                 "Округа для путей графа: породы по брёвнам (ободранные — не дерево), красный песок отдельно, глина, "
                         + "цветы, найденная алмазная руда, живность; иначе путь «world» не активируется: " + world);
+    }
+
+    @Test
+    void world_GeodeDripstoneLushBlocks_Tags() {
+        assertEquals(
+                List.of(Set.of("geode"), Set.of("geode"), Set.of("dripstone_caves"), Set.of("lush_caves")),
+                List.of(
+                        GraphNames.blockWorld("amethyst_block"),
+                        GraphNames.blockWorld("minecraft:amethyst_cluster"),
+                        GraphNames.blockWorld("pointed_dripstone"),
+                        GraphNames.blockWorld("moss_block")),
+                "Жеода, карстовая пещера и пышная пещера узнаются по своим блокам: без метки мира пути "
+                        + "mine_amethyst, mine_dripstone и forage_moss_block не активируются");
     }
 
     @Test

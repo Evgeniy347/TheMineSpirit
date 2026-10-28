@@ -7,5 +7,6 @@
   "redstone": ["redstone_ore", "deepslate_redstone_ore"],
   "lapis_lazuli": ["lapis_ore", "deepslate_lapis_ore"],
   "emerald": ["emerald_ore", "deepslate_emerald_ore"],
+  "amethyst_shard": ["amethyst_block", "amethyst_cluster"],
   "cobblestone": ["stone"]
 }
