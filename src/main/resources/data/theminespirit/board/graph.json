@@ -312,8 +312,7 @@
       "xmin": 0,
       "k": 1,
       "base": 25,
-      "stage": 3,
-      "implemented": false
+      "stage": 3
     },
     "glass_bottle": {
       "xmin": 3,
@@ -2960,8 +2959,7 @@
       },
       "requires": [
         "portal_hall"
-      ],
-      "implemented": false
+      ]
     },
     "orchard_oak": {
       "case": "BUILD_ORCHARD",
@@ -4920,8 +4918,7 @@
       },
       "tool": "pickaxe",
       "tier": "diamond",
-      "building": "mine",
-      "implemented": false
+      "building": "mine"
     },
     {
       "id": "craft_glass_bottle",

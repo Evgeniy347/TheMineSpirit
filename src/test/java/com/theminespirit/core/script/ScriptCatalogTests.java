@@ -368,6 +368,8 @@ class ScriptCatalogTests {
                 spec("collect_eggs", List.of(), Map.of("radius", new long[] {1, 16})),
                 spec("harvest_hive", List.of(), Map.of("radius", new long[] {1, 16}, "count", new long[] {1, 64})),
                 spec("brush", List.of(), Map.of("radius", new long[] {1, 16}, "count", new long[] {1, 64})),
+                spec("cast_obsidian", List.of(), Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 32})),
+                spec("light_portal", List.of(), Map.of("radius", new long[] {1, 32})),
                 spec("cull", List.of("species"), Map.of("keep", new long[] {2, 64}, "radius", new long[] {1, 16})),
                 spec("herd_check", List.of(), Map.of("radius", new long[] {1, 16})),
                 spec("hunt", List.of("species"), Map.of("radius", new long[] {1, 48}, "count", new long[] {1, 64})),
@@ -569,9 +571,7 @@ class ScriptCatalogTests {
     void defaultCatalog_ScriptTable_CoversExactlyAllIds() {
         ScriptCatalog catalog = CoreScripts.defaultCatalog();
         List<String> tableIds = scriptSpecRows()
-                .map(arguments -> arguments.get()[0])
-                .map(ScriptExpectation.class::cast)
-                .map(ScriptExpectation::id)
+                .map(arguments -> ((ScriptExpectation) arguments.get()[0]).id())
                 .toList();
 
         assertEquals(

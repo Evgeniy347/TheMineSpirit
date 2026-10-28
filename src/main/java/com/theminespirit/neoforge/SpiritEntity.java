@@ -756,7 +756,7 @@ public final class SpiritEntity extends PathfinderMob {
     private void restoreSnapshot(TaskSnapshot snapshot) {
         try {
             TaskSnapshot validated = SnapshotRestorer.withValidatedPlan(
-                    snapshot, SpiritScripts.catalogFor(this), SpiritScripts.conditionCatalog());
+                    snapshot, SpiritScripts.catalog(), SpiritScripts.conditionCatalog());
             brain().restore(validated);
         } catch (RuntimeException e) {
             String reason = "не удалось восстановить задачу: " + e.getMessage();

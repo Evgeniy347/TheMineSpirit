@@ -92,6 +92,9 @@ final class GraphSurroundings {
             events.add(DROPS);
         }
         scan.decay().ifPresent(at -> events.add(LEAF_DECAY));
+        if (scan.nearest().containsKey("lava")) {
+            events.add("lava_seen");
+        }
         return new Around(
                 GraphNames.world(scan.blocks(), creatures),
                 Set.copyOf(events),

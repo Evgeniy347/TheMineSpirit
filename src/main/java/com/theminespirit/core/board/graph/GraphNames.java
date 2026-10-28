@@ -106,6 +106,7 @@ public final class GraphNames {
         tag(tags, "sand", "sand");
         tag(tags, "red_sand", "red_sand");
         tag(tags, "clay", "clay");
+        tag(tags, "lava", "lava");
         tag(tags, "cactus", "cactus");
         tag(tags, "poppy", "flower:poppy");
         tag(tags, "dandelion", "flower:dandelion");

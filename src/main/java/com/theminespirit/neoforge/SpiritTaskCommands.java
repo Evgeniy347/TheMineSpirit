@@ -73,7 +73,7 @@ final class SpiritTaskCommands {
         List<ScriptCatalog> catalogs = new ArrayList<>(spirits.size());
         List<WorldObservation> observations = new ArrayList<>(spirits.size());
         for (SpiritEntity spirit : spirits) {
-            catalogs.add(SpiritScripts.catalogFor(spirit));
+            catalogs.add(SpiritScripts.catalog());
             observations.add(goalObservation(spirit));
         }
         List<TaskNode> plans;

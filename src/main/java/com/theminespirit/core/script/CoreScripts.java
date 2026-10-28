@@ -45,6 +45,7 @@ public final class CoreScripts {
         specs.addAll(cropCareSpecs());
         specs.addAll(breedingSpecs());
         specs.addAll(AnimalProduceSpecs.all());
+        specs.addAll(PortalScripts.all());
         specs.addAll(huntingSpecs());
         specs.addAll(fishingSpecs());
         specs.addAll(itemSpecs());
@@ -481,7 +482,7 @@ public final class CoreScripts {
                                         CatalogLimits.HARVEST_RADIUS_MAX,
                                         CatalogLimits.HARVEST_RADIUS_DEFAULT)),
                         List.of("в радиусе есть подходящая жила"),
-                        pickaxeForOre(),
+                        List.of(ScriptRequirement.pickaxe("ore", PickaxeTiers.oreTiers(), 1)),
                         List.of("руда добыта")),
                 spec(
                         "dig_area",
@@ -1431,10 +1432,6 @@ public final class CoreScripts {
             List<ScriptRequirement> requires,
             List<String> effects) {
         return new ScriptSpec(id, summary, params, preconditions, effects, requires);
-    }
-
-    private static List<ScriptRequirement> pickaxeForOre() {
-        return List.of(ScriptRequirement.pickaxe("ore", PickaxeTiers.oreTiers(), 1));
     }
 
     private static List<ScriptRequirement> pickaxeForBlock() {
