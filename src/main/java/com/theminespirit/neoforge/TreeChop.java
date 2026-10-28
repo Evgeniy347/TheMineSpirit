@@ -158,7 +158,7 @@ final class TreeChop {
         }
         while (planIndex < plan.order().size()) {
             BlockCoord log = plan.order().get(planIndex);
-            BlockBreaker.Begin begin = breaker.beginAnyDistance(toPos(log), orchard);
+            BlockBreaker.Begin begin = breaker.beginChop(toPos(log), orchard);
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
                 return ChopOutcome.running();
