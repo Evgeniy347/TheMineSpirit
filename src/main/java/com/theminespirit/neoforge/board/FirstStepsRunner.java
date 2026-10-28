@@ -431,7 +431,7 @@ public final class FirstStepsRunner {
     private static PlotLeveling leveling(ServerLevel level, StageSite site) {
         IntBinaryOperator tops =
                 (x, z) -> GroundProbe.top(level, x, z, site.anchor().y() + 1);
-        PlotLeveling plan = SiteLevels.leveling(site, tops);
+        PlotLeveling plan = SiteLevels.leveling(site, tops, PlotPlanBlocks.of(site)::planned);
         if (!plan.cut().isEmpty()) {
             LOGGER.info(
                     "Расчистка на y={}: лишнего выше уровня {} ящиков, подсыпки нет",
