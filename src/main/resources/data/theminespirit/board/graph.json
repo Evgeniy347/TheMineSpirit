@@ -2610,7 +2610,7 @@
         "oak_log": 40
       },
       "requires": [
-        "chests"
+        "clearing"
       ]
     },
     "hut": {
@@ -2623,7 +2623,7 @@
         "cobblestone": 16
       },
       "requires": [
-        "chests"
+        "clearing"
       ]
     },
     "streets": {
@@ -2963,7 +2963,8 @@
         "oak_sapling": 4,
         "torch": 4,
         "dirt": 8
-      }
+      },
+      "requires": ["hut"]
     },
     "orchard_birch": {
       "case": "BUILD_ORCHARD",

@@ -73,7 +73,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class BoardService {
-    private static final long EARLY_DISPATCH_TICKS = 20;
+    private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
     private static final long DIG_OUT_PAUSE_TICKS = 1200;

@@ -300,9 +300,13 @@ public final class FirstStageGameTests {
             }
             pitDug = true;
             ColumnMask.Cell spot = site.level().cells().stream()
+                    .filter(cell -> site.inside(cell.x(), cell.z()))
                     .filter(cell -> !site.planCell(cell.x(), anchor.y(), cell.z()))
                     .findFirst()
-                    .orElse(site.level().cells().get(0));
+                    .orElseGet(() -> site.level().cells().stream()
+                            .filter(cell -> !site.planCell(cell.x(), anchor.y(), cell.z()))
+                            .findFirst()
+                            .orElse(site.level().cells().get(0)));
             BlockPos top = new BlockPos(spot.x(), anchor.y() - 1, spot.z());
             for (int depth = 0; depth < PIT_DEPTH; depth++) {
                 helper.getLevel().setBlockAndUpdate(top.below(depth), Blocks.AIR.defaultBlockState());

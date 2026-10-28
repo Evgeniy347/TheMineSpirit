@@ -129,6 +129,9 @@ class GraphWiringTests {
     @Test
     void tickets_ChopShortage_CountCoversThresholdGap() {
         GraphWorld world = GraphWorld.settled().with("oak_log", 0);
+        GraphWorld.GRAPH.buildings().values().stream()
+                .filter(building -> !building.optional() && building.stage() <= world.stage)
+                .forEach(building -> world.built(building.id(), Built.BUILT));
 
         GraphTickets.Result result = GraphTickets.of(GraphWorld.GRAPH, world.state(), world.plan());
 
@@ -138,6 +141,22 @@ class GraphWiringTests {
                         .anyMatch(ticket -> "graph:chop_oak_log".equals(ticket.id())
                                 && ticket.count() == Math.min(GraphTickets.COUNT_MAX, threshold)),
                 "Рубка добирает запас до порога Xmin·P·S·K (" + threshold + "), не больше стака: " + result.post());
+    }
+
+    @Test
+    void tickets_BuildingBillBiggerThanThreshold_CountCoversRemainingBill() {
+        GraphWorld world =
+                GraphWorld.settled().with("oak_log", 40).with("oak_planks", 60).with("cobblestone", 64);
+        world.materials.put("hut", Map.of("oak_log", 12, "oak_planks", 120, "cobblestone", 16));
+
+        GraphTickets.Result result = GraphTickets.of(GraphWorld.GRAPH, world.state(), world.plan());
+
+        assertTrue(
+                result.post().stream()
+                        .anyMatch(ticket -> "graph:craft_oak_planks".equals(ticket.id()) && ticket.count() >= 60),
+                "Заготовка закрывает счёт постройки, а не только порог предмета: хижине нужно 120 досок, "
+                        + "на складе 60 — крафт досок обязан идти на остаток 60, иначе стройка ждёт вечно: "
+                        + result.post());
     }
 
     @Test

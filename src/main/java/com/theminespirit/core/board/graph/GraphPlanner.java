@@ -5,6 +5,7 @@ import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -369,7 +370,81 @@ public final class GraphPlanner {
             }
         }
         load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
-        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
+        return new GraphPlan(buildingsFirst(tasks), List.copyOf(notices.values()), advice);
+    }
+
+    private List<GraphPlan.Task> buildingsFirst(List<GraphPlan.Task> tasks) {
+        Set<String> supply = new LinkedHashSet<>();
+        for (GraphPlan.Task task : tasks) {
+            if (!task.id().startsWith(BUILDING) || !declaredReady(task.makes())) {
+                continue;
+            }
+            task.consumes().keySet().forEach(item -> {
+                if (graph.isGroup(item)) {
+                    supply.addAll(graph.members(item));
+                } else {
+                    supply.add(item);
+                }
+            });
+        }
+        int maxOther = tasks.stream()
+                .filter(task -> !task.id().startsWith(BUILDING))
+                .filter(task -> !supply.contains(task.makes()))
+                .mapToInt(GraphPlan.Task::priority)
+                .max()
+                .orElse(0);
+        List<Integer> order = tasks.stream()
+                .filter(task -> task.id().startsWith(BUILDING))
+                .filter(task -> task.priority() > 0)
+                .map(GraphPlan.Task::priority)
+                .distinct()
+                .sorted()
+                .toList();
+        if (order.isEmpty() || maxOther >= graph.maxPriority()) {
+            return tasks;
+        }
+        int start = Math.max(maxOther + 1, order.get(0));
+        int step = order.size() > 1 ? Math.max(1, (graph.maxPriority() - start) / (order.size() - 1)) : 1;
+        Map<Integer, Integer> band = new LinkedHashMap<>();
+        for (int index = 0; index < order.size(); index++) {
+            band.put(order.get(index), Math.min(graph.maxPriority(), start + index * step));
+        }
+        int maxSupply = tasks.stream()
+                .filter(task -> !task.id().startsWith(BUILDING))
+                .filter(task -> supply.contains(task.makes()))
+                .mapToInt(GraphPlan.Task::priority)
+                .max()
+                .orElse(0);
+        int shift = Math.max(0, start - 1 - maxSupply);
+        return tasks.stream()
+                .map(task -> {
+                    boolean building = task.id().startsWith(BUILDING);
+                    int priority;
+                    if (building) {
+                        priority = task.priority() > 0 ? band.getOrDefault(task.priority(), task.priority()) : 0;
+                    } else if (supply.contains(task.makes()) && !task.consumes().isEmpty()) {
+                        priority = start;
+                    } else if (supply.contains(task.makes())) {
+                        priority = Math.min(Math.max(0, start - 1), task.priority() + shift);
+                    } else {
+                        priority = task.priority();
+                    }
+                    if (priority == task.priority()) {
+                        return task;
+                    }
+                    return new GraphPlan.Task(
+                            task.id(),
+                            task.boardCase(),
+                            task.makes(),
+                            task.spirit(),
+                            Math.min(graph.maxPriority(), priority),
+                            task.consumes(),
+                            task.feasible(),
+                            task.chance(),
+                            task.implemented(),
+                            task.ticks());
+                })
+                .toList();
     }
 
     private Optional<String> station(String key) {
@@ -464,7 +539,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     materials,
-                    tooled && share(materials) >= graph.buildStartShare(),
+                    tooled && share(building.materials()) >= graph.buildStartShare(),
                     false,
                     graph.implemented(id),
                     graph.costs().ticks(key, building.boardCase()));
@@ -491,6 +566,11 @@ public final class GraphPlanner {
     private Map<String, Integer> materials(String building) {
         SupplyGraph.Building known = graph.buildings().get(building);
         return state.materials().getOrDefault(building, known == null ? Map.of() : known.materials());
+    }
+
+    private boolean declaredReady(String building) {
+        SupplyGraph.Building known = graph.buildings().get(building);
+        return known != null && share(known.materials()) >= graph.buildStartShare();
     }
 
     private int count(String node) {
