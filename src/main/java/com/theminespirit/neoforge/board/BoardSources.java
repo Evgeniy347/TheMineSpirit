@@ -16,6 +16,7 @@ public final class BoardSources {
     private final WoolWatch wool = new WoolWatch();
     private final FishingWatch fishing = new FishingWatch();
     private final HiveWatch hive = new HiveWatch();
+    private final PetWatch pets = new PetWatch();
     private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
@@ -85,6 +86,7 @@ public final class BoardSources {
             lastHerdScan = now;
             herdScans++;
             guard.run("herd", () -> HerdWatch.tick(level, service, spirits, now));
+            guard.run("pets", () -> pets.tick(level, spirits, now));
         }
         live.addAll(guard.call("transfer", () -> TransferWatch.liveCauses(service), Set.of()));
         guard.run("wool", () -> wool.tick(level, service, spirits, stock, now));

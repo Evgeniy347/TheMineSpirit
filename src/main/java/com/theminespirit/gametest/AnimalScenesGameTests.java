@@ -21,6 +21,7 @@ public final class AnimalScenesGameTests {
                 HusbandryCullGameTests.class,
                 HusbandryGameTests.class,
                 HusbandryProduceGameTests.class,
+                PetGameTests.class,
                 HusbandryScaleGameTests.class);
     }
 }
