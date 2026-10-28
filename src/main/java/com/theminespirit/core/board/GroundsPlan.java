@@ -8,11 +8,13 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class GroundsPlan {
     public static final int CLEAR_GRID = 3;
@@ -80,6 +82,9 @@ public final class GroundsPlan {
         PlotLeveling leveling = target.leveling() == null ? PlotLeveling.FLAT : target.leveling();
         List<PlotLeveling.Box> cuts = leveling.cutTopDown();
         List<Integer> cutPart = balancedParts(cuts, frame, CUT_SLACK);
+        if ((!single || quarter == 1) && !cuts.isEmpty() && target.work() != null) {
+            steps.addAll(chestSteps(target));
+        }
         for (int index = 0; index < cuts.size(); index++) {
             if (!single || cutPart.get(index) == quarter) {
                 steps.add(retried(new ScriptCall(CLEAR_AREA, boxParams(cuts.get(index), Map.of()))));
@@ -102,6 +107,21 @@ public final class GroundsPlan {
             }
         }
         return new SequenceNode(steps);
+    }
+
+    private static List<TaskNode> chestSteps(TicketTarget target) {
+        StageWork work = Objects.requireNonNull(
+                target.work(), "Временный сундук расчистки ставится по месту этапа: работа не может быть null");
+        BlockCoord spot = SiteLevels.chestSpot(work.site());
+        return List.of(
+                retried(new ScriptCall("acquire", Map.of("item", MINECRAFT + "chest", "count", 1))),
+                retried(new ScriptCall(
+                        "place_block",
+                        Map.of(
+                                "block", MINECRAFT + "chest",
+                                "x", spot.x(),
+                                "y", spot.y(),
+                                "z", spot.z()))));
     }
 
     private static List<TaskNode> fillSteps(

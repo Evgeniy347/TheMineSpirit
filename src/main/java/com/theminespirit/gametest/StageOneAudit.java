@@ -60,9 +60,13 @@ final class StageOneAudit {
 
     private static void level(ServerLevel level, StageSite site, List<String> problems) {
         List<String> extra = new ArrayList<>();
-        int y = site.anchor().y();
-        IntBinaryOperator tops = (x, z) -> GroundProbe.top(level, x, z, y + 1);
-        for (PlotLeveling.Box box : SiteLevels.extra(site, tops, cell -> site.ringPost(cell.x(), cell.z()))) {
+        int y = SiteLevels.level(site);
+        IntBinaryOperator tops = (x, z) -> GroundProbe.top(level, x, z, SiteLevels.fenceY(site));
+        BlockCoord chest = SiteLevels.chestSpot(site);
+        for (PlotLeveling.Box box : SiteLevels.extra(
+                site,
+                tops,
+                cell -> site.ringPost(cell.x(), cell.z()) || (cell.x() == chest.x() && cell.z() == chest.z()))) {
             extra.add(box + " лишнее выше y=" + y);
         }
         report("площадки этапа не расчищены выше y=" + y, extra, problems);

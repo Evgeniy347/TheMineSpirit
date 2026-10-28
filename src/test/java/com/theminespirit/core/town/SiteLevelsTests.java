@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.PlotLeveling;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.function.IntBinaryOperator;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class SiteLevelsTests {
     @Test
     void level_AnySite_EqualsAnchorY() {
         assertEquals(
-                LEVEL,
+                LEVEL - 1,
                 SiteLevels.level(SITE),
                 "Уровень поселения один и берётся из якоря участка: иначе площадки, ограда и расчистка живут на "
                         + "разных высотах");
@@ -29,6 +30,7 @@ class SiteLevelsTests {
 
         assertEquals(
                 List.of(
+                        new PlotLeveling.Box(cell.x(), LEVEL, cell.z(), cell.x(), LEVEL, cell.z()),
                         new PlotLeveling.Box(cell.x(), LEVEL + 1, cell.z(), cell.x(), LEVEL + 1, cell.z()),
                         new PlotLeveling.Box(cell.x(), LEVEL + 2, cell.z(), cell.x(), LEVEL + 2, cell.z())),
                 extra,
@@ -38,7 +40,7 @@ class SiteLevelsTests {
     @Test
     void fenceY_AnySite_OneAboveLevel() {
         assertEquals(
-                LEVEL + 1,
+                LEVEL,
                 SiteLevels.fenceY(SITE),
                 "Вся ограда стоит на одном уровне y+1: столб над уровнем, а не по высоте своей земли");
     }
@@ -57,10 +59,10 @@ class SiteLevelsTests {
         ColumnMask.Cell post = SITE.ring().posts().get(0);
 
         assertTrue(
-                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 1)),
+                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL)),
                 "Клетка готова, когда выше y нет блоков: земля на уровне y столбу не мешает");
         assertFalse(
-                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 2)),
+                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 1)),
                 "Блок над уровнем держит столб: его сначала срезает расчистка");
     }
 
@@ -69,17 +71,17 @@ class SiteLevelsTests {
         ColumnMask.Cell post = SITE.ring().posts().get(0);
 
         assertTrue(
-                SiteLevels.needsSupport(SITE, post, tops(post, LEVEL)),
+                SiteLevels.needsSupport(SITE, post, tops(post, LEVEL - 1)),
                 "Под столбом нет опоры на уровне y — подсыпают одну землю только под ним");
         assertFalse(
-                SiteLevels.needsSupport(SITE, post, tops(post, LEVEL + 1)),
+                SiteLevels.needsSupport(SITE, post, tops(post, LEVEL)),
                 "Опора на уровне y уже есть — лишнюю землю под столб не кладут");
     }
 
     @Test
     void readyPosts_RingWithOneClearedColumn_ReturnsOnlyCleared() {
         ColumnMask.Cell first = SITE.ring().posts().get(0);
-        IntBinaryOperator tops = (x, z) -> x == first.x() && z == first.z() ? LEVEL + 1 : LEVEL + 2;
+        IntBinaryOperator tops = (x, z) -> x == first.x() && z == first.z() ? LEVEL : LEVEL + 2;
 
         assertEquals(
                 List.of(first),
@@ -123,11 +125,37 @@ class SiteLevelsTests {
     }
 
     @Test
+    void leveling_BuildingColumn_CutsStrayBlocksAboveLevel() {
+        ColumnMask.Cell built = SITE.level().cells().stream()
+                .filter(cell -> SITE.planCell(cell.x(), LEVEL + 2, cell.z()))
+                .findFirst()
+                .orElseThrow();
+
+        assertFalse(
+                SiteLevels.leveling(SITE, tops(built, LEVEL + 5)).cut().isEmpty(),
+                "Расчистка срезает и дерево над площадкой постройки: постройки плана ещё не стоят, а их клетки — "
+                        + "часть участка");
+    }
+
+    @Test
+    void chestSpot_FlatSite_LiesOutsidePlan() {
+        BlockCoord spot = SiteLevels.chestSpot(SITE);
+
+        assertEquals(LEVEL, spot.y(), "Временный сундук стоит на уровне поселения: выше y его срежет расчистка");
+        assertFalse(
+                SITE.planCell(spot.x(), spot.y(), spot.z()),
+                "Временный сундук не встаёт в клетку постройки плана: иначе он мешает хижине и двору");
+        assertFalse(
+                SITE.ringPost(spot.x(), spot.z()),
+                "Временный сундук не встаёт в клетку столба ограды: столб и сундук делят одну клетку");
+    }
+
+    @Test
     void leveling_ColumnHigherThanLevel_HasCutWithoutFill() {
         ColumnMask.Cell cell = freeCell();
         PlotLeveling plan = SiteLevels.leveling(SITE, tops(cell, LEVEL + 3));
 
-        assertEquals(2, plan.cut().size(), "Расчистка срезает всё лишнее выше y, слой за слоем");
+        assertEquals(3, plan.cut().size(), "Расчистка срезает всё лишнее выше y, слой за слоем");
         assertEquals(List.of(), plan.fill(), "Расчистка ничего не подсыпает: ямы ниже y её не держат");
         assertEquals(
                 List.of(),
@@ -140,9 +168,11 @@ class SiteLevelsTests {
     }
 
     private static ColumnMask.Cell freeCell() {
+        BlockCoord chest = SiteLevels.chestSpot(SITE);
         return SITE.level().cells().stream()
                 .filter(cell -> !SITE.planCell(cell.x(), LEVEL, cell.z()))
                 .filter(cell -> !SITE.ringPost(cell.x(), cell.z()))
+                .filter(cell -> cell.x() != chest.x() || cell.z() != chest.z())
                 .findFirst()
                 .orElseThrow();
     }

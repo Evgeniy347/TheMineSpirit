@@ -21,9 +21,16 @@ final class PlanCells {
         }
         return SettlementPlotStore.get(server)
                         .site()
-                        .filter(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ()) && !oldFill(level, site, pos))
+                        .filter(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ())
+                                && !oldFill(level, site, pos)
+                                && (site.ringPost(pos.getX(), pos.getZ()) || !debris(level, pos)))
                         .isPresent()
                 && PlacedBlocksData.get(server).isSpiritMarked(pos);
+    }
+
+    private static boolean debris(Level level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return state.is(BlockTags.FENCES) || state.is(BlockTags.FENCE_GATES);
     }
 
     private static boolean oldFill(Level level, StageSite site, BlockPos pos) {

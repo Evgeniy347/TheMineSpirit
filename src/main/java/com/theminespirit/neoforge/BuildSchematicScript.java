@@ -349,7 +349,7 @@ final class BuildSchematicScript implements ScriptInstance {
         SpiritReach reach = SpiritReach.current();
         ReachPlanner.World world = clearWorld();
         for (BlockCoord cell : ReachPlanner.workableNow(reach, feet(), clear, world)) {
-            BlockBreaker.Begin begin = breaker.beginAnyDistance(SchematicSite.toPos(cell));
+            BlockBreaker.Begin begin = breaker.begin(SchematicSite.toPos(cell), BlockBreaker.Intent.DEMOLISH, false);
             switch (begin) {
                 case BlockBreaker.Started ignored -> {
                     breaking = cell;

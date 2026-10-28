@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.board.PlotLeveling;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -16,7 +17,7 @@ public final class SiteLevels {
 
     public static int level(StageSite site) {
         Objects.requireNonNull(site, "Место этапа не может быть null: уровень поселения берётся из него");
-        return site.anchor().y();
+        return site.anchor().y() - 1;
     }
 
     public static int fenceY(StageSite site) {
@@ -24,7 +25,11 @@ public final class SiteLevels {
     }
 
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops) {
-        return new PlotLeveling(extra(site, tops), List.of(), PlotLeveling.DEFAULT_BLOCK);
+        BlockCoord chest = chestSpot(site);
+        return new PlotLeveling(
+                extra(site, tops, cell -> cell.x() == chest.x() && cell.z() == chest.z(), false),
+                List.of(),
+                PlotLeveling.DEFAULT_BLOCK);
     }
 
     public static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops) {
@@ -33,6 +38,11 @@ public final class SiteLevels {
 
     public static List<PlotLeveling.Box> extra(
             StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip) {
+        return extra(site, tops, skip, true);
+    }
+
+    private static List<PlotLeveling.Box> extra(
+            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip, boolean protectBuildings) {
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них лишнего над уровнем не найти");
         Objects.requireNonNull(skip, "Пропускаемые колонки не могут быть null: нет таких — всегда false");
         int level = level(site);
@@ -43,7 +53,7 @@ public final class SiteLevels {
             }
             int top = tops.applyAsInt(column.x(), column.z());
             for (int y = level + 1; y < top; y++) {
-                if (!building(site, column.x(), y, column.z())) {
+                if (!protectBuildings || !building(site, column.x(), y, column.z())) {
                     layers.computeIfAbsent(y, key -> new TreeMap<>())
                             .computeIfAbsent(column.z(), key -> new ArrayList<>())
                             .add(column.x());
@@ -75,6 +85,16 @@ public final class SiteLevels {
         return site.ring().posts().stream()
                 .filter(post -> fenceReady(site, post, tops))
                 .toList();
+    }
+
+    public static BlockCoord chestSpot(StageSite site) {
+        int walk = fenceY(site);
+        for (ColumnMask.Cell cell : site.level().cells()) {
+            if (!site.planCell(cell.x(), walk, cell.z()) && !site.ringPost(cell.x(), cell.z())) {
+                return new BlockCoord(cell.x(), walk, cell.z());
+            }
+        }
+        return site.workYard();
     }
 
     private static boolean building(StageSite site, int x, int y, int z) {

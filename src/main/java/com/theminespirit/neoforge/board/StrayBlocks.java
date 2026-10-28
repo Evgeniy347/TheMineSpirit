@@ -10,6 +10,7 @@ import com.theminespirit.core.town.StrayRule;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.PlotGround;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -81,6 +82,7 @@ public final class StrayBlocks {
         private final StageSite site;
         private final PlacedBlocksData placed;
         private final LevelTreeView trees;
+        private final Set<BlockCoord> settlementChests;
         private final Map<BlockCoord, Boolean> inTree = new HashMap<>();
 
         Scan(ServerLevel level, StageSite site, PlacedBlocksData placed) {
@@ -88,6 +90,8 @@ public final class StrayBlocks {
             this.site = site;
             this.placed = placed;
             this.trees = new LevelTreeView(level, LOGS);
+            this.settlementChests =
+                    Set.copyOf(SettlementChestStore.get(level).chests().all());
         }
 
         boolean stray(BlockCoord cell) {
@@ -97,7 +101,7 @@ public final class StrayBlocks {
                 return false;
             }
             BlockEntity entity = level.getBlockEntity(pos);
-            if (entity instanceof Container container && !container.isEmpty()) {
+            if (entity instanceof Container container && (!container.isEmpty() || settlementChests.contains(cell))) {
                 return false;
             }
             return StrayRule.stray(BlockStates.idOf(state), facts(cell, pos, state), PROTECTION);

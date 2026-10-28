@@ -240,7 +240,7 @@ public final class FirstStepsRunner {
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
-            need.remove(PlotLeveling.DEFAULT_BLOCK);
+            need.keySet().removeIf(item -> "chest".equals(item) || PlotLeveling.DEFAULT_BLOCK.equals(item));
         }
         if (caseValue == BoardCase.BUILD_MINE) {
             int floors = mineFloorsToBring(level, stage);

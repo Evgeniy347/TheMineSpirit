@@ -450,7 +450,7 @@ public class ClearAreaSession {
                         currentTarget,
                         COLLECT_RADIUS,
                         PickupTuning.DEFAULT,
-                        OverflowMode.BY_VALUE);
+                        OverflowMode.RETURN_TO_BASE);
                 state = State.COLLECT;
             }
             case GONE -> {
