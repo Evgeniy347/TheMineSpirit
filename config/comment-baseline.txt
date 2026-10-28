@@ -139,8 +139,6 @@ src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результ�
 src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
 src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
 src/main/java/com/theminespirit/gametest/FarmSafetyGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	[флак] этап 1 по плану поселения — площадки, двор, шахта, ограда этапа ~110 столбов, хижина и факелы
-src/main/java/com/theminespirit/gametest/FirstStageGameTests.java	тремя духами: тысячи тиков (замер 25.10 — 4500–5000 на трёх сидах), предел владельца ≤ 6000.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
