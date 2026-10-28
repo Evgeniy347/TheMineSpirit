@@ -24,6 +24,7 @@ public final class SpiritCommands {
         LiteralArgumentBuilder<CommandSourceStack> operatorOnly = new OperatorSubtree();
         SpiritSpawnCommand.register(operatorOnly);
         SpiritObserveCommand.register(operatorOnly);
+        SpiritAuditCommand.register(operatorOnly);
         SpiritTaskCommands.register(operatorOnly);
         SpiritMemoryCommand.register(operatorOnly);
         SpiritZoneCommand.register(operatorOnly);
