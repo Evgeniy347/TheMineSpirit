@@ -44,7 +44,7 @@ public final class CoreScripts {
         specs.addAll(gatheringSpecs());
         specs.addAll(cropCareSpecs());
         specs.addAll(breedingSpecs());
-        specs.addAll(animalProduceSpecs());
+        specs.addAll(AnimalProduceSpecs.all());
         specs.addAll(huntingSpecs());
         specs.addAll(fishingSpecs());
         specs.addAll(itemSpecs());
@@ -747,57 +747,6 @@ public final class CoreScripts {
                                         CatalogLimits.HERD_WORK_COUNT_DEFAULT)),
                         List.of("есть ножницы", "овцы с шерстью"),
                         List.of("овцы пострижены", "шерсть подобрана")));
-    }
-
-    private static List<ScriptSpec> animalProduceSpecs() {
-        return List.of(
-                spec(
-                        "milk",
-                        "подоить коров",
-                        List.of(
-                                ParamSpec.integer(
-                                        RADIUS,
-                                        false,
-                                        CatalogLimits.HERD_RADIUS_MIN,
-                                        CatalogLimits.HERD_RADIUS_MAX,
-                                        CatalogLimits.HERD_RADIUS_DEFAULT),
-                                ParamSpec.integer(
-                                        COUNT,
-                                        false,
-                                        CatalogLimits.HERD_COUNT_MIN,
-                                        CatalogLimits.HERD_COUNT_MAX,
-                                        CatalogLimits.HERD_WORK_COUNT_DEFAULT)),
-                        List.of("есть пустые вёдра"),
-                        List.of("коровы подоены")),
-                spec(
-                        "collect_eggs",
-                        "собрать яйца в загоне",
-                        List.of(ParamSpec.integer(
-                                RADIUS,
-                                false,
-                                CatalogLimits.HERD_RADIUS_MIN,
-                                CatalogLimits.HERD_RADIUS_MAX,
-                                CatalogLimits.HERD_RADIUS_DEFAULT)),
-                        List.of(),
-                        List.of("яйца в инвентаре")),
-                spec(
-                        "harvest_hive",
-                        "собрать соты или мёд из полного улья",
-                        List.of(
-                                ParamSpec.integer(
-                                        RADIUS,
-                                        false,
-                                        CatalogLimits.HERD_RADIUS_MIN,
-                                        CatalogLimits.HERD_RADIUS_MAX,
-                                        CatalogLimits.HERD_RADIUS_DEFAULT),
-                                ParamSpec.integer(
-                                        COUNT,
-                                        false,
-                                        CatalogLimits.HERD_COUNT_MIN,
-                                        CatalogLimits.HERD_COUNT_MAX,
-                                        CatalogLimits.HIVE_COUNT_DEFAULT)),
-                        List.of("есть ножницы или стеклянная бутылка", "под ульем костёр или материалы для него"),
-                        List.of("соты или мёд в инвентаре", "пчёлы целы")));
     }
 
     private static List<ScriptSpec> huntingSpecs() {

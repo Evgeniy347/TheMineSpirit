@@ -30,6 +30,7 @@ class GraphForageTests {
         ways.put("loot_rabbit", "rabbits");
         ways.put("loot_rabbit_hide", "rabbits");
         ways.put("loot_glow_ink_sac", "glow_squid");
+        ways.put("brush_armadillo_scute", "armadillo");
         return Map.copyOf(ways);
     }
 
@@ -70,6 +71,7 @@ class GraphForageTests {
         GraphWorld world = GraphWorld.settled();
         world.stage = 2;
         world.stock.put("shears", 1);
+        world.stock.put("brush", 1);
         if (tag != null) {
             world.world.add(tag);
         }

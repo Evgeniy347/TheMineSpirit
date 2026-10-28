@@ -6,6 +6,10 @@ import java.util.Optional;
 public interface ResourceKnowledge {
     boolean isGatherable(String item);
 
+    default boolean isBrushed(String item) {
+        return false;
+    }
+
     default String gatherBlockFor(String item) {
         return item;
     }

@@ -4,6 +4,8 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardSources;
 import com.theminespirit.neoforge.board.GraphSurroundings;
@@ -13,11 +15,15 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.armadillo.Armadillo;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.VineBlock;
 import net.neoforged.fml.loading.FMLPaths;
@@ -77,6 +83,26 @@ public final class GraphForageGameTests {
                 "У метки мира есть ближайшая точка: без неё дух не знает, куда идти за ресурсом");
         GameTestFixtures.finish(helper);
         helper.succeed();
+    }
+
+    @SceneStep(template = "arena", timeoutTicks = 400)
+    public static void brush_AdultArmadilloWithBrush_ScuteInInventory(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        HusbandryGameTests.spawnStill(helper, EntityType.ARMADILLO, new BlockPos(3, 1, 3));
+        SpiritEntity spirit = HusbandryGameTests.spawnWith(helper, new BlockPos(1, 1, 1), new ItemStack(Items.BRUSH));
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("brush", Map.of("radius", 8, "count", 1)), 5);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            HusbandryGameTests.assertSucceeded(helper, spirit, "взрослый броненосец со щёткой обязан отдать щетину");
+            int scute = GameTestFixtures.countInInventory(spirit.getInventory(), Items.ARMADILLO_SCUTE);
+            helper.assertTrue(scute >= 1, "в инвентаре духа обязана появиться щетина, фактически " + scute);
+            helper.assertTrue(
+                    HusbandryGameTests.alive(helper, Armadillo.class).size() == 1,
+                    "броненосец обязан остаться живым: щётка не убивает");
+            GameTestFixtures.finish(helper);
+        });
     }
 
     private static BoardService isolatedBoard(ServerLevel level, String journalFile) {
