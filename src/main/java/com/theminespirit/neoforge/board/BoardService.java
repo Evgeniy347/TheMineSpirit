@@ -1135,7 +1135,7 @@ public final class BoardService {
                         : target.withTransfer(target.transferFrom(), target.transferTo(), target.supplyItem(), held));
     }
 
-    TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
+    public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
         return targets.getOrDefault(ticketId, TicketTarget.at(homeOf(spirits)));
     }
 

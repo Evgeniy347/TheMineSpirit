@@ -9,9 +9,11 @@ import com.theminespirit.core.board.BoardWhy;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketTarget;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class BoardTasks {
     private BoardTasks() {}
@@ -27,6 +29,16 @@ public final class BoardTasks {
 
     public static BoardTask of(
             Board board, BoardTicket ticket, BoardStatus status, StockView stock, BoardTiming timing) {
+        return of(board, ticket, status, stock, timing, null);
+    }
+
+    public static BoardTask of(
+            Board board,
+            BoardTicket ticket,
+            BoardStatus status,
+            StockView stock,
+            BoardTiming timing,
+            @Nullable TicketTarget target) {
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         Optional<UUID> holder = board.holderOf(ticket.id());
         boolean queued = status == BoardStatus.PENDING
@@ -54,6 +66,8 @@ public final class BoardTasks {
                 attempt.startedAt(),
                 attempt.finishedAt(),
                 attempt.durationTicks(board.now()),
-                BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null));
+                BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null),
+                target == null ? null : target.supplyItem(),
+                target == null ? 0 : target.supplyCount());
     }
 }

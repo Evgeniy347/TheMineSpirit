@@ -23,7 +23,51 @@ public record BoardTask(
         long startedAt,
         long finishedAt,
         long durationTicks,
-        @Nullable String waitReason) {
+        @Nullable String waitReason,
+        @Nullable String supplyItem,
+        int supplyCount) {
+
+    public BoardTask(
+            String id,
+            String boardCase,
+            int priority,
+            @Nullable String assignee,
+            String status,
+            Map<String, Integer> requiredItems,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long createdAt,
+            int level,
+            String cause,
+            int effectivePriority,
+            List<String> modifiers,
+            boolean done,
+            long startedAt,
+            long finishedAt,
+            long durationTicks,
+            @Nullable String waitReason) {
+        this(
+                id,
+                boardCase,
+                priority,
+                assignee,
+                status,
+                requiredItems,
+                missing,
+                dependsOn,
+                createdAt,
+                level,
+                cause,
+                effectivePriority,
+                modifiers,
+                done,
+                startedAt,
+                finishedAt,
+                durationTicks,
+                waitReason,
+                null,
+                0);
+    }
 
     public BoardTask(
             String id,
@@ -175,5 +219,9 @@ public record BoardTask(
         }
         modifiers = List.copyOf(Objects.requireNonNull(
                 modifiers, "modifiers не может быть null: задание без модификаторов задают пустым списком"));
+        if (supplyCount < 0) {
+            throw new IllegalArgumentException(
+                    "Количество материала " + supplyCount + " отрицательно: запас задания не бывает меньше нуля");
+        }
     }
 }

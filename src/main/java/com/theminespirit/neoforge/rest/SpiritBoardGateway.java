@@ -78,7 +78,8 @@ public final class SpiritBoardGateway implements BoardGateway {
                     ticket,
                     board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
                     stock,
-                    timings.getOrDefault(ticket.id(), BoardTiming.NONE)));
+                    timings.getOrDefault(ticket.id(), BoardTiming.NONE),
+                    service.targetOf(ticket.id(), List.of())));
         }
         return List.copyOf(tasks);
     }
@@ -125,7 +126,13 @@ public final class SpiritBoardGateway implements BoardGateway {
                         "Доска приняла задание '" + id + "', но не находит его в очереди: состояние доски "
                                 + "испорчено, перезапустите сервер",
                         Map.of("request_id", request.requestId().toString())));
-        return BoardTasks.of(board, stored, service.stock());
+        return BoardTasks.of(
+                board,
+                stored,
+                board.statusOf(stored.id()).orElse(BoardStatus.PENDING),
+                service.stock(),
+                BoardTiming.NONE,
+                service.targetOf(stored.id(), List.of()));
     }
 
     private static TicketTarget relocationTarget(BoardTaskRequest request) {
@@ -154,6 +161,7 @@ public final class SpiritBoardGateway implements BoardGateway {
                         ErrorCode.NOT_FOUND,
                         "Задание доски '" + ticketId + "' исчезло после отмены: список заданий — GET /v1/board",
                         Map.of("id", ticketId)));
-        return BoardTasks.of(board, ticket, status, service.stock());
+        return BoardTasks.of(
+                board, ticket, status, service.stock(), BoardTiming.NONE, service.targetOf(ticket.id(), List.of()));
     }
 }

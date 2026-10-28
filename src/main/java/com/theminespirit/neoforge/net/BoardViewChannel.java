@@ -43,7 +43,7 @@ public final class BoardViewChannel {
     public static final CustomPacketPayload.Type<Reply> REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "board_view_reply"));
 
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
     private static final int MAX_TILES = 4096;
     private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
     private static volatile Consumer<List<BoardTile>> clientReceiver = tiles -> {};
@@ -111,7 +111,8 @@ public final class BoardViewChannel {
                     ticket,
                     board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
                     service.get().stock(),
-                    timings.getOrDefault(ticket.id(), BoardTiming.NONE)));
+                    timings.getOrDefault(ticket.id(), BoardTiming.NONE),
+                    service.get().targetOf(ticket.id(), List.of())));
         }
         MinecraftServer server = level.getServer();
         return BoardSnapshot.build(tasks, uuid -> spiritName(server, uuid));
@@ -175,6 +176,11 @@ public final class BoardViewChannel {
             buf.writeVarLong(tile.startedAt());
             buf.writeVarLong(tile.finishedAt());
             buf.writeVarLong(tile.durationTicks());
+            buf.writeBoolean(tile.supplyItem() != null);
+            if (tile.supplyItem() != null) {
+                buf.writeUtf(tile.supplyItem());
+            }
+            buf.writeVarInt(tile.supplyCount());
         }
         buf.writeVarInt(reply.stage().number());
     }
@@ -208,6 +214,8 @@ public final class BoardViewChannel {
             long startedAt = buf.readVarLong();
             long finishedAt = buf.readVarLong();
             long durationTicks = buf.readVarLong();
+            String supplyItem = buf.readBoolean() ? buf.readUtf() : null;
+            int supplyCount = buf.readVarInt();
             tiles.add(new BoardTile(
                     id,
                     boardCase,
@@ -221,7 +229,9 @@ public final class BoardViewChannel {
                     doneAt,
                     startedAt,
                     finishedAt,
-                    durationTicks));
+                    durationTicks,
+                    supplyItem,
+                    supplyCount));
         }
         return new Reply(tiles, new BoardStage(buf.readVarInt()));
     }
