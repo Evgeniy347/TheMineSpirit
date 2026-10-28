@@ -358,8 +358,7 @@ final class BuildSchematicScript implements ScriptInstance {
                 }
                 case BlockBreaker.Protected refused -> blocked.put(cell, "очистка запрещена: " + refused.reason());
                 case BlockBreaker.Refused refused -> {
-                    if (refused.reason() != BlockBreaker.RefuseReason.AIR
-                            && refused.reason() != BlockBreaker.RefuseReason.OUT_OF_REACH) {
+                    if (refused.reason() != BlockBreaker.RefuseReason.AIR && !BreakSight.retryable(refused.reason())) {
                         blocked.put(cell, "очистка не удалась: " + refused.message());
                     }
                 }

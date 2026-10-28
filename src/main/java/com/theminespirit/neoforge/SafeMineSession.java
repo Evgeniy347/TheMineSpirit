@@ -6,6 +6,7 @@ import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.DescentStop;
+import com.theminespirit.core.mining.MineDigOrder;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafeMineMode;
 import com.theminespirit.core.mining.SafeMinePlan;
@@ -73,7 +74,6 @@ public final class SafeMineSession {
     private int blocksDug;
     private int blocksFilled;
     private int torchesPlaced;
-    private int cellCursor;
     private int fillCursor;
     private int fallWait;
     private boolean approachBegun;
@@ -194,7 +194,6 @@ public final class SafeMineSession {
         blocksFilled = number(saved, "blocks_filled");
         torchesPlaced = number(saved, "torches");
         stepIndex = Math.min(number(saved, "step"), plan.steps().size());
-        cellCursor = 0;
         fillCursor = 0;
         fallWait = 0;
         approachBegun = false;
@@ -226,7 +225,6 @@ public final class SafeMineSession {
         for (BlockCoord cell : step.passage()) {
             reservations.reserve(cell, spirit.getUUID());
         }
-        cellCursor = 0;
         fillCursor = 0;
         fallWait = 0;
         approachBegun = false;
@@ -280,12 +278,10 @@ public final class SafeMineSession {
     }
 
     private void digBegin() {
-        List<BlockCoord> passage = currentStep().passage();
-        while (cellCursor < passage.size()) {
-            BlockCoord cell = passage.get(cellCursor);
+        BlockCoord feet = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+        for (BlockCoord cell : MineDigOrder.from(feet, currentStep().passage(), safety)) {
             BlockPos pos = toPos(cell);
             if (level.getBlockState(pos).isAir() || level.getBlockState(pos).is(Blocks.TORCH)) {
-                cellCursor++;
                 continue;
             }
             BreakSafety safetyResult = MiningSafety.canBreak(cell, safety);
@@ -323,11 +319,9 @@ public final class SafeMineSession {
             case BREAKING -> {}
             case BROKEN -> {
                 blocksDug++;
-                cellCursor++;
                 state = State.DIG_BEGIN;
             }
             case GONE -> {
-                cellCursor++;
                 state = State.DIG_BEGIN;
             }
         }
@@ -341,7 +335,6 @@ public final class SafeMineSession {
         }
         for (BlockCoord cell : step.passage()) {
             if (!level.getBlockState(toPos(cell)).isAir()) {
-                cellCursor = 0;
                 state = State.DIG_BEGIN;
                 return;
             }
@@ -448,7 +441,6 @@ public final class SafeMineSession {
     }
 
     private void attemptNextStep() {
-        cellCursor = 0;
         fillCursor = 0;
         fallWait = 0;
         approachBegun = false;

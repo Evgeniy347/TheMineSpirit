@@ -13,7 +13,6 @@ import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -52,6 +51,7 @@ final class TreeChop {
     private boolean guarded;
     private boolean secondStand;
     private @Nullable BlockPos stand;
+    private @Nullable ChopOutcome refusal;
 
     TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, boolean orchard, TreeView view) {
         this.spirit = spirit;
@@ -66,7 +66,7 @@ final class TreeChop {
 
     void begin(Tree target) {
         tree = target;
-        species = speciesOf(target);
+        species = ChopSpecies.of(spirit.level(), target);
         planIndex = 0;
         standingLogs = 0;
         plantedSaplings = 0;
@@ -76,25 +76,36 @@ final class TreeChop {
         guarded = false;
         secondStand = false;
         clearing.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
-        startApproach();
+        refusal = startApproach();
     }
 
-    private void startApproach() {
+    private @Nullable ChopOutcome startApproach() {
         stand = ChopStand.first(spirit, tree);
         if (stand == null && clearing.active()) {
             phase = Phase.CLEAR;
-            return;
+            return null;
         }
-        BlockCoord from = stand == null ? tree.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
+        if (stand == null) {
+            LOGGER.warn(
+                    "[chop] {}: у дерева {} нет стоянки на земле — рубка брошена",
+                    spirit.getName().getString(),
+                    tree.base());
+            return ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
+        }
+        BlockCoord from = new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
         plan = ChopPlan.of(tree, from);
         planIndex = 0;
-        approach.begin(
-                stand == null ? Vec3.atCenterOf(toPos(tree.base())) : Vec3.atBottomCenterOf(stand),
-                stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
+        approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
+        return null;
     }
 
     ChopOutcome tick() {
+        if (refusal != null) {
+            ChopOutcome outcome = refusal;
+            refusal = null;
+            return outcome;
+        }
         return switch (phase) {
             case APPROACH -> approach();
             case CLEAR -> clear();
@@ -143,8 +154,8 @@ final class TreeChop {
         if (clearing.tick()) {
             return ChopOutcome.running();
         }
-        startApproach();
-        return ChopOutcome.running();
+        ChopOutcome outcome = startApproach();
+        return outcome == null ? ChopOutcome.running() : outcome;
     }
 
     private ChopOutcome resumeChop() {
@@ -178,7 +189,7 @@ final class TreeChop {
         }
         while (planIndex < plan.order().size()) {
             BlockCoord log = plan.order().get(planIndex);
-            BlockBreaker.Begin begin = breaker.beginAnyDistance(toPos(log), orchard);
+            BlockBreaker.Begin begin = breaker.beginChop(toPos(log), orchard);
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
                 return ChopOutcome.running();
@@ -204,15 +215,16 @@ final class TreeChop {
         secondStand = true;
         planIndex = 0;
         stand = ChopStand.second(spirit, tree, rest.order(), stand);
+        if (stand == null) {
+            return leftStanding();
+        }
         LOGGER.info(
                 "[chop] {} у дерева {}: после прохода стоят {} брёвен — добивка со второй стоянки {}",
                 spirit.getName().getString(),
                 tree.base(),
                 rest.order().size(),
-                stand == null ? "нет (подход к стволу)" : stand.toShortString());
-        approach.begin(
-                stand == null ? Vec3.atCenterOf(toPos(tree.base())) : Vec3.atBottomCenterOf(stand),
-                stand == null ? ChopTuning.STAND_DISTANCE : ChopTuning.CHOP_ARRIVAL);
+                stand.toShortString());
+        approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
         return ChopOutcome.running();
     }
@@ -278,16 +290,6 @@ final class TreeChop {
 
     private ChopOutcome finish() {
         return ChopOutcome.done(standingLogs, plantedSaplings, skippedCells, lackedSaplings);
-    }
-
-    private TreeSpecies speciesOf(Tree found) {
-        BlockCoord base = found.base();
-        String blockId = BuiltInRegistries.BLOCK
-                .getKey(spirit.level().getBlockState(toPos(base)).getBlock())
-                .toString();
-        return TreeSpecies.ofLog(blockId)
-                .orElseThrow(() -> new IllegalStateException("Основание дерева " + base + " — блок '" + blockId
-                        + "', а не бревно известной породы: поиск брал только брёвна из TreeSpecies"));
     }
 
     private static BlockPos toPos(BlockCoord coord) {

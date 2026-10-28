@@ -1,6 +1,8 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.building.BlockSight;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.tactics.adapter.Visibility;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -36,14 +38,14 @@ public final class StandSpots {
                 if (fallingAbove && stand.x() == target.x() && stand.z() == target.z() && stand.y() < target.y()) {
                     continue;
                 }
-                if (MiningSafety.canStand(stand, view)) {
+                if (MiningSafety.canStand(stand, view) && visible(stand, target, view)) {
                     candidates.add(stand);
                 }
             }
             if (face[1] == 1) {
                 for (int[] side : HORIZONTAL_OFFSETS) {
                     BlockCoord stand = offset(neighbor, side[0], 0, side[2]);
-                    if (MiningSafety.canStand(stand, view)) {
+                    if (MiningSafety.canStand(stand, view) && visible(stand, target, view)) {
                         candidates.add(stand);
                     }
                 }
@@ -56,6 +58,12 @@ public final class StandSpots {
         Comparator<BlockCoord> byDistance = Comparator.comparingLong(coord -> distanceSquared(from, coord));
         unique.sort(byDistance.thenComparing(Comparator.naturalOrder()));
         return List.copyOf(unique);
+    }
+
+    private static boolean visible(BlockCoord stand, BlockCoord target, SafetyView view) {
+        return BlockSight.visible(
+                        BlockSight.eyes(stand), target, coord -> MineTerrain.of(view.cellAt(coord)), cell -> false)
+                == Visibility.CLEAR;
     }
 
     private static long distanceSquared(BlockCoord from, BlockCoord to) {

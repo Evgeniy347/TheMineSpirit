@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,11 @@ final class PillarDismantler {
             if (state.isAir()) {
                 unmark(pos);
                 continue;
+            }
+            if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
+                failureReason = "блок столба " + cell + " не виден из глаз духа: разбор остановлен";
+                outcome = Outcome.FAILED;
+                return outcome;
             }
             Item item = state.getBlock().asItem();
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);

@@ -10,6 +10,7 @@ import com.theminespirit.core.mining.DescentPlan;
 import com.theminespirit.core.mining.DescentStop;
 import com.theminespirit.core.mining.DescentWidenPlan;
 import com.theminespirit.core.mining.DescentWidenStep;
+import com.theminespirit.core.mining.MineDigOrder;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
@@ -54,7 +55,6 @@ public final class DescentWidenSession {
     private int entryFloor;
 
     private int stepIndex;
-    private int cellCursor;
     private boolean approachBegun;
     private int blocksDug;
     private State state = State.APPROACH;
@@ -149,7 +149,6 @@ public final class DescentWidenSession {
         blocksDug = number(saved, "blocks_dug");
         rebuild(DescentLevels.loadDefault());
         stepIndex = Math.min(number(saved, "step"), plan.steps().size());
-        cellCursor = 0;
         approachBegun = false;
         state = State.APPROACH;
     }
@@ -188,7 +187,6 @@ public final class DescentWidenSession {
             case MOVING -> {}
             case ARRIVED -> {
                 approachBegun = false;
-                cellCursor = 0;
                 state = State.DIG;
             }
             case STUCK, TIMEOUT -> {
@@ -199,12 +197,11 @@ public final class DescentWidenSession {
     }
 
     private void digTick() {
-        List<BlockCoord> stepCells = cells.get(stepIndex);
-        while (cellCursor < stepCells.size()) {
-            BlockCoord cell = stepCells.get(cellCursor);
+        List<BlockCoord> stepCells =
+                MineDigOrder.from(plan.steps().get(stepIndex).stand(), cells.get(stepIndex), safety);
+        for (BlockCoord cell : stepCells) {
             BlockPos pos = toPos(cell);
             if (level.getBlockState(pos).isAir()) {
-                cellCursor++;
                 continue;
             }
             BreakSafety safetyResult = MiningSafety.canBreak(cell, safety);
@@ -227,7 +224,6 @@ public final class DescentWidenSession {
             return;
         }
         stepIndex++;
-        cellCursor = 0;
         approachBegun = false;
         state = State.APPROACH;
     }
@@ -237,11 +233,9 @@ public final class DescentWidenSession {
             case BREAKING -> {}
             case BROKEN -> {
                 blocksDug++;
-                cellCursor++;
                 state = State.DIG;
             }
             case GONE -> {
-                cellCursor++;
                 state = State.DIG;
             }
         }

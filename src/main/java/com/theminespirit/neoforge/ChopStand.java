@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.forestry.ChopStands;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -26,30 +27,26 @@ final class ChopStand {
 
     private static @Nullable BlockPos best(
             Level level, Tree target, @Nullable BlockPos used, ToDoubleFunction<BlockPos> score) {
-        int baseY = target.base().y();
         BlockPos best = null;
         double bestScore = Double.MAX_VALUE;
-        for (BlockCoord log : target.logs()) {
-            if (log.y() != baseY) {
+        for (BlockCoord stand : ChopStands.around(target, feet -> isStandable(level, toPos(feet)))) {
+            BlockPos pos = toPos(stand);
+            if (pos.equals(used)) {
                 continue;
             }
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    for (int dy = 0; dy <= 1 && (dx != 0 || dz != 0); dy++) {
-                        BlockPos pos = new BlockPos(log.x() + dx, baseY + dy, log.z() + dz);
-                        if (pos.equals(used) || !isStandable(level, pos)) {
-                            continue;
-                        }
-                        double value = score.applyAsDouble(pos) + (dx != 0 && dz != 0 ? DIAGONAL_PENALTY : 0);
-                        if (value < bestScore) {
-                            bestScore = value;
-                            best = pos;
-                        }
-                    }
-                }
+            boolean diagonal = pos.getX() != target.base().x()
+                    && pos.getZ() != target.base().z();
+            double value = score.applyAsDouble(pos) + (diagonal ? DIAGONAL_PENALTY : 0);
+            if (value < bestScore) {
+                bestScore = value;
+                best = pos;
             }
         }
         return best;
+    }
+
+    private static BlockPos toPos(BlockCoord coord) {
+        return new BlockPos(coord.x(), coord.y(), coord.z());
     }
 
     private static double nearest(BlockPos pos, List<BlockCoord> rest) {

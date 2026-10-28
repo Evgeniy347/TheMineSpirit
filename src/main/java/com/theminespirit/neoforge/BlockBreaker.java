@@ -8,6 +8,7 @@ import com.theminespirit.core.mining.ToolChoice.ToolOption;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.tactics.adapter.Visibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +49,7 @@ public final class BlockBreaker {
         AIR,
         UNBREAKABLE,
         OUT_OF_REACH,
+        NO_SIGHT,
         NEED_TOOL
     }
 
@@ -70,10 +72,7 @@ public final class BlockBreaker {
     private int crackStage = NO_STAGE;
     private boolean active;
     private boolean toolBroke;
-    private int lastHitTick = -1;
     private int forcedSlot = NO_FORCED_SLOT;
-    private int hitsThisTick;
-    private int maxHitsPerTick;
 
     public BlockBreaker(SpiritEntity spirit) {
         this(spirit, false);
@@ -117,11 +116,19 @@ public final class BlockBreaker {
         return begin(target, tended ? Intent.HARVEST : Intent.BREAK, false);
     }
 
+    public Begin beginChop(BlockPos target, boolean tended) {
+        return begin(target, tended ? Intent.HARVEST : Intent.BREAK, false, true);
+    }
+
     private static Intent intent(boolean tended, boolean demolish) {
         return demolish ? Intent.DEMOLISH : tended ? Intent.HARVEST : Intent.BREAK;
     }
 
     Begin begin(BlockPos target, Intent intent, boolean reachLimited) {
+        return begin(target, intent, reachLimited, false);
+    }
+
+    Begin begin(BlockPos target, Intent intent, boolean reachLimited, boolean leavesPass) {
         cancel();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
@@ -148,6 +155,12 @@ public final class BlockBreaker {
                         "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа (" + distance
                                 + "): сначала подойти");
             }
+        }
+        if (BreakSight.visible(spirit, target, leavesPass) != Visibility.CLEAR) {
+            return new Refused(
+                    RefuseReason.NO_SIGHT,
+                    "блок в " + target.toShortString()
+                            + " не виден из глаз духа: сначала подойти или убрать мешающий блок");
         }
         BlockProtection.Decision decision = switch (intent) {
             case HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
@@ -195,7 +208,6 @@ public final class BlockBreaker {
         if (!active) {
             throw new IllegalStateException("Ломка не начата: сначала begin(...), иначе нечего ломать");
         }
-        recordHit();
         Level level = spirit.level();
         boolean unloaded = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4) == null;
         if (unloaded || !level.getBlockState(pos).is(state.getBlock())) {
@@ -252,21 +264,6 @@ public final class BlockBreaker {
         return toolBroke;
     }
 
-    public int maxHitsPerTick() {
-        return maxHitsPerTick;
-    }
-
-    private void recordHit() {
-        int now = spirit.tickCount;
-        if (now == lastHitTick) {
-            hitsThisTick++;
-        } else {
-            lastHitTick = now;
-            hitsThisTick = 1;
-        }
-        maxHitsPerTick = Math.max(maxHitsPerTick, hitsThisTick);
-    }
-
     private List<ToolOption> toolOptions(BlockState targetState) {
         boolean needsTool = targetState.requiresCorrectToolForDrops();
         List<ToolOption> options = new ArrayList<>();
@@ -280,13 +277,13 @@ public final class BlockBreaker {
                 ""));
         ItemStack hand = spirit.getMainHandItem();
         if (!hand.isEmpty() && allowed(ToolChoice.MAIN_HAND)) {
-            options.add(optionFor(ToolChoice.MAIN_HAND, hand, targetState, needsTool));
+            options.add(BreakTools.optionFor(ToolChoice.MAIN_HAND, hand, targetState, needsTool));
         }
         Container inventory = spirit.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             if (!stack.isEmpty() && allowed(slot)) {
-                options.add(optionFor(slot, stack, targetState, needsTool));
+                options.add(BreakTools.optionFor(slot, stack, targetState, needsTool));
             }
         }
         return options;
@@ -307,24 +304,10 @@ public final class BlockBreaker {
         return forcedSlot == NO_FORCED_SLOT || forcedSlot == slot;
     }
 
-    private static ToolOption optionFor(int slot, ItemStack stack, BlockState targetState, boolean needsTool) {
-        int max = stack.isDamageableItem() ? stack.getMaxDamage() : ToolChoice.UNWEARING;
-        int remaining = max > 0 ? max - stack.getDamageValue() : ToolChoice.UNWEARING;
-        String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-        return new ToolOption(
-                slot,
-                stack.getDestroySpeed(targetState),
-                !needsTool || stack.isCorrectToolForDrops(targetState),
-                remaining,
-                max,
-                stack.isEnchanted(),
-                itemId);
-    }
-
     private void replaceSpentHandTool(BlockState targetState, ToolReserve reserve) {
         ItemStack hand = spirit.getMainHandItem();
         if (hand.isEmpty()
-                || !optionFor(ToolChoice.MAIN_HAND, hand, targetState, true)
+                || !BreakTools.optionFor(ToolChoice.MAIN_HAND, hand, targetState, true)
                         .spent(reserve, MiningTables.repairTiers())) {
             return;
         }
@@ -347,7 +330,7 @@ public final class BlockBreaker {
             if (stack.isEmpty() || !stack.isCorrectToolForDrops(targetState)) {
                 continue;
             }
-            ToolOption option = optionFor(slot, stack, targetState, true);
+            ToolOption option = BreakTools.optionFor(slot, stack, targetState, true);
             if (option.spent(reserve, repairTiers)) {
                 continue;
             }
