@@ -17,6 +17,7 @@ BUILDING = "building:"
 EVENT = "event:"
 EXPLORE = "explore:"
 STATION = "station:"
+ORDER = "order:"
 AT = "@"
 
 BUILT = "BUILT"
@@ -163,6 +164,27 @@ def merge(manual, generated):
     return merged
 
 
+class HerdCap:
+    """HerdCap: предел стада числом (fixed) или долей на духа (perSpirit)."""
+
+    __slots__ = ("fixed", "per_spirit")
+
+    def __init__(self, value):
+        if isinstance(value, dict):
+            self.fixed = int(value["fixed"]) if "fixed" in value else None
+            self.per_spirit = float(value["perSpirit"]) if "perSpirit" in value else None
+        else:
+            self.fixed = int(value)
+            self.per_spirit = None
+        if self.fixed is None and self.per_spirit is None:
+            raise ValueError("Лимит стада без числа и без доли на духа: нечего сравнивать с поголовьем")
+
+    def limit(self, spirits):
+        if self.per_spirit is not None:
+            return int(math.floor(self.per_spirit * spirits))
+        return self.fixed
+
+
 class Item:
     __slots__ = ("id", "xmin", "k", "base", "stage", "per_spirit")
 
@@ -239,7 +261,7 @@ class Graph:
             }
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
         self.triggers = [dict(t) for t in (data.get("triggers") or [])]
-        self.herd_caps = dict(data.get("herdCaps") or {})
+        self.herd_caps = {k: HerdCap(v) for k, v in (data.get("herdCaps") or {}).items()}
         self.unimplemented = set()
         for section in ("items", "buildings"):
             for key, value in (data.get(section) or {}).items():
@@ -347,6 +369,7 @@ class State:
         self.world = list(data.get("world") or [])
         self.distances = dict(data.get("distances") or {})
         self.stations = dict(data.get("stations") or {})
+        self.orders = dict(data.get("orders") or {})
 
     def copy(self):
         return State({
@@ -360,6 +383,7 @@ class State:
             "world": self.world,
             "distances": self.distances,
             "stations": self.stations,
+            "orders": self.orders,
         })
 
     def spirits(self):
@@ -384,6 +408,46 @@ class State:
             if value > best:
                 best = value
         return best
+
+
+def buildings_first(graph, tasks, ready):
+    """GraphBuildOrder.buildingsFirst: постройки и их поставка выше прочих заданий."""
+    supply = set()
+    for task in tasks:
+        if not task["id"].startswith(BUILDING) or not ready(task["makes"]):
+            continue
+        for item in task["consumes"]:
+            if graph.is_group(item):
+                supply.update(graph.members(item))
+            else:
+                supply.add(item)
+    max_other = max((task["priority"] for task in tasks
+                     if not task["id"].startswith(BUILDING) and task["makes"] not in supply), default=0)
+    order = sorted({task["priority"] for task in tasks
+                    if task["id"].startswith(BUILDING) and task["priority"] > 0})
+    if not order or max_other >= graph.max_priority:
+        return tasks
+    start = max(max_other + 1, order[0])
+    step = max(1, (graph.max_priority - start) // (len(order) - 1)) if len(order) > 1 else 1
+    band = {value: min(graph.max_priority, start + index * step)
+            for index, value in enumerate(order)}
+    max_supply = max((task["priority"] for task in tasks
+                      if not task["id"].startswith(BUILDING) and task["makes"] in supply), default=0)
+    shift = max(0, start - 1 - max_supply)
+    result = []
+    for task in tasks:
+        if task["id"].startswith(BUILDING):
+            priority = band.get(task["priority"], task["priority"]) if task["priority"] > 0 else 0
+        elif task["makes"] in supply and task["consumes"]:
+            priority = start
+        elif task["makes"] in supply:
+            priority = min(max(0, start - 1), task["priority"] + shift)
+        else:
+            priority = task["priority"]
+        if priority != task["priority"]:
+            task = dict(task, priority=min(graph.max_priority, priority))
+        result.append(task)
+    return result
 
 
 class Planner:
@@ -484,6 +548,10 @@ class Planner:
         known = self.graph.buildings.get(building)
         return self.state.materials.get(building, known.materials if known is not None else {})
 
+    def ready(self, building):
+        known = self.graph.buildings.get(building)
+        return known is not None and self.share(known.materials) >= self.graph.build_start_share
+
     def push(self, source, node, amount):
         if amount == 0:
             return
@@ -528,7 +596,7 @@ class Planner:
             if not building.optional and building.stage <= state.stage and state.built(building.id) != BUILT:
                 self.require_building(None, building.id, building.base, "постройка этапа " + str(building.stage))
         for herd, cap in graph.herd_caps.items():
-            if self.count(herd) > cap:
+            if self.count(herd) > cap.limit(state.spirits()):
                 for way in graph.ways:
                     if herd in way.consumes and self.available(way):
                         self.flow.local(way.id, HERD_CULL_BOOST)
@@ -665,9 +733,21 @@ class Planner:
                 for rule in building.advice:
                     self.advice.append((building.id, rule))
 
+    def orders(self):
+        for item, lack in self.state.orders.items():
+            if item in self.graph.items or self.graph.is_group(item):
+                self.push(None, item, self.graph.max_priority)
+            else:
+                self.notices.setdefault(ORDER + item, {
+                    "building": item,
+                    "reason": "заказ игрока ждёт «" + item + "» ×" + str(lack)
+                              + ", а граф не знает, как его добыть: добавьте предмет в граф",
+                })
+
     def prepare(self):
         self.roots()
         self.events()
+        self.orders()
         self.standing()
 
     def apply_edges(self, scores):
@@ -706,7 +786,8 @@ class Planner:
             extra = self.station_task(building, value, scores)
             if extra is not None:
                 tasks.append(extra)
-        return {"tasks": tasks, "notices": list(self.notices.values()), "advice": list(self.advice)}
+        return {"tasks": buildings_first(self.graph, tasks, self.ready),
+                "notices": list(self.notices.values()), "advice": list(self.advice)}
 
     def station(self, key):
         at = key.find(AT)
@@ -780,7 +861,7 @@ class Planner:
                 all(state.built(required) == BUILT for required in building.requires)
             return {"id": key, "makes": building_id, "spirit": None, "priority": prio,
                     "consumes": dict(materials),
-                    "feasible": tooled and self.share(materials) >= graph.build_start_share,
+                    "feasible": tooled and self.share(building.materials) >= graph.build_start_share,
                     "chance": False, "implemented": graph.implemented(building_id),
                     "ticks": graph.costs.ticks(key, building.board_case)}
         at = key.find(AT)
