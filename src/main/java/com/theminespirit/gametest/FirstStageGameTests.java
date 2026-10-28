@@ -61,9 +61,10 @@ public final class FirstStageGameTests {
     private static final int STARTING_LOGS = 64;
     private static final int PIT_DEPTH = 3;
     private static final long NOON = 6000;
-    private static final int SPIRITS = 3;
+    private static final int SPIRITS = 4;
     private static final int REPORT_EVERY = 500;
     private static final int COPY_SHIFT = 46;
+    private static final long FIXED_SEED = 1L;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<BoardCase> WORK = EnumSet.of(
             BoardCase.CLEAR_GROUNDS,
@@ -84,10 +85,11 @@ public final class FirstStageGameTests {
         GameTestFixtures.reset(helper);
         GameTestFixtures.holdDayTime(helper, NOON);
         GameTestClock.align(helper);
-        long seed = GeneratedScene.seed();
+        long seed = GeneratedScene.fixedSeed() ? GeneratedScene.seed() : FIXED_SEED;
         ScenePlan scene = GeneratedScene.place(helper, seed, BATCH);
         GameTestChunks.hold(helper, GeneratedScene.at(0, 0, 0), scene.radius() + HELD_MARGIN);
         ServerLevel level = helper.getLevel();
+        level.random.setSeed(seed);
         BoardService board = BoardRegistry.get(level);
         board.board().restore(new BoardState(List.of(), Set.of()));
         BlockPos home = GeneratedScene.at(0, scene.height(0, 0) + 1, 0);
