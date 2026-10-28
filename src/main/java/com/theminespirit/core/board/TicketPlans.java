@@ -663,14 +663,6 @@ public final class TicketPlans {
                     new ScriptCall(
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
         }
-        Optional<TaskNode> saplings = saplingPlan(target, item, batch);
-        if (saplings.isPresent()) {
-            return saplings.get();
-        }
-        Optional<TaskNode> stripped = stripPlan(target, item, batch);
-        if (stripped.isPresent()) {
-            return stripped.get();
-        }
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         Optional<TreeSpecies> tree = treeOf(item);
         if (tree.isPresent()) {
@@ -692,72 +684,6 @@ public final class TicketPlans {
                             acquire)));
         }
         return sequence(gotoTarget(target), acquire);
-    }
-
-    private static Optional<TaskNode> saplingPlan(TicketTarget target, String item, int batch) {
-        Optional<TreeSpecies> sapling = saplingSpeciesOf(item);
-        if (sapling.isEmpty()) {
-            return Optional.empty();
-        }
-        TreeSpecies species = sapling.get();
-        int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (batch + 1) / 2));
-        int leaves = Math.min(CatalogLimits.COUNT_MAX, Math.max(16, batch * 16));
-        return Optional.of(sequence(
-                gotoTarget(target),
-                new ScriptCall(
-                        "chop_tree",
-                        Map.of(
-                                SPECIES,
-                                species.id(),
-                                COUNT,
-                                trees,
-                                RADIUS,
-                                BoardTuning.chopRadius(),
-                                "replant",
-                                false)),
-                new ScriptCall(
-                        "gather",
-                        Map.of(
-                                BLOCK,
-                                pathOf(species.leavesId()),
-                                COUNT,
-                                leaves,
-                                RADIUS,
-                                CatalogLimits.HARVEST_RADIUS_MAX))));
-    }
-
-    private static Optional<TaskNode> stripPlan(TicketTarget target, String item, int batch) {
-        Optional<TreeSpecies> stripped = strippedSpeciesOf(item);
-        if (stripped.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(sequence(
-                gotoTarget(target),
-                new ScriptCall(
-                        "strip_log",
-                        Map.of(SPECIES, stripped.get().id(), COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)),
-                new ScriptCall(
-                        "collect_drops",
-                        Map.of(RADIUS, CatalogLimits.DROP_RADIUS_MAX, "filter", List.of(pathOf(item))))));
-    }
-
-    private static Optional<TreeSpecies> saplingSpeciesOf(String item) {
-        String name = pathOf(item);
-        return TreeSpecies.ALL.stream()
-                .filter(tree -> (tree.id() + "_sapling").equals(name)
-                        || pathOf(tree.saplingId()).equals(name))
-                .findFirst();
-    }
-
-    private static Optional<TreeSpecies> strippedSpeciesOf(String item) {
-        String name = pathOf(item);
-        return TreeSpecies.ALL.stream()
-                .filter(tree -> ("stripped_" + tree.id() + "_log").equals(name))
-                .findFirst();
-    }
-
-    private static String pathOf(String item) {
-        return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
     }
 
     private static Optional<TreeSpecies> treeOf(String item) {

@@ -25,8 +25,6 @@ public final class GraphNames {
             "deepslate_diamond_ore", DIAMOND_FOUND);
     private static final String TREE = "tree:";
     private static final String LOG = "_log";
-    private static final String MANGROVE_SAPLING = "mangrove_sapling";
-    private static final String MANGROVE_PROPAGULE = "mangrove_propagule";
 
     private GraphNames() {}
 
@@ -35,27 +33,19 @@ public final class GraphNames {
         Objects.requireNonNull(node, "Узел графа не может быть null: его переводят в предмет мира");
         WoodSpecies.check(wood);
         if (!graph.isGroup(node)) {
-            return worldItem(node);
+            return node;
         }
         List<String> members = graph.members(node);
-        String member = members.stream()
-                .filter(entry ->
-                        WoodSpecies.speciesOf(entry).filter(wood::equals).isPresent())
+        return members.stream()
+                .filter(member ->
+                        WoodSpecies.speciesOf(member).filter(wood::equals).isPresent())
                 .findFirst()
                 .orElse(members.get(0));
-        return worldItem(member);
-    }
-
-    private static String worldItem(String node) {
-        return MANGROVE_SAPLING.equals(node) ? MANGROVE_PROPAGULE : node;
     }
 
     public static String graphItem(String item) {
         Objects.requireNonNull(item, "Предмет мира не может быть null: его переводят в узел графа");
         String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
-        if (MANGROVE_PROPAGULE.equals(name)) {
-            return MANGROVE_SAPLING;
-        }
         if (WoodSpecies.speciesOf(name).isPresent()) {
             return name;
         }

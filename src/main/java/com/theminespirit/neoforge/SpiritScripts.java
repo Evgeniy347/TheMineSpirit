@@ -90,7 +90,6 @@ import com.theminespirit.core.script.ShearParams;
 import com.theminespirit.core.script.SmeltParams;
 import com.theminespirit.core.script.SortChestParams;
 import com.theminespirit.core.script.StepOverParams;
-import com.theminespirit.core.script.StripLogParams;
 import com.theminespirit.core.script.SwapToolParams;
 import com.theminespirit.core.script.SwimParams;
 import com.theminespirit.core.script.TakeParams;
@@ -210,7 +209,6 @@ public final class SpiritScripts {
         table.put("collect_drops", spirit -> params -> new CollectDropsScript(spirit, CollectDropsParams.from(params)));
         table.put("goto", spirit -> params -> new GotoScript(spirit, GotoParams.from(params)));
         table.put("chop_tree", spirit -> params -> new ChopTreeScript(spirit, ChopTreeParams.from(params)));
-        table.put("strip_log", spirit -> params -> new StripLogScript(spirit, StripLogParams.from(params)));
         table.put("chop_target", spirit -> params -> new ChopTargetScript(spirit, ChopTargetParams.from(params)));
         table.put("follow", spirit -> params -> new FollowScript(spirit, FollowParams.from(params)));
         table.put("escort", spirit -> params -> new EscortScript(spirit, EscortParams.from(params)));
