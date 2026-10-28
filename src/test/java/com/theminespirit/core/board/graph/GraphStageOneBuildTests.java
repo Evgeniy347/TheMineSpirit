@@ -36,4 +36,26 @@ class GraphStageOneBuildTests {
                         + "ограда " + plan.priority("building:fence") + ", кирка "
                         + plan.priority("craft_stone_pickaxe@spirit-1"));
     }
+
+    @Test
+    void plan_ClearingInProgress_FenceAndClearingBothOnBoard() {
+        GraphWorld world = GraphWorld.settled().with("oak_log", 64).with("oak_planks", 64);
+        world.buildings.put("clearing", GraphState.Built.PLANNED);
+        world.buildings.remove("chests");
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("building:clearing").isPresent()
+                        && plan.task("building:fence")
+                                .map(GraphPlan.Task::feasible)
+                                .orElse(false),
+                "Расчистка и ограда — сразу обе на доске: ограда встаёт там, где место уже свободно, не дожидаясь "
+                        + "конца расчистки (владелец 28.10); расчистка " + plan.task("building:clearing")
+                        + ", ограда " + plan.task("building:fence"));
+        assertTrue(
+                GraphWorld.GRAPH.buildings().get("clearing").advice().contains("settlement_single_y")
+                        && GraphWorld.GRAPH.buildings().get("fence").advice().contains("build_fence_where_cell_free"),
+                "Правила стройки этапа 1 записаны в граф: всё поселение на одном y, ограда — на освободившейся клетке");
+    }
 }

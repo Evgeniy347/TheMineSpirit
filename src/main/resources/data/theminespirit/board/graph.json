@@ -2565,8 +2565,16 @@
       "case": "CLEAR_GROUNDS",
       "stage": 1,
       "base": 50,
-      "materials": {},
-      "tool": "pickaxe"
+      "materials": {
+        "#planks": 8
+      },
+      "tool": "pickaxe",
+      "advice": [
+        "settlement_single_y",
+        "clear_above_y_only_ignore_buildings",
+        "chop_trees_on_plot",
+        "temp_chest_for_dump"
+      ]
     },
     "chests": {
       "case": "STOCK_CHESTS",
@@ -2609,8 +2617,8 @@
       "materials": {
         "oak_log": 40
       },
-      "requires": [
-        "clearing"
+      "advice": [
+        "build_fence_where_cell_free"
       ]
     },
     "hut": {
