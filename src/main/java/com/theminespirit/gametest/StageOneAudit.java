@@ -16,25 +16,24 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.FirstStepsRunner;
 import com.theminespirit.neoforge.board.GroundProbe;
 import com.theminespirit.neoforge.board.SchemeAudit;
-import com.theminespirit.neoforge.board.StageBuilds;
 import com.theminespirit.neoforge.board.StrayBlocks;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.IntBinaryOperator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 final class StageOneAudit {
     private static final int SHOWN = 6;
-    private static final int SCAN = 12;
     private static final List<BoardCase> STEPS =
             List.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
 
@@ -60,35 +59,26 @@ final class StageOneAudit {
     }
 
     private static void level(ServerLevel level, StageSite site, List<String> problems) {
-        List<String> off = new ArrayList<>();
-        BlockCoord anchor = site.anchor();
-        for (ColumnMask.Cell cell : site.level().cells()) {
-            int feet = feet(level, anchor, cell.x(), cell.z());
-            if (site.levelColumn(cell.x(), cell.z()) && Math.abs(feet - anchor.y()) > PlotLeveling.TOLERANCE) {
-                BlockPos top = new BlockPos(cell.x(), feet - 1, cell.z());
-                off.add("(" + cell.x() + ", " + cell.z() + ") ноги " + feet + " на "
-                        + BuiltInRegistries.BLOCK
-                                .getKey(level.getBlockState(top).getBlock())
-                                .getPath());
-            }
+        List<String> extra = new ArrayList<>();
+        int y = site.anchor().y();
+        IntBinaryOperator tops = (x, z) -> GroundProbe.top(level, x, z, y + 1);
+        for (PlotLeveling.Box box : SiteLevels.extra(site, tops, cell -> site.ringPost(cell.x(), cell.z()))) {
+            extra.add(box + " лишнее выше y=" + y);
         }
-        report("площадки этапа не ровные на y=" + anchor.y(), off, problems);
+        report("площадки этапа не расчищены выше y=" + y, extra, problems);
     }
 
     private static void ring(ServerLevel level, StageSite site, List<String> problems) {
+        int fenceY = SiteLevels.fenceY(site);
         List<String> steps = new ArrayList<>();
-        int[][] sides = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         for (ColumnMask.Cell post : site.ring().posts()) {
-            int base = StageBuilds.builtPost(level, post, StageBuilds.postY(level, site, post));
-            for (int[] side : sides) {
-                int x = post.x() + side[0];
-                int z = post.z() + side[1];
-                if (!site.inside(x, z) && GroundProbe.feet(level, x, z, base) > base) {
-                    steps.add("(" + x + ", " + z + ") выше столба " + post + " на y=" + base);
-                }
+            BlockState state = level.getBlockState(new BlockPos(post.x(), fenceY, post.z()));
+            if (!state.is(BlockTags.FENCES) && !state.is(BlockTags.FENCE_GATES)) {
+                steps.add("(" + post.x() + ", " + post.z() + ") на y=" + fenceY + " нет столба: "
+                        + BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath());
             }
         }
-        report("уступ у ограды снаружи — забор перешагивается", steps, problems);
+        report("ограда не на одном уровне y=" + fenceY, steps, problems);
     }
 
     private static void building(
@@ -171,21 +161,6 @@ final class StageOneAudit {
             }
         }
         report("спуск в шахту не по схеме", wrong, problems);
-    }
-
-    static int feet(ServerLevel level, BlockCoord anchor, int x, int z) {
-        for (int y = anchor.y() + SCAN; y > anchor.y() - SCAN; y--) {
-            BlockState state = level.getBlockState(new BlockPos(x, y, z));
-            if (state.is(BlockTags.DIRT)
-                    || state.is(BlockTags.BASE_STONE_OVERWORLD)
-                    || state.is(BlockTags.SAND)
-                    || state.is(Blocks.GRAVEL)
-                    || state.is(Blocks.COBBLESTONE)
-                    || !state.getFluidState().isEmpty()) {
-                return y + 1;
-            }
-        }
-        return anchor.y() - SCAN;
     }
 
     private static void report(String what, List<String> cells, List<String> problems) {

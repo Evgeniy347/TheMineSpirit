@@ -1,6 +1,8 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.PlotLeveling;
 import java.util.List;
@@ -31,6 +33,59 @@ class SiteLevelsTests {
                         new PlotLeveling.Box(cell.x(), LEVEL + 2, cell.z(), cell.x(), LEVEL + 2, cell.z())),
                 extra,
                 "Лишним считается только то, что выше уровня: блок на уровне y — опора, его не срезают");
+    }
+
+    @Test
+    void fenceY_AnySite_OneAboveLevel() {
+        assertEquals(
+                LEVEL + 1,
+                SiteLevels.fenceY(SITE),
+                "Вся ограда стоит на одном уровне y+1: столб над уровнем, а не по высоте своей земли");
+    }
+
+    @Test
+    void extra_FencePostColumn_CutsBlocksAboveLevel() {
+        ColumnMask.Cell post = SITE.ring().posts().get(0);
+
+        assertTrue(
+                !SiteLevels.extra(SITE, tops(post, LEVEL + 3)).isEmpty(),
+                "Клетку столба ограды расчищают как все: дерево над ней не даёт поставить забор");
+    }
+
+    @Test
+    void fenceReady_ColumnAtLevel_IsReady() {
+        ColumnMask.Cell post = SITE.ring().posts().get(0);
+
+        assertTrue(
+                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 1)),
+                "Клетка готова, когда выше y нет блоков: земля на уровне y столбу не мешает");
+        assertFalse(
+                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 2)),
+                "Блок над уровнем держит столб: его сначала срезает расчистка");
+    }
+
+    @Test
+    void needsSupport_ColumnAtLevel_AddsOneDirt() {
+        ColumnMask.Cell post = SITE.ring().posts().get(0);
+
+        assertTrue(
+                SiteLevels.needsSupport(SITE, post, tops(post, LEVEL)),
+                "Под столбом нет опоры на уровне y — подсыпают одну землю только под ним");
+        assertFalse(
+                SiteLevels.needsSupport(SITE, post, tops(post, LEVEL + 1)),
+                "Опора на уровне y уже есть — лишнюю землю под столб не кладут");
+    }
+
+    @Test
+    void readyPosts_RingWithOneClearedColumn_ReturnsOnlyCleared() {
+        ColumnMask.Cell first = SITE.ring().posts().get(0);
+        IntBinaryOperator tops = (x, z) -> x == first.x() && z == first.z() ? LEVEL + 1 : LEVEL + 2;
+
+        assertEquals(
+                List.of(first),
+                SiteLevels.readyPosts(SITE, tops),
+                "В работу берут только те столбы, чьи клетки уже освободила расчистка: ограда и расчистка не ждут "
+                        + "друг друга целиком");
     }
 
     @Test

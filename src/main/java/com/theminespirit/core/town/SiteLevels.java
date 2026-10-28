@@ -19,6 +19,10 @@ public final class SiteLevels {
         return site.anchor().y();
     }
 
+    public static int fenceY(StageSite site) {
+        return level(site) + 1;
+    }
+
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops) {
         return new PlotLeveling(extra(site, tops), List.of(), PlotLeveling.DEFAULT_BLOCK);
     }
@@ -53,6 +57,24 @@ public final class SiteLevels {
             boxes.addAll(merged(runs));
         });
         return List.copyOf(boxes);
+    }
+
+    public static boolean fenceReady(StageSite site, ColumnMask.Cell post, IntBinaryOperator tops) {
+        Objects.requireNonNull(post, "Столб ограды не может быть null: проверяется его клетка");
+        Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них клетку столба не проверить");
+        return tops.applyAsInt(post.x(), post.z()) <= fenceY(site);
+    }
+
+    public static boolean needsSupport(StageSite site, ColumnMask.Cell post, IntBinaryOperator tops) {
+        Objects.requireNonNull(post, "Столб ограды не может быть null: проверяется его клетка");
+        Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них опору под столбом не найти");
+        return tops.applyAsInt(post.x(), post.z()) <= level(site);
+    }
+
+    public static List<ColumnMask.Cell> readyPosts(StageSite site, IntBinaryOperator tops) {
+        return site.ring().posts().stream()
+                .filter(post -> fenceReady(site, post, tops))
+                .toList();
     }
 
     private static boolean building(StageSite site, int x, int y, int z) {
