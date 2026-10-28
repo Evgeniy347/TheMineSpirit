@@ -66,26 +66,17 @@ public final class StockReader {
         }
         StockScan.Result found =
                 StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT, blockBudget, blocks(level));
-        List<BlockCoord> candidates = new ArrayList<>();
-        SettlementChestStore.get(level).chests().all().forEach(pos -> {
-            if (!candidates.contains(pos)) {
-                candidates.add(pos);
-            }
-        });
-        found.containers().forEach(pos -> {
-            if (!candidates.contains(pos)) {
-                candidates.add(pos);
-            }
-        });
         int reads = 0;
-        for (BlockCoord pos : candidates) {
-            if (!level.isLoaded(new BlockPos(pos.x(), pos.y(), pos.z()))) {
-                continue;
-            }
+        List<BlockCoord> known = SettlementChestStore.get(level).chests().all();
+        for (BlockCoord pos : StockScan.knownFirst(known, found.containers())) {
             if (reads >= containerBudget) {
                 break;
             }
-            ContainerAccess.Open open = ContainerAccess.open(level, new BlockPos(pos.x(), pos.y(), pos.z()));
+            BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
+            if (!level.isLoaded(at)) {
+                continue;
+            }
+            ContainerAccess.Open open = ContainerAccess.open(level, at);
             if (open instanceof ContainerAccess.Opened container) {
                 StackMapper mapper = new StackMapper();
                 for (Stack stack : mapper.map(container.container())) {

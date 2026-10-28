@@ -43,6 +43,16 @@ class StrayRuleTests {
     }
 
     @Test
+    void stray_MasterStation_IsKept() {
+        assertFalse(
+                StrayRule.stray("minecraft:crafting_table", EnumSet.noneOf(StrayRule.Fact.class), PROTECTION),
+                "Стол мастера не лишняя постройка: без него духи не скрафтят материалы и хижина встанет");
+        assertFalse(
+                StrayRule.stray("minecraft:furnace", EnumSet.noneOf(StrayRule.Fact.class), PROTECTION),
+                "Печь двора — станция, а не обломок: её снос отнимает у поселения варку");
+    }
+
+    @Test
     void stray_LogOutsideTree_IsDemolishedButTreeStays() {
         assertTrue(
                 StrayRule.stray("minecraft:oak_log", EnumSet.of(StrayRule.Fact.LOG), PROTECTION),

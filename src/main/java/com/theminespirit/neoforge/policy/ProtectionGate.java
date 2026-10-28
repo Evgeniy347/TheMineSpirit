@@ -12,6 +12,7 @@ import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
+import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
@@ -39,11 +40,11 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreak(BlockPos pos, BlockState state) {
-        return decideBreak(pos, state, false);
+        return decideBreak(pos, state, false, false);
     }
 
     public BlockProtection.Decision checkHarvest(BlockPos pos, BlockState state) {
-        return decideBreak(pos, state, true);
+        return decideBreak(pos, state, true, false);
     }
 
     public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
@@ -51,13 +52,20 @@ public final class ProtectionGate {
                 && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
             return new BlockProtection.Allowed();
         }
-        return checkBreak(pos, state);
+        return decideBreak(pos, state, false, true);
     }
 
     private static boolean inPlan(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .site()
                 .map(site -> site.planCell(coord.x(), coord.y(), coord.z()))
+                .orElse(false);
+    }
+
+    private static boolean inFenceStrip(ServerLevel level, BlockCoord coord, String blockId) {
+        return SettlementPlotStore.get(level)
+                .site()
+                .map(site -> FenceDemolition.allowed(blockId, site.fenceStrip(), coord.x(), coord.z()))
                 .orElse(false);
     }
 
@@ -68,7 +76,7 @@ public final class ProtectionGate {
                 .orElse(false);
     }
 
-    private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended) {
+    private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended, boolean demolish) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         BlockProtection.Decision outside = checkTravel(coord);
@@ -86,8 +94,11 @@ public final class ProtectionGate {
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
+        String id = blockId(state);
         BlockProtection.Decision decision;
-        if (tended) {
+        if (demolish && !inProtectedZone && level instanceof ServerLevel server && inFenceStrip(server, coord, id)) {
+            decision = new BlockProtection.Allowed();
+        } else if (tended) {
             decision = PROTECTION.check(
                     blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),

@@ -59,10 +59,10 @@ public final class StageSites {
         ColumnMask enclosure =
                 connected(box(core, rules.spacing().stageMargin()).intersect(plan.region()), anchor);
         FenceLine ring = FenceGates.around(enclosure, plan.streets());
+        ColumnMask fenceStrip =
+                FenceStrip.of(ring, rules.spacing().fenceStrip()).intersect(plan.region());
         ColumnMask between = streets.intersect(box(pads, 0));
-        ColumnMask level = pads.union(between)
-                .union(FenceStrip.of(ring, rules.spacing().fenceStrip()))
-                .intersect(plan.region());
+        ColumnMask level = pads.union(between).union(fenceStrip).intersect(plan.region());
         Placement mine = need(plan, MINE, stage);
         Placement orchard = need(plan, ORCHARD, stage);
         return new StageSite(
@@ -77,6 +77,7 @@ public final class StageSites {
                 extraOrchards,
                 level,
                 enclosure,
+                fenceStrip,
                 ring);
     }
 
