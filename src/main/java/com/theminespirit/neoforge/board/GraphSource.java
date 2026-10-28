@@ -43,8 +43,11 @@ public final class GraphSource {
             return Set.of();
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
-        GraphSurroundings.Around around =
-                GraphSurroundings.of(level, service, scan.orElseThrow().home()).with(events);
+        RouteWatch.Result routes = RouteWatch.tick(level, scan.orElseThrow().home());
+        GraphSurroundings.Around around = GraphSurroundings.of(
+                        level, service, scan.orElseThrow().home())
+                .with(events)
+                .withRoutes(routes.events(), routes.world());
         GraphState state = GraphInputs.state(level, service, spirits, stock, scan.orElseThrow(), graph, around);
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);

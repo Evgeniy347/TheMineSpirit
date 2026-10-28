@@ -14,6 +14,8 @@ import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.route.RouteMarker;
+import com.theminespirit.core.board.route.RoutePlan;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
@@ -94,6 +96,15 @@ final class GraphInputs {
             ServerLevel level, BoardLedger ledger, FirstStepsRunner.StageScan scan, SupplyGraph graph) {
         Map<String, Built> buildings = new HashMap<>(StageBuilt.of(scan.facts()));
         buildings.putIfAbsent(ORCHARD + scan.wood(), buildings.get(StageBuilt.ORCHARD));
+        RoutePlan routes = RouteStore.get(level).plan();
+        for (RouteMarker marker : routes.markers().values()) {
+            buildings.put(marker.resource().pathBuilding(), marker.pathBuilt() ? Built.BUILT : Built.PLANNED);
+            if (marker.routeBuilt()) {
+                buildings.put(marker.resource().routeBuilding(), Built.BUILT);
+            } else if (marker.pathBuilt()) {
+                buildings.put(marker.resource().routeBuilding(), Built.PLANNED);
+            }
+        }
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
         graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));

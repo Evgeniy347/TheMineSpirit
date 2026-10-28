@@ -61,6 +61,7 @@ public final class TicketPlans {
     private static final String TICKS = "ticks";
     private static final String CLEAR_AREA = "clear_area";
     private static final String WITHDRAW = "withdraw";
+    private static final String DEPOSIT = "deposit";
     private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
@@ -148,7 +149,7 @@ public final class TicketPlans {
             case CAPTURE_ANIMAL -> captureAnimal(target);
             case LURE_ANIMAL -> lureAnimal(target);
             case SUPPLY_SITE -> supplySite(target);
-            case GATHER_MATERIALS -> gatherMaterials(target);
+            case GATHER_MATERIALS -> target.leveling() == null ? gatherMaterials(target) : routeDig(target);
             case CLEAR_GROUNDS -> withLeftovers(GroundsPlan.plan(target), target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
@@ -205,7 +206,7 @@ public final class TicketPlans {
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target);
             case LIGHTING -> lighting(target);
-            case BUILD_STREETS -> new SequenceNode(List.of(gotoPoint(target.target())));
+            case BUILD_STREETS -> routePath(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
             case BREED_ANIMALS -> breedAnimals(target);
@@ -540,7 +541,7 @@ public final class TicketPlans {
         for (String item : items) {
             steps.add(new FallbackNode(List.of(
                     new ScriptCall(
-                            "deposit",
+                            DEPOSIT,
                             Map.of(
                                     CONTAINER,
                                     NEAREST,
@@ -614,7 +615,7 @@ public final class TicketPlans {
                 new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch)),
                 gotoTarget(target),
                 new ScriptCall(
-                        "deposit",
+                        DEPOSIT,
                         Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)));
     }
 
@@ -623,6 +624,66 @@ public final class TicketPlans {
                 ? Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT)
                 : Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "filter", target.dropItems());
         return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
+    }
+
+    private static TaskNode routePath(TicketTarget target) {
+        PlotLeveling plan = target.leveling();
+        if (plan == null || target.from() == null) {
+            return new SequenceNode(List.of(gotoPoint(target.target())));
+        }
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(gotoPoint(target.from()));
+        int volume = plan.fillVolume();
+        for (int left = volume; left > 0; left -= CatalogLimits.COUNT_MAX) {
+            steps.add(new ScriptCall(
+                    ACQUIRE, Map.of(ITEM, full(plan.block()), COUNT, Math.min(left, CatalogLimits.COUNT_MAX))));
+        }
+        plan.cutTopDown().forEach(box -> steps.add(new ScriptCall(CLEAR_AREA, boxParams(box, null))));
+        plan.fill().forEach(box -> steps.add(new ScriptCall(FILL, boxParams(box, plan.block()))));
+        return new SequenceNode(steps);
+    }
+
+    private static Map<String, Object> boxParams(PlotLeveling.Box box, @Nullable String block) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("x1", box.x1());
+        params.put("y1", box.y1());
+        params.put("z1", box.z1());
+        params.put("x2", box.x2());
+        params.put("y2", box.y2());
+        params.put("z2", box.z2());
+        if (block != null) {
+            params.put(BLOCK, full(block));
+        }
+        return Map.copyOf(params);
+    }
+
+    private static TaskNode routeDig(TicketTarget target) {
+        PlotLeveling plan = Objects.requireNonNull(
+                target.leveling(), "Добыча с маршрута без плана слоёв: нечего снимать с участка");
+        List<TaskNode> steps = new ArrayList<>();
+        BlockCoord dig = target.from() == null ? target.target() : target.from();
+        steps.add(gotoPoint(dig));
+        plan.cutTopDown().forEach(box -> steps.add(new ScriptCall(CLEAR_AREA, boxParams(box, null))));
+        steps.add(new ScriptCall("collect_drops", Map.of(RADIUS, CatalogLimits.DROP_RADIUS_MAX)));
+        steps.add(gotoTarget(target));
+        if (target.supplyItem() != null) {
+            steps.add(new ScriptCall(
+                    DEPOSIT,
+                    Map.of(
+                            CONTAINER,
+                            NEAREST,
+                            ITEM,
+                            target.supplyItem(),
+                            COUNT,
+                            Math.min(Math.max(1, target.supplyCount()), CatalogLimits.COUNT_MAX),
+                            RADIUS,
+                            SUPPLY_CONTAINER_RADIUS)));
+        }
+        return new SequenceNode(steps);
+    }
+
+    private static String full(String block) {
+        return block.contains(":") ? block : MINECRAFT + block;
     }
 
     private static TaskNode gatherMaterials(TicketTarget target) {
@@ -634,7 +695,7 @@ public final class TicketPlans {
                 gotoTarget(target),
                 new FallbackNode(List.of(
                         new ScriptCall(
-                                "deposit",
+                                DEPOSIT,
                                 Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                 store(target, LEFTOVERS.toArray(String[]::new)));

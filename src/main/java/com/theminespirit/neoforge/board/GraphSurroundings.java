@@ -46,6 +46,14 @@ final class GraphSurroundings {
             return new Around(world, Set.copyOf(all), drop, decay, nearest);
         }
 
+        Around withRoutes(Set<String> moreEvents, Set<String> moreWorld) {
+            Set<String> allEvents = new HashSet<>(events);
+            allEvents.addAll(moreEvents);
+            Set<String> allWorld = new HashSet<>(world);
+            allWorld.addAll(moreWorld);
+            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drop, decay, nearest);
+        }
+
         Optional<BlockCoord> resource(String world) {
             return Optional.ofNullable(nearest.get(world));
         }

@@ -413,10 +413,9 @@ class GraphPlannerTests {
                 "Просьба игрока — задание высшего приоритета: " + plan.task("event:player_request:player_request"));
         assertTrue(
                 plan.task("building:path_desert")
-                        .map(task -> !task.implemented())
+                        .map(GraphPlan.Task::implemented)
                         .orElse(false),
-                "Открытый биом без ресурса ставит тропинку до него (прокладка — «в разработке»): "
-                        + plan.task("building:path_desert"));
+                "Открытый биом ставит тропинку до него, её механика реализована: " + plan.task("building:path_desert"));
     }
 
     @Test

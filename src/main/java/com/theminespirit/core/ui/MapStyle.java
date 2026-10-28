@@ -14,6 +14,7 @@ public final class MapStyle {
     public static final int LABEL_BACKGROUND = 0x99000000;
     public static final int SPIRIT = 0xFF66DD66;
     public static final int PLAYER = 0xFF54A0FF;
+    public static final int ROUTE = 0xFFE0B050;
     private static final int PERCENT = 100;
     private static final int LOT_EMPTY = 0xA84E5A3A;
     private static final int LOT_DONE = 0xA86FA548;
@@ -38,7 +39,11 @@ public final class MapStyle {
 
     public static int marker(MapMarker.Kind kind) {
         Objects.requireNonNull(kind, "Вид метки карты не может быть null");
-        return kind == MapMarker.Kind.SPIRIT ? SPIRIT : PLAYER;
+        return switch (kind) {
+            case SPIRIT -> SPIRIT;
+            case PLAYER -> PLAYER;
+            case ROUTE -> ROUTE;
+        };
     }
 
     public static int blend(int from, int to, int percent) {
