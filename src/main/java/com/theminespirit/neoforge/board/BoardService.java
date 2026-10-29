@@ -35,7 +35,6 @@ import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.movement.PitEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -43,7 +42,6 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.core.town.StageWork;
-import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -76,7 +74,6 @@ public final class BoardService {
     private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
-    private static final long DIG_OUT_PAUSE_TICKS = 1200;
 
     private final Board board;
     private final HerdCycles animals;
@@ -88,9 +85,8 @@ public final class BoardService {
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final Map<UUID, Launched> launched = new HashMap<>();
-    private final Map<UUID, Long> digOutAfter = new HashMap<>();
+    private final DigOutWatch digOut;
     private final TaskStall stall = new TaskStall();
-    private final Map<UUID, Long> digOutChecked = new HashMap<>();
     private final Map<String, Long> issuedGenerations = new HashMap<>();
     private final Map<String, Long> supplyClosed = new HashMap<>();
     private final AbsentOwners absentOwners = new AbsentOwners();
@@ -147,6 +143,7 @@ public final class BoardService {
             }
         }
         journal.restore(board.ledger());
+        this.digOut = new DigOutWatch(this);
     }
 
     public static BoardService create(ServerLevel level) {
@@ -240,7 +237,7 @@ public final class BoardService {
             board.retain(liveCauses, now);
             retains++;
         }
-        digOut(level, spirits);
+        digOut.tick(level, spirits, now);
         issue(level, spirits, now);
         reconcileActivities(spirits, true);
         releaseDeadHolders(level, spirits, now);
@@ -583,52 +580,7 @@ public final class BoardService {
         return placed.total() > 0 && placed.done() >= placed.total();
     }
 
-    private void digOut(ServerLevel level, List<SpiritEntity> spirits) {
-        long now = level.getGameTime();
-        for (SpiritEntity spirit : spirits) {
-            BlockPos feet = spirit.blockPosition();
-            if (spirit.isRemoved()) {
-                continue;
-            }
-            boolean digging = DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
-                    && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
-            boolean paused = now < digOutAfter.getOrDefault(spirit.getUUID(), 0L);
-            if (DigOutScript.open(level, feet)) {
-                if (!digging && !paused && idleOrActivity(spirit)) {
-                    climbOut(spirit, now);
-                }
-                continue;
-            }
-            boolean sealed = !digging && !paused && DigOutScript.sealed(level, feet);
-            BlockCoord home = spirit.home().orElseGet(() -> homeOf(spirits));
-            if (now >= digOutChecked.getOrDefault(spirit.getUUID(), 0L)) {
-                digOutChecked.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
-                LOGGER.info(
-                        "[dig_out] проверка: дух {} в {} без неба над головой — замурован {}, уже копает {}, пауза {}, задача {}"
-                                + ", дом {}",
-                        spirit.displayName(),
-                        feet.toShortString(),
-                        sealed,
-                        digging,
-                        paused,
-                        spirit.currentTaskScript().orElse("-"),
-                        spirit.home().isPresent() ? home : "нет (дом поселения " + home + ")");
-            }
-            if (!sealed) {
-                continue;
-            }
-            digOutAfter.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
-            LOGGER.warn(
-                    "[incident] дух {} замурован в {}: воздуха к поверхности нет — копает лестницу вверх к дому {}",
-                    spirit.displayName(),
-                    feet.toShortString(),
-                    home);
-            board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
-            spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", home.x(), "y", home.y(), "z", home.z())));
-        }
-    }
-
-    private boolean idleOrActivity(SpiritEntity spirit) {
+    boolean idleOrActivity(SpiritEntity spirit) {
         if (spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
             return true;
         }
@@ -636,23 +588,12 @@ public final class BoardService {
         return own != null && own.generation() == spirit.taskGeneration();
     }
 
-    private void climbOut(SpiritEntity spirit, long now) {
-        Optional<PitEscape.Exit> pit = PitRescue.trapped(spirit);
-        if (pit.isEmpty()) {
-            return;
-        }
-        digOutAfter.put(spirit.getUUID(), now + DIG_OUT_PAUSE_TICKS);
-        PitEscape.Exit exit = pit.orElseThrow();
-        LOGGER.warn(
-                "[incident] дух {} в яме {}: пути наверх нет — поднимается на {} у ({}, {}) к краю",
-                spirit.displayName(),
-                spirit.blockPosition().toShortString(),
-                exit.rise(),
-                exit.dx(),
-                exit.dz());
+    void releaseAssigned(SpiritEntity spirit) {
         board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
+    }
+
+    void forgetLaunch(SpiritEntity spirit) {
         launched.remove(spirit.getUUID());
-        spirit.startTask(PitRescue.plan(spirit, exit));
     }
 
     private Optional<BoardCase> occupationOf(SpiritEntity spirit) {
@@ -1231,7 +1172,7 @@ public final class BoardService {
                 || status == BoardStatus.ASSIGNED;
     }
 
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
+    static BlockCoord homeOf(List<SpiritEntity> spirits) {
         return spirits.stream()
                 .map(SpiritEntity::home)
                 .flatMap(Optional::stream)
