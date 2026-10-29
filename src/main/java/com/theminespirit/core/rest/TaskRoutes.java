@@ -26,18 +26,21 @@ public final class TaskRoutes {
     private final PlanningService planning;
     private final IdempotencyCache idempotency;
     private final SseSlots slots;
+    private final BoardGateway board;
 
     public TaskRoutes(
             TaskRegistry registry,
             TaskGateway gateway,
             PlanningService planning,
             IdempotencyCache idempotency,
-            SseSlots slots) {
+            SseSlots slots,
+            BoardGateway board) {
         this.registry = Objects.requireNonNull(registry, "registry не может быть null: задачи живут в реестре");
         this.gateway = Objects.requireNonNull(gateway, "gateway не может быть null: мир двигает только платформа");
         this.planning = Objects.requireNonNull(planning, "planning не может быть null: цель превращает планировщик");
         this.idempotency = Objects.requireNonNull(idempotency, "idempotency не может быть null: повтор снимает память");
         this.slots = Objects.requireNonNull(slots, "slots не может быть null: лимит потоков считает счётчик");
+        this.board = Objects.requireNonNull(board, "board не может быть null: задания доски живут не в REST-реестре");
     }
 
     public List<Route> routes() {
@@ -107,7 +110,17 @@ public final class TaskRoutes {
     }
 
     private RestResponse get(RestRequest ignoredRequest, PathParams params) {
-        return RestResponse.ok(TaskJson.toJson(knownTask(params.get("id"))));
+        String taskId = params.get("id");
+        return RestResponse.ok(
+                registry.get(taskId).map(TaskJson::toJson).orElseGet(() -> BoardJson.toJson(knownBoardTask(taskId))));
+    }
+
+    private BoardTask knownBoardTask(String taskId) {
+        return board.tasks().stream()
+                .filter(task -> task.id().equals(taskId))
+                .findFirst()
+                .orElseThrow(
+                        () -> new ApiException(ErrorCode.NOT_FOUND, lostTaskMessage(taskId), Map.of(TASK_ID, taskId)));
     }
 
     private RestResponse delete(RestRequest ignoredRequest, PathParams params) {

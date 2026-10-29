@@ -93,6 +93,24 @@ class TaskRunnerProgressTests {
     }
 
     @Test
+    void failedAt_CountingScriptFails_KeepsDoneAndTarget() {
+        TaskRunner runner = TaskRunner.start(
+                new ScriptCall(COUNTED, Map.of()),
+                TestScripts.singleRegistry(COUNTED, TestScripts.failingCounting(4)),
+                TestScripts.condition("yes", true));
+
+        RunStatus status = RunStatus.RUNNING;
+        for (int tick = 0; tick < 4 && status == RunStatus.RUNNING; tick++) {
+            status = runner.tick();
+        }
+
+        assertEquals(RunStatus.FAILED, status, "Счётный скрипт проваливается — задача падает");
+        RunProgress failedAt = runner.failedAt().orElseThrow();
+        assertEquals(4, failedAt.done(), "Провал обязан сохранить сделанное: иначе непонятно, где дух застрял");
+        assertEquals(4, failedAt.target(), "Провал обязан сохранить цель счётного скрипта");
+    }
+
+    @Test
     void failedAt_ScriptFailsOnFirstTick_NamesFailedScript() {
         TaskRunner runner = TaskRunner.start(
                 new ScriptCall(FAST, Map.of()),

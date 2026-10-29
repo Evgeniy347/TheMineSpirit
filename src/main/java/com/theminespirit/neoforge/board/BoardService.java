@@ -36,6 +36,7 @@ import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.SpeciesIds;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -56,7 +57,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -228,7 +228,7 @@ public final class BoardService {
         targets.keySet().retainAll(alive);
         issuedGenerations.keySet().retainAll(alive);
         List<SpiritEntity> spirits = census(level);
-        cancelOrphans(spirits);
+        cancelOrphans(level, spirits);
         settleOwners(spirits);
         StockParts parts = refreshStock(level, spirits);
         ensureSupply(level, spirits, stock, now);
@@ -241,6 +241,7 @@ public final class BoardService {
             retains++;
         }
         digOut.tick(level, spirits, now);
+        ForceloadGuard.tick(level, spirits, board, targets);
         issue(level, spirits, now);
         notices.watchPending(board, stock, now);
         reconcileActivities(spirits, true);
@@ -640,12 +641,12 @@ public final class BoardService {
     }
 
     public void completePen(String penId) {
-        Species species = speciesOfId(penId);
+        Species species = SpeciesIds.of(penId);
         animals.cycle(species).penBuilt(penId);
         TicketTarget pen = targets.get(penId);
         if (pen != null) {
             targets.put(
-                    cycleId(species, "lure"),
+                    HerdCycles.cycleId(species, "lure"),
                     pen.withSpecies(species)
                             .withLureItem(FeedTable.feedFor(species).get(0)));
         }
@@ -669,30 +670,14 @@ public final class BoardService {
 
     private Species speciesOfCapture(String captureId) {
         Capture capture = captures.get(captureId);
-        return capture == null ? speciesOfId(captureId) : capture.species();
+        return capture == null ? SpeciesIds.of(captureId) : capture.species();
     }
 
     private Species firstCaptureSpecies() {
         return captures.values().stream().findFirst().map(Capture::species).orElse(Species.COW);
     }
 
-    private static Species speciesOfId(String ticketId) {
-        String[] parts = ticketId.split(":", 3);
-        String prefix = parts.length > 1 && "capture".equals(parts[0]) ? parts[1] : ticketId.split("[_:/]", 2)[0];
-        String name = prefix.toLowerCase(Locale.ROOT);
-        for (Species species : Species.all()) {
-            if (species.name().toLowerCase(Locale.ROOT).equals(name)) {
-                return species;
-            }
-        }
-        return Species.COW;
-    }
-
-    private static String cycleId(Species species, String suffix) {
-        return species.name().toLowerCase(Locale.ROOT) + "_" + suffix;
-    }
-
-    private void cancelOrphans(List<SpiritEntity> spirits) {
+    private void cancelOrphans(ServerLevel level, List<SpiritEntity> spirits) {
         if (orphans.isEmpty()) {
             return;
         }
@@ -707,10 +692,11 @@ public final class BoardService {
                 spirit.cancelTask();
                 LOGGER.warn(
                         "[incident] дух {}: задание {} снято сбросом при смене сборки — его задача {} отменена, дух "
-                                + "свободен для доски",
+                                + "свободен для доски; {}",
                         spirit.displayName(),
                         ticket,
-                        spirit.currentTaskScript().orElse("-"));
+                        spirit.currentTaskScript().orElse("-"),
+                        IncidentSnapshots.record(level, spirit, "сброс сборки снял задание " + ticket));
             }
         }
     }
@@ -923,7 +909,7 @@ public final class BoardService {
             return target.species();
         }
         Capture capture = captures.get(ticket.id());
-        return capture == null ? speciesOfId(ticket.id()) : capture.species();
+        return capture == null ? SpeciesIds.of(ticket.id()) : capture.species();
     }
 
     private StockParts refreshStock(ServerLevel level, List<SpiritEntity> spirits) {

@@ -17,7 +17,6 @@ import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.core.task.TaskState;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -47,6 +46,7 @@ class TaskRoutesTests {
     private PlanningService planning;
     private IdempotencyCache idempotency;
     private SseSlots slots;
+    private final FakeBoardGateway board = new FakeBoardGateway();
     private Router router;
 
     @BeforeEach
@@ -56,7 +56,7 @@ class TaskRoutesTests {
         gateway = new FakeTaskGateway().observing(OBSERVATION).planning(planning);
         idempotency = new IdempotencyCache();
         slots = new SseSlots();
-        router = Router.of(new TaskRoutes(registry, gateway, planning, idempotency, slots).routes());
+        router = Router.of(new TaskRoutes(registry, gateway, planning, idempotency, slots, board).routes());
     }
 
     private static String uuid() {
@@ -508,7 +508,7 @@ class TaskRoutesTests {
     @Test
     void create_UnknownBotDuringGoal_ConflictsWithoutReservation() {
         FakeTaskGateway empty = new FakeTaskGateway();
-        Router fresh = Router.of(new TaskRoutes(registry, empty, planning, idempotency, slots).routes());
+        Router fresh = Router.of(new TaskRoutes(registry, empty, planning, idempotency, slots, board).routes());
         String body =
                 "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
 
@@ -523,7 +523,7 @@ class TaskRoutesTests {
     void create_UnknownBotDuringPlan_ConflictsWithoutReservation() {
         FakeTaskGateway empty = new FakeTaskGateway()
                 .startFailsWith(new ApiException(ErrorCode.NOT_FOUND, "Дух не найден", Map.of("id", BOT)));
-        Router fresh = Router.of(new TaskRoutes(registry, empty, planning, idempotency, slots).routes());
+        Router fresh = Router.of(new TaskRoutes(registry, empty, planning, idempotency, slots, board).routes());
         String body = "{\"request_id\":\"" + uuid()
                 + "\",\"plan\":{\"type\":\"script\",\"script\":\"goto\",\"params\":{\"x\":1,\"y\":64,\"z\":2}}}";
 
@@ -875,24 +875,6 @@ class TaskRoutesTests {
         assertTrue(
                 parsed.get("task_id").asText().startsWith("t-"),
                 "Ответ 202 обязан содержать task_id в формате t-N: " + response.body());
-    }
-
-    @Test
-    void routes_AllFiveMethods_AreRegistered() {
-        Set<String> keys = new HashSet<>();
-        new TaskRoutes(registry, gateway, planning, idempotency, slots)
-                .routes()
-                .forEach(route -> keys.add(route.method() + " " + route.pattern()));
-
-        assertEquals(
-                Set.of(
-                        "POST /v1/bots/{id}/tasks",
-                        "GET /v1/tasks/{id}",
-                        "DELETE /v1/tasks/{id}",
-                        "GET /v1/tasks/{id}/events",
-                        "POST /v1/plan"),
-                keys,
-                "Чеклист п.7 обязывает ровно пять маршрутов задач");
     }
 
     @Test

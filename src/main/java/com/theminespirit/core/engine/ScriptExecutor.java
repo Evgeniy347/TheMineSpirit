@@ -12,6 +12,7 @@ final class ScriptExecutor extends NodeExecutor {
     private final ScriptRegistry registry;
     private @Nullable ScriptInstance instance;
     private boolean failed;
+    private ScriptInstance.@Nullable Progress lastProgress;
     private Optional<ScriptResult> collectedResult = Optional.empty();
 
     ScriptExecutor(ScriptCall call, ScriptRegistry registry) {
@@ -30,6 +31,7 @@ final class ScriptExecutor extends NodeExecutor {
             ScriptStatus result = live.tick();
             if (result != ScriptStatus.RUNNING) {
                 collectedResult = live.result();
+                lastProgress = live.progress().orElse(null);
                 instance = null;
             }
             if (result == ScriptStatus.FAILED) {
@@ -92,7 +94,7 @@ final class ScriptExecutor extends NodeExecutor {
 
     @Override
     Optional<ScriptInstance.Progress> scriptProgress() {
-        return instance == null ? Optional.empty() : instance.progress();
+        return instance == null ? Optional.ofNullable(lastProgress) : instance.progress();
     }
 
     @Override

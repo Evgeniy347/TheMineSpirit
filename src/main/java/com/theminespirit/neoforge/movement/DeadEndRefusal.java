@@ -30,6 +30,11 @@ public final class DeadEndRefusal {
             return null;
         }
         return "путь упёрся в тупик в пределах " + GotoTuning.EARLY_REFUSAL_RANGE
-                + " блоков от цели: стоянка за преградой";
+                + " блоков от цели " + at(target) + ": стоянка " + at(spirit.position())
+                + " за преградой, путь кончается в " + at(end);
+    }
+
+    private static String at(Vec3 point) {
+        return "(" + Math.floor(point.x) + ", " + Math.floor(point.y) + ", " + Math.floor(point.z) + ")";
     }
 }

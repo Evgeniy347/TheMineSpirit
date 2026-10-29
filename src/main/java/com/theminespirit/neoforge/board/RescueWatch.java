@@ -10,6 +10,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.movement.StuckSituation;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
 import java.util.List;
@@ -48,13 +49,19 @@ final class RescueWatch {
             if (active(service, id)) {
                 continue;
             }
-            submit(service, id, spirit, feet, grid, now);
+            submit(level, service, id, spirit, feet, grid, now);
         }
         return live;
     }
 
     private static void submit(
-            BoardService service, String id, SpiritEntity spirit, BlockPos feet, StuckSituation.Grid grid, long now) {
+            ServerLevel level,
+            BoardService service,
+            String id,
+            SpiritEntity spirit,
+            BlockPos feet,
+            StuckSituation.Grid grid,
+            long now) {
         boolean tool = hasPickaxe(spirit);
         int steps = spirit.getInventory().countItem(Items.DIRT)
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
@@ -62,13 +69,17 @@ final class RescueWatch {
                 .orElseGet(() -> new BlockCoord(feet.getX(), feet.getY() + StuckSituation.PASSAGE_HEIGHT, feet.getZ()));
         Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, grid, tool, steps);
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
+        String what = "застрял в " + feet.toShortString() + " ("
+                + self.map(plan -> plan.method().name()).orElse("сам не выйдет") + "), задание спасения " + id
+                + " выдано " + assignee.map(UUID::toString).orElse("любому свободному духу");
         LOGGER.warn(
-                "[incident] дух {} застрял в {} ({}): задание спасения {} выдано {}",
+                "[incident] дух {} застрял в {} ({}): задание спасения {} выдано {}; {}",
                 spirit.displayName(),
                 feet.toShortString(),
                 self.map(plan -> plan.method().name()).orElse("сам не выйдет"),
                 id,
-                assignee.map(UUID::toString).orElse("любому свободному духу"));
+                assignee.map(UUID::toString).orElse("любому свободному духу"),
+                IncidentSnapshots.record(level, spirit, what));
         TicketTarget target = TicketTarget.at(coord(feet));
         if (self.isPresent()) {
             target = target.withRescue(self.orElseThrow());

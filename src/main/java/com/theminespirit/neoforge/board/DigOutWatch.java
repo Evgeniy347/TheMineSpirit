@@ -112,14 +112,13 @@ final class DigOutWatch {
             return;
         }
         nextCheck.put(id, now + PAUSE_TICKS);
-        String key = check.sealed() + "|" + check.digging() + "|" + check.paused() + "|" + check.air() + "|"
-                + check.sky() + "|" + check.task();
+        String key = check.stateKey();
         if (key.equals(lastCheck.put(id, key))) {
             return;
         }
         LOGGER.info(
                 "[dig_out] проверка: дух {} в {} — замурован {}, уже копает {}, пауза {}, ближайший воздух над духом {},"
-                        + " небо над ним {}, задача {}, дом {}",
+                        + " небо над ним {}, задача {}, дом {}, спасений за 10 мин: {}",
                 spirit.displayName(),
                 feet.toShortString(),
                 check.sealed(),
@@ -128,10 +127,26 @@ final class DigOutWatch {
                 airText(check.air()),
                 check.sky() ? "есть" : "нет",
                 check.task(),
-                spirit.home().map(BlockCoord::toString).orElse("нет"));
+                spirit.home().map(BlockCoord::toString).orElse("нет"),
+                rescuesSoFar(id, now));
     }
 
-    private record Check(boolean sealed, boolean digging, boolean paused, int air, boolean sky, String task) {}
+    private int rescuesSoFar(UUID id, long now) {
+        Deque<Long> times = rescues.get(id);
+        if (times == null) {
+            return 0;
+        }
+        while (!times.isEmpty() && times.peekFirst() < now - RESCUE_WINDOW_TICKS) {
+            times.removeFirst();
+        }
+        return times.size();
+    }
+
+    record Check(boolean sealed, boolean digging, boolean paused, int air, boolean sky, String task) {
+        String stateKey() {
+            return sealed + "|" + digging + "|" + paused;
+        }
+    }
 
     private int countRescue(UUID id, long now) {
         Deque<Long> times = rescues.computeIfAbsent(id, ignored -> new ArrayDeque<>());

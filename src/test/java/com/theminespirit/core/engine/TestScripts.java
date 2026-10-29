@@ -15,7 +15,11 @@ final class TestScripts {
     }
 
     static ScriptFactory counting(int ticks) {
-        return params -> new CountingInstance(ticks);
+        return params -> new CountingInstance(ticks, ScriptStatus.SUCCEEDED);
+    }
+
+    static ScriptFactory failingCounting(int ticks) {
+        return params -> new CountingInstance(ticks, ScriptStatus.FAILED);
     }
 
     static ScriptFactory observing(int ticks, boolean observes) {
@@ -63,16 +67,18 @@ final class TestScripts {
 
     private static final class CountingInstance implements ScriptInstance {
         private final int target;
+        private final ScriptStatus terminal;
         private int done;
 
-        CountingInstance(int ticks) {
+        CountingInstance(int ticks, ScriptStatus terminal) {
             this.target = ticks;
+            this.terminal = terminal;
         }
 
         @Override
         public ScriptStatus tick() {
             done++;
-            return done >= target ? ScriptStatus.SUCCEEDED : ScriptStatus.RUNNING;
+            return done >= target ? terminal : ScriptStatus.RUNNING;
         }
 
         @Override
