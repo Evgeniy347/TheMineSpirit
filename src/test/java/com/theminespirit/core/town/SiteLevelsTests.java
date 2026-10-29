@@ -68,6 +68,19 @@ class SiteLevelsTests {
     }
 
     @Test
+    void fenceReady_BuiltFenceAtLevel_IsReady() {
+        ColumnMask.Cell post = SITE.ring().posts().get(0);
+
+        assertTrue(
+                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 1), true),
+                "Стоящий забор на уровне y не делает столб неготовым: иначе после постройки фрагмента повторная "
+                        + "выдача видит пустой план и закрывается без работы");
+        assertFalse(
+                SiteLevels.fenceReady(SITE, post, tops(post, LEVEL + 1), false),
+                "Посторонний блок на уровне y держит столб: его срезает расчистка, забором он не считается");
+    }
+
+    @Test
     void needsSupport_ColumnAtLevel_AddsOneDirt() {
         ColumnMask.Cell post = SITE.ring().posts().get(0);
 

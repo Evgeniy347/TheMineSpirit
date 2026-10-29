@@ -81,6 +81,14 @@ public final class SiteLevels {
         return tops.applyAsInt(post.x(), post.z()) <= fenceY(site);
     }
 
+    public static boolean fenceReady(
+            StageSite site, ColumnMask.Cell post, IntBinaryOperator tops, boolean fenceAtLevel) {
+        Objects.requireNonNull(post, "Столб ограды не может быть null: проверяется его клетка");
+        Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них клетку столба не проверить");
+        int top = tops.applyAsInt(post.x(), post.z());
+        return top <= fenceY(site) || (fenceAtLevel && top == fenceY(site) + 1);
+    }
+
     public static boolean needsSupport(StageSite site, ColumnMask.Cell post, IntBinaryOperator tops) {
         Objects.requireNonNull(post, "Столб ограды не может быть null: проверяется его клетка");
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них опору под столбом не найти");
