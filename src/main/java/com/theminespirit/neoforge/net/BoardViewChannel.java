@@ -43,7 +43,7 @@ public final class BoardViewChannel {
     public static final CustomPacketPayload.Type<Reply> REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "board_view_reply"));
 
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
     private static final int MAX_TILES = 4096;
     private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
     private static volatile Consumer<List<BoardTile>> clientReceiver = tiles -> {};
@@ -181,6 +181,10 @@ public final class BoardViewChannel {
                 buf.writeUtf(tile.supplyItem());
             }
             buf.writeVarInt(tile.supplyCount());
+            buf.writeVarInt(tile.details().size());
+            for (String detail : tile.details()) {
+                buf.writeUtf(detail);
+            }
         }
         buf.writeVarInt(reply.stage().number());
     }
@@ -216,6 +220,11 @@ public final class BoardViewChannel {
             long durationTicks = buf.readVarLong();
             String supplyItem = buf.readBoolean() ? buf.readUtf() : null;
             int supplyCount = buf.readVarInt();
+            int detailCount = buf.readVarInt();
+            List<String> details = new ArrayList<>(detailCount);
+            for (int j = 0; j < detailCount; j++) {
+                details.add(buf.readUtf());
+            }
             tiles.add(new BoardTile(
                     id,
                     boardCase,
@@ -231,7 +240,8 @@ public final class BoardViewChannel {
                     finishedAt,
                     durationTicks,
                     supplyItem,
-                    supplyCount));
+                    supplyCount,
+                    details));
         }
         return new Reply(tiles, new BoardStage(buf.readVarInt()));
     }

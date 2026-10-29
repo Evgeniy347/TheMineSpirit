@@ -21,7 +21,43 @@ public record BoardTile(
         long finishedAt,
         long durationTicks,
         @Nullable String supplyItem,
-        int supplyCount) {
+        int supplyCount,
+        List<String> details) {
+    public BoardTile(
+            String id,
+            String boardCase,
+            int level,
+            int priority,
+            @Nullable String spirit,
+            String status,
+            BoardTileGroup group,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long doneAt,
+            long startedAt,
+            long finishedAt,
+            long durationTicks,
+            @Nullable String supplyItem,
+            int supplyCount) {
+        this(
+                id,
+                boardCase,
+                level,
+                priority,
+                spirit,
+                status,
+                group,
+                missing,
+                dependsOn,
+                doneAt,
+                startedAt,
+                finishedAt,
+                durationTicks,
+                supplyItem,
+                supplyCount,
+                List.of());
+    }
+
     public BoardTile(
             String id,
             String boardCase,
@@ -79,6 +115,8 @@ public record BoardTile(
             throw new IllegalArgumentException(
                     "Количество материала " + supplyCount + " отрицательно: запас задания не бывает меньше нуля");
         }
+        details = List.copyOf(Objects.requireNonNull(
+                details, "details не может быть null: задание без подробностей задают пустым списком"));
     }
 
     public boolean completed() {

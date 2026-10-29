@@ -507,19 +507,16 @@ public final class BoardService {
             return false;
         }
         launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
-        board.occupy(spirit.getUUID(), activity, script, board.now());
+        board.occupy(spirit.getUUID(), activity, script, BoardActivities.targetOf(task), board.now());
         return true;
     }
 
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
         for (SpiritEntity spirit : spirits) {
-            Optional<BoardCase> occupation = occupationOf(spirit);
+            Optional<BoardOccupant.Occupation> occupation = occupationOf(spirit);
             if (occupation.isPresent()) {
-                board.occupy(
-                        spirit.getUUID(),
-                        occupation.get(),
-                        spirit.currentPlan().map(BoardActivities::scriptOf).orElse(null),
-                        board.now());
+                BoardOccupant.Occupation occ = occupation.get();
+                board.occupy(spirit.getUUID(), occ.boardCase(), occ.script(), occ.target(), board.now());
             } else {
                 board.vacate(spirit.getUUID());
             }
@@ -601,37 +598,15 @@ public final class BoardService {
         launched.remove(spirit.getUUID());
     }
 
-    private Optional<BoardCase> occupationOf(SpiritEntity spirit) {
+    private Optional<BoardOccupant.Occupation> occupationOf(SpiritEntity spirit) {
         UUID id = spirit.getUUID();
-        if (spirit.isRemoved()) {
-            return Optional.empty();
-        }
-        if (DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
-                && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-            return Optional.of(BoardCase.ACTIVITY_ESCAPE);
-        }
-        if (spirit.tactics().wantsControl() && board.assignedTo(id).isEmpty()) {
-            Optional<BoardCase> tactic = BoardActivities.caseOf(spirit.tactics().action());
-            if (tactic.isPresent()) {
-                return tactic;
-            }
-        }
-        boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
         Launched own = launched.get(id);
         boolean ownActivity = own != null && own.generation() == spirit.taskGeneration();
-        if (running && ownActivity) {
-            return Optional.of(own.activity());
-        }
-        if (!board.assignedTo(id).isEmpty()) {
-            return Optional.empty();
-        }
-        if (running) {
-            return Optional.of(BoardCase.ACTIVITY_EXTERNAL);
-        }
-        if (spirit.isDefenceAssigned()) {
-            return Optional.of(BoardCase.ACTIVITY_DEFEND);
-        }
-        return Optional.empty();
+        return BoardOccupant.of(
+                spirit,
+                ownActivity,
+                own == null ? null : own.activity(),
+                !board.assignedTo(id).isEmpty());
     }
 
     private record Launched(BoardCase activity, long generation) {}

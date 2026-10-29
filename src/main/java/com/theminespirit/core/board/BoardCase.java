@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 public enum BoardCase {
     ACTIVITY_ARM,
+    ACTIVITY_BUILD,
     ACTIVITY_CHOP,
     ACTIVITY_COMBAT,
     ACTIVITY_CRAFT,
@@ -13,10 +14,13 @@ public enum BoardCase {
     ACTIVITY_FORAGE,
     ACTIVITY_GUARD,
     ACTIVITY_MINE,
+    ACTIVITY_MOVE,
     ACTIVITY_REST,
     ACTIVITY_RETREAT,
     ACTIVITY_RETURN,
+    ACTIVITY_SENSE,
     ACTIVITY_SMELT,
+    ACTIVITY_SOCIAL,
     ACTIVITY_UNLOAD,
     BREED_ANIMALS,
     BREW_POTION,

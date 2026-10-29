@@ -12,6 +12,7 @@ class BoardCaseTests {
 
     private static final Set<String> EXPECTED_CASES = Set.of(
             "ACTIVITY_ARM",
+            "ACTIVITY_BUILD",
             "ACTIVITY_CHOP",
             "ACTIVITY_COMBAT",
             "ACTIVITY_CRAFT",
@@ -23,10 +24,13 @@ class BoardCaseTests {
             "ACTIVITY_FORAGE",
             "ACTIVITY_GUARD",
             "ACTIVITY_MINE",
+            "ACTIVITY_MOVE",
             "ACTIVITY_REST",
             "ACTIVITY_RETREAT",
             "ACTIVITY_RETURN",
+            "ACTIVITY_SENSE",
             "ACTIVITY_SMELT",
+            "ACTIVITY_SOCIAL",
             "ACTIVITY_UNLOAD",
             "CLEAR_GROUNDS",
             "COLLECT_DROPS",

@@ -432,15 +432,15 @@ public final class Board {
     }
 
     public void occupy(UUID spirit, BoardCase activity, long now) {
-        occupy(spirit, activity, null, now);
+        occupy(spirit, activity, null, null, now);
     }
 
-    public void occupy(UUID spirit, BoardCase activity, @Nullable String script, long now) {
+    public void occupy(UUID spirit, BoardCase activity, @Nullable String script, @Nullable String target, long now) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие показывается на конкретного духа");
         requireNow(now);
         String id = BoardActivities.idOf(spirit);
         BoardTicket current = tickets.get(id);
-        List<String> details = BoardActivities.details(script);
+        List<String> details = BoardActivities.details(script, target);
         if (current != null
                 && current.boardCase() == activity
                 && current.modifiers().equals(details)) {

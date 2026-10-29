@@ -6,6 +6,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.TacticsAction;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +19,10 @@ import org.jspecify.annotations.Nullable;
 public final class BoardActivities {
     public static final String ID_PREFIX = "activity:";
     public static final String SCRIPT_KEY = "script=";
+    public static final String TARGET_KEY = "target=";
     public static final Set<BoardCase> CASES = EnumSet.of(
             BoardCase.ACTIVITY_ARM,
+            BoardCase.ACTIVITY_BUILD,
             BoardCase.ACTIVITY_CHOP,
             BoardCase.ACTIVITY_COMBAT,
             BoardCase.ACTIVITY_CRAFT,
@@ -31,10 +34,13 @@ public final class BoardActivities {
             BoardCase.ACTIVITY_FORAGE,
             BoardCase.ACTIVITY_GUARD,
             BoardCase.ACTIVITY_MINE,
+            BoardCase.ACTIVITY_MOVE,
             BoardCase.ACTIVITY_REST,
             BoardCase.ACTIVITY_RETREAT,
             BoardCase.ACTIVITY_RETURN,
+            BoardCase.ACTIVITY_SENSE,
             BoardCase.ACTIVITY_SMELT,
+            BoardCase.ACTIVITY_SOCIAL,
             BoardCase.ACTIVITY_UNLOAD);
     private static final String GOTO = "goto";
 
@@ -97,8 +103,63 @@ public final class BoardActivities {
         return null;
     }
 
+    public static Optional<BoardCase> caseOfScript(@Nullable String script) {
+        if (script == null || script.isBlank()) {
+            return Optional.empty();
+        }
+        return BoardScriptCards.of(script);
+    }
+
+    public static @Nullable String targetOf(TaskNode plan) {
+        Objects.requireNonNull(plan, "План задачи не может быть null: цель карточки берётся из него");
+        if (plan instanceof ScriptCall call) {
+            return targetOf(call.params());
+        }
+        if (plan instanceof SequenceNode sequence) {
+            for (TaskNode step : sequence.steps()) {
+                String target = targetOf(step);
+                if (target != null) {
+                    return target;
+                }
+            }
+            return null;
+        }
+        if (plan instanceof RepeatNode repeat) {
+            return targetOf(repeat.step());
+        }
+        return null;
+    }
+
+    private static @Nullable String targetOf(Map<String, Object> params) {
+        Object x = params.get("x");
+        Object y = params.get("y");
+        Object z = params.get("z");
+        if (x != null && y != null && z != null) {
+            return x + "," + y + "," + z;
+        }
+        for (String key : List.of("target", "block", "item", "container", "species", "crop")) {
+            Object value = params.get(key);
+            if (value != null) {
+                return value.toString();
+            }
+        }
+        return null;
+    }
+
     public static List<String> details(@Nullable String script) {
-        return script == null || script.isBlank() ? List.of() : List.of(SCRIPT_KEY + script);
+        return details(script, null);
+    }
+
+    public static List<String> details(@Nullable String script, @Nullable String target) {
+        if (script == null || script.isBlank()) {
+            return List.of();
+        }
+        List<String> details = new ArrayList<>();
+        details.add(SCRIPT_KEY + script);
+        if (target != null && !target.isBlank()) {
+            details.add(TARGET_KEY + target);
+        }
+        return List.copyOf(details);
     }
 
     static BoardTicket ticket(UUID spirit, BoardCase boardCase, long now, List<String> details) {

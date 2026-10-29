@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.intellect.ActivityId;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,6 +89,54 @@ class BoardActivitiesTests {
                 IllegalArgumentException.class,
                 () -> board.occupy(SPIRIT, BoardCase.BUILD_HOUSE, 100),
                 "Занятием показывается только ACTIVITY_*: кейс очереди так подменил бы выдачу");
+    }
+
+    @Test
+    void occupy_ActivityWithTarget_CardCarriesScriptAndTarget() {
+        Board board = new Board(() -> 100);
+
+        board.occupy(SPIRIT, BoardCase.ACTIVITY_CHOP, "chop_tree", "-203,68,-560", 100);
+
+        BoardTicket card = board.all().get(0);
+        assertEquals(
+                List.of("script=chop_tree", "target=-203,68,-560"),
+                card.modifiers(),
+                "Карточка занятия обязана нести скрипт и цель: по ним владелец видит, что дух делает и где");
+    }
+
+    @Test
+    void caseOf_Script_NamesWhatTheSpiritDoes() {
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_CHOP),
+                BoardActivities.caseOfScript("chop_tree"),
+                "Рубка вне задания доски (REST, мозг, план) обязана быть карточкой ACTIVITY_CHOP, а не "
+                        + "безымянным ACTIVITY_EXTERNAL: владелец по карточке решает, чем дух занят");
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_ESCAPE),
+                BoardActivities.caseOfScript("dig_out"),
+                "dig_out — спасение из-под земли, карточка ACTIVITY_ESCAPE с целью, а не внешнее действие");
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_MOVE),
+                BoardActivities.caseOfScript("goto"),
+                "Перемещение — карточка ACTIVITY_MOVE: ходьба без задания тоже видна на доске");
+        assertEquals(
+                Optional.empty(),
+                BoardActivities.caseOfScript("no_such_script"),
+                "Неизвестный скрипт не получает выдуманный кейс: карточку ему даёт ACTIVITY_EXTERNAL");
+    }
+
+    @Test
+    void targetOf_Plan_SaysWhereOrWhat() {
+        TaskNode call = new ScriptCall("dig_out", Map.of("x", 10, "y", 61, "z", -5));
+
+        assertEquals(
+                "10,61,-5",
+                BoardActivities.targetOf(call),
+                "Цель карточки — координаты плана: по ней владелец видит, куда дух идёт, а не «внешнее действие»");
+        assertEquals(
+                List.of("script=dig_out", "target=10,61,-5"),
+                BoardActivities.details("dig_out", BoardActivities.targetOf(call)),
+                "Цель попадает в подробности карточки рядом со скриптом: иначе она не дойдёт до экрана доски");
     }
 
     @Test
