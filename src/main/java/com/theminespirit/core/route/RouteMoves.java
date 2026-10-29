@@ -1,6 +1,10 @@
 package com.theminespirit.core.route;
 
+import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BreakVeto;
+import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -10,12 +14,16 @@ final class RouteMoves {
     private static final int DIRECTIONS = 4;
     private static final int DOWN = 12;
     private static final int NO_LANDING = Integer.MIN_VALUE;
+    private static final int VETO_SAMPLE = 3;
     private static final int[] DX = {1, -1, 0, 0};
     private static final int[] DZ = {0, 0, 1, -1};
     private static final double WALK_OFF_SHARE = 0.8;
 
     private final RouteCells cells;
     private final RouteRules rules;
+    private final SafetyView safety;
+    private final List<Route.Veto> vetoes = new ArrayList<>(VETO_SAMPLE);
+    private int vetoCount;
     private int toX;
     private int toY;
     private int toZ;
@@ -24,6 +32,7 @@ final class RouteMoves {
     RouteMoves(RouteCells cells, RouteRules rules) {
         this.cells = cells;
         this.rules = rules;
+        this.safety = coord -> RouteCell.safety(cells.at(coord.x(), coord.y(), coord.z()));
     }
 
     double cost(int move, int x, int y, int z, int placesLeft, @Nullable List<RouteStep> out) {
@@ -54,6 +63,14 @@ final class RouteMoves {
 
     int placed() {
         return placed;
+    }
+
+    int vetoCount() {
+        return vetoCount;
+    }
+
+    List<Route.Veto> vetoes() {
+        return vetoes;
     }
 
     private double traverse(BlockCoord from, int nx, int nz, int placesLeft, @Nullable List<RouteStep> out) {
@@ -110,6 +127,16 @@ final class RouteMoves {
 
     private double down(int x, int y, int z, @Nullable List<RouteStep> out) {
         if (!standing(x, y, z) || !RouteCell.breakable(cells.at(x, y - 1, z))) {
+            return IMPOSSIBLE;
+        }
+        BlockCoord target = new BlockCoord(x, y - 1, z);
+        if (BreakVeto.checkBelowFeet(target, new BlockCoord(x, y, z), safety) instanceof BreakSafety.Unsafe unsafe) {
+            if (out == null) {
+                vetoCount++;
+                if (vetoes.size() < VETO_SAMPLE) {
+                    vetoes.add(new Route.Veto(target, unsafe.reason()));
+                }
+            }
             return IMPOSSIBLE;
         }
         int land = landing(x, y - 1, z);

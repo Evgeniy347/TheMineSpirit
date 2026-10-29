@@ -1,6 +1,9 @@
 package com.theminespirit.core.route;
 
+import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BreakVeto;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +43,9 @@ final class RouteReplay {
                 }
                 if (lavaNear(cell)) {
                     yield Optional.of("ломка рядом с лавой");
+                }
+                if (BreakVeto.checkBelowFeet(cell, feet, this::safety) instanceof BreakSafety.Unsafe unsafe) {
+                    yield Optional.of("ломка пола под ногами запрещена BreakVeto: " + unsafe.reason());
                 }
                 changed.put(cell, RouteCell.AIR);
                 yield Optional.empty();
@@ -85,6 +91,15 @@ final class RouteReplay {
         }
         feet = to;
         return Optional.empty();
+    }
+
+    private Cell safety(BlockCoord cell) {
+        return switch (RouteCell.kind(at(cell))) {
+            case RouteCell.SOLID, RouteCell.BLOCKED, RouteCell.TALL -> Cell.SOLID;
+            case RouteCell.AIR, RouteCell.CLIMB -> Cell.PASSABLE;
+            case RouteCell.WATER -> Cell.WATER;
+            default -> Cell.LAVA;
+        };
     }
 
     private boolean far(BlockCoord cell) {
