@@ -95,6 +95,7 @@ public final class BoardService {
     private final BoardNotices notices = new BoardNotices();
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
+    private final TransferWait transferWait = new TransferWait();
     private StockView stock = new StockView(Map.of());
     private long lastRebuild = -1;
     private int rebuilds;
@@ -866,6 +867,9 @@ public final class BoardService {
         String why = verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
         if (success) {
             board.complete(ticket.id());
+            if (ticket.boardCase() == BoardCase.TRANSFER_ITEM) {
+                TransferNote.delivered(spirit, ticket, targets.get(ticket.id()));
+            }
             switch (ticket.boardCase()) {
                 case CAPTURE_ANIMAL -> animals.cycle(speciesFor(ticket)).captured(ticket.id());
                 case BUILD_PEN -> completePen(ticket.id());
@@ -932,6 +936,7 @@ public final class BoardService {
 
     private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
         List<BoardTicket> claimable = DispatchRound.order(board.claimable(stock, now));
+        transferWait.retain(board);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
         DispatchRound round = new DispatchRound(board, now);
         DispatchPick pick = new DispatchPick(round, spirits);
@@ -955,7 +960,7 @@ public final class BoardService {
             }
             target = fitted.orElseThrow();
             if (TransferWatch.ensureTransfers(level, this, spirits, stock, ticket, spirit, now)) {
-                awaitTransfers(ticket, spirit, spirits, round);
+                transferWait.await(board, crafters, ticket, spirit, spirits, round);
                 continue;
             }
             TaskNode plan;
@@ -999,7 +1004,7 @@ public final class BoardService {
                 claims++;
                 round.take(spirit.getUUID());
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
-                notices.assigned(board, ticket, pick.whyChosen(ticket, spirit, crafters));
+                notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters));
             } else {
                 LOGGER.error("Задание {} не выдано духу {}: {}", ticket.id(), spirit.displayName(), outcome);
             }
@@ -1018,24 +1023,6 @@ public final class BoardService {
         return held <= 0
                 ? target
                 : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
-    }
-
-    private void awaitTransfers(
-            BoardTicket ticket, SpiritEntity crafter, List<SpiritEntity> spirits, DispatchRound round) {
-        crafters.remember(ticket.id(), crafter.getUUID());
-        Set<UUID> running = new HashSet<>();
-        for (SpiritEntity each : spirits) {
-            if (each.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                running.add(each.getUUID());
-            }
-        }
-        for (UUID donor : TransferCarriers.carrying(board, ticket.id(), running)) {
-            round.await(donor, "несёт ингредиенты для " + ticket.id());
-        }
-        LOGGER.info(
-                "Задание {} ждёт передачу ингредиентов: дух {} пока не начинает крафт",
-                ticket.id(),
-                crafter.displayName());
     }
 
     private void dropGoallessRepair(BoardTicket ticket) {

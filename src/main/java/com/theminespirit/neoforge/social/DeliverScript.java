@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.social;
 
+import com.theminespirit.core.board.DeliverRetry;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -29,6 +30,7 @@ public final class DeliverScript implements ScriptInstance {
     private LivingEntity target;
 
     private int delivered;
+    private int restarts;
     private boolean started;
     private String failureReason;
     private ScriptResult result;
@@ -78,10 +80,10 @@ public final class DeliverScript implements ScriptInstance {
             case MOVING -> ScriptStatus.RUNNING;
             case ARRIVED -> transfer();
             case TIMEOUT ->
-                fail("не подошёл к адресату '" + params.to() + "' за " + approach.timeoutTicks() + " тиков");
+                retryOrFail("не подошёл к адресату '" + params.to() + "' за " + approach.timeoutTicks() + " тиков");
             case STUCK ->
-                fail("застрял по дороге к адресату '" + params.to() + "' в (x=" + spirit.getX() + ", y=" + spirit.getY()
-                        + ", z=" + spirit.getZ() + ")");
+                retryOrFail("застрял по дороге к адресату '" + params.to() + "' в (x=" + spirit.getX() + ", y="
+                        + spirit.getY() + ", z=" + spirit.getZ() + ")");
         };
     }
 
@@ -109,6 +111,7 @@ public final class DeliverScript implements ScriptInstance {
     public Map<String, Object> saveState() {
         Map<String, Object> state = new HashMap<>();
         state.put("delivered", delivered);
+        state.put("restarts", restarts);
         return state;
     }
 
@@ -117,6 +120,10 @@ public final class DeliverScript implements ScriptInstance {
         Object saved = state.get("delivered");
         if (saved instanceof Number number) {
             delivered = number.intValue();
+        }
+        Object retried = state.get("restarts");
+        if (retried instanceof Number number) {
+            restarts = number.intValue();
         }
     }
 
@@ -185,6 +192,20 @@ public final class DeliverScript implements ScriptInstance {
             remaining -= take;
         }
         return wanted - remaining;
+    }
+
+    private ScriptStatus retryOrFail(String reason) {
+        if (target == null || target.isRemoved() || !target.isAlive() || !DeliverRetry.canRetry(restarts)) {
+            return fail(reason + " (попыток подхода: " + (restarts + 1) + ")");
+        }
+        restarts++;
+        Optional<LivingEntity> again = ScriptTargetResolver.resolve(spirit, TargetSelector.parse(params.to()));
+        if (again.isEmpty()) {
+            return fail("адресат '" + params.to() + "' ушёл по дороге: доставка сорвана");
+        }
+        target = again.get();
+        approach.begin(target, SocialTuning.DELIVER_ARRIVAL);
+        return ScriptStatus.RUNNING;
     }
 
     private ScriptStatus succeed() {

@@ -118,6 +118,66 @@ class BoardBlockTests {
     }
 
     @Test
+    void fail_Blocked_KeepsReasonAndAttemptHistoryInJournal() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        String stuck = "застрял в (-175.3, 67.0, -487.5)";
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            if (attempt > 1) {
+                board.prune(now[0]);
+                now[0] += BoardTuning.failBackoffTicks();
+            }
+            board.submit(ticket());
+            board.claim(ID, spirit(attempt), now[0]);
+            board.fail(ID, new StockView(Map.of()), stuck);
+        }
+
+        BoardLogEntry blocked = board.drainBlocks().get(0);
+
+        assertTrue(
+                blocked.modifiers().stream().anyMatch(modifier -> modifier.contains(stuck)),
+                "BLOCKED называет причину последнего провала: пустой waitReason не показывает, что чинить "
+                        + "(п.4 отчёта); модификаторы: " + blocked.modifiers());
+        assertTrue(
+                blocked.modifiers().stream().anyMatch(modifier -> modifier.startsWith("history=")),
+                "BLOCKED хранит историю попыток, а не только счётчик: по ней видно, один и тот же тупик "
+                        + "или разные причины; модификаторы: " + blocked.modifiers());
+        assertTrue(
+                blocked.modifiers().stream().anyMatch(modifier -> modifier.startsWith("failures=")),
+                "BLOCKED по-прежнему называет число провалов: история дополняет счётчик, а не заменяет его; "
+                        + "модификаторы: " + blocked.modifiers());
+    }
+
+    @Test
+    void prune_BlockedLongEnough_StaysBlockedWithoutConditionChange() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
+            UUID holder = spirit(attempt);
+            board.submit(ticket());
+            board.claim(ID, holder, now[0]);
+            board.fail(ID);
+            board.prune(now[0]);
+            now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, CASE));
+        }
+        assertTrue(board.blocked(ID), "Сцена: задание заблокировано провалами подряд");
+        board.prune(now[0]);
+        now[0] += 100_000;
+
+        board.prune(now[0]);
+
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(ID).orElse(null),
+                "BLOCKED не снимается по времени: без изменения условий доска снова выдаст тот же тупик "
+                        + "(N6: BLOCKED→UNBLOCKED без изменения условий)");
+        assertEquals(
+                BoardOutcome.BLOCKED,
+                board.claim(ID, spirit(99), now[0]),
+                "Заблокированное задание не выдаётся и после паузы: разблокировка только при смене условий");
+    }
+
+    @Test
     void claimable_Unblocked_NoStaleHolder() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

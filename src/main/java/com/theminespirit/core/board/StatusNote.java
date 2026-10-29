@@ -13,6 +13,17 @@ public final class StatusNote {
             int attempts,
             @Nullable String waitReason,
             @Nullable String chosen) {
+        return line(event, ticketId, boardCase, attempts, waitReason, chosen, null);
+    }
+
+    public static String line(
+            BoardLog.Event event,
+            String ticketId,
+            BoardCase boardCase,
+            int attempts,
+            @Nullable String waitReason,
+            @Nullable String chosen,
+            @Nullable String details) {
         Objects.requireNonNull(event, "Событие перехода не может быть null: строка называет переход");
         Objects.requireNonNull(ticketId, "id задания не может быть null: строка называет задание");
         Objects.requireNonNull(boardCase, "Кейс задания не может быть null: строка называет кейс");
@@ -21,7 +32,7 @@ public final class StatusNote {
                     "Попыток " + attempts + " меньше нуля: счётчик провалов не бывает отрицательным");
         }
         return "[board] " + event.name() + " задание=" + ticketId + " кейс=" + boardCase + " попыток=" + attempts
-                + " waitReason=" + dash(waitReason) + " выбор=" + dash(chosen);
+                + " waitReason=" + dash(waitReason) + " выбор=" + dash(chosen) + " подробности=" + dash(details);
     }
 
     private static String dash(@Nullable String text) {

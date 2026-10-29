@@ -28,6 +28,41 @@ class StatusNoteTests {
     }
 
     @Test
+    void line_AssignedWithTarget_NamesTargetAndChoice() {
+        String line = StatusNote.line(
+                BoardLog.Event.ASSIGNED,
+                "first:build_mine",
+                BoardCase.BUILD_MINE,
+                1,
+                null,
+                "spirit-2 — ближайший свободный дух",
+                "цель=(-198,58,-530) предмет=— количество=1 попыток=1");
+
+        assertTrue(
+                line.contains("подробности=цель=(-198,58,-530)"),
+                "В строке выдачи есть цель задания и расчёт выбора: без них не понять, куда и почему пошёл дух "
+                        + "(п.4 отчёта); строка: " + line);
+    }
+
+    @Test
+    void line_BlockedWithDetails_NamesReasonAndHistory() {
+        String line = StatusNote.line(
+                BoardLog.Event.BLOCKED,
+                "first:build_mine",
+                BoardCase.BUILD_MINE,
+                5,
+                null,
+                null,
+                "причина=стоянка за преградой история=тик 100: стоянка за преградой");
+
+        assertTrue(line.contains("BLOCKED"), "Строка обязана называть переход BLOCKED");
+        assertTrue(
+                line.contains("история=тик 100: стоянка за преградой"),
+                "BLOCKED показывает историю попыток и причину: waitReason у заблокированного пуст (п.4 отчёта); "
+                        + "строка: " + line);
+    }
+
+    @Test
     void line_BlockedWithoutHolder_ShowsAttemptsAndEmptyChoice() {
         String line = StatusNote.line(BoardLog.Event.BLOCKED, "first:build_mine", BoardCase.BUILD_MINE, 5, null, null);
 

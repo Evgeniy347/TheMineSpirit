@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -342,19 +341,6 @@ public final class FirstStepsRunner {
             reopenParts(service, caseValue, parts);
             return false;
         }
-        LOGGER.info(
-                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков: восстановление",
-                caseValue,
-                missing,
-                placed.total());
-        service.journal()
-                .recordEntry(BoardLog.note(
-                        "layout:" + caseValue.name().toLowerCase(Locale.ROOT),
-                        caseValue,
-                        now,
-                        List.of("missing=" + missing, "total=" + placed.total()),
-                        null,
-                        ConfigStamp.current()));
         BoardOutcome repair = StageRepair.submit(
                 service,
                 caseValue,
