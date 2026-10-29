@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -10,6 +11,21 @@ import org.junit.jupiter.api.Test;
 class SupplyGateTests {
 
     private static final long BACKOFF = BoardTuning.FAIL_BACKOFF_TICKS;
+
+    @Test
+    void needsDepositPoint_GatherMaterials_StartsWithoutContainer() {
+        assertFalse(
+                SupplyGate.needsDepositPoint(BoardCase.GATHER_MATERIALS),
+                "Добыча не сдаёт сразу и умеет идти без точки сдачи: при пустом складе задание всё равно "
+                        + "выходит на доску, а не ждёт сундук бесконечно");
+    }
+
+    @Test
+    void needsDepositPoint_SupplySite_RequiresContainer() {
+        assertTrue(
+                SupplyGate.needsDepositPoint(BoardCase.SUPPLY_SITE),
+                "Снабжение со склада без контейнера сдавать некуда: задание не ставится, доска ставит сундук");
+    }
 
     @Test
     void decide_StockInsideMinimum_GathersInsteadOfSupply() {

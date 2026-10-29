@@ -37,20 +37,24 @@ final class SupplyTickets {
                 .orElse(TicketTarget.at(home));
         Optional<BlockCoord> point =
                 StorageFinder.depositPoint(level, target.target(), request.item(), request.count());
-        if (point.isEmpty()) {
+        if (point.isPresent()) {
+            CHANGES.forget("supply:" + id);
+            target = target.withSupply(request.item(), request.count()).withDeposit(point.orElseThrow());
+        } else {
             if (CHANGES.changed("supply:" + id, "no-container")) {
                 LOGGER.info(
-                        "[supply] {} отложено: на складе поселения нет контейнера под '{}' — доска сундуков "
-                                + "ставит сундук двора, сдача в пустом месте не начинается",
+                        "[supply] {}: на складе поселения нет контейнера под '{}' — доска сундуков ставит "
+                                + "сундук двора; добыча идёт без точки сдачи, сдача — ближайшему сундуку",
                         id,
                         request.item());
             }
             Optional<StageSite> site = SettlementPlotStore.get(level).site();
             site.ifPresent(stage -> ChestSpaceWatch.request(level, service, stage, now, "сдача " + request.item()));
-            return;
+            if (SupplyGate.needsDepositPoint(boardCase)) {
+                return;
+            }
+            target = target.withSupply(request.item(), request.count());
         }
-        CHANGES.forget("supply:" + id);
-        target = target.withSupply(request.item(), request.count()).withDeposit(point.orElseThrow());
         service.submit(
                 new BoardTicket(
                         id,

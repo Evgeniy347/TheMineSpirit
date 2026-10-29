@@ -35,6 +35,11 @@ public final class SupplyGate {
 
     private SupplyGate() {}
 
+    public static boolean needsDepositPoint(BoardCase boardCase) {
+        Objects.requireNonNull(boardCase, "Кейс снабжения не может быть null: от него зависит точка сдачи");
+        return boardCase != BoardCase.GATHER_MATERIALS;
+    }
+
     public static Decision decide(
             Map<String, Integer> missing,
             Map<String, Integer> stock,
