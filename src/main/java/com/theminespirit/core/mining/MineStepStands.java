@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class MineStepStands {
@@ -28,7 +29,7 @@ public final class MineStepStands {
         Objects.requireNonNull(column, "Колонка не может быть null: без неё неизвестно, к какой ступени идти");
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней сортируются стоянки");
         Objects.requireNonNull(view, "Вид мира не может быть null: по нему проверяется стоянка и видимость");
-        LinkedHashSet<BlockCoord> stands = new LinkedHashSet<>();
+        Set<BlockCoord> stands = new LinkedHashSet<>();
         if (parentStand != null && !shaft(column, parentStand) && MiningSafety.canStand(parentStand, view)) {
             stands.add(parentStand);
         }
