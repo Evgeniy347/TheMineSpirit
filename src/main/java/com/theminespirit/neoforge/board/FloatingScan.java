@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.SettlementPlot;
+import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
@@ -9,6 +10,7 @@ import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayRule;
 import com.theminespirit.neoforge.BlockStates;
+import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.PlotGround;
 import com.theminespirit.neoforge.SettlementChestStore;
@@ -64,6 +66,10 @@ public final class FloatingScan {
             FloatingBlocks.classify(cell, scan).ifPresent(found::add);
         }
         return List.copyOf(found);
+    }
+
+    public static boolean reachable(ServerLevel level, BlockCoord at) {
+        return !StandSpots.of(at, new LevelSafetyView(level), at).isEmpty();
     }
 
     private static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {

@@ -9,10 +9,16 @@ public final class FloatingCleanup {
         RELOCATE_STATION,
         SKIP_REGISTERED,
         SKIP_PROTECTED,
+        SKIP_UNREACHABLE,
         SKIP_WAIT
     }
 
-    public record Rooms(boolean yardReady, boolean playerBuilding, boolean chestEmpty, boolean stationNeeded) {}
+    public record Rooms(
+            boolean yardReady, boolean playerBuilding, boolean chestEmpty, boolean stationNeeded, boolean reachable) {
+        public Rooms(boolean yardReady, boolean playerBuilding, boolean chestEmpty, boolean stationNeeded) {
+            this(yardReady, playerBuilding, chestEmpty, stationNeeded, true);
+        }
+    }
 
     private FloatingCleanup() {}
 
@@ -24,19 +30,26 @@ public final class FloatingCleanup {
         }
         return switch (finding.kind()) {
             case REGISTERED_CHEST -> Action.SKIP_REGISTERED;
-            case CHEST -> {
-                if (!rooms.yardReady()) {
-                    yield Action.SKIP_WAIT;
+            default -> {
+                if (!rooms.reachable()) {
+                    yield Action.SKIP_UNREACHABLE;
                 }
-                yield rooms.chestEmpty() ? Action.REMOVE : Action.DRAIN_CHEST;
+                yield switch (finding.kind()) {
+                    case CHEST -> {
+                        if (!rooms.yardReady()) {
+                            yield Action.SKIP_WAIT;
+                        }
+                        yield rooms.chestEmpty() ? Action.REMOVE : Action.DRAIN_CHEST;
+                    }
+                    case STATION -> {
+                        if (!rooms.yardReady()) {
+                            yield Action.SKIP_WAIT;
+                        }
+                        yield rooms.stationNeeded() ? Action.RELOCATE_STATION : Action.REMOVE;
+                    }
+                    default -> Action.REMOVE;
+                };
             }
-            case STATION -> {
-                if (!rooms.yardReady()) {
-                    yield Action.SKIP_WAIT;
-                }
-                yield rooms.stationNeeded() ? Action.RELOCATE_STATION : Action.REMOVE;
-            }
-            default -> Action.REMOVE;
         };
     }
 }

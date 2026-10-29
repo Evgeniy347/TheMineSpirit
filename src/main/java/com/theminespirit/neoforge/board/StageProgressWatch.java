@@ -9,6 +9,7 @@ import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.town.StageSite;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +49,24 @@ final class StageProgressWatch {
                 now.total(),
                 leveling == null ? 0 : leveling.cutVolume(),
                 leveling == null ? 0 : leveling.fillVolume()));
+        if (target == null || target.work() == null) {
+            return;
+        }
+        StageSite site = target.work().site();
+        String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
+        PlotTrace.Trace trace =
+                PlotTrace.trace(level, TicketPlans.plan(ticket.boardCase(), ticket.level(), target), wood);
+        LOGGER.info(
+                "[plot] {}: план от участка {}, дом {}, сад {}, поворот {}; требуется {} — поставлено {}",
+                ticket.id(),
+                site.anchor(),
+                site.houseOrigin(),
+                site.orchardOrigin(),
+                target.work().builds().isEmpty()
+                        ? "-"
+                        : target.work().builds().get(0).rotation(),
+                trace.required(),
+                trace.placed());
     }
 
     @Nullable

@@ -60,16 +60,20 @@ final class PlanDemolition {
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
                 .limit(BATCH)
                 .toList();
-        String id = PREFIX + now;
-        if (!submit(service, site, stray, now)) {
+        String previous = previous(service);
+        String id = idFor(stray);
+        if (!submit(service, site, stray, now, id)) {
             return;
         }
         LOGGER.info(
-                "[tidy] {}: уборка висящих объектов — {} из {}, первые {}",
+                "[tidy] {}: план уборки пересчитан в тик {} — в уборку {} из {}, первые {}; прошлый {}; "
+                        + "id меняется только вместе с набором координат",
                 id,
+                now,
                 stray.size(),
                 findings.size(),
-                stray.stream().limit(SHOWN).toList());
+                stray.stream().limit(SHOWN).toList(),
+                previous);
         service.journal()
                 .recordEntry(BoardLog.note(
                         id,
@@ -89,15 +93,29 @@ final class PlanDemolition {
             List<FloatingBlocks.Finding> findings) {
         List<BlockCoord> remove = new ArrayList<>();
         int protectedSkipped = 0;
+        int unreachableSkipped = 0;
+        int reachableShown = 0;
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
             if (finding.kind() == FloatingBlocks.Kind.FENCE && site.ringPost(at.x(), at.z())) {
                 continue;
             }
             boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
+            boolean reachable = FloatingScan.reachable(level, at);
             FloatingCleanup.Action action = FloatingCleanup.decide(
-                    finding, new FloatingCleanup.Rooms(yardReady, playerBuilding(level, at), empty(level, at), needed));
+                    finding,
+                    new FloatingCleanup.Rooms(
+                            yardReady, playerBuilding(level, at), empty(level, at), needed, reachable));
             switch (action) {
+                case SKIP_UNREACHABLE -> {
+                    if (unreachableSkipped++ < SHOWN) {
+                        LOGGER.info(
+                                "[tidy] {} — {} ({}): рядом нет стоянки — недостижим, не трогаем",
+                                at,
+                                finding.reason(),
+                                finding.blockId());
+                    }
+                }
                 case SKIP_PROTECTED -> {
                     if (protectedSkipped++ < PROTECTED_SHOWN) {
                         LOGGER.info(
@@ -117,15 +135,40 @@ final class PlanDemolition {
                     LOGGER.info("[tidy] станция {} нужна плану — снимаем и ставим заново по схеме двора", at);
                     remove.add(at);
                 }
-                case REMOVE -> remove.add(at);
+                case REMOVE -> {
+                    if (reachableShown++ < SHOWN) {
+                        LOGGER.info(
+                                "[tidy] {} — {} ({}): стоянка рядом есть — достижим, в уборку",
+                                at,
+                                finding.reason(),
+                                finding.blockId());
+                    }
+                    remove.add(at);
+                }
                 case SKIP_REGISTERED, SKIP_WAIT -> {}
             }
         }
         return remove;
     }
 
-    private static boolean submit(BoardService service, StageSite site, List<BlockCoord> stray, long now) {
-        String id = PREFIX + now;
+    static String idFor(List<BlockCoord> stray) {
+        long hash = 17L;
+        for (BlockCoord at : stray) {
+            hash = hash * 31L + at.hashCode();
+        }
+        return PREFIX + Long.toUnsignedString(hash, 36);
+    }
+
+    private static String previous(BoardService service) {
+        return service.board().all().stream()
+                .filter(ticket -> ticket.id().startsWith(PREFIX))
+                .max(Comparator.comparingLong(BoardTicket::createdAt))
+                .map(ticket -> ticket.id() + " ("
+                        + service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE) + ")")
+                .orElse("уборки ещё не было");
+    }
+
+    private static boolean submit(BoardService service, StageSite site, List<BlockCoord> stray, long now, String id) {
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
                 .toList();

@@ -556,9 +556,9 @@ public final class TicketPlans {
                         target.target().y(),
                         target.target().z() + offset.z()))
                 .toList();
-        List<TaskNode> steps = new ArrayList<>(torches.size() + 2);
+        List<TaskNode> steps = new ArrayList<>(torches.size() + 4);
         steps.add(gotoTarget(target));
-        steps.add(new ScriptCall(ACQUIRE, Map.of(ITEM, TORCH, COUNT, torches.size())));
+        steps.addAll(TorchPlans.supply(torches.size()));
         for (BlockCoord torch : torches) {
             steps.add(new ScriptCall(
                     "place_block", Map.of(BLOCK, TORCH, "x", torch.x(), "y", torch.y(), "z", torch.z())));
@@ -604,10 +604,7 @@ public final class TicketPlans {
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         List<TaskNode> steps = new ArrayList<>();
         steps.add(gotoPoint(site == null ? target.target() : site.workYard()));
-        orchardMaterials(scheme)
-                .forEach((item, count) -> steps.add(new ScriptCall(
-                        ACQUIRE,
-                        Map.of(ITEM, WoodSpecies.swap(item, wood), COUNT, Math.min(count, CatalogLimits.COUNT_MAX)))));
+        TorchPlans.addMaterials(steps, orchardMaterials(scheme), wood);
         steps.add(schematic(scheme, origin, target));
         return new SequenceNode(steps);
     }

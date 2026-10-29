@@ -73,6 +73,17 @@ class FloatingCleanupTests {
     }
 
     @Test
+    void decide_UnreachableStump_IsLeftAlone() {
+        assertEquals(
+                FloatingCleanup.Action.SKIP_UNREACHABLE,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.STUMP),
+                        new FloatingCleanup.Rooms(false, false, false, false, false)),
+                "Висящее бревно в 12 блоках над духом недостижимо: доска не должна открывать уборку, "
+                        + "иначе DISMANTLE_SHELTER бесконечно переоткрывается на том же месте");
+    }
+
+    @Test
     void decide_Stump_IsRemoved() {
         assertEquals(
                 FloatingCleanup.Action.REMOVE,

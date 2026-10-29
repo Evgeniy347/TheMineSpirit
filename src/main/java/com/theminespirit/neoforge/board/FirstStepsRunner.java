@@ -283,12 +283,19 @@ public final class FirstStepsRunner {
                 return;
             }
         }
-        BoardOutcome outcome = BoardOutcome.ACCEPTED;
+        StageWork work = target.work();
+        List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
+                ? FenceParts.of(level, work.site(), parts)
+                : List.of();
+        List<Integer> openParts = FenceParts.open(fenceParts);
+        BoardOutcome outcome = BoardOutcome.DUPLICATE;
         for (int part = 1; part <= parts; part++) {
             TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
-            StageWork work = target.work();
             if (caseValue == BoardCase.BUILD_FENCE && work != null) {
-                partTarget = partTarget.withWork(StageBuilds.of(level, caseValue, work.site(), part));
+                if (!openParts.contains(part)) {
+                    break;
+                }
+                partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
             }
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE) {
@@ -310,7 +317,7 @@ public final class FirstStepsRunner {
             if (submitted == BoardOutcome.DUPLICATE) {
                 service.board().reprioritize(partId(caseValue, part), order.priority());
             }
-            if (part == 1) {
+            if (outcome == BoardOutcome.DUPLICATE) {
                 outcome = submitted;
             }
         }
@@ -321,32 +328,24 @@ public final class FirstStepsRunner {
 
     private static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
         BoardCase caseValue = step.caseValue();
-        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE
-                || (caseValue == BoardCase.BUILD_FENCE && !partsDone(service, caseValue))) {
-            return false;
-        }
         StageWork work = Objects.requireNonNull(
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
+        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE
+                || (caseValue == BoardCase.BUILD_FENCE && !partsDone(service, caseValue, level, work.site()))) {
+            return false;
+        }
         Placed placed = audit(level, caseValue, work.site(), step.wood());
         int missing = placed.total() - placed.done();
         if (missing == 0) {
             return true;
         }
         if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
-            LOGGER.info(
-                    "[layout] {} сделан по журналу, но нет {} из {} блоков: стройка заново",
-                    caseValue,
-                    missing,
-                    placed.total());
+            PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, placed.total(), true);
             BuildingWoodChoice.rebuilt(level, caseValue, work.site());
             reopenParts(service, caseValue, parts);
             return false;
         }
-        LOGGER.info(
-                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков: восстановление",
-                caseValue,
-                missing,
-                placed.total());
+        PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, placed.total(), false);
         service.journal()
                 .recordEntry(BoardLog.note(
                         "layout:" + caseValue.name().toLowerCase(Locale.ROOT),
@@ -413,7 +412,7 @@ public final class FirstStepsRunner {
         };
     }
 
-    private static String partId(BoardCase caseValue, int part) {
+    static String partId(BoardCase caseValue, int part) {
         if (part == 1) {
             return FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
         }
@@ -563,7 +562,7 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static String bare(String id) {
+    static String bare(String id) {
         int state = id.indexOf('[');
         String block = state < 0 ? id : id.substring(0, state);
         return block.startsWith(MINECRAFT) ? block.substring(MINECRAFT.length()) : block;
@@ -629,8 +628,8 @@ public final class FirstStepsRunner {
             }
         }
         Set<String> tools = toolStock(stock);
-        Set<BoardCase> done = journalSteps(service, false);
-        Set<BoardCase> blocked = journalSteps(service, true);
+        Set<BoardCase> done = journalSteps(service, false, level, stage);
+        Set<BoardCase> blocked = journalSteps(service, true, level, stage);
         boolean furnaceAvailable = furnace || stock.available().getOrDefault(FURNACE_ITEM, 0) > 0;
         boolean journal = world == PlanWorld.JOURNAL;
         boolean plotLevel = journal || PlotLeveling.isLevel(stage.anchor(), stage.level(), plotFeet(level, stage));
@@ -673,7 +672,7 @@ public final class FirstStepsRunner {
     public static TownSnapshot.Progress progress(
             ServerLevel level, BoardService service, BoardCase step, StageSite stage, String wood) {
         Placed placed = audit(level, step, stage, wood);
-        boolean done = journalSteps(service, false).contains(step);
+        boolean done = journalSteps(service, false, level, stage).contains(step);
         return new TownSnapshot.Progress(placed.done(), placed.total(), done && placed.done() < placed.total());
     }
 
@@ -783,7 +782,7 @@ public final class FirstStepsRunner {
         };
     }
 
-    private static boolean placed(BlockState state, String block) {
+    static boolean placed(BlockState state, String block) {
         String actual = bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
         return actual.equals(block)
                 || WoodSpecies.sameRole(actual, block)
@@ -791,13 +790,14 @@ public final class FirstStepsRunner {
                 || ("torch".equals(block) && "wall_torch".equals(actual));
     }
 
-    private static Set<BoardCase> journalSteps(BoardService service, boolean blocked) {
+    private static Set<BoardCase> journalSteps(
+            BoardService service, boolean blocked, ServerLevel level, StageSite stage) {
         Set<BoardCase> steps = EnumSet.noneOf(BoardCase.class);
         for (BoardCase step : STAGE_STEPS) {
             String id = FIRST_PREFIX + step.name().toLowerCase(Locale.ROOT);
             boolean match = blocked
                     ? service.board().statusOf(id).orElse(null) == BoardStatus.BLOCKED
-                    : service.board().ledger().has(step, 1) && partsDone(service, step);
+                    : service.board().ledger().has(step, 1) && partsDone(service, step, level, stage);
             if (match) {
                 steps.add(step);
             }
@@ -805,7 +805,7 @@ public final class FirstStepsRunner {
         return steps;
     }
 
-    private static boolean partsDone(BoardService service, BoardCase step) {
+    private static boolean partsDone(BoardService service, BoardCase step, ServerLevel level, StageSite stage) {
         if (step == BoardCase.CLEAR_GROUNDS) {
             for (int part = 2; part <= GroundsPlan.CLEAR_PARTS; part++) {
                 if (active(service, partId(step, part))) {
@@ -817,12 +817,7 @@ public final class FirstStepsRunner {
         if (step != BoardCase.BUILD_FENCE) {
             return true;
         }
-        List<BoardStatus> statuses = new ArrayList<>();
-        for (int part = 1; part <= partsOf(step); part++) {
-            statuses.add(service.board().statusOf(partId(step, part)).orElse(null));
-        }
-        boolean anyPart = statuses.subList(1, statuses.size()).stream().anyMatch(Objects::nonNull);
-        return StageAudit.allDone(statuses) || (!anyPart && statuses.get(0) == BoardStatus.DONE);
+        return FenceParts.done(service, FenceParts.of(level, stage, partsOf(step)));
     }
 
     private static Set<String> toolStock(StockView stock) {
