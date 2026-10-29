@@ -6,6 +6,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
+import com.theminespirit.core.incident.InventoryText;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.task.SpiritReading;
@@ -183,7 +184,12 @@ public final class SpiritBrain {
             lastResult = runner.successResult().orElse(null);
         }
         if (lastStatus == RunStatus.FAILED) {
-            LOGGER.warn("Дух {} провалил задачу: {}", spirit.getUUID(), lastReason, lastCause);
+            LOGGER.warn(
+                    "Дух {} провалил задачу: {}; инвентарь {}",
+                    spirit.getUUID(),
+                    lastReason,
+                    InventoryText.of(IncidentSnapshots.inventoryOf(spirit)),
+                    lastCause);
         }
     }
 }

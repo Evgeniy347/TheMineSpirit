@@ -1,8 +1,11 @@
 package com.theminespirit.neoforge.rest;
 
+import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.rest.ApiException;
+import com.theminespirit.core.rest.BotBoardTask;
 import com.theminespirit.core.rest.BotGateway;
 import com.theminespirit.core.rest.BotInfo;
 import com.theminespirit.core.rest.BotState;
@@ -14,6 +17,9 @@ import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import com.theminespirit.core.task.TaskRecord;
 import com.theminespirit.core.task.TaskRegistry;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.BoardService;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +28,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
+import org.jspecify.annotations.Nullable;
 
 public final class SpiritBotGateway implements BotGateway {
     private final MinecraftServer server;
@@ -31,6 +39,9 @@ public final class SpiritBotGateway implements BotGateway {
     private final ObserveJobs jobs;
     private final TaskRegistry tasks;
     private final TaskWatcher watcher;
+    private final Map<UUID, PositionSeen> positions = new HashMap<>();
+
+    private record PositionSeen(BlockPos pos, long tick) {}
 
     public SpiritBotGateway(MinecraftServer server, SpiritIndex index, IEventBus bus, TaskRegistry tasks) {
         this.server = server;
@@ -133,7 +144,38 @@ public final class SpiritBotGateway implements BotGateway {
                 position.getZ(),
                 spirit.level().dimension().location().toString(),
                 currentTask,
-                spirit.hunger().satietyFraction());
+                spirit.hunger().satietyFraction(),
+                boardTask(spirit),
+                spirit.level().getGameTime(),
+                positionTick(spirit, position));
+    }
+
+    private static @Nullable BotBoardTask boardTask(SpiritEntity spirit) {
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        Optional<BoardService> service = BoardRegistry.peek(level);
+        if (service.isEmpty()) {
+            return null;
+        }
+        Board board = service.get().board();
+        List<BoardTicket> held = board.assignedTo(spirit.getUUID());
+        if (held.isEmpty()) {
+            return null;
+        }
+        BoardTicket ticket = held.get(0);
+        String status = board.statusOf(ticket.id()).map(Enum::name).orElse("PENDING");
+        return new BotBoardTask(ticket.id(), ticket.boardCase().name(), status);
+    }
+
+    private long positionTick(SpiritEntity spirit, BlockPos position) {
+        long now = spirit.level().getGameTime();
+        PositionSeen seen = positions.get(spirit.getUUID());
+        if (seen == null || !seen.pos().equals(position)) {
+            positions.put(spirit.getUUID(), new PositionSeen(position.immutable(), now));
+            return now;
+        }
+        return seen.tick();
     }
 
     private static BotState state(SpiritEntity spirit) {

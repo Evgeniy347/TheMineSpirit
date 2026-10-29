@@ -53,6 +53,16 @@ final class DispatchPick {
                 .orElse(null);
     }
 
+    String whyChosen(BoardTicket ticket, SpiritEntity spirit, CrafterMemory crafters) {
+        if (ticket.assignee().filter(spirit.getUUID()::equals).isPresent()) {
+            return spirit.displayName() + " — назначенный держатель задания";
+        }
+        if (crafters.remembered(ticket.id()).filter(spirit.getUUID()::equals).isPresent()) {
+            return spirit.displayName() + " — крафтер задания";
+        }
+        return spirit.displayName() + " — ближайший свободный дух";
+    }
+
     String why(BoardTicket ticket, @Nullable TicketTarget target) {
         String supply = target == null ? null : target.supplyItem();
         List<DispatchRound.Candidate> all = new ArrayList<>(candidates.values());

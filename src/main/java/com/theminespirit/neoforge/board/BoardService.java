@@ -95,6 +95,7 @@ public final class BoardService {
     private final Map<String, Long> supplyClosed = new HashMap<>();
     private final AbsentOwners absentOwners = new AbsentOwners();
     private final StageProgressWatch progress = new StageProgressWatch();
+    private final BoardNotices notices = new BoardNotices();
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private StockView stock = new StockView(Map.of());
@@ -242,6 +243,7 @@ public final class BoardService {
         }
         digOut(level, spirits);
         issue(level, spirits, now);
+        notices.watchPending(board, stock, now);
         reconcileActivities(spirits, true);
         releaseDeadHolders(level, spirits, now);
         dropAbsentOwners(spirits, now);
@@ -968,9 +970,7 @@ public final class BoardService {
     }
 
     private void flushBlockNotes() {
-        for (BoardLogEntry entry : board.drainBlocks()) {
-            journal.recordEntry(entry);
-        }
+        notices.blocks(board, journal);
     }
 
     private Species speciesFor(BoardTicket ticket) {
@@ -1058,11 +1058,7 @@ public final class BoardService {
                 claims++;
                 round.take(spirit.getUUID());
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
-                LOGGER.info(
-                        "Доска выдала задание {} (кейс {}) духу {}",
-                        ticket.id(),
-                        ticket.boardCase(),
-                        spirit.displayName());
+                notices.assigned(board, ticket, pick.whyChosen(ticket, spirit, crafters));
             } else {
                 LOGGER.error("Задание {} не выдано духу {}: {}", ticket.id(), spirit.displayName(), outcome);
             }
