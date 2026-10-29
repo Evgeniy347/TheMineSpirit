@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +44,30 @@ class StageAuditTests {
                         ResourceGate.missing(new StockNeed(StageAudit.shortage(need)), empty)),
                 "Ремонт без материалов не выдаётся: ждёт с недостачей «доски×120» (по ней рубка и крафт), а не "
                         + "ведёт духа вдоль линии с пустыми руками");
+    }
+
+    @Test
+    void allDone_PartsPending_NotRebuilt() {
+        assertEquals(
+                List.of(false, false, true),
+                List.of(
+                        StageAudit.allDone(List.of(BoardStatus.DONE, BoardStatus.PENDING)),
+                        StageAudit.allDone(List.of()),
+                        StageAudit.allDone(List.of(BoardStatus.DONE, BoardStatus.DONE))),
+                "Частичную стройку не переоткрывают: шаг ограды закрыт, только когда закрыты все его части");
+    }
+
+    @Test
+    void nothingToBuild_EmptyPlan_NamesReason() {
+        assertEquals(
+                List.of(false, true),
+                List.of(
+                        StageAudit.nothingToBuild(1).isPresent(),
+                        StageAudit.nothingToBuild(0).isPresent()),
+                "Пустой план стройки закрывается с причиной, а не «сделано»: иначе доска выдаёт задание по кругу");
+        assertTrue(
+                StageAudit.nothingToBuild(0).orElseThrow().contains("0 блоков"),
+                "Причина пустого плана называет цену: в работе 0 блоков — духу нечего строить");
     }
 
     @Test

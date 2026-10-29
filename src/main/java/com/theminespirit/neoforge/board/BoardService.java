@@ -921,18 +921,16 @@ public final class BoardService {
         if (ticket.boardCase() == BoardCase.SUPPLY_SITE) {
             supplyClosed.put(ticket.id(), spirit.level().getGameTime());
         }
+        String why = verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
         if (success) {
             board.complete(ticket.id());
             switch (ticket.boardCase()) {
                 case CAPTURE_ANIMAL -> animals.cycle(speciesFor(ticket)).captured(ticket.id());
                 case BUILD_PEN -> completePen(ticket.id());
                 case LURE_ANIMAL -> animals.cycle(speciesFor(ticket)).lured();
-                case DISMANTLE_SHELTER -> {}
                 default -> {}
             }
         } else {
-            String reason =
-                    verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
             board.fail(
                     ticket.id(),
                     stock,
@@ -944,9 +942,9 @@ public final class BoardService {
                     spirit.getUUID(),
                     ticket.id(),
                     ticket.boardCase(),
-                    reason,
+                    why,
                     board.statusOf(ticket.id()).orElse(null),
-                    incident(spirit, ticket, reason));
+                    incident(spirit, ticket, why));
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
@@ -962,10 +960,11 @@ public final class BoardService {
         }
         WorkReserveHub.releaseAll(spirit);
         LOGGER.info(
-                "Дух {} {} задание {}: статус закрыт доской",
+                "Дух {} {} задание {}: статус закрыт доской; причина: {}",
                 spirit.displayName(),
                 success ? "завершил" : "провалил",
-                ticket.id());
+                ticket.id(),
+                success ? "выполнено" : why);
     }
 
     private void flushBlockNotes() {

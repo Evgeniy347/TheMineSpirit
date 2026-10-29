@@ -73,6 +73,11 @@ public final class StageBuilds {
         int fenceY = SiteLevels.fenceY(site);
         IntBinaryOperator tops = (x, z) -> GroundProbe.top(level, x, z, fenceY);
         Set<ColumnMask.Cell> ready = new HashSet<>(SiteLevels.readyPosts(site, tops));
+        for (ColumnMask.Cell post : ring.posts()) {
+            if (SiteLevels.fenceReady(site, post, tops, fenceAtLevel(level, post, fenceY))) {
+                ready.add(post);
+            }
+        }
         List<PlannedBlock> blocks = new ArrayList<>();
         List<SchemeBuild> builds = new ArrayList<>();
         for (WallPiece piece : pieces.subList(from, to)) {
@@ -98,6 +103,11 @@ public final class StageBuilds {
             cells.add(ring.posts().get((piece.from() + offset) % ring.posts().size()));
         }
         return cells;
+    }
+
+    private static boolean fenceAtLevel(ServerLevel level, ColumnMask.Cell post, int fenceY) {
+        BlockState state = level.getBlockState(new BlockPos(post.x(), fenceY, post.z()));
+        return state.is(BlockTags.FENCES) || state.is(BlockTags.FENCE_GATES);
     }
 
     private static List<BlockCoord> oldFence(ServerLevel level, ColumnMask.Cell post, int fenceY) {

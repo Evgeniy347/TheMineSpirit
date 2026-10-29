@@ -321,7 +321,8 @@ public final class FirstStepsRunner {
 
     private static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
         BoardCase caseValue = step.caseValue();
-        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE) {
+        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE
+                || (caseValue == BoardCase.BUILD_FENCE && !partsDone(service, caseValue))) {
             return false;
         }
         StageWork work = Objects.requireNonNull(
@@ -333,7 +334,7 @@ public final class FirstStepsRunner {
         }
         if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
             LOGGER.info(
-                    "[layout] {} по журналу сделан, но нет {} из {} блоков: не построено — шаг стройки заново",
+                    "[layout] {} сделан по журналу, но нет {} из {} блоков: стройка заново",
                     caseValue,
                     missing,
                     placed.total());
@@ -342,7 +343,7 @@ public final class FirstStepsRunner {
             return false;
         }
         LOGGER.info(
-                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков плана: восстановление",
+                "[layout] {} сделан по журналу, но в мире нет {} из {} блоков: восстановление",
                 caseValue,
                 missing,
                 placed.total());
@@ -816,14 +817,12 @@ public final class FirstStepsRunner {
         if (step != BoardCase.BUILD_FENCE) {
             return true;
         }
-        boolean anyPart = false;
-        boolean allDone = true;
+        List<BoardStatus> statuses = new ArrayList<>();
         for (int part = 1; part <= partsOf(step); part++) {
-            Optional<BoardStatus> status = service.board().statusOf(partId(step, part));
-            anyPart |= part > 1 && status.isPresent();
-            allDone &= status.orElse(null) == BoardStatus.DONE;
+            statuses.add(service.board().statusOf(partId(step, part)).orElse(null));
         }
-        return allDone || (!anyPart && service.board().statusOf(partId(step, 1)).orElse(null) == BoardStatus.DONE);
+        boolean anyPart = statuses.subList(1, statuses.size()).stream().anyMatch(Objects::nonNull);
+        return StageAudit.allDone(statuses) || (!anyPart && statuses.get(0) == BoardStatus.DONE);
     }
 
     private static Set<String> toolStock(StockView stock) {

@@ -1,12 +1,31 @@
 package com.theminespirit.core.board;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public final class StageAudit {
     private static final int PERCENT = 100;
 
     private StageAudit() {}
+
+    public static boolean allDone(List<BoardStatus> statuses) {
+        Objects.requireNonNull(statuses, "Статусы частей не могут быть null: по ним решают, закрыт ли шаг");
+        return !statuses.isEmpty() && statuses.stream().allMatch(status -> status == BoardStatus.DONE);
+    }
+
+    public static Optional<String> nothingToBuild(int total) {
+        if (total < 0) {
+            throw new IllegalArgumentException(
+                    "План стройки на " + total + " блоков: число блоков не бывает отрицательным, проверьте подсчёт");
+        }
+        return total == 0
+                ? Optional.of("стройка закрыта без работы: в плане 0 блоков — клетки ещё не освобождены "
+                        + "или строить нечего")
+                : Optional.empty();
+    }
 
     public static boolean unbuilt(int missing, int total, int rebuildPercent) {
         if (missing < 0 || total < 0 || missing > total) {

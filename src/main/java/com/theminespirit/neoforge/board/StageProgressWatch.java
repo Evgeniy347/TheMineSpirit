@@ -36,8 +36,14 @@ final class StageProgressWatch {
             return null;
         }
         Optional<FirstStepsRunner.Placed> after = progress(level, ticket, target);
-        if (after.isEmpty()
-                || StageAudit.progressed(before, after.get().done(), after.get().total())) {
+        if (after.isEmpty()) {
+            return null;
+        }
+        Optional<String> empty = StageAudit.nothingToBuild(after.get().total());
+        if (empty.isPresent()) {
+            return empty.get();
+        }
+        if (StageAudit.progressed(before, after.get().done(), after.get().total())) {
             return null;
         }
         return "стройка закрыта без результата: поставлено " + after.get().done() + " из "
@@ -53,6 +59,6 @@ final class StageProgressWatch {
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         FirstStepsRunner.Placed placed = FirstStepsRunner.placedBlocks(
                 level, TicketPlans.plan(ticket.boardCase(), ticket.level(), target), wood);
-        return placed.total() == 0 ? Optional.empty() : Optional.of(placed);
+        return Optional.of(placed);
     }
 }
