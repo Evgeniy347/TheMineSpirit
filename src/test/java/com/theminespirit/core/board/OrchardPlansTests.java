@@ -82,6 +82,26 @@ class OrchardPlansTests {
                 "Сад джунглей берёт саженцы jungle_sapling: " + calls(plan));
     }
 
+    @Test
+    void plan_OrchardTorches_CraftedNotGatheredFromWorld() {
+        StageSite site = TownFixtures.flatSite();
+        TicketTarget target = TicketTarget.at(site.workYard()).withWork(new StageWork(site, List.of()));
+
+        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target));
+
+        assertFalse(
+                calls.stream()
+                        .anyMatch(call -> "acquire".equals(call.script())
+                                && "minecraft:torch".equals(call.params().get("item"))),
+                "Факелы сада не добываются из мира: acquire уходил в сбор и падал «без стоянки: 118», "
+                        + "а факелы надо крафтить из угля и палки");
+        assertTrue(
+                calls.stream()
+                        .anyMatch(call -> "craft".equals(call.script())
+                                && "minecraft:torch".equals(call.params().get("item"))),
+                "Сад обязан планировать крафт факелов: без этого стройка открывается без ресурсов");
+    }
+
     private static List<ScriptCall> calls(TaskNode plan) {
         List<ScriptCall> out = new ArrayList<>();
         if (plan instanceof ScriptCall call) {

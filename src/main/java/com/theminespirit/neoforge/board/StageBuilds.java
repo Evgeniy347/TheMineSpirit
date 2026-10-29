@@ -62,7 +62,13 @@ public final class StageBuilds {
         return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.FENCE);
     }
 
+    record FencePart(StageWork work, boolean hasPieces) {}
+
     private static StageWork fence(ServerLevel level, StageSite site, int part) {
+        return fencePart(level, site, part).work();
+    }
+
+    static FencePart fencePart(ServerLevel level, StageSite site, int part) {
         FenceLine ring = site.ring();
         List<WallPiece> pieces = fenceLayout().closed(ring.posts(), ring.gates());
         int size = pieces.size();
@@ -94,7 +100,7 @@ public final class StageBuilds {
             }
             builds.add(new SchemeBuild(piece.scheme(), new BlockCoord(piece.x(), fenceY, piece.z()), piece.rotation()));
         }
-        return new StageWork(site, blocks, builds);
+        return new FencePart(new StageWork(site, blocks, builds), to > from);
     }
 
     private static List<ColumnMask.Cell> posts(FenceLine ring, WallPiece piece) {
