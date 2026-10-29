@@ -274,6 +274,7 @@ public final class Approach {
 
     private boolean rescued(Vec3 target) {
         if (!rescue.free(mode, blockCoord(target), (int) Math.floor(arrival), targetEntity != null)) {
+            refusal = rescue.refusal();
             return false;
         }
         timeoutTicks = Math.max(timeoutTicks, elapsed + rescue.ticksBudget());

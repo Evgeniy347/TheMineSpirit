@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.movement;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.movement.Passage;
+import com.theminespirit.core.movement.TeleportTrail;
 import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
@@ -23,9 +24,13 @@ public final class StuckTeleport {
 
     private StuckTeleport() {}
 
-    public static Optional<BlockCoord> find(SpiritEntity spirit, PathMode mode, BlockCoord target, int used) {
+    public static Optional<BlockCoord> find(
+            SpiritEntity spirit, PathMode mode, BlockCoord target, TeleportTrail trail) {
         Unstuck rules = DataTables.INSTANCE.unstuck().current();
-        if (used >= rules.teleportsPerApproach() || mode == PathMode.SWIM || mode == PathMode.CAREFUL) {
+        int limit = rules.teleportsPerApproach();
+        trail.aimAt(target);
+        int used = trail.attempts();
+        if (used >= limit || mode == PathMode.SWIM || mode == PathMode.CAREFUL) {
             return Optional.empty();
         }
         LevelSafetyView safety = new LevelSafetyView(spirit.level());
@@ -33,26 +38,51 @@ public final class StuckTeleport {
                 blockCoord(spirit.position()),
                 target,
                 cell -> MiningSafety.canStand(cell, safety) && allowedThere(spirit, cell),
-                cell -> clearPath(spirit, cell));
+                cell -> clearPath(spirit, cell),
+                trail::used);
         if (step.isEmpty()) {
             LOGGER.info(
-                    "[move] {} застрял у {}: перенос не найден, путь закрыт",
+                    "[move] {} застрял у {}: {}; попытка {}/{}",
                     spirit.getName().getString(),
-                    blockCoord(spirit.position()));
+                    blockCoord(spirit.position()),
+                    failure(target, trail),
+                    used,
+                    limit);
         }
         return step;
     }
 
-    public static void apply(SpiritEntity spirit, BlockCoord cell) {
+    public static String failure(BlockCoord target, TeleportTrail trail) {
+        if (trail.attempts() > 0) {
+            return "петля переносов: цель " + target + ", клетки у неё уже пробовали (" + trail.attempts() + ")";
+        }
+        return "перенос не найден, путь закрыт: цель " + target;
+    }
+
+    public static void apply(SpiritEntity spirit, BlockCoord cell, BlockCoord target, TeleportTrail trail) {
         BlockCoord from = blockCoord(spirit.position());
+        int used = trail.attempts() + 1;
+        int limit = DataTables.INSTANCE.unstuck().current().teleportsPerApproach();
+        String previous = trail.last().map(BlockCoord::toString).orElse("нет");
+        long previousTick = trail.lastTick();
+        double before = distance(from, target);
         spirit.getNavigation().stop();
         spirit.teleportTo(cell.x() + 0.5, cell.y(), cell.z() + 0.5);
         spirit.countTeleport();
+        trail.record(cell, spirit.level().getGameTime());
         LOGGER.info(
-                "[move] {} перенос {} → {}: застрял, открытого прохода рядом нет",
+                "[move] {} перенос {} → {}: цель навигации {}, попытка {}/{}, прошлый перенос {} (тик {}), "
+                        + "до цели {} → {}, открытого прохода рядом нет",
                 spirit.getName().getString(),
                 from,
-                cell);
+                cell,
+                target,
+                used,
+                limit,
+                previous,
+                previousTick,
+                before,
+                distance(cell, target));
     }
 
     private static boolean allowedThere(SpiritEntity spirit, BlockCoord cell) {
@@ -92,5 +122,12 @@ public final class StuckTeleport {
 
     private static BlockCoord blockCoord(Vec3 point) {
         return new BlockCoord((int) Math.floor(point.x), (int) Math.floor(point.y), (int) Math.floor(point.z));
+    }
+
+    private static double distance(BlockCoord from, BlockCoord target) {
+        double dx = from.x() - target.x();
+        double dy = from.y() - target.y();
+        double dz = from.z() - target.z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 }

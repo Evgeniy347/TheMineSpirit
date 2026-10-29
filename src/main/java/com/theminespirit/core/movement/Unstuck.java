@@ -24,10 +24,20 @@ public record Unstuck(int maxDistance, int teleportsPerApproach) {
 
     public Optional<BlockCoord> step(
             BlockCoord feet, BlockCoord target, Predicate<BlockCoord> standable, Predicate<BlockCoord> clearPath) {
+        return step(feet, target, standable, clearPath, cell -> false);
+    }
+
+    public Optional<BlockCoord> step(
+            BlockCoord feet,
+            BlockCoord target,
+            Predicate<BlockCoord> standable,
+            Predicate<BlockCoord> clearPath,
+            Predicate<BlockCoord> used) {
         Objects.requireNonNull(feet, "Ноги духа не могут быть null: без них неизвестно, откуда переносить");
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, куда ближе");
         Objects.requireNonNull(standable, "Правило стоянки не может быть null");
         Objects.requireNonNull(clearPath, "Правило видимого пути не может быть null: иначе перенос сквозь стену");
+        Objects.requireNonNull(used, "Память переносов не может быть null: иначе клетка повторится по кругу");
         double from = distanceSquared(feet, target);
         BlockCoord best = null;
         double bestDistance = Double.MAX_VALUE;
@@ -42,7 +52,7 @@ public record Unstuck(int maxDistance, int teleportsPerApproach) {
                     boolean better = best == null
                             ? distance < from
                             : distance < bestDistance || (distance == bestDistance && cell.compareTo(best) < 0);
-                    if (better && standable.test(cell) && clearPath.test(cell)) {
+                    if (better && !used.test(cell) && standable.test(cell) && clearPath.test(cell)) {
                         best = cell;
                         bestDistance = distance;
                     }

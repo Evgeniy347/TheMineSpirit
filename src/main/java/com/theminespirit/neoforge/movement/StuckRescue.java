@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import com.theminespirit.core.movement.TeleportTrail;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.PathMode;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -9,9 +10,10 @@ import org.jspecify.annotations.Nullable;
 public final class StuckRescue {
     private static final int ROUTE_ATTEMPTS = 3;
     private final SpiritEntity spirit;
-    private int teleports;
+    private final TeleportTrail trail = new TeleportTrail();
     private boolean routes;
     private int routeAttempts;
+    private @Nullable String refusal;
     private @Nullable RouteWalk walk;
 
     public StuckRescue(SpiritEntity spirit) {
@@ -20,24 +22,26 @@ public final class StuckRescue {
 
     public void reset(boolean allowRoutes) {
         cancel();
-        teleports = 0;
         routes = allowRoutes;
         routeAttempts = 0;
+        refusal = null;
     }
 
     public boolean free(PathMode mode, BlockCoord target, int radius, boolean movingTarget) {
-        Optional<BlockCoord> step = StuckTeleport.find(spirit, mode, target, teleports);
+        Optional<BlockCoord> step = StuckTeleport.find(spirit, mode, target, trail);
         if (step.isPresent()) {
-            StuckTeleport.apply(spirit, step.get());
-            teleports++;
+            StuckTeleport.apply(spirit, step.get(), target, trail);
             return true;
         }
+        String teleportFailure = StuckTeleport.failure(target, trail);
         if (!routes || movingTarget || routeAttempts >= ROUTE_ATTEMPTS) {
+            refusal = teleportFailure;
             return false;
         }
         routeAttempts++;
         walk = RouteDetour.plan(spirit, target, radius, "подход").orElse(null);
         if (walk == null) {
+            refusal = teleportFailure;
             return false;
         }
         spirit.getNavigation().stop();
@@ -71,7 +75,11 @@ public final class StuckRescue {
     }
 
     public int teleports() {
-        return teleports;
+        return trail.attempts();
+    }
+
+    public @Nullable String refusal() {
+        return refusal;
     }
 
     public void cancel() {
