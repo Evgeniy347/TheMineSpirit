@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildPlanner;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.HashSet;
@@ -32,6 +33,9 @@ final class BuildPlanStart {
         Map<String, Integer> required = new TreeMap<>();
         Set<BlockCoord> done = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
+            if (SchematicActions.isActionPlaced(entry.block())) {
+                continue;
+            }
             if (optionalPresent(spirit, entry)) {
                 done.add(relative(entry.pos(), origin));
                 continue;
@@ -47,7 +51,7 @@ final class BuildPlanStart {
         }
         Set<BlockCoord> skip = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.schematic().entries(origin, site.rotation())) {
-            if (!BlockItems.hasBlockItem(entry.block())) {
+            if (!BlockItems.hasBlockItem(entry.block()) || SchematicActions.isActionPlaced(entry.block())) {
                 boolean present = spirit.level()
                         .getBlockState(SchematicSite.toPos(entry.pos()))
                         .is(BlockStates.blockFor(entry.block()));
@@ -62,13 +66,7 @@ final class BuildPlanStart {
                 inventory.put(key, count);
             }
         });
-        int materialSlots = 0;
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = spirit.getInventory().getItem(slot);
-            if (!stack.isEmpty() && materials.contains(stack.getItem())) {
-                materialSlots++;
-            }
-        }
+        int materialSlots = materialSlots(spirit, materials);
         List<BlockPos> chests = BuildSupplyTrip.containers(spirit);
         Map<String, Integer> chest = new TreeMap<>();
         Set<BlockPos> seen = new HashSet<>();
@@ -104,6 +102,17 @@ final class BuildPlanStart {
                 BuildSupplyTrip.junkSlots(spirit, site),
                 stacks(items));
         return new Prepared(supply, start, Map.copyOf(items));
+    }
+
+    private static int materialSlots(SpiritEntity spirit, Set<Item> materials) {
+        int slots = 0;
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (!stack.isEmpty() && materials.contains(stack.getItem())) {
+                slots++;
+            }
+        }
+        return slots;
     }
 
     private static boolean optionalPresent(SpiritEntity spirit, Schematic.PlacedEntry entry) {

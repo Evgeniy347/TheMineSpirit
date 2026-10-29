@@ -14,6 +14,7 @@ import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.CellPartition;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchemeFilter;
 import com.theminespirit.core.building.SpiritReach;
@@ -31,7 +32,6 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -299,6 +299,9 @@ final class BuildSchematicScript implements ScriptInstance {
         List<Schematic.PlacedEntry> unsupplied = new ArrayList<>();
         boolean waitingForeign = false;
         for (Schematic.PlacedEntry entry : site.primaries()) {
+            if (SchematicActions.isDecorFlower(entry.block())) {
+                continue;
+            }
             if (site.matches(entry) && site.secondPartMatches(entry)) {
                 continue;
             }
@@ -314,6 +317,7 @@ final class BuildSchematicScript implements ScriptInstance {
                 return ScriptStatus.RUNNING;
             }
             if (BlockItems.hasBlockItem(entry.block())
+                    && !SchematicActions.isActionPlaced(entry.block())
                     && BlockItems.countIn(spirit.getInventory(), entry.block()) == 0) {
                 unsupplied.add(entry);
                 continue;
@@ -760,6 +764,12 @@ final class BuildSchematicScript implements ScriptInstance {
                 return startSupply(steps);
             }
         }
+        List<ScriptCall> shovel = PathTrample.restock(spirit, blockId);
+        if (!shovel.isEmpty() && crafts < MAX_OWN_CRAFTS) {
+            crafts++;
+            LOGGER.info("Стройка {}: для тропинки нужна лопата — заход за инструментом", buildKey);
+            return startSupply(shovel);
+        }
         int needed = countMissing(blockId);
         if (crafts < MAX_OWN_CRAFTS && "minecraft:torch".equals(blockId)) {
             int held = BlockItems.countIn(spirit.getInventory(), blockId);
@@ -769,7 +779,7 @@ final class BuildSchematicScript implements ScriptInstance {
             if (coal * TORCHES_PER_COAL >= count - held) {
                 crafts++;
                 LOGGER.info("Стройка {}: крафт своих факелов ×{} из угля духа", buildKey, count - held);
-                return startSupply(ownCraft(blockId, count));
+                return startSupply(SelfCraftSteps.of(spirit, blockId, count));
             }
         }
         if (crafts < MAX_OWN_CRAFTS && !OwnWood.species(blockId).isEmpty()) {
@@ -779,7 +789,7 @@ final class BuildSchematicScript implements ScriptInstance {
                     >= OwnWood.plankCost(blockId, count - held)) {
                 crafts++;
                 LOGGER.info("Стройка {}: крафт своего {} ×{} из брёвен духа", buildKey, blockId, count - held);
-                return startSupply(ownCraft(blockId, count));
+                return startSupply(SelfCraftSteps.of(spirit, blockId, count));
             }
         }
         failed++;
@@ -788,18 +798,6 @@ final class BuildSchematicScript implements ScriptInstance {
         tally.supplies(placed + have, Math.max(needed - have, 0));
         return fail("не хватило материала '" + blockId + "': поставлено " + placed + " из "
                 + site.primaries().size() + "; нужно " + needed + ", есть " + have);
-    }
-
-    private List<ScriptCall> ownCraft(String blockId, int count) {
-        List<ScriptCall> steps = new ArrayList<>();
-        if (spirit.level() instanceof ServerLevel server) {
-            SettlementPlotStore.get(server).site().ifPresent(site -> {
-                BlockCoord yard = site.workYard();
-                steps.add(new ScriptCall("goto", Map.of("x", yard.x(), "y", yard.y(), "z", yard.z())));
-            });
-        }
-        steps.add(new ScriptCall("acquire", Map.of("item", blockId, "count", count)));
-        return steps;
     }
 
     private ScriptStatus startSupply(List<ScriptCall> steps) {
