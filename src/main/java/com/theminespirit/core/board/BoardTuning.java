@@ -25,7 +25,7 @@ public final class BoardTuning {
     public static final int STOCK_BLOCK_BUDGET = 4096;
 
     public static final long FAIL_BACKOFF_TICKS = 200;
-    public static final long BLOCKED_RETRY_TICKS = 6000;
+    public static final long STARVE_TICKS = 12000;
 
     public static final long CASE_FAIL_PAUSE_TICKS = 1200;
 
@@ -57,7 +57,7 @@ public final class BoardTuning {
             "stockReadBudget",
             "stockBlockBudget",
             "failBackoffTicks",
-            "blockedRetryTicks",
+            "starveTicks",
             "caseFailPauseTicks",
             "caseFailMultiplier",
             "caseFailPauseCapTicks",
@@ -102,8 +102,8 @@ public final class BoardTuning {
         return (int) interval("stockBlockBudget", STOCK_BLOCK_BUDGET);
     }
 
-    public static long blockedRetryTicks() {
-        return interval("blockedRetryTicks", BLOCKED_RETRY_TICKS);
+    public static long starveTicks() {
+        return interval("starveTicks", STARVE_TICKS);
     }
 
     public static long failBackoffTicks() {

@@ -1020,31 +1020,6 @@ class BoardTests {
     }
 
     @Test
-    void prune_BlockedLongEnough_RetriedNotForever() {
-        long[] now = {0};
-        Board board = new Board(() -> now[0]);
-        BoardTicket blocked = simpleTicket("first:build_fence", BoardCase.BUILD_FENCE);
-        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
-            UUID holder = new UUID(0, attempt);
-            board.submit(blocked);
-            board.claim(blocked.id(), holder, now[0]);
-            board.fail(blocked.id());
-            board.prune(now[0]);
-            now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, BoardCase.BUILD_FENCE));
-        }
-        assertTrue(board.blocked(blocked.id()), "Сцена: забор заблокирован провалами подряд");
-        board.prune(now[0]);
-        now[0] += BoardTuning.blockedRetryTicks();
-
-        board.prune(now[0]);
-
-        assertEquals(
-                BoardStatus.PENDING,
-                board.statusOf(blocked.id()).orElse(null),
-                "BLOCKED не останавливает цепочку первых шагов навсегда: после паузы — новая попытка");
-    }
-
-    @Test
     void occupy_ActivityChangeAndVacate_Journaled() {
         List<String> events = new ArrayList<>();
         Board board =

@@ -100,6 +100,7 @@
     "stockReadBudget": 8,
     "stockBlockBudget": 4096,
     "failBackoffTicks": 200,
+    "starveTicks": 12000,
     "caseFailPauseTicks": 1200,
     "caseFailMultiplier": 2,
     "caseFailPauseCapTicks": 9600,

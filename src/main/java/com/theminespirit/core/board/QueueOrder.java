@@ -11,11 +11,25 @@ public final class QueueOrder {
     private QueueOrder() {}
 
     public static Comparator<BoardTicket> of(Collection<BoardTicket> tickets, Map<String, BoardStatus> statuses) {
+        return of(tickets, statuses, 0);
+    }
+
+    public static Comparator<BoardTicket> of(
+            Collection<BoardTicket> tickets, Map<String, BoardStatus> statuses, long now) {
         Map<String, Integer> effective = inherited(tickets, statuses);
-        return Comparator.<BoardTicket>comparingInt(ticket -> effective.getOrDefault(ticket.id(), ticket.priority()))
-                .reversed()
+        long starveTicks = BoardTuning.starveTicks();
+        Comparator<BoardTicket> starved = Comparator.<BoardTicket>comparingInt(
+                        ticket -> starved(ticket, now, starveTicks) ? 1 : 0)
+                .reversed();
+        return starved.thenComparing(Comparator.<BoardTicket>comparingInt(
+                                ticket -> effective.getOrDefault(ticket.id(), ticket.priority()))
+                        .reversed())
                 .thenComparingLong(BoardTicket::createdAt)
                 .thenComparing(BoardTicket::id);
+    }
+
+    private static boolean starved(BoardTicket ticket, long now, long starveTicks) {
+        return starveTicks > 0 && now - ticket.createdAt() >= starveTicks;
     }
 
     public static Map<String, Integer> inherited(Collection<BoardTicket> tickets, Map<String, BoardStatus> statuses) {

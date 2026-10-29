@@ -9,6 +9,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.RepairPlan;
+import com.theminespirit.core.board.RepairReopen;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSites;
@@ -38,6 +39,11 @@ final class StageRepair {
         String id = RepairPlan.PREFIX + step.name().toLowerCase(Locale.ROOT);
         int percent = total == 0 ? 0 : missing * PERCENT / total;
         if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
+            Map<String, Integer> before =
+                    service.board().find(id).map(BoardTicket::requiredItems).orElse(Map.of());
+            if (!RepairReopen.shouldReopen(before, gap.need())) {
+                return BoardOutcome.DUPLICATE;
+            }
             service.reopen(id);
         }
         BoardOutcome outcome = service.submit(
