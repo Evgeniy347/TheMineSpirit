@@ -50,8 +50,8 @@ public final class ContainerPicker {
 
     private static String refusal(List<ContainerSnapshot> containers, Stack incoming) {
         if (containers.isEmpty()) {
-            return "в радиусе нет допустимого контейнера: некуда положить '" + incoming.item()
-                    + "'. Проверьте, что рядом есть сундук, бочка или шалкер-бокс, и увеличьте радиус";
+            return "на складе поселения нет допустимого контейнера: некуда положить '" + incoming.item()
+                    + "'. Проверьте, что в поселении есть сундук, бочка или шалкер-бокс";
         }
         int withKind = 0;
         for (ContainerSnapshot container : containers) {
@@ -59,9 +59,9 @@ public final class ContainerPicker {
                 withKind++;
             }
         }
-        return "во всех " + containers.size() + " контейнерах в радиусе нет свободного слота под '"
+        return "во всех " + containers.size() + " контейнерах склада нет свободного слота под '"
                 + incoming.item() + "': ни одного пустого слота, неполных стопок нет, контейнеров с таким "
-                + "предметом " + withKind + ". Освободите место или увеличьте радиус";
+                + "предметом " + withKind + ". Освободите место или поставьте сундук";
     }
 
     private static int nearestMatching(

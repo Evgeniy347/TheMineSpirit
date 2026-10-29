@@ -101,6 +101,20 @@ class SettlementChestsTests {
     }
 
     @Test
+    void warehouse_ChestBeyondOldRadius_IsStillOffered() {
+        SettlementChests chests = new SettlementChests();
+        BlockCoord spirit = new BlockCoord(-179, 68, -515);
+        BlockCoord yard = new BlockCoord(-171, 71, -487);
+        chests.add(yard);
+
+        assertEquals(
+                List.of(yard),
+                chests.warehouse(spirit),
+                "склад поселения — весь реестр сундуков, а не 16 блоков вокруг случайной точки духа: "
+                        + "сундук двора в 29 блоках обязан попасть в выбор точки сдачи и еды");
+    }
+
+    @Test
     void all_RegisteredChests_KeepInsertionSetWithoutDuplicates() {
         SettlementChests chests = new SettlementChests();
         chests.add(new BlockCoord(2, 64, 2));

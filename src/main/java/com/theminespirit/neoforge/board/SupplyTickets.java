@@ -4,9 +4,11 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.inventory.StorageFinder;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 
 final class SupplyTickets {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final StateChangeLog CHANGES = new StateChangeLog();
 
     private SupplyTickets() {}
 
@@ -35,14 +38,18 @@ final class SupplyTickets {
         Optional<BlockCoord> point =
                 StorageFinder.depositPoint(level, target.target(), request.item(), request.count());
         if (point.isEmpty()) {
-            LOGGER.info(
-                    "[supply] {} отложено: у точки {} нет допустимого контейнера под '{}' — нужен сундук двора "
-                            + "(его ставит доска сундуков), а не сдача в пустом месте",
-                    id,
-                    target.target(),
-                    request.item());
+            if (CHANGES.changed("supply:" + id, "no-container")) {
+                LOGGER.info(
+                        "[supply] {} отложено: на складе поселения нет контейнера под '{}' — доска сундуков "
+                                + "ставит сундук двора, сдача в пустом месте не начинается",
+                        id,
+                        request.item());
+            }
+            Optional<StageSite> site = SettlementPlotStore.get(level).site();
+            site.ifPresent(stage -> ChestSpaceWatch.request(level, service, stage, now, "сдача " + request.item()));
             return;
         }
+        CHANGES.forget("supply:" + id);
         target = target.withSupply(request.item(), request.count()).withDeposit(point.orElseThrow());
         service.submit(
                 new BoardTicket(
