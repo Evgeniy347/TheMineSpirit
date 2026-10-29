@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.AbsentOwners;
+import com.theminespirit.core.board.ActivityCadence;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
@@ -88,6 +89,7 @@ public final class BoardService {
     private final Map<UUID, Launched> launched = new HashMap<>();
     private final DigOutWatch digOut;
     private final TaskStall stall = new TaskStall();
+    private long lastActivity;
     private final Map<String, Long> issuedGenerations = new HashMap<>();
     private final Map<String, Long> supplyClosed = new HashMap<>();
     private final AbsentOwners absentOwners = new AbsentOwners();
@@ -201,10 +203,14 @@ public final class BoardService {
             rebuild(level, now);
             return;
         }
+        if (ActivityCadence.due(lastActivity, now)) {
+            lastActivity = now;
+            reconcileActivities(SpiritCensus.all(level), false);
+        }
         if (now - lastDispatch >= EARLY_DISPATCH_TICKS && (freshTickets || holderFreed(level))) {
             lastDispatch = now;
             freshTickets = false;
-            issue(level, census(level), now);
+            issue(level, SpiritCensus.all(level), now);
         }
     }
 
@@ -227,7 +233,7 @@ public final class BoardService {
         }
         targets.keySet().retainAll(alive);
         issuedGenerations.keySet().retainAll(alive);
-        List<SpiritEntity> spirits = census(level);
+        List<SpiritEntity> spirits = SpiritCensus.all(level);
         cancelOrphans(level, spirits);
         settleOwners(spirits);
         StockParts parts = refreshStock(level, spirits);
@@ -1122,15 +1128,5 @@ public final class BoardService {
                 .flatMap(Optional::stream)
                 .findFirst()
                 .orElse(new BlockCoord(0, 64, 0));
-    }
-
-    private static List<SpiritEntity> census(ServerLevel level) {
-        List<SpiritEntity> spirits = new ArrayList<>();
-        for (Entity entity : level.getAllEntities()) {
-            if (entity instanceof SpiritEntity spirit && !spirit.isRemoved() && spirit.isAlive() && !spirit.isDemo()) {
-                spirits.add(spirit);
-            }
-        }
-        return spirits;
     }
 }
