@@ -37,7 +37,9 @@
   "result": null, "error": null }
 ```
 
-`state`: `accepted` / `running` / `succeeded` / `failed` / `cancelled`. `progress.done` и `progress.target` есть у счётных
+`{id}` задания доски (например `graph:chop_jungle_log`) отдаётся тем же запросом из очереди доски: ответ —
+`id`, `case`, `status`, `waitReason`, `assignee` и прочие поля `GET /v1/board`. Для REST-задачи `state`:
+`accepted` / `running` / `succeeded` / `failed` / `cancelled`. `progress.done` и `progress.target` есть у счётных
 скриптов (`mine_vein`, `gather`, `place_block`, `fill`, `clear_area`, `dig_area`, `dig_descent`, `build_schematic`), у остальных
 `null`; у завершённой задачи остаётся последний прогресс, у проваленной —
 шаг и скрипт, на которых она упала. `error` у `failed` называет причину; «дух исчез» — дух погиб или не вернулся в

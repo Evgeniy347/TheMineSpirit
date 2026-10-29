@@ -24,10 +24,11 @@ public final class RestRouter {
         List<Route> routes = new ArrayList<>(V1Routes.routes(gateway, SpiritScripts.catalog()));
         PlanningService planning = new PlanningService(SpiritScripts.catalog(), SpiritScripts.conditionCatalog());
         SpiritTaskGateway taskGateway = new SpiritTaskGateway(gateway.index(), gateway.serverCall(), planning);
-        TaskRoutes taskRoutes =
-                new TaskRoutes(gateway.taskRegistry(), taskGateway, planning, new IdempotencyCache(), slots);
+        SpiritBoardGateway boardGateway = new SpiritBoardGateway(gateway.server());
+        TaskRoutes taskRoutes = new TaskRoutes(
+                gateway.taskRegistry(), taskGateway, planning, new IdempotencyCache(), slots, boardGateway);
         routes.addAll(taskRoutes.routes());
-        BoardRoutes boardRoutes = new BoardRoutes(new SpiritBoardGateway(gateway.server()), new IdempotencyCache());
+        BoardRoutes boardRoutes = new BoardRoutes(boardGateway, new IdempotencyCache());
         routes.addAll(boardRoutes.routes());
         PolicyRoutes policyRoutes = new PolicyRoutes(new SpiritPolicyGateway(gateway.server()), new IdempotencyCache());
         routes.addAll(policyRoutes.routes());

@@ -3,6 +3,7 @@ package com.theminespirit.core.incident;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -44,5 +45,15 @@ class IncidentNoteTests {
                 note.line(),
                 "Строка инцидента называет духа, позицию, задачу с параметрами и инвентарь по алфавиту: без них "
                         + "инцидент не повторить в тесте");
+    }
+
+    @Test
+    void line_SnapshotPath_IsAppended() {
+        IncidentNote note = new IncidentNote(
+                "spirit-1", "задание стоит 1200 тиков", new BlockCoord(-162, 72, -505), "demolish:1", Map.of());
+        assertEquals(
+                note.line() + "; снимок a.nbt",
+                note.line(Path.of("a.nbt")),
+                "Строка [incident] обязана нести путь NBT-снимка: без него инцидент не найти среди файлов");
     }
 }

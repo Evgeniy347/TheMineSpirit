@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.Species;
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -22,5 +23,11 @@ public final class HerdCycles {
 
     public Set<Species> species() {
         return Set.copyOf(cycles.keySet());
+    }
+
+    public static String cycleId(Species species, String suffix) {
+        Objects.requireNonNull(species, "Вид цикла не может быть null: id цикла называет вид");
+        Objects.requireNonNull(suffix, "Суффикс цикла не может быть null: id цикла без суффикса не отличить");
+        return species.name().toLowerCase(Locale.ROOT) + "_" + suffix;
     }
 }

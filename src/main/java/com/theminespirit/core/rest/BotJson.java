@@ -29,9 +29,12 @@ public final class BotJson {
         map.put("position", List.of(bot.x(), bot.y(), bot.z()));
         map.put("dimension", bot.dimension());
         map.put("current_task", bot.currentTask());
+        map.put("activity", bot.activity());
+        map.put("script", bot.script());
         map.put("board_task", boardTask(bot.boardTask()));
         map.put("tick", bot.tick());
         map.put("position_tick", bot.positionTick());
+        map.put("state_since_tick", bot.stateSinceTick());
         map.put("food", bot.food());
         return map;
     }

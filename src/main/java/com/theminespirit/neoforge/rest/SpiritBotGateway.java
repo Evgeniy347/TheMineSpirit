@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.WorldObservation;
@@ -40,8 +41,15 @@ public final class SpiritBotGateway implements BotGateway {
     private final TaskRegistry tasks;
     private final TaskWatcher watcher;
     private final Map<UUID, PositionSeen> positions = new HashMap<>();
+    private final Map<UUID, WorkSeen> work = new HashMap<>();
 
     private record PositionSeen(BlockPos pos, long tick) {}
+
+    private record WorkSeen(
+            BotState state,
+            @Nullable String activity,
+            @Nullable String script,
+            long tick) {}
 
     public SpiritBotGateway(MinecraftServer server, SpiritIndex index, IEventBus bus, TaskRegistry tasks) {
         this.server = server;
@@ -135,19 +143,27 @@ public final class SpiritBotGateway implements BotGateway {
         BlockPos position = spirit.blockPosition();
         String id = spirit.getUUID().toString();
         String currentTask = tasks.activeForBot(id).map(TaskRecord::taskId).orElse(null);
+        BotBoardTask boardTask = boardTask(spirit);
+        String activity = activity(spirit);
+        String script = spirit.currentTaskScript().orElse(null);
+        BotState state = state(spirit, boardTask, activity);
+        long now = spirit.level().getGameTime();
         return new BotInfo(
                 id,
                 spirit.displayName(),
-                state(spirit),
+                state,
                 position.getX(),
                 position.getY(),
                 position.getZ(),
                 spirit.level().dimension().location().toString(),
                 currentTask,
                 spirit.hunger().satietyFraction(),
-                boardTask(spirit),
-                spirit.level().getGameTime(),
-                positionTick(spirit, position));
+                boardTask,
+                now,
+                positionTick(spirit, position),
+                activity,
+                script,
+                stateSince(spirit.getUUID(), state, activity, script, now));
     }
 
     private static @Nullable BotBoardTask boardTask(SpiritEntity spirit) {
@@ -178,12 +194,38 @@ public final class SpiritBotGateway implements BotGateway {
         return seen.tick();
     }
 
-    private static BotState state(SpiritEntity spirit) {
+    private long stateSince(UUID id, BotState state, @Nullable String activity, @Nullable String script, long now) {
+        WorkSeen seen = work.get(id);
+        if (seen == null
+                || seen.state() != state
+                || !Objects.equals(seen.activity(), activity)
+                || !Objects.equals(seen.script(), script)) {
+            work.put(id, new WorkSeen(state, activity, script, now));
+            return now;
+        }
+        return seen.tick();
+    }
+
+    private static @Nullable String activity(SpiritEntity spirit) {
+        if (spirit.level() instanceof ServerLevel level) {
+            Optional<BoardService> service = BoardRegistry.peek(level);
+            if (service.isPresent()) {
+                Optional<BoardCase> occupation = service.get().board().occupation(spirit.getUUID());
+                if (occupation.isPresent()) {
+                    return occupation.get().name();
+                }
+            }
+        }
+        return spirit.currentActivity().orElse(null);
+    }
+
+    private static BotState state(SpiritEntity spirit, @Nullable BotBoardTask boardTask, @Nullable String activity) {
         if (!spirit.isAlive()) {
             return BotState.DEAD;
         }
-        return spirit.taskStatus().filter(status -> status == RunStatus.RUNNING).isPresent()
-                ? BotState.BUSY
-                : BotState.IDLE;
+        boolean running = spirit.taskStatus()
+                .filter(status -> status == RunStatus.RUNNING)
+                .isPresent();
+        return running || boardTask != null || activity != null ? BotState.BUSY : BotState.IDLE;
     }
 }

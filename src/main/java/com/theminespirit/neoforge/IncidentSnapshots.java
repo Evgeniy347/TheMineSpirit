@@ -31,6 +31,7 @@ public final class IncidentSnapshots {
     public static final long MIN_GAP_TICKS = 1200;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, Long> LAST = new ConcurrentHashMap<>();
+    private static final Map<UUID, Path> LAST_FILE = new ConcurrentHashMap<>();
 
     private IncidentSnapshots() {}
 
@@ -39,7 +40,9 @@ public final class IncidentSnapshots {
         long now = level.getGameTime();
         Long last = LAST.get(spirit.getUUID());
         if (last != null && now - last < MIN_GAP_TICKS && now >= last) {
-            return note.line() + "; снимок окрестности — прошлый, моложе " + MIN_GAP_TICKS + " тиков";
+            Path previous = LAST_FILE.get(spirit.getUUID());
+            String where = previous == null ? "" : " (" + previous.normalize() + ")";
+            return note.line() + "; снимок окрестности — прошлый, моложе " + MIN_GAP_TICKS + " тиков" + where;
         }
         LAST.put(spirit.getUUID(), now);
         Path file = level.getServer()
@@ -50,9 +53,10 @@ public final class IncidentSnapshots {
             write(level, note, spirit, file);
         } catch (UncheckedIOException failure) {
             LOGGER.error("[incident] снимок {} не записан: {}", file, failure.getMessage());
-            return note.line() + "; снимок не записан: " + failure.getMessage();
+            return note.line() + "; снимок " + file.normalize() + " не записан: " + failure.getMessage();
         }
-        return note.line() + "; снимок " + file.normalize();
+        LAST_FILE.put(spirit.getUUID(), file);
+        return note.line(file.normalize());
     }
 
     public static IncidentNote note(SpiritEntity spirit, String what) {

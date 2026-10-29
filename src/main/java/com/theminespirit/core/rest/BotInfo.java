@@ -15,7 +15,10 @@ public record BotInfo(
         double food,
         @Nullable BotBoardTask boardTask,
         long tick,
-        long positionTick) {
+        long positionTick,
+        @Nullable String activity,
+        @Nullable String script,
+        long stateSinceTick) {
     public BotInfo(
             String id,
             String name,
@@ -26,7 +29,23 @@ public record BotInfo(
             String dimension,
             String currentTask,
             double food) {
-        this(id, name, state, x, y, z, dimension, currentTask, food, null, 0, 0);
+        this(id, name, state, x, y, z, dimension, currentTask, food, null, 0, 0, null, null, 0);
+    }
+
+    public BotInfo(
+            String id,
+            String name,
+            BotState state,
+            int x,
+            int y,
+            int z,
+            String dimension,
+            String currentTask,
+            double food,
+            @Nullable BotBoardTask boardTask,
+            long tick,
+            long positionTick) {
+        this(id, name, state, x, y, z, dimension, currentTask, food, boardTask, tick, positionTick, null, null, tick);
     }
 
     public BotInfo {
@@ -41,6 +60,10 @@ public record BotInfo(
         if (positionTick > tick) {
             throw new IllegalArgumentException(
                     "Тик позиции " + positionTick + " больше текущего " + tick + ": позиция не может быть из будущего");
+        }
+        if (stateSinceTick < 0 || stateSinceTick > tick) {
+            throw new IllegalArgumentException("Тик состояния " + stateSinceTick + " вне [0; " + tick
+                    + "]: состояние не может начаться в будущем");
         }
         if (!Double.isFinite(food) || food < 0 || food > 1) {
             throw new IllegalArgumentException(

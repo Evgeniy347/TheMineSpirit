@@ -36,7 +36,7 @@ src/main/java/com/theminespirit/neoforge/SchematicSite.java	363
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	767
 src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
-src/main/java/com/theminespirit/neoforge/board/BoardService.java	1188
+src/main/java/com/theminespirit/neoforge/board/BoardService.java	1174
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	893
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	609
 src/main/java/com/theminespirit/neoforge/client/BoardScreen.java	346
@@ -72,7 +72,7 @@ src/test/java/com/theminespirit/core/planner/FallbackPlannerTests.java	325
 src/test/java/com/theminespirit/core/planner/ResourceResolverTests.java	566
 src/test/java/com/theminespirit/core/policy/BlockProtectionTests.java	341
 src/test/java/com/theminespirit/core/rest/BoardRoutesTests.java	364
-src/test/java/com/theminespirit/core/rest/TaskRoutesTests.java	905
+src/test/java/com/theminespirit/core/rest/TaskRoutesTests.java	887
 src/test/java/com/theminespirit/core/script/ScriptCatalogTests.java	1101
 src/test/java/com/theminespirit/core/tactics/FactorTests.java	422
 src/test/java/com/theminespirit/core/tactics/TacticsConfigTests.java	370

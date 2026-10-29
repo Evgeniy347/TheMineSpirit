@@ -3,10 +3,20 @@
 `{id}` — UUID сущности духа. Неизвестный `id` (в том числе не UUID) — 404 `not_found` с `id` в тексте.
 
 ```json
-{"bots":[{"id":"6f1c2d3e-0000-4000-8000-000000000001","name":"spirit","state":"idle","position":[10,64,-3],"dimension":"minecraft:overworld","current_task":null,"food":1.0}]}
+{"bots":[{"id":"6f1c2d3e-0000-4000-8000-000000000001","name":"spirit","state":"idle","position":[10,64,-3],
+  "dimension":"minecraft:overworld","current_task":null,"activity":null,"script":null,"board_task":null,
+  "tick":123456,"position_tick":123400,"state_since_tick":123400,"food":1.0}]}
 ```
 
 `GET /v1/bots/{id}` возвращает один такой объект без обёртки `bots`.
+
+| Поле | Смысл |
+|---|---|
+| `state` | `idle` — дух свободен; `busy` — исполняет задачу или держит задание доски/занятие; `dead` — погиб |
+| `activity` | занятие доски (`ACTIVITY_*`, например `ACTIVITY_CHOP`); нет занятия — `null` |
+| `script` | исполняемый сейчас скрипт; скрипт не идёт — `null` |
+| `board_task` | задание доски духа: `id`, `case`, `status`; задания нет — `null` |
+| `state_since_tick` | тик, с которого не менялись `state`, `activity` и `script`: по нему видно, сколько дух стоит в одном состоянии |
 
 ### GET /v1/spirits/{id}/decisions
 
