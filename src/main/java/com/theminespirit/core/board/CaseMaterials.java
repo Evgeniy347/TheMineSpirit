@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.plan.ConditionNode;
@@ -116,7 +117,8 @@ public final class CaseMaterials {
                 ? Stream.of(blocks.split(",")).map(SchematicBlocks::path).toList()
                 : List.of();
         source.schematicBlocks(text(call, "file")).forEach((block, count) -> {
-            if (only.isEmpty() || only.contains(SchematicBlocks.path(block))) {
+            if (!SchematicActions.isActionPlaced(block)
+                    && (only.isEmpty() || only.contains(SchematicBlocks.path(block)))) {
                 merge(placed, normalize(WoodSpecies.swap(block, wood)), count);
             }
         });

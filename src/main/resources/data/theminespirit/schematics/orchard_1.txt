@@ -15,11 +15,11 @@ exemptions:
     reason: "у сада нет пола и потолка: внутреннюю высоту не с чем мерить"
 legend:
   'o': oak_sapling ~
-  'p': dirt_path
-  'f': poppy ~
-  'd': dandelion ~
-  'a': azure_bluet ~
-  'b': cornflower ~
+  'p': dirt_path  # тропинку топчут лопатой по траве/земле, предмет не нужен
+  'f': poppy ~  # декор: нет цветка — клетка остаётся травой, стройку не держит
+  'd': dandelion ~  # декор
+  'a': azure_bluet ~  # декор
+  'b': cornflower ~  # декор
   'T': torch
 layers:
   - y0 сад: |

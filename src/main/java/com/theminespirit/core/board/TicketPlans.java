@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicPart;
 import com.theminespirit.core.building.WoodSpecies;
@@ -25,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 
 public final class TicketPlans {
@@ -686,9 +686,9 @@ public final class TicketPlans {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Нет схемы '" + scheme + "' для сада: проверьте presets.json и файл схемы"))
                 .schematic();
-        Map<String, Integer> counts = new TreeMap<>();
+        Map<String, Integer> counts = new LinkedHashMap<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            if (!SchematicBlocks.isSecondaryPart(entry.block(), entry.state())) {
+            if (!SchematicActions.isNotBought(entry.block(), entry.state())) {
                 counts.merge(SchematicBlocks.itemOf(entry.block()), 1, Integer::sum);
             }
         }

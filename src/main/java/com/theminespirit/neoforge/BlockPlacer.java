@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BlockSupport;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
@@ -72,7 +73,8 @@ public final class BlockPlacer {
                     "чанк с клеткой " + target.toShortString() + " не загружен: дух не грузит чанки ради стройки");
         }
         BlockState current = level.getBlockState(target);
-        if (!current.isAir() && !current.canBeReplaced()) {
+        boolean action = SchematicActions.isActionPlaced(blockId);
+        if (!action && !current.isAir() && !current.canBeReplaced()) {
             return new Refused(
                     RefuseReason.OCCUPIED,
                     "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
@@ -83,10 +85,7 @@ public final class BlockPlacer {
                     RefuseReason.OCCUPIED,
                     "клетку " + target.toShortString() + " занимает живое существо: ставить в него нельзя");
         }
-        BlockCoord feet = new BlockCoord(
-                spirit.blockPosition().getX(),
-                spirit.blockPosition().getY(),
-                spirit.blockPosition().getZ());
+        BlockCoord feet = feet();
         BlockCoord cell = new BlockCoord(target.getX(), target.getY(), target.getZ());
         SpiritReach reach = SpiritReach.current();
         if (!reach.reaches(feet, cell)) {
@@ -97,6 +96,9 @@ public final class BlockPlacer {
         }
         if (spirit.protectionGate().checkPlace(target) instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
+        }
+        if (action) {
+            return PathTrample.trample(spirit, target);
         }
         if (supportRequired && !hasSupport(level, target, state)) {
             return new Refused(
@@ -139,6 +141,11 @@ public final class BlockPlacer {
             SettlementChestWatch.placed(server, target, level.getBlockState(target));
         }
         return new Started(target.immutable());
+    }
+
+    private BlockCoord feet() {
+        BlockPos pos = spirit.blockPosition();
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
     // mc: ChestBlock.updateShape сбрасывает половину двойного сундука в SINGLE, пока соседа нет; пара из схемы

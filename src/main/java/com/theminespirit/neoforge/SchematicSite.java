@@ -5,6 +5,7 @@ import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.forestry.TreeSpan;
@@ -197,10 +198,7 @@ final class SchematicSite {
     List<Schematic.PlacedEntry> missing() {
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
         for (Schematic.PlacedEntry entry : entries) {
-            if (entry.optional()) {
-                continue;
-            }
-            if (!matches(entry)) {
+            if (!entry.optional() && !matches(entry)) {
                 missing.add(entry);
             }
         }
@@ -219,7 +217,7 @@ final class SchematicSite {
         }
         List<BlockCoord> cells = new ArrayList<>(unique);
         for (Schematic.PlacedEntry entry : entries) {
-            if (entry.optional()) {
+            if (entry.optional() || SchematicActions.isActionPlaced(entry.block())) {
                 continue;
             }
             BlockState current = level.getBlockState(toPos(entry.pos()));
