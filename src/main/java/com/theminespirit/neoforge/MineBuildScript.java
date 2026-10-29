@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 final class MineBuildScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double STAND_ARRIVAL = 0.6;
-    private static final double ENTRANCE_ARRIVAL = 1.5;
     private static final int SETTLE_TICKS = 5;
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final int MAX_ACTIONS_PER_COLUMN = 64;
@@ -76,6 +75,7 @@ final class MineBuildScript implements ScriptInstance {
     private Phase phase = Phase.PICK;
     private @Nullable MineColumn current;
     private boolean walking;
+    private final MineStepWalker stepWalker;
     private boolean breaking;
     private boolean dugHere;
     private int actions;
@@ -94,6 +94,7 @@ final class MineBuildScript implements ScriptInstance {
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
+        this.stepWalker = new MineStepWalker(approach, safety);
         this.plan = new ArrayList<>(MinePlan.order(MinePlan.columns(layout.floors(), layout.air()), layout.entrance()));
         this.torches = new ArrayList<>(layout.optional());
         this.walls = new HashSet<>(layout.floors());
@@ -161,12 +162,14 @@ final class MineBuildScript implements ScriptInstance {
     public void cancel() {
         breaker.cancel();
         approach.cancel();
+        stepWalker.reset();
     }
 
     @Override
     public void suspend() {
         approach.suspend();
         walking = false;
+        stepWalker.reset();
     }
 
     @Override
@@ -199,22 +202,14 @@ final class MineBuildScript implements ScriptInstance {
     private void walk() {
         MineColumn column = current();
         Optional<MineColumn> parent = MinePlan.parent(column, open);
-        BlockCoord stand = parent.map(MineColumn::stand).orElse(column.stand());
-        double arrival = parent.isPresent() ? STAND_ARRIVAL : ENTRANCE_ARRIVAL;
-        if (!walking) {
-            approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), arrival);
-            walking = true;
-        }
-        switch (approach.tick()) {
-            case MOVING -> {}
-            case ARRIVED -> {
-                walking = false;
-                parent.ifPresent(found -> parents.put(column, found));
-                phase = Phase.DIG;
-            }
-            case STUCK, TIMEOUT ->
-                fail("к ступени " + stand + " не подойти: "
-                        + (approach.refusal() == null ? "путь не найден" : approach.refusal()));
+        BlockCoord feet = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+        MineStepWalker.State state =
+                stepWalker.tick(column, parent.map(MineColumn::stand).orElse(null), feet);
+        if (state == MineStepWalker.State.ARRIVED || state == MineStepWalker.State.VISIBLE) {
+            parent.ifPresentOrElse(found -> parents.put(column, found), () -> parents.remove(column));
+            phase = Phase.DIG;
+        } else if (state == MineStepWalker.State.FAILED) {
+            fail("к ступени " + column.stand() + " не подойти: " + stepWalker.refusal());
         }
     }
 
