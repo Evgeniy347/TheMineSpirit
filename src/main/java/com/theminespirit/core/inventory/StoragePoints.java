@@ -17,9 +17,10 @@ public final class StoragePoints {
     }
 
     public record Choice(
-            @Nullable BlockCoord point, @Nullable String type, String log) {
+            @Nullable BlockCoord point, @Nullable String type, String log, String state) {
         public Choice {
             Objects.requireNonNull(log, "Строка выбора не может быть null: без неё провал не объяснить");
+            Objects.requireNonNull(state, "Состояние выбора не может быть null: по нему не писать одно и то же");
         }
 
         public boolean found() {
@@ -29,7 +30,7 @@ public final class StoragePoints {
 
     private StoragePoints() {}
 
-    public static Choice deposit(List<Spot> spots, BlockCoord origin, Stack incoming, int radius) {
+    public static Choice deposit(List<Spot> spots, BlockCoord origin, Stack incoming) {
         Objects.requireNonNull(spots, "Список контейнеров не может быть null: пустой задают пустым списком");
         Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
         Objects.requireNonNull(incoming, "Предмет не может быть null: без него непонятно, что сдавать");
@@ -38,17 +39,20 @@ public final class StoragePoints {
         if (choice instanceof ContainerChoice.Chosen chosen) {
             Spot spot = spots.get(chosen.index());
             return new Choice(
-                    spot.pos(), spot.type(), describe("точка сдачи", spots, origin, radius, incoming.item(), spot));
+                    spot.pos(),
+                    spot.type(),
+                    describeDeposit(spots, origin, incoming, spot),
+                    "chosen@" + coord(spot.pos()));
         }
         String reason = ((ContainerChoice.Refused) choice).reason();
         return new Choice(
                 null,
                 null,
-                "точка сдачи не выбрана: " + reason + "; "
-                        + describe("точка сдачи", spots, origin, radius, incoming.item(), null));
+                "точка сдачи не выбрана: " + reason + "; " + describeDeposit(spots, origin, incoming, null),
+                "refused:" + reason);
     }
 
-    public static Choice withdraw(List<Spot> spots, BlockCoord origin, String item, int count, int radius) {
+    public static Choice withdraw(List<Spot> spots, BlockCoord origin, String item, int count) {
         Objects.requireNonNull(spots, "Список контейнеров не может быть null: пустой задают пустым списком");
         Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
         if (item == null || item.isBlank()) {
@@ -75,9 +79,14 @@ public final class StoragePoints {
                     null,
                     null,
                     head + "; не выбрана: ни в одном контейнере нет '" + item + "'; "
-                            + describe("осмотр", spots, origin, radius, item, null));
+                            + describeFood(spots, origin, item, null),
+                    "refused:нет '" + item + "'");
         }
-        return new Choice(best.pos(), best.type(), head + "; " + describe("выбор", spots, origin, radius, item, best));
+        return new Choice(
+                best.pos(),
+                best.type(),
+                head + "; " + describeFood(spots, origin, item, best),
+                "chosen@" + coord(best.pos()));
     }
 
     public static int count(ContainerSnapshot snapshot, String item) {
@@ -91,14 +100,46 @@ public final class StoragePoints {
         return total;
     }
 
-    private static String describe(
-            String title, List<Spot> spots, BlockCoord origin, int radius, String item, @Nullable Spot chosen) {
+    private static String describeDeposit(List<Spot> spots, BlockCoord origin, Stack incoming, @Nullable Spot chosen) {
         List<String> parts = new ArrayList<>();
         for (Spot spot : spots) {
-            String verdict = spot.equals(chosen) ? "выбрана" : "не подходит под '" + item + "'";
+            String verdict = spot.equals(chosen) ? "выбрана" : depositVerdict(spot.snapshot(), incoming);
             parts.add(coord(spot.pos()) + " " + spot.type() + " — " + verdict);
         }
-        return title + " от " + origin + ", радиус " + radius + ": [" + String.join("; ", parts) + "]";
+        return "склад поселения от " + origin + ": [" + String.join("; ", parts) + "]";
+    }
+
+    private static String depositVerdict(ContainerSnapshot snapshot, Stack incoming) {
+        if (snapshot.freeSlots() == 0) {
+            return "полон: свободных слотов нет, неполной стопки нет";
+        }
+        if (snapshot.hasPartial(incoming)) {
+            return "подходит неполной стопкой, но выбрана ближайшая";
+        }
+        if (snapshot.hasKind(incoming)) {
+            return "подходит по предмету, но выбрана ближайшая";
+        }
+        if (WarehouseSpace.canTakeNewSlot(snapshot, 0)) {
+            return "подходит свободным слотом, но выбрана ближайшая";
+        }
+        return "нет свободного слота под '" + incoming.item() + "'";
+    }
+
+    private static String describeFood(List<Spot> spots, BlockCoord origin, String item, @Nullable Spot chosen) {
+        List<String> parts = new ArrayList<>();
+        for (Spot spot : spots) {
+            String verdict = spot.equals(chosen) ? "выбрана" : foodVerdict(spot.snapshot(), item);
+            parts.add(coord(spot.pos()) + " " + spot.type() + " — " + verdict);
+        }
+        return "склад поселения от " + origin + ": [" + String.join("; ", parts) + "]";
+    }
+
+    private static String foodVerdict(ContainerSnapshot snapshot, String item) {
+        int count = count(snapshot, item);
+        if (count <= 0) {
+            return "нет '" + item + "'";
+        }
+        return "есть '" + item + "' ×" + count + ", но выбрана ближайшая";
     }
 
     private static String coord(BlockCoord pos) {

@@ -4,6 +4,8 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.hunger.SpiritHunger;
@@ -32,6 +34,7 @@ final class GraphFood {
     private static final int STATION_BUDGET = 4096;
     private static final int STATION_SLICES = 16;
     private static final Set<Block> COOKING_STATIONS = Set.of(Blocks.SMOKER, Blocks.FURNACE, Blocks.CAMPFIRE);
+    private static final StateChangeLog CHANGES = new StateChangeLog();
 
     private GraphFood() {}
 
@@ -67,28 +70,38 @@ final class GraphFood {
             int count = available.getOrDefault(item, 0);
             BlockCoord point = targetOf(spirit);
             Optional<BlockCoord> container = StorageFinder.foodPoint(level, point, item, count);
+            String channel = "food:" + spirit.getUUID() + ":" + item;
             if (container.isEmpty()) {
-                LOGGER.info(
-                        "[food] дух {}: еда {} saturation {} — RESTOCK_FOOD '{}' отложен: у {} нет контейнера "
-                                + "с едой в радиусе {}, сначала нужен сундук двора",
-                        spirit.displayName(),
-                        spirit.hunger().foodLevel(),
-                        spirit.hunger().state().saturation(),
-                        item,
-                        point,
-                        StorageFinder.SEARCH_RADIUS);
+                if (CHANGES.changed(channel, "missing")) {
+                    LOGGER.info(
+                            "[food] дух {}: еда {} saturation {}, порог {} — RESTOCK_FOOD '{}' не начат: на складе "
+                                    + "поселения нет '{}'; следующая попытка на тике {}",
+                            spirit.displayName(),
+                            spirit.hunger().foodLevel(),
+                            spirit.hunger().state().saturation(),
+                            norm,
+                            item,
+                            item,
+                            now + BoardTuning.boardIntervalTicks());
+                }
+                SettlementPlotStore.get(level)
+                        .site()
+                        .ifPresent(stage -> ChestSpaceWatch.request(
+                                level, service, stage, now, "голод " + spirit.displayName() + ": нет '" + item + "'"));
                 continue;
             }
             BlockCoord from = container.orElseThrow();
-            LOGGER.info(
-                    "[food] дух {}: еда {} saturation {} — RESTOCK_FOOD '{}'×{} берётся из {} (радиус {})",
-                    spirit.displayName(),
-                    spirit.hunger().foodLevel(),
-                    spirit.hunger().state().saturation(),
-                    item,
-                    count,
-                    from,
-                    StorageFinder.SEARCH_RADIUS);
+            if (CHANGES.changed(channel, "found@" + from)) {
+                LOGGER.info(
+                        "[food] дух {}: еда {} saturation {}, порог {} — RESTOCK_FOOD '{}'×{} берётся из {}",
+                        spirit.displayName(),
+                        spirit.hunger().foodLevel(),
+                        spirit.hunger().state().saturation(),
+                        norm,
+                        item,
+                        count,
+                        from);
+            }
             String ticketId = id + "@" + spirit.getUUID();
             BoardOutcome outcome = service.submit(
                     new BoardTicket(

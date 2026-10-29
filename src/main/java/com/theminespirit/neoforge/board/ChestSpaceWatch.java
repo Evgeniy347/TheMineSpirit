@@ -8,6 +8,7 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.inventory.WarehouseSpace;
 import com.theminespirit.core.observation.BlockCoord;
@@ -31,6 +32,7 @@ final class ChestSpaceWatch {
     static final String PREFIX = "chests:";
     private static final int FULL_PERCENT = 100;
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final StateChangeLog CHANGES = new StateChangeLog();
     private static final Set<BoardStatus> OPEN =
             EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
@@ -56,20 +58,7 @@ final class ChestSpaceWatch {
         }
         int slot = next.orElseThrow();
         String id = PREFIX + slot;
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.STOCK_CHESTS,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(site.workYard())
-                        .withWork(StageBuilds.of(level, BoardCase.STOCK_CHESTS, site, slot))
-                        .withCount(slot));
+        BoardOutcome outcome = submit(level, service, site, slot, now);
         if (outcome != BoardOutcome.ACCEPTED) {
             return;
         }
@@ -84,6 +73,44 @@ final class ChestSpaceWatch {
                         List.of("free=" + free, "slots=" + slots, "threshold=" + threshold, "slot=" + slot),
                         null,
                         ConfigStamp.current()));
+    }
+
+    static void request(ServerLevel level, BoardService service, StageSite site, long now, String cause) {
+        if (open(service)) {
+            return;
+        }
+        Optional<Integer> next = nextSlot(level, site);
+        if (next.isEmpty()) {
+            if (CHANGES.changed("chests:request", "full")) {
+                LOGGER.info("[chests] нужен сундук ({}): ряд сундуков двора занят — нужен склад этапа 2", cause);
+            }
+            return;
+        }
+        int slot = next.orElseThrow();
+        if (submit(level, service, site, slot, now) != BoardOutcome.ACCEPTED) {
+            return;
+        }
+        if (CHANGES.changed("chests:request", "slot:" + slot)) {
+            LOGGER.info("[chests] заявка на сундук ({}): место {} двора", cause, slot);
+        }
+    }
+
+    private static BoardOutcome submit(ServerLevel level, BoardService service, StageSite site, int slot, long now) {
+        String id = PREFIX + slot;
+        return service.submit(
+                new BoardTicket(
+                        id,
+                        BoardCase.STOCK_CHESTS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(site.workYard())
+                        .withWork(StageBuilds.of(level, BoardCase.STOCK_CHESTS, site, slot))
+                        .withCount(slot));
     }
 
     record Space(int free, int slots) {

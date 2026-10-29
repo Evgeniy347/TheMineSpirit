@@ -80,6 +80,11 @@ public final class SettlementChests {
         return new Search(from);
     }
 
+    public List<BlockCoord> warehouse(BlockCoord from) {
+        Objects.requireNonNull(from, "Точка отсчёта не может быть null: склад отдаётся в порядке расстояния");
+        return nearest(from, known.size());
+    }
+
     public long probes() {
         return probes;
     }
