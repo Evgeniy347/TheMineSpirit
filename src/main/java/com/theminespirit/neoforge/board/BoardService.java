@@ -20,6 +20,7 @@ import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
+import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TaskStall;
@@ -227,9 +228,9 @@ public final class BoardService {
         List<SpiritEntity> spirits = census(level);
         cancelOrphans(spirits);
         settleOwners(spirits);
-        refreshStock(level, spirits);
-        ensureSupply(spirits, stock, now);
-        StockView unreserved = BoardReserve.unreserved(stock, board);
+        StockParts parts = refreshStock(level, spirits);
+        ensureSupply(level, spirits, stock, now);
+        StockView unreserved = parts.free(BoardReserve.items(board));
         Set<String> liveCauses = sources.tick(level, this, spirits, unreserved, now);
         liveCauses.addAll(liveHerdCauses(level));
         liveCauses.addAll(liveDropCauses(level));
@@ -859,9 +860,7 @@ public final class BoardService {
 
     private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success, @Nullable String verdict) {
         issuedGenerations.remove(ticket.id());
-        if (ticket.boardCase() == BoardCase.SUPPLY_SITE) {
-            supplyClosed.put(ticket.id(), spirit.level().getGameTime());
-        }
+        SettleNotes.note(spirit, ticket, success, supplyClosed, spirit.level().getGameTime());
         String why = verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
         if (success) {
             board.complete(ticket.id());
@@ -923,11 +922,12 @@ public final class BoardService {
         return capture == null ? speciesOfId(ticket.id()) : capture.species();
     }
 
-    private void refreshStock(ServerLevel level, List<SpiritEntity> spirits) {
+    private StockParts refreshStock(ServerLevel level, List<SpiritEntity> spirits) {
         StockReader.Snapshot snapshot = stockReader.collect(level, spirits, gateCenters(spirits));
         stockBlockReads += snapshot.blockReads();
         stockContainers += snapshot.containers();
-        stock = snapshot.view();
+        stock = snapshot.parts().total();
+        return snapshot.parts();
     }
 
     private void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
@@ -1120,7 +1120,7 @@ public final class BoardService {
         return centers;
     }
 
-    private void ensureSupply(List<SpiritEntity> spirits, StockView stock, long now) {
+    private void ensureSupply(ServerLevel level, List<SpiritEntity> spirits, StockView stock, long now) {
         if (spirits.isEmpty()) {
             return;
         }
@@ -1145,10 +1145,10 @@ public final class BoardService {
                 BoardTuning.failBackoffTicks());
         BlockCoord home = homeOf(spirits);
         for (SupplyGate.Request request : decision.supply()) {
-            SupplyTickets.issue(this, targets, home, request, BoardCase.SUPPLY_SITE, "supply:", now);
+            SupplyTickets.issue(level, this, targets, home, request, BoardCase.SUPPLY_SITE, now);
         }
         for (SupplyGate.Request request : decision.gather()) {
-            SupplyTickets.issue(this, targets, home, request, BoardCase.GATHER_MATERIALS, "supply_gather:", now);
+            SupplyTickets.issue(level, this, targets, home, request, BoardCase.GATHER_MATERIALS, now);
         }
     }
 

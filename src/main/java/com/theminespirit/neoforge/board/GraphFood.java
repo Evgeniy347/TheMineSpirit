@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardTicket;
@@ -13,6 +14,7 @@ import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.inventory.StorageFinder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +24,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import org.slf4j.Logger;
 
 final class GraphFood {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final int STATION_RADIUS = 8;
     private static final int STATION_BUDGET = 4096;
     private static final int STATION_SLICES = 16;
@@ -61,6 +65,30 @@ final class GraphFood {
             }
             String item = choice.orElseThrow().item();
             int count = available.getOrDefault(item, 0);
+            BlockCoord point = targetOf(spirit);
+            Optional<BlockCoord> container = StorageFinder.foodPoint(level, point, item, count);
+            if (container.isEmpty()) {
+                LOGGER.info(
+                        "[food] дух {}: еда {} saturation {} — RESTOCK_FOOD '{}' отложен: у {} нет контейнера "
+                                + "с едой в радиусе {}, сначала нужен сундук двора",
+                        spirit.displayName(),
+                        spirit.hunger().foodLevel(),
+                        spirit.hunger().state().saturation(),
+                        item,
+                        point,
+                        StorageFinder.SEARCH_RADIUS);
+                continue;
+            }
+            BlockCoord from = container.orElseThrow();
+            LOGGER.info(
+                    "[food] дух {}: еда {} saturation {} — RESTOCK_FOOD '{}'×{} берётся из {} (радиус {})",
+                    spirit.displayName(),
+                    spirit.hunger().foodLevel(),
+                    spirit.hunger().state().saturation(),
+                    item,
+                    count,
+                    from,
+                    StorageFinder.SEARCH_RADIUS);
             String ticketId = id + "@" + spirit.getUUID();
             BoardOutcome outcome = service.submit(
                     new BoardTicket(
@@ -73,7 +101,7 @@ final class GraphFood {
                             id,
                             List.of(),
                             Map.of()),
-                    TicketTarget.at(targetOf(spirit)).withSupply(item, count));
+                    TicketTarget.at(from).withSupply(item, count).withDeposit(from));
             if (outcome == BoardOutcome.DUPLICATE) {
                 service.board().reprioritize(ticketId, priority);
             }
