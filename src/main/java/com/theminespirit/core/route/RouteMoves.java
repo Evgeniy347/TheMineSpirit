@@ -130,6 +130,16 @@ final class RouteMoves {
             double swim = feet == RouteCell.CLIMB ? rules.climbTicks() : rules.waterTicks();
             return arrive(x, y + 1, z, clear(x, y + 2, z, out) + swim, out);
         }
+        if (RouteCell.kind(above) == RouteCell.CLIMB) {
+            if (!standing(x, y, z)) {
+                return IMPOSSIBLE;
+            }
+            double cost = clear(x, y + 2, z, out);
+            if (cost == IMPOSSIBLE) {
+                return IMPOSSIBLE;
+            }
+            return arrive(x, y + 1, z, cost + rules.walkTicks() + rules.jumpPenalty(), out);
+        }
         if (placesLeft < 1 || !standing(x, y, z) || !RouteCell.open(above)) {
             return IMPOSSIBLE;
         }

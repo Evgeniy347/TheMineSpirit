@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import com.theminespirit.core.movement.WalkAscent;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
@@ -10,9 +11,12 @@ import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -31,6 +35,7 @@ public final class RouteWalk {
 
     private final SpiritEntity spirit;
     private final List<RouteStep> steps;
+    private final BlockCoord target;
     private final double cost;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
@@ -42,9 +47,10 @@ public final class RouteWalk {
     private final RemovalLog removals = new RemovalLog();
     private String breakingId = "-";
 
-    public RouteWalk(SpiritEntity spirit, Route route) {
+    public RouteWalk(SpiritEntity spirit, Route route, BlockCoord target) {
         this.spirit = spirit;
         this.steps = route.steps();
+        this.target = target;
         this.cost = route.cost();
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
@@ -59,7 +65,9 @@ public final class RouteWalk {
         }
         RouteStep step = steps.get(next);
         if (!breaking && ++stepTicks > STEP_TICKS) {
-            return fail("шаг " + step.action() + " в " + step.cell() + " не выполнен за " + STEP_TICKS + " тиков");
+            String details = step.action() == RouteStep.Action.WALK ? walkState(step.cell()) : "";
+            return fail("шаг " + step.action() + " в " + step.cell() + " не выполнен за " + STEP_TICKS + " тиков"
+                    + details);
         }
         Optional<String> refusal = switch (step.action()) {
             case BREAK -> breakCell(pos(step.cell()));
@@ -83,6 +91,10 @@ public final class RouteWalk {
 
     public String failure() {
         return failure == null ? "-" : failure;
+    }
+
+    public BlockCoord target() {
+        return target;
     }
 
     public void cancel() {
@@ -166,8 +178,12 @@ public final class RouteWalk {
         }
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SPEED);
-        boolean rising = cell.y() > spirit.blockPosition().getY();
-        if (rising && (spirit.isInWater() || spirit.onClimbable())) {
+        WalkAscent.Lift lift = WalkAscent.lift(
+                cell.y() > spirit.blockPosition().getY(),
+                new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable()));
+        if (lift == WalkAscent.Lift.JUMP) {
+            spirit.getJumpControl().jump();
+        } else if (lift == WalkAscent.Lift.CLIMB) {
             Vec3 motion = spirit.getDeltaMovement();
             spirit.setDeltaMovement(motion.x, LIFT, motion.z);
         }
@@ -185,6 +201,27 @@ public final class RouteWalk {
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };
+    }
+
+    private String walkState(BlockCoord cell) {
+        Level level = spirit.level();
+        BlockPos pos = pos(cell);
+        BlockState state = level.getBlockState(pos);
+        boolean collision = !state.getCollisionShape(level, pos).isEmpty();
+        boolean climbable = state.is(BlockTags.CLIMBABLE);
+        boolean rising = cell.y() > spirit.blockPosition().getY();
+        String code = rising ? (climbable ? "CLIMB_STALLED" : "JUMP_STALLED") : "NO_PROGRESS";
+        if (collision) {
+            code = "CELL_BLOCKED";
+        }
+        double distance = horizontal(new Vec3(cell.x() + CENTER, cell.y(), cell.z() + CENTER));
+        return ": блок " + BlockStates.idOf(state)
+                + ", collision=" + collision
+                + ", climbable=" + climbable
+                + ", onGround=" + spirit.onGround()
+                + ", onClimbable=" + spirit.onClimbable()
+                + ", дистанция=" + String.format(Locale.ROOT, "%.2f", distance)
+                + ", код=" + code;
     }
 
     private double horizontal(Vec3 target) {

@@ -99,6 +99,24 @@ class RoutePlannerTests {
     }
 
     @Test
+    void plan_VineOneStepAbove_JumpsInWithoutBlocks() {
+        GridWorld world = GridWorld.flat(0).fill(0, 1, 0, 0, 1, 0, RouteCell.CLIMB);
+        BlockCoord vine = new BlockCoord(0, 1, 0);
+
+        Route route = RoutePlanner.plan(world, ORIGIN, new GoalBlock(vine), RULES, 0);
+
+        assertFound(world, ORIGIN, route, "лиана в клетке на шаг выше без единого блока в запасе");
+        assertEquals(
+                0,
+                route.places(),
+                "Лиана — не повод ставить ступень: клетка climbable открыта, дух прыгает в неё с земли");
+        assertEquals(
+                RouteStep.Action.WALK,
+                route.steps().get(route.steps().size() - 1).action(),
+                "Последний шаг к лиане — ходьба с прыжком, а не столб: иначе исполнитель ставит блок под себя");
+    }
+
+    @Test
     void plan_RiverWithoutBlocks_SwimsAcross() {
         GridWorld world = GridWorld.flat(0).fill(3, -3, -40, 7, -1, 40, RouteCell.WATER);
 

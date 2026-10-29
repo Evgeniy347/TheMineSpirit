@@ -46,7 +46,7 @@ public final class RouteDetour {
                 route.nodes(),
                 route.reads(),
                 micros);
-        return route.usable() ? Optional.of(new RouteWalk(spirit, route)) : Optional.empty();
+        return route.usable() ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
     }
 
     public static void removed(SpiritEntity spirit, RouteWalk walk) {
