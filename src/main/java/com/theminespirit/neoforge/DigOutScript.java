@@ -2,19 +2,17 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.neoforge.movement.RouteDetour;
 import com.theminespirit.neoforge.movement.RouteWalk;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -27,7 +25,6 @@ import org.jspecify.annotations.Nullable;
 public final class DigOutScript implements ScriptInstance {
     private static final int MAX_STEPS = 96;
     private static final int STEP_TICKS = 60;
-    private static final int SEALED_SCAN = 256;
     private static final String FLOOR_BLOCK = "minecraft:cobblestone";
     private static final int HOME_RADIUS = 2;
 
@@ -58,40 +55,43 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     public static boolean sealed(Level level, BlockPos feet) {
-        Set<BlockPos> seen = new HashSet<>();
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        queue.add(feet);
-        seen.add(feet);
-        while (!queue.isEmpty()) {
-            BlockPos cell = queue.poll();
-            if (open(level, cell)) {
-                return false;
-            }
-            if (seen.size() > SEALED_SCAN) {
-                return false;
-            }
-            for (Direction side : Direction.values()) {
-                BlockPos near = cell.relative(side);
-                if (level.isLoaded(near) && walkable(level, near) && seen.add(near)) {
-                    queue.add(near);
-                }
-            }
-        }
-        return true;
+        return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new SealedView(level));
     }
 
     public static boolean open(Level level, BlockPos cell) {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
     }
 
-    private static boolean walkable(Level level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        if (state.getBlock() instanceof DoorBlock
-                || state.getBlock() instanceof FenceGateBlock
-                || state.getBlock() instanceof TrapDoorBlock) {
-            return true;
+    private record SealedView(Level level) implements SealedSpace.View {
+        @Override
+        public boolean passable(BlockCoord cell) {
+            BlockPos pos = pos(cell);
+            if (!level.isLoaded(pos)) {
+                return false;
+            }
+            BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof DoorBlock
+                    || state.getBlock() instanceof FenceGateBlock
+                    || state.getBlock() instanceof TrapDoorBlock) {
+                return true;
+            }
+            return DigOutScript.passable(level, pos);
         }
-        return passable(level, pos);
+
+        @Override
+        public boolean swimmable(BlockCoord cell) {
+            BlockPos pos = pos(cell);
+            return level.isLoaded(pos) && level.getFluidState(pos).is(FluidTags.WATER);
+        }
+
+        @Override
+        public boolean sky(BlockCoord cell) {
+            return open(level, pos(cell));
+        }
+
+        private static BlockPos pos(BlockCoord cell) {
+            return new BlockPos(cell.x(), cell.y(), cell.z());
+        }
     }
 
     private static boolean passable(Level level, BlockPos pos) {

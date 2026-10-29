@@ -35,6 +35,10 @@ public final class StuckSituation {
     public interface Grid {
         boolean passable(BlockCoord cell);
 
+        default boolean swimmable(BlockCoord cell) {
+            return false;
+        }
+
         int floorY(int x, int z);
     }
 
@@ -49,7 +53,7 @@ public final class StuckSituation {
         for (int[] side : SIDES) {
             BlockCoord lower = new BlockCoord(feet.x() + side[0], feet.y(), feet.z() + side[1]);
             BlockCoord upper = new BlockCoord(lower.x(), lower.y() + 1, lower.z());
-            if (grid.passable(lower) && grid.passable(upper)) {
+            if (open(grid, lower) && open(grid, upper)) {
                 return new Verdict(Kind.FREE, lower, null);
             }
         }
@@ -59,5 +63,9 @@ public final class StuckSituation {
             return new Verdict(Kind.DEEP_PIT, null, pit);
         }
         return new Verdict(Kind.WALLED, null, null);
+    }
+
+    private static boolean open(Grid grid, BlockCoord cell) {
+        return grid.passable(cell) || grid.swimmable(cell);
     }
 }

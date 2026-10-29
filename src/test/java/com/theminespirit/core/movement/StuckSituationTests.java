@@ -76,6 +76,38 @@ class StuckSituationTests {
     }
 
     @Test
+    void detect_WaterOnSide_IsFree() {
+        Set<BlockCoord> water = Set.of(new BlockCoord(11, 64, 10), new BlockCoord(11, 65, 10));
+        StuckSituation.Grid grid = new StuckSituation.Grid() {
+            @Override
+            public boolean passable(BlockCoord cell) {
+                return false;
+            }
+
+            @Override
+            public boolean swimmable(BlockCoord cell) {
+                return water.contains(cell);
+            }
+
+            @Override
+            public int floorY(int x, int z) {
+                return 64;
+            }
+        };
+
+        StuckSituation.Verdict verdict = StuckSituation.detect(FEET, grid);
+
+        assertEquals(
+                StuckSituation.Kind.FREE,
+                verdict.kind(),
+                "Вода сбоку — дорога, а не стена: дух в пруду не замурован, спасение не требуется");
+        assertEquals(
+                new BlockCoord(11, 64, 10),
+                verdict.passage(),
+                "Свободный вид обязан назвать водную сторону прохода, иначе спасение снова сочтёт духа замурованным");
+    }
+
+    @Test
     void verdict_FreeWithoutPassage_IsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
