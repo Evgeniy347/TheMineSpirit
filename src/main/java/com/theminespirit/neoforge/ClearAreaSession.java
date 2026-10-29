@@ -10,6 +10,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
@@ -24,13 +25,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public class ClearAreaSession {
@@ -54,7 +51,6 @@ public class ClearAreaSession {
     private static final int COLLECT_RADIUS = 4;
     private static final int LEFTOVER_SHOWN = 4;
     private static final int LONG_APPROACH = 60;
-    private static final double REACH_FROM_PLACE = BlockBreaker.REACH - 0.5;
 
     protected final SpiritEntity spirit;
     protected final Level level;
@@ -79,8 +75,8 @@ public class ClearAreaSession {
     protected int unreachable;
     protected int protectedSkipped;
     protected int foreignSkipped;
-    protected int unbreakable;
     protected int restoredSkipped;
+    protected final BreakSkipTally breakSkips = new BreakSkipTally();
 
     private final BuildResult tally = new BuildResult();
     private int approachFailed;
@@ -174,7 +170,13 @@ public class ClearAreaSession {
     }
 
     public int skippedTotal() {
-        return unsafe + noStand + unreachable + protectedSkipped + foreignSkipped + unbreakable + restoredSkipped;
+        return unsafe
+                + noStand
+                + unreachable
+                + protectedSkipped
+                + foreignSkipped
+                + restoredSkipped
+                + breakSkips.total();
     }
 
     public Map<String, Object> resultData() {
@@ -211,8 +213,8 @@ public class ClearAreaSession {
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         List<BlockCoord> top = ClearOrder.topmost(remaining, cell -> !clear(cell));
-        BlockCoord near = inReach(top, feet);
-        if (near != null) {
+        BlockCoord near = ClearReach.near(spirit, level, top, feet, safety, reservations);
+        if (near != null && !approachFailures.excludedStands().contains(from)) {
             remaining.remove(near);
             reservations.reserve(near, spirit.getUUID());
             currentTarget = near;
@@ -311,33 +313,6 @@ public class ClearAreaSession {
         }
     }
 
-    private @Nullable BlockCoord inReach(List<BlockCoord> top, BlockPos feet) {
-        if (!spirit.onGround()) {
-            return null;
-        }
-        Vec3 eye = spirit.getEyePosition();
-        BlockCoord best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (BlockCoord cell : top) {
-            BlockPos pos = toPos(cell);
-            double distance = eye.distanceTo(Vec3.atCenterOf(pos));
-            if (distance > REACH_FROM_PLACE || distance >= bestDistance || pos.equals(feet.below())) {
-                continue;
-            }
-            if (reservations.foreign(cell, spirit.getUUID())
-                    || !(MiningSafety.canBreak(cell, safety) instanceof BreakSafety.Safe)) {
-                continue;
-            }
-            BlockHitResult hit = level.clip(new ClipContext(
-                    eye, Vec3.atCenterOf(pos), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, spirit));
-            if (hit.getType() == HitResult.Type.BLOCK && hit.getBlockPos().equals(pos)) {
-                best = cell;
-                bestDistance = distance;
-            }
-        }
-        return best;
-    }
-
     private boolean clear(BlockCoord cell) {
         BlockState state = level.getBlockState(toPos(cell));
         return state.isAir() || (keepGround && PlotGround.natural(state));
@@ -414,15 +389,39 @@ public class ClearAreaSession {
             state = State.PICK;
             return;
         }
-        if (begin instanceof BlockBreaker.Refused) {
-            unbreakable++;
+        if (begin instanceof BlockBreaker.Refused refused) {
+            if (refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
+                fail(refused.message());
+                return;
+            }
+            BreakSkipTally.Reason reason = BreakSkips.reason(refused.reason());
+            breakSkips
+                    .record(reason, currentTarget, currentStand)
+                    .ifPresent(sample -> SkipLog.skipped(LOGGER, spirit, "clear", sample));
             tally.skipped();
+            if (BreakSight.retryable(refused.reason()) && retryOtherStand()) {
+                return;
+            }
             releaseCurrent();
             state = State.PICK;
             return;
         }
         brokenKind = blockAt(currentTarget);
         state = State.BREAK;
+    }
+
+    private boolean retryOtherStand() {
+        if (currentTarget == null) {
+            return false;
+        }
+        BlockCoord target = currentTarget;
+        if (currentStand != null) {
+            approachFailures.excludeStand(currentStand, target);
+        }
+        releaseCurrent();
+        remaining.add(0, target);
+        state = State.PICK;
+        return true;
     }
 
     private void breakTick() {
@@ -532,9 +531,9 @@ public class ClearAreaSession {
                         unsafe,
                         noStand,
                         protectedSkipped,
-                        unbreakable,
                         foreignSkipped,
-                        unreachable),
+                        unreachable,
+                        ClearSummary.Refusals.of(breakSkips)),
                 leftover);
     }
 
