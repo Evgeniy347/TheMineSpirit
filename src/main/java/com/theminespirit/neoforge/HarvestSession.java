@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.coordinator.WorkKind;
@@ -10,6 +11,7 @@ import com.theminespirit.core.inventory.InventorySpace;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.DropRetries;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
@@ -44,6 +46,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 public final class HarvestSession {
     public enum Outcome {
@@ -64,6 +67,7 @@ public final class HarvestSession {
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final double APPROACH_PROGRESS_STEP = 0.05;
     private static final int COLLECT_RADIUS = 4;
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -100,7 +104,7 @@ public final class HarvestSession {
 
     private int mined;
     private int unsafe;
-    private int noStand;
+    private final BreakSkipTally breakSkips = new BreakSkipTally();
     private int unreachable;
     private int noTool;
     private int protectedSkipped;
@@ -178,7 +182,8 @@ public final class HarvestSession {
 
         watchdog.tick();
         if (watchdog.stalled()) {
-            return fail(stallReason());
+            return fail(HarvestReasonText.stallReason(
+                    reasonTally(), watchdog.limitTicks(), searching(), state.name(), targetForReason()));
         }
         switch (state) {
             case FIND -> find();
@@ -290,7 +295,7 @@ public final class HarvestSession {
             return;
         }
         if (targets.done()) {
-            fail(stopReason());
+            fail(HarvestReasonText.stopReason(reasonTally(), radius, vein, kind == WorkKind.GATHER, lastUnreachable));
         }
     }
 
@@ -315,7 +320,10 @@ public final class HarvestSession {
         }
         for (BlockCoord candidate : candidates) {
             boolean ownColumn = candidate.x() == origin.x() && candidate.z() == origin.z();
-            if (SpiritReach.reachable(origin, candidate) && !ownColumn && (vein || exposed(candidate))) {
+            if (SpiritReach.reachable(origin, candidate)
+                    && !ownColumn
+                    && (vein || exposed(candidate))
+                    && !approachFailures.excludedStands().contains(origin)) {
                 if (acceptTarget(candidate)) {
                     currentStand = origin;
                     prepareBreak();
@@ -330,7 +338,7 @@ public final class HarvestSession {
                 return;
             }
             unsafe += exhausted.unsafe();
-            noStand += exhausted.noStand();
+            breakSkips.record(BreakSkipTally.Reason.NO_STAND, exhausted.noStand());
             unreachable += exhausted.unreachable();
             buffer.clearActive();
             state = State.FIND;
@@ -501,12 +509,18 @@ public final class HarvestSession {
             state = State.PICK;
             return;
         }
-        if (begin instanceof BlockBreaker.Refused refused && refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
-            fail(refused.message());
-            return;
-        }
-        if (!(begin instanceof BlockBreaker.Started)) {
-            noStand++;
+        if (begin instanceof BlockBreaker.Refused refused) {
+            if (refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
+                fail(refused.message());
+                return;
+            }
+            BreakSkipTally.Reason reason = BreakSkips.reason(refused.reason());
+            breakSkips
+                    .record(reason, currentTarget, currentStand)
+                    .ifPresent(sample -> SkipLog.skipped(LOGGER, spirit, "harvest", sample));
+            if (BreakSight.retryable(refused.reason()) && retryOtherStand()) {
+                return;
+            }
             currentTarget = null;
             currentStand = null;
             state = State.PICK;
@@ -547,6 +561,21 @@ public final class HarvestSession {
         }
         reserved = target;
         state = State.BREAK;
+    }
+
+    private boolean retryOtherStand() {
+        if (currentTarget == null) {
+            return false;
+        }
+        BlockCoord target = currentTarget;
+        if (currentStand != null) {
+            approachFailures.excludeStand(currentStand, target);
+        }
+        buffer.offer(List.of(target));
+        currentTarget = null;
+        currentStand = null;
+        state = State.PICK;
+        return true;
     }
 
     private void releaseReserved() {
@@ -680,25 +709,12 @@ public final class HarvestSession {
         return outcome;
     }
 
-    private String stopReason() {
-        String base = summary() + "; подходящих блоков в радиусе " + radius + " не осталось";
-        if (vein && noStand > 0) {
-            return base + "; руда закрыта, нужен проход: блоки руды есть, но нет места для духа — прокопайте "
-                    + "проход к руде (dig_descent или dig_area) и повторите mine_vein";
-        }
-        if (kind == WorkKind.GATHER && mined == 0 && lastUnreachable != null) {
-            return "нет пути к блоку " + coordText(lastUnreachable) + ": " + base + "; " + pathCause();
-        }
-        return base;
+    private HarvestReasonText.Tally reasonTally() {
+        return new HarvestReasonText.Tally(mined, count, unsafe, noTool, protectedSkipped, unreachable, breakSkips);
     }
 
-    private String stallReason() {
-        String timing = "нет прогресса " + watchdog.limitTicks() + " тиков (" + (watchdog.limitTicks() / 20) + " с): "
-                + summary();
-        if (mined == 0 && (state == State.FIND || state == State.PICK || state == State.APPROACH)) {
-            return "нет пути к блоку " + coordText(targetForReason()) + " — " + timing + "; " + pathCause();
-        }
-        return timing + "; текущий шаг " + state + " — проверьте доступность блоков и подходящий инструмент";
+    private boolean searching() {
+        return mined == 0 && (state == State.FIND || state == State.PICK || state == State.APPROACH);
     }
 
     private BlockCoord targetForReason() {
@@ -706,34 +722,6 @@ public final class HarvestSession {
             return currentTarget;
         }
         return lastUnreachable;
-    }
-
-    private static String coordText(BlockCoord target) {
-        return target == null
-                ? "(координата неизвестна)"
-                : "(" + target.x() + ", " + target.y() + ", " + target.z() + ")";
-    }
-
-    private String pathCause() {
-        if (noStand > 0) {
-            return "блок есть, но к нему нет места для стоянки духа — преграда вплотную к цели";
-        }
-        if (unreachable > 0) {
-            return "блок есть, но все стоянки у него недостижимы — путь перекрыт";
-        }
-        return "блок есть, но дух не смог к нему подойти: путь перекрыт или цель недостижима";
-    }
-
-    private String summary() {
-        String counts = "добыто " + mined + " из " + count
-                + "; пропущено небезопасных: " + unsafe
-                + ", без места для духа: " + noStand
-                + ", без подходящего инструмента: " + noTool
-                + ", пропущено защищённых: " + protectedSkipped;
-        if (unreachable > 0) {
-            counts += "; недостижимо: " + unreachable;
-        }
-        return counts;
     }
 
     private String tierReason(BlockState state) {
