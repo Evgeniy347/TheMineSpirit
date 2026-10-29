@@ -17,6 +17,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -25,7 +27,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class BoardGameTests {
     private static final String BUILD_ID = "build_house";
-    private static final String SUPPLY_ID = "supply:oak_log";
+    private static final String SUPPLY_ID = "supply_gather:oak_log";
     private static final int GATE_LOGS = 1;
     private static final int SUPPLY_WAIT_LIMIT = 200;
 
@@ -40,6 +42,7 @@ public final class BoardGameTests {
         BoardService board = BoardRegistry.get(helper.getLevel());
         drainForeignTickets(board);
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.getInventory().addItem(new ItemStack(Items.IRON_AXE));
         BlockCoord home = absolute(helper, new BlockPos(4, 1, 4));
         for (int tree = 0; tree < 2; tree++) {
             for (int height = 1; height <= 4; height++) {
@@ -76,7 +79,7 @@ public final class BoardGameTests {
                     helper.fail("Добыча провалилась: задание " + SUPPLY_ID + " закрыто с провалом, "
                             + "стройка не может выдаться после неудачной добычи");
                 } else if (supplyWaited.incrementAndGet() > SUPPLY_WAIT_LIMIT) {
-                    helper.fail("При нехватке доска не выдала задание добычи SUPPLY_SITE за "
+                    helper.fail("При нехватке доска не выдала задание добычи GATHER_MATERIALS за "
                             + supplyWaited.get() + " тиков, статус " + supply + ": без добычи стройка "
                             + "зависнет навсегда");
                 }
