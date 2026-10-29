@@ -94,7 +94,7 @@ final class PlotTrace {
                     && call.params().get("y") instanceof Integer y
                     && call.params().get("z") instanceof Integer z ->
                 item(level, new BlockCoord(x, y, z), block, wood, required, placed, missing);
-            default -> {}
+            case ScriptCall ignored -> {}
         }
     }
 
