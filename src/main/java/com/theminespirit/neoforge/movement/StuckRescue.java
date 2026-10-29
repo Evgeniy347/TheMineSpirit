@@ -11,10 +11,12 @@ public final class StuckRescue {
     private static final int ROUTE_ATTEMPTS = 3;
     private final SpiritEntity spirit;
     private final TeleportTrail trail = new TeleportTrail();
+    private final MoveDwell dwell = new MoveDwell();
     private boolean routes;
     private int routeAttempts;
     private @Nullable String refusal;
     private @Nullable RouteWalk walk;
+    private @Nullable BlockCoord teleportTarget;
 
     public StuckRescue(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -25,9 +27,12 @@ public final class StuckRescue {
         routes = allowRoutes;
         routeAttempts = 0;
         refusal = null;
+        teleportTarget = null;
+        dwell.reset();
     }
 
     public boolean free(PathMode mode, BlockCoord target, int radius, boolean movingTarget) {
+        teleportTarget = target;
         Optional<BlockCoord> step = StuckTeleport.find(spirit, mode, target, trail);
         if (step.isPresent()) {
             StuckTeleport.apply(spirit, step.get(), target, trail);
@@ -53,6 +58,7 @@ public final class StuckRescue {
         if (current == null) {
             return false;
         }
+        dwell.observe(spirit, current.target(), teleportTarget);
         RouteWalk.State state = current.tick();
         if (state == RouteWalk.State.RUNNING) {
             return true;
