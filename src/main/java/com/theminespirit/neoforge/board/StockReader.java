@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.Stack;
@@ -55,13 +56,14 @@ public final class StockReader {
     }
 
     public Snapshot collect(ServerLevel level, List<SpiritEntity> spirits, List<BlockCoord> centers) {
-        Map<String, Integer> available = new HashMap<>();
+        Map<String, Integer> chests = new HashMap<>();
+        Map<String, Integer> carried = new HashMap<>();
         for (SpiritEntity spirit : spirits) {
             for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-                add(available, spirit.getInventory().getItem(slot));
+                add(carried, spirit.getInventory().getItem(slot));
             }
             if (spirit.mainHandOwned()) {
-                add(available, spirit.getMainHandItem());
+                add(carried, spirit.getMainHandItem());
             }
         }
         StockScan.Result found =
@@ -81,11 +83,11 @@ public final class StockReader {
                 StackMapper mapper = new StackMapper();
                 for (Stack stack : mapper.map(container.container())) {
                     if (stack != null) {
-                        add(available, stack);
+                        add(chests, stack);
                     }
                 }
                 for (int slot = 0; slot < container.container().getContainerSize(); slot++) {
-                    addPotion(available, container.container().getItem(slot));
+                    addPotion(chests, container.container().getItem(slot));
                 }
                 reads++;
             }
@@ -96,10 +98,10 @@ public final class StockReader {
                             + "дочитаются на следующей пересборке",
                     containerBudget);
         }
-        return new Snapshot(new StockView(available), found.blockReads(), reads);
+        return new Snapshot(new StockParts(new StockView(chests), new StockView(carried)), found.blockReads(), reads);
     }
 
-    public record Snapshot(StockView view, int blockReads, int containers) {
+    public record Snapshot(StockParts parts, int blockReads, int containers) {
         public Snapshot {
             if (blockReads < 0 || containers < 0) {
                 throw new IllegalArgumentException("Счётчики снимка не бывают отрицательными: чтений " + blockReads

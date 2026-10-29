@@ -32,7 +32,8 @@ public record TicketTarget(
         @Nullable String building,
         @Nullable PlotLeveling leveling,
         @Nullable StageWork work,
-        SelfEscape.@Nullable Plan rescue) {
+        SelfEscape.@Nullable Plan rescue,
+        @Nullable BlockCoord deposit) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -66,6 +67,12 @@ public record TicketTarget(
         Builder builder = new Builder(this);
         builder.supplyItem = item;
         builder.supplyCount = supply;
+        return builder.build();
+    }
+
+    public TicketTarget withDeposit(@Nullable BlockCoord point) {
+        Builder builder = new Builder(this);
+        builder.deposit = point;
         return builder.build();
     }
 
@@ -177,6 +184,7 @@ public record TicketTarget(
         private @Nullable PlotLeveling leveling;
         private @Nullable StageWork work;
         private SelfEscape.@Nullable Plan rescue;
+        private @Nullable BlockCoord deposit;
 
         Builder(BlockCoord target) {
             this.target = Objects.requireNonNull(target, "Цель задания не может быть null: от неё строится план");
@@ -205,6 +213,7 @@ public record TicketTarget(
             leveling = source.leveling;
             work = source.work;
             rescue = source.rescue;
+            deposit = source.deposit;
         }
 
         TicketTarget build() {
@@ -230,7 +239,8 @@ public record TicketTarget(
                     building,
                     leveling,
                     work,
-                    rescue);
+                    rescue,
+                    deposit);
         }
     }
 }

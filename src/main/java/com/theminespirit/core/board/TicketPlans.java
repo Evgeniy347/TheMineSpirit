@@ -36,7 +36,6 @@ public final class TicketPlans {
     public static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
-    private static final String COBBLESTONE = "cobblestone";
     private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
     private static final String COUNT = "count";
@@ -45,7 +44,6 @@ public final class TicketPlans {
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String TORCH = "minecraft:torch";
-    private static final String COAL = "coal";
     private static final int TORCHES_PER_CRAFT = 4;
     private static final int CHARCOAL_LOGS = 4;
     private static final int CHARCOAL_BATCH = 2;
@@ -63,8 +61,6 @@ public final class TicketPlans {
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
-    private static final String DEFAULT_SUPPLY_ITEM = "dirt";
-    private static final int DEFAULT_SUPPLY_COUNT = 64;
     private static final int CRATER_FILL_RADIUS = 1;
     private static final int DISMANTLE_RADIUS = 4;
     private static final String FENCE_SCHEME = "fence";
@@ -72,7 +68,7 @@ public final class TicketPlans {
     private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     private static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
-    private static final List<String> LEFTOVERS = List.of(
+    static final List<String> LEFTOVERS = List.of(
             "minecraft:stick",
             "minecraft:*_planks",
             "minecraft:*_log",
@@ -82,7 +78,6 @@ public final class TicketPlans {
             TORCH);
 
     private static final int MINE_STEPS_SIZE = 3;
-    private static final int RESTOCK_FOOD_COUNT = 48;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
 
     private static final List<BlockCoord> LIGHT_OFFSETS = List.of(
@@ -145,8 +140,9 @@ public final class TicketPlans {
             case REPAIR_FENCE -> repairFence(target);
             case CAPTURE_ANIMAL -> captureAnimal(target);
             case LURE_ANIMAL -> lureAnimal(target);
-            case SUPPLY_SITE -> supplySite(target);
-            case GATHER_MATERIALS -> target.leveling() == null ? gatherMaterials(target) : RoutePlans.dig(target);
+            case SUPPLY_SITE -> TicketStoragePlans.supplySite(target);
+            case GATHER_MATERIALS ->
+                target.leveling() == null ? TicketStoragePlans.gatherMaterials(target) : RoutePlans.dig(target);
             case CLEAR_GROUNDS -> withLeftovers(GroundsPlan.plan(target), target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
@@ -197,7 +193,7 @@ public final class TicketPlans {
             case BREED_ANIMALS -> breedAnimals(target);
             case HERD_CULL -> herdCull(target);
             case RELOCATE_BUILDING -> relocateBuilding(target);
-            case RESTOCK_FOOD -> restockFood(target);
+            case RESTOCK_FOOD -> TicketStoragePlans.restockFood(target);
             case TRANSFER_ITEM -> transferItem(target);
             case MINE_LEFT_ORE -> mineLeftOre(target);
             default ->
@@ -588,73 +584,11 @@ public final class TicketPlans {
                         target.target().z() + DISMANTLE_RADIUS));
     }
 
-    private static TaskNode supplySite(TicketTarget target) {
-        if (ChestMove.applies(target)) {
-            return ChestMove.plan(target);
-        }
-        String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
-        int count = target.supplyCount() > 0 ? target.supplyCount() : DEFAULT_SUPPLY_COUNT;
-        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch)),
-                gotoTarget(target),
-                new ScriptCall(
-                        "deposit",
-                        Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)));
-    }
-
     private static TaskNode collectDrops(TicketTarget target) {
         Map<String, Object> params = target.dropItems().isEmpty()
                 ? Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT)
                 : Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "filter", target.dropItems());
         return sequence(gotoPoint(target.target()), new ScriptCall("collect_drops", params));
-    }
-
-    private static TaskNode gatherMaterials(TicketTarget target) {
-        String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
-        int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
-        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        return sequence(
-                gatherOnly(target),
-                gotoTarget(target),
-                new FallbackNode(List.of(
-                        new ScriptCall(
-                                "deposit",
-                                Map.of(CONTAINER, NEAREST, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS)),
-                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                store(target, LEFTOVERS.toArray(String[]::new)));
-    }
-
-    private static TaskNode gatherOnly(TicketTarget target) {
-        String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
-        int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
-        int batch = Math.min(count, CatalogLimits.COUNT_MAX);
-        if (COAL.equals(item)) {
-            return sequence(
-                    gotoTarget(target),
-                    new ScriptCall(
-                            "mine_vein",
-                            Map.of(
-                                    "ore",
-                                    OreKind.COAL.name().toLowerCase(Locale.ROOT),
-                                    COUNT,
-                                    batch,
-                                    RADIUS,
-                                    CatalogLimits.HARVEST_RADIUS_MAX)));
-        }
-        if (COBBLESTONE.equals(item)) {
-            return sequence(
-                    gotoTarget(target),
-                    new ScriptCall(
-                            "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
-        }
-        Optional<TaskNode> gathered = GatherPlans.plan(target, item, batch);
-        if (gathered.isPresent()) {
-            return gathered.get();
-        }
-        ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
-        return sequence(gotoTarget(target), acquire);
     }
 
     private static TaskNode buildOrchard(TicketTarget target) {
@@ -899,24 +833,6 @@ public final class TicketPlans {
                                         RADIUS,
                                         CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
-    }
-
-    private static TaskNode restockFood(TicketTarget target) {
-        if (target.supplyItem() == null) {
-            throw new IllegalArgumentException("Пополнение еды без supplyItem: со склада забирают "
-                    + "конкретный продукт, без имени предмета withdraw нечего взять");
-        }
-        return new ScriptCall(
-                WITHDRAW,
-                Map.of(
-                        CONTAINER,
-                        NEAREST,
-                        ITEM,
-                        target.supplyItem(),
-                        COUNT,
-                        RESTOCK_FOOD_COUNT,
-                        RADIUS,
-                        CatalogLimits.CONTAINER_RADIUS_DEFAULT));
     }
 
     private static ScriptCall schematic(String scheme, TicketTarget target) {
