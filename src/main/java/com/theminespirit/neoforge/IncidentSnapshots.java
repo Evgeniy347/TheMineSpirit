@@ -62,7 +62,7 @@ public final class IncidentSnapshots {
                 what,
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
                 task(spirit),
-                inventory(spirit));
+                inventoryOf(spirit));
     }
 
     public static void write(ServerLevel level, IncidentNote note, SpiritEntity spirit, Path file) {
@@ -120,7 +120,7 @@ public final class IncidentSnapshots {
                 + spirit.taskFailedAt().map(failed -> ", провал на " + failed).orElse("");
     }
 
-    private static Map<String, Integer> inventory(SpiritEntity spirit) {
+    public static Map<String, Integer> inventoryOf(SpiritEntity spirit) {
         Map<String, Integer> items = new HashMap<>();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);

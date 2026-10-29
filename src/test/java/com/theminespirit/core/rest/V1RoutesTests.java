@@ -100,14 +100,47 @@ class V1RoutesTests {
         assertEquals(
                 "{\"bots\":["
                         + "{\"id\":\"" + IDLE_ID + "\",\"name\":\"spirit\",\"state\":\"idle\",\"position\":[10,64,-3],"
-                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"food\":0.5},"
+                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"board_task\":null,"
+                        + "\"tick\":0,\"position_tick\":0,\"food\":0.5},"
                         + "{\"id\":\"" + BUSY_ID + "\",\"name\":\"Дух-2\",\"state\":\"busy\",\"position\":[0,70,5],"
-                        + "\"dimension\":\"minecraft:the_nether\",\"current_task\":null,\"food\":1.0},"
+                        + "\"dimension\":\"minecraft:the_nether\",\"current_task\":null,\"board_task\":null,"
+                        + "\"tick\":0,\"position_tick\":0,\"food\":1.0},"
                         + "{\"id\":\"" + DEAD_ID + "\",\"name\":\"spirit\",\"state\":\"dead\",\"position\":[1,2,3],"
-                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"food\":0.0}]}",
+                        + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"board_task\":null,"
+                        + "\"tick\":0,\"position_tick\":0,\"food\":0.0}]}",
                 response.body(),
                 "Список духов — контракт REST: id, name, state, position [x,y,z], dimension, current_task "
-                        + "(null до чеклиста 15) и food в этом порядке");
+                        + "(null до чеклиста 15), board_task/id-кейс-статус доски, tick, position_tick и food "
+                        + "в этом порядке");
+    }
+
+    @Test
+    void bots_BusyWithBoardTask_ShowsTaskCaseStatusAndPositionTime() {
+        String id = "44444444-4444-4444-4444-444444444444";
+        BotInfo busy = new BotInfo(
+                id,
+                "spirit-1",
+                BotState.BUSY,
+                -181,
+                69,
+                -518,
+                "minecraft:overworld",
+                null,
+                1.0,
+                new BotBoardTask("chop_jungle_log:2", "GATHER_MATERIALS", "ASSIGNED"),
+                1350,
+                1290);
+        RestResponse response = send(new FakeBotGateway(List.of(busy)), "GET", "/v1/bots/" + id, "");
+
+        assertEquals(
+                "{\"id\":\"" + id + "\",\"name\":\"spirit-1\",\"state\":\"busy\","
+                        + "\"position\":[-181,69,-518],\"dimension\":\"minecraft:overworld\","
+                        + "\"current_task\":null,\"board_task\":{\"id\":\"chop_jungle_log:2\","
+                        + "\"case\":\"GATHER_MATERIALS\",\"status\":\"ASSIGNED\"},"
+                        + "\"tick\":1350,\"position_tick\":1290,\"food\":1.0}",
+                response.body(),
+                "Занятый дух обязан показывать задание доски в GET /v1/bots: без него наблюдение за работой "
+                        + "слепо, а отдельный observe недоступен в списке");
     }
 
     @Test

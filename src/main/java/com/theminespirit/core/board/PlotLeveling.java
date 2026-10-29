@@ -46,6 +46,10 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         return fill.stream().mapToInt(Box::volume).sum();
     }
 
+    public int cutVolume() {
+        return cut.stream().mapToInt(Box::volume).sum();
+    }
+
     public static int level(BlockCoord anchor, int half, IntBinaryOperator feet) {
         Objects.requireNonNull(anchor, "Якорь участка не может быть null: высоты читаются вокруг него");
         Objects.requireNonNull(feet, "Высоты колонок не могут быть null: без них средней высоты нет");

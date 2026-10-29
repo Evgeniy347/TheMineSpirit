@@ -1,7 +1,10 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BuildProgressNote;
+import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
@@ -13,8 +16,10 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 final class StageProgressWatch {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<BoardCase> BUILDS = EnumSet.of(
             BoardCase.BUILD_FENCE,
             BoardCase.BUILD_HOUSE,
@@ -26,7 +31,23 @@ final class StageProgressWatch {
 
     void issued(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
         placedAtIssue.remove(ticket.id());
-        progress(level, ticket, target).ifPresent(placed -> placedAtIssue.put(ticket.id(), placed.done()));
+        Optional<FirstStepsRunner.Placed> placed = progress(level, ticket, target);
+        if (placed.isEmpty()) {
+            return;
+        }
+        FirstStepsRunner.Placed now = placed.get();
+        placedAtIssue.put(ticket.id(), now.done());
+        PlotLeveling leveling = target == null ? null : target.leveling();
+        LOGGER.info(BuildProgressNote.line(
+                ticket.boardCase(),
+                ticket.level(),
+                target == null || target.work() == null
+                        ? ticket.level()
+                        : target.work().site().anchor().y(),
+                now.done(),
+                now.total(),
+                leveling == null ? 0 : leveling.cutVolume(),
+                leveling == null ? 0 : leveling.fillVolume()));
     }
 
     @Nullable
