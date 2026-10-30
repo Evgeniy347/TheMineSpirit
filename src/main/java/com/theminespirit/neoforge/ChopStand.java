@@ -29,7 +29,7 @@ final class ChopStand {
             Level level, Tree target, @Nullable BlockPos used, ToDoubleFunction<BlockPos> score) {
         BlockPos best = null;
         double bestScore = Double.MAX_VALUE;
-        for (BlockCoord stand : ChopStands.around(target, feet -> isStandable(level, toPos(feet)))) {
+        for (BlockCoord stand : ChopStands.stands(target, feet -> isStandable(level, toPos(feet)))) {
             BlockPos pos = toPos(stand);
             if (pos.equals(used)) {
                 continue;
