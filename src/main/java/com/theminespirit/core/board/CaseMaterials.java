@@ -56,7 +56,7 @@ public final class CaseMaterials {
                 }
                 case SequenceNode sequence -> queue.addAll(sequence.steps());
                 case RepeatNode repeat -> queue.add(repeat.step());
-                case FallbackNode fallback -> queue.addAll(alternatives(fallback));
+                case FallbackNode fallback -> queue.add(primary(fallback, source));
                 case ParallelNode parallel -> queue.addAll(parallel.steps());
                 case ConditionNode condition -> {
                     queue.add(condition.thenStep());
@@ -73,10 +73,19 @@ public final class CaseMaterials {
         return Map.copyOf(need);
     }
 
-    private static List<TaskNode> alternatives(FallbackNode fallback) {
-        TaskNode first = fallback.steps().get(0);
+    private static TaskNode primary(FallbackNode fallback, MaterialSource source) {
+        List<TaskNode> steps = fallback.steps();
+        TaskNode first = steps.get(0);
         boolean retriedPlace = first instanceof ScriptCall call && "place_block".equals(call.script());
-        return retriedPlace ? List.of(first) : fallback.steps();
+        if (retriedPlace) {
+            return first;
+        }
+        for (TaskNode step : steps) {
+            if (!walk(step, source, null).isEmpty()) {
+                return step;
+            }
+        }
+        return first;
     }
 
     private record Taken(Map<String, Integer> acquired, Map<String, Integer> placed, Map<String, Integer> crafted) {}

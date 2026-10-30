@@ -418,10 +418,7 @@ public final class TicketPlans {
         int part = target.count();
         String base = level >= 2 ? "wall_3" : FENCE_SCHEME;
         String scheme = part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(base, part, FENCE_PARTS) : base;
-        return sequence(
-                new FallbackNode(
-                        List.of(gotoTarget(target), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                schematic(scheme, target.target(), target));
+        return schematic(scheme, target.target(), target);
     }
 
     static TaskNode placeInYard(String item, int count, TicketTarget target) {
@@ -597,7 +594,9 @@ public final class TicketPlans {
         BlockCoord origin = site == null ? target.target() : site.orchardOrigin(target.building());
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         List<TaskNode> steps = new ArrayList<>();
-        steps.add(gotoPoint(site == null ? target.target() : site.workYard()));
+        BlockCoord yard = site == null ? target.target() : site.workYard();
+        steps.add(new FallbackNode(
+                List.of(gotoPoint(yard), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         TorchPlans.addMaterials(steps, orchardMaterials(scheme), wood, target);
         steps.add(schematic(scheme, origin, target));
         return new SequenceNode(steps);

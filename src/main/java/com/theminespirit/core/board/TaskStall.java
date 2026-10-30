@@ -18,9 +18,17 @@ public final class TaskStall {
     private record Progress(String key, long since) {}
 
     public boolean noProgress(UUID spirit, String key, long now) {
+        return noProgress(spirit, key, now, false);
+    }
+
+    public boolean noProgress(UUID spirit, String key, long now, boolean paused) {
         Objects.requireNonNull(spirit, "Дух не может быть null: прогресс считается на конкретного духа");
         Objects.requireNonNull(key, "Ключ прогресса не может быть null: без него не видно, сдвинулась ли задача");
         Progress last = progress.get(spirit);
+        if (paused) {
+            progress.put(spirit, new Progress(key, now));
+            return false;
+        }
         if (last == null || !last.key().equals(key)) {
             progress.put(spirit, new Progress(key, now));
             return false;
@@ -31,8 +39,16 @@ public final class TaskStall {
     private record Seen(@Nullable String script, BlockCoord pos, long since) {}
 
     public boolean stalled(UUID spirit, @Nullable String script, BlockCoord pos, long now) {
+        return stalled(spirit, script, pos, now, false);
+    }
+
+    public boolean stalled(UUID spirit, @Nullable String script, BlockCoord pos, long now, boolean paused) {
         Objects.requireNonNull(spirit, "Дух не может быть null: простой считается на конкретного духа");
         Objects.requireNonNull(pos, "Позиция не может быть null: простой — это «не сдвинулся»");
+        if (paused) {
+            seen.remove(spirit);
+            return false;
+        }
         boolean idleKind = script == null || GOTO.equals(script);
         Seen last = seen.get(spirit);
         if (!idleKind) {

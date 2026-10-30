@@ -53,4 +53,29 @@ class TaskStallTests {
                 "Дух ходит, но прогресс задачи не меняется — простой: 10 минут по пещере без срезки (INC-67)");
         assertFalse(stall.noProgress(SPIRIT, "1/clear_area/1", TaskStall.NO_PROGRESS_TICKS + 1), "Сдвиг — сброс");
     }
+
+    @Test
+    void noProgress_PausedByPolicy_RestartsClockInsteadOfFailing() {
+        TaskStall stall = new TaskStall();
+        stall.noProgress(SPIRIT, "2/chop_tree/1", 0);
+
+        assertFalse(
+                stall.noProgress(SPIRIT, "2/chop_tree/1", TaskStall.NO_PROGRESS_TICKS, true),
+                "Пауза политики (AIR: голова под водой) — не простой задачи: рефлекс выводит на сушу, "
+                        + "а задание продолжается, а не проваливается через 3600 тиков (наблюдение 7)");
+        assertFalse(
+                stall.noProgress(SPIRIT, "2/chop_tree/1", TaskStall.NO_PROGRESS_TICKS + 1),
+                "Выход из паузы начинает отсчёт заново: время под водой не съедает бюджет ожидания");
+    }
+
+    @Test
+    void stalled_PausedByPolicy_DoesNotFail() {
+        TaskStall stall = new TaskStall();
+        stall.stalled(SPIRIT, null, BOTTOM, 0);
+
+        assertFalse(
+                stall.stalled(SPIRIT, null, BOTTOM, TaskStall.STALL_TICKS, true),
+                "Стоянка на месте под паузой политики — не простой задания: дух не виноват, что его "
+                        + "держит воздух/вода");
+    }
 }

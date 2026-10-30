@@ -44,4 +44,25 @@ class BreathSearchTests {
                 BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
                 "запечатанная вода без воздуха — подниматься некуда, поиск называет это пустотой, а не клеткой");
     }
+
+    @Test
+    void nearest_PoolWithShore_LeadsToDryLandNotWaterSurface() {
+        CellWorld world = new CellWorld();
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                world.set(x, 0, z, Cell.WATER);
+                world.set(x, 1, z, Cell.WATER);
+                world.set(x, -1, z, Cell.SOLID);
+            }
+        }
+        world.set(2, -1, 0, Cell.SOLID);
+        world.set(2, 0, 0, Cell.PASSABLE);
+        world.set(2, 1, 0, Cell.PASSABLE);
+
+        assertEquals(
+                Optional.of(new BlockCoord(2, 0, 0)),
+                BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
+                "рядом с водой рефлекс воздуха обязан вести на сушу (стоять на твёрдом полу), а не на "
+                        + "поверхность воды: на поверхности дух снова тонет, тратит 216 [air] и простаивает");
+    }
 }
