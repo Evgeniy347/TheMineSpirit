@@ -10,10 +10,12 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
@@ -184,8 +186,10 @@ class ServerThreadCallTests {
         ServerThreadCall call = new ServerThreadCall(new QueuedExecutor());
         CompletableFuture<Integer> future = call.submit(() -> 1);
         AtomicReference<Throwable> failure = new AtomicReference<>();
+        CountDownLatch awaiting = new CountDownLatch(1);
         Thread waiter = new Thread(
                 () -> {
+                    awaiting.countDown();
                     try {
                         call.await(future, WITHOUT_TIMEOUT);
                     } catch (Throwable e) {
@@ -196,18 +200,9 @@ class ServerThreadCallTests {
         waiter.setDaemon(true);
         waiter.start();
 
-        int spins = 0;
-        Thread.State state = waiter.getState();
-        while (state != Thread.State.TIMED_WAITING && state != Thread.State.WAITING) {
-            if (++spins > 10_000_000) {
-                waiter.interrupt();
-                throw new AssertionError("Ожидальец за " + spins + " итераций не встал в ожидание задачи: "
-                        + "без этого stop() не будит, а проверяет пустоту — "
-                        + "смотри ServerThreadCall.await и запускающий его поток");
-            }
-            Thread.onSpinWait();
-            state = waiter.getState();
-        }
+        assertTrue(
+                awaiting.await(LONG_ENOUGH.toMillis(), TimeUnit.MILLISECONDS),
+                "Ожидальец обязан дойти до await: иначе тест проверяет запуск потока, а не остановку сервера");
         call.stop();
         waiter.join(LONG_ENOUGH.toMillis());
 
