@@ -29,4 +29,18 @@ class SettlementBreakTests {
                 SettlementBreak.of(SettlementBreak.Origin.PLAYER, SettlementBreak.Place.PLOT),
                 "Поставленное игроком защищено и на участке поселения");
     }
+
+    @Test
+    void place_PlanCellOffPlot_IsPlan() {
+        assertEquals(
+                SettlementBreak.Place.PLAN,
+                SettlementBreak.place(false, true),
+                "Клетка плана за оградой участка — всё равно план: своя стенка или факел спуска шахты уходили "
+                        + "в чёрный список защиты, если участок кончался раньше шахты (observe8: wall_torch держал "
+                        + "шахту на 75%)");
+        assertEquals(
+                SettlementBreak.Place.OFF_PLOT,
+                SettlementBreak.place(false, false),
+                "Вне участка и вне плана — по-прежнему чужая земля: послабление только для клеток плана");
+    }
 }

@@ -81,6 +81,33 @@ class MineDigOrderTests {
                         + "порядок " + order);
     }
 
+    @Test
+    void column_PassageBeforeSideWalls_MineFeedsItself() {
+        CellWorld world = new CellWorld().set(0, 63, 0, Cell.SOLID);
+        List<BlockCoord> walls = new ArrayList<>();
+        for (int y = 64; y <= 66; y++) {
+            world.set(-1, y, 0, Cell.SOLID).set(0, y, 0, Cell.SOLID).set(1, y, 0, Cell.SOLID);
+            walls.add(new BlockCoord(-1, y, 0));
+            walls.add(new BlockCoord(1, y, 0));
+        }
+        MineColumn column = new MineColumn(new BlockCoord(0, 63, 0), MineColumn.PASSAGE_HEIGHT);
+
+        List<BlockCoord> order = MineDigOrder.column(column, walls, new BlockCoord(0, 67, 0), world);
+
+        int firstWall = order.stream()
+                .filter(walls::contains)
+                .mapToInt(order::indexOf)
+                .min()
+                .orElseThrow(() -> new AssertionError("В порядке нет стенок: " + order));
+        for (BlockCoord passage : column.cells()) {
+            assertTrue(
+                    order.indexOf(passage) < firstWall,
+                    "Проход колонки " + column.floor() + " рубится раньше её стенок: первые блоки камня проходки "
+                            + "дают булыжник на стенки. Иначе шахте нужен стартовый булыжник, которого без группы "
+                            + "не добыть (observe8: «нет булыжника на стенка»). Порядок " + order);
+        }
+    }
+
     private static CellWorld shaft() {
         CellWorld world = new CellWorld()
                 .set(0, 63, 0, Cell.SOLID)

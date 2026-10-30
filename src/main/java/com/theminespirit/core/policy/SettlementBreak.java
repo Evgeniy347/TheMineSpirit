@@ -21,6 +21,13 @@ public final class SettlementBreak {
 
     private SettlementBreak() {}
 
+    public static Place place(boolean onPlot, boolean inPlan) {
+        if (inPlan) {
+            return Place.PLAN;
+        }
+        return onPlot ? Place.PLOT : Place.OFF_PLOT;
+    }
+
     public static Check of(Origin origin, Place place) {
         if (origin == Origin.PLAYER) {
             return Check.DEFAULT;
