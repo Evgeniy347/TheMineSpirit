@@ -5,34 +5,38 @@ import com.theminespirit.core.movement.GoalNear;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.route.Route;
+import com.theminespirit.core.route.RouteBreakAudit;
+import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RoutePlanner;
 import com.theminespirit.core.route.RouteStep;
+import com.theminespirit.core.route.RouteWorld;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 
 public final class RouteDetour {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long NANOS_PER_MICRO = 1_000L;
+    private static final int MAX_VETO_REPLANS = 3;
 
     private RouteDetour() {}
 
     public static Optional<RouteWalk> plan(SpiritEntity spirit, BlockCoord target, int radius, String why) {
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        RouteWorld world = new RouteLevelView(spirit);
+        int blocks = RouteLevelView.blocks(spirit);
         long started = System.nanoTime();
-        Route route = RoutePlanner.plan(
-                new RouteLevelView(spirit),
-                from,
-                new GoalNear(target, Math.max(0, radius)),
-                DataTables.INSTANCE.route().current(),
-                RouteLevelView.blocks(spirit));
+        Route route = plan(world, from, target, radius, blocks);
+        route = withoutVetoed(spirit, world, from, target, radius, blocks, route);
         long micros = (System.nanoTime() - started) / NANOS_PER_MICRO;
         LOGGER.info(
                 "[route] дух {} ({}): из {} к {} — {}, цена {} тиков, сломать {}, поставить {}, шагов {}, конец {},"
-                        + " узлов {}, чтений {}, {} мкс",
+                        + " узлов {}, чтений {}, {} мкс, BreakVeto отказов {}, первые {}",
                 spirit.displayName(),
                 why,
                 from,
@@ -45,8 +49,50 @@ public final class RouteDetour {
                 route.end(),
                 route.nodes(),
                 route.reads(),
-                micros);
+                micros,
+                route.vetoCount(),
+                route.vetoes());
         return route.usable() ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
+    }
+
+    private static Route plan(RouteWorld world, BlockCoord from, BlockCoord target, int radius, int blocks) {
+        return RoutePlanner.plan(
+                world,
+                from,
+                new GoalNear(target, Math.max(0, radius)),
+                DataTables.INSTANCE.route().current(),
+                blocks);
+    }
+
+    private static Route withoutVetoed(
+            SpiritEntity spirit,
+            RouteWorld world,
+            BlockCoord from,
+            BlockCoord target,
+            int radius,
+            int blocks,
+            Route route) {
+        Set<BlockCoord> excluded = new HashSet<>();
+        for (int attempt = 0; attempt < MAX_VETO_REPLANS; attempt++) {
+            Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(world, from, route);
+            if (veto.isEmpty()) {
+                return route;
+            }
+            Route.Veto found = veto.get();
+            excluded.add(found.cell());
+            LOGGER.warn(
+                    "[route] дух {}: BreakVeto отказал BREAK в {}: {} — пересчёт без шага",
+                    spirit.displayName(),
+                    found.cell(),
+                    found.reason());
+            route = plan(
+                    (x, y, z) -> excluded.contains(new BlockCoord(x, y, z)) ? RouteCell.BLOCKED : world.cell(x, y, z),
+                    from,
+                    target,
+                    radius,
+                    blocks);
+        }
+        return route;
     }
 
     public static void removed(SpiritEntity spirit, RouteWalk walk) {

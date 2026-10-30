@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -75,6 +74,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private final BlockPlacer placer;
     private final BlockBreaker breaker;
     private final Approach approach;
+    private final BuildPitWatch pit;
     private final BuildReservations reservations;
     private final BuildKey buildKey;
     private final BuildSquad squad;
@@ -153,6 +153,7 @@ final class BuildSchematicScript implements ScriptInstance {
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         this.buildKey = new BuildKey(file, origin, rotation);
+        this.pit = new BuildPitWatch(spirit, level, site, buildKey);
         this.squad = BuildSquadRegistry.join(level, buildKey, spirit.getUUID());
         if (level instanceof ServerLevel server) {
             PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());
@@ -168,6 +169,9 @@ final class BuildSchematicScript implements ScriptInstance {
             return fail("дух исчез во время стройки по схеме");
         }
         ticks++;
+        if (pit.stalled(ticks, placed, cleared, trips)) {
+            pit.stalledReport(feet(), placed, cleared, trips, blocked);
+        }
         refreshShare();
         if (supplyRunner != null) {
             RunStatus supply = supplyRunner.tick();
@@ -219,40 +223,29 @@ final class BuildSchematicScript implements ScriptInstance {
             case ARRIVED -> {
                 excludedStands.add(approachStand);
                 if (spirit.pathBuilds() - approachPathMark >= HARD_APPROACH_PATH_BUILDS) {
-                    noteHardApproach("дошёл");
+                    pit.hardApproach(
+                            approachStand,
+                            approach.refusal(),
+                            approach.networkNote(),
+                            spirit.pathBuilds() - approachPathMark,
+                            "дошёл");
                 }
             }
             case STUCK, TIMEOUT -> {
                 excludedStands.add(approachStand);
                 lastRefusal = "стоянка " + approachStand + " недостижима: "
                         + (approach.refusal() == null ? "путь не найден" : approach.refusal());
-                noteHardApproach("срыв");
+                pit.hardApproach(
+                        approachStand,
+                        approach.refusal(),
+                        approach.networkNote(),
+                        spirit.pathBuilds() - approachPathMark,
+                        "срыв");
             }
         }
         approach.cancel();
         approachStand = null;
         return planTick();
-    }
-
-    private void noteHardApproach(String outcome) {
-        BlockCoord stand = approachStand;
-        if (stand == null) {
-            return;
-        }
-        BlockPos below = SchematicSite.toPos(new BlockCoord(stand.x(), stand.y() - 1, stand.z()));
-        LOGGER.info(
-                "Стройка {}: подход {} к стоянке {} (пол {}), построений пути {}, дух {} в {} от стоянки; {}",
-                buildKey,
-                outcome,
-                stand,
-                level.getBlockState(below).getBlock().getDescriptionId(),
-                spirit.pathBuilds() - approachPathMark,
-                spirit.position(),
-                String.format(
-                        Locale.ROOT,
-                        "%.2f",
-                        spirit.position().distanceTo(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5))),
-                (approach.refusal() == null ? "без отказа" : approach.refusal()) + "; " + approach.networkNote());
     }
 
     private ScriptStatus breakTick() {
@@ -1056,6 +1049,7 @@ final class BuildSchematicScript implements ScriptInstance {
 
     private ScriptStatus beginApproach(BlockCoord stand) {
         approachStand = stand;
+        pit.descent(feet(), stand);
         approachPathMark = spirit.pathBuilds();
         standsChosen++;
         if (site.onRoof(stand)) {

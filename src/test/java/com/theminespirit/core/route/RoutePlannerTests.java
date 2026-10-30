@@ -170,6 +170,43 @@ class RoutePlannerTests {
     }
 
     @Test
+    void plan_SealedShaftOverVoid_DoesNotReturnRouteWithVetoedFloorBreak() {
+        GridWorld world = GridWorld.flat(0)
+                .fill(-1, 0, -1, 1, 1, 1, RouteCell.BLOCKED)
+                .fill(0, 0, 0, 0, 1, 0, RouteCell.AIR)
+                .fill(0, -3, 0, 0, -2, 0, RouteCell.AIR);
+        BlockCoord start = new BlockCoord(0, 0, 0);
+
+        Route route = RoutePlanner.plan(world, start, new GoalBlock(new BlockCoord(0, -3, 0)), RULES, 0);
+
+        assertEquals(
+                Route.Status.NONE,
+                route.status(),
+                "В шахте 1×1 единственный путь — сломать пол и упасть на 3 блока в пустоту: BreakVeto с MAX_DROP=2 "
+                        + "запрещает такую ломку, поэтому FOUND с этим шагом — цикл «маршрут найден → дух упадёт, "
+                        + "сначала положите опору»");
+        assertEquals(
+                0,
+                route.count(RouteStep.Action.BREAK),
+                "Маршрут не должен нести ломку пола под ногами, которую исполнитель тут же отвергает: иначе дух "
+                        + "стоит в яме, а планировщик каждую секунду снова выдаёт невыполнимый FOUND");
+    }
+
+    @Test
+    void plan_FloorBreakIntoVoidWithLegalDetour_ReplansWithoutBreak() {
+        GridWorld world = GridWorld.flat(0)
+                .fill(0, -1, 0, 0, -1, 0, RouteCell.solid(1))
+                .fill(0, -3, 0, 0, -2, 0, RouteCell.AIR)
+                .fill(1, -3, 0, 5, -2, 0, RouteCell.AIR)
+                .fill(5, -1, 0, 5, 0, 0, RouteCell.AIR);
+        BlockCoord start = new BlockCoord(0, 0, 0);
+
+        Route route = RoutePlanner.plan(world, start, new GoalBlock(new BlockCoord(0, -3, 0)), RULES, 0);
+
+        assertFound(world, start, route, "яма с тонким полом над пустотой и обходом по коридору");
+    }
+
+    @Test
     void plan_HundredBlocksOfPlain_ExpandsAboutStraightLine() {
         GridWorld world = GridWorld.flat(0);
 
@@ -186,5 +223,11 @@ class RoutePlannerTests {
         assertEquals(Route.Status.FOUND, route.status(), "Маршрут не найден: " + scene + ", узлов " + route.nodes());
         Optional<String> broken = RouteReplay.violation(world, start, route);
         assertEquals(Optional.empty(), broken, "План нарушает правила движения (" + scene + ")");
+        Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(world, start, route);
+        assertEquals(
+                Optional.empty(),
+                veto,
+                "План содержит ломку, запрещённую BreakVeto (MAX_DROP=2), — исполнитель её отвергнет, и дух "
+                        + "застрянет в цикле FOUND→отказ (" + scene + ")");
     }
 }

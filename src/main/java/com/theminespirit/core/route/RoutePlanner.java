@@ -77,7 +77,15 @@ public final class RoutePlanner {
         boolean progress = estimates[first] - estimates[best] >= rules.minPartial();
         return progress
                 ? route(Route.Status.PARTIAL, best)
-                : new Route(Route.Status.NONE, List.of(), 0.0, start, nodes, cells.reads());
+                : new Route(
+                        Route.Status.NONE,
+                        List.of(),
+                        0.0,
+                        start,
+                        nodes,
+                        cells.reads(),
+                        moves.vetoCount(),
+                        moves.vetoes());
     }
 
     private void expand(int current) {
@@ -121,7 +129,8 @@ public final class RoutePlanner {
             int from = parents[at];
             moves.cost(arrivals[at], xs[from], ys[from], zs[from], placesLeft[from], steps);
         }
-        return new Route(status, steps, costs[last], coord(last), nodes, cells.reads());
+        return new Route(
+                status, steps, costs[last], coord(last), nodes, cells.reads(), moves.vetoCount(), moves.vetoes());
     }
 
     private BlockCoord coord(int node) {

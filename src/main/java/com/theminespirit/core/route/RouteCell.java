@@ -1,5 +1,7 @@
 package com.theminespirit.core.route;
 
+import com.theminespirit.core.mining.Cell;
+
 public final class RouteCell {
     public static final int AIR = 0;
     public static final int CLIMB = 1;
@@ -43,6 +45,15 @@ public final class RouteCell {
     static boolean breakable(int cell) {
         int kind = kind(cell);
         return kind == SOLID || kind == TALL;
+    }
+
+    public static Cell safety(int cell) {
+        return switch (kind(cell)) {
+            case SOLID, BLOCKED, TALL -> Cell.SOLID;
+            case AIR, CLIMB -> Cell.PASSABLE;
+            case WATER -> Cell.WATER;
+            default -> Cell.LAVA;
+        };
     }
 
     private static int encode(int kind, int breakTicks) {
