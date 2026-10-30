@@ -97,9 +97,15 @@ public final class BoardJournal {
                 BoardLogEntry entry = BoardLog.parse(line, index + 1);
                 if (entry.event() == BoardLog.Event.DONE) {
                     ledger.note(entry.boardCase(), entry.level());
+                    if (entry.boardCase() == BoardCase.BUILD_PLACED) {
+                        StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.notePlan(id, entry.level()));
+                    }
                     restored++;
                 } else if (entry.event() == BoardLog.Event.REOPENED) {
                     ledger.forget(entry.boardCase(), entry.level());
+                    if (entry.boardCase() == BoardCase.BUILD_PLACED) {
+                        StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.forgetPlan(id, entry.level()));
+                    }
                 }
             } catch (RuntimeException failure) {
                 lastLine = index + 1;

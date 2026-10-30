@@ -833,7 +833,7 @@ public final class BoardService {
         SettleNotes.note(spirit, ticket, success, supplyClosed, spirit.level().getGameTime());
         String why = verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
         if (success) {
-            board.complete(ticket.id());
+            PlanCompletion.complete(board, ticket, targets.get(ticket.id()));
             if (ticket.boardCase() == BoardCase.TRANSFER_ITEM) {
                 TransferNote.delivered(spirit, ticket, targets.get(ticket.id()));
             }
