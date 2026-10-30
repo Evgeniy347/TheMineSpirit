@@ -1,6 +1,7 @@
 package com.theminespirit.core.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.theminespirit.core.board.Board;
@@ -65,6 +66,21 @@ class BoardTasksTests {
                 task.assignee(),
                 "После выдачи наблюдатель обязан видеть духа-держателя, а не «любой свободный»");
         assertEquals("ASSIGNED", task.status(), "Статус выданного задания — ASSIGNED");
+    }
+
+    @Test
+    void of_BlockedTicketWithLedgerMark_ReportsNotDone() {
+        Board board = new Board(() -> 0);
+        BoardTicket ticket = ticket("supply_gather:oak_planks", Map.of());
+        board.submit(ticket);
+        board.ledger().note(BoardCase.SUPPLY_SITE, 1);
+
+        BoardTask task = BoardTasks.of(board, ticket, BoardStatus.BLOCKED, new StockView(Map.of()));
+
+        assertFalse(
+                task.done(),
+                "Заблокированное задание не выполнено, даже если в журнале есть отметка прошлого прогона: "
+                        + "status BLOCKED и done=true противоречат друг другу (аномалия 7)");
     }
 
     @Test

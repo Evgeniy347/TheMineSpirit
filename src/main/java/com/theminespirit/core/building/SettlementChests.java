@@ -1,6 +1,7 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.SettlementReach;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,6 +84,18 @@ public final class SettlementChests {
     public List<BlockCoord> warehouse(BlockCoord from) {
         Objects.requireNonNull(from, "Точка отсчёта не может быть null: склад отдаётся в порядке расстояния");
         return nearest(from, known.size());
+    }
+
+    public List<BlockCoord> warehouse(BlockCoord from, SettlementReach reach) {
+        Objects.requireNonNull(from, "Точка отсчёта не может быть null: склад отдаётся в порядке расстояния");
+        Objects.requireNonNull(reach, "Граница поселения не может быть null: без неё склад не ограничить");
+        List<BlockCoord> inside = new ArrayList<>();
+        for (BlockCoord pos : nearest(from, known.size())) {
+            if (reach.covers(pos.x(), pos.z())) {
+                inside.add(pos);
+            }
+        }
+        return List.copyOf(inside);
     }
 
     public long probes() {

@@ -3,18 +3,22 @@ package com.theminespirit.neoforge.inventory;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StateChangeLog;
+import com.theminespirit.core.building.SettlementChests;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.inventory.StoragePoints;
 import com.theminespirit.core.inventory.UnloadedSpots;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.SettlementReach;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.terminal.CraftTerminalService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
 public final class StorageFinder {
@@ -50,8 +54,15 @@ public final class StorageFinder {
                 level.getGameTime() + BoardTuning.boardIntervalTicks());
     }
 
+    private static List<BlockCoord> warehouse(ServerLevel level, BlockCoord origin) {
+        SettlementChests chests = SettlementChestStore.get(level).chests();
+        Optional<SettlementReach> reach =
+                Level.OVERWORLD.equals(level.dimension()) ? CraftTerminalService.reach(level) : Optional.empty();
+        return reach.map(found -> chests.warehouse(origin, found)).orElseGet(() -> chests.warehouse(origin));
+    }
+
     private static List<StoragePoints.Spot> spots(ServerLevel level, BlockCoord origin) {
-        List<BlockCoord> known = SettlementChestStore.get(level).chests().warehouse(origin);
+        List<BlockCoord> known = warehouse(level, origin);
         List<StoragePoints.Spot> spots = new ArrayList<>();
         List<BlockCoord> unloaded = new ArrayList<>();
         for (BlockCoord pos : known) {
