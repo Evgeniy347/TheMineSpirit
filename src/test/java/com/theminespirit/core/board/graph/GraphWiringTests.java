@@ -94,6 +94,26 @@ class GraphWiringTests {
     }
 
     @Test
+    void notes_StrategistNotice_RepeatsRarelyOrOnChange() {
+        GraphNotes notes = new GraphNotes();
+        String key = "notice:orchard_jungle";
+        String text = "нужна постройка orchard_jungle (есть jungle_sapling), её нет в плане";
+
+        boolean first = notes.due(key, text, 100);
+        boolean afterMinute = notes.due(key, text, 100 + GraphNotes.EVERY_TICKS);
+        boolean beforePeriod = notes.due(key, text, 100 + GraphNotes.NOTICE_EVERY_TICKS - 1);
+        boolean atPeriod = notes.due(key, text, 100 + GraphNotes.NOTICE_EVERY_TICKS);
+        boolean changed = notes.due(key, text + " (появился дуб)", 100 + GraphNotes.NOTICE_EVERY_TICKS + 1);
+
+        assertTrue(
+                first && !afterMinute && !beforePeriod && atPeriod && changed,
+                "Одна и та же просьба стратегу не повторяется каждую минуту (наблюдение 8: «нужна постройка "
+                        + "orchard_jungle», «нет источника diamond» — раз в минуту): повтор — раз в "
+                        + GraphNotes.NOTICE_EVERY_TICKS + " тиков или сразу, если текст изменился; факт: "
+                        + first + afterMinute + beforePeriod + atPeriod + changed);
+    }
+
+    @Test
     void tickets_UnimplementedAndInfeasible_NotPosted() {
         GraphWorld world = GraphWorld.settled().with("coal", 0).with("torch", 0);
         GraphPlan plan = world.plan();
