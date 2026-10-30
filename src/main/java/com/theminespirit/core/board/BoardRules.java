@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.repair.RepairData;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -36,6 +37,21 @@ public final class BoardRules {
         }
         throw new IllegalArgumentException("Приоритет кейса не задан: " + boardCase
                 + " отсутствует в таблице приоритетов — добавьте строку в BoardRules");
+    }
+
+    public static int repairPriorityOf(BoardCase boardCase) {
+        if (boardCase == null) {
+            throw new IllegalArgumentException("Приоритет ремонта не задан: доска не решит, что чинить первым");
+        }
+        RepairData.Priorities priorities =
+                DataTables.INSTANCE.repair().current().priorities();
+        return switch (boardCase) {
+            case BUILD_FENCE -> priorities.wall();
+            case BUILD_HOUSE -> priorities.housing();
+            case BUILD_WAREHOUSE, BUILD_MINE, CRAFTING_STATION, CRAFT_FURNACE, CRAFT_ANVIL, CRAFT_SMITHING_TABLE ->
+                priorities.craft();
+            default -> priorities.decor();
+        };
     }
 
     private static Map<BoardCase, Integer> buildPriorities() {

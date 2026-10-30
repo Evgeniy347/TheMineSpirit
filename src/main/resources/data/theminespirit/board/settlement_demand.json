@@ -1,0 +1,6 @@
+{
+  "bedsReserve": 1,
+  "storageFreePercentMin": 20,
+  "darkCellsMin": 1,
+  "stageEnabled": true
+}
