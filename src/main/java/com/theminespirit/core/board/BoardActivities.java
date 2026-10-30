@@ -103,11 +103,71 @@ public final class BoardActivities {
         return null;
     }
 
+    public static @Nullable String firstScript(TaskNode plan) {
+        Objects.requireNonNull(plan, "План задачи не может быть null: первый шаг берётся из него");
+        if (plan instanceof ScriptCall call) {
+            return call.script();
+        }
+        if (plan instanceof SequenceNode sequence) {
+            for (TaskNode step : sequence.steps()) {
+                String first = firstScript(step);
+                if (first != null) {
+                    return first;
+                }
+            }
+            return null;
+        }
+        if (plan instanceof RepeatNode repeat) {
+            return firstScript(repeat.step());
+        }
+        return null;
+    }
+
     public static Optional<BoardCase> caseOfScript(@Nullable String script) {
         if (script == null || script.isBlank()) {
             return Optional.empty();
         }
         return BoardScriptCards.of(script);
+    }
+
+    public record CardFacts(
+            boolean removed,
+            boolean running,
+            boolean tacticsControl,
+            @Nullable TacticsAction tactic,
+            boolean ownActivity,
+            @Nullable BoardCase launchedCase,
+            boolean assigned,
+            boolean defenceAssigned,
+            @Nullable String script) {
+
+        public Optional<BoardCase> card() {
+            if (removed) {
+                return Optional.empty();
+            }
+            if (running && "dig_out".equals(script)) {
+                return Optional.of(BoardCase.ACTIVITY_ESCAPE);
+            }
+            if (tacticsControl && !assigned && tactic != null) {
+                Optional<BoardCase> card = caseOf(tactic);
+                if (card.isPresent()) {
+                    return card;
+                }
+            }
+            if (running && ownActivity && launchedCase != null) {
+                return Optional.of(launchedCase);
+            }
+            if (running) {
+                return Optional.of(caseOfScript(script).orElse(BoardCase.ACTIVITY_EXTERNAL));
+            }
+            if (assigned) {
+                return Optional.empty();
+            }
+            if (defenceAssigned) {
+                return Optional.of(BoardCase.ACTIVITY_DEFEND);
+            }
+            return Optional.empty();
+        }
     }
 
     public static @Nullable String targetOf(TaskNode plan) {

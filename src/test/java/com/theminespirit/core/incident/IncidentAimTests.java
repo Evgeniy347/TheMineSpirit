@@ -55,6 +55,46 @@ class IncidentAimTests {
     }
 
     @Test
+    void describe_GraphGather_NamesGatherTargetNotSettlement() {
+        BoardTicket gather = new BoardTicket(
+                "graph:gather_oak_sapling",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                0,
+                1,
+                "graph:gather_oak_sapling",
+                List.of(),
+                Map.of());
+        WorkTarget sapling = new WorkTarget(WorkKind.GATHER, new BlockCoord(-224, 55, -519));
+
+        String aim = IncidentAim.describe(gather, TicketTarget.at(HOME).withSupply("oak_sapling", 1), List.of(sapling));
+
+        assertTrue(aim.contains(sapling.anchor().toString()), "Цель добычи — выбранный блок саженца: " + aim);
+        assertFalse(aim.contains(HOME.toString()), "Точка поселения не цель добычи: " + aim);
+    }
+
+    @Test
+    void describe_LeafDecayCollect_NamesDropTargetNotSettlement() {
+        BoardTicket collect = new BoardTicket(
+                "graph:event:leaf_decay:collect_saplings",
+                BoardCase.COLLECT_DROPS,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.COLLECT_DROPS),
+                0,
+                1,
+                "graph:event:leaf_decay:collect_saplings",
+                List.of(),
+                Map.of());
+        WorkTarget drop = new WorkTarget(WorkKind.DROP, new BlockCoord(-220, 58, -536));
+
+        String aim = IncidentAim.describe(collect, TicketTarget.at(HOME).withSupply("oak_sapling", 1), List.of(drop));
+
+        assertTrue(aim.contains(drop.anchor().toString()), "Цель сбора — выбранный дроп саженца: " + aim);
+        assertFalse(aim.contains(HOME.toString()), "Точка поселения не цель сбора: " + aim);
+    }
+
+    @Test
     void describe_NonSupplyTicket_KeepsTargetAndCount() {
         BoardTicket build = new BoardTicket(
                 "first:build_fence",

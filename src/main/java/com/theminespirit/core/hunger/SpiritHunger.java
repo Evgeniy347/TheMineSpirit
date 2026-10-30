@@ -44,6 +44,10 @@ public record SpiritHunger(int foodLevel, double saturation, double exhaustion, 
         return (double) foodLevel / MAX_FOOD;
     }
 
+    public String foodText() {
+        return "food " + satietyFraction() + " saturation " + saturation;
+    }
+
     public SpiritHunger addExhaustion(double amount) {
         if (!Double.isFinite(amount) || amount < 0) {
             throw new IllegalArgumentException(

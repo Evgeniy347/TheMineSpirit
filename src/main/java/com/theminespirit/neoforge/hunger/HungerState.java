@@ -52,6 +52,10 @@ public final class HungerState {
         return hunger.foodLevel();
     }
 
+    public String foodText() {
+        return hunger.foodText();
+    }
+
     public void tick() {
         spendOnMovement();
         HungerTick result = hunger.tick(rules(), spirit.getHealth(), spirit.getMaxHealth());

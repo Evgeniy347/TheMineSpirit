@@ -195,6 +195,15 @@ class SpiritHungerTests {
     }
 
     @Test
+    void foodText_NineteenOfTwenty_PrintsFraction() {
+        assertEquals(
+                "food 0.95 saturation 0.0",
+                SpiritHunger.of(19, 0, 0).foodText(),
+                "Лог еды обязан печатать ту же долю шкалы [0; 1], что REST food: иначе 19 в логе и 0.95 "
+                        + "в /v1/bots выглядят как разные величины");
+    }
+
+    @Test
     void addExhaustion_BadAmount_Throws() {
         assertThrows(
                 IllegalArgumentException.class,
