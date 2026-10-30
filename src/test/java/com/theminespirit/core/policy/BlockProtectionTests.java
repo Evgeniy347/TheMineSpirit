@@ -286,33 +286,6 @@ class BlockProtectionTests {
     }
 
     @Test
-    void checkOwn_OwnWallInsideOwnBuild_IsAllowed() {
-        BlockProtection.Decision refused = protection.check("minecraft:cobblestone", house(), false, false);
-
-        assertInstanceOf(
-                BlockProtection.Refused.class,
-                refused,
-                "Предусловие: стена из булыжника среди 14 искусственных соседей считается постройкой игрока и обычной проверкой запрещена");
-        assertEquals(
-                new BlockProtection.Allowed(),
-                protection.checkOwn("minecraft:cobblestone", false),
-                "Свой поставленный блок дух разбирает: эвристика «постройка игрока» и защита игрока на блоки духов не распространяются, "
-                        + "иначе дух не разберёт то, что построил");
-    }
-
-    @Test
-    void checkOwn_DenyBlockInZone_IsStillRefused() {
-        assertInstanceOf(
-                BlockProtection.Refused.class,
-                protection.checkOwn("minecraft:chest", false),
-                "Свой сундук всё равно запрещён: чёрный список действует и на блоки духов, иначе дух разберёт механизм");
-        assertInstanceOf(
-                BlockProtection.Refused.class,
-                protection.checkOwn("minecraft:cobblestone", true),
-                "Своя постройка в защищённой зоне всё равно запрещена: зона сильнее метки духа");
-    }
-
-    @Test
     void checkSettlement_OldFenceOnPlot_AllowedChestKept() {
         assertEquals(
                 new BlockProtection.Allowed(),

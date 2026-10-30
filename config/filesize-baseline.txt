@@ -30,7 +30,7 @@ src/main/java/com/theminespirit/neoforge/DropCollector.java	476
 src/main/java/com/theminespirit/neoforge/FarmSession.java	688
 src/main/java/com/theminespirit/neoforge/FillSession.java	616
 src/main/java/com/theminespirit/neoforge/HarvestSession.java	749
-src/main/java/com/theminespirit/neoforge/MineBuildScript.java	543
+src/main/java/com/theminespirit/neoforge/MineBuildScript.java	527
 src/main/java/com/theminespirit/neoforge/SafeMineSession.java	504
 src/main/java/com/theminespirit/neoforge/SchematicSite.java	363
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	767
@@ -69,7 +69,7 @@ src/test/java/com/theminespirit/core/plan/PlanValidatorRulesTests.java	359
 src/test/java/com/theminespirit/core/planner/AcquireScriptTests.java	998
 src/test/java/com/theminespirit/core/planner/FallbackPlannerTests.java	325
 src/test/java/com/theminespirit/core/planner/ResourceResolverTests.java	566
-src/test/java/com/theminespirit/core/policy/BlockProtectionTests.java	341
+src/test/java/com/theminespirit/core/policy/BlockProtectionTests.java	314
 src/test/java/com/theminespirit/core/rest/BoardRoutesTests.java	364
 src/test/java/com/theminespirit/core/rest/TaskRoutesTests.java	887
 src/test/java/com/theminespirit/core/script/ScriptCatalogTests.java	1101

@@ -40,7 +40,6 @@ final class MineBuildScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double STAND_ARRIVAL = 0.6;
     private static final int SETTLE_TICKS = 5;
-    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final int MAX_ACTIONS_PER_COLUMN = 64;
     private static final List<String> FLOOR_MATERIALS =
             List.of("minecraft:cobblestone", "minecraft:cobbled_deepslate", "minecraft:stone", "minecraft:dirt");
@@ -69,8 +68,9 @@ final class MineBuildScript implements ScriptInstance {
     private final Map<MineColumn, MineColumn> parents = new HashMap<>();
     private final List<MineColumn> exitPath = new ArrayList<>();
     private final List<Schematic.PlacedEntry> torches;
-    private final Set<BlockCoord> walls;
+    private final MineCells cells;
     private final BuildRotation rotation;
+    private final MineEntranceOpening entranceOpening;
 
     private Phase phase = Phase.PICK;
     private @Nullable MineColumn current;
@@ -97,9 +97,11 @@ final class MineBuildScript implements ScriptInstance {
         this.stepWalker = new MineStepWalker(approach, safety);
         this.plan = new ArrayList<>(MinePlan.order(MinePlan.columns(layout.floors(), layout.air()), layout.entrance()));
         this.torches = new ArrayList<>(layout.optional());
-        this.walls = new HashSet<>(layout.floors());
+        Set<BlockCoord> walls = new HashSet<>(layout.floors());
         plan.forEach(column -> walls.remove(column.floor()));
+        this.cells = new MineCells(level, walls);
         this.rotation = rotation;
+        this.entranceOpening = MineEntranceOpening.of(plan, layout, safety);
         if (plan.isEmpty()) {
             LOGGER.info(
                     "[mine] {}: вход {} уже на глубине цели спуска — 0 ступеней, уровень считается достигнутым",
@@ -201,8 +203,12 @@ final class MineBuildScript implements ScriptInstance {
 
     private void walk() {
         MineColumn column = current();
-        Optional<MineColumn> parent = MinePlan.parent(column, open);
         BlockCoord feet = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+        if (entranceOpening.waiting(
+                column, feet, cells::open, cell -> startBreak(cell, OptionalInt.empty()), cells::removeWalls)) {
+            return;
+        }
+        Optional<MineColumn> parent = MinePlan.parent(column, open);
         MineStepWalker.State state =
                 stepWalker.tick(column, parent.map(MineColumn::stand).orElse(null), feet);
         if (state == MineStepWalker.State.ARRIVED || state == MineStepWalker.State.VISIBLE) {
@@ -221,7 +227,7 @@ final class MineBuildScript implements ScriptInstance {
             return;
         }
         BlockCoord feet = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
-        for (BlockCoord cell : MineDigOrder.column(column, wallsOf(column), feet, safety)) {
+        for (BlockCoord cell : MineDigOrder.column(column, cells.wallsOf(column), feet, safety)) {
             boolean ready = cell.equals(column.floor())
                     ? solidReady(cell, "пол")
                     : column.contains(cell) ? cellReady(column, cell) : solidReady(cell, "стенка");
@@ -240,7 +246,7 @@ final class MineBuildScript implements ScriptInstance {
         MineColumn column = current();
         boolean falling = !level.getEntitiesOfClass(FallingBlockEntity.class, columnBox(column))
                 .isEmpty();
-        if (falling || column.cells().stream().anyMatch(cell -> !open(cell))) {
+        if (falling || column.cells().stream().anyMatch(cell -> !cells.open(cell))) {
             phase = Phase.DIG;
             return;
         }
@@ -278,19 +284,6 @@ final class MineBuildScript implements ScriptInstance {
         };
     }
 
-    private List<BlockCoord> wallsOf(MineColumn column) {
-        List<BlockCoord> found = new ArrayList<>();
-        for (BlockCoord cell : column.cells()) {
-            for (int[] side : SIDES) {
-                BlockCoord wall = new BlockCoord(cell.x() + side[0], cell.y(), cell.z() + side[1]);
-                if (walls.contains(wall)) {
-                    found.add(wall);
-                }
-            }
-        }
-        return found;
-    }
-
     private boolean oreInFloor(BlockCoord floor, BlockState state) {
         MineOres.Decision decision = MineOres.decide(BlockStates.idOf(state), picks(state));
         if (decision instanceof MineOres.Mine mine) {
@@ -302,10 +295,10 @@ final class MineBuildScript implements ScriptInstance {
     }
 
     private boolean cellReady(MineColumn column, BlockCoord cell) {
-        if (open(cell)) {
+        if (cells.open(cell)) {
             return true;
         }
-        List<BlockCoord> plugsNeeded = MineFluids.plugsBefore(cell, openCells, this::fluid);
+        List<BlockCoord> plugsNeeded = MineFluids.plugsBefore(cell, openCells, cells::fluid);
         if (!plugsNeeded.isEmpty()) {
             if (place(plugsNeeded.get(0), "пробка")) {
                 plugs++;
@@ -339,7 +332,7 @@ final class MineBuildScript implements ScriptInstance {
         }
         int at = plan.indexOf(column) + 1;
         for (MineColumn side : detour.get()) {
-            side.cells().forEach(walls::remove);
+            cells.removeWalls(side.cells());
             if (!plan.contains(side)) {
                 plan.add(at++, side);
             }
@@ -502,15 +495,6 @@ final class MineBuildScript implements ScriptInstance {
 
     private List<MineOres.Pick> picks(BlockState state) {
         return PickOptions.of(spirit, state);
-    }
-
-    private boolean open(BlockCoord cell) {
-        BlockState state = level.getBlockState(toPos(cell));
-        return (state.isAir() || state.canBeReplaced()) && state.getFluidState().isEmpty();
-    }
-
-    private boolean fluid(BlockCoord cell) {
-        return !level.getBlockState(toPos(cell)).getFluidState().isEmpty();
     }
 
     private MineColumn current() {
