@@ -19,7 +19,7 @@ public final class FuelPlanner {
         String freshFuel = null;
         int freshBurn = 0;
         for (String fuel : candidates) {
-            if (path.contains(fuel)) {
+            if (path.contains(fuel) || sameSource(smelted, fuel)) {
                 continue;
             }
             int burn = knowledge.burnTicks(fuel);
@@ -60,6 +60,10 @@ public final class FuelPlanner {
                         + " нет доступного топлива (" + names
                         + "): добавьте топливо в знания как gatherable, craftable или "
                         + "smeltable либо выдайте духу топливо в инвентарь");
+    }
+
+    private static boolean sameSource(String smelted, String fuel) {
+        return "charcoal".equals(smelted) && "coal".equals(fuel);
     }
 
     private static List<String> fuelCandidates(ResourceKnowledge knowledge, String smelted) {

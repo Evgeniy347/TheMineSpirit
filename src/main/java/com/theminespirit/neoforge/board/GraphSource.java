@@ -133,7 +133,7 @@ public final class GraphSource {
 
     private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {
         for (GraphPlan.Notice notice : plan.notices()) {
-            if (!notes.due("notice:" + notice.building(), now)) {
+            if (!notes.due("notice:" + notice.building(), notice.reason(), now)) {
                 continue;
             }
             String text = "[поселение] " + notice.reason();
