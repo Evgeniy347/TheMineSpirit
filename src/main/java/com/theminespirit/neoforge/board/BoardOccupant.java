@@ -23,16 +23,24 @@ final class BoardOccupant {
     }
 
     static Optional<Occupation> of(
-            SpiritEntity spirit, boolean ownActivity, @Nullable BoardCase launchedCase, boolean assigned) {
+            SpiritEntity spirit,
+            boolean ownActivity,
+            @Nullable BoardCase launchedCase,
+            @Nullable String launchedScript,
+            @Nullable String launchedTarget,
+            boolean assigned) {
         if (spirit.isRemoved()) {
             return Optional.empty();
         }
         Optional<TaskNode> plan = spirit.currentPlan();
         boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING
                 || spirit.currentTaskScript().isPresent();
-        String script = spirit.currentTaskScript()
-                .orElseGet(() -> plan.map(BoardActivities::firstScript).orElse(null));
-        String target = plan.map(BoardActivities::targetOf).orElse(null);
+        String script = ownActivity && launchedScript != null
+                ? launchedScript
+                : BoardActivities.cardScript(spirit.currentTaskScript().orElse(null), plan.orElse(null));
+        String target = ownActivity && launchedTarget != null
+                ? launchedTarget
+                : plan.map(BoardActivities::targetOf).orElse(null);
         return new BoardActivities.CardFacts(
                         spirit.isRemoved(),
                         running,

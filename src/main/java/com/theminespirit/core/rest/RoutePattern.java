@@ -12,7 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class RoutePattern {
-    private static final Pattern PARAM_VALUE = Pattern.compile("[A-Za-z0-9_:,@-]{1,64}");
+    static final int PARAM_MAX_LENGTH = 256;
+    private static final Pattern PARAM_VALUE = Pattern.compile("[A-Za-z0-9_:,@-]{1," + PARAM_MAX_LENGTH + "}");
     private static final Pattern PARAM_SEGMENT = Pattern.compile("[{]([a-z][A-Za-z0-9]*)[}]");
 
     private final List<String> segments;

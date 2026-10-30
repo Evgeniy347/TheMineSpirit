@@ -15,6 +15,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class RouterTests {
     private static final String ID_64 = "a".repeat(64);
+    private static final String TRANSFER_ID =
+            "transfer:graph:craft_stone_pickaxe@c48663b4-da59-43d9-9804-81a680580300:stick:"
+                    + "caf11c6f-9a9a-408d-92ed-71726c762c19";
     private static final Router ROUTER = Router.of(List.of(
             route("GET", "/v1/capabilities", "capabilities"),
             route("GET", "/v1/bots", "bots"),
@@ -46,8 +49,15 @@ class RouterTests {
                         "{\"handled\":\"bot\",\"id\":\"graph:craft_stone_axe@c48663b4-da59-43d9-9804-81a680580300\"}",
                         null),
                 Arguments.of("GET", "/v1/bots/" + ID_64, 200, "{\"handled\":\"bot\",\"id\":\"" + ID_64 + "\"}", null),
+                Arguments.of(
+                        "GET",
+                        "/v1/bots/" + TRANSFER_ID,
+                        200,
+                        "{\"handled\":\"bot\",\"id\":\"" + TRANSFER_ID + "\"}",
+                        null),
                 Arguments.of("POST", "/v1/bots/abc/observe", 200, "{\"handled\":\"observe\",\"id\":\"abc\"}", null),
-                Arguments.of("GET", "/v1/bots/" + ID_64 + "a", 404, "not_found", null),
+                Arguments.of(
+                        "GET", "/v1/bots/" + "a".repeat(RoutePattern.PARAM_MAX_LENGTH + 1), 404, "not_found", null),
                 Arguments.of("GET", "/v1/bots/", 404, "not_found", null),
                 Arguments.of("GET", "/v1/bots//", 404, "not_found", null),
                 Arguments.of("GET", "//v1/bots", 404, "not_found", null),

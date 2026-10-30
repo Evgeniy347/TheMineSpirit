@@ -87,7 +87,7 @@ public final class BoardService {
     private final CraterProfiles craters = new CraterProfiles(64);
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
-    private final Map<UUID, Launched> launched = new HashMap<>();
+    private final ActivityCards cards = new ActivityCards();
     private final DigOutWatch digOut;
     private final TaskStall stall = new TaskStall();
     private long lastActivity;
@@ -472,7 +472,7 @@ public final class BoardService {
             board.release(ticket.id());
         }
         board.vacate(spirit.getUUID());
-        launched.remove(spirit.getUUID());
+        cards.forget(spirit.getUUID());
         WorkReserveHub.releaseAll(spirit);
     }
 
@@ -490,9 +490,12 @@ public final class BoardService {
                 continue;
             }
             if (launcher.start(spirit, offer.script(), task, now)) {
-                launched.put(
+                cards.remember(
                         spirit.getUUID(),
-                        new Launched(BoardActivities.caseOf(offer.activity()), spirit.taskGeneration()));
+                        BoardActivities.caseOf(offer.activity()),
+                        spirit.taskGeneration(),
+                        offer.script(),
+                        BoardActivities.targetOf(task));
             }
         }
         reconcileActivities(offered, false);
@@ -513,7 +516,7 @@ public final class BoardService {
         if (!launcher.start(spirit, script, task, now)) {
             return false;
         }
-        launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
+        cards.remember(spirit.getUUID(), activity, spirit.taskGeneration(), script, BoardActivities.targetOf(task));
         board.occupy(spirit.getUUID(), activity, script, BoardActivities.targetOf(task), board.now());
         return true;
     }
@@ -560,7 +563,7 @@ public final class BoardService {
         }
         for (Board.HolderRelease freed : board.releaseDeadHolders(live)) {
             if (freed.activity()) {
-                launched.remove(freed.holder());
+                cards.forget(freed.holder());
             }
             LOGGER.info(
                     "[board] задание {} освобождено: держатель {} погиб или удалён", freed.ticketId(), freed.holder());
@@ -590,11 +593,8 @@ public final class BoardService {
     }
 
     boolean idleOrActivity(SpiritEntity spirit) {
-        if (spirit.taskStatus().orElse(null) != RunStatus.RUNNING) {
-            return true;
-        }
-        Launched own = launched.get(spirit.getUUID());
-        return own != null && own.generation() == spirit.taskGeneration();
+        return cards.idleOrActivity(
+                spirit.getUUID(), spirit.taskGeneration(), spirit.taskStatus().orElse(null));
     }
 
     void releaseAssigned(SpiritEntity spirit) {
@@ -602,21 +602,12 @@ public final class BoardService {
     }
 
     void forgetLaunch(SpiritEntity spirit) {
-        launched.remove(spirit.getUUID());
+        cards.forget(spirit.getUUID());
     }
 
     private Optional<BoardOccupant.Occupation> occupationOf(SpiritEntity spirit) {
-        UUID id = spirit.getUUID();
-        Launched own = launched.get(id);
-        boolean ownActivity = own != null && own.generation() == spirit.taskGeneration();
-        return BoardOccupant.of(
-                spirit,
-                ownActivity,
-                own == null ? null : own.activity(),
-                !board.assignedTo(id).isEmpty());
+        return cards.occupation(spirit, !board.assignedTo(spirit.getUUID()).isEmpty(), board.now());
     }
-
-    private record Launched(BoardCase activity, long generation) {}
 
     public void completeCapture(String captureId) {
         animals.cycle(speciesOfCapture(captureId)).captured(captureId);

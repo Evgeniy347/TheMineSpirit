@@ -73,15 +73,6 @@ final class GraphPost {
 
     record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around) {}
 
-    static List<String> ticketIds(GraphPlan.Task task, SupplyGraph graph) {
-        String id = GraphTickets.id(task);
-        if (task.id().startsWith("building:") && StageBuilt.ids().contains(task.makes())) {
-            return FirstStepsRunner.ticketIds(
-                    graph.buildings().get(task.makes()).boardCase());
-        }
-        return List.of(id, id + PART);
-    }
-
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
