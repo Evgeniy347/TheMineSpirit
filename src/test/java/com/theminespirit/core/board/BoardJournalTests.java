@@ -62,6 +62,32 @@ class BoardJournalTests {
     }
 
     @Test
+    void load_DoneThenReopened_KeepsCumulativeDoneAcrossReload() {
+        BoardJournal journal = new BoardJournal(log());
+        journal.enqueue(entry(BoardLog.Event.DONE, "repair:build_house", BoardCase.BUILD_HOUSE, 1));
+        journal.enqueue(entry(BoardLog.Event.REOPENED, "repair:build_house", BoardCase.BUILD_HOUSE, 1));
+        journal.flushAll();
+        BoardLedger ledger = new BoardLedger();
+
+        journal.load(ledger);
+
+        assertEquals(
+                1,
+                ledger.doneTotal(),
+                "Журнал прошлой сессии не откатывает DONE на REOPENED: иначе после перезапуска наблюдатель "
+                        + "снова видит 1230→1229");
+        assertEquals(
+                1,
+                ledger.reopenedTotal(),
+                "REOPENED после перезапуска учитывается отдельно: по нему видно законный ремонт");
+        journal.load(ledger);
+        assertEquals(
+                1,
+                ledger.doneTotal(),
+                "Повторная загрузка того же журнала не удваивает DONE: счётчик считается один раз на файл");
+    }
+
+    @Test
     void load_BrokenTail_TruncatesItAndKeepsPreviousMarks() throws IOException {
         BoardJournal journal = new BoardJournal(log());
         journal.enqueue(entry(BoardLog.Event.DONE, "mine", BoardCase.BUILD_MINE, 1));

@@ -8,6 +8,10 @@ public interface BoardGateway {
 
     List<BoardTask> tasks();
 
+    default BoardCounts counts() {
+        return new BoardCounts(0, 0);
+    }
+
     default Optional<BoardTask> task(String ticketId) {
         return tasks().stream().filter(task -> task.id().equals(ticketId)).findFirst();
     }

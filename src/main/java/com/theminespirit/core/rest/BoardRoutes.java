@@ -25,7 +25,7 @@ public final class BoardRoutes {
     }
 
     private RestResponse list(RestRequest ignoredRequest, PathParams ignoredParams) {
-        return RestResponse.ok(BoardJson.listJson(gateway.tasks()));
+        return RestResponse.ok(BoardJson.listJson(gateway.tasks(), gateway.counts()));
     }
 
     private RestResponse log(RestRequest request, PathParams ignoredParams) {

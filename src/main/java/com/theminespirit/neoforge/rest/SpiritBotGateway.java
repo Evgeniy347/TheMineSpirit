@@ -11,6 +11,7 @@ import com.theminespirit.core.rest.BotBoardTask;
 import com.theminespirit.core.rest.BotGateway;
 import com.theminespirit.core.rest.BotInfo;
 import com.theminespirit.core.rest.BotState;
+import com.theminespirit.core.rest.CurrentTask;
 import com.theminespirit.core.rest.ErrorCode;
 import com.theminespirit.core.rest.ObserveRequest;
 import com.theminespirit.core.rest.RestTuning;
@@ -143,10 +144,14 @@ public final class SpiritBotGateway implements BotGateway {
     private BotInfo info(SpiritEntity spirit) {
         BlockPos position = spirit.blockPosition();
         String id = spirit.getUUID().toString();
-        String currentTask = tasks.activeForBot(id).map(TaskRecord::taskId).orElse(null);
         BotBoardTask boardTask = boardTask(spirit);
         String activity = activity(spirit);
         String script = spirit.currentTaskScript().orElse(null);
+        String currentTask = CurrentTask.of(
+                tasks.activeForBot(id).map(TaskRecord::taskId).orElse(null),
+                boardTask == null ? null : boardTask.id(),
+                activity,
+                script);
         BotState state = state(spirit, boardTask, activity);
         long now = spirit.level().getGameTime();
         return new BotInfo(
