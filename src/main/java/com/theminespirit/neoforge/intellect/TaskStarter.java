@@ -1,7 +1,9 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.incident.InventoryText;
 import com.theminespirit.core.intellect.BackgroundWork;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.TaskAdmission;
@@ -24,6 +26,7 @@ public final class TaskStarter {
     private final TaskBackoff backoff = new TaskBackoff();
     private final Map<UUID, Issued> issued = new HashMap<>();
     private final Map<UUID, RunStatus> observed = new HashMap<>();
+    private final StateChangeLog reported = new StateChangeLog();
     private int starts;
     private int failures;
 
@@ -44,6 +47,7 @@ public final class TaskStarter {
         UUID id = spirit.getUUID();
         if (spirit.isRemoved()) {
             issued.remove(id);
+            reported.forget(id.toString());
             return false;
         }
         if (backoff.blocked(id, script, tick)) {
@@ -74,6 +78,9 @@ public final class TaskStarter {
             case START -> {
                 RunStatus previous = observed.put(id, status.orElse(null));
                 if (status.isPresent() && status.get() != RunStatus.RUNNING && previous != status.get()) {
+                    if (status.get() == RunStatus.SUCCEEDED) {
+                        reported.forget(id.toString());
+                    }
                     return false;
                 }
                 Issued last = issued.remove(id);
@@ -108,14 +115,19 @@ public final class TaskStarter {
         return failures;
     }
 
-    private static void logFailure(SpiritEntity spirit, UUID id, String script, RunStatus status) {
+    private void logFailure(SpiritEntity spirit, UUID id, String script, RunStatus status) {
+        String reason = spirit.taskFailureReason().orElse("причина не записана");
+        String inventory = InventoryText.of(IncidentSnapshots.inventoryOf(spirit));
+        if (!reported.changed(id.toString(), script + "|" + reason + "|" + inventory)) {
+            return;
+        }
         LOGGER.warn(
                 "[incident] дух {} ({}) провалил задачу '{}': {}; состояние {}; пауза {} тиков, "
-                        + "тот же скрипт не повторяется; {}",
+                        + "повтор того же провала подавлен до смены инвентаря; {}",
                 spirit.getName().getString(),
                 id,
                 script,
-                spirit.taskFailureReason().orElse("причина не записана"),
+                reason,
                 status,
                 IntellectTuning.loadDefault().failBackoffTicks(),
                 incident(spirit, script));

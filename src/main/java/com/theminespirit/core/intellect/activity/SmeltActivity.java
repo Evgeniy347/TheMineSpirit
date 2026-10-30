@@ -101,10 +101,14 @@ public final class SmeltActivity implements Activity {
                     Optional.empty());
         }
         Optional<String> cooked = CookableFoods.best(enoughRaw(stock, rules), StockCatalog.defaultTable());
-        if (cooked.isEmpty()) {
+        if (cooked.isEmpty() || !hasFuel(stock)) {
             return new ActivityIntent(id(), Optional.empty(), Map.of(), Optional.empty());
         }
         return smelt(shortName(cooked.get()), rules.cookCount(), rules);
+    }
+
+    private static boolean hasFuel(ProcessingStock stock) {
+        return stock.charcoal() > 0 || stock.hasPlanks() || stock.sticks() > 0 || stock.hasLogs();
     }
 
     private static String shortName(String itemId) {
