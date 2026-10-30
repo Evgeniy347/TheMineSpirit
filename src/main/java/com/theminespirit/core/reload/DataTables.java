@@ -3,6 +3,7 @@ package com.theminespirit.core.reload;
 import com.theminespirit.core.armor.ArmorTable;
 import com.theminespirit.core.base.RespawnRules;
 import com.theminespirit.core.board.BoardConfig;
+import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.WoodRules;
@@ -10,7 +11,6 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.doors.DoorTuning;
 import com.theminespirit.core.doors.DoorTuning.DoorRules;
 import com.theminespirit.core.fishing.FishingData;
@@ -25,7 +25,6 @@ import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.intellect.defense.DefenseProfileParser;
 import com.theminespirit.core.inventory.BaseKit;
-import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.OverflowTuning;
 import com.theminespirit.core.inventory.ValueTable;
@@ -47,8 +46,6 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.town.TownRules;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,6 +85,7 @@ public final class DataTables {
     private final TableHolder<Unstuck> unstuck;
     private final TableHolder<RouteRules> route;
     private final TableHolder<StageRules> stages;
+    private final TableHolder<DemandRules> demand;
     private final TableHolder<WoodRules> wood;
     private final TableHolder<LevelingRules> leveling;
     private final TableHolder<TownRules> town;
@@ -106,7 +104,7 @@ public final class DataTables {
 
     public DataTables(Clock clock) {
         this.registry = new TableRegistry(clock);
-        this.tactics = registry.registerLazy(tacticsDefinition(), TacticsConfig::readFromClasspath);
+        this.tactics = registry.registerLazy(DataTableDefinitions.tactics(), TacticsConfig::readFromClasspath);
         this.adapter = single(
                 "adapter",
                 TACTICS_ROOT + "adapter.json",
@@ -147,15 +145,17 @@ public final class DataTables {
                 "data/theminespirit/policy/protection.json",
                 ProtectionConfig::parse,
                 ProtectionConfig::readClasspath);
-        this.presets = registry.registerLazy(presetsDefinition(), () -> PresetLibrary.parse(loadPresetBodies()));
+        this.presets = registry.registerLazy(
+                DataTableDefinitions.presets(), () -> PresetLibrary.parse(DataTableDefinitions.presetBodies()));
         this.board = single("board", BoardConfig.RESOURCE, BoardConfig::fromJson, BoardConfig::readFromClasspath);
-        this.graph = graphDefinition();
+        this.graph = DataTableDefinitions.graph(registry);
         this.building = single("building", BuildData.RESOURCE, BuildData::parse, BuildData::load);
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
         this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
         this.route = single("route", RouteRules.RESOURCE, RouteRules::parse, RouteRules::load);
         this.stages = single("stages", StageRules.RESOURCE, StageRules::parse, StageRules::load);
+        this.demand = single("settlement_demand", DemandRules.RESOURCE, DemandRules::parse, DemandRules::load);
         this.wood = single("wood", WoodRules.RESOURCE, WoodRules::parse, WoodRules::load);
         this.leveling = single("leveling", LevelingRules.RESOURCE, LevelingRules::parse, LevelingRules::load);
         this.town = single("town", TownRules.RESOURCE, TownRules::parse, TownRules::load);
@@ -177,96 +177,13 @@ public final class DataTables {
         this.repair = single("repair", RepairData.RESOURCE, RepairData::parse, RepairData::load);
         this.observation =
                 single("observation", ObservationLimits.RESOURCE, ObservationLimits::parse, ObservationLimits::load);
-        this.schematics = registerLiveSchematics();
-        this.processing = single(
-                "processing",
-                ProcessingRules.RESOURCE,
-                (json, origin) -> ProcessingRules.parse(json, origin),
-                ProcessingRules::load);
+        this.schematics = DataTableDefinitions.schematics(registry);
+        this.processing = single("processing", ProcessingRules.RESOURCE, ProcessingRules::parse, ProcessingRules::load);
     }
 
     private <T> TableHolder<T> single(
             String id, String resourcePath, TableDefinition.SingleParser<T> parser, Supplier<T> seed) {
         return registry.registerLazy(TableDefinition.single(id, resourcePath, parser), seed);
-    }
-
-    private TableHolder<SupplyGraph> graphDefinition() {
-        return registry.registerLazy(
-                TableDefinition.composite(
-                        "graph",
-                        List.of(SupplyGraph.RESOURCE, SupplyGraph.RECIPES),
-                        contents -> SupplyGraph.merge(
-                                contents.get(0).json(),
-                                contents.get(0).origin(),
-                                contents.get(1).json(),
-                                contents.get(1).origin())),
-                SupplyGraph::loadDefault);
-    }
-
-    private static TableDefinition<TacticsConfig> tacticsDefinition() {
-        return TableDefinition.composite(
-                "tactics",
-                List.of(
-                        TACTICS_ROOT + "enemies.json",
-                        TACTICS_ROOT + "weights.json",
-                        TACTICS_ROOT + "rules.json",
-                        TACTICS_ROOT + "modes.json"),
-                contents -> TacticsConfig.fromJson(
-                        contents.get(0).json(),
-                        contents.get(1).json(),
-                        contents.get(2).json(),
-                        contents.get(3).json()));
-    }
-
-    private static TableDefinition<PresetLibrary> presetsDefinition() {
-        return TableDefinition.indexed(
-                PresetLibrary.INDEX_ID,
-                PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json",
-                index -> PresetLibrary.bodyPaths(index.json(), index.origin()),
-                PresetLibrary::parse);
-    }
-
-    private Map<String, TableHolder<Schematic>> registerLiveSchematics() {
-        Map<String, TableHolder<Schematic>> liveSchematics = new LinkedHashMap<>();
-        for (String file : liveSchematicFiles()) {
-            String path = PresetLibrary.SCHEMATICS_ROOT + file + SchematicTextParser.EXTENSION;
-            liveSchematics.put(
-                    file,
-                    registry.registerLazy(
-                            TableDefinition.single(
-                                    "schematic_" + file,
-                                    path,
-                                    (text, origin) -> SchematicTextParser.parse(text, origin)
-                                            .schematic()),
-                            () -> SchematicTextParser.parse(JsonResource.readClasspath(path), path)
-                                    .schematic()));
-        }
-        return Map.copyOf(liveSchematics);
-    }
-
-    private static List<String> liveSchematicFiles() {
-        return List.of(
-                "fixture_plate",
-                "fence",
-                "storage_v1",
-                "storage_v2",
-                "storage_v3",
-                "storage_v4",
-                "reach_wall",
-                "retreat_nook",
-                "shelter",
-                "state_demo");
-    }
-
-    private static List<LoadedContent> loadPresetBodies() {
-        String indexPath = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
-        String indexJson = JsonResource.readClasspath(indexPath);
-        List<LoadedContent> contents = new ArrayList<>();
-        contents.add(new LoadedContent(indexJson, indexPath + " (мод)", TableStatus.Source.MOD));
-        for (String path : PresetLibrary.bodyPaths(indexJson, indexPath)) {
-            contents.add(new LoadedContent(JsonResource.readClasspath(path), path + " (мод)", TableStatus.Source.MOD));
-        }
-        return List.copyOf(contents);
     }
 
     public TableRegistry registry() {
@@ -383,6 +300,10 @@ public final class DataTables {
 
     public TableHolder<StageRules> stages() {
         return stages;
+    }
+
+    public TableHolder<DemandRules> demand() {
+        return demand;
     }
 
     public TableHolder<WoodRules> wood() {

@@ -1,3 +1,28 @@
 {
-  "maxDurabilityPercent": 90
+  "maxDurabilityPercent": 90,
+  "auditIntervalTicks": 24000,
+  "cellBudgetPerTick": 256,
+  "warnTicks": 3600,
+  "warnRepeatTicks": 1200,
+  "rebuildPercent": 50,
+  "softBlocks": [
+    "poppy",
+    "dandelion",
+    "short_grass",
+    "tall_grass",
+    "wheat",
+    "carrots",
+    "potatoes",
+    "beetroots",
+    "oak_sapling",
+    "vine",
+    "snow",
+    "white_carpet"
+  ],
+  "priorities": {
+    "wall": 95,
+    "housing": 70,
+    "craft": 60,
+    "decor": 30
+  }
 }

@@ -77,6 +77,12 @@ public final class BoardSources {
         guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
         guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));
         guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
+        guard.run("demand", () -> DemandWatch.tick(level, service, spirits, now));
+        guard.run(
+                "repair_audit",
+                () -> SettlementPlotStore.get(level)
+                        .site()
+                        .ifPresent(site -> RepairAuditWatch.tick(level, service, site, now)));
         guard.run("house_levels", () -> HouseLevels.tick(level, service, spirits, now));
         guard.run("mine_levels", () -> MineLevels.tick(level, service, spirits, now));
         if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {

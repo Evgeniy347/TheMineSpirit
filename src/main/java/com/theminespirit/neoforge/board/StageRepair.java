@@ -56,7 +56,7 @@ final class StageRepair {
                         id,
                         BoardCase.REPAIR_BUILDING,
                         Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.REPAIR_BUILDING),
+                        BoardRules.repairPriorityOf(step),
                         now,
                         1,
                         BoardTicket.ALWAYS_CAUSE,

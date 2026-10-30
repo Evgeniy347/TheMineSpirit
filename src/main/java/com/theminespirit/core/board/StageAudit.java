@@ -32,7 +32,7 @@ public final class StageAudit {
             throw new IllegalArgumentException("Аудит постройки: нет " + missing + " из " + total
                     + " — недостача не может быть отрицательной или больше плана, проверьте подсчёт блоков");
         }
-        return total > 0 && (long) missing * PERCENT >= (long) rebuildPercent * total;
+        return total > 0 && (long) missing * PERCENT > (long) rebuildPercent * total;
     }
 
     public static boolean progressed(int placedBefore, int placedAfter, int total) {
