@@ -123,6 +123,11 @@ public final class BoardActivities {
         return null;
     }
 
+    public static @Nullable String cardScript(@Nullable String running, @Nullable TaskNode plan) {
+        @Nullable String planned = plan == null ? null : scriptOf(plan);
+        return planned != null ? planned : running;
+    }
+
     public static Optional<BoardCase> caseOfScript(@Nullable String script) {
         if (script == null || script.isBlank()) {
             return Optional.empty();
@@ -154,7 +159,7 @@ public final class BoardActivities {
                     return card;
                 }
             }
-            if (running && ownActivity && launchedCase != null) {
+            if (ownActivity && launchedCase != null) {
                 return Optional.of(launchedCase);
             }
             if (running) {

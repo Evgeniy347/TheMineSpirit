@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardHeld;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.WorldObservation;
@@ -175,11 +176,11 @@ public final class SpiritBotGateway implements BotGateway {
             return null;
         }
         Board board = service.get().board();
-        List<BoardTicket> held = board.assignedTo(spirit.getUUID());
+        Optional<BoardTicket> held = BoardHeld.of(board, spirit.getUUID());
         if (held.isEmpty()) {
             return null;
         }
-        BoardTicket ticket = held.get(0);
+        BoardTicket ticket = held.get();
         String status = board.statusOf(ticket.id()).map(Enum::name).orElse("PENDING");
         return new BotBoardTask(ticket.id(), ticket.boardCase().name(), status);
     }

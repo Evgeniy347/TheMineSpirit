@@ -62,7 +62,7 @@ public final class GraphSource {
         }
         for (GraphPlan.Task task : plan.tasks()) {
             if (task.implemented() && task.priority() > 0) {
-                GraphPost.ticketIds(task, graph).forEach(id -> service.board().reprioritize(id, task.priority()));
+                GraphTicketIds.ids(task, graph).forEach(id -> service.board().reprioritize(id, task.priority()));
             }
         }
         report(plan, result, unconnected, now);

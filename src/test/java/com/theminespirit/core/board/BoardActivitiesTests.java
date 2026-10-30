@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +151,45 @@ class BoardActivitiesTests {
                 Optional.of(BoardCase.ACTIVITY_FORAGE),
                 new BoardActivities.CardFacts(false, true, false, null, false, null, true, false, "gather").card(),
                 "Сбор с назначенным заданием доски — карточка ACTIVITY_FORAGE, а не устаревшее activity из плана");
+    }
+
+    @Test
+    void currentCard_RetryBetweenAttempts_KeepsActivityCard() {
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_SMELT),
+                new BoardActivities.CardFacts(
+                                false, false, false, null, true, BoardCase.ACTIVITY_SMELT, false, false, "smelt")
+                        .card(),
+                "Между попытками занятия дух свободен, но карточка обязана остаться: иначе доска мерцает "
+                        + "и в паузах показывает «свободен», хотя цикл продолжается");
+    }
+
+    @Test
+    void cardScript_GotoThenWork_NamesWorkNotApproach() {
+        TaskNode plan = new SequenceNode(List.of(new ScriptCall("goto", Map.of()), new ScriptCall("smelt", Map.of())));
+
+        assertEquals(
+                "smelt",
+                BoardActivities.cardScript("goto", plan),
+                "Карточка занятия с планом «подход, потом плавка» обязана называть плавку: на плитке виден goto, "
+                        + "владелец не понимает, чем дух занят");
+        assertEquals(
+                "goto",
+                BoardActivities.cardScript("goto", null),
+                "Без плана карточка называет текущий скрипт: команда «goto» остаётся подходом");
+    }
+
+    @Test
+    void heldBy_Activity_ShowsTicketEvenThoughNotBoardTask() {
+        Board board = new Board(() -> 100);
+        board.occupy(SPIRIT, BoardCase.ACTIVITY_SMELT, "smelt", "-171,71,-489", 100);
+
+        assertEquals(List.of(), board.assignedTo(SPIRIT), "Занятие не задание доски: очередь его не закрывает");
+        BoardTicket held = BoardHeld.of(board, SPIRIT)
+                .orElseThrow(() -> new AssertionError(
+                        "У духа с карточкой занятия обязан быть держатель: иначе REST отдаёт board_task=null"));
+        assertEquals(BoardActivities.idOf(SPIRIT), held.id(), "heldBy называет id карточки занятия");
+        assertEquals(BoardCase.ACTIVITY_SMELT, held.boardCase(), "heldBy называет кейс занятия");
     }
 
     @Test

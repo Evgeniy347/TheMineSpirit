@@ -36,7 +36,7 @@ src/main/java/com/theminespirit/neoforge/SchematicSite.java	363
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	767
 src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
-src/main/java/com/theminespirit/neoforge/board/BoardService.java	1132
+src/main/java/com/theminespirit/neoforge/board/BoardService.java	1123
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	879
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	609
 src/main/java/com/theminespirit/neoforge/coordinator/SpiritCoordinator.java	400
