@@ -10,6 +10,7 @@ public final class WalkAscent {
     }
 
     public enum Step {
+        ALIGN,
         MOVE,
         JUMP,
         CLIMB,
@@ -34,7 +35,7 @@ public final class WalkAscent {
         if (body.inWater() || body.onClimbable()) {
             return Lift.CLIMB;
         }
-        return body.onGround() ? Lift.JUMP : Lift.HOLD;
+        return Lift.JUMP;
     }
 
     public static Command next(BlockCoord cell, Pose pose, Body body) {
@@ -44,6 +45,11 @@ public final class WalkAscent {
             return new Command(Step.ARRIVED, targetX, cell.y(), targetZ);
         }
         boolean rising = cell.y() > pose.feet().y();
+        double centerX = pose.feet().x() + CENTER;
+        double centerZ = pose.feet().z() + CENTER;
+        if (rising && body.onGround() && horizontal(pose, centerX, centerZ) > CellCentering.TOLERANCE) {
+            return new Command(Step.ALIGN, centerX, pose.y(), centerZ);
+        }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;
             case JUMP -> Step.JUMP;
