@@ -1,9 +1,14 @@
 package com.theminespirit.core.chunk;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.Placement;
+import com.theminespirit.core.town.TownFixtures;
+import com.theminespirit.core.town.TownPlan;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +69,28 @@ class SettlementChunksTests {
                 chunks.size(),
                 "Два дома в трёх чанках друг от друга обязаны дать объединение участков без дублей: "
                         + "каждый дом — свои девять чанков, пересечений нет");
+    }
+
+    @Test
+    void forPlan_BigSettlement_HoldsEveryPlacementChunk() {
+        TownPlan plan = TownFixtures.flatPlan();
+        Set<ChunkCoord> chunks =
+                SettlementChunks.forPlan(plan, List.of(plan.anchor()), SettlementChunks.WORK_RADIUS_BLOCKS);
+        Set<ChunkCoord> homesOnly =
+                SettlementChunks.around(List.of(plan.anchor()), SettlementChunks.WORK_RADIUS_BLOCKS);
+        for (Placement place : plan.placements()) {
+            ChunkCoord chunk = new ChunkCoord(place.x() >> 4, place.z() >> 4);
+            assertTrue(
+                    chunks.contains(chunk),
+                    "Место '" + place.id() + "' в (" + place.x() + ", " + place.z() + ") лежит в чанке " + chunk
+                            + ", а поселение держит только чанки вокруг домов: дух идёт к цели, чанк выгружен, "
+                            + "position_tick замирает, задание проваливается «нет прогресса»");
+        }
+        Placement storage = plan.placement("storage").orElseThrow();
+        assertFalse(
+                homesOnly.contains(new ChunkCoord(storage.x() >> 4, storage.z() >> 4)),
+                "Склад обязан быть дальше радиуса дома: иначе тест не воспроизводит observe6 (−144,71,−368 "
+                        + "в чанке [−9,−23] вне чанков вокруг дома)");
     }
 
     @Test

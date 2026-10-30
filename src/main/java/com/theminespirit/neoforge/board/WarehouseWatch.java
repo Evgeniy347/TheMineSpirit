@@ -13,6 +13,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashMap;
@@ -21,10 +22,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class WarehouseWatch {
     private static final String STORAGE = "storage";
+    private static final Logger LOGGER = LoggerFactory.getLogger(WarehouseWatch.class);
+    private static final Map<ServerLevel, BlockCoord> LOGGED = new ConcurrentHashMap<>();
 
     private WarehouseWatch() {}
 
@@ -149,6 +156,27 @@ public final class WarehouseWatch {
             return Optional.empty();
         }
         Placement place = storage.orElseThrow();
-        return Optional.of(new BlockCoord(place.x(), site.orElseThrow().anchor().y(), place.z()));
+        TownPlan plan = store.town().orElseThrow();
+        BlockCoord lot = new BlockCoord(place.x(), site.orElseThrow().anchor().y(), place.z());
+        boolean inside = plan.onPlot(place.x(), place.z())
+                && plan.onPlot(place.x() + place.width() - 1, place.z() + place.depth() - 1);
+        if (!inside) {
+            LOGGER.warn(
+                    "[warehouse] слот storage {} вне плана поселения: склад ставится у дома духов, "
+                            + "проверьте town.json и сохранённый план",
+                    lot);
+            return Optional.empty();
+        }
+        BlockCoord previous = LOGGED.put(level, lot);
+        if (!lot.equals(previous)) {
+            LOGGER.info(
+                    "[warehouse] слот storage {}, site {}, чанк [{}, {}] загружен: {}",
+                    lot,
+                    WarehouseRules.site(lot, 1),
+                    lot.x() >> 4,
+                    lot.z() >> 4,
+                    level.isLoaded(new BlockPos(lot.x(), lot.y(), lot.z())) ? "да" : "нет");
+        }
+        return Optional.of(lot);
     }
 }
