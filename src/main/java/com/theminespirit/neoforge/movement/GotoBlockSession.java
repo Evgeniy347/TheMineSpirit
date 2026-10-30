@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.Goal;
 import com.theminespirit.core.movement.GoalComposite;
 import com.theminespirit.core.movement.GoalNear;
@@ -14,8 +15,10 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 public final class GotoBlockSession {
     public enum Outcome {
@@ -27,6 +30,8 @@ public final class GotoBlockSession {
     public static final int MAX_SLICES_PER_TICK = 4;
     public static final int NEAR_RADIUS = 8;
     public static final double WALK_ARRIVAL = 2.0;
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private enum State {
         FIND,
@@ -154,7 +159,17 @@ public final class GotoBlockSession {
                 refused++;
                 continue;
             }
-            approach.begin(new Vec3(candidate.x() + 0.5, candidate.y(), candidate.z() + 0.5), WALK_ARRIVAL);
+            Vec3 target = new Vec3(candidate.x() + 0.5, candidate.y(), candidate.z() + 0.5);
+            LOGGER.info(
+                    "[goto] дух {}: цель {} {}/{}, из {}, к {}, осталось {}",
+                    spirit.getName().getString(),
+                    block,
+                    next,
+                    ordered.size(),
+                    spirit.blockPosition().toShortString(),
+                    candidate,
+                    String.format(Locale.ROOT, "%.1f", spirit.position().distanceTo(target)));
+            approach.begin(target, WALK_ARRIVAL);
             current = candidate;
             return true;
         }

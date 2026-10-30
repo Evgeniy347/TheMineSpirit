@@ -7,13 +7,16 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.SettlementPlot;
+import com.theminespirit.core.incident.InventoryText;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
+import com.theminespirit.neoforge.movement.RouteHistory;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,6 +50,17 @@ public final class SpiritRespawnService {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return;
         }
+        BlockPos death = spirit.blockPosition();
+        String cause = event.getSource().getLocalizedDeathMessage(spirit).getString();
+        LOGGER.info(
+                "[death] дух {}: {}, место ({}, {}, {}), инвентарь {}, последние шаги маршрута {}",
+                spirit.displayName(),
+                cause,
+                death.getX(),
+                death.getY(),
+                death.getZ(),
+                InventoryText.of(IncidentSnapshots.inventoryOf(spirit)),
+                RouteHistory.drain(spirit));
         dropInventory(spirit);
         if (spirit.isDemo()) {
             return;
@@ -59,14 +73,13 @@ public final class SpiritRespawnService {
         if (base.isEmpty()) {
             return;
         }
-        BlockPos death = spirit.blockPosition();
         store.add(new SpiritRespawnStore.Pending(
                 spirit.getUUID(),
                 spirit.displayName(),
                 spirit.home(),
                 base.orElseThrow(),
                 new BlockCoord(death.getX(), death.getY(), death.getZ()),
-                event.getSource().getLocalizedDeathMessage(spirit).getString(),
+                cause,
                 level.getGameTime() + RespawnRules.loadDefault().delayTicks()));
     }
 

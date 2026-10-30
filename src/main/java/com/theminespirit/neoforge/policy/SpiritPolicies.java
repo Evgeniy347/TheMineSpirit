@@ -21,6 +21,7 @@ import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.tactics.Layer;
 import com.theminespirit.neoforge.LevelSafetyView;
+import com.theminespirit.neoforge.PositionTrace;
 import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -38,6 +39,7 @@ public final class SpiritPolicies {
     private final SpiritEntity spirit;
     private final LayerArbiter arbiter = new LayerArbiter();
     private final ReflexExecutor executor = new ReflexExecutor();
+    private final PositionTrace positions = new PositionTrace();
 
     private PolicyExemptions exemptions = PolicyExemptions.empty();
     private PolicyExemptions configured;
@@ -69,6 +71,7 @@ public final class SpiritPolicies {
             return;
         }
         long now = level.getGameTime();
+        positions.tick(spirit);
         refreshExemptions();
         BodyFlags flags = bodyFlags();
         BlockPos feet = spirit.blockPosition();
