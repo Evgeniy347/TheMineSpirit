@@ -172,9 +172,9 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/opencode-pick-model.sh](scripts/opencode-pick-model.sh) | выбор бесплатной модели opencode по свежим сбоям и загрузке |
 | [scripts/strategist.sh](scripts/strategist.sh) | надзор агента-стратега (`start/stop/status/once/smoke/logs`) |
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | сторож памяти domovoy (SIGSTOP/SIGCONT тяжёлой java) |
-| [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `res-pc.ps1`, `keepawake.ps1` |
+| [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `orphan-sweep-win.sh`, `res-pc.ps1`, `keepawake.ps1` |
 | [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh), [scripts/git-hooks/](scripts/git-hooks/) | хуки: формат коммита, зелёный коммит, запрет перезаписи истории |
-| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh` |
+| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-orphan-sweep-win.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh` |
 
 ## Структура
 

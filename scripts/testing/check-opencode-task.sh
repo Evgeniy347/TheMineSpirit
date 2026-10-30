@@ -8,6 +8,7 @@ export OPENCODE_LOG_ROOT="$PWD/$work/logs"
 export OPENCODE_ALLOW_DIRTY=1
 export OPENCODE_DIRTY_SHORT_ANSWER=0
 export OPENCODE_TASK_FILE="$PWD/$work/task.md"
+export OPENCODE_NO_SWEEP=1
 failures_log="$OPENCODE_LOG_ROOT/failures.log"
 
 check() {
@@ -100,3 +101,12 @@ grep "жду провайдера\|предел ожидания" "$work/wait_li
 gave_up=$(tail -n +$((failures_before + 1)) "$failures_log" | grep -c 'ожидание провайдера исчерпано')
 [ "$gave_up" = 1 ] && v=OK || v=FAIL
 echo "$v wait_limit_exhausted: в failures.log «ожидание провайдера исчерпано»=$gave_up (ожидал 1)"
+sweep_count="$PWD/$work/sweep.count"
+sweep_fake="$PWD/$work/fake-sweep.sh"
+rm -f "$sweep_count"
+printf '#!/usr/bin/env bash\nprintf x >> "%s"\n' "$sweep_count" >"$sweep_fake"
+chmod +x "$sweep_fake"
+check sweep_runs_at_start_and_finish 0 1 OPENCODE_NO_SWEEP= OPENCODE_ORPHAN_SWEEP_WIN="$sweep_fake"
+sweeps=$(wc -c < "$sweep_count" 2>/dev/null || echo 0)
+[ "$sweeps" = 2 ] && v=OK || v=FAIL
+echo "$v sweep_runs_at_start_and_finish: вызовов уборки=$sweeps (ожидал 2 — начало и завершение)"
