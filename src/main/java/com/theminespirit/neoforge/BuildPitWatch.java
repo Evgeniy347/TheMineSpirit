@@ -30,6 +30,7 @@ final class BuildPitWatch {
     private long signature = Long.MIN_VALUE;
     private long lastProgress = -1;
     private boolean reported;
+    private @Nullable BlockCoord lastStand;
 
     BuildPitWatch(SpiritEntity spirit, Level level, SchematicSite site, BuildKey buildKey) {
         this.spirit = spirit;
@@ -73,20 +74,23 @@ final class BuildPitWatch {
     }
 
     void descent(BlockCoord feet, BlockCoord stand) {
-        if (feet.y() - stand.y() < PIT_DROP) {
+        if (feet.y() - stand.y() < PIT_DROP || stand.equals(lastStand)) {
             return;
         }
-        BlockPos below = SchematicSite.toPos(new BlockCoord(stand.x(), stand.y() - 1, stand.z()));
+        lastStand = stand;
+        BlockPos underFeet = SchematicSite.toPos(new BlockCoord(feet.x(), feet.y() - 1, feet.z()));
+        BlockPos underStand = SchematicSite.toPos(new BlockCoord(stand.x(), stand.y() - 1, stand.z()));
         Optional<Set<BlockCoord>> exit = site.walkable(stand, EXIT_MARGIN);
         LOGGER.info(
-                "Стройка {}: дух спускается в яму с y={} на стоянку {} (y={}), низ схемы y={}, опора под стоянкой: "
-                        + "{}, {}",
+                "Стройка {}: дух спускается в яму с y={} на стоянку {} (y={}), низ схемы y={}, опора под духом: "
+                        + "{}, опора под стоянкой: {}, {}",
                 buildKey,
                 feet.y(),
                 stand,
                 stand.y(),
                 site.origin().y(),
-                level.getBlockState(below).getBlock().getDescriptionId(),
+                level.getBlockState(underFeet).getBlock().getDescriptionId(),
+                level.getBlockState(underStand).getBlock().getDescriptionId(),
                 exit.isPresent()
                         ? "выход по земле: клеток " + exit.get().size()
                         : "выхода по земле нет — копать или ставить");
