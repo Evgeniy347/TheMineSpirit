@@ -92,6 +92,43 @@ class TreeCandidatesTests {
     }
 
     @Test
+    void nearestNear_LogsBeyondSettlementLimit_AreNotChosen() {
+        TreeCandidates candidates = new TreeCandidates(10);
+        candidates.offer(new BlockCoord(70, 64, 0));
+        candidates.offer(new BlockCoord(73, 56, -9));
+
+        assertTrue(
+                candidates.nearestNear(new BlockCoord(0, 64, 0), 32, 0, 64, 0).isEmpty(),
+                "Дерево дальше 32 блоков от поселения не выбирается: дух не доходит до леса в 65–73 блоках за "
+                        + "3600 тиков, задание проваливается без прогресса. Как надо: ближнее дерево, иначе честная "
+                        + "причина");
+    }
+
+    @Test
+    void nearestNear_ChoosesLogClosestToSettlement_NotToSpirit() {
+        TreeCandidates candidates = new TreeCandidates(10);
+        candidates.offer(new BlockCoord(31, 64, 0));
+        candidates.offer(new BlockCoord(10, 64, 0));
+
+        assertEquals(
+                Optional.of(new BlockCoord(10, 64, 0)),
+                candidates.nearestNear(new BlockCoord(0, 64, 0), 32, 30, 64, 0),
+                "Выбор идёт по расстоянию до поселения, а не до духа: иначе дух уходит в лес к юго-западу от сада "
+                        + "и не возвращается");
+    }
+
+    @Test
+    void nearestNear_LogAtLimit_IsChosen() {
+        TreeCandidates candidates = new TreeCandidates(10);
+        candidates.offer(new BlockCoord(32, 64, 0));
+
+        assertEquals(
+                Optional.of(new BlockCoord(32, 64, 0)),
+                candidates.nearestNear(new BlockCoord(0, 64, 0), 32, 0, 64, 0),
+                "Предел дальности включительный: дерево ровно в 32 блоках ещё в работе");
+    }
+
+    @Test
     void constructor_LimitBelowOne_Throws() {
         assertThrows(
                 IllegalArgumentException.class,

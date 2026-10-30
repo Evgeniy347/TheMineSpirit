@@ -9,21 +9,17 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeCandidates;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
-import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
-import com.theminespirit.neoforge.policy.OrchardTrees;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 import org.slf4j.Logger;
 
@@ -38,11 +34,10 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private final SpiritEntity spirit;
     private final ChopTreeParams params;
-    private final Set<Block> logBlocks;
     private final IdFilter logFilter;
     private final LevelTreeView treeView;
     private final TreeChop chop;
-    private final TreeCandidates candidates = new TreeCandidates(ChopTuning.SEARCH_MAX_LOGS);
+    private final ChopSearch search;
     private Tree tree;
     private boolean chopping;
     private int standingLogs;
@@ -57,31 +52,15 @@ public final class ChopTreeScript implements ScriptInstance {
     private String failureReason;
     private WorkTarget reserved;
     private Tree crowded;
-    private BlockLocator.Search search;
-    private BlockCoord searchCenter;
-    private int searchRestarts;
 
     public ChopTreeScript(SpiritEntity spirit, ChopTreeParams params) {
         this.spirit = spirit;
         this.params = params;
-        this.logBlocks = TreeBlocks.logs(params.species());
+        Set<Block> logBlocks = TreeBlocks.logs(params.species());
         this.logFilter = TreeBlocks.filter(params.species());
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
-        this.searchCenter = coords(spirit.blockPosition());
-        this.search = newSearch(searchCenter);
+        this.search = new ChopSearch(spirit, params, logBlocks);
         this.chop = new TreeChop(spirit, logFilter, params.replant(), false, treeView);
-    }
-
-    private BlockLocator.Search newSearch(BlockCoord center) {
-        return BlockLocator.search(
-                spirit.level(),
-                new BlockPos(center.x(), center.y(), center.z()),
-                params.radius(),
-                Set.copyOf(logBlocks));
-    }
-
-    private static BlockCoord coords(BlockPos pos) {
-        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
     @Override
@@ -187,19 +166,18 @@ public final class ChopTreeScript implements ScriptInstance {
         if (chopped >= params.count()) {
             return ScriptStatus.SUCCEEDED;
         }
-        locate();
-        Optional<BlockCoord> start = candidates.nearest(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+        Optional<BlockCoord> start = search.next();
         if (start.isEmpty()) {
             if (!search.done()) {
                 return ScriptStatus.RUNNING;
             }
-            if (restartSearch()) {
+            if (search.restart()) {
                 return ScriptStatus.RUNNING;
             }
             return crowdOrOutOfTrees();
         }
         if (!treeView.isLog(start.get())) {
-            candidates.markKnown(List.of(start.get()));
+            search.markKnown(List.of(start.get()));
             return ScriptStatus.RUNNING;
         }
         TreeDetection detection = TreeShape.detect(start.get(), treeView);
@@ -218,7 +196,7 @@ public final class ChopTreeScript implements ScriptInstance {
         releaseReserved();
         if (!WorkReserveHub.reserve(spirit, target)) {
             crowded = found;
-            candidates.markKnown(found.logs());
+            search.markKnown(found.logs());
             return false;
         }
         reserved = target;
@@ -241,21 +219,9 @@ public final class ChopTreeScript implements ScriptInstance {
         }
     }
 
-    private void locate() {
-        if (candidates.isFull()) {
-            return;
-        }
-        for (BlockPos pos : search.step(ScanTuning.SLICES_PER_TICK)) {
-            BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            if (!OrchardTrees.planned(spirit.level(), cell)) {
-                candidates.offer(cell);
-            }
-        }
-    }
-
     private ScriptStatus reject(NotATree notATree) {
         rejected++;
-        candidates.markKnown(notATree.logs());
+        search.markKnown(notATree.logs());
         return ScriptStatus.RUNNING;
     }
 
@@ -269,33 +235,23 @@ public final class ChopTreeScript implements ScriptInstance {
         }
         tree = fresh.get();
         chopping = true;
+        search.logChosen(tree);
         chop.begin(tree);
         return ScriptStatus.RUNNING;
-    }
-
-    private boolean restartSearch() {
-        BlockCoord center = coords(spirit.blockPosition());
-        if (searchRestarts >= ChopTuning.SEARCH_RESTARTS_MAX || center.equals(searchCenter)) {
-            return false;
-        }
-        searchRestarts++;
-        searchCenter = center;
-        search = newSearch(center);
-        return true;
     }
 
     private Optional<Tree> refresh(Tree found) {
         Optional<BlockCoord> surviving =
                 found.logs().stream().filter(treeView::isLog).findFirst();
         if (surviving.isEmpty()) {
-            candidates.markKnown(found.logs());
+            search.markKnown(found.logs());
             return Optional.empty();
         }
         TreeDetection detection = TreeShape.detect(surviving.get(), treeView);
         if (detection instanceof Tree tree) {
             return Optional.of(tree);
         }
-        candidates.markKnown(found.logs());
+        search.markKnown(found.logs());
         return Optional.empty();
     }
 
@@ -317,7 +273,7 @@ public final class ChopTreeScript implements ScriptInstance {
         skippedCells += outcome.skippedCells();
         lackedSaplings |= outcome.lackedSaplings();
         consecutiveUnreachable = 0;
-        candidates.markKnown(tree.logs());
+        search.markKnown(tree.logs());
         tree = null;
         chopping = false;
         if (chopped >= params.count()) {
@@ -330,7 +286,7 @@ public final class ChopTreeScript implements ScriptInstance {
     private ScriptStatus protectedTree() {
         releaseReserved();
         protectedLogs++;
-        candidates.markKnown(tree.logs());
+        search.markKnown(tree.logs());
         tree = null;
         chopping = false;
         return ScriptStatus.RUNNING;
@@ -338,11 +294,16 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus unreachableTree() {
         releaseReserved();
-        unreachable++;
-        consecutiveUnreachable++;
-        candidates.markKnown(tree.logs());
+        List<BlockCoord> logs = tree.logs();
         tree = null;
         chopping = false;
+        return unreachableLogs(logs);
+    }
+
+    private ScriptStatus unreachableLogs(List<BlockCoord> logs) {
+        unreachable++;
+        consecutiveUnreachable++;
+        search.markKnown(logs);
         if (consecutiveUnreachable > ChopTuning.MAX_REJECTED_TREES) {
             return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " недоступных деревьев подряд: срублено деревьев "
                     + chopped + " из " + params.count() + ", недоступных деревьев " + unreachable);
@@ -359,9 +320,15 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus outOfTrees() {
+        int far = search.nearestFarDistance();
+        String beyond = far < 0
+                ? ""
+                : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
+                        + " — посадите саженцы и дождитесь их роста";
         return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы " + speciesText()
-                + " в радиусе " + params.radius() + " закончились (отвергнуто не-деревьев: " + rejected
-                + ", недоступных: " + unreachable + ", пропущено защищённых: " + protectedLogs + ")");
+                + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "
+                + rejected + ", недоступных: " + unreachable + ", пропущено защищённых: " + protectedLogs + ")"
+                + beyond);
     }
 
     private ScriptStatus fail(String reason) {
