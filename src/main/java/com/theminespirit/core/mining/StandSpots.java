@@ -60,6 +60,12 @@ public final class StandSpots {
         return List.copyOf(unique);
     }
 
+    public static boolean walkable(BlockCoord stand, BlockCoord from) {
+        Objects.requireNonNull(stand, "Стоянка не может быть null: без неё непонятно, что проверять на подъём");
+        Objects.requireNonNull(from, "Точка духа не может быть null: по ней считается высота подъёма");
+        return stand.y() - from.y() <= MiningTuning.MAX_STAND_RISE;
+    }
+
     private static boolean visible(BlockCoord stand, BlockCoord target, SafetyView view) {
         return BlockSight.visible(
                         BlockSight.eyes(stand), target, coord -> MineTerrain.of(view.cellAt(coord)), cell -> false)

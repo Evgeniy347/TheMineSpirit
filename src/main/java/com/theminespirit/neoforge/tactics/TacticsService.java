@@ -13,6 +13,7 @@ import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.RetreatMethod;
+import com.theminespirit.core.tactics.ReturnStall;
 import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.Situation;
 import com.theminespirit.core.tactics.TacticalOption;
@@ -58,7 +59,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class TacticsService {
@@ -70,8 +70,6 @@ public final class TacticsService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final TacticsEngine ENGINE = new TacticsEngine(TacticsConfig.loadDefault());
     private static final int NEVER = -1_000_000;
-    private static final double RETURN_PROGRESS = 0.5;
-    private static final int RETURN_STALL_TICKS = 200;
     private static final int RETURN_MAX_TICKS = 600;
     private static final int RETURN_COOLDOWN_TICKS = 1200;
 
@@ -103,9 +101,7 @@ public final class TacticsService {
     private TacticsAction action = TacticsAction.IDLE;
     private int returnTicks;
     private long returnBlockedUntil;
-    private @Nullable Point stallPoint;
-    private double stallBest;
-    private int stallTicks;
+    private final ReturnStall returnStall = new ReturnStall();
     private String lastReturnState = "-";
     private CombatDirective directive;
     private final DirectiveOwnership ownership = new DirectiveOwnership();
@@ -432,7 +428,7 @@ public final class TacticsService {
                 .map(EnemyFact::id)
                 .orElse(null);
         replan(collected, situation);
-        returnTarget = next.returnTo();
+        returnTarget = next.returnTo().flatMap(point -> ReturnAnchor.stand(spirit, point));
         returned = false;
         logChange(next);
         journalDecision(now, next, situation);
@@ -577,7 +573,20 @@ public final class TacticsService {
             return;
         }
         returnTicks++;
-        if (stalledReturn(point, distance) || returnTicks > RETURN_MAX_TICKS) {
+        boolean stalled = returnStall.stalled(point, distance);
+        if (stalled) {
+            LOGGER.warn(
+                    "[incident] дух {} не дошёл до якоря {} за {} тиков (осталось {}, стоит в {}, подход {}): возврат "
+                            + "снят, дух свободен",
+                    spirit.displayName(),
+                    point,
+                    ReturnStall.STALL_TICKS,
+                    String.format(Locale.ROOT, "%.1f", distance),
+                    spirit.blockPosition().toShortString(),
+                    lastReturnState);
+            lastReturnState = "-";
+        }
+        if (stalled || returnTicks > RETURN_MAX_TICKS) {
             if (returnTicks > RETURN_MAX_TICKS) {
                 LOGGER.warn(
                         "[incident] дух {} шёл к якорю {} дольше {} тиков (осталось {}, стоит в {}): возврат снят на {}"
@@ -592,7 +601,7 @@ public final class TacticsService {
             approach.cancel();
             returned = true;
             returnTicks = 0;
-            stallPoint = null;
+            returnStall.reset();
             returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;
             return;
         }
@@ -610,34 +619,6 @@ public final class TacticsService {
         if (state != Approach.State.MOVING) {
             lastReturnState = state + (approach.refusal() == null ? "" : ": " + approach.refusal());
         }
-    }
-
-    private boolean stalledReturn(Point point, double distance) {
-        if (!point.equals(stallPoint)) {
-            stallPoint = point;
-            stallBest = distance;
-            stallTicks = 0;
-            return false;
-        }
-        if (distance < stallBest - RETURN_PROGRESS) {
-            stallBest = distance;
-            stallTicks = 0;
-            return false;
-        }
-        stallTicks++;
-        if (stallTicks == RETURN_STALL_TICKS) {
-            LOGGER.warn(
-                    "[incident] дух {} не дошёл до якоря {} за {} тиков (осталось {}, стоит в {}, подход {}): возврат "
-                            + "снят, дух свободен",
-                    spirit.displayName(),
-                    point,
-                    RETURN_STALL_TICKS,
-                    String.format(Locale.ROOT, "%.1f", distance),
-                    spirit.blockPosition().toShortString(),
-                    lastReturnState);
-            lastReturnState = "-";
-        }
-        return stallTicks >= RETURN_STALL_TICKS;
     }
 
     private void release() {

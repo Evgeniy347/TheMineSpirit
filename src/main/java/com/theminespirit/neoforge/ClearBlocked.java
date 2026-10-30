@@ -103,16 +103,35 @@ final class ClearBlocked {
             if (!(MiningSafety.canBreak(cell, safety) instanceof BreakSafety.Safe)) {
                 unsafe++;
                 reason = BreakSkipTally.Reason.UNBREAKABLE.title();
-            } else if (StandSpots.of(cell, safety, from).isEmpty()) {
-                noStand++;
-                reason = BreakSkipTally.Reason.NO_STAND.title();
             } else {
-                unreachable++;
-                reason = "недостижимо";
+                List<BlockCoord> stands = StandSpots.of(cell, safety, from);
+                if (stands.isEmpty()) {
+                    noStand++;
+                    reason = BreakSkipTally.Reason.NO_STAND.title();
+                } else {
+                    unreachable++;
+                    reason = unreachableReason(stands, from);
+                }
             }
             leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), reason, cells.noteFailure(cell)));
         }
         return new Sweep(leftover, unsafe, noStand, unreachable, 0, 0);
+    }
+
+    Sweep approachFailure(BlockCoord target, BlockCoord stand, String refusal) {
+        String reason = "срыв подхода к стоянке " + stand + ":" + (refusal == null ? " без причины" : " " + refusal);
+        ClearSummary.Leftover step =
+                new ClearSummary.Leftover(target, blockAt(target), reason, cells.noteFailure(target));
+        return new Sweep(List.of(step), 0, 0, 1, 0, 0);
+    }
+
+    private static String unreachableReason(List<BlockCoord> stands, BlockCoord from) {
+        for (BlockCoord stand : stands) {
+            if (!StandSpots.walkable(stand, from)) {
+                return "стоянка " + stand + " на " + (stand.y() - from.y()) + " выше духа — не подняться";
+            }
+        }
+        return "недостижимо";
     }
 
     void escalate(Logger logger, SpiritEntity spirit, String reason) {
