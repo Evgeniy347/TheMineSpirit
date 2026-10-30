@@ -106,6 +106,29 @@ class CraftedSourceTests {
     }
 
     @Test
+    void resolve_EveryCraftedFamilyWithoutRecipe_RefusesWorldGather() {
+        for (String item : List.of(
+                PLANKS,
+                SAPLING,
+                "oak_fence",
+                "oak_door",
+                "oak_stairs",
+                "oak_slab",
+                "torch",
+                "chest",
+                "glass",
+                "bookshelf")) {
+            ResourceKnowledge knowledge = new StubKnowledge(Set.of(item), Map.of(), Map.of());
+
+            assertThrows(
+                    UnplannableGoalException.class,
+                    () -> ResourceResolver.resolve(item, 4, knowledge),
+                    "Крафтовый '" + item + "' без рецепта обязан отказывать на любом пути выдачи (graph:make, "
+                            + "supply, supply_gather, acquire), а не искать размещённую копию блоком в мире");
+        }
+    }
+
+    @Test
     void isCrafted_Families_True() {
         for (String item : List.of(PLANKS, SAPLING, "oak_fence", "oak_stairs", "oak_door", "torch", "chest")) {
             assertTrue(

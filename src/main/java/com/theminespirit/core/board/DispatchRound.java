@@ -102,7 +102,7 @@ public final class DispatchRound {
         if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()) {
             return Optional.of("задание другого духа");
         }
-        if (!board.availableTo(spirit.id(), ticket.boardCase(), now)) {
+        if (!board.availableTo(spirit.id(), ticket, now)) {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }

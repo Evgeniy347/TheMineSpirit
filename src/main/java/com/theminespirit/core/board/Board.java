@@ -35,7 +35,7 @@ public final class Board {
     private final Map<String, String> lastFailReasons = new LinkedHashMap<>();
     private final WaitNotes waitNotes = new WaitNotes();
     private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
-    private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
+    private final CasePauseBook casePauses = new CasePauseBook();
     private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
     private final FailureHistory failHistory = new FailureHistory();
@@ -87,7 +87,7 @@ public final class Board {
         failTicks.clear();
         ticketFailures.clear();
         blockedMissing.clear();
-        caseFailures.clear();
+        casePauses.clear();
         ledger.clear();
         ledger.restore(state.ledger());
         for (BoardState.Entry entry : state.entries()) {
@@ -207,7 +207,7 @@ public final class Board {
             }
             return BoardOutcome.TAKEN_BY_OTHER;
         }
-        if (!availableTo(spirit, ticket.boardCase(), now)) {
+        if (!availableTo(spirit, ticket, now)) {
             return BoardOutcome.SPIRIT_PAUSED;
         }
         if (status == BoardStatus.WAITING_RESOURCES) {
@@ -228,7 +228,7 @@ public final class Board {
         }
         UUID holder = holder(ticket);
         if (holder != null) {
-            caseFailures.remove(new SpiritCase(holder, ticket.boardCase()));
+            casePauses.reset(holder, ticket.boardCase());
         }
         ticketFailures.remove(ticketId);
         lastFailReasons.remove(ticketId);
@@ -272,32 +272,25 @@ public final class Board {
     }
 
     public boolean availableTo(UUID spirit, BoardCase boardCase, long now) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
-        Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
         requireNow(now);
-        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
-        return failures == null || (!failures.detached && now >= failures.pausedUntil);
+        return casePauses.available(spirit, boardCase, now);
+    }
+
+    public boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
+        requireNow(now);
+        return casePauses.available(spirit, ticket, now);
     }
 
     public boolean caseDetached(UUID spirit, BoardCase boardCase) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: снятие считается на конкретного духа");
-        Objects.requireNonNull(boardCase, "boardCase не может быть null: снятие считается на конкретный кейс");
-        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
-        return failures != null && failures.detached;
+        return casePauses.detached(spirit, boardCase);
     }
 
     public int consecutiveFailures(UUID spirit, BoardCase boardCase) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: счёт провалов идёт на конкретного духа");
-        Objects.requireNonNull(boardCase, "boardCase не может быть null: счёт провалов идёт на кейс");
-        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
-        return failures == null ? 0 : failures.consecutive;
+        return casePauses.consecutive(spirit, boardCase);
     }
 
     public long casePauseTicks(UUID spirit, BoardCase boardCase) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
-        Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
-        CaseFailures failures = caseFailures.get(new SpiritCase(spirit, boardCase));
-        return failures == null ? 0 : BoardBackoff.pauseTicks(failures.consecutive);
+        return casePauses.pauseTicks(spirit, boardCase);
     }
 
     public int ticketFailures(String ticketId) {
@@ -509,7 +502,7 @@ public final class Board {
         }
         failTicks.clear();
         ticketFailures.clear();
-        caseFailures.clear();
+        casePauses.clear();
         return List.copyOf(removed);
     }
 
@@ -719,26 +712,22 @@ public final class Board {
     }
 
     private void noteCaseFailure(UUID spirit, BoardTicket ticket, long now) {
-        SpiritCase key = new SpiritCase(spirit, ticket.boardCase());
-        CaseFailures failures = caseFailures.computeIfAbsent(key, ignored -> new CaseFailures());
-        failures.consecutive++;
-        failures.pausedUntil = now + BoardBackoff.pauseTicks(failures.consecutive);
-        if (!failures.detached && failures.consecutive >= BoardTuning.caseFailLimit()) {
-            failures.detached = true;
-            detachments.add(new BoardLogEntry(
-                    BoardLog.Event.DETACHED,
-                    now,
-                    ticket.id(),
-                    ticket.boardCase(),
-                    ticket.level(),
-                    ticket.cause(),
-                    ticket.priority(),
-                    ticket.priority(),
-                    List.of(),
-                    spirit.toString(),
-                    ConfigStamp.current(),
-                    now));
+        if (!casePauses.noteFailure(spirit, ticket, now)) {
+            return;
         }
+        detachments.add(new BoardLogEntry(
+                BoardLog.Event.DETACHED,
+                now,
+                ticket.id(),
+                ticket.boardCase(),
+                ticket.level(),
+                ticket.cause(),
+                ticket.priority(),
+                ticket.priority(),
+                List.of(),
+                spirit.toString(),
+                ConfigStamp.current(),
+                now));
     }
 
     private void noteTicketFailure(BoardTicket ticket, long now, StockView stock) {
@@ -831,14 +820,6 @@ public final class Board {
     public List<String> failureHistory(String ticketId) {
         Objects.requireNonNull(ticketId, "id задания не может быть null: история читается по заданию");
         return failHistory.of(ticketId);
-    }
-
-    private record SpiritCase(UUID spirit, BoardCase boardCase) {}
-
-    private static final class CaseFailures {
-        private int consecutive;
-        private long pausedUntil;
-        private boolean detached;
     }
 
     private void requireNow(long now) {
