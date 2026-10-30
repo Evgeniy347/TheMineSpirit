@@ -5,6 +5,8 @@ import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
 import com.theminespirit.core.chunk.ChunkSquare;
 import com.theminespirit.core.chunk.SettlementChunks;
+import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
@@ -34,8 +36,9 @@ public final class SettlementChunkTickets {
     }
 
     static void tick(ServerLevel level, boolean anyPlayerOnline) {
-        Set<ChunkCoord> settlement = SettlementChunks.around(
-                SettlementAnchorStore.get(level).anchors(), SettlementChunks.WORK_RADIUS_BLOCKS);
+        TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
+        Set<ChunkCoord> settlement = SettlementChunks.forPlan(
+                plan, SettlementAnchorStore.get(level).anchors(), SettlementChunks.WORK_RADIUS_BLOCKS);
         Set<ChunkCoord> held = HELD.getOrDefault(level, Set.of());
         ChunkDiff diff = SettlementChunks.transition(held, settlement, anyPlayerOnline);
         if (!diff.isEmpty()) {
