@@ -112,14 +112,12 @@ public final class ProtectionGate {
                 spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
                 placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
                 onPlot = onSettlementPlot(server, coord);
-                inPlan = onPlot && inPlan(server, coord);
+                inPlan = inPlan(server, coord);
             }
             SettlementBreak.Origin origin = placedByPlayer
                     ? SettlementBreak.Origin.PLAYER
                     : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
-            SettlementBreak.Place place = inPlan
-                    ? SettlementBreak.Place.PLAN
-                    : onPlot ? SettlementBreak.Place.PLOT : SettlementBreak.Place.OFF_PLOT;
+            SettlementBreak.Place place = SettlementBreak.place(onPlot, inPlan);
             decision = switch (SettlementBreak.of(origin, place)) {
                 case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
                 case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone, inPlan);

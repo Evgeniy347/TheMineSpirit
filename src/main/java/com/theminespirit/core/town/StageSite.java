@@ -142,7 +142,7 @@ public record StageSite(
     }
 
     public boolean planCell(int x, int y, int z) {
-        if (mineColumn(x, z) || ringPost(x, z)) {
+        if (minePlan(x, z) || ringPost(x, z)) {
             return true;
         }
         if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
@@ -153,6 +153,17 @@ public record StageSite(
                 || orchard.covers(x, z)
                 || extraOrchardCell(x, z)
                 || mine.covers(x, z);
+    }
+
+    private boolean minePlan(int x, int z) {
+        if (mineColumn(x, z) || mine.covers(x, z)) {
+            return true;
+        }
+        return minePlot.covers(x, z)
+                || minePlot.covers(x - 1, z)
+                || minePlot.covers(x + 1, z)
+                || minePlot.covers(x, z - 1)
+                || minePlot.covers(x, z + 1);
     }
 
     public boolean planned(int x, int y, int z) {

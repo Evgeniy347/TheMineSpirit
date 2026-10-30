@@ -160,6 +160,20 @@ class StageSiteTests {
     }
 
     @Test
+    void planCell_DeepMineWallAndTorch_IsPlanAtAnyDepth() {
+        MinePlot plot = SITE.minePlot();
+        BlockCoord wall = new BlockCoord(plot.x1() - 1, SITE.anchor().y() - 20, plot.z1() + 20);
+
+        assertTrue(
+                SITE.minePlot().covers(wall.x() + 1, wall.z()),
+                "Предусловие: стенка " + wall + " стоит вплотную к коридору спуска " + plot);
+        assertTrue(
+                SITE.planCell(wall.x(), wall.y(), wall.z()),
+                "Свои стенки и факелы спуска входят в план на любой глубине: факел у " + wall + " вне клетки плана "
+                        + "попадал в чёрный список защиты (observe8: wall_torch держал шахту на 75%)");
+    }
+
+    @Test
     void complete_StoredPlanWithoutOrchard_IsIncompleteAndGetsReplanned() {
         TownPlan full = TownFixtures.flatPlan();
         TownPlan old = new TownPlan(
