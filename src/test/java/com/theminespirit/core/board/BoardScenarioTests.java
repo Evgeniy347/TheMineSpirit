@@ -117,6 +117,30 @@ class BoardScenarioTests {
     }
 
     @Test
+    void stageOne_OpenCases_NotAboveSpiritCapacity() {
+        BoardScenario scenario = BoardScenario.stageOne(17);
+        scenario.hold(BoardTuning.boardIntervalTicks() * 2);
+        int limit = BoardTuning.stageCaseLimit(3);
+        int most = 0;
+        for (int round = 0; round < ROUNDS; round++) {
+            scenario.round(round);
+            most = Math.max(most, scenario.openStageCases());
+        }
+
+        assertTrue(
+                most <= limit,
+                "На этапе 1 одновременно открыто не больше лимита (" + limit + " шагов на трёх духов): "
+                        + "сверх лимита шаги висят PENDING за занятыми духами; открыто " + most);
+        assertEquals(
+                2,
+                scenario.settlementStage(),
+                "Очередь открывается по мере освобождения духов и всё равно закрывает этап 1: "
+                        + scenario.tickets().stream()
+                                .map(ticket -> ticket.id() + "=" + scenario.status(ticket.id()))
+                                .toList());
+    }
+
+    @Test
     void priorities_ToolCraft_NotBelowCaseNeedingTool() {
         List<String> inverted = new ArrayList<>();
         for (BoardCase user : BoardCase.values()) {

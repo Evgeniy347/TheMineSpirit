@@ -155,6 +155,9 @@ final class GraphPost {
         if (FirstStepsRunner.ticketIds(boardCase).stream().anyMatch(this::open)) {
             return true;
         }
+        if (StageOpen.full(service.board(), spirits.size())) {
+            return true;
+        }
         Map<String, Integer> missing = FirstStepsRunner.open(
                 level,
                 service,
