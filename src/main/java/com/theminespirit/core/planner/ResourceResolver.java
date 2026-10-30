@@ -169,7 +169,7 @@ public final class ResourceResolver {
         }
 
         private boolean dropsFromAnotherBlock(String item) {
-            return !knowledge.gatherBlockFor(item).equals(item);
+            return !ItemName.same(knowledge.gatherBlockFor(item), item);
         }
 
         private TaskNode gatherPlan(String item, int count, boolean topLevel) {

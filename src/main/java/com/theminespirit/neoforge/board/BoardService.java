@@ -730,7 +730,7 @@ public final class BoardService {
                 }
                 case RESUME -> resume(spirit, ticket, spirits);
                 case RUNNING -> checkStall(spirit, ticket);
-                case DISPLACED -> {}
+                case DISPLACED -> DisplacedClaims.release(spirit, ticket, board, issuedGenerations);
             }
         }
     }
