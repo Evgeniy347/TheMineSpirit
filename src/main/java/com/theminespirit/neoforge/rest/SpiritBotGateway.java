@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardHeld;
 import com.theminespirit.core.board.BoardTicket;
@@ -152,7 +153,7 @@ public final class SpiritBotGateway implements BotGateway {
                 boardTask == null ? null : boardTask.id(),
                 activity,
                 script);
-        BotState state = state(spirit, boardTask, activity);
+        BotState state = state(spirit, boardTask);
         long now = spirit.level().getGameTime();
         return new BotInfo(
                 id,
@@ -225,13 +226,14 @@ public final class SpiritBotGateway implements BotGateway {
         return spirit.currentActivity().orElse(null);
     }
 
-    private static BotState state(SpiritEntity spirit, @Nullable BotBoardTask boardTask, @Nullable String activity) {
+    private static BotState state(SpiritEntity spirit, @Nullable BotBoardTask boardTask) {
         if (!spirit.isAlive()) {
             return BotState.DEAD;
         }
         boolean running = spirit.taskStatus()
                 .filter(status -> status == RunStatus.RUNNING)
                 .isPresent();
-        return running || boardTask != null || activity != null ? BotState.BUSY : BotState.IDLE;
+        boolean holdsTask = boardTask != null && !boardTask.id().startsWith(BoardActivities.ID_PREFIX);
+        return running || holdsTask ? BotState.BUSY : BotState.IDLE;
     }
 }

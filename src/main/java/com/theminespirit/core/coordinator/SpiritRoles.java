@@ -6,12 +6,16 @@ public final class SpiritRoles {
     private SpiritRoles() {}
 
     public static SpiritRole classify(Optional<String> currentScript, boolean hasActivePlan) {
+        return classify(currentScript, hasActivePlan, false);
+    }
+
+    public static SpiritRole classify(Optional<String> currentScript, boolean hasActivePlan, boolean busyActivity) {
         if (currentScript == null) {
             throw new IllegalArgumentException(
                     "currentScript не может быть null: отсутствие скрипта — это Optional.empty()");
         }
         if (currentScript.isEmpty()) {
-            return hasActivePlan ? SpiritRole.IDLE : SpiritRole.DEFENDER;
+            return hasActivePlan || busyActivity ? SpiritRole.IDLE : SpiritRole.DEFENDER;
         }
         String name = currentScript.get();
         if (isBuilding(name)) {

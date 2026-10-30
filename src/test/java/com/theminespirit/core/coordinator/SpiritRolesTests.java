@@ -25,6 +25,16 @@ class SpiritRolesTests {
     }
 
     @Test
+    void classify_NoScriptButAssignedActivity_IsIdleNotDefender() {
+        assertEquals(
+                SpiritRole.IDLE,
+                SpiritRoles.classify(Optional.empty(), false, true),
+                "Дух с выданным занятием (плавка ждёт повторной попытки) не свободный защитник: иначе "
+                        + "координатор на каждом провале ставит его на пост охраны, приказ то появляется, то "
+                        + "исчезает, и режим тактики качается DEFENSIVE ↔ GUARD_AREA без врагов");
+    }
+
+    @Test
     void classify_WorkerScript_IsWorker() {
         assertEquals(
                 SpiritRole.WORKER,

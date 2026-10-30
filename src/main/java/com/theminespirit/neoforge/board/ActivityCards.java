@@ -63,15 +63,14 @@ final class ActivityCards {
             launched.remove(id);
             return null;
         }
-        long since = own.idleSince() == 0 ? now : own.idleSince();
-        if (now - since > BoardTuning.failBackoffTicks()) {
-            launched.remove(id);
-            return null;
-        }
         if (own.idleSince() == 0) {
-            Launched paused = new Launched(own.activity(), own.generation(), own.script(), own.target(), since);
+            Launched paused = new Launched(own.activity(), own.generation(), own.script(), own.target(), now);
             launched.put(id, paused);
             return paused;
+        }
+        if (now - own.idleSince() > BoardTuning.caseFailPauseCapTicks()) {
+            launched.remove(id);
+            return null;
         }
         return own;
     }
