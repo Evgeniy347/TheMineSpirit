@@ -122,7 +122,7 @@ public final class ProtectionGate {
                     : onPlot ? SettlementBreak.Place.PLOT : SettlementBreak.Place.OFF_PLOT;
             decision = switch (SettlementBreak.of(origin, place)) {
                 case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
-                case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone);
+                case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone, inPlan);
                 case DEFAULT ->
                     PROTECTION.check(
                             blockId(state),

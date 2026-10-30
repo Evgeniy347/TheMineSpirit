@@ -214,6 +214,46 @@ class MineStepStandsTests {
         }
     }
 
+    @Test
+    void of_LiveObserve7EntranceWall_OpeningMakesFirstStepReachable() {
+        BlockCoord from = new BlockCoord(-190, 71, -516);
+        MineColumn entrance = new MineColumn(new BlockCoord(-189, 68, -518), MineColumn.PASSAGE_HEIGHT);
+        CellWorld world = Observe7MineWorld.build();
+
+        assertFalse(
+                MineReach.canReach(from, entrance.stand(), world),
+                "Предусловие observe7: дух на холме над шахтой, вход " + entrance.stand()
+                        + " за стеной — стоянка за преградой, проходка встаёт на 75%");
+
+        List<BlockCoord> opening = MineApproach.opening(entrance, from, world);
+
+        assertFalse(opening.isEmpty(), "Вход шахты обязан вскрываться: иначе дух не спускается и шахта не растёт");
+        for (BlockCoord cell : opening) {
+            assertTrue(
+                    cell.y() > entrance.floor().y(),
+                    "Вскрытие входа ломает только стену над полом ступени, а не сам пол: " + cell);
+            world.set(cell.x(), cell.y(), cell.z(), Cell.PASSABLE);
+        }
+        assertTrue(
+                MineReach.canReach(from, entrance.stand(), world),
+                "После вскрытия стены вход достижим без падения глубже " + MineReach.MAX_FALL + ": " + opening);
+
+        MineStepStands.Choice choice = MineStepStands.of(entrance, null, from, world);
+
+        assertTrue(
+                choice.found(),
+                "После вскрытия входа стоянка первой ступени обязана найтись, иначе шахта снова стоит: "
+                        + choice.reason());
+        for (BlockCoord stand : choice.stands()) {
+            assertTrue(
+                    MineReach.canReach(from, stand, world),
+                    "Стоянка " + stand + " обязана быть достижима от духа " + from);
+            assertTrue(
+                    MineStepStands.visibleFrom(entrance, stand, world),
+                    "Стоянка " + stand + " обязана видеть ступень " + entrance.stand());
+        }
+    }
+
     private static CellWorld ground() {
         return new CellWorld().fill(LEVEL, -4, -4, 4, 4, Cell.SOLID);
     }

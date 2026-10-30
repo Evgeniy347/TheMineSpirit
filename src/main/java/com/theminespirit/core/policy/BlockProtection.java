@@ -62,11 +62,15 @@ public final class BlockProtection {
     }
 
     public Decision checkOwn(String blockId, boolean inProtectedZone) {
+        return checkOwn(blockId, inProtectedZone, false);
+    }
+
+    public Decision checkOwn(String blockId, boolean inProtectedZone, boolean inPlan) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что проверять");
         if (GatherPolicy.check(blockId) instanceof GatherPolicy.Refused refused) {
             return new Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
         }
-        if (deny.matches(blockId)) {
+        if (!inPlan && deny.matches(blockId)) {
             return new Refused(
                     PolicyId.PROTECTED_BLOCKS,
                     "блок '" + blockId + "' в чёрном списке защиты (protection.json → deny): "
