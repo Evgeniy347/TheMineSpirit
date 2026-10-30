@@ -230,12 +230,12 @@ public final class Board {
         if (holder != null) {
             casePauses.reset(holder, ticket.boardCase());
         }
+        statuses.put(ticketId, BoardStatus.DONE);
+        ledger.complete(ticket.boardCase(), ticket.level());
+        events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         ticketFailures.remove(ticketId);
         lastFailReasons.remove(ticketId);
         blockedMissing.remove(ticketId);
-        statuses.put(ticketId, BoardStatus.DONE);
-        ledger.note(ticket.boardCase(), ticket.level());
-        events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         return true;
     }
 
@@ -257,7 +257,6 @@ public final class Board {
         long now = nowTicks.getAsLong();
         statuses.put(ticketId, BoardStatus.FAILED);
         failTicks.put(ticketId, now);
-        events.transition(BoardLog.Event.FAILED, ticket.withFailure(reason), claimAssignees.get(ticketId), now);
         UUID holder = holder(ticket);
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
@@ -268,6 +267,7 @@ public final class Board {
             ticketFailures.put(ticketId, BoardTuning.ticketFailLimit() - 1);
         }
         noteTicketFailure(ticket, now, stock);
+        events.transition(BoardLog.Event.FAILED, ticket.withFailure(reason), claimAssignees.get(ticketId), now);
         return true;
     }
 
@@ -369,7 +369,7 @@ public final class Board {
         tickets.remove(ticketId);
         statuses.remove(ticketId);
         claimAssignees.remove(ticketId);
-        ledger.forget(ticket.boardCase(), ticket.level());
+        ledger.reopen(ticket.boardCase(), ticket.level());
         events.transition(BoardLog.Event.REOPENED, ticket, null, nowTicks.getAsLong());
         return true;
     }

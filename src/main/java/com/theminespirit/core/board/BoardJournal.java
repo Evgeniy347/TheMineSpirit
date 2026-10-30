@@ -88,6 +88,7 @@ public final class BoardJournal {
         int lastLine = -1;
         String error = "";
         boolean truncated = false;
+        ledger.forgetHistory();
         for (int index = 0; index < lines.size(); index++) {
             String line = lines.get(index);
             if (line.isBlank()) {
@@ -96,13 +97,13 @@ public final class BoardJournal {
             try {
                 BoardLogEntry entry = BoardLog.parse(line, index + 1);
                 if (entry.event() == BoardLog.Event.DONE) {
-                    ledger.note(entry.boardCase(), entry.level());
+                    ledger.complete(entry.boardCase(), entry.level());
                     if (entry.boardCase() == BoardCase.BUILD_PLACED) {
                         StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.notePlan(id, entry.level()));
                     }
                     restored++;
                 } else if (entry.event() == BoardLog.Event.REOPENED) {
-                    ledger.forget(entry.boardCase(), entry.level());
+                    ledger.reopen(entry.boardCase(), entry.level());
                     if (entry.boardCase() == BoardCase.BUILD_PLACED) {
                         StageCatalog.planId(entry.ticketId()).ifPresent(id -> ledger.forgetPlan(id, entry.level()));
                     }

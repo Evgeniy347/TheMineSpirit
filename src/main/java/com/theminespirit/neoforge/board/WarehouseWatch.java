@@ -9,6 +9,7 @@ import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.UpgradePlan;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.WarehouseSpot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
@@ -23,13 +24,16 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class WarehouseWatch {
     private static final String STORAGE = "storage";
     private static final Logger LOGGER = LoggerFactory.getLogger(WarehouseWatch.class);
-    private static final Map<ServerLevel, BlockCoord> LOGGED = new ConcurrentHashMap<>();
+    private static final Map<ServerLevel, Spot> LOGGED = new ConcurrentHashMap<>();
+
+    private record Spot(BlockCoord home, @Nullable BlockCoord slot, String reason) {}
 
     private WarehouseWatch() {}
 
@@ -40,10 +44,12 @@ public final class WarehouseWatch {
         if (!houseBuilt(service) || FirstStepsRunner.stageOneBuilding(service)) {
             return;
         }
-        BlockCoord home = storageLot(level).orElseGet(() -> homeOf(spirits));
+        Spot spot = spot(level, spirits);
+        BlockCoord home = spot.home();
         Set<Integer> standing = doneLevels(service);
-        submitRelocations(service, home, standing, now);
         int next = WarehouseRules.nextLevel(standing);
+        logSpot(level, spot, next == 0 ? 1 : next);
+        submitRelocations(service, home, standing, now);
         if (next == 0
                 || !WarehouseRules.canBuild(next, standing)
                 || !SettlementStage.allows(
@@ -67,6 +73,7 @@ public final class WarehouseWatch {
                         UpgradePlan.required(
                                 next > 1 ? WarehouseRules.scheme(next - 1) : null, WarehouseRules.scheme(next))),
                 TicketTarget.at(WarehouseRules.site(home, next)));
+        LOGGER.info("{} — задание {}", WarehouseSpot.line(next, home, spot.slot(), spot.reason()), id);
     }
 
     private static void submitRelocations(BoardService service, BlockCoord home, Set<Integer> standing, long now) {
@@ -136,12 +143,15 @@ public final class WarehouseWatch {
                 .orElse(new BlockCoord(0, 64, 0));
     }
 
-    private static Optional<BlockCoord> storageLot(ServerLevel level) {
+    private static Spot spot(ServerLevel level, List<SpiritEntity> spirits) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<Placement> storage = store.town().flatMap(town -> town.placement(STORAGE));
+        if (storage.isEmpty()) {
+            return new Spot(homeOf(spirits), null, "в плане поселения нет слота storage: склад у дома духов");
+        }
         Optional<StageSite> site = store.site();
-        if (storage.isEmpty() || site.isEmpty()) {
-            return Optional.empty();
+        if (site.isEmpty()) {
+            return new Spot(homeOf(spirits), null, "план поселения не сохранён: склад у дома духов");
         }
         Placement place = storage.orElseThrow();
         TownPlan plan = store.town().orElseThrow();
@@ -153,18 +163,18 @@ public final class WarehouseWatch {
                     "[warehouse] слот storage {} вне плана поселения: склад ставится у дома духов, "
                             + "проверьте town.json и сохранённый план",
                     lot);
-            return Optional.empty();
+            return new Spot(homeOf(spirits), null, "слот storage вне плана поселения: склад у дома духов");
         }
-        BlockCoord previous = LOGGED.put(level, lot);
-        if (!lot.equals(previous)) {
-            LOGGER.info(
-                    "[warehouse] слот storage {}, site {}, чанк [{}, {}] загружен: {}",
-                    lot,
-                    WarehouseRules.site(lot, 1),
-                    lot.x() >> 4,
-                    lot.z() >> 4,
-                    level.isLoaded(new BlockPos(lot.x(), lot.y(), lot.z())) ? "да" : "нет");
+        String reason = "слот storage плана, чанк [" + (lot.x() >> 4) + ", " + (lot.z() >> 4) + "] загружен: "
+                + (level.isLoaded(new BlockPos(lot.x(), lot.y(), lot.z())) ? "да" : "нет");
+        return new Spot(lot, lot, reason);
+    }
+
+    private static void logSpot(ServerLevel level, Spot spot, int warehouseLevel) {
+        Spot previous = LOGGED.put(level, spot);
+        if (spot.equals(previous)) {
+            return;
         }
-        return Optional.of(lot);
+        LOGGER.info(WarehouseSpot.line(warehouseLevel, spot.home(), spot.slot(), spot.reason()));
     }
 }

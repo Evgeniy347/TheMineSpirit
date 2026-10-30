@@ -13,6 +13,7 @@ import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.rest.ApiException;
+import com.theminespirit.core.rest.BoardCounts;
 import com.theminespirit.core.rest.BoardGateway;
 import com.theminespirit.core.rest.BoardTask;
 import com.theminespirit.core.rest.BoardTaskRequest;
@@ -51,6 +52,11 @@ public final class SpiritBoardGateway implements BoardGateway {
     }
 
     @Override
+    public BoardCounts counts() {
+        return serverCall.call(this::readCounts, RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
     public Optional<BoardTask> task(String ticketId) {
         return serverCall.call(() -> findTask(ticketId), RestTuning.SERVER_CALL_TIMEOUT);
     }
@@ -69,6 +75,12 @@ public final class SpiritBoardGateway implements BoardGateway {
     public List<BoardLogEntry> log(int limit) {
         return serverCall.call(
                 () -> BoardRegistry.get(server.overworld()).journal().last(limit), RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    private BoardCounts readCounts() {
+        BoardService service = BoardRegistry.get(server.overworld());
+        return new BoardCounts(
+                service.board().ledger().doneTotal(), service.board().ledger().reopenedTotal());
     }
 
     private List<BoardTask> readTasks() {

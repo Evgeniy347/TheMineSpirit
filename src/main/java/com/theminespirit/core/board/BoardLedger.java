@@ -12,6 +12,8 @@ public final class BoardLedger {
     public record BuildingMark(BoardCase boardCase, int level) {}
 
     private final Set<String> built = new LinkedHashSet<>();
+    private long doneTotal;
+    private long reopenedTotal;
 
     public static String key(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс отметки не может быть null: без него непонятно, что стоит");
@@ -64,6 +66,29 @@ public final class BoardLedger {
     public void forget(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс снятия отметки не может быть null: без него непонятно, что снимать");
         built.remove(key(boardCase, level));
+    }
+
+    public void complete(BoardCase boardCase, int level) {
+        note(boardCase, level);
+        doneTotal++;
+    }
+
+    public void reopen(BoardCase boardCase, int level) {
+        forget(boardCase, level);
+        reopenedTotal++;
+    }
+
+    public void forgetHistory() {
+        doneTotal = 0;
+        reopenedTotal = 0;
+    }
+
+    public long doneTotal() {
+        return doneTotal;
+    }
+
+    public long reopenedTotal() {
+        return reopenedTotal;
     }
 
     public void notePlan(String planId, int level) {

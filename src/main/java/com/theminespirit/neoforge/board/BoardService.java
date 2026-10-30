@@ -154,7 +154,7 @@ public final class BoardService {
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
         JournalService journal = JournalService.inWorld(level.getServer());
-        Board board = new Board(now, (event, ticket, holder, tick) -> journal.record(event, ticket, holder, tick));
+        Board board = TransitionEvents.create(now, journal);
         return new BoardService(
                 board,
                 new HerdCycles(board),

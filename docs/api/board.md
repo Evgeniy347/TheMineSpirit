@@ -10,9 +10,11 @@
    "requiredItems":{"oak_log":16},"missing":{"oak_log":10},"dependsOn":["board-root"],
    "createdAt":1234,"level":1,"cause":"always","effectivePriority":55,
    "modifiers":["lure_bait_ready"],"done":false,"waitReason":"не хватает материалов: {oak_log=16}"}
-]}
+],"counts":{"done":1231,"reopened":1}}
 ```
 
+- `counts` — итоги журнала: `done` (переходы DONE, только растёт) и `reopened` (REOPENED, отдельно); текущий
+  статус задачи в `tasks` от этого не зависит.
 - `id` — id задания; `case` — кейс `BoardCase`; `priority` — вес (больше — раньше);
 - `assignee` — дух-держатель или `null` («любой свободный»);
 - `status` — `PENDING`/`WAITING_RESOURCES`/`ASSIGNED`/`BLOCKED`/`DONE`/`FAILED`/`CANCELLED`;

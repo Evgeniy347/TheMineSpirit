@@ -22,12 +22,15 @@ public final class BoardJson {
         return RestJson.write(toMap(task));
     }
 
-    public static String listJson(List<BoardTask> tasks) {
+    public static String listJson(List<BoardTask> tasks, BoardCounts counts) {
         List<Object> items = new ArrayList<>(tasks.size());
         for (BoardTask task : tasks) {
             items.add(toMap(task));
         }
-        return RestJson.write(Map.of("tasks", items));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("tasks", items);
+        body.put("counts", Map.of("done", counts.done(), "reopened", counts.reopened()));
+        return RestJson.write(body);
     }
 
     public static Map<String, Object> toMap(BoardTask task) {

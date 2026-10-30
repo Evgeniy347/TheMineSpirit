@@ -32,19 +32,14 @@ row() {
     row 118 999 20 find.exe 'find.exe /'
     row 119 999 60 bash.exe 'bash -c "find / -name x"'
     row 120 999 60 opencode.exe 'C:\Program Files\OpenCode\opencode.exe'
-    # Живая цепочка исполнителя: оболочки запускающего агента умерли, работа идёт дальше.
     row 30001 1 130 bash.exe 'bash.exe scripts/lead/next-slot.sh'
     row 30002 30001 120 bash.exe 'bash.exe scripts/lead/run-one.sh observe7'
     row 30003 30002 100 bash.exe 'bash.exe scripts/opencode-task.sh -f observe7.msg'
     row 30004 30003 90 opencode.exe 'opencode.exe run'
-    # bash без маркера, но с живым потомком — не сирота.
     row 30010 1 130 bash.exe 'bash.exe -c loop'
     row 30011 30010 90 bash.exe 'bash.exe -c inner'
-    # bash без потомков моложе 60 мин — не сирота.
     row 30030 1 40 bash.exe 'bash.exe -c sleep 30'
-    # bash без потомков старше 60 мин — сирота.
     row 30040 1 70 bash.exe 'bash.exe -c stale'
-    # не-bash с маркером сценария — не сирота, даже без потомков.
     row 30050 1 40 java.exe 'java -cp gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain gradlew test'
 } >"$list"
 
