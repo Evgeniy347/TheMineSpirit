@@ -10,6 +10,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.WeakHashMap;
 import net.minecraft.world.level.Level;
 
@@ -43,6 +44,11 @@ public final class WorkReserveHub {
     public static int releaseAll(SpiritEntity spirit) {
         requireSpirit(spirit);
         return leasesFor(spirit.level()).releaseAll(spirit.getUUID());
+    }
+
+    public static Set<WorkTarget> ownedBy(SpiritEntity spirit) {
+        requireSpirit(spirit);
+        return leasesFor(spirit.level()).ownedBy(spirit.getUUID());
     }
 
     public static Optional<WorkTarget> choose(SpiritEntity spirit, List<WorkTarget> candidates) {
