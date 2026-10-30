@@ -74,11 +74,10 @@ final class GraphFood {
             if (container.isEmpty()) {
                 if (CHANGES.changed(channel, "missing")) {
                     LOGGER.info(
-                            "[food] дух {}: еда {} saturation {}, порог {} — RESTOCK_FOOD '{}' не начат: на складе "
+                            "[food] дух {}: {}, порог {} — RESTOCK_FOOD '{}' не начат: на складе "
                                     + "поселения нет '{}'; следующая попытка на тике {}",
                             spirit.displayName(),
-                            spirit.hunger().foodLevel(),
-                            spirit.hunger().state().saturation(),
+                            spirit.hunger().foodText(),
                             norm,
                             item,
                             item,
@@ -93,10 +92,9 @@ final class GraphFood {
             BlockCoord from = container.orElseThrow();
             if (CHANGES.changed(channel, "found@" + from)) {
                 LOGGER.info(
-                        "[food] дух {}: еда {} saturation {}, порог {} — RESTOCK_FOOD '{}'×{} берётся из {}",
+                        "[food] дух {}: {}, порог {} — RESTOCK_FOOD '{}'×{} берётся из {}",
                         spirit.displayName(),
-                        spirit.hunger().foodLevel(),
-                        spirit.hunger().state().saturation(),
+                        spirit.hunger().foodText(),
                         norm,
                         item,
                         count,

@@ -39,6 +39,12 @@ class RouterTests {
                 Arguments.of("GET", "/v1/bots", 200, "{\"handled\":\"bots\",\"id\":\"\"}", null),
                 Arguments.of("GET", "/v1/bots/abc", 200, "{\"handled\":\"bot\",\"id\":\"abc\"}", null),
                 Arguments.of("GET", "/v1/bots/a_b-C9", 200, "{\"handled\":\"bot\",\"id\":\"a_b-C9\"}", null),
+                Arguments.of(
+                        "GET",
+                        "/v1/bots/graph:craft_stone_axe@c48663b4-da59-43d9-9804-81a680580300",
+                        200,
+                        "{\"handled\":\"bot\",\"id\":\"graph:craft_stone_axe@c48663b4-da59-43d9-9804-81a680580300\"}",
+                        null),
                 Arguments.of("GET", "/v1/bots/" + ID_64, 200, "{\"handled\":\"bot\",\"id\":\"" + ID_64 + "\"}", null),
                 Arguments.of("POST", "/v1/bots/abc/observe", 200, "{\"handled\":\"observe\",\"id\":\"abc\"}", null),
                 Arguments.of("GET", "/v1/bots/" + ID_64 + "a", 404, "not_found", null),

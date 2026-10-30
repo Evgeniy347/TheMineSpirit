@@ -94,11 +94,13 @@ final class DispatchPick {
         boolean running =
                 status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent();
         boolean control = spirit.tactics().wantsControl();
-        String busyWith = null;
-        if (running && !(spirit.runsBackgroundTask() && !control)) {
-            String script = spirit.currentTaskScript().orElse("задача");
-            busyWith = control ? "тактика держит (" + script + ")" : script;
-        }
+        DispatchRound.BusyMode mode = !running
+                ? DispatchRound.BusyMode.IDLE
+                : control
+                        ? DispatchRound.BusyMode.TACTICS
+                        : spirit.runsBackgroundTask() ? DispatchRound.BusyMode.BACKGROUND : DispatchRound.BusyMode.WORK;
+        String busyWith = DispatchRound.busyWith(
+                spirit.currentTaskScript().orElse(null), spirit.currentPlan().orElse(null), mode);
         return new DispatchRound.Candidate(
                 spirit.getUUID(),
                 spirit.displayName(),

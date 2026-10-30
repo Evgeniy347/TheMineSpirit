@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,28 @@ public final class DispatchRound {
         this.board = Objects.requireNonNull(board, "Доска раунда выдачи не может быть null: задания берутся с неё");
         this.now = now;
         this.held = new HashMap<>(board.assignedCounts());
+    }
+
+    public enum BusyMode {
+        IDLE,
+        WORK,
+        TACTICS,
+        BACKGROUND
+    }
+
+    public static @Nullable String busyWith(@Nullable String script, @Nullable TaskNode plan, BusyMode mode) {
+        Objects.requireNonNull(mode, "Режим занятости не может быть null: по нему решают, что писать в причине");
+        if (mode == BusyMode.IDLE || mode == BusyMode.BACKGROUND) {
+            return null;
+        }
+        String shown = script;
+        if (shown == null && plan != null) {
+            shown = BoardActivities.firstScript(plan);
+        }
+        if (shown == null) {
+            shown = "задача";
+        }
+        return mode == BusyMode.TACTICS ? "тактика держит (" + shown + ")" : shown;
     }
 
     public static List<BoardTicket> order(List<BoardTicket> claimable) {

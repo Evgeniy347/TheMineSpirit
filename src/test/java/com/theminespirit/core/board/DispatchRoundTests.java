@@ -3,6 +3,9 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +89,22 @@ class DispatchRoundTests {
                 board.assignedCounts().size(),
                 "Своё задание духа не выдано (ждёт передачу) — дух не простаивает «в ожидании своего», а берёт "
                         + "другое по силам; иначе он стоит, пока висят задания");
+    }
+
+    @Test
+    void busyWith_NoCurrentScript_NamesPlanStepInsteadOfTask() {
+        TaskNode plan = new SequenceNode(List.of(
+                new ScriptCall("goto", Map.of("x", 1, "y", 64, "z", 2)), new ScriptCall("chop_tree", Map.of())));
+
+        assertEquals(
+                "goto",
+                DispatchRound.busyWith(null, plan, DispatchRound.BusyMode.WORK),
+                "Между шагами скрипт ещё не стартовал: причина ожидания обязана называть шаг плана (goto), "
+                        + "а не обезличенное «задача» — иначе видно только «занят: задача»");
+        assertEquals(
+                "тактика держит (goto)",
+                DispatchRound.busyWith(null, plan, DispatchRound.BusyMode.TACTICS),
+                "При управлении тактикой причина называет тот же шаг плана: «тактика держит (goto)»");
     }
 
     @Test

@@ -19,12 +19,11 @@ final class SettleNotes {
         }
         if (ticket.boardCase() == BoardCase.RESTOCK_FOOD) {
             LOGGER.info(
-                    "[food] дух {} {} задание еды {}: food {} saturation {} (питание {})",
+                    "[food] дух {} {} задание еды {}: {} (питание {})",
                     spirit.displayName(),
                     success ? "завершил" : "провалил",
                     ticket.id(),
-                    spirit.hunger().foodLevel(),
-                    spirit.hunger().state().saturation(),
+                    spirit.hunger().foodText(),
                     spirit.hunger().personalNutrition());
         }
     }

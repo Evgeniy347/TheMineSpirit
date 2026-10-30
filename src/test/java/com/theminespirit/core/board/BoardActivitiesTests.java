@@ -140,6 +140,19 @@ class BoardActivitiesTests {
     }
 
     @Test
+    void currentCard_AssignedRunning_ShowsWhatTheSpiritDoesNow() {
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_MOVE),
+                new BoardActivities.CardFacts(false, true, false, null, false, null, true, false, "goto").card(),
+                "Дух с заданием доски, идущий к цели, обязан иметь карточку текущего действия ACTIVITY_MOVE: "
+                        + "иначе на /v1/board 0 карточек ACTIVITY_*, и владелец не видит, чем занят дух");
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_FORAGE),
+                new BoardActivities.CardFacts(false, true, false, null, false, null, true, false, "gather").card(),
+                "Сбор с назначенным заданием доски — карточка ACTIVITY_FORAGE, а не устаревшее activity из плана");
+    }
+
+    @Test
     void caseOf_EveryIntellectActivity_HasActivityCaseBelowQueue() {
         for (ActivityId activity : ActivityId.values()) {
             BoardCase boardCase = BoardActivities.caseOf(activity);
