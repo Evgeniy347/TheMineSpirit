@@ -130,11 +130,11 @@ public final class TicketPlans {
             case BUILD_HOUSE -> buildHouse(level, target);
             case BUILD_ORCHARD -> buildOrchard(target);
             case BUILD_WAREHOUSE -> buildWarehouseLevel(level, target);
-            default -> legacyPlan(boardCase, target);
+            default -> legacyPlan(boardCase, target, level);
         };
     }
 
-    private static TaskNode legacyPlan(BoardCase boardCase, TicketTarget target) {
+    private static TaskNode legacyPlan(BoardCase boardCase, TicketTarget target, int level) {
         return switch (boardCase) {
             case FILL_CRATER -> fillCrater(target);
             case REPAIR_FENCE -> repairFence(target);
@@ -185,7 +185,7 @@ public final class TicketPlans {
             case HARVEST_HIVE -> harvestHive();
             case HARVEST_ORCHARD -> OrchardPlans.harvest(target);
             case PLACE_BEEHIVE -> placeBeehive(target);
-            case BUILD_FENCE -> buildFence(target);
+            case BUILD_FENCE -> buildFence(target, level);
             case LIGHTING -> lighting(target);
             case BUILD_STREETS -> RoutePlans.path(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
@@ -414,10 +414,10 @@ public final class TicketPlans {
                                 CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
-    private static TaskNode buildFence(TicketTarget target) {
+    private static TaskNode buildFence(TicketTarget target, int level) {
         int part = target.count();
-        String scheme =
-                part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(FENCE_SCHEME, part, FENCE_PARTS) : FENCE_SCHEME;
+        String base = level >= 2 ? "wall_3" : FENCE_SCHEME;
+        String scheme = part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(base, part, FENCE_PARTS) : base;
         return sequence(
                 new FallbackNode(
                         List.of(gotoTarget(target), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),

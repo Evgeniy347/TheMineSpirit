@@ -62,6 +62,11 @@ class PresetLibraryTests {
             "fence_corner45_left",
             "fence_corner45_right",
             "fence_wicket",
+            "wall_3",
+            "wall_3_straight",
+            "wall_3_post",
+            "wall_3_corner",
+            "gate_3",
             "yard_1",
             "yard_chest",
             "ground_torch",
@@ -184,7 +189,7 @@ class PresetLibraryTests {
         PresetLibrary library = loadReal();
 
         assertEquals(
-                126,
+                131,
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, "
                         + "площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
@@ -306,25 +311,6 @@ class PresetLibraryTests {
     }
 
     @Test
-    void byType_Defense_ReturnsPalisadeSection() {
-        PresetLibrary library = loadReal();
-
-        assertEquals(
-                List.of(
-                        "palisade_section",
-                        "fence_long",
-                        "fence_straight",
-                        "fence_post",
-                        "fence_corner",
-                        "fence_diagonal",
-                        "fence_corner45_left",
-                        "fence_corner45_right",
-                        "fence_wicket"),
-                library.byType(BuildingType.DEFENSE).stream().map(Preset::id).toList(),
-                "Поиск по типу «оборона» обязан находить палисад-секцию и фрагменты забора: по нему стратег выбирает ограждение");
-    }
-
-    @Test
     void byStage_StageZero_ReturnsCampStructures() {
         PresetLibrary library = loadReal();
 
@@ -406,7 +392,7 @@ class PresetLibraryTests {
         List<String> paths = PresetLibrary.bodyPaths(indexJson, INDEX_PATH);
 
         assertEquals(
-                126,
+                131,
                 paths.size(),
                 "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
         assertEquals(

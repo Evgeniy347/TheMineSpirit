@@ -1,0 +1,30 @@
+# wall_3 — длинный прямой фрагмент каменной стены этапа 2 (catalog-2.md, wall 3): булыжник высотой 4,
+# зубцы через клетку. Линию ограды план раскладывает на фрагменты (WallLayout), как забор этапа 1.
+name: "Стена: длинный прямой фрагмент"
+type: defense
+stage: 2
+level: 3
+requires: fence_long
+size: 8x4x2   # Ш×В×Д
+entrance: 0,0,0
+exemptions:
+  - rule: light
+    reason: "глухой фрагмент стены без света: фонари и ворота ставятся отдельными фрагментами линии"
+  - rule: closed_walls
+    reason: "фрагмент стены — отрезок линии ограды, периметр замыкают соседние фрагменты"
+legend:
+  'W': cobblestone_wall
+  'C': cobblestone
+layers:
+  - y0 основание стены: |
+
+      WWWWWWWW
+  - y1: |
+
+      CCCCCCCC
+  - y2: |
+
+      CCCCCCCC
+  - y3 зубцы через клетку: |
+
+      C.C.C.C.

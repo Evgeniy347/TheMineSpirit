@@ -122,7 +122,9 @@
     "BUILD_WAREHOUSE": 4,
     "ENCHANT_ROOM": 4,
     "BUILD_HOUSE": 4,
-    "BUILD_STREETS": 2
+    "BUILD_STREETS": 2,
+    "BUILD_FENCE": 3,
+    "LIGHTING": 2
   },
   "hive": {
     "hive_radius": 16,

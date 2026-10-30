@@ -1,0 +1,29 @@
+# wall_3_straight — прямой фрагмент каменной стены этапа 2: 4 клетки булыжника высотой 4 с зубцами.
+name: "Стена: прямой фрагмент"
+type: defense
+stage: 2
+level: 3
+requires: fence_straight
+size: 4x4x2   # Ш×В×Д
+entrance: 0,0,0
+exemptions:
+  - rule: light
+    reason: "глухой фрагмент стены без света: фонари и ворота ставятся отдельными фрагментами линии"
+  - rule: closed_walls
+    reason: "фрагмент стены — отрезок линии ограды, периметр замыкают соседние фрагменты"
+legend:
+  'W': cobblestone_wall
+  'C': cobblestone
+layers:
+  - y0 основание стены: |
+
+      WWWW
+  - y1: |
+
+      CCCC
+  - y2: |
+
+      CCCC
+  - y3 зубцы через клетку: |
+
+      C.C.
