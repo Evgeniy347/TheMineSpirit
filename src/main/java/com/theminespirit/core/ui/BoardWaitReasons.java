@@ -34,7 +34,9 @@ public final class BoardWaitReasons {
         RESOURCE,
         TOOL,
         DEPENDENCY,
-        BLOCKED
+        BLOCKED,
+        FAILED,
+        CANCELLED
     }
 
     public record Wait(Kind kind, String subject, int count) {
@@ -64,12 +66,20 @@ public final class BoardWaitReasons {
         String status = tile.status();
         if (!BoardStatus.PENDING.name().equals(status)
                 && !BoardStatus.WAITING_RESOURCES.name().equals(status)
-                && !BoardStatus.BLOCKED.name().equals(status)) {
+                && !BoardStatus.BLOCKED.name().equals(status)
+                && !BoardStatus.FAILED.name().equals(status)
+                && !BoardStatus.CANCELLED.name().equals(status)) {
             return List.of();
         }
         List<Wait> reasons = new ArrayList<>();
         if (BoardStatus.BLOCKED.name().equals(status)) {
             reasons.add(new Wait(Kind.BLOCKED, "", 0));
+        }
+        if (BoardStatus.FAILED.name().equals(status)) {
+            reasons.add(new Wait(Kind.FAILED, "", 0));
+        }
+        if (BoardStatus.CANCELLED.name().equals(status)) {
+            reasons.add(new Wait(Kind.CANCELLED, "", 0));
         }
         for (String dependency : tile.dependsOn()) {
             BoardTile dependencyTile = byId.get(dependency);
