@@ -2,6 +2,12 @@
 set -uo pipefail
 
 REPO_DIR="${OPENCODE_REPO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+ORPHAN_SWEEP_WIN="${OPENCODE_ORPHAN_SWEEP_WIN:-$REPO_DIR/scripts/lead/orphan-sweep-win.sh}"
+sweep_orphans() {
+    [ -z "${OPENCODE_NO_SWEEP:-}" ] || return 0
+    [ -f "$ORPHAN_SWEEP_WIN" ] || return 0
+    bash "$ORPHAN_SWEEP_WIN" >/dev/null 2>&1 || true
+}
 OPENCODE_BIN="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
 MODEL="${OPENCODE_MODEL:-opencode/big-pickle}"
 read -ra RETRY_DELAYS <<<"${OPENCODE_RETRY_DELAYS:-5 5 10 30 60}"
@@ -27,10 +33,14 @@ DIRTY_SHORT_ANSWER="${OPENCODE_DIRTY_SHORT_ANSWER:-600}"
 LOOP_REPEAT="${OPENCODE_LOOP_REPEAT:-15}"
 LOOP_LIMIT="${OPENCODE_LOOP_LIMIT:-3}"
 LOOP_PROMPT="Ты ${LOOP_REPEAT} раз подряд выполнил одну и ту же команду — это зацикливание. Остановись: посмотри git status (правки в индексе видны в git diff --cached), перечитай TestResults/task.md и TestResults/progress.md, реши, какой следующий шаг задания, и сделай его другой командой."
-EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): работаешь без собеседника — вопросов не задавай, решай сам по правилам проекта. Работа БЛОКАМИ: законченный кусок правишь целиком, затем тесты, затем один коммит; тесты — когда считаешь, что всё должно стать зелёным, а не после каждой правки; коммиты не мельчить. Тесты — только scripts/test.sh (unit [--tests …] / gametest [пачка…]), полный лог уже в TestResults/logs/; полный unit перед коммитом гоняет хук; полный GameTest — в финале. Красное не коммитишь, хук не обходишь (--no-verify запрещён). Новый тест доказываешь подлогом по существу (код компилируется, тест краснеет); сторожа и проверки не ослабляешь, таймауты не поднимаешь вместо исправления. Код смотри через codegraph (MCP codegraph_*), полученному коду верь и не перечитывай; правки — точечные (edit), не переписывание файла целиком; вывод команд — не больше 40 строк. Задание — TestResults/task.md; в конце каждого блока — запись в TestResults/progress.md (хэши, решения, что дальше); после продолжения сессии сначала перечитай оба файла. Процессы останавливай только свои, по PID; pkill -f/killall по шаблону запрещены. Публикацию мода и перезапуск сервера не делаешь. В конце — отчёт: хэши коммитов, итог тестов, что не сделано и почему."
+EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Исполнитель»): работаешь без собеседника — вопросов не задавай, решай сам по правилам проекта. Работа БЛОКАМИ: законченный кусок правишь целиком, затем тесты, затем один коммит; тесты — когда считаешь, что всё должно стать зелёным, а не после каждой правки; коммиты не мельчить. Тесты — только scripts/test.sh (unit [--tests …] / gametest [пачка…]), полный лог уже в TestResults/logs/; полный unit перед коммитом гоняет хук; полный GameTest — в финале. Красное не коммитишь, хук не обходишь (--no-verify запрещён). Новый тест доказываешь подлогом по существу (код компилируется, тест краснеет); сторожа и проверки не ослабляешь, таймауты не поднимаешь вместо исправления. Код смотри через codegraph (MCP codegraph_*), полученному коду верь и не перечитывай; правки — точечные (edit), не переписывание файла целиком; вывод команд — не больше 40 строк. Задание — TestResults/task.md; в конце каждого блока — запись в TestResults/progress.md (хэши, решения, что дальше); после продолжения сессии сначала перечитай оба файла. Процессы останавливай только свои, по PID; pkill -f/killall по шаблону запрещены. Поиск по всему диску запрещён: не запускай find/grep с корнем «/» (find / …), ищи в каталоге репозитория — такой процесс живёт часами после смерти родителя и грузит диск. Публикацию мода и перезапуск сервера не делаешь. В конце — отчёт: хэши коммитов, итог тестов, что не сделано и почему."
 POLL_SECONDS=2
 current_pid=""
-trap '[ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null' EXIT
+finish_run() {
+    [ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null
+    sweep_orphans
+}
+trap finish_run EXIT
 trap 'exit 143' TERM HUP INT
 PYTHON="${PYTHON:-$(python3 -c "" >/dev/null 2>&1 && echo python3 || echo python)}"
 EXIT_PROVIDER_EXHAUSTED=75
@@ -72,6 +82,7 @@ log_root="${OPENCODE_LOG_ROOT:-$REPO_DIR/TestResults/opencode}"
 log_dir="$log_root/$(date +%Y%m%d-%H%M%S)-$$"
 failures_log="$log_root/failures.log"
 mkdir -p "$log_dir"
+sweep_orphans
 failure_text=""
 
 newest_mtime() {
