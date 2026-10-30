@@ -16,11 +16,7 @@ class CharcoalFuelResolveTests {
 
     @Test
     void resolve_CharcoalFuel_BurnsWoodInsteadOfCoal() {
-        ResourceKnowledge knowledge = new StubKnowledge(
-                        Set.of("oak_log", "coal"),
-                        Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
-                        Map.of("charcoal", "oak_log"))
-                .withGatherSource("coal", "coal_ore");
+        ResourceKnowledge knowledge = woodKnowledge();
 
         TaskNode plan = ResourceResolver.resolve("charcoal", 1, knowledge);
 
@@ -33,6 +29,27 @@ class CharcoalFuelResolveTests {
                 "Древесный уголь жгут брёвнами, а не углём: уголь приходится добывать из руды, и обжиг "
                         + "оказывался недоступен там, где уголь и понадобился (наблюдение 8, «не удалось добыть "
                         + "charcoal ×1»). Топливо — своя доска из брёвен, уголь в цепочке не участвует");
+    }
+
+    @Test
+    void select_PrefixedCharcoal_SkipsCoalFuel() {
+        FuelPlanner.FuelRequirement fuel = FuelPlanner.select(
+                        "minecraft:charcoal", 1, woodKnowledge(), Set.of(), Map.of())
+                .orElseThrow();
+
+        assertEquals(
+                "oak_planks",
+                fuel.fuel(),
+                "Предмет из задания приходит с полным id (minecraft:charcoal), а знания и таблица топлива — "
+                        + "с короткими: без приведения имени обжиг снова выбирал уголь, и сад зависел от шахты");
+    }
+
+    private static ResourceKnowledge woodKnowledge() {
+        return new StubKnowledge(
+                        Set.of("oak_log", "coal"),
+                        Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
+                        Map.of("charcoal", "oak_log"))
+                .withGatherSource("coal", "coal_ore");
     }
 
     private static ScriptCall craft(String item, int count) {

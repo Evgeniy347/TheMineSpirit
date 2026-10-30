@@ -63,7 +63,11 @@ public final class FuelPlanner {
     }
 
     private static boolean sameSource(String smelted, String fuel) {
-        return "charcoal".equals(smelted) && "coal".equals(fuel);
+        return "charcoal".equals(shortName(smelted)) && "coal".equals(shortName(fuel));
+    }
+
+    private static String shortName(String item) {
+        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
     private static List<String> fuelCandidates(ResourceKnowledge knowledge, String smelted) {
