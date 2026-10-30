@@ -58,6 +58,22 @@ final class ClearSummary {
         return (int) Math.min(box.volume(), Integer.MAX_VALUE);
     }
 
+    static String of(ClearAreaSession session) {
+        return of(
+                session.box,
+                new Tally(
+                        session.removed,
+                        session.skippedTotal(),
+                        session.unsafe,
+                        session.noStand,
+                        session.protectedSkipped,
+                        session.foreignSkipped,
+                        session.unreachable,
+                        session.excludedSkipped,
+                        Refusals.of(session.breakSkips)),
+                session.leftover);
+    }
+
     static String of(BuildBox box, Tally tally, List<Leftover> leftover) {
         String counts = "убрано " + tally.removed() + " из " + box.volume() + "; пропущено: " + tally.skipped()
                 + " (небезопасных: " + tally.unsafe()

@@ -78,6 +78,7 @@ public class ClearAreaSession {
     protected int restoredSkipped;
     protected int excludedSkipped;
     protected final BreakSkipTally breakSkips = new BreakSkipTally();
+    protected List<ClearSummary.Leftover> leftover = List.of();
 
     private final BuildResult tally = new BuildResult();
     private int approachFailed;
@@ -93,7 +94,6 @@ public class ClearAreaSession {
     private final boolean demolish;
     private final boolean keepGround;
     private final ClearBlocked blocked;
-    private List<ClearSummary.Leftover> leftover = List.of();
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this(spirit, box, false);
@@ -211,6 +211,7 @@ public class ClearAreaSession {
             remaining.remove(0);
         }
         apply(blocked.dropExcluded(remaining));
+        apply(blocked.dropPlanned(remaining));
         if (remaining.isEmpty()) {
             finish();
             return;
@@ -316,6 +317,7 @@ public class ClearAreaSession {
         noStand += sweep.noStand();
         unreachable += sweep.unreachable();
         excludedSkipped += sweep.excluded();
+        protectedSkipped += sweep.planned();
         noteSkipped(sweep.skipped());
         if (!sweep.leftover().isEmpty()) {
             leftover = Stream.concat(leftover.stream(), sweep.leftover().stream())
@@ -483,7 +485,7 @@ public class ClearAreaSession {
             return;
         }
         if (removed == 0 && skippedTotal() - protectedSkipped - excludedSkipped > 0) {
-            fail(summary() + "; не убран ни один блок");
+            fail(ClearSummary.of(this) + "; не убран ни один блок");
             return;
         }
         if (removed == 0 && skippedTotal() == 0) {
@@ -505,7 +507,7 @@ public class ClearAreaSession {
                             approaches,
                             fromPlace,
                             vanished),
-                    summary());
+                    ClearSummary.of(this));
         }
         outcome = Outcome.SUCCEEDED;
     }
@@ -523,22 +525,6 @@ public class ClearAreaSession {
         tally.failed();
         cancel();
         return outcome;
-    }
-
-    private String summary() {
-        return ClearSummary.of(
-                box,
-                new ClearSummary.Tally(
-                        removed,
-                        skippedTotal(),
-                        unsafe,
-                        noStand,
-                        protectedSkipped,
-                        foreignSkipped,
-                        unreachable,
-                        excludedSkipped,
-                        ClearSummary.Refusals.of(breakSkips)),
-                leftover);
     }
 
     private void releaseCurrent() {

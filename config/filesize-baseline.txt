@@ -24,7 +24,7 @@ src/main/java/com/theminespirit/gametest/RestFixture.java	310
 src/main/java/com/theminespirit/neoforge/BlockBreaker.java	395
 src/main/java/com/theminespirit/neoforge/BuildSchematicScript.java	1226
 src/main/java/com/theminespirit/neoforge/ChopTreeScript.java	376
-src/main/java/com/theminespirit/neoforge/ClearAreaSession.java	561
+src/main/java/com/theminespirit/neoforge/ClearAreaSession.java	547
 src/main/java/com/theminespirit/neoforge/DescentSession.java	359
 src/main/java/com/theminespirit/neoforge/DropCollector.java	476
 src/main/java/com/theminespirit/neoforge/FarmSession.java	688

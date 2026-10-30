@@ -7,17 +7,21 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
 final class ClearBlocked {
-    record Sweep(List<ClearSummary.Leftover> leftover, int unsafe, int noStand, int unreachable, int excluded) {
+    record Sweep(
+            List<ClearSummary.Leftover> leftover, int unsafe, int noStand, int unreachable, int excluded, int planned) {
         int skipped() {
-            return unsafe + noStand + unreachable + excluded;
+            return unsafe + noStand + unreachable + excluded + planned;
         }
     }
 
@@ -49,7 +53,44 @@ final class ClearBlocked {
                     cell, blockAt(cell), BreakSkipTally.Reason.NO_STAND.title(), cells.failureCount(cell)));
             remaining.remove(index);
         }
-        return new Sweep(leftover, 0, 0, 0, excluded);
+        return new Sweep(leftover, 0, 0, 0, excluded, 0);
+    }
+
+    Sweep dropPlanned(List<BlockCoord> remaining) {
+        List<ClearSummary.Leftover> leftover = new ArrayList<>();
+        int planned = 0;
+        for (int index = remaining.size() - 1; index >= 0; index--) {
+            BlockCoord cell = remaining.get(index);
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            BlockState state = level.getBlockState(pos);
+            String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+            if (!plannedFence(id, onFenceStrip(pos))) {
+                continue;
+            }
+            planned++;
+            leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), "забор плана ограды", 0));
+            remaining.remove(index);
+        }
+        return new Sweep(leftover, 0, 0, 0, 0, planned);
+    }
+
+    static boolean plannedFence(String blockId, boolean onStrip) {
+        if (!onStrip) {
+            return false;
+        }
+        String path = blockId.contains(":") ? blockId.substring(blockId.indexOf(':') + 1) : blockId;
+        return "fence".equals(path)
+                || "fence_gate".equals(path)
+                || path.endsWith("_fence")
+                || path.endsWith("_fence_gate");
+    }
+
+    private boolean onFenceStrip(BlockPos pos) {
+        return level instanceof ServerLevel server
+                && SettlementPlotStore.get(server)
+                        .site()
+                        .filter(site -> site.fenceStrip().contains(pos.getX(), pos.getZ()))
+                        .isPresent();
     }
 
     Sweep exhausted(List<BlockCoord> remaining, LevelSafetyView safety, BlockCoord from) {
@@ -71,7 +112,7 @@ final class ClearBlocked {
             }
             leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), reason, cells.noteFailure(cell)));
         }
-        return new Sweep(leftover, unsafe, noStand, unreachable, 0);
+        return new Sweep(leftover, unsafe, noStand, unreachable, 0, 0);
     }
 
     void escalate(Logger logger, SpiritEntity spirit, String reason) {
