@@ -49,7 +49,15 @@ final class GraphSimulation {
         return run(start, limit, Disturbance.NONE);
     }
 
+    static Outcome runUntil(GraphWorld start, int limit, int stopStage) {
+        return run(start, limit, Disturbance.NONE, stopStage);
+    }
+
     static Outcome run(GraphWorld start, int limit, Disturbance disturbance) {
+        return run(start, limit, disturbance, LAST_STAGE + 1);
+    }
+
+    private static Outcome run(GraphWorld start, int limit, Disturbance disturbance, int stopStage) {
         GraphWorld world = start.copy();
         List<Step> trail = new ArrayList<>();
         Map<String, Integer> streak = new LinkedHashMap<>();
@@ -77,8 +85,16 @@ final class GraphSimulation {
                 stageTicks.put(stageBefore, now - stageStart);
                 stageStart = now;
             }
-            if (world.stage > LAST_STAGE) {
-                return new Outcome(LAST_STAGE, trail.size(), trail, "", strategist, stageSteps, now, stageTicks);
+            if (world.stage > LAST_STAGE || world.stage >= stopStage) {
+                return new Outcome(
+                        Math.min(world.stage, LAST_STAGE),
+                        trail.size(),
+                        trail,
+                        "",
+                        strategist,
+                        stageSteps,
+                        now,
+                        stageTicks);
             }
             GraphPlan plan = world.plan();
             answer(world, plan, strategist);
