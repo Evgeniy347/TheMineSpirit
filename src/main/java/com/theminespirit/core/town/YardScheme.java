@@ -14,6 +14,8 @@ public final class YardScheme {
     public static final String YARD = "yard_1";
     public static final String CHESTS = "yard_chest";
     public static final String GROUND_TORCH = "ground_torch";
+    public static final String LAMP_2 = "lamp_2";
+    public static final String LAMP_3 = "lamp_3";
     public static final List<String> TABLE = List.of("crafting_table");
     public static final List<String> CHEST = List.of("chest");
     public static final List<String> FURNACE = List.of("furnace");
@@ -80,12 +82,22 @@ public final class YardScheme {
         return new SchemeBuild(YARD, origin(site), BuildRotation.NONE, FURNACE);
     }
 
+    public static String lightScheme(int stage) {
+        return stage >= 3 ? LAMP_3 : stage == 2 ? LAMP_2 : GROUND_TORCH;
+    }
+
     public static List<SchemeBuild> lighting(StageSite site) {
-        Schematic.Entry torch = scheme(DataTables.INSTANCE.presets().current(), GROUND_TORCH)
-                .blocks()
-                .get(0);
+        return lighting(site, site.stage());
+    }
+
+    public static List<SchemeBuild> lighting(StageSite site, int stage) {
+        String scheme = lightScheme(stage);
+        Schematic.Entry base =
+                scheme(DataTables.INSTANCE.presets().current(), scheme).blocks().get(0);
         List<SchemeBuild> builds = new ArrayList<>();
-        builds.add(new SchemeBuild(YARD, origin(site), BuildRotation.NONE, TORCH));
+        if (stage < 2) {
+            builds.add(new SchemeBuild(YARD, origin(site), BuildRotation.NONE, TORCH));
+        }
         BlockCoord house = site.houseOrigin();
         List<BlockCoord> spots = List.of(
                 new BlockCoord(site.mine().x(), site.anchor().y(), site.mine().z()),
@@ -97,8 +109,8 @@ public final class YardScheme {
                 new BlockCoord(house.x() + StageSite.HOUSE_WIDTH, house.y(), house.z()));
         for (BlockCoord spot : spots) {
             builds.add(new SchemeBuild(
-                    GROUND_TORCH,
-                    new BlockCoord(spot.x() - torch.dx(), spot.y() - torch.dy(), spot.z() - torch.dz()),
+                    scheme,
+                    new BlockCoord(spot.x() - base.dx(), spot.y() - base.dy(), spot.z() - base.dz()),
                     BuildRotation.NONE));
         }
         return List.copyOf(builds);

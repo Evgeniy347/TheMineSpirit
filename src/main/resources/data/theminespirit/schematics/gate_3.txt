@@ -1,0 +1,23 @@
+# gate_3 — главные ворота этапа 2 (catalog-2.md, gate 3): надвратная арка из булыжника, проход с калиткой,
+# фонари на столбах. Ширина 3 клетки: проход держится в линии каменной стены.
+name: "Ворота главные, уровень 3"
+type: defense
+stage: 2
+level: 3
+requires: fence_wicket
+size: 3x4x1   # Ш×В×Д
+entrance: 1,0,0
+legend:
+  'W': cobblestone_wall
+  'C': cobblestone
+  'G': oak_fence_gate
+  'L': lantern[hanging=false]
+layers:
+  - y0 столбы и створка: |
+      WGW
+  - y1 проход под аркой: |
+      C.C
+  - y2 арка: |
+      CCC
+  - y3 фонари на столбах: |
+      L.L

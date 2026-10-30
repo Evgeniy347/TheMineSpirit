@@ -1,0 +1,29 @@
+# wall_3_post — одиночный столб каменной стены: добивает линию там, где не ложится фрагмент крупнее.
+name: "Стена: столб"
+type: defense
+stage: 2
+level: 3
+requires: fence_post
+size: 1x4x2   # Ш×В×Д
+entrance: 0,0,0
+exemptions:
+  - rule: light
+    reason: "глухой фрагмент стены без света: фонари и ворота ставятся отдельными фрагментами линии"
+  - rule: closed_walls
+    reason: "столб — отрезок линии ограды, периметр замыкают соседние фрагменты"
+legend:
+  'W': cobblestone_wall
+  'C': cobblestone
+layers:
+  - y0 основание: |
+
+      W
+  - y1: |
+
+      C
+  - y2: |
+
+      C
+  - y3: |
+
+      C

@@ -58,8 +58,8 @@ public final class StageBuilds {
         return new StageWork(site, List.of(), builds);
     }
 
-    private static WallLayout fenceLayout() {
-        return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.FENCE);
+    private static WallLayout fenceLayout(StageSite site) {
+        return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.fence(site.stage()));
     }
 
     record FencePart(StageWork work, boolean hasPieces) {}
@@ -70,7 +70,7 @@ public final class StageBuilds {
 
     static FencePart fencePart(ServerLevel level, StageSite site, int part) {
         FenceLine ring = site.ring();
-        List<WallPiece> pieces = fenceLayout().closed(ring.posts(), ring.gates());
+        List<WallPiece> pieces = fenceLayout(site).closed(ring.posts(), ring.gates());
         int size = pieces.size();
         int parts = TicketPlans.FENCE_PARTS;
         int from = part >= 1 && part <= parts ? (part - 1) * size / parts : 0;

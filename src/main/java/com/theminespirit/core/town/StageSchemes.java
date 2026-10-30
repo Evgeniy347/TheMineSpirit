@@ -13,5 +13,12 @@ public final class StageSchemes {
             "fence_wicket",
             "fence_post");
 
+    public static final List<String> WALL =
+            List.of("wall_3", "wall_3_straight", "wall_3_post", "wall_3_corner", "gate_3");
+
     private StageSchemes() {}
+
+    public static List<String> fence(int stage) {
+        return stage >= 2 ? WALL : FENCE;
+    }
 }

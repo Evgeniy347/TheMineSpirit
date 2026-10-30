@@ -1,0 +1,29 @@
+# wall_3_corner — угол каменной стены 90°: линия ограды поворачивает на четверть.
+name: "Стена: угол 90°"
+type: defense
+stage: 2
+level: 3
+requires: fence_corner
+size: 2x4x2   # Ш×В×Д
+entrance: 0,0,1
+exemptions:
+  - rule: light
+    reason: "глухой фрагмент стены без света: фонари и ворота ставятся отдельными фрагментами линии"
+  - rule: closed_walls
+    reason: "угол — отрезок линии ограды, периметр замыкают соседние фрагменты"
+legend:
+  'W': cobblestone_wall
+  'C': cobblestone
+layers:
+  - y0 основание: |
+      WW
+       W
+  - y1: |
+      CC
+       C
+  - y2: |
+      CC
+       C
+  - y3 зубцы: |
+      C.
+       .
