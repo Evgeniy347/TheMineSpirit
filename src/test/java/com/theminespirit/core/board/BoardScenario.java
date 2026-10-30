@@ -65,6 +65,9 @@ public final class BoardScenario {
     final Map<String, Integer> stock = new HashMap<>();
     final List<Anomaly> anomalies = new ArrayList<>();
     final Set<UUID> dead = new HashSet<>();
+    private final StageBacklog backlog = new StageBacklog();
+    private final Map<String, Long> assignedAt = new HashMap<>();
+    private final boolean stageOne;
 
     BoardScenario(long seed) {
         this(seed, false);
@@ -73,6 +76,7 @@ public final class BoardScenario {
     private BoardScenario(long seed, boolean stageOne) {
         this.seed = seed;
         this.random = new Random(seed);
+        this.stageOne = stageOne;
         if (stageOne) {
             stageOfSettlement();
             return;
@@ -127,55 +131,11 @@ public final class BoardScenario {
     }
 
     private void stageOfSettlement() {
-        List<String> tools =
-                List.of("minecraft:stone_pickaxe", "minecraft:stone_axe", "minecraft:stone_shovel", "minecraft:bread");
-        for (int i = 1; i <= 3; i++) {
-            spirits.add(new Spirit(new UUID(seed, i), "spirit-" + i, tools, FED, new SpiritView(false, false, false)));
-        }
-        stock.putAll(Map.of(
-                "oak_log", 256,
-                "oak_planks", 256,
-                "cobblestone", 256,
-                "torch", 64,
-                "oak_sapling", 16,
-                "dirt", 128,
-                "stick", 32,
-                "coal", 32,
-                "bread", 16));
-        ticket("first:crafting_station:1", BoardCase.CRAFTING_STATION, List.of(), Map.of("oak_planks", 4));
-        ticket(
-                "first:clear_grounds:1",
-                BoardCase.CLEAR_GROUNDS,
-                List.of("first:crafting_station:1"),
-                Map.of("oak_planks", 8));
-        ticket(
-                "first:stock_chests:1",
-                BoardCase.STOCK_CHESTS,
-                List.of("first:clear_grounds:1"),
-                Map.of("oak_planks", 16));
-        ticket("first:build_mine:1", BoardCase.BUILD_MINE, List.of("first:clear_grounds:1"), Map.of("torch", 6));
-        ticket(
-                "first:craft_furnace:1",
-                BoardCase.CRAFT_FURNACE,
-                List.of("first:stock_chests:1"),
-                Map.of("cobblestone", 8));
-        ticket("first:lighting:1", BoardCase.LIGHTING, List.of("first:stock_chests:1"), Map.of("torch", 8));
-        ticket("first:build_fence:1", BoardCase.BUILD_FENCE, List.of("first:clear_grounds:1"), Map.of("oak_log", 40));
-        ticket(
-                "first:build_house:1",
-                BoardCase.BUILD_HOUSE,
-                List.of("first:clear_grounds:1"),
-                Map.of("oak_log", 12, "oak_planks", 30, "cobblestone", 16));
-        ticket(
-                "first:build_orchard:1",
-                BoardCase.BUILD_ORCHARD,
-                List.of("first:build_house:1"),
-                Map.of("oak_sapling", 4, "torch", 4, "dirt", 8));
-        ticket("first:build_streets:1", BoardCase.BUILD_STREETS, List.of("first:build_house:1"), Map.of("dirt", 40));
+        StageOneFixture.seed(this);
     }
 
-    private void ticket(String id, BoardCase boardCase, List<String> deps, Map<String, Integer> required) {
-        board.submit(new BoardTicket(
+    void ticket(String id, BoardCase boardCase, List<String> deps, Map<String, Integer> required) {
+        backlog.add(new BoardTicket(
                 id,
                 boardCase,
                 Optional.empty(),
@@ -185,6 +145,18 @@ public final class BoardScenario {
                 BoardTicket.ALWAYS_CAUSE,
                 deps,
                 required));
+    }
+
+    public void hold(long ticks) {
+        backlog.hold(ticks);
+    }
+
+    public int openStageCases() {
+        return backlog.openCases(board);
+    }
+
+    public long longestStageWaitTicks() {
+        return backlog.longestWait(board, clock[0]);
     }
 
     StockView stockView() {
@@ -200,6 +172,9 @@ public final class BoardScenario {
     }
 
     void dispatch(int round) {
+        if (stageOne) {
+            backlog.open(board, clock[0], spirits.size());
+        }
         board.prune(clock[0]);
         for (BoardTicket held : assigned()) {
             Optional<Spirit> holder = board.holderOf(held.id()).flatMap(this::spirit);
@@ -223,6 +198,7 @@ public final class BoardScenario {
                 anomalies.add(new Anomaly("CLAIM_REFUSED", seed, round, ticket.id() + " → " + outcome));
                 continue;
             }
+            assignedAt.put(ticket.id(), clock[0]);
             dispatch.take(chosen.orElseThrow().id());
         }
     }
@@ -261,7 +237,11 @@ public final class BoardScenario {
     public void round(int round) {
         dispatch(round);
         for (BoardTicket held : assigned()) {
+            if (clock[0] - assignedAt.getOrDefault(held.id(), clock[0]) < backlog.holdTicks()) {
+                continue;
+            }
             board.complete(held.id());
+            assignedAt.remove(held.id());
         }
         clock[0] += BoardTuning.boardIntervalTicks();
     }
