@@ -16,6 +16,7 @@ import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.planner.CraftedItems;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
@@ -158,7 +159,7 @@ final class GraphPost {
                 new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
                 now);
         missing.forEach((item, count) -> {
-            if (GraphItemIds.known(item)) {
+            if (GraphItemIds.known(item) && !CraftedItems.isCrafted(item)) {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
             }
         });

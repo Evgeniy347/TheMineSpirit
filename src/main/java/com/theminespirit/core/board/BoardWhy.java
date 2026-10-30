@@ -34,7 +34,7 @@ public final class BoardWhy {
             return Optional.of("откат после провала: задание вернётся в очередь после паузы");
         }
         Optional<UUID> holder = ticket.assignee();
-        if (holder.isPresent() && !board.availableTo(holder.get(), ticket.boardCase(), now)) {
+        if (holder.isPresent() && !board.availableTo(holder.get(), ticket, now)) {
             UUID spirit = holder.get();
             return Optional.of(
                     board.caseDetached(spirit, ticket.boardCase())

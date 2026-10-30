@@ -172,7 +172,7 @@ public final class TicketPlans {
                     CRAFT_DIAMOND_PICKAXE,
                     CRAFT_DIAMOND_AXE,
                     CRAFT_DIAMOND_SHOVEL,
-                    CRAFT_DIAMOND_SWORD -> craftTool(boardCase, target);
+                    CRAFT_DIAMOND_SWORD -> ToolCraftPlan.of(boardCase, target);
             case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
             case CRAFT_BED -> craft(bedItem(target), target.count() > 0 ? target.count() : 1, target);
             case WEAVE_WOOL ->
@@ -539,14 +539,8 @@ public final class TicketPlans {
         return new SequenceNode(steps);
     }
 
-    private static TaskNode withLeftovers(TaskNode step, TicketTarget target) {
+    static TaskNode withLeftovers(TaskNode step, TicketTarget target) {
         return sequence(step, store(target, LEFTOVERS.toArray(String[]::new)));
-    }
-
-    private static TaskNode craftTool(BoardCase boardCase, TicketTarget target) {
-        int count = target.toolCount() > 0 ? target.toolCount() : 1;
-        return withLeftovers(
-                craft(ToolSet.itemId(boardCase), Math.min(count, CatalogLimits.COUNT_MAX), target), target);
     }
 
     private static TaskNode lighting(TicketTarget target) {
