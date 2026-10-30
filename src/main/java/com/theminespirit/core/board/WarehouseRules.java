@@ -12,7 +12,6 @@ public final class WarehouseRules {
     public static final int MAX_LEVEL = 4;
     public static final int LAST_LEVEL = 4;
     public static final int MAX_INTERMEDIATE = 3;
-    public static final int SITE_SPACING = 32;
 
     private WarehouseRules() {}
 
@@ -65,7 +64,7 @@ public final class WarehouseRules {
             throw new IllegalArgumentException(
                     "Уровень склада " + level + " вне 1.." + MAX_LEVEL + ": места для такого уровня нет");
         }
-        return new BlockCoord(home.x() + (level - 1) * SITE_SPACING, home.y(), home.z());
+        return home;
     }
 
     public static String scheme(int level) {

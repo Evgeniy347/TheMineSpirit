@@ -630,11 +630,8 @@ public final class TicketPlans {
         if (target.schemeFile() != null) {
             return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
         }
-        Optional<String> staged = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_HOUSE, level);
-        if (staged.isEmpty()) {
-            return sequence(gotoTarget(target), schematic(DEFAULT_SCHEME, target));
-        }
-        return sequence(gotoTarget(target), schematic(staged.orElseThrow(), target.target(), target));
+        String scheme = BuildingLevels.scheme(BoardCase.BUILD_HOUSE, level).orElse(DEFAULT_SCHEME);
+        return sequence(gotoTarget(target), schematic(scheme, target));
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {

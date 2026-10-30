@@ -33,10 +33,6 @@ final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
     static final String PART = ":2";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
-    private static final int TORCHES_PER_CRAFT = 4;
-    private static final int TORCH_BATCH = 16;
-    private static final int CHARCOAL_LOGS = 4;
-    private static final int CHARCOAL_BATCH = 2;
     private static final String EAT = "eat";
     private static final String ORDER = "craft_player_order";
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
@@ -46,9 +42,9 @@ final class GraphPost {
     final GraphSurroundings.Around around;
     final StockView stock;
     final long now;
+    final List<SpiritEntity> spirits;
+    final SupplyGraph graph;
     private final BoardService service;
-    private final List<SpiritEntity> spirits;
-    private final SupplyGraph graph;
     private final MaterialSource source;
     private @Nullable BlockCoord craft;
 
@@ -135,8 +131,8 @@ final class GraphPost {
         return switch (boardCase) {
             case GATHER_MATERIALS -> PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
-            case CRAFT_TORCHES -> torches(ticket, task);
-            case SMELT_CHARCOAL -> charcoal(ticket, task);
+            case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
+            case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             default -> false;
         };
@@ -210,36 +206,6 @@ final class GraphPost {
         submit(
                 ticket(ticket.id(), task.boardCase(), Optional.of(spirit), task.priority(), ticket.id(), items(task)),
                 TicketTarget.at(craftPoint()).withToolCount(1));
-        return true;
-    }
-
-    private boolean torches(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        int coal = stock.available().getOrDefault("coal", 0);
-        int charcoal = stock.available().getOrDefault("charcoal", 0);
-        String fuel = coal >= charcoal ? "coal" : "charcoal";
-        int torches = Math.min(ticket.count(), TORCH_BATCH);
-        int crafts = Math.min((torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT, Math.max(coal, charcoal));
-        if (crafts <= 0) {
-            return true;
-        }
-        submit(
-                ticket(
-                        ticket.id(),
-                        task.boardCase(),
-                        Optional.empty(),
-                        task.priority(),
-                        ticket.id(),
-                        Map.of(fuel, crafts)),
-                TicketTarget.at(craftPoint()).withCount(crafts * TORCHES_PER_CRAFT));
-        return true;
-    }
-
-    private boolean charcoal(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        String log = GraphNames.item(graph, "#logs", scan.wood());
-        Optional<UUID> holder = scan.furnaceBlock() ? Optional.empty() : GraphCrew.furnaceHolder(spirits);
-        submit(
-                ticket(ticket.id(), task.boardCase(), holder, task.priority(), ticket.id(), Map.of(log, CHARCOAL_LOGS)),
-                TicketTarget.at(craftPoint()).withSupply(log, CHARCOAL_LOGS).withCount(CHARCOAL_BATCH));
         return true;
     }
 

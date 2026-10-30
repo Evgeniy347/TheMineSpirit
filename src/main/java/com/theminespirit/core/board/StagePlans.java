@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -168,8 +169,8 @@ public final class StagePlans {
     private static TaskNode demolish(List<PlannedBlock> blocks) {
         List<TaskNode> steps = new ArrayList<>();
         blocks.stream()
-                .sorted(Comparator.comparingInt(
-                                (PlannedBlock block) -> block.at().y())
+                .sorted(Comparator.comparingInt((PlannedBlock block) -> SchematicBlocks.isBed(block.block()) ? 0 : 1)
+                        .thenComparingInt((PlannedBlock block) -> block.at().y())
                         .thenComparing(PlannedBlock::at))
                 .forEach(block -> steps.add(PlanSteps.clear(block.at(), true)));
         return new SequenceNode(steps);
