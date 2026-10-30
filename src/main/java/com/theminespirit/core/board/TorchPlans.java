@@ -30,13 +30,11 @@ final class TorchPlans {
 
     private TorchPlans() {}
 
-    static void addMaterials(List<TaskNode> steps, Map<String, Integer> materials, String wood) {
+    static void addMaterials(List<TaskNode> steps, Map<String, Integer> materials, String wood, TicketTarget target) {
         int torches = materials.getOrDefault(TORCH, 0);
         materials.forEach((item, count) -> {
             if (!TORCH.equals(item)) {
-                steps.add(new ScriptCall(
-                        ACQUIRE,
-                        Map.of(ITEM, WoodSpecies.swap(item, wood), COUNT, Math.min(count, CatalogLimits.COUNT_MAX))));
+                steps.add(material(target, WoodSpecies.swap(item, wood), Math.min(count, CatalogLimits.COUNT_MAX)));
             }
         });
         if (torches > 0) {
@@ -44,10 +42,17 @@ final class TorchPlans {
         }
     }
 
+    private static TaskNode material(TicketTarget target, String item, int count) {
+        return GatherPlans.plan(target, item, count)
+                .orElseGet(() -> new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, count)));
+    }
+
     static List<TaskNode> supply(int torches) {
         int crafts = (torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT;
         return List.of(
-                new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:coal", COUNT, crafts)),
+                new FallbackNode(List.of(
+                        new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:coal", COUNT, crafts)),
+                        new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:charcoal", COUNT, crafts)))),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, crafts)),
                 new ScriptCall(
                         CRAFT, Map.of(ITEM, TORCH, COUNT, torches, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));

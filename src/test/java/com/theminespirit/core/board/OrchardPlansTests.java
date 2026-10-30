@@ -76,10 +76,9 @@ class OrchardPlansTests {
                 "Порода схемы — порода постройки графа, а не порода поселения");
         assertTrue(
                 calls(plan).stream()
-                        .anyMatch(call -> "acquire".equals(call.script())
-                                && "minecraft:jungle_sapling"
-                                        .equals(call.params().get("item"))),
-                "Сад джунглей берёт саженцы jungle_sapling: " + calls(plan));
+                        .anyMatch(call -> "gather".equals(call.script())
+                                && "jungle_leaves".equals(call.params().get("block"))),
+                "Сад джунглей берёт саженцы с листвы джунгля, а не из размещённых саженцев: " + calls(plan));
     }
 
     @Test

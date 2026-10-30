@@ -604,7 +604,7 @@ public final class TicketPlans {
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         List<TaskNode> steps = new ArrayList<>();
         steps.add(gotoPoint(site == null ? target.target() : site.workYard()));
-        TorchPlans.addMaterials(steps, orchardMaterials(scheme), wood);
+        TorchPlans.addMaterials(steps, orchardMaterials(scheme), wood, target);
         steps.add(schematic(scheme, origin, target));
         return new SequenceNode(steps);
     }

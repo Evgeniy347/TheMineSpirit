@@ -6,6 +6,10 @@ import java.util.Optional;
 public interface ResourceKnowledge {
     boolean isGatherable(String item);
 
+    default boolean isCraftedProduct(String item) {
+        return CraftedItems.isCrafted(item);
+    }
+
     default boolean isBrushed(String item) {
         return false;
     }
