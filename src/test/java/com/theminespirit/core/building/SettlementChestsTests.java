@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.SettlementReach;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -101,7 +102,7 @@ class SettlementChestsTests {
     }
 
     @Test
-    void warehouse_ChestBeyondOldRadius_IsStillOffered() {
+    void warehouse_WithoutSettlementBoundary_KeepsWholeRegistry() {
         SettlementChests chests = new SettlementChests();
         BlockCoord spirit = new BlockCoord(-179, 68, -515);
         BlockCoord yard = new BlockCoord(-171, 71, -487);
@@ -110,8 +111,25 @@ class SettlementChestsTests {
         assertEquals(
                 List.of(yard),
                 chests.warehouse(spirit),
-                "склад поселения — весь реестр сундуков, а не 16 блоков вокруг случайной точки духа: "
+                "без границы поселения склад — весь реестр сундуков, а не 16 блоков вокруг случайной точки духа: "
                         + "сундук двора в 29 блоках обязан попасть в выбор точки сдачи и еды");
+    }
+
+    @Test
+    void warehouse_ChestOutsideSettlement_IsNotOffered() {
+        SettlementChests chests = new SettlementChests();
+        BlockCoord spirit = new BlockCoord(-179, 68, -515);
+        BlockCoord yard = new BlockCoord(-171, 71, -487);
+        BlockCoord farBarrel = new BlockCoord(-73, 75, -119);
+        chests.add(yard);
+        chests.add(farBarrel);
+        SettlementReach reach = new SettlementReach(-200, -540, -140, -460);
+
+        assertEquals(
+                List.of(yard),
+                chests.warehouse(spirit, reach),
+                "Склад поселения — только контейнеры внутри его границ: бочка −73,75,−119 в ~100 блоках вне ограды "
+                        + "не склад поселения (аномалия 6), иначе дух идёт за материалом за пределы поселения");
     }
 
     @Test

@@ -44,8 +44,8 @@ public final class BoardTasks {
         boolean queued = status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
-        boolean done =
-                status == BoardStatus.DONE || (!queued && board.ledger().has(ticket.boardCase(), ticket.level()));
+        boolean done = status == BoardStatus.DONE
+                || (status != BoardStatus.BLOCKED && !queued && board.ledger().has(ticket.boardCase(), ticket.level()));
         BoardTiming attempt =
                 BoardTiming.attempt(status, timing, BoardActivities.isActivity(ticket.boardCase()), ticket.createdAt());
         return new BoardTask(
