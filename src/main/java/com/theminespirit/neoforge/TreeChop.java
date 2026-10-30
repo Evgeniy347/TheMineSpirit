@@ -77,6 +77,16 @@ final class TreeChop {
         secondStand = false;
         clearing.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
         refusal = startApproach();
+        if (stand != null) {
+            BlockCoord base = tree.base();
+            double trunk = Math.sqrt(spirit.position().distanceToSqr(Vec3.atBottomCenterOf(toPos(base))));
+            LOGGER.info(
+                    "[chop] {} идёт к стволу {}: стоянка {}, до ствола {}",
+                    spirit.getName().getString(),
+                    base,
+                    stand.toShortString(),
+                    String.format(Locale.ROOT, "%.1f", trunk));
+        }
     }
 
     private @Nullable ChopOutcome startApproach() {
@@ -159,16 +169,6 @@ final class TreeChop {
     }
 
     private ChopOutcome resumeChop() {
-        if (phase == Phase.APPROACH) {
-            BlockCoord base = tree.base();
-            double trunk = Math.sqrt(spirit.position().distanceToSqr(Vec3.atBottomCenterOf(toPos(base))));
-            LOGGER.info(
-                    "[chop] {} у дерева {}: стоянка {}, до ствола {}",
-                    spirit.getName().getString(),
-                    base,
-                    stand == null ? "нет (подход к стволу)" : stand.toShortString(),
-                    String.format(Locale.ROOT, "%.1f", trunk));
-        }
         phase = Phase.CHOP;
         return ChopOutcome.running();
     }

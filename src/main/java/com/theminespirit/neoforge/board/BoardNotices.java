@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
+import com.theminespirit.core.board.BoardNoticeText;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardWhy;
@@ -11,9 +12,7 @@ import com.theminespirit.core.board.PendingStall;
 import com.theminespirit.core.board.StatusNote;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
 
@@ -22,17 +21,10 @@ final class BoardNotices {
 
     private final PendingStall pending = new PendingStall();
 
-    void blocks(Board board, JournalService journal) {
+    void blocks(Board board, JournalService journal, StockView stock, long now) {
         for (BoardLogEntry entry : board.drainBlocks()) {
             journal.recordEntry(entry);
-            LOGGER.info(StatusNote.line(
-                    entry.event(),
-                    entry.ticketId(),
-                    entry.boardCase(),
-                    board.ticketFailures(entry.ticketId()),
-                    board.waitNote(entry.ticketId()).orElse(null),
-                    null,
-                    details(board, entry)));
+            LOGGER.info(BoardNoticeText.line(board, entry, stock, now));
         }
     }
 
@@ -47,18 +39,6 @@ final class BoardNotices {
                 board.waitNote(ticket.id()).orElse(null),
                 chosen,
                 details));
-    }
-
-    private static String details(Board board, BoardLogEntry entry) {
-        List<String> parts = new ArrayList<>();
-        if (entry.event() == BoardLog.Event.BLOCKED) {
-            parts.add("причина=" + String.join(", ", entry.modifiers()));
-            List<String> history = board.failureHistory(entry.ticketId());
-            parts.add("история=" + String.join("; ", history));
-        } else if (entry.event() == BoardLog.Event.UNBLOCKED) {
-            parts.add("изменилось: " + String.join(", ", entry.modifiers()));
-        }
-        return String.join(" ", parts);
     }
 
     private static String text(String value) {

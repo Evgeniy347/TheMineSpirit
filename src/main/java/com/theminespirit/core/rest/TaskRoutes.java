@@ -116,9 +116,7 @@ public final class TaskRoutes {
     }
 
     private BoardTask knownBoardTask(String taskId) {
-        return board.tasks().stream()
-                .filter(task -> task.id().equals(taskId))
-                .findFirst()
+        return board.task(taskId)
                 .orElseThrow(
                         () -> new ApiException(ErrorCode.NOT_FOUND, lostTaskMessage(taskId), Map.of(TASK_ID, taskId)));
     }

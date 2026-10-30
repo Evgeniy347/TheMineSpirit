@@ -37,6 +37,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.husbandry.SpeciesIds;
+import com.theminespirit.core.incident.IncidentAim;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -811,8 +812,7 @@ public final class BoardService {
     }
 
     private String incident(SpiritEntity spirit, BoardTicket ticket, String reason) {
-        TicketTarget target = targets.get(ticket.id());
-        String aim = target == null ? "-" : target.target() + " часть " + target.count();
+        String aim = IncidentAim.describe(ticket, targets.get(ticket.id()), WorkReserveHub.ownedBy(spirit));
         String what = ticket.id() + " (" + ticket.boardCase() + ", цель " + aim + "): " + reason;
         return spirit.level() instanceof ServerLevel level ? IncidentSnapshots.record(level, spirit, what) : what;
     }
@@ -900,7 +900,7 @@ public final class BoardService {
     }
 
     private void flushBlockNotes() {
-        notices.blocks(board, journal);
+        notices.blocks(board, journal, stock, board.now());
     }
 
     private Species speciesFor(BoardTicket ticket) {

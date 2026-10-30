@@ -784,7 +784,7 @@ public final class Board {
             }
             Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
             Map<String, Integer> before = blockedMissing.getOrDefault(ticket.id(), Map.of());
-            if (missing.equals(before)) {
+            if (!ShortageChange.improved(before, missing)) {
                 continue;
             }
             statuses.put(ticket.id(), BoardStatus.PENDING);

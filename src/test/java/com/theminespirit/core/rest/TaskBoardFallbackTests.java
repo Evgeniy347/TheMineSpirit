@@ -68,6 +68,22 @@ class TaskBoardFallbackTests {
     }
 
     @Test
+    void get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot() throws Exception {
+        FakeBoardGateway board = new FakeBoardGateway().withRestored(boardTask());
+
+        RestResponse response = send(board, "GET", "/v1/tasks/graph:chop_jungle_log");
+
+        assertEquals(
+                200,
+                response.status(),
+                "Задание, восстановленное из сейва, живёт в реестре доски: 404 «сервер перезапущен» врёт, "
+                        + "хотя бы его и не было в списке на момент снимка: " + response.body());
+        JsonNode task = MAPPER.readTree(response.body());
+        assertEquals("graph:chop_jungle_log", task.get("id").asText(), "Ответ обязан назвать задание доски");
+        assertEquals(BOT, task.get("assignee").asText(), "Ответ обязан назвать держателя задания доски");
+    }
+
+    @Test
     void get_UnknownTicket_StillReportsLostTask() {
         RestResponse response = send(new FakeBoardGateway(), "GET", "/v1/tasks/нет-такого");
 

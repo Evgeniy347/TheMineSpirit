@@ -201,6 +201,34 @@ class BoardBlockTests {
     }
 
     @Test
+    void claimable_ShortageWorsened_StaysBlockedWithoutConditionChange() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        int limit = BoardTuning.ticketFailLimit();
+        for (int attempt = 1; attempt <= limit; attempt++) {
+            if (attempt > 1) {
+                board.prune(now[0]);
+                now[0] += BoardTuning.failBackoffTicks();
+            }
+            board.submit(ticket());
+            board.claim(ID, spirit(attempt), now[0]);
+            board.fail(ID, new StockView(Map.of("dirt", 5)));
+        }
+        assertTrue(board.blocked(ID), "Подготовка: задание заблокировано пределом провалов");
+        board.drainBlocks();
+
+        board.claimable(new StockView(Map.of("dirt", 2)), now[0]);
+
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(ID).orElse(null),
+                "Нехватка выросла (4 → 7), а условия задания не изменились: разблокировка гнала духа в тот же "
+                        + "тупик, в отчёте это переиздание first:build_mine с новым createdAt и снова 5 провалов");
+        assertTrue(
+                board.drainBlocks().isEmpty(), "Без улучшения запасов нет события UNBLOCKED: причина блокировки та же");
+    }
+
+    @Test
     void claimable_MaterialsAppeared_UnblocksAndWritesJournal() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

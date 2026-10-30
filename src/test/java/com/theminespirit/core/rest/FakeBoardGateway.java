@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 final class FakeBoardGateway implements BoardGateway {
     private static final String ID_PREFIX = "board-";
 
     private final Map<String, BoardTask> tasks = new LinkedHashMap<>();
+    private final Map<String, BoardTask> restored = new LinkedHashMap<>();
     private final List<String> submits = new ArrayList<>();
     private final List<String> cancels = new ArrayList<>();
     private final List<BoardLogEntry> log = new ArrayList<>();
@@ -42,9 +44,20 @@ final class FakeBoardGateway implements BoardGateway {
         return this;
     }
 
+    FakeBoardGateway withRestored(BoardTask task) {
+        restored.put(task.id(), task);
+        return this;
+    }
+
     @Override
     public List<BoardTask> tasks() {
         return List.copyOf(tasks.values());
+    }
+
+    @Override
+    public Optional<BoardTask> task(String ticketId) {
+        BoardTask live = tasks.get(ticketId);
+        return Optional.ofNullable(live != null ? live : restored.get(ticketId));
     }
 
     @Override

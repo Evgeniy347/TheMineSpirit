@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
@@ -47,6 +48,11 @@ public final class SpiritBoardGateway implements BoardGateway {
     @Override
     public List<BoardTask> tasks() {
         return serverCall.call(this::readTasks, RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
+    public Optional<BoardTask> task(String ticketId) {
+        return serverCall.call(() -> findTask(ticketId), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override
@@ -82,6 +88,20 @@ public final class SpiritBoardGateway implements BoardGateway {
                     service.targetOf(ticket.id(), List.of())));
         }
         return List.copyOf(tasks);
+    }
+
+    private Optional<BoardTask> findTask(String ticketId) {
+        BoardService service = BoardRegistry.get(server.overworld());
+        Board board = service.board();
+        return board.find(ticketId)
+                .map(ticket -> BoardTasks.of(
+                        board,
+                        ticket,
+                        board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
+                        service.stock(),
+                        BoardTiming.fromJournal(service.journal().last(BoardTiming.JOURNAL_LOOKBACK))
+                                .getOrDefault(ticket.id(), BoardTiming.NONE),
+                        service.targetOf(ticket.id(), List.of())));
     }
 
     private BoardTask createTask(BoardTaskRequest request) {
