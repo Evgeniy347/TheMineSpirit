@@ -201,6 +201,19 @@ class TownPlannerTests {
     }
 
     @Test
+    void stages_SecondStagePlan_AllBuildingsRequired() {
+        StageRules.Stage second = StageRules.load().stages().get(1);
+
+        assertEquals(
+                Set.copyOf(second.plan()),
+                second.requires().keySet(),
+                "Этап 2 закрывается всем составом плана: у каждой постройки плана есть требование и уровень");
+        assertTrue(
+                second.requires().values().stream().allMatch(level -> level == 1),
+                "Постройки плана этапа 2 стоят уровнем 1 из каталога: завышенный уровень держал бы этап навсегда");
+    }
+
+    @Test
     void stages_EveryCatalogEntry_InExactlyOneStage() {
         Set<String> seen = new HashSet<>();
         for (List<String> stage : STAGES) {

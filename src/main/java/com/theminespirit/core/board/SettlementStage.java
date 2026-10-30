@@ -15,7 +15,7 @@ public final class SettlementStage {
         return rules().stageOf(ledger);
     }
 
-    public static Map<BoardCase, Integer> missing(BoardLedger ledger) {
+    public static Map<String, Integer> missing(BoardLedger ledger) {
         Objects.requireNonNull(ledger, "Журнал доски не может быть null: остаток этапа читается по построенному");
         return rules().missingOf(ledger);
     }
