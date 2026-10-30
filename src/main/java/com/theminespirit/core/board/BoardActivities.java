@@ -153,14 +153,14 @@ public final class BoardActivities {
             if (running && "dig_out".equals(script)) {
                 return Optional.of(BoardCase.ACTIVITY_ESCAPE);
             }
+            if (ownActivity && launchedCase != null) {
+                return Optional.of(launchedCase);
+            }
             if (tacticsControl && !assigned && tactic != null) {
                 Optional<BoardCase> card = caseOf(tactic);
                 if (card.isPresent()) {
                     return card;
                 }
-            }
-            if (ownActivity && launchedCase != null) {
-                return Optional.of(launchedCase);
             }
             if (running) {
                 return Optional.of(caseOfScript(script).orElse(BoardCase.ACTIVITY_EXTERNAL));

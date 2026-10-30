@@ -9,6 +9,7 @@ import com.theminespirit.core.intellect.ActivityId;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.tactics.TacticsAction;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -162,6 +163,50 @@ class BoardActivitiesTests {
                         .card(),
                 "Между попытками занятия дух свободен, но карточка обязана остаться: иначе доска мерцает "
                         + "и в паузах показывает «свободен», хотя цикл продолжается");
+    }
+
+    @Test
+    void currentCard_TacticsControlOverOwnActivity_KeepsOwnCard() {
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_SMELT),
+                new BoardActivities.CardFacts(
+                                false,
+                                true,
+                                true,
+                                TacticsAction.GUARD,
+                                true,
+                                BoardCase.ACTIVITY_SMELT,
+                                false,
+                                false,
+                                "smelt")
+                        .card(),
+                "Охрана тактики не перебивает уже выданное занятие: иначе карточка духа прыгает SMELT ↔ GUARD "
+                        + "через тик и владелец не видит, чем дух занят на самом деле");
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_SMELT),
+                new BoardActivities.CardFacts(
+                                false,
+                                false,
+                                true,
+                                TacticsAction.GUARD,
+                                true,
+                                BoardCase.ACTIVITY_SMELT,
+                                false,
+                                false,
+                                "smelt")
+                        .card(),
+                "Пауза между попытками занятия не отдаёт карточку тактике: занятие остаётся тем же, пока его "
+                        + "не заменили или не сняли");
+    }
+
+    @Test
+    void currentCard_NoOwnActivity_TacticsGuardStillWins() {
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_GUARD),
+                new BoardActivities.CardFacts(false, false, true, TacticsAction.GUARD, false, null, false, false, null)
+                        .card(),
+                "Без своего занятия управление тактики показывает охранную карточку: свободный дух на посту "
+                        + "виден на доске");
     }
 
     @Test
