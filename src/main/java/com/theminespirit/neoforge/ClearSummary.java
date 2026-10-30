@@ -2,10 +2,18 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.mining.BreakSkipTally;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 
 final class ClearSummary {
     private ClearSummary() {}
+
+    record Leftover(BlockCoord at, String block, String reason, int repeats) {
+        String text() {
+            String repeat = repeats > 1 ? ", повтор " + repeats : "";
+            return "(" + at.x() + ", " + at.y() + ", " + at.z() + ") " + block + " — " + reason + repeat;
+        }
+    }
 
     record Refusals(int unbreakable, int outOfReach, int noSight, int chunkNotLoaded) {
         static Refusals of(BreakSkipTally skips) {
@@ -43,13 +51,30 @@ final class ClearSummary {
             int protectedSkipped,
             int foreignSkipped,
             int unreachable,
+            int excluded,
             Refusals refusals) {}
 
     static int volume(BuildBox box) {
         return (int) Math.min(box.volume(), Integer.MAX_VALUE);
     }
 
-    static String of(BuildBox box, Tally tally, List<String> leftover) {
+    static String of(ClearAreaSession session) {
+        return of(
+                session.box,
+                new Tally(
+                        session.removed,
+                        session.skippedTotal(),
+                        session.unsafe,
+                        session.noStand,
+                        session.protectedSkipped,
+                        session.foreignSkipped,
+                        session.unreachable,
+                        session.excludedSkipped,
+                        Refusals.of(session.breakSkips)),
+                session.leftover);
+    }
+
+    static String of(BuildBox box, Tally tally, List<Leftover> leftover) {
         String counts = "убрано " + tally.removed() + " из " + box.volume() + "; пропущено: " + tally.skipped()
                 + " (небезопасных: " + tally.unsafe()
                 + ", без стоянки: " + tally.noStand() + ", защищено: " + tally.protectedSkipped()
@@ -61,8 +86,11 @@ final class ClearSummary {
         if (tally.unreachable() > 0) {
             counts += "; недостижимо: " + tally.unreachable();
         }
+        if (tally.excluded() > 0) {
+            counts += "; исключено недостижимых: " + tally.excluded();
+        }
         if (!leftover.isEmpty()) {
-            counts += "; не взяты " + leftover;
+            counts += "; не взяты " + leftover.stream().map(Leftover::text).toList();
         }
         return counts;
     }
