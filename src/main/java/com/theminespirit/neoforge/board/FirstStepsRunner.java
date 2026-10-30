@@ -292,7 +292,7 @@ public final class FirstStepsRunner {
             TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
             if (caseValue == BoardCase.BUILD_FENCE && work != null) {
                 if (!openParts.contains(part)) {
-                    break;
+                    continue;
                 }
                 partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
             }

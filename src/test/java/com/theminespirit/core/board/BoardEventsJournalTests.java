@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,37 @@ class BoardEventsJournalTests {
                 events,
                 "Журнал доски обязан помнить постановку, назначение и итог: по нему видно, кто "
                         + "выкинул вещь, кто её забрал и закончил ли");
+    }
+
+    @Test
+    void failed_WithReason_PutsReasonIntoFailedRecord() {
+        List<BoardTicket> failed = new ArrayList<>();
+        Board board = new Board(() -> 42, (event, ticket, holder, tick) -> {
+            if (event == BoardLog.Event.FAILED) {
+                failed.add(ticket);
+            }
+        });
+        BoardTicket ticket = new BoardTicket(
+                "first:build_fence",
+                BoardCase.BUILD_FENCE,
+                Optional.empty(),
+                50,
+                0,
+                1,
+                "first",
+                List.of(),
+                Map.of("oak_planks", 4));
+
+        board.submit(ticket);
+        board.claim("first:build_fence", SPIRIT, 42);
+        board.fail("first:build_fence", new StockView(Map.of()), "не хватает: oak_planks 2 из 4");
+
+        assertEquals(1, failed.size(), "Провал обязан попасть в журнал ровно одним событием FAILED");
+        assertTrue(
+                failed.get(0).modifiers().stream().anyMatch(detail -> detail.contains("oak_planks")),
+                "FAILED в board-log обязан назвать причину провала: сейчас modifiers="
+                        + failed.get(0).modifiers()
+                        + ", и причину приходится искать в latest.log (наблюдение 6, лог 4)");
     }
 
     @Test

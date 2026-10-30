@@ -1,4 +1,4 @@
-src/main/java/com/theminespirit/core/board/Board.java	857
+src/main/java/com/theminespirit/core/board/Board.java	850
 src/main/java/com/theminespirit/core/board/TicketPlans.java	903
 src/main/java/com/theminespirit/core/board/graph/GraphPlanner.java	548
 src/main/java/com/theminespirit/core/board/graph/RecipeImport.java	555
@@ -51,7 +51,7 @@ src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java	653
 src/test/java/com/theminespirit/core/board/AnimalLifecycleTests.java	303
 src/test/java/com/theminespirit/core/board/BoardConfigTests.java	401
 src/test/java/com/theminespirit/core/board/BoardLogTests.java	422
-src/test/java/com/theminespirit/core/board/BoardTests.java	1050
+src/test/java/com/theminespirit/core/board/BoardTests.java	1026
 src/test/java/com/theminespirit/core/board/BoardTicketTests.java	401
 src/test/java/com/theminespirit/core/board/TicketPlansTests.java	1216
 src/test/java/com/theminespirit/core/board/graph/GraphPlannerTests.java	933

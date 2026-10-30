@@ -88,7 +88,7 @@ public final class StageBuilds {
         List<SchemeBuild> builds = new ArrayList<>();
         for (WallPiece piece : pieces.subList(from, to)) {
             List<ColumnMask.Cell> posts = posts(ring, piece);
-            if (part >= 1 && !ready.containsAll(posts)) {
+            if (!ready.containsAll(posts)) {
                 continue;
             }
             for (ColumnMask.Cell post : posts) {
