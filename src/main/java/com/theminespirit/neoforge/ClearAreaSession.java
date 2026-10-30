@@ -299,8 +299,7 @@ public class ClearAreaSession {
                             approach.refusal() == null ? "без причины" : approach.refusal());
                 }
                 if (approachFailures.recordFailure(currentStand, currentTarget)) {
-                    unreachable++;
-                    tally.skipped();
+                    apply(blocked.approachFailure(currentTarget, currentStand, approach.refusal()));
                     releaseCurrent();
                 } else {
                     BlockCoord retry = currentTarget;

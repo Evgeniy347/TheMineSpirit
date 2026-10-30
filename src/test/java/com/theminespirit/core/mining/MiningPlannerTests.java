@@ -217,6 +217,42 @@ class MiningPlannerTests {
     }
 
     @Test
+    void next_StandNineAboveSpirit_ReturnsExhaustedUnreachable() {
+        CellWorld world = new CellWorld()
+                .set(0, 9, 0, Cell.SOLID)
+                .set(1, 9, 0, Cell.PASSABLE)
+                .set(1, 8, 0, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(FROM, List.of(new BlockCoord(0, 9, 0)), world);
+
+        assertEquals(
+                new MiningPlanner.Exhausted(0, 0, 1),
+                outcome,
+                "Стоянка на 9 блоков выше духа недостижима шагом: иначе планировщик выдаёт цель, RouteDetour "
+                        + "возвращает FOUND, а WALK застревает на 60 тиков и петля повторяется каждую минуту "
+                        + "(аномалия 3). Как надо: высокую стоянку отбрасывать до выдачи и считать цель недостижимой");
+    }
+
+    @Test
+    void next_StandAtRiseLimit_IsAccepted() {
+        CellWorld world = new CellWorld()
+                .set(0, MiningTuning.MAX_STAND_RISE, 0, Cell.SOLID)
+                .set(1, MiningTuning.MAX_STAND_RISE, 0, Cell.PASSABLE)
+                .set(1, MiningTuning.MAX_STAND_RISE - 1, 0, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome =
+                MiningPlanner.next(FROM, List.of(new BlockCoord(0, MiningTuning.MAX_STAND_RISE, 0)), world);
+
+        assertEquals(
+                new MiningPlanner.Next(
+                        new BlockCoord(0, MiningTuning.MAX_STAND_RISE, 0),
+                        new BlockCoord(1, MiningTuning.MAX_STAND_RISE, 0)),
+                outcome,
+                "Стоянка ровно на пределе подъёма остаётся достижимой: порог не должен отбрасывать "
+                        + "цель, к которой дух поднимается по ступеням на допустимую высоту");
+    }
+
+    @Test
     void next_ExcludedAndWalledTargets_CountsSeparately() {
         CellWorld world = new CellWorld()
                 .set(1, -1, 0, Cell.SOLID)

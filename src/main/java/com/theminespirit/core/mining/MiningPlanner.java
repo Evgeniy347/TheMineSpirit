@@ -44,6 +44,7 @@ public final class MiningPlanner {
                 continue;
             }
             List<BlockCoord> open = new ArrayList<>(stands);
+            open.removeIf(stand -> !StandSpots.walkable(stand, from));
             open.removeIf(excluded::contains);
             if (open.isEmpty()) {
                 unreachable++;
