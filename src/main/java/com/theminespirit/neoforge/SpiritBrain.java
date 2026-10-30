@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
@@ -21,6 +22,7 @@ public final class SpiritBrain {
     private static final AtomicLong GENERATIONS = new AtomicLong(SpiritReading.UNKNOWN_GENERATION);
 
     private final SpiritEntity spirit;
+    private final StateChangeLog reported = new StateChangeLog();
     private TaskRunner runner;
     private RunStatus lastStatus;
     private String lastReason;
@@ -182,13 +184,18 @@ public final class SpiritBrain {
         lastFailedAt = runner.failedAt().orElse(null);
         if (lastStatus == RunStatus.SUCCEEDED) {
             lastResult = runner.successResult().orElse(null);
+            reported.forget("failure");
         }
         if (lastStatus == RunStatus.FAILED) {
+            String inventory = InventoryText.of(IncidentSnapshots.inventoryOf(spirit));
+            if (!reported.changed("failure", lastReason + "|" + inventory + "|" + lastCause)) {
+                return;
+            }
             LOGGER.warn(
-                    "Дух {} провалил задачу: {}; инвентарь {}",
+                    "Дух {} провалил задачу: {}; инвентарь {}; повтор того же провала подавлен до смены инвентаря",
                     spirit.getUUID(),
                     lastReason,
-                    InventoryText.of(IncidentSnapshots.inventoryOf(spirit)),
+                    inventory,
                     lastCause);
         }
     }

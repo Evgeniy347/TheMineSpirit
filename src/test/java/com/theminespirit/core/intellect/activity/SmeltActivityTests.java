@@ -108,6 +108,29 @@ class SmeltActivityTests {
     }
 
     @Test
+    void order_RawFoodWithoutFuel_NoSmelt() {
+        ProcessingStock stock = new ProcessingStock(0, 0, 0, 0, Map.of("minecraft:porkchop", 4), Map.of());
+        SettlementView view = SettlementViews.processing(3, 0, stock);
+
+        assertEquals(
+                Optional.empty(),
+                SMELT.order(SettlementViews.spirit(SPIRIT), view).script(),
+                "Сырая еда без топлива — не повод звать smelt: иначе дух проваливает «нет топлива … cooked_porkchop» "
+                        + "каждые ~15 с (observe5 №3), а WARN забивает лог (№10)");
+    }
+
+    @Test
+    void order_RawFoodWithPlanks_Smelts() {
+        ProcessingStock stock = new ProcessingStock(0, 8, 0, 0, Map.of("minecraft:porkchop", 4), Map.of());
+        SettlementView view = SettlementViews.processing(3, 0, stock);
+
+        assertEquals(
+                Optional.of("smelt"),
+                SMELT.order(SettlementViews.spirit(SPIRIT), view).script(),
+                "Доски — топливо для печи: гейт не должен глушить готовку, когда топливо есть");
+    }
+
+    @Test
     void order_RawFoodBelowBatch_NoCooking() {
         ProcessingStock stock =
                 new ProcessingStock(RULES.charcoalTarget(), 0, 0, 0, Map.of("minecraft:porkchop", 3), Map.of());
