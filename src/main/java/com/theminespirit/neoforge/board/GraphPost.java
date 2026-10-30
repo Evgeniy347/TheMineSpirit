@@ -102,8 +102,13 @@ final class GraphPost {
     }
 
     private boolean collect(GraphTickets.Ticket ticket) {
-        Optional<BlockCoord> at = "collect_drops".equals(ticket.node()) ? around.anyDrop() : around.decay();
+        boolean saplings = "collect_saplings".equals(ticket.node());
+        Optional<BlockCoord> at = saplings ? around.decay() : around.anyDrop();
         if (at.isEmpty()) {
+            return false;
+        }
+        Optional<BlockCoord> target = saplings ? GraphTargets.leafDropStand(level, at.orElseThrow()) : at;
+        if (target.isEmpty()) {
             return false;
         }
         submit(
@@ -114,7 +119,7 @@ final class GraphPost {
                         ticket.task().priority(),
                         ticket.id(),
                         Map.of()),
-                TicketTarget.at(at.orElseThrow()));
+                TicketTarget.at(target.orElseThrow()));
         return true;
     }
 
