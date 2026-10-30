@@ -16,6 +16,7 @@ final class BoardPriorityTable {
             Map.entry("GRIND_BLAZE_POWDER", 40),
             Map.entry("HARVEST_NETHER_WART", 40),
             Map.entry("BUILD_PEN", 65),
+            Map.entry("BUILD_PLACED", 50),
             Map.entry("BUILD_WAREHOUSE", 50),
             Map.entry("LURE_ANIMAL", 65),
             Map.entry("DISMANTLE_SHELTER", 65),

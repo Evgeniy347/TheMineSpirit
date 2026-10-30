@@ -2682,7 +2682,7 @@
       }
     },
     "plaza": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 48,
       "materials": {
@@ -2691,7 +2691,7 @@
       }
     },
     "family_house_a": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 61,
       "materials": {
@@ -2701,7 +2701,7 @@
       }
     },
     "family_house_b": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 61,
       "materials": {
@@ -2711,7 +2711,7 @@
       }
     },
     "family_house_c": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 61,
       "materials": {
@@ -2721,7 +2721,7 @@
       }
     },
     "barn": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 55,
       "materials": {
@@ -2731,7 +2731,7 @@
       }
     },
     "field": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 61,
       "materials": {
@@ -2740,7 +2740,7 @@
       }
     },
     "well": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 48,
       "materials": {
@@ -2748,7 +2748,7 @@
       }
     },
     "lumber_yard": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 55,
       "materials": {
@@ -2758,7 +2758,7 @@
       }
     },
     "workshop": {
-      "case": "BUILD_HOUSE",
+      "case": "BUILD_PLACED",
       "stage": 2,
       "base": 55,
       "materials": {

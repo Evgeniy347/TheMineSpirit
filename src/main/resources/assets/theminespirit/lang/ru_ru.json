@@ -74,6 +74,7 @@
   "theminespirit.board.case.build_mine": "Заложить шахту",
   "theminespirit.board.case.mine_left_ore": "Добыть оставленную руду",
   "theminespirit.board.case.build_pen": "Построить загон",
+  "theminespirit.board.case.build_placed": "Построить по плану участка",
   "theminespirit.board.case.build_warehouse": "Построить склад",
   "theminespirit.board.case.capture_animal": "Поймать животное в загон",
   "theminespirit.board.case.clear_grounds": "Расчистить участок",

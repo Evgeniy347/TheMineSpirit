@@ -76,6 +76,7 @@ class BoardCaseTests {
             "FISH",
             "CAPTURE_ANIMAL",
             "BUILD_PEN",
+            "BUILD_PLACED",
             "LURE_ANIMAL",
             "DISMANTLE_SHELTER",
             "SUPPLY_SITE",
