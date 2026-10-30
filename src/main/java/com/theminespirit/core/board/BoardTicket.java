@@ -1,10 +1,12 @@
 package com.theminespirit.core.board;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public record BoardTicket(
         String id,
@@ -77,5 +79,26 @@ public record BoardTicket(
                         + "наблюдатель показывает ключи, а не пустоту");
             }
         }
+    }
+
+    public BoardTicket withFailure(@Nullable String reason) {
+        if (reason == null || reason.isBlank()) {
+            return this;
+        }
+        List<String> details = new ArrayList<>(modifiers);
+        details.add("reason=" + reason);
+        return new BoardTicket(
+                id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, details);
+    }
+
+    public boolean sameDetails(BoardTicket other) {
+        return level == other.level
+                && cause.equals(other.cause)
+                && dependsOn.equals(other.dependsOn)
+                && requiredItems.equals(other.requiredItems);
+    }
+
+    public boolean replacesDone(BoardTicket before, boolean stage) {
+        return !stage && (ALWAYS_CAUSE.equals(cause) || !sameDetails(before));
     }
 }

@@ -119,8 +119,8 @@ public final class Board {
         if (existing != null) {
             BoardStatus current = statuses.get(ticket.id());
             boolean stage = StageTicket.stage(ticket.id());
-            boolean changed = (current == BoardStatus.DONE && !stage)
-                    || (current == BoardStatus.BLOCKED && conditionsChanged(existing, ticket));
+            boolean changed = (current == BoardStatus.BLOCKED && !ticket.sameDetails(existing))
+                    || (current == BoardStatus.DONE && ticket.replacesDone(existing, stage));
             boolean retry = current == BoardStatus.FAILED && stage && !recentlyFailed(ticket.id(), now);
             if (!changed && !retry) {
                 return BoardOutcome.DUPLICATE;
@@ -257,7 +257,7 @@ public final class Board {
         long now = nowTicks.getAsLong();
         statuses.put(ticketId, BoardStatus.FAILED);
         failTicks.put(ticketId, now);
-        events.transition(BoardLog.Event.FAILED, ticket, claimAssignees.get(ticketId), now);
+        events.transition(BoardLog.Event.FAILED, ticket.withFailure(reason), claimAssignees.get(ticketId), now);
         UUID holder = holder(ticket);
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
@@ -581,13 +581,6 @@ public final class Board {
 
     private boolean holds(BoardTicket ticket, UUID spirit) {
         return ticket.assignee().filter(spirit::equals).isPresent() || spirit.equals(claimAssignees.get(ticket.id()));
-    }
-
-    private static boolean conditionsChanged(BoardTicket before, BoardTicket after) {
-        return before.level() != after.level()
-                || !before.cause().equals(after.cause())
-                || !before.dependsOn().equals(after.dependsOn())
-                || !before.requiredItems().equals(after.requiredItems());
     }
 
     private @Nullable UUID holder(BoardTicket ticket) {

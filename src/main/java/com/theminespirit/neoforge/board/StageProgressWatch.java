@@ -29,6 +29,7 @@ final class StageProgressWatch {
             BoardCase.BUILD_STREETS,
             BoardCase.REPAIR_BUILDING);
     private final Map<String, Integer> placedAtIssue = new HashMap<>();
+    private final Map<String, FirstStepsRunner.Placed> overallAtIssue = new HashMap<>();
 
     void issued(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
         placedAtIssue.remove(ticket.id());
@@ -38,6 +39,7 @@ final class StageProgressWatch {
         }
         FirstStepsRunner.Placed now = placed.get();
         placedAtIssue.put(ticket.id(), now.done());
+        overall(level, ticket, target).ifPresent(overall -> overallAtIssue.put(ticket.id(), overall));
         PlotLeveling leveling = target == null ? null : target.leveling();
         LOGGER.info(BuildProgressNote.line(
                 ticket.boardCase(),
@@ -72,6 +74,7 @@ final class StageProgressWatch {
     @Nullable
     String emptyResult(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
         Integer before = placedAtIssue.remove(ticket.id());
+        logOverall(level, ticket, target);
         if (before == null) {
             return null;
         }
@@ -89,6 +92,42 @@ final class StageProgressWatch {
         return "стройка закрыта без результата: поставлено " + after.get().done() + " из "
                 + after.get().total()
                 + ", как и при выдаче — нет материала или подхода, задание не считается сделанным";
+    }
+
+    private void logOverall(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
+        FirstStepsRunner.Placed before = overallAtIssue.remove(ticket.id());
+        Optional<FirstStepsRunner.Placed> after = overall(level, ticket, target);
+        if (before == null || after.isEmpty() || target == null) {
+            return;
+        }
+        FirstStepsRunner.Placed now = after.get();
+        LOGGER.info(
+                "[plot] {}: сегмент {} из {}, было {}% ({}/{}), стало {}% ({}/{})",
+                ticket.id(),
+                target.count(),
+                TicketPlans.FENCE_PARTS,
+                percent(before),
+                before.done(),
+                before.total(),
+                percent(now),
+                now.done(),
+                now.total());
+    }
+
+    private static int percent(FirstStepsRunner.Placed placed) {
+        return placed.total() == 0 ? 0 : placed.done() * 100 / placed.total();
+    }
+
+    private static Optional<FirstStepsRunner.Placed> overall(
+            ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
+        if (ticket.boardCase() != BoardCase.BUILD_FENCE || target == null || target.work() == null) {
+            return Optional.empty();
+        }
+        String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
+        TicketTarget whole = FirstStepsRunner.targetFor(
+                level, ticket.boardCase(), target.work().site(), wood);
+        return Optional.of(FirstStepsRunner.placedBlocks(
+                level, TicketPlans.plan(ticket.boardCase(), ticket.level(), whole), wood));
     }
 
     private static Optional<FirstStepsRunner.Placed> progress(

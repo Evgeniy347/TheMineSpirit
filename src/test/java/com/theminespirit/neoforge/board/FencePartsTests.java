@@ -14,14 +14,25 @@ class FencePartsTests {
     private static final StageSite SITE = TownFixtures.flatSite();
 
     @Test
-    void open_DeferredPart_StopsBeforeIt() {
+    void open_DeferredPart_DoesNotBlockLaterReadyParts() {
         List<StageBuilds.FencePart> parts = List.of(part(true, true), part(true, false), part(true, true));
 
         assertEquals(
-                List.of(1),
+                List.of(1, 3),
                 FenceParts.open(parts),
-                "Часть с кусками забора, но без освобождённых клеток, ещё не готова: открывать её нельзя — "
-                        + "иначе fence:2 получает «в плане 0 блоков» и падает, хотя забор строится");
+                "Часть, чьи клетки ещё заняты, пропускается, а готовые части за ней открываются: иначе ограда "
+                        + "строится только до первой занятой клетки и не дорастает до 100% (наблюдение 6, аномалия 3)");
+    }
+
+    @Test
+    void required_DeferredPart_DoesNotHoldFenceDone() {
+        List<StageBuilds.FencePart> parts = List.of(part(true, true), part(true, false), part(true, true));
+
+        assertEquals(
+                List.of(1, 3),
+                FenceParts.required(parts),
+                "Часть, у которой нет готовых к постройке блоков, не держит ограду незакрытой: иначе DONE всех "
+                        + "построенных частей навсегда остаётся ложью, и задача переоткрывается по кругу");
     }
 
     @Test
