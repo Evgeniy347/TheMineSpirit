@@ -12,6 +12,7 @@ public final class ChopTuning {
     public static final double CHOP_ARRIVAL = 0.6;
     public static final int COLLECT_RADIUS = 6;
     public static final int MAX_REJECTED_TREES = 8;
+    public static final int SETTLEMENT_RADIUS = 32;
 
     private ChopTuning() {}
 }

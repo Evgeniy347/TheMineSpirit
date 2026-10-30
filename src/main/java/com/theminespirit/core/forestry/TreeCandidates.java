@@ -50,4 +50,8 @@ public final class TreeCandidates {
     public Optional<BlockCoord> nearest(int fromX, int fromY, int fromZ) {
         return TreeChooser.next(fromX, fromY, fromZ, List.copyOf(live), Set.of());
     }
+
+    public Optional<BlockCoord> nearestNear(BlockCoord anchor, int maxDistance, int fromX, int fromY, int fromZ) {
+        return TreeChooser.near(anchor, maxDistance, fromX, fromY, fromZ, List.copyOf(live), Set.of());
+    }
 }
