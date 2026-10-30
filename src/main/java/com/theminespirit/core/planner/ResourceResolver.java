@@ -34,19 +34,9 @@ public final class ResourceResolver {
     }
 
     public static TaskNode resolve(
-            String item,
-            int count,
-            ResourceKnowledge knowledge,
-            Map<String, Integer> inventory,
-            Set<String> presentStations) {
+            String item, int count, ResourceKnowledge knowledge, Map<String, Integer> inventory, Set<String> stations) {
         return resolve(
-                item,
-                count,
-                knowledge,
-                CoreScripts.defaultCatalog(),
-                ConditionCatalog.empty(),
-                inventory,
-                presentStations);
+                item, count, knowledge, CoreScripts.defaultCatalog(), ConditionCatalog.empty(), inventory, stations);
     }
 
     public static TaskNode resolve(
@@ -72,8 +62,7 @@ public final class ResourceResolver {
             ConditionCatalog conditions,
             Map<String, Integer> inventory,
             Set<String> presentStations) {
-        Objects.requireNonNull(
-                inventory, "inventory не может быть null: без инвентаря резолвер не предпочтёт имеющееся топливо");
+        Objects.requireNonNull(inventory, "inventory не может быть null: без инвентаря резолвер не предпочтёт топливо");
         Objects.requireNonNull(
                 presentStations,
                 "presentStations не может быть null: без снимка станций резолвер построит печь там, где она уже стоит");
@@ -165,6 +154,9 @@ public final class ResourceResolver {
                     return smeltPlan(item, count, topLevel);
                 }
                 if (knowledge.isGatherable(item)) {
+                    if (knowledge.isCraftedProduct(item) && !dropsFromAnotherBlock(item)) {
+                        throw CraftedItems.error(item);
+                    }
                     return gatherPlan(item, count, topLevel);
                 }
                 throw new UnplannableGoalException(

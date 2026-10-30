@@ -12,7 +12,7 @@ src/main/java/com/theminespirit/core/building/SchematicTextParser.java	655
 src/main/java/com/theminespirit/core/engine/TaskSnapshotCodec.java	549
 src/main/java/com/theminespirit/core/inventory/BaseKit.java	323
 src/main/java/com/theminespirit/core/planner/AcquireScript.java	321
-src/main/java/com/theminespirit/core/planner/ResourceResolver.java	329
+src/main/java/com/theminespirit/core/planner/ResourceResolver.java	321
 src/main/java/com/theminespirit/core/reload/DataTables.java	447
 src/main/java/com/theminespirit/core/rest/BoardTaskRequest.java	412
 src/main/java/com/theminespirit/core/script/CoreScripts.java	1450
