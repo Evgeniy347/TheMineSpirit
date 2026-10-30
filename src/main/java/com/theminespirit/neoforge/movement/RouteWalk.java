@@ -29,7 +29,6 @@ public final class RouteWalk {
 
     private static final int STEP_TICKS = 60;
     private static final double CENTER = 0.5;
-    private static final double ARRIVAL = 0.3;
     private static final double LIFT = 0.2;
     private static final double SPEED = 1.0;
 
@@ -168,26 +167,30 @@ public final class RouteWalk {
     }
 
     private Optional<String> walk(BlockCoord cell) {
-        Vec3 target = new Vec3(cell.x() + CENTER, cell.y(), cell.z() + CENTER);
-        boolean arrived = spirit.blockPosition().equals(pos(cell))
-                && horizontal(target) < ARRIVAL
-                && (spirit.onGround() || spirit.isInWater() || spirit.onClimbable());
-        if (arrived) {
+        WalkAscent.Command command = WalkAscent.next(cell, pose(), body());
+        if (command.step() == WalkAscent.Step.ARRIVED) {
             advance();
             return Optional.empty();
         }
         spirit.getNavigation().stop();
-        spirit.getMoveControl().setWantedPosition(target.x, target.y, target.z, SPEED);
-        WalkAscent.Lift lift = WalkAscent.lift(
-                cell.y() > spirit.blockPosition().getY(),
-                new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable()));
-        if (lift == WalkAscent.Lift.JUMP) {
+        spirit.getMoveControl().setWantedPosition(command.x(), command.y(), command.z(), SPEED);
+        if (command.step() == WalkAscent.Step.JUMP) {
             spirit.getJumpControl().jump();
-        } else if (lift == WalkAscent.Lift.CLIMB) {
+        } else if (command.step() == WalkAscent.Step.CLIMB) {
             Vec3 motion = spirit.getDeltaMovement();
             spirit.setDeltaMovement(motion.x, LIFT, motion.z);
         }
         return Optional.empty();
+    }
+
+    private WalkAscent.Pose pose() {
+        BlockPos feet = spirit.blockPosition();
+        return new WalkAscent.Pose(
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), spirit.getX(), spirit.getY(), spirit.getZ());
+    }
+
+    private WalkAscent.Body body() {
+        return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable());
     }
 
     private Optional<String> place(BlockPos cell) {

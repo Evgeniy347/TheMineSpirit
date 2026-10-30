@@ -30,11 +30,12 @@ class WalkAscentTests {
     }
 
     @Test
-    void lift_AirborneOffClimbable_Holds() {
+    void lift_AirborneOffClimbable_RetriesJump() {
         assertEquals(
-                WalkAscent.Lift.HOLD,
+                WalkAscent.Lift.JUMP,
                 WalkAscent.lift(true, new WalkAscent.Body(false, false, false)),
-                "В воздухе без опоры и без лианы подъём невозможен: прыжок и лазание не выдумывают опору");
+                "В воздухе на шаге вверх прыжок запрашивается снова: Minecraft применит его в тик приземления, "
+                        + "иначе дух прыгает один раз, не дотягивает и висит в воздухе до JUMP_STALLED (N1)");
     }
 
     @Test
