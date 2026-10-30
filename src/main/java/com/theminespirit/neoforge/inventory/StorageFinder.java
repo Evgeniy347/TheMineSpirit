@@ -6,6 +6,7 @@ import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.inventory.StoragePoints;
+import com.theminespirit.core.inventory.UnloadedSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SettlementChestStore;
 import java.util.ArrayList;
@@ -52,13 +53,12 @@ public final class StorageFinder {
     private static List<StoragePoints.Spot> spots(ServerLevel level, BlockCoord origin) {
         List<BlockCoord> known = SettlementChestStore.get(level).chests().warehouse(origin);
         List<StoragePoints.Spot> spots = new ArrayList<>();
+        List<BlockCoord> unloaded = new ArrayList<>();
         for (BlockCoord pos : known) {
             BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
             String channel = "container:" + coord(pos);
             if (!level.isLoaded(at)) {
-                if (CHANGES.changed(channel, "unloaded")) {
-                    LOGGER.info("[storage] контейнер {} не в загруженном чанке — осмотр пропущен", coord(pos));
-                }
+                unloaded.add(pos);
                 continue;
             }
             String type = BuiltInRegistries.BLOCK
@@ -73,6 +73,13 @@ public final class StorageFinder {
                 if (CHANGES.changed(channel, "refused:" + refused.reason())) {
                     LOGGER.info("[storage] контейнер {} ({}) отклонён: {}", coord(pos), type, refused.reason());
                 }
+            }
+        }
+        if (!unloaded.isEmpty()) {
+            String line = UnloadedSpots.line(unloaded);
+            String scope = "unloaded:" + level.dimension().location();
+            if (CHANGES.changed(scope, line)) {
+                LOGGER.info("[storage] {}", line);
             }
         }
         return spots;

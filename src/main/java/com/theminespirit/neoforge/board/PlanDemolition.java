@@ -9,7 +9,10 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.StagePlans;
+import com.theminespirit.core.board.StateChangeLog;
+import com.theminespirit.core.board.SubmitGate;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingCleanup;
@@ -19,6 +22,7 @@ import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.UnreachableCellsStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,6 +45,10 @@ final class PlanDemolition {
     private static final int PROTECTED_SHOWN = 10;
     private static final Set<BoardStatus> OPEN =
             EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
+    private static final SubmitGate SUBMITS = new SubmitGate();
+    private static final StateChangeLog CHANGES = new StateChangeLog();
+
+    private record Collected(List<BlockCoord> remove, List<String> notes, int excluded, int unreachable) {}
 
     private PlanDemolition() {}
 
@@ -48,32 +56,49 @@ final class PlanDemolition {
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1) || busy(service, now)) {
             return;
         }
+        String world = level.dimension().location().toString();
         boolean yardReady = service.board().ledger().has(BoardCase.STOCK_CHESTS, 1)
                 && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
         List<FloatingBlocks.Finding> findings = FloatingScan.find(level, site, town.region());
-        List<BlockCoord> remove = collect(level, service, site, plan, yardReady, findings);
-        if (remove.isEmpty()) {
+        Collected collected = collect(level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level));
+        if (collected.remove().isEmpty()) {
+            warnExcluded(world, collected, now);
             return;
         }
-        List<BlockCoord> stray = remove.stream()
+        List<BlockCoord> stray = collected.remove().stream()
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
                 .limit(BATCH)
                 .toList();
-        String previous = previous(service);
         String id = idFor(stray);
+        if (!SUBMITS.allow("demolish:" + world, id)) {
+            warnExcluded(world, collected, now);
+            if (CHANGES.changed("tidy-wait:" + world, id)) {
+                LOGGER.info(
+                        "[tidy] {}: набор уборки не изменился — повторно не выдаём (первый {}); {}",
+                        id,
+                        stray.get(0),
+                        collected.notes());
+            }
+            return;
+        }
         if (!submit(service, site, stray, now, id)) {
             return;
         }
-        LOGGER.info(
-                "[tidy] {}: план уборки пересчитан в тик {} — в уборку {} из {}, первые {}; прошлый {}; "
-                        + "id меняется только вместе с набором координат",
-                id,
-                now,
-                stray.size(),
-                findings.size(),
-                stray.stream().limit(SHOWN).toList(),
-                previous);
+        supersede(level, service, id);
+        if (CHANGES.changed("tidy:" + world, id)) {
+            LOGGER.info(
+                    "[tidy] {}: план уборки пересчитан в тик {} — в уборку {} из {}, первые {}; прошлый {}; "
+                            + "недостижимых {}; {}",
+                    id,
+                    now,
+                    stray.size(),
+                    findings.size(),
+                    stray.stream().limit(SHOWN).toList(),
+                    previous(service),
+                    collected.unreachable(),
+                    collected.notes());
+        }
         service.journal()
                 .recordEntry(BoardLog.note(
                         id,
@@ -84,71 +109,85 @@ final class PlanDemolition {
                         ConfigStamp.current()));
     }
 
-    private static List<BlockCoord> collect(
+    private static void warnExcluded(String world, Collected collected, long now) {
+        if (collected.excluded() == 0) {
+            return;
+        }
+        String signature = collected.excluded() + ":" + collected.notes();
+        if (!CHANGES.changed("tidy-excluded:" + world, signature)) {
+            return;
+        }
+        LOGGER.warn(
+                "[tidy] участок не расчищается в тик {}: исключено недостижимых {} из висящих; {}",
+                now,
+                collected.excluded(),
+                collected.notes());
+    }
+
+    private static Collected collect(
             ServerLevel level,
             BoardService service,
             StageSite site,
             PlotPlanBlocks.Plan plan,
             boolean yardReady,
-            List<FloatingBlocks.Finding> findings) {
+            List<FloatingBlocks.Finding> findings,
+            UnreachableCells unreachableCells) {
         List<BlockCoord> remove = new ArrayList<>();
+        List<String> notes = new ArrayList<>();
         int protectedSkipped = 0;
         int unreachableSkipped = 0;
+        int excluded = 0;
         int reachableShown = 0;
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
-            if (finding.kind() == FloatingBlocks.Kind.FENCE && site.ringPost(at.x(), at.z())) {
-                continue;
-            }
+            boolean plannedFence = finding.kind() == FloatingBlocks.Kind.FENCE
+                    && site.fenceStrip().contains(at.x(), at.z());
             boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
-            boolean reachable = FloatingScan.reachable(level, at);
+            boolean blocked = unreachableCells.excluded(at);
+            boolean reachable = !blocked && FloatingScan.reachable(level, at);
             FloatingCleanup.Action action = FloatingCleanup.decide(
                     finding,
                     new FloatingCleanup.Rooms(
-                            yardReady, playerBuilding(level, at), empty(level, at), needed, reachable));
+                            yardReady, playerBuilding(level, at), empty(level, at), needed, reachable, plannedFence));
             switch (action) {
                 case SKIP_UNREACHABLE -> {
+                    if (blocked) {
+                        excluded++;
+                    }
                     if (unreachableSkipped++ < SHOWN) {
-                        LOGGER.info(
-                                "[tidy] {} — {} ({}): рядом нет стоянки — недостижим, не трогаем",
-                                at,
-                                finding.reason(),
-                                finding.blockId());
+                        notes.add(at + " — " + (blocked ? "исключён: " : "рядом нет стоянки: ") + finding.reason());
+                    }
+                }
+                case SKIP_PLANNED -> {
+                    if (notes.size() < SHOWN) {
+                        notes.add(at + " — забор плана ограды, не убираем");
                     }
                 }
                 case SKIP_PROTECTED -> {
                     if (protectedSkipped++ < PROTECTED_SHOWN) {
-                        LOGGER.info(
-                                "[tidy] {} — постройка игрока, не трогаем: {} ({})",
-                                at,
-                                finding.reason(),
-                                finding.blockId());
+                        notes.add(at + " — постройка игрока, не трогаем: " + finding.reason());
                     }
                 }
                 case DRAIN_CHEST -> {
                     if (track(level, at)) {
-                        LOGGER.info("[tidy] сундук {} вне плана не пуст — содержимое уйдёт в сундуки двора", at);
+                        notes.add("сундук " + at + " вне плана не пуст — содержимое уйдёт в сундуки двора");
                     }
                 }
                 case RELOCATE_STATION -> {
                     reopen(service, finding.blockId());
-                    LOGGER.info("[tidy] станция {} нужна плану — снимаем и ставим заново по схеме двора", at);
+                    notes.add("станция " + at + " нужна плану — снимаем и ставим заново по схеме двора");
                     remove.add(at);
                 }
                 case REMOVE -> {
                     if (reachableShown++ < SHOWN) {
-                        LOGGER.info(
-                                "[tidy] {} — {} ({}): стоянка рядом есть — достижим, в уборку",
-                                at,
-                                finding.reason(),
-                                finding.blockId());
+                        notes.add(at + " — " + finding.reason() + ": стоянка рядом есть — в уборку");
                     }
                     remove.add(at);
                 }
                 case SKIP_REGISTERED, SKIP_WAIT -> {}
             }
         }
-        return remove;
+        return new Collected(remove, List.copyOf(notes), excluded, unreachableSkipped);
     }
 
     static String idFor(List<BlockCoord> stray) {
@@ -157,6 +196,17 @@ final class PlanDemolition {
             hash = hash * 31L + at.hashCode();
         }
         return PREFIX + Long.toUnsignedString(hash, 36);
+    }
+
+    private static void supersede(ServerLevel level, BoardService service, String keep) {
+        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+            if (ticket.id().startsWith(PREFIX)
+                    && !ticket.id().equals(keep)
+                    && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.BLOCKED
+                    && service.cancel(level, ticket.id())) {
+                LOGGER.info("[tidy] старый заблокированный {} снят: набор уборки сменился на {}", ticket.id(), keep);
+            }
+        }
     }
 
     private static String previous(BoardService service) {

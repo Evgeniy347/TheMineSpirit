@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
-import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.CaveStand;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.forestry.TreeSpecies;
@@ -23,6 +22,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
@@ -76,6 +76,7 @@ public class ClearAreaSession {
     protected int protectedSkipped;
     protected int foreignSkipped;
     protected int restoredSkipped;
+    protected int excludedSkipped;
     protected final BreakSkipTally breakSkips = new BreakSkipTally();
 
     private final BuildResult tally = new BuildResult();
@@ -91,7 +92,8 @@ public class ClearAreaSession {
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     private final boolean demolish;
     private final boolean keepGround;
-    private List<String> leftover = List.of();
+    private final ClearBlocked blocked;
+    private List<ClearSummary.Leftover> leftover = List.of();
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this(spirit, box, false);
@@ -112,6 +114,7 @@ public class ClearAreaSession {
         this.reservations = BuildReservationHub.forLevel(level);
         this.demolish = demolish;
         this.keepGround = keepGround;
+        this.blocked = new ClearBlocked(level, box);
         new TreeFelling(new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.ALL))).extend(remaining);
     }
 
@@ -176,6 +179,7 @@ public class ClearAreaSession {
                 + protectedSkipped
                 + foreignSkipped
                 + restoredSkipped
+                + excludedSkipped
                 + breakSkips.total();
     }
 
@@ -184,11 +188,11 @@ public class ClearAreaSession {
     }
 
     public Map<String, Object> saveState() {
-        return new BuildState(0, removed, skippedTotal(), 0, outcome == Outcome.RUNNING).toMap();
+        return ClearState.save(removed, skippedTotal(), outcome == Outcome.RUNNING);
     }
 
     public void restoreState(Map<String, Object> saved) {
-        BuildState state = BuildState.fromMap(saved);
+        ClearState.Restored state = ClearState.restore(saved);
         removed = Math.max(removed, state.removed());
         restoredSkipped = Math.max(restoredSkipped, state.skipped());
         for (int i = 0; i < state.removed(); i++) {
@@ -206,6 +210,7 @@ public class ClearAreaSession {
         while (!remaining.isEmpty() && clear(remaining.get(0))) {
             remaining.remove(0);
         }
+        apply(blocked.dropExcluded(remaining));
         if (remaining.isEmpty()) {
             finish();
             return;
@@ -230,16 +235,9 @@ public class ClearAreaSession {
                     remaining.stream().filter(cell -> !clear(cell)).toList();
             result = MiningPlanner.next(from, solid, safety, approachFailures.excludedStands());
         }
-        if (result instanceof MiningPlanner.Exhausted exhausted) {
-            unsafe += exhausted.unsafe();
-            noStand += exhausted.noStand();
-            unreachable += exhausted.unreachable();
-            noteSkipped(exhausted.unsafe() + exhausted.noStand() + exhausted.unreachable());
-            leftover = remaining.stream()
-                    .filter(cell -> !clear(cell))
-                    .limit(LEFTOVER_SHOWN)
-                    .map(cell -> cell + " " + blockAt(cell))
-                    .toList();
+        if (result instanceof MiningPlanner.Exhausted) {
+            apply(blocked.exhausted(
+                    remaining.stream().filter(cell -> !clear(cell)).toList(), safety, from));
             remaining.clear();
             finish();
             return;
@@ -265,7 +263,7 @@ public class ClearAreaSession {
         reservations.reserve(next.target(), spirit.getUUID());
         currentTarget = next.target();
         currentStand = next.stand();
-        pickedKind = blockAt(currentTarget);
+        pickedKind = ClearBlocked.blockAt(level, currentTarget);
         approach.beginWithRoutes(
                 new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5), APPROACH_ARRIVAL);
         approaches++;
@@ -313,6 +311,19 @@ public class ClearAreaSession {
         }
     }
 
+    private void apply(ClearBlocked.Sweep sweep) {
+        unsafe += sweep.unsafe();
+        noStand += sweep.noStand();
+        unreachable += sweep.unreachable();
+        excludedSkipped += sweep.excluded();
+        noteSkipped(sweep.skipped());
+        if (!sweep.leftover().isEmpty()) {
+            leftover = Stream.concat(leftover.stream(), sweep.leftover().stream())
+                    .limit(LEFTOVER_SHOWN)
+                    .toList();
+        }
+    }
+
     private boolean clear(BlockCoord cell) {
         BlockState state = level.getBlockState(toPos(cell));
         return state.isAir() || (keepGround && PlotGround.natural(state));
@@ -326,7 +337,7 @@ public class ClearAreaSession {
                     approachSpent,
                     currentStand,
                     currentTarget,
-                    blockAt(currentTarget));
+                    ClearBlocked.blockAt(level, currentTarget));
         }
         approachSpent = 0;
         prepareBreak();
@@ -406,7 +417,7 @@ public class ClearAreaSession {
             state = State.PICK;
             return;
         }
-        brokenKind = blockAt(currentTarget);
+        brokenKind = ClearBlocked.blockAt(level, currentTarget);
         state = State.BREAK;
     }
 
@@ -429,17 +440,11 @@ public class ClearAreaSession {
             case BREAKING -> {}
             case BROKEN -> {
                 removed++;
+                blocked.reached(currentTarget);
                 brokenKinds.merge(brokenKind, 1, Integer::sum);
                 tally.removed();
                 if (removed % PROGRESS_EVERY == 1) {
-                    LOGGER.info(
-                            "[clear] {}: ящик {}..{}, срезано {}, осталось {}, стоянка {}",
-                            spirit.getName().getString(),
-                            new BlockCoord(box.minX(), box.minY(), box.minZ()),
-                            new BlockCoord(box.maxX(), box.maxY(), box.maxZ()),
-                            removed,
-                            remaining.size(),
-                            currentStand);
+                    ClearReport.progress(LOGGER, spirit, box, removed, remaining.size(), currentStand);
                 }
                 collector = new DropCollector(
                         spirit,
@@ -477,32 +482,29 @@ public class ClearAreaSession {
         if (outcome != Outcome.RUNNING) {
             return;
         }
-        if (removed == 0 && skippedTotal() - protectedSkipped > 0) {
+        if (removed == 0 && skippedTotal() - protectedSkipped - excludedSkipped > 0) {
             fail(summary() + "; не убран ни один блок");
             return;
         }
         if (removed == 0 && skippedTotal() == 0) {
-            LOGGER.info(
-                    "[clear] {}: ящик {}..{} уже чист: ломать нечего",
-                    spirit.getName().getString(),
-                    new BlockCoord(box.minX(), box.minY(), box.minZ()),
-                    new BlockCoord(box.maxX(), box.maxY(), box.maxZ()));
+            ClearReport.clean(LOGGER, spirit, box);
         }
+        blocked.warnExcluded(LOGGER, spirit, excludedSkipped, leftover);
         if (removed > 0) {
-            LOGGER.info(
-                    "[clear] {}: ящик {}..{} расчищен: убрано {} {}, тиков подход {} лом {} подбор {}, срывов подхода {}, подходов {}, с места {}, исчезло {}; {}",
-                    spirit.getName().getString(),
-                    new BlockCoord(box.minX(), box.minY(), box.minZ()),
-                    new BlockCoord(box.maxX(), box.maxY(), box.maxZ()),
-                    removed,
-                    brokenKinds,
-                    phaseTicks.getOrDefault(State.APPROACH, 0),
-                    phaseTicks.getOrDefault(State.BREAK, 0),
-                    phaseTicks.getOrDefault(State.COLLECT, 0),
-                    approachFailed,
-                    approaches,
-                    fromPlace,
-                    vanished,
+            ClearReport.success(
+                    LOGGER,
+                    spirit,
+                    box,
+                    new ClearReport.Metrics(
+                            removed,
+                            brokenKinds,
+                            phaseTicks.getOrDefault(State.APPROACH, 0),
+                            phaseTicks.getOrDefault(State.BREAK, 0),
+                            phaseTicks.getOrDefault(State.COLLECT, 0),
+                            approachFailed,
+                            approaches,
+                            fromPlace,
+                            vanished),
                     summary());
         }
         outcome = Outcome.SUCCEEDED;
@@ -515,6 +517,7 @@ public class ClearAreaSession {
                 new BlockCoord(box.minX(), box.minY(), box.minZ()),
                 new BlockCoord(box.maxX(), box.maxY(), box.maxZ()),
                 reason);
+        blocked.escalate(LOGGER, spirit, reason);
         failureReason = reason;
         outcome = Outcome.FAILED;
         tally.failed();
@@ -533,6 +536,7 @@ public class ClearAreaSession {
                         protectedSkipped,
                         foreignSkipped,
                         unreachable,
+                        excludedSkipped,
                         ClearSummary.Refusals.of(breakSkips)),
                 leftover);
     }
@@ -549,12 +553,6 @@ public class ClearAreaSession {
         for (int i = 0; i < count; i++) {
             tally.skipped();
         }
-    }
-
-    private String blockAt(BlockCoord cell) {
-        return BuiltInRegistries.BLOCK
-                .getKey(level.getBlockState(toPos(cell)).getBlock())
-                .getPath();
     }
 
     private static BlockPos toPos(BlockCoord coord) {

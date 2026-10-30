@@ -14,6 +14,7 @@ import com.theminespirit.core.town.SchemeBuild;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -132,10 +133,11 @@ public final class StagePlans {
 
     private static TaskNode demolish(List<PlannedBlock> blocks) {
         List<TaskNode> steps = new ArrayList<>();
-        if (!blocks.isEmpty()) {
-            steps.add(PlanSteps.gotoPoint(blocks.get(0).at()));
-        }
-        blocks.forEach(block -> steps.add(PlanSteps.clear(block.at(), true)));
+        blocks.stream()
+                .sorted(Comparator.comparingInt(
+                                (PlannedBlock block) -> block.at().y())
+                        .thenComparing(PlannedBlock::at))
+                .forEach(block -> steps.add(PlanSteps.clear(block.at(), true)));
         return new SequenceNode(steps);
     }
 }

@@ -84,6 +84,17 @@ class FloatingCleanupTests {
     }
 
     @Test
+    void decide_PlannedFence_IsLeftAlone() {
+        assertEquals(
+                FloatingCleanup.Action.SKIP_PLANNED,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.FENCE),
+                        new FloatingCleanup.Rooms(true, false, false, false, true, true)),
+                "Забор, совпадающий с планом ограды, уборка не трогает: иначе она снимает уже построенную "
+                        + "оградную линию и задача строится заново");
+    }
+
+    @Test
     void decide_Stump_IsRemoved() {
         assertEquals(
                 FloatingCleanup.Action.REMOVE,
