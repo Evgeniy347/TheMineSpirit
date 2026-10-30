@@ -37,6 +37,7 @@ final class BoardTileView {
     private static final Map<BoardTileGroup, Integer> GROUP_COLORS = Map.of(
             BoardTileGroup.DONE, 0xFF55AA55,
             BoardTileGroup.ACTIVE, 0xFFFFAA00,
+            BoardTileGroup.WAITING, 0xFFFF5555,
             BoardTileGroup.AVAILABLE, 0xFF55AAFF);
 
     private BoardTileView() {}
@@ -275,6 +276,8 @@ final class BoardTileView {
                         KEY + "wait.tool", itemName(wait.subject()), Component.literal(String.valueOf(wait.count())));
             case DEPENDENCY -> Component.translatable(KEY + "wait.dependency", dependencyText(wait.subject(), byId));
             case BLOCKED -> Component.translatable(KEY + "wait.blocked");
+            case FAILED -> Component.translatable(KEY + "wait.failed");
+            case CANCELLED -> Component.translatable(KEY + "wait.cancelled");
         };
     }
 

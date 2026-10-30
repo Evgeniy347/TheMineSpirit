@@ -13,7 +13,7 @@ public final class BoardLayout {
     public static final int BORDER_TOP = 18;
     public static final int BORDER_RIGHT = 9;
     public static final int BORDER_BOTTOM = 9;
-    public static final int COLUMN_COUNT = 3;
+    public static final int COLUMN_COUNT = 4;
     public static final int COLUMN_GAP = 4;
     public static final int COLUMN_HEADER = 12;
     public static final int CONTENT_PAD = 2;

@@ -19,7 +19,7 @@ class BoardLayoutTests {
         assertEquals(
                 BoardLayout.COLUMN_COUNT,
                 columns.size(),
-                "Доска обязана раскладываться в три колонки при любом размере окна");
+                "Доска обязана раскладываться в четыре колонки при любом размере окна");
         assertEquals(
                 screenWidth - 2 * BoardLayout.MARGIN,
                 window.width(),
@@ -71,7 +71,7 @@ class BoardLayoutTests {
         List<BoardLayout.Rect> headers = layout.headers();
         List<BoardLayout.Rect> columns = layout.columns();
 
-        assertEquals(BoardLayout.COLUMN_COUNT, headers.size(), "У каждой из трёх колонок обязан быть свой заголовок");
+        assertEquals(BoardLayout.COLUMN_COUNT, headers.size(), "У каждой колонки обязан быть свой заголовок");
         for (int i = 0; i < headers.size(); i++) {
             BoardLayout.Rect header = headers.get(i);
             assertTrue(

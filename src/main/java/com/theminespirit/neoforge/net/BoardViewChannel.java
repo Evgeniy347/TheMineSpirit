@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.SettlementStage;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.rest.BoardTask;
 import com.theminespirit.core.rest.BoardTasks;
 import com.theminespirit.core.ui.BoardSnapshot;
@@ -101,21 +102,25 @@ public final class BoardViewChannel {
         if (service.isEmpty()) {
             return List.of();
         }
-        Board board = service.get().board();
+        BoardService found = service.get();
+        Board board = found.board();
         Map<String, BoardTiming> timings =
-                BoardTiming.fromJournal(service.get().journal().last(BoardTiming.JOURNAL_LOOKBACK));
+                BoardTiming.fromJournal(found.journal().last(BoardTiming.JOURNAL_LOOKBACK));
         List<BoardTask> tasks = new ArrayList<>();
+        Map<String, List<String>> targetDetails = new LinkedHashMap<>();
         for (BoardTicket ticket : board.all()) {
+            TicketTarget target = found.targetOf(ticket.id(), List.of());
+            targetDetails.put(ticket.id(), target.details());
             tasks.add(BoardTasks.of(
                     board,
                     ticket,
                     board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
-                    service.get().stock(),
+                    found.stock(),
                     timings.getOrDefault(ticket.id(), BoardTiming.NONE),
-                    service.get().targetOf(ticket.id(), List.of())));
+                    target));
         }
         MinecraftServer server = level.getServer();
-        return BoardSnapshot.build(tasks, uuid -> spiritName(server, uuid));
+        return BoardSnapshot.build(tasks, uuid -> spiritName(server, uuid), targetDetails);
     }
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {

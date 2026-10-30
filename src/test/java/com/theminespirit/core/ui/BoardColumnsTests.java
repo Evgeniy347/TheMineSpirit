@@ -12,30 +12,34 @@ class BoardColumnsTests {
     }
 
     @Test
-    void split_ThreeGroups_ReturnsColumnsInShowOrderAndKeepsTiles() {
+    void split_FourGroups_ReturnsColumnsInShowOrderAndKeepsTiles() {
         List<BoardTile> tiles = List.of(
                 tile("done", BoardTileGroup.DONE),
                 tile("active", BoardTileGroup.ACTIVE),
+                tile("waiting", BoardTileGroup.WAITING),
                 tile("free-1", BoardTileGroup.AVAILABLE),
                 tile("free-2", BoardTileGroup.AVAILABLE));
 
         List<BoardColumns.BoardColumn> columns = BoardColumns.split(tiles);
 
         assertEquals(
-                List.of(BoardTileGroup.DONE, BoardTileGroup.ACTIVE, BoardTileGroup.AVAILABLE),
+                List.of(BoardTileGroup.DONE, BoardTileGroup.ACTIVE, BoardTileGroup.WAITING, BoardTileGroup.AVAILABLE),
                 columns.stream().map(BoardColumns.BoardColumn::group).toList(),
-                "Колонки обязаны идти в порядке показа: завершённые, активные, доступные");
+                "Колонки обязаны идти в порядке показа: завершённые, активные, ждущие, доступные");
         assertEquals(
                 List.of("free-1", "free-2"),
-                columns.get(2).tiles().stream().map(BoardTile::id).toList(),
+                columns.get(3).tiles().stream().map(BoardTile::id).toList(),
                 "Раскладка по колонкам обязана сохранить порядок плиток внутри группы");
     }
 
     @Test
-    void split_EmptyBoard_ReturnsThreeEmptyColumns() {
+    void split_EmptyBoard_ReturnsOneEmptyColumnPerGroup() {
         List<BoardColumns.BoardColumn> columns = BoardColumns.split(List.of());
 
-        assertEquals(3, columns.size(), "Пустая доска всё равно показывает три колонки");
+        assertEquals(
+                BoardTileGroup.values().length,
+                columns.size(),
+                "Пустая доска всё равно показывает по колонке на каждую группу");
         assertEquals(
                 0,
                 columns.stream().mapToInt(column -> column.tiles().size()).sum(),
