@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -43,6 +44,61 @@ class OrchardSaplingSourceTests {
                                 && SAPLING.equals(call.params().get("item"))),
                 "Сад не просит acquire саженца: acquire уходил в «добыть oak_sapling ×4» из мира и падал "
                         + "без стоянки. План: " + calls);
+    }
+
+    @Test
+    void plan_SaplingGather_TargetsTrunkNotOrchardCenter() {
+        StageSite site = TownFixtures.flatSite();
+        BlockCoord plot = site.orchardOrigin();
+        TicketTarget target = TicketTarget.at(plot).withSupply(SAPLING, 24);
+
+        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.GATHER_MATERIALS, 1, target));
+        int chop = firstChop(calls);
+
+        assertFalse(
+                calls.subList(0, chop).stream()
+                        .anyMatch(call -> "goto".equals(call.script())
+                                && Integer.valueOf(plot.x())
+                                        .equals(call.params().get("x"))
+                                && Integer.valueOf(plot.y())
+                                        .equals(call.params().get("y"))
+                                && Integer.valueOf(plot.z())
+                                        .equals(call.params().get("z"))),
+                "Цель добычи саженцев — ствол настоящего дерева, а не центр участка сада: до рубки дух не идёт в "
+                        + "пустую точку сада, а ищет дерево из своего положения. План: " + calls);
+        assertTrue(
+                calls.stream()
+                        .anyMatch(call -> "chop_tree".equals(call.script())
+                                && "oak".equals(call.params().get("species"))
+                                && Boolean.FALSE.equals(call.params().get("replant"))),
+                "Саженцы даёт поваленное дерево: план валит дуб без пересадки, а не идёт в центр участка. План: "
+                        + calls);
+    }
+
+    @Test
+    void plan_SaplingGather_CollectsEnoughLeavesForWholeOrchard() {
+        StageSite site = TownFixtures.flatSite();
+        TicketTarget target = TicketTarget.at(site.orchardOrigin()).withSupply(SAPLING, 24);
+
+        int leaves = calls(TicketPlans.plan(BoardCase.GATHER_MATERIALS, 1, target)).stream()
+                .filter(call -> "gather".equals(call.script())
+                        && LEAVES.equals(call.params().get("block")))
+                .mapToInt(call -> (Integer) call.params().get("count"))
+                .sum();
+
+        assertTrue(
+                leaves >= 24 * 20,
+                "Саженец падает примерно с каждого двадцатого листа: на 24 саженца нужно не меньше 480 листьев, "
+                        + "а план собирает " + leaves + " — иначе сад остаётся 0 из 24");
+    }
+
+    private static int firstChop(List<ScriptCall> calls) {
+        for (int index = 0; index < calls.size(); index++) {
+            if ("chop_tree".equals(calls.get(index).script())) {
+                return index;
+            }
+        }
+        throw new AssertionError("В плане саженцев нет рубки дерева: " + calls);
     }
 
     @Test

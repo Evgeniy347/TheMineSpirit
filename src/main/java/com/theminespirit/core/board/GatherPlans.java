@@ -6,12 +6,14 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 final class GatherPlans {
     private static final int LOGS_PER_TREE = 4;
+    private static final int LEAVES_PER_SAPLING = 20;
     private static final String COUNT = "count";
     private static final String RADIUS = "radius";
     private static final String MINECRAFT = "minecraft:";
@@ -23,7 +25,7 @@ final class GatherPlans {
         if (portal.isPresent()) {
             return portal;
         }
-        Optional<TaskNode> saplings = saplingPlan(target, item, batch);
+        Optional<TaskNode> saplings = saplingPlan(item, batch);
         if (saplings.isPresent()) {
             return saplings;
         }
@@ -54,36 +56,33 @@ final class GatherPlans {
                         acquire))));
     }
 
-    private static Optional<TaskNode> saplingPlan(TicketTarget target, String item, int batch) {
+    private static Optional<TaskNode> saplingPlan(String item, int batch) {
         Optional<TreeSpecies> sapling = saplingSpeciesOf(item);
         if (sapling.isEmpty()) {
             return Optional.empty();
         }
         TreeSpecies species = sapling.get();
         int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (batch + 1) / 2));
-        int leaves = Math.min(CatalogLimits.COUNT_MAX, Math.max(16, batch * 16));
-        return Optional.of(sequence(
-                TicketPlans.gotoTarget(target),
-                new ScriptCall(
-                        "chop_tree",
-                        Map.of(
-                                "species",
-                                species.id(),
-                                COUNT,
-                                trees,
-                                RADIUS,
-                                BoardTuning.chopRadius(),
-                                "replant",
-                                false)),
-                new ScriptCall(
-                        "gather",
-                        Map.of(
-                                "block",
-                                pathOf(species.leavesId()),
-                                COUNT,
-                                leaves,
-                                RADIUS,
-                                CatalogLimits.HARVEST_RADIUS_MAX))));
+        int leaves = Math.max(16, batch * LEAVES_PER_SAPLING);
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(new ScriptCall(
+                "chop_tree",
+                Map.of("species", species.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", false)));
+        int left = leaves;
+        while (left > 0) {
+            int part = Math.min(left, CatalogLimits.COUNT_MAX);
+            steps.add(new ScriptCall(
+                    "gather",
+                    Map.of(
+                            "block",
+                            pathOf(species.leavesId()),
+                            COUNT,
+                            part,
+                            RADIUS,
+                            CatalogLimits.HARVEST_RADIUS_MAX)));
+            left -= part;
+        }
+        return Optional.of(new SequenceNode(steps));
     }
 
     private static Optional<TaskNode> stripPlan(TicketTarget target, String item, int batch) {

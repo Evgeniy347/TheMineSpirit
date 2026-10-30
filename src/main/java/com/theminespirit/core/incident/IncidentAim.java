@@ -24,6 +24,13 @@ public final class IncidentAim {
         Objects.requireNonNull(ticket, "ticket не может быть null: инцидент называет задание");
         Objects.requireNonNull(reserved, "reserved не может быть null: без броней не видно цель добычи");
         if (!ticket.id().startsWith(SUPPLY_GATHER) && !GATHER_CASES.contains(ticket.boardCase())) {
+            Optional<WorkTarget> tree = reserved.stream()
+                    .filter(candidate -> candidate.kind() == WorkKind.TREE)
+                    .findFirst();
+            if (tree.isPresent()) {
+                return "дерево " + tree.orElseThrow().anchor() + " (цель " + (target == null ? "-" : target.target())
+                        + ")";
+            }
             return target == null ? "-" : target.target() + " часть " + target.count();
         }
         String item = target == null || target.supplyItem() == null ? "-" : target.supplyItem();
