@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-final class BoardScenario {
+public final class BoardScenario {
     static final List<BoardCase> CASES = List.of(
             BoardCase.CLEAR_GROUNDS,
             BoardCase.BUILD_MINE,
@@ -55,7 +55,7 @@ final class BoardScenario {
         }
     }
 
-    record Anomaly(String kind, long seed, int round, String detail) {}
+    public record Anomaly(String kind, long seed, int round, String detail) {}
 
     final long seed;
     final Random random;
@@ -67,8 +67,16 @@ final class BoardScenario {
     final Set<UUID> dead = new HashSet<>();
 
     BoardScenario(long seed) {
+        this(seed, false);
+    }
+
+    private BoardScenario(long seed, boolean stageOne) {
         this.seed = seed;
         this.random = new Random(seed);
+        if (stageOne) {
+            stageOfSettlement();
+            return;
+        }
         int count = 1 + random.nextInt(4);
         for (int i = 1; i <= count; i++) {
             List<String> items = new ArrayList<>();
@@ -112,6 +120,71 @@ final class BoardScenario {
                     required));
             ids.add(id);
         }
+    }
+
+    public static BoardScenario stageOne(long seed) {
+        return new BoardScenario(seed, true);
+    }
+
+    private void stageOfSettlement() {
+        List<String> tools =
+                List.of("minecraft:stone_pickaxe", "minecraft:stone_axe", "minecraft:stone_shovel", "minecraft:bread");
+        for (int i = 1; i <= 3; i++) {
+            spirits.add(new Spirit(new UUID(seed, i), "spirit-" + i, tools, FED, new SpiritView(false, false, false)));
+        }
+        stock.putAll(Map.of(
+                "oak_log", 256,
+                "oak_planks", 256,
+                "cobblestone", 256,
+                "torch", 64,
+                "oak_sapling", 16,
+                "dirt", 128,
+                "stick", 32,
+                "coal", 32,
+                "bread", 16));
+        ticket("first:crafting_station:1", BoardCase.CRAFTING_STATION, List.of(), Map.of("oak_planks", 4));
+        ticket(
+                "first:clear_grounds:1",
+                BoardCase.CLEAR_GROUNDS,
+                List.of("first:crafting_station:1"),
+                Map.of("oak_planks", 8));
+        ticket(
+                "first:stock_chests:1",
+                BoardCase.STOCK_CHESTS,
+                List.of("first:clear_grounds:1"),
+                Map.of("oak_planks", 16));
+        ticket("first:build_mine:1", BoardCase.BUILD_MINE, List.of("first:clear_grounds:1"), Map.of("torch", 6));
+        ticket(
+                "first:craft_furnace:1",
+                BoardCase.CRAFT_FURNACE,
+                List.of("first:stock_chests:1"),
+                Map.of("cobblestone", 8));
+        ticket("first:lighting:1", BoardCase.LIGHTING, List.of("first:stock_chests:1"), Map.of("torch", 8));
+        ticket("first:build_fence:1", BoardCase.BUILD_FENCE, List.of("first:clear_grounds:1"), Map.of("oak_log", 40));
+        ticket(
+                "first:build_house:1",
+                BoardCase.BUILD_HOUSE,
+                List.of("first:clear_grounds:1"),
+                Map.of("oak_log", 12, "oak_planks", 30, "cobblestone", 16));
+        ticket(
+                "first:build_orchard:1",
+                BoardCase.BUILD_ORCHARD,
+                List.of("first:build_house:1"),
+                Map.of("oak_sapling", 4, "torch", 4, "dirt", 8));
+        ticket("first:build_streets:1", BoardCase.BUILD_STREETS, List.of("first:build_house:1"), Map.of("dirt", 40));
+    }
+
+    private void ticket(String id, BoardCase boardCase, List<String> deps, Map<String, Integer> required) {
+        board.submit(new BoardTicket(
+                id,
+                boardCase,
+                Optional.empty(),
+                BoardRules.priorityOf(boardCase),
+                clock[0],
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                deps,
+                required));
     }
 
     StockView stockView() {
@@ -183,6 +256,30 @@ final class BoardScenario {
             }
         }
         return held;
+    }
+
+    public void round(int round) {
+        dispatch(round);
+        for (BoardTicket held : assigned()) {
+            board.complete(held.id());
+        }
+        clock[0] += BoardTuning.boardIntervalTicks();
+    }
+
+    public BoardStatus status(String id) {
+        return board.statusOf(id).orElse(null);
+    }
+
+    public List<BoardTicket> tickets() {
+        return board.all();
+    }
+
+    public List<Anomaly> anomalies() {
+        return List.copyOf(anomalies);
+    }
+
+    public int settlementStage() {
+        return SettlementStage.of(board.ledger());
     }
 
     BoardScenario run(int rounds, ScenarioCheck check) {

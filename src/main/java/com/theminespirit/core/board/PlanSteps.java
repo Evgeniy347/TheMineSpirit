@@ -81,6 +81,10 @@ final class PlanSteps {
         return state < 0 ? block : block.substring(0, state);
     }
 
+    static boolean ownCraft(String item) {
+        return item.endsWith("_fence") || item.endsWith("_fence_gate");
+    }
+
     static int woodPlanks(Map<String, Integer> counts) {
         int planks = 0;
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
@@ -131,7 +135,11 @@ final class PlanSteps {
         StageWork work = target.work();
         if (work != null) {
             steps.add(gotoPoint(work.site().workYard()));
-            counts.forEach((item, count) -> steps.add(withdraw(item, Math.min(count, CatalogLimits.COUNT_MAX))));
+            counts.forEach((item, count) -> {
+                if (!ownCraft(item)) {
+                    steps.add(withdraw(item, Math.min(count, CatalogLimits.COUNT_MAX)));
+                }
+            });
             int logs = (woodPlanks(counts) + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG;
             if (logs > 0) {
                 steps.add(withdraw(MINECRAFT + wood + "_log", Math.min(logs, CatalogLimits.COUNT_MAX)));
@@ -142,7 +150,10 @@ final class PlanSteps {
         } else if (!builds.isEmpty()) {
             steps.add(gotoPoint(builds.get(0).origin()));
         }
-        counts.forEach((item, count) -> steps.add(acquire(item, Math.min(count, CatalogLimits.COUNT_MAX))));
+        counts.forEach((item, count) -> steps.add(
+                ownCraft(item)
+                        ? craft(item, Math.min(count, CatalogLimits.COUNT_MAX))
+                        : acquire(item, Math.min(count, CatalogLimits.COUNT_MAX))));
         for (PlannedBlock block : blocks) {
             steps.add(place(block, target));
         }
