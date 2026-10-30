@@ -114,28 +114,28 @@ public final class Board {
         if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger)) {
             return BoardOutcome.STAGE_LOCKED;
         }
-        if (tickets.containsKey(ticket.id())) {
+        long now = nowTicks.getAsLong();
+        BoardTicket existing = tickets.get(ticket.id());
+        if (existing != null) {
             BoardStatus current = statuses.get(ticket.id());
-            if (current == BoardStatus.DONE
-                    && (ticket.id().startsWith(FIRST_STEPS_PREFIX)
-                            || ticket.id().startsWith(STONE_PART_PREFIX)
-                            || ticket.id().startsWith(FENCE_PART_PREFIX))) {
+            boolean stage = StageTicket.stage(ticket.id());
+            boolean changed = (current == BoardStatus.DONE && !stage)
+                    || (current == BoardStatus.BLOCKED && conditionsChanged(existing, ticket));
+            boolean retry = current == BoardStatus.FAILED && stage && !recentlyFailed(ticket.id(), now);
+            if (!changed && !retry) {
                 return BoardOutcome.DUPLICATE;
             }
-            if (current == BoardStatus.DONE
-                    || (current == BoardStatus.BLOCKED && conditionsChanged(tickets.get(ticket.id()), ticket))) {
-                tickets.put(ticket.id(), ticket);
-                statuses.put(ticket.id(), BoardStatus.PENDING);
-                claimAssignees.remove(ticket.id());
+            tickets.put(ticket.id(), ticket);
+            statuses.put(ticket.id(), BoardStatus.PENDING);
+            claimAssignees.remove(ticket.id());
+            if (changed) {
                 ticketFailures.remove(ticket.id());
                 lastFailReasons.remove(ticket.id());
                 blockedMissing.remove(ticket.id());
-                events.transition(BoardLog.Event.SUBMITTED, ticket, null, nowTicks.getAsLong());
-                return BoardOutcome.ACCEPTED;
             }
-            return BoardOutcome.DUPLICATE;
+            events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
+            return BoardOutcome.ACCEPTED;
         }
-        long now = nowTicks.getAsLong();
         if (recentlyFailed(ticket.id(), now)) {
             return BoardOutcome.BACKOFF;
         }
@@ -523,8 +523,7 @@ public final class Board {
         int removed = 0;
         List<String> removableIds = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
-            BoardStatus status = statuses.get(ticket.id());
-            if (status == BoardStatus.CANCELLED || status == BoardStatus.FAILED) {
+            if (StageTicket.removable(statuses.get(ticket.id()), ticket.id())) {
                 removableIds.add(ticket.id());
             }
         }

@@ -68,6 +68,18 @@ class CraftedSourceTests {
     }
 
     @Test
+    void resolve_NamespacedPlanksWithoutRecipe_RefusesWorldGather() {
+        ResourceKnowledge knowledge = new StubKnowledge(Set.of("minecraft:oak_planks"), Map.of(), Map.of())
+                .withGatherSource("minecraft:oak_planks", "oak_planks");
+
+        assertThrows(
+                UnplannableGoalException.class,
+                () -> ResourceResolver.resolve("minecraft:oak_planks", 67, knowledge),
+                "Пространство имён не делает доски другим блоком: 'minecraft:oak_planks' и 'oak_planks' — "
+                        + "один предмет, и добыча размещённых досок запрещена так же, как для короткого id (A)");
+    }
+
+    @Test
     void resolve_DropSourcedCraftedFamily_GathersSourceBlock() {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("glass"), Map.of(), Map.of()).withGatherSource("glass", "sand");
