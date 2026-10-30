@@ -69,14 +69,14 @@ class WarehouseRulesTests {
     }
 
     @Test
-    void site_EachLevel_StandAsideFromHome() {
+    void site_EachLevel_StaysAtHomeAnchor() {
         BlockCoord home = new BlockCoord(10, 64, -5);
 
         assertEquals(home, WarehouseRules.site(home, 1), "Первый склад ставится у дома");
         assertEquals(
-                new BlockCoord(10 + WarehouseRules.SITE_SPACING, 64, -5),
+                home,
                 WarehouseRules.site(home, 2),
-                "Второй склад ставится на шаг в стороне: старый не сносится под новым");
+                "Второй склад улучшает первый на месте: второй участок не занимается");
         assertThrows(
                 IllegalArgumentException.class, () -> WarehouseRules.site(home, 0), "Места для нулевого уровня нет");
     }

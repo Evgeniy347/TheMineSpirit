@@ -1,5 +1,5 @@
 src/main/java/com/theminespirit/core/board/Board.java	857
-src/main/java/com/theminespirit/core/board/TicketPlans.java	906
+src/main/java/com/theminespirit/core/board/TicketPlans.java	903
 src/main/java/com/theminespirit/core/board/graph/GraphPlanner.java	548
 src/main/java/com/theminespirit/core/board/graph/RecipeImport.java	555
 src/main/java/com/theminespirit/core/board/graph/SupplyGraph.java	408

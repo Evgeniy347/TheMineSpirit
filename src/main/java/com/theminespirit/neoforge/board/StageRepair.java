@@ -7,6 +7,7 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.RepairReopen;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.slf4j.Logger;
 
 final class StageRepair {
@@ -35,6 +37,9 @@ final class StageRepair {
         StageWork work = target.work();
         if (work == null) {
             throw new IllegalArgumentException("Восстановление " + step + " без места этапа: план не передан");
+        }
+        if (upgrading(service, step)) {
+            return BoardOutcome.DUPLICATE;
         }
         String id = RepairPlan.PREFIX + step.name().toLowerCase(Locale.ROOT);
         int percent = total == 0 ? 0 : missing * PERCENT / total;
@@ -73,6 +78,29 @@ final class StageRepair {
                             ConfigStamp.current()));
         }
         return outcome;
+    }
+
+    private static boolean upgrading(BoardService service, BoardCase step) {
+        OptionalInt next = BuildingLevels.nextLevel(step, service.board().ledger());
+        if (next.isEmpty() || next.getAsInt() < 2) {
+            return false;
+        }
+        int level = next.getAsInt();
+        if (BuildingLevels.state(step, level, service.board().ledger()) != BuildingLevels.State.UPGRADING) {
+            return false;
+        }
+        for (BoardTicket ticket : service.board().all()) {
+            if (ticket.boardCase() != step || ticket.level() != level) {
+                continue;
+            }
+            BoardStatus status = service.board().statusOf(ticket.id()).orElse(null);
+            if (status == BoardStatus.PENDING
+                    || status == BoardStatus.WAITING_RESOURCES
+                    || status == BoardStatus.ASSIGNED) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static String label(BoardCase step) {

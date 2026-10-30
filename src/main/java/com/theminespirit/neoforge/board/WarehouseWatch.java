@@ -7,15 +7,13 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.PriorityContext;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.UpgradePlan;
 import com.theminespirit.core.board.WarehouseRules;
-import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +57,8 @@ public final class WarehouseWatch {
                         next,
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
-                        materials(WarehouseRules.scheme(next))),
+                        UpgradePlan.required(
+                                next > 1 ? WarehouseRules.scheme(next - 1) : null, WarehouseRules.scheme(next))),
                 TicketTarget.at(WarehouseRules.site(home, next)));
     }
 
@@ -69,6 +68,11 @@ public final class WarehouseWatch {
         }
         int highest = standing.stream().max(Integer::compareTo).orElseThrow();
         for (int old : WarehouseRules.relocateOldLevels(standing)) {
+            BlockCoord from = WarehouseRules.site(home, old);
+            BlockCoord to = WarehouseRules.site(home, highest);
+            if (from.equals(to)) {
+                continue;
+            }
             String id = WarehouseRules.relocateTicketId(old);
             if (service.board().find(id).isPresent() || active(service, id)) {
                 continue;
@@ -84,9 +88,7 @@ public final class WarehouseWatch {
                             "warehouse:level:" + old,
                             List.of(),
                             Map.of()),
-                    TicketTarget.at(WarehouseRules.site(home, highest))
-                            .withRelocate(WarehouseRules.site(home, old), WarehouseRules.site(home, highest))
-                            .withScheme(WarehouseRules.scheme(highest)));
+                    TicketTarget.at(to).withRelocate(from, to).withScheme(WarehouseRules.scheme(highest)));
         }
     }
 
@@ -118,20 +120,6 @@ public final class WarehouseWatch {
         return status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
-    }
-
-    private static Map<String, Integer> materials(String scheme) {
-        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(scheme);
-        if (preset.isEmpty()) {
-            return Map.of();
-        }
-        Map<String, Integer> materials = new LinkedHashMap<>();
-        preset.orElseThrow().materials().forEach((item, count) -> materials.merge(shortId(item), count, Integer::sum));
-        return Map.copyOf(materials);
-    }
-
-    private static String shortId(String item) {
-        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {

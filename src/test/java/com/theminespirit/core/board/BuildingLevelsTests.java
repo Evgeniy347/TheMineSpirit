@@ -101,6 +101,63 @@ class BuildingLevelsTests {
     }
 
     @Test
+    void state_FirstLevelNotBuilt_IsNew() {
+        assertEquals(
+                BuildingLevels.State.NEW,
+                BuildingLevels.state(BoardCase.BUILD_HOUSE, 1, new BoardLedger()),
+                "Пока уровень не стоит и ниже ничего нет, постройка новая: это не улучшение");
+    }
+
+    @Test
+    void state_LowerLevelStands_IsUpgrading() {
+        BoardLedger ledger = new BoardLedger();
+        ledger.note(BoardCase.BUILD_HOUSE, 1);
+
+        assertEquals(
+                BuildingLevels.State.UPGRADING,
+                BuildingLevels.state(BoardCase.BUILD_HOUSE, 2, ledger),
+                "Уровень 2 поверх стоящего уровня 1 — улучшение на месте, а не новая стройка");
+    }
+
+    @Test
+    void state_LevelStands_IsStanding() {
+        BoardLedger ledger = new BoardLedger();
+        ledger.note(BoardCase.BUILD_HOUSE, 2);
+
+        assertEquals(
+                BuildingLevels.State.STANDING,
+                BuildingLevels.state(BoardCase.BUILD_HOUSE, 2, ledger),
+                "Отмеченный уровень стоит: повторно его не строят");
+    }
+
+    @Test
+    void state_GapBelow_IsNew() {
+        BoardLedger ledger = new BoardLedger();
+        ledger.note(BoardCase.BUILD_HOUSE, 3);
+
+        assertEquals(
+                BuildingLevels.State.NEW,
+                BuildingLevels.state(BoardCase.BUILD_HOUSE, 2, ledger),
+                "Уровень 2 без стоящего уровня 1 — не улучшение: дыру в уровнях улучшением не закрывают");
+    }
+
+    @Test
+    void state_NullArgs_AreRejected() {
+        assertThrows(
+                NullPointerException.class,
+                () -> BuildingLevels.state(null, 1, new BoardLedger()),
+                "Кейс null обязан отвергаться: без него неизвестно, чьё состояние считается");
+        assertThrows(
+                NullPointerException.class,
+                () -> BuildingLevels.state(BoardCase.BUILD_HOUSE, 1, null),
+                "Ledger null обязан отвергаться: без него неизвестно, что стоит");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BuildingLevels.state(BoardCase.BUILD_HOUSE, 0, new BoardLedger()),
+                "Нулевого уровня нет: состояние ниже первого не считается");
+    }
+
+    @Test
     void nextLevel_NullArgs_AreRejected() {
 
         assertThrows(
