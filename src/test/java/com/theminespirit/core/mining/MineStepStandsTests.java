@@ -76,6 +76,53 @@ class MineStepStandsTests {
     }
 
     @Test
+    void of_ParentStandBehindTerraceWall_StandBehindWallIsNotOffered() {
+        BlockCoord from = new BlockCoord(3, FEET, 0);
+        BlockCoord parent = new BlockCoord(0, LEVEL + 5, -1);
+        MineColumn column = new MineColumn(new BlockCoord(0, LEVEL, 0), MineColumn.PASSAGE_HEIGHT);
+        CellWorld world = terraceWall();
+
+        MineStepStands.Choice choice = MineStepStands.of(column, parent, from, world);
+
+        assertTrue(
+                choice.found(),
+                "Стоянка за стеной не отменяет спуск: дух обязан найти достижимую клетку с прямой видимостью "
+                        + "на ступень " + column.stand() + ", иначе проходка встаёт (observe4: (-189,69,-518))");
+        assertFalse(
+                choice.stands().contains(parent),
+                "Стоянка родителя " + parent + " за преградой не предлагается: подход к ней кончается у духа "
+                        + "(observe4: «стоянка (-187,69,-517) за преградой»), очередь стоянок из-за неё не тратится");
+        for (BlockCoord stand : choice.stands()) {
+            assertTrue(
+                    MineReach.canReach(from, stand, world),
+                    "Каждая предложенная стоянка обязана быть достижима пешком от духа " + from + ": " + stand
+                            + " за преградой даёт провал подхода, а не спуск");
+            assertTrue(
+                    MineStepStands.visibleFrom(column, stand, world),
+                    "Каждая предложенная стоянка обязана видеть ступень " + column.stand()
+                            + " напрямую: ломать сквозь блоки нельзя, из-за стены клетку не открыть — " + stand);
+        }
+        assertEquals(
+                new BlockCoord(4, LEVEL + 3, 1),
+                choice.stands().get(0),
+                "Ближняя достижимая клетка с прямой видимостью — на уступе у стены: она открывает верх ступени "
+                        + "из-за стены, дух подходит к ней, а не стоит под стеной: " + choice.stands());
+    }
+
+    private static CellWorld terraceWall() {
+        CellWorld world = new CellWorld()
+                .fill(LEVEL, -8, -8, 8, 8, Cell.SOLID)
+                .fill(LEVEL + 1, 2, -8, 2, 8, Cell.SOLID)
+                .fill(LEVEL + 2, 2, -8, 2, 8, Cell.SOLID)
+                .fill(LEVEL + 3, 2, -8, 2, 8, Cell.SOLID);
+        world.set(4, LEVEL + 1, 0, Cell.SOLID);
+        world.set(4, LEVEL + 2, 1, Cell.SOLID);
+        world.set(0, LEVEL + 4, -1, Cell.SOLID);
+        world.set(-1, LEVEL + 1, 0, Cell.SOLID).set(1, LEVEL + 1, 0, Cell.SOLID).set(0, LEVEL + 1, 1, Cell.SOLID);
+        return world;
+    }
+
+    @Test
     void of_EntranceSealed_EmptyWithClearReason() {
         CellWorld world = ground().set(0, LEVEL, 0, Cell.SOLID);
         for (int y = FEET; y <= FEET + 2; y++) {

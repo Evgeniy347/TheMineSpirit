@@ -2,6 +2,7 @@ package com.theminespirit.core.mining;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class MineStepStands {
     public static final int MAX_STANDS = 6;
+    public static final int MAX_ALTERNATIVES = 64;
 
     public record Choice(List<BlockCoord> stands, String reason) {
         public Choice {
@@ -29,23 +31,51 @@ public final class MineStepStands {
         Objects.requireNonNull(column, "Колонка не может быть null: без неё неизвестно, к какой ступени идти");
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней сортируются стоянки");
         Objects.requireNonNull(view, "Вид мира не может быть null: по нему проверяется стоянка и видимость");
+        Set<BlockCoord> reachable = MineReach.stands(from, view);
         Set<BlockCoord> stands = new LinkedHashSet<>();
-        if (parentStand != null && !shaft(column, parentStand) && MiningSafety.canStand(parentStand, view)) {
-            stands.add(parentStand);
-        }
+        consider(column, parentStand, view, reachable, stands);
         for (BlockCoord stand : StandSpots.of(column.stand(), view, from)) {
-            if (shaft(column, stand)) {
-                continue;
-            }
-            stands.add(stand);
+            consider(column, stand, view, reachable, stands);
             if (stands.size() >= MAX_STANDS) {
                 break;
             }
         }
         if (stands.isEmpty()) {
-            return new Choice(List.of(), reason(column, parentStand, view));
+            addReachable(column, from, view, reachable, stands);
+        }
+        if (stands.isEmpty()) {
+            return new Choice(List.of(), reason(column, parentStand, view, reachable));
         }
         return new Choice(new ArrayList<>(stands), "");
+    }
+
+    private static void consider(
+            MineColumn column,
+            @Nullable BlockCoord stand,
+            SafetyView view,
+            Set<BlockCoord> reachable,
+            Set<BlockCoord> stands) {
+        if (stand == null || shaft(column, stand) || !reachable.contains(stand)) {
+            return;
+        }
+        if (!MiningSafety.canStand(stand, view) || !visibleFrom(column, stand, view)) {
+            return;
+        }
+        stands.add(stand);
+    }
+
+    private static void addReachable(
+            MineColumn column, BlockCoord from, SafetyView view, Set<BlockCoord> reachable, Set<BlockCoord> stands) {
+        List<BlockCoord> ordered = new ArrayList<>(reachable);
+        ordered.sort(Comparator.comparingLong((BlockCoord stand) -> distanceSquared(from, stand))
+                .thenComparing(Comparator.naturalOrder()));
+        int scanned = 0;
+        for (BlockCoord stand : ordered) {
+            if (stands.size() >= MAX_STANDS || scanned++ >= MAX_ALTERNATIVES) {
+                return;
+            }
+            consider(column, stand, view, reachable, stands);
+        }
     }
 
     public static boolean shaft(MineColumn column, BlockCoord at) {
@@ -65,11 +95,16 @@ public final class MineStepStands {
                 return true;
             }
         }
-        return false;
+        return MineDigOrder.visible(feet, column.floor(), List.of(), view);
     }
 
-    private static String reason(MineColumn column, @Nullable BlockCoord parentStand, SafetyView view) {
+    private static String reason(
+            MineColumn column, @Nullable BlockCoord parentStand, SafetyView view, Set<BlockCoord> reachable) {
         BlockCoord stand = column.stand();
+        if (parentStand != null && !reachable.contains(parentStand)) {
+            return "стоянка " + parentStand + " за преградой: к ступени " + stand
+                    + " нет достижимой клетки с прямой видимостью — расчистить подход";
+        }
         if (!MiningSafety.canStand(stand, view)) {
             return "клетка ступени " + stand
                     + " не годится для стоянки: над ней нет прохода или под ней нет пола — вход завален";
@@ -79,5 +114,12 @@ public final class MineStepStands {
                     + " нет свободной клетки с прямой видимостью: преграда у входа";
         }
         return "у входа нет свободной клетки с прямой видимостью на ступень " + stand + ": вход завален или загорожен";
+    }
+
+    private static long distanceSquared(BlockCoord from, BlockCoord to) {
+        long dx = (long) to.x() - from.x();
+        long dy = (long) to.y() - from.y();
+        long dz = (long) to.z() - from.z();
+        return dx * dx + dy * dy + dz * dz;
     }
 }
