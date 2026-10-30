@@ -4,6 +4,7 @@ import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.pickup.LeafDropStand;
 import java.util.Optional;
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
@@ -21,6 +22,10 @@ final class GraphTargets {
 
     static BlockCoord stand(ServerLevel level, BlockCoord point) {
         return WorkStand.near(point, ground(level)).orElse(point);
+    }
+
+    static Optional<BlockCoord> leafDropStand(ServerLevel level, BlockCoord leaf) {
+        return LeafDropStand.of(leaf, ground(level));
     }
 
     static BlockCoord source(
