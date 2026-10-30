@@ -33,7 +33,7 @@ public final class Board {
     private final Map<String, Long> failTicks = new LinkedHashMap<>();
     private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
     private final Map<String, String> lastFailReasons = new LinkedHashMap<>();
-    private final Map<String, String> waitNotes = new LinkedHashMap<>();
+    private final WaitNotes waitNotes = new WaitNotes();
     private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
     private final Map<SpiritCase, CaseFailures> caseFailures = new LinkedHashMap<>();
     private final List<BoardLogEntry> detachments = new ArrayList<>();
@@ -170,22 +170,17 @@ public final class Board {
             }
             ready.add(ticket);
         }
+        waitNotes.retain(ready.stream().map(BoardTicket::id).toList());
         ready.sort(QueueOrder.of(tickets.values(), statuses, now()));
         return List.copyOf(ready);
     }
 
     public void noteWait(String ticketId, @Nullable String reason) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания пишется на задание");
-        if (reason == null) {
-            waitNotes.remove(ticketId);
-        } else {
-            waitNotes.put(ticketId, reason);
-        }
+        waitNotes.note(ticketId, reason);
     }
 
     public Optional<String> waitNote(String ticketId) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания читается по заданию");
-        return Optional.ofNullable(waitNotes.get(ticketId));
+        return waitNotes.of(ticketId);
     }
 
     public BoardOutcome claim(String ticketId, UUID spirit, long now) {
@@ -220,7 +215,7 @@ public final class Board {
         }
         statuses.put(ticketId, BoardStatus.ASSIGNED);
         claimAssignees.put(ticketId, spirit);
-        waitNotes.remove(ticketId);
+        waitNotes.forget(ticketId);
         events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
         return BoardOutcome.CLAIMED;
     }

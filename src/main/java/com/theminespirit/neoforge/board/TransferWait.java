@@ -35,17 +35,27 @@ final class TransferWait {
             }
         }
         Set<UUID> carriers = TransferCarriers.carrying(board, ticket.id(), running);
+        Set<UUID> planned = TransferCarriers.planned(board, ticket.id());
         List<String> names = new ArrayList<>();
+        List<String> waiting = new ArrayList<>();
         for (SpiritEntity each : spirits) {
             if (carriers.contains(each.getUUID())) {
                 names.add(each.displayName());
                 round.await(each.getUUID(), "несёт ингредиенты для " + ticket.id());
+            } else if (planned.contains(each.getUUID())) {
+                waiting.add(each.displayName());
             }
         }
-        String state = names.isEmpty()
-                ? "носильщиков нет: ингредиентов не хватает у духов и на складе, крафт не начат"
-                : "носильщики: " + String.join(", ", names) + "; крафтер " + crafter.displayName()
-                        + " ждёт ингредиенты";
+        String state;
+        if (!names.isEmpty()) {
+            state = "носильщики: " + String.join(", ", names) + "; крафтер " + crafter.displayName()
+                    + " ждёт ингредиенты";
+        } else if (!waiting.isEmpty()) {
+            state = "передачи ждут выдачи: " + String.join(", ", waiting);
+        } else {
+            state = "носильщиков нет: ингредиентов не хватает у духов и на складе, крафт не начат";
+        }
+        board.noteWait(ticket.id(), "ждёт передачи ингредиентов: " + state);
         notes.observe(ticket.id(), state).ifPresent(LOGGER::info);
     }
 

@@ -34,12 +34,26 @@ public final class TransferCarriers {
             }
             Optional<UUID> holder = ticket.assignee();
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
-            boolean waiting = status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES;
-            boolean carries = status == BoardStatus.ASSIGNED && holder.isPresent() && running.contains(holder.get());
-            if (holder.isPresent() && (waiting || carries)) {
+            if (status == BoardStatus.ASSIGNED && holder.isPresent() && running.contains(holder.get())) {
                 carriers.add(holder.get());
             }
         }
         return carriers;
+    }
+
+    public static Set<UUID> planned(Board board, String craftId) {
+        Objects.requireNonNull(board, "Доска не может быть null: передачи берутся с неё");
+        Set<UUID> holders = new HashSet<>();
+        for (BoardTicket ticket : board.all()) {
+            if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !cause(craftId).equals(ticket.cause())) {
+                continue;
+            }
+            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+            if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
+                continue;
+            }
+            ticket.assignee().ifPresent(holders::add);
+        }
+        return holders;
     }
 }
