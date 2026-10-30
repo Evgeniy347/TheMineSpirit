@@ -95,6 +95,26 @@ class IncidentAimTests {
     }
 
     @Test
+    void describe_OrchardBuildWithTree_NamesTreeNotPlotCenter() {
+        BoardTicket build = new BoardTicket(
+                "first:build_orchard",
+                BoardCase.BUILD_ORCHARD,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_ORCHARD),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        WorkTarget tree = new WorkTarget(WorkKind.TREE, TRUNK);
+
+        String aim = IncidentAim.describe(build, TicketTarget.at(HOME).withBuilding("orchard_oak"), List.of(tree));
+
+        assertTrue(aim.contains(TRUNK.toString()), "Провал сада называет дерево, у которого брали саженцы: " + aim);
+        assertTrue(aim.contains("дерево"), "Строка прямо говорит, что цель — дерево, а не точка сада: " + aim);
+    }
+
+    @Test
     void describe_NonSupplyTicket_KeepsTargetAndCount() {
         BoardTicket build = new BoardTicket(
                 "first:build_fence",
