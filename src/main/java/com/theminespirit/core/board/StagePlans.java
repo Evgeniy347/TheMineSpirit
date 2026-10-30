@@ -32,6 +32,9 @@ public final class StagePlans {
     private StagePlans() {}
 
     public static Optional<TaskNode> plan(BoardCase boardCase, int level, TicketTarget target) {
+        if (boardCase == BoardCase.BUILD_PLACED) {
+            return Optional.of(placed(target));
+        }
         StageWork work = target.work();
         if (work == null) {
             return Optional.empty();
@@ -52,6 +55,37 @@ public final class StagePlans {
             case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
             default -> Optional.empty();
         };
+    }
+
+    private static TaskNode placed(TicketTarget target) {
+        String scheme = target.schemeFile();
+        if (scheme == null) {
+            throw new IllegalArgumentException("Постройка по месту без схемы: BUILD_PLACED берёт файл схемы из "
+                    + "цели задания, иначе дух не знает, что ставить в свой слот");
+        }
+        BlockCoord origin = target.target();
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(PlanSteps.gotoPoint(origin));
+        DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
+                        .forEach((item, count) -> {
+                            String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
+                            steps.add(PlanSteps.acquire(
+                                    id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
+                        }));
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("file", scheme);
+        params.put("x", origin.x());
+        params.put("y", origin.y());
+        params.put("z", origin.z());
+        if (target.wood() != null) {
+            params.put(BuildSchematicParams.WOOD, target.wood());
+        }
+        steps.add(new ScriptCall("build_schematic", Map.copyOf(params)));
+        return new SequenceNode(steps);
     }
 
     private static TaskNode hut(TicketTarget target, StageSite site) {
