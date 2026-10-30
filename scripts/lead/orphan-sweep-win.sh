@@ -8,8 +8,10 @@ for arg in "$@"; do
         -h|--help)
             echo "Использование: scripts/lead/orphan-sweep-win.sh [--dry-run]"
             echo "Ищет и убивает по PID осиротевшие процессы исполнителей, запущенные на ПК (Windows, Git Bash)."
-            echo "find/grep/bash/sh/timeout/tail/xargs/java/opencode старше 15 мин с умершим родителем;"
-            echo "find с аргументом «/» старше 5 мин. GradleDaemon, Minecraft, OpenCode desktop и Claude не трогает."
+            echo "find/grep/bash/sh/timeout/tail/xargs/java/opencode старше 15 мин с умершим родителем и без живых потомков;"
+            echo "процессы с opencode-task.sh/run-one.sh/next-slot.sh/lead-merge.sh/test.sh/gradlew не трогает;"
+            echo "bash/sh — только без потомков и старше 60 мин; find с аргументом «/» — старше 5 мин."
+            echo "GradleDaemon, Minecraft, OpenCode desktop и Claude не трогает."
             exit 0
             ;;
         *) echo "orphan-sweep-win: неизвестный аргумент $arg" >&2; exit 2 ;;
@@ -18,6 +20,7 @@ done
 
 OLD_MIN="${ORPHAN_SWEEP_WIN_OLD_MINUTES:-15}"
 FIND_SLASH_MIN="${ORPHAN_SWEEP_WIN_FIND_SLASH_MINUTES:-5}"
+SHELL_MIN="${ORPHAN_SWEEP_WIN_SHELL_MINUTES:-60}"
 
 if [ -z "${ORPHAN_SWEEP_WIN_LIST:-}" ] && ! command -v powershell.exe >/dev/null 2>&1; then
     exit 0
@@ -40,12 +43,31 @@ Get-CimInstance Win32_Process | ForEach-Object {
 }
 
 select_orphans() {
-    awk -F '\t' -v old="$OLD_MIN" -v find_slash="$FIND_SLASH_MIN" '
+    awk -F '\t' -v old="$OLD_MIN" -v find_slash="$FIND_SLASH_MIN" -v shell_min="$SHELL_MIN" '
     function lower(s) { return tolower(s) }
     function target_name(name,   n) {
         n = lower(name)
         sub(/\.exe$/, "", n)
         return n ~ /^(find|grep|bash|sh|timeout|tail|xargs|java|opencode)$/
+    }
+    function shell_name(name,   n) {
+        n = lower(name)
+        sub(/\.exe$/, "", n)
+        return n == "bash" || n == "sh"
+    }
+    function script_marker(cmd,   c) {
+        c = lower(cmd)
+        gsub(/\\/, "/", c)
+        return c ~ /opencode-task\.sh|run-one\.sh|next-slot\.sh|lead-merge\.sh|test\.sh|gradlew/
+    }
+    function has_live_descendant(pid,   i, c) {
+        if (!(pid in cnt)) return 0
+        for (i = 1; i <= cnt[pid]; i++) {
+            c = children[pid, i]
+            if (c in live) return 1
+            if (has_live_descendant(c)) return 1
+        }
+        return 0
     }
     function find_slash_root(cmd,   c) {
         c = lower(cmd)
@@ -66,6 +88,10 @@ select_orphans() {
     END {
         for (i = 1; i <= total; i++) {
             split(rows[i], f, "\t")
+            children[f[2] + 0, ++cnt[f[2] + 0]] = f[1] + 0
+        }
+        for (i = 1; i <= total; i++) {
+            split(rows[i], f, "\t")
             pid = f[1] + 0
             ppid = f[2] + 0
             age = f[3] + 0
@@ -76,6 +102,13 @@ select_orphans() {
             if (find_slash_root(cmd) && age > find_slash) {
                 reason = "find / старше " find_slash " мин"
             } else if (target_name(name) && age > old && (ppid == 0 || !(ppid in live))) {
+                if (has_live_descendant(pid)) {
+                    continue
+                } else if (script_marker(cmd)) {
+                    continue
+                } else if (shell_name(name) && age <= shell_min) {
+                    continue
+                }
                 reason = "родитель " ppid " умер, жил " age " мин"
             }
             if (reason != "") printf "%d\t%s\t%d\t%s\n", pid, name, age, reason
