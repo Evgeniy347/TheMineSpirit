@@ -6,7 +6,9 @@
      "plan": ["hut", "yard", "mine", "orchard", "orchard_extra", "fence", "torches"]},
     {"stage": 2, "buildings": {"BUILD_MINE": 2, "BUILD_WAREHOUSE": 2, "BUILD_STREETS": 2},
      "plan": ["plaza", "family_house_a", "family_house_b", "family_house_c", "storage", "barn", "field_a", "field_b",
-              "pen", "well", "lumber_yard", "workshop"]},
+              "pen", "well", "lumber_yard", "workshop"],
+     "requires": {"plaza": 1, "family_house_a": 1, "family_house_b": 1, "family_house_c": 1, "storage": 1,
+                  "barn": 1, "field_a": 1, "field_b": 1, "pen": 1, "well": 1, "lumber_yard": 1, "workshop": 1}},
     {"stage": 3, "buildings": {"BUILD_MINE": 3, "BUILD_WAREHOUSE": 3, "BUILD_STREETS": 2},
      "plan": ["player_house", "forge", "bakery", "apiary", "kennel", "stable", "barracks", "weaver"]},
     {"stage": 4, "buildings": {"BUILD_MINE": 4, "BUILD_WAREHOUSE": 4},
@@ -15,5 +17,9 @@
   "schemes": {
     "BUILD_HOUSE": ["hut_1", "stone_house"],
     "BUILD_ORCHARD": ["orchard_1"]
+  },
+  "planCases": {
+    "storage": "BUILD_WAREHOUSE",
+    "pen": "BUILD_PEN"
   }
 }

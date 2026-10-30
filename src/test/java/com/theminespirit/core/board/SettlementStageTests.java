@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SettlementStageTests {
@@ -50,9 +51,50 @@ class SettlementStageTests {
                 SettlementStage.of(ledger),
                 "Расчистка, шахта, забор, сад, дом, склад и улицы 1 — переход на этап 2");
         assertEquals(
-                Map.of(BoardCase.BUILD_MINE, 2, BoardCase.BUILD_WAREHOUSE, 2, BoardCase.BUILD_STREETS, 2),
+                Map.ofEntries(
+                        Map.entry("BUILD_MINE", 2),
+                        Map.entry("BUILD_STREETS", 2),
+                        Map.entry("BUILD_WAREHOUSE", 2),
+                        Map.entry("barn", 1),
+                        Map.entry("family_house_a", 1),
+                        Map.entry("family_house_b", 1),
+                        Map.entry("family_house_c", 1),
+                        Map.entry("field_a", 1),
+                        Map.entry("field_b", 1),
+                        Map.entry("lumber_yard", 1),
+                        Map.entry("pen", 1),
+                        Map.entry("plaza", 1),
+                        Map.entry("storage", 1),
+                        Map.entry("well", 1),
+                        Map.entry("workshop", 1)),
                 SettlementStage.missing(ledger),
-                "Остаток этапа 2 — постройки уровня 2 из stages.json");
+                "Остаток этапа 2 — постройки уровня 2 и весь план этапа из stages.json");
+    }
+
+    @Test
+    void missing_SecondStageWithoutBarn_StageTwo() {
+        BoardLedger ledger = firstStageBuilt();
+        ledger.note(BoardCase.BUILD_MINE, 2);
+        ledger.note(BoardCase.BUILD_WAREHOUSE, 1);
+        ledger.note(BoardCase.BUILD_WAREHOUSE, 2);
+        ledger.note(BoardCase.BUILD_STREETS, 2);
+        ledger.note(BoardCase.BUILD_PEN, 1);
+        ledger.restore(Set.of(
+                "building:plaza:1",
+                "building:family_house_a:1",
+                "building:family_house_b:1",
+                "building:family_house_c:1",
+                "building:field_a:1",
+                "building:field_b:1",
+                "building:well:1",
+                "building:lumber_yard:1",
+                "building:workshop:1"));
+
+        Map<?, ?> missing = SettlementStage.missing(ledger);
+
+        assertEquals(2, SettlementStage.of(ledger), "Без амбара этап 2 не закрыт: состав этапа — план поселения");
+        assertEquals(Set.of("barn"), missing.keySet(), "Остаток этапа 2 называет амбар, а не три кейса доски");
+        assertEquals(1, missing.get("barn"), "Амбар этапа 2 — уровень 1");
     }
 
     @Test
@@ -65,7 +107,7 @@ class SettlementStageTests {
         }
 
         assertEquals(1, SettlementStage.of(ledger), "Без забора первый этап не пройден");
-        assertEquals(Map.of(BoardCase.BUILD_FENCE, 1), SettlementStage.missing(ledger), "Остаток — забор");
+        assertEquals(Map.of("BUILD_FENCE", 1), SettlementStage.missing(ledger), "Остаток — забор");
     }
 
     @Test
