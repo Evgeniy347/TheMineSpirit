@@ -56,6 +56,23 @@ public final class MiningSafety {
         return ringSafe(cell, view) && ringSafe(floor, view);
     }
 
+    public static boolean canStandOnGround(BlockCoord cell, SafetyView view, int maxDrop) {
+        Objects.requireNonNull(cell, "Клетка стоянки не может быть null: без неё неизвестно, где искать опору");
+        Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется опора под полом");
+        if (maxDrop < 1) {
+            throw new IllegalArgumentException("Глубина опоры " + maxDrop + " не положительна: опору не найти");
+        }
+        if (!canStand(cell, view)) {
+            return false;
+        }
+        for (int depth = 2; depth <= maxDrop + 1; depth++) {
+            if (canStandOn(view.cellAt(offset(cell, 0, -depth, 0)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean canStandOn(Cell floor) {
         Objects.requireNonNull(floor, "Клетка пола не может быть null: без неё неизвестно, на чём стоять");
         return floor == Cell.SOLID || floor == Cell.FALLING;

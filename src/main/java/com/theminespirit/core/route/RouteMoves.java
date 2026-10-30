@@ -236,6 +236,22 @@ final class RouteMoves {
         return false;
     }
 
+    private boolean waterWithoutExit(int x, int y, int z) {
+        if (RouteCell.kind(cells.at(x, y, z)) != RouteCell.WATER) {
+            return false;
+        }
+        for (int dy = 1; dy <= rules.maxWaterDepth() + 1; dy++) {
+            int kind = RouteCell.kind(cells.at(x, y + dy, z));
+            if (kind == RouteCell.AIR || kind == RouteCell.CLIMB) {
+                return false;
+            }
+            if (kind != RouteCell.WATER) {
+                return true;
+            }
+        }
+        return true;
+    }
+
     private boolean nearLava(int x, int y, int z) {
         for (int side = 0; side < DIRECTIONS; side++) {
             int sideX = x + DX[side];
@@ -257,7 +273,7 @@ final class RouteMoves {
     }
 
     private double arrive(int x, int y, int z, double cost, @Nullable List<RouteStep> out) {
-        if (cost == IMPOSSIBLE || nearLava(x, y, z)) {
+        if (cost == IMPOSSIBLE || nearLava(x, y, z) || waterWithoutExit(x, y, z)) {
             return IMPOSSIBLE;
         }
         if (out != null) {

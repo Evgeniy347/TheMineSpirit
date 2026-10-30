@@ -88,6 +88,25 @@ class MiningSafetyTests {
     }
 
     @Test
+    void canStandOnGround_FloatingFloorOverChasm_IsRejected() {
+        CellWorld world = new CellWorld().set(0, -1, 0, Cell.SOLID);
+
+        assertFalse(
+                MiningSafety.canStandOnGround(new BlockCoord(0, 0, 0), world, 2),
+                "Стоянка на висящей плите над пустотой (перенос к стоянке y=80 30.10) обязана отвергаться: "
+                        + "дух сходит с неё вниз и разбивается, а перенос — аварийный выход, не приговор");
+    }
+
+    @Test
+    void canStandOnGround_SolidGroundBelowFloor_IsAccepted() {
+        CellWorld world = new CellWorld().set(0, -1, 0, Cell.SOLID).set(0, -2, 0, Cell.SOLID);
+
+        assertTrue(
+                MiningSafety.canStandOnGround(new BlockCoord(0, 0, 0), world, 2),
+                "Стоянка с твёрдым полом и опорой под ним — годная: иначе дух не может выбраться из застревания");
+    }
+
+    @Test
     void canStand_FloorIsPassable_IsRejected() {
         CellWorld world = new CellWorld();
 

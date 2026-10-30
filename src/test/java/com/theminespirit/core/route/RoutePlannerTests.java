@@ -16,7 +16,7 @@ class RoutePlannerTests {
     @Test
     void table_Defaults_TicksLikeWalkingSpirit() {
         assertEquals(
-                new RouteRules(4.633, 9.091, 8.511, 2.0, 20.0, 2.0, 1.5, 3, 12, 40000, 1.0, 5),
+                new RouteRules(4.633, 9.091, 8.511, 2.0, 20.0, 2.0, 1.5, 3, 12, 4, 40000, 1.0, 5),
                 RULES,
                 "Цены ходов — в тиках (ходьба 20/4.317, вода 20/2.2, лестница 20/2.35), падение на сушу до 3, бюджет "
                         + "40 000 узлов: числа — movement/route.json, при смене пересчитать живой снимок");
@@ -126,6 +126,39 @@ class RoutePlannerTests {
     }
 
     @Test
+    void plan_FloodedTunnelWithoutAir_NoWaterStepWithoutExit() {
+        GridWorld world = GridWorld.flat(0)
+                .fill(3, -3, -200, 7, -1, 200, RouteCell.WATER)
+                .fill(3, 0, -200, 7, 2, 200, RouteCell.BLOCKED);
+
+        Route route = RoutePlanner.plan(world, ORIGIN, new GoalBlock(new BlockCoord(10, 0, 0)), RULES, 0);
+
+        for (RouteStep step : route.steps()) {
+            BlockCoord cell = step.cell();
+            if (step.action() != RouteStep.Action.WALK
+                    || RouteCell.kind(world.cell(cell.x(), cell.y(), cell.z())) != RouteCell.WATER) {
+                continue;
+            }
+            int exit = 0;
+            for (int dy = 1; dy <= RULES.maxWaterDepth() + 1; dy++) {
+                int kind = RouteCell.kind(world.cell(cell.x(), cell.y() + dy, cell.z()));
+                if (kind == RouteCell.AIR || kind == RouteCell.CLIMB) {
+                    exit = dy;
+                    break;
+                }
+                if (kind != RouteCell.WATER) {
+                    break;
+                }
+            }
+            assertTrue(
+                    exit > 0,
+                    "Шаг " + step + " ведёт в затопленный ход под потолком без выхода к воздуху: дух утонет, "
+                            + "как spirit-2 в (-264,54,-490) 30.10; маршрут обязан держаться воды у поверхности "
+                            + "(route.json maxWaterDepth)");
+        }
+    }
+
+    @Test
     void plan_LavaMoat_KeepsOneCellFromLava() {
         GridWorld world = GridWorld.flat(0)
                 .fill(3, -1, -40, 7, -1, 40, RouteCell.LAVA)
@@ -158,7 +191,7 @@ class RoutePlannerTests {
 
     @Test
     void plan_TinyNodeBudget_StopsWithinBudget() {
-        RouteRules tiny = new RouteRules(4.633, 9.091, 8.511, 2.0, 20.0, 2.0, 1.5, 3, 12, 50, 1.0, 5);
+        RouteRules tiny = new RouteRules(4.633, 9.091, 8.511, 2.0, 20.0, 2.0, 1.5, 3, 12, 4, 50, 1.0, 5);
         GridWorld world = GridWorld.flat(0).fill(5, 0, -400, 5, 3, 400, RouteCell.BLOCKED);
 
         Route route = RoutePlanner.plan(world, ORIGIN, new GoalBlock(new BlockCoord(10, 0, 0)), tiny, 0);

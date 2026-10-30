@@ -8,6 +8,7 @@
   "fallTicks": 1.5,
   "maxFall": 3,
   "maxWaterFall": 12,
+  "maxWaterDepth": 4,
   "maxNodes": 40000,
   "heuristicWeight": 1.0,
   "minPartial": 5

@@ -14,6 +14,7 @@ public record RouteRules(
         double fallTicks,
         int maxFall,
         int maxWaterFall,
+        int maxWaterDepth,
         int maxNodes,
         double heuristicWeight,
         int minPartial) {
@@ -28,6 +29,7 @@ public record RouteRules(
             "fallTicks",
             "maxFall",
             "maxWaterFall",
+            "maxWaterDepth",
             "maxNodes",
             "heuristicWeight",
             "minPartial");
@@ -45,6 +47,10 @@ public record RouteRules(
         if (maxFall < 1 || maxWaterFall < maxFall) {
             throw new IllegalArgumentException("Падение: maxFall = " + maxFall + ", maxWaterFall = " + maxWaterFall
                     + ": спуск хотя бы на 1, в воду — не меньше, чем на землю");
+        }
+        if (maxWaterDepth < 0) {
+            throw new IllegalArgumentException("Глубина воды " + maxWaterDepth
+                    + " отрицательна: вода у поверхности (0) проходит, глубже — только с выходом к воздуху");
         }
         if (maxNodes < 1 || !(heuristicWeight >= 1) || minPartial < 1) {
             throw new IllegalArgumentException("Бюджет поиска: maxNodes = " + maxNodes + ", вес эвристики = "
@@ -67,6 +73,7 @@ public record RouteRules(
                     JsonResource.decimal(root.get("fallTicks"), origin, "fallTicks"),
                     JsonResource.integer(root.get("maxFall"), origin, "maxFall"),
                     JsonResource.integer(root.get("maxWaterFall"), origin, "maxWaterFall"),
+                    JsonResource.integer(root.get("maxWaterDepth"), origin, "maxWaterDepth"),
                     JsonResource.integer(root.get("maxNodes"), origin, "maxNodes"),
                     JsonResource.decimal(root.get("heuristicWeight"), origin, "heuristicWeight"),
                     JsonResource.integer(root.get("minPartial"), origin, "minPartial"));
