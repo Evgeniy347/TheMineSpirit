@@ -1,6 +1,7 @@
 package com.theminespirit.core.mining;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.DropPolicy;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashSet;
@@ -10,7 +11,7 @@ import java.util.Set;
 public final class MineReach {
     public static final int MAX_CELLS = 256;
     public static final int MAX_RADIUS = 8;
-    public static final int MAX_FALL = 3;
+    public static final int MAX_FALL = DropPolicy.MAX_DROP;
 
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
