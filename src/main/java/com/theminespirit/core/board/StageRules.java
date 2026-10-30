@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -120,11 +119,7 @@ public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> scheme
         if (boardCase != null) {
             return ledger.has(boardCase, level);
         }
-        Set<String> keys = ledger.keys();
-        String upper = id.toUpperCase(Locale.ROOT);
-        return keys.contains(BoardLedger.PREFIX + id + ":" + level)
-                || keys.contains(BoardLedger.PREFIX + upper + ":" + level)
-                || keys.contains(BoardLedger.PREFIX + "BUILD_" + upper + ":" + level);
+        return ledger.hasPlan(id, level);
     }
 
     public static StageRules parse(String json, String origin) {

@@ -5,7 +5,11 @@ import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.SettlementStage;
+import com.theminespirit.core.board.StageCatalog;
+import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.board.graph.GraphKits;
@@ -18,6 +22,7 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.board.route.RoutePlan;
 import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;
@@ -111,6 +116,7 @@ final class GraphInputs {
             }
         }
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        buildings.putAll(planBuilt(level, service, scan, town));
         Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
         graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
         for (SupplyGraph.Building building : graph.buildings().values()) {
@@ -126,6 +132,46 @@ final class GraphInputs {
             }
         }
         return buildings;
+    }
+
+    private static Map<String, Built> planBuilt(
+            ServerLevel level, BoardService service, FirstStepsRunner.StageScan scan, Optional<TownPlan> town) {
+        BoardLedger ledger = service.board().ledger();
+        Map<String, Built> states = new HashMap<>();
+        StageRules rules = DataTables.INSTANCE.stages().current();
+        int stage = SettlementStage.of(ledger);
+        if (stage > rules.stages().size()) {
+            return states;
+        }
+        for (String id : rules.stages().get(stage - 1).plan()) {
+            Optional<StageCatalog.Entry> entry = StageCatalog.entry(id);
+            if (entry.isEmpty() || entry.orElseThrow().boardCase() != BoardCase.BUILD_PLACED) {
+                continue;
+            }
+            boolean built = ledger.hasPlan(id, 1)
+                    || (town.isPresent() && worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow()));
+            if (built) {
+                ledger.notePlan(id, 1);
+                states.put(id, Built.BUILT);
+            } else {
+                states.put(id, Built.PLANNED);
+            }
+        }
+        return states;
+    }
+
+    private static boolean worldBuilt(
+            ServerLevel level, FirstStepsRunner.StageScan scan, TownPlan town, StageCatalog.Entry entry) {
+        Optional<BlockCoord> origin =
+                StageCatalog.origin(entry.id(), town, scan.stage().anchor().y());
+        if (origin.isEmpty()) {
+            return false;
+        }
+        TicketTarget target =
+                TicketTarget.at(origin.orElseThrow()).withScheme(entry.scheme()).withBuilding(entry.id());
+        FirstStepsRunner.Placed placed =
+                FirstStepsRunner.placedBlocks(level, TicketPlans.plan(BoardCase.BUILD_PLACED, 1, target), scan.wood());
+        return placed.total() > 0 && placed.done() == placed.total();
     }
 
     private static boolean orchardDone(BoardService service, SupplyGraph.Building building) {

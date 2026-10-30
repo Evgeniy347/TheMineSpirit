@@ -15,11 +15,20 @@ public final class BoardLedger {
 
     public static String key(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс отметки не может быть null: без него непонятно, что стоит");
+        return planKey(boardCase.name(), level);
+    }
+
+    public static String planKey(String planId, int level) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: без него непонятно, что стоит");
+        if (planId.isBlank() || planId.indexOf(':') >= 0) {
+            throw new IllegalArgumentException("id постройки плана '" + planId
+                    + "' пуст или содержит ':' — ключ отметки разбирается по двоеточиям, проверьте stages.json");
+        }
         if (level < 1) {
             throw new IllegalArgumentException(
                     "Уровень отметки " + level + " меньше 1: первой всегда " + "стоит отметка уровня 1");
         }
-        return PREFIX + boardCase.name() + ":" + level;
+        return PREFIX + planId + ":" + level;
     }
 
     public static Optional<BuildingMark> parse(@Nullable String dependency) {
@@ -57,6 +66,14 @@ public final class BoardLedger {
         built.remove(key(boardCase, level));
     }
 
+    public void notePlan(String planId, int level) {
+        built.add(planKey(planId, level));
+    }
+
+    public void forgetPlan(String planId, int level) {
+        built.remove(planKey(planId, level));
+    }
+
     public void clear() {
         built.clear();
     }
@@ -75,6 +92,11 @@ public final class BoardLedger {
     public boolean has(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс проверки не может быть null: без него непонятно, что искать");
         return built.contains(PREFIX + boardCase.name() + ":" + level);
+    }
+
+    public boolean hasPlan(String planId, int level) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: без него непонятно, что искать");
+        return built.contains(planKey(planId, level));
     }
 
     public Set<String> keys() {

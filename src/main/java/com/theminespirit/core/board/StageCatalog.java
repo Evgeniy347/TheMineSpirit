@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public final class StageCatalog {
     private static final Map<String, String> GRAPH_ALIASES = Map.of("storage", "warehouse", "pen", "pen_cow");
+    private static final String GRAPH_BUILDING = "graph:building:";
 
     public record Entry(String id, BoardCase boardCase, String scheme) {
         public Entry {
@@ -45,6 +46,14 @@ public final class StageCatalog {
         return entry(planId)
                 .map(entry -> entry.boardCase() == BoardCase.BUILD_PLACED)
                 .orElse(false);
+    }
+
+    public static Optional<String> planId(String ticketId) {
+        Objects.requireNonNull(ticketId, "id задания не может быть null: по нему ищут постройку плана");
+        if (!ticketId.startsWith(GRAPH_BUILDING) || ticketId.length() == GRAPH_BUILDING.length()) {
+            return Optional.empty();
+        }
+        return Optional.of(ticketId.substring(GRAPH_BUILDING.length()));
     }
 
     private static Optional<SupplyGraph.Building> graphBuilding(String planId) {

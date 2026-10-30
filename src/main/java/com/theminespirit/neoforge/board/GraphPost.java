@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
@@ -155,7 +153,7 @@ final class GraphPost {
                 new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
                 now);
         missing.forEach((item, count) -> {
-            if (known(item)) {
+            if (GraphItemIds.known(item)) {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
             }
         });
@@ -164,7 +162,7 @@ final class GraphPost {
 
     private boolean gather(GraphTickets.Ticket ticket, GraphPlan.Task task) {
         String item = GraphNames.item(graph, task.makes(), scan.wood());
-        if (!graph.items().containsKey(task.makes()) || !known(item)) {
+        if (!graph.items().containsKey(task.makes()) || !GraphItemIds.known(item)) {
             return false;
         }
         Optional<RouteResource> route =
@@ -249,10 +247,5 @@ final class GraphPost {
 
     private GraphRoutes routes() {
         return new GraphRoutes(this, level, service, scan, graph, source, spirits.size());
-    }
-
-    private static boolean known(String item) {
-        String name = item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
-        return BuiltInRegistries.ITEM.containsKey(ResourceLocation.withDefaultNamespace(name));
     }
 }
