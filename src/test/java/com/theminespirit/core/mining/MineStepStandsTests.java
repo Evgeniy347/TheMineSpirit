@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.DropPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -184,6 +185,32 @@ class MineStepStandsTests {
                         "Клетку шахты ломают только в прямой видимости: " + cell + " при открытых " + opened);
             }
             opened.add(cell);
+        }
+    }
+
+    @Test
+    void of_LiveObserve6PitBehindWall_NotOffered() {
+        BlockCoord from = new BlockCoord(-191, FEET, -517);
+        MineColumn column = new MineColumn(new BlockCoord(-189, LEVEL, -518), MineColumn.PASSAGE_HEIGHT);
+        CellWorld world = Observe6MineWorld.build();
+
+        MineStepStands.Choice choice = MineStepStands.of(column, null, from, world);
+
+        BlockCoord trap = new BlockCoord(-189, LEVEL, -517);
+        assertTrue(
+                choice.found(),
+                "Живая шахта observe6: к ступени " + column.stand()
+                        + " обязана найтись стоянка, иначе проходка встаёт на 75% (5 провалов → BLOCKED): "
+                        + choice.reason());
+        assertFalse(
+                choice.stands().contains(trap),
+                "Стоянка " + trap + " достижима только падением на 3 блока в тупиковую яму, а навигация духа "
+                        + "роняет не глубже " + DropPolicy.MAX_DROP
+                        + ": её выбор и дал «путь упёрся в тупик, стоянка (-191,69,-517) за преградой» (observe6)");
+        for (BlockCoord stand : choice.stands()) {
+            assertTrue(
+                    MineStepStands.visibleFrom(column, stand, world),
+                    "Каждая предложенная стоянка обязана видеть ступень " + column.stand() + ": " + stand);
         }
     }
 
