@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -107,6 +108,33 @@ class CaseMaterialsTests {
                 CaseMaterials.need(plan, FAKE),
                 "Каждая постановка факела требует по факелу: имя приводится к короткому виду "
                         + "как ключ снимка запасов");
+    }
+
+    @Test
+    void need_FallbackAlternatives_RequiresPrimaryOnly() {
+        TaskNode fallback = new FallbackNode(List.of(
+                new ScriptCall("acquire", Map.of("item", "coal", "count", 1)),
+                new ScriptCall("acquire", Map.of("item", "charcoal", "count", 1))));
+
+        assertEquals(
+                Map.of("coal", 1),
+                CaseMaterials.need(fallback, FAKE),
+                "Ветки fallback — замена друг другу: доска требует только первую (уголь), а не обе. "
+                        + "Иначе древесный уголь (обжиг, не добыча) появляется в requiredItems и добыча "
+                        + "проваливает сад 0/24 (наблюдение 7)");
+    }
+
+    @Test
+    void need_FallbackFirstWithoutMaterial_UsesNextBranch() {
+        TaskNode fallback = new FallbackNode(List.of(
+                new ScriptCall("chop_tree", Map.of("species", "oak", "count", 1)),
+                new ScriptCall("acquire", Map.of("item", "oak_log", "count", 1))));
+
+        assertEquals(
+                Map.of("oak_log", 1),
+                CaseMaterials.need(fallback, FAKE),
+                "Если первая ветка ничего не берёт со склада (рубка), нужду задаёт следующая: иначе "
+                        + "добыча брёвен теряла бы материал из гейта");
     }
 
     @Test

@@ -38,7 +38,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.husbandry.SpeciesIds;
-import com.theminespirit.core.incident.IncidentAim;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -755,38 +754,34 @@ public final class BoardService {
     private void checkStall(SpiritEntity spirit, BoardTicket ticket) {
         BlockPos feet = spirit.blockPosition();
         String script = spirit.currentTaskScript().orElse(null);
-        boolean standing = stall.stalled(
-                spirit.getUUID(), script, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), board.now());
+        boolean paused =
+                spirit.tactics().wantsControl() || spirit.taskSuspendReason().isPresent();
+        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        boolean standing = stall.stalled(spirit.getUUID(), script, at, board.now(), paused);
         String key = spirit.taskProgress()
                 .map(p -> p.step() + "/" + p.currentScript() + "/" + p.done())
                 .orElse("-");
-        boolean idle = stall.noProgress(spirit.getUUID(), key, board.now());
+        boolean idle = stall.noProgress(spirit.getUUID(), key, board.now(), paused);
         if (!standing && !idle) {
             return;
         }
-        String reason = (standing
-                        ? "задание стоит " + TaskStall.STALL_TICKS + " тиков: "
-                                + (script == null ? "скрипт не стартовал" : "подход не двигается")
-                        : "нет прогресса " + TaskStall.NO_PROGRESS_TICKS + " тиков (" + script + ", " + key + ")")
-                + " в " + feet.toShortString()
-                + (spirit.tactics().wantsControl() ? ", тактика держит духа" : "")
-                + spirit.taskSuspendReason().map(why -> ", пауза: " + why).orElse("");
+        String reason = StallText.reason(
+                standing,
+                script,
+                key,
+                feet.toShortString(),
+                spirit.tactics().wantsControl(),
+                spirit.taskSuspendReason().orElse(null));
         LOGGER.warn(
                 "[incident] дух {}: {} {}; задание провалено; {}",
                 spirit.displayName(),
                 ticket.id(),
                 reason,
-                incident(spirit, ticket, reason));
+                IncidentText.of(spirit, ticket, targets.get(ticket.id()), reason));
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
         board.fail(ticket.id(), stock, reason);
-    }
-
-    private String incident(SpiritEntity spirit, BoardTicket ticket, String reason) {
-        String aim = IncidentAim.describe(ticket, targets.get(ticket.id()), WorkReserveHub.ownedBy(spirit));
-        String what = ticket.id() + " (" + ticket.boardCase() + ", цель " + aim + "): " + reason;
-        return spirit.level() instanceof ServerLevel level ? IncidentSnapshots.record(level, spirit, what) : what;
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
@@ -848,7 +843,7 @@ public final class BoardService {
                     ticket.boardCase(),
                     why,
                     board.statusOf(ticket.id()).orElse(null),
-                    incident(spirit, ticket, why));
+                    IncidentText.of(spirit, ticket, targets.get(ticket.id()), why));
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
