@@ -45,6 +45,7 @@ public final class RouteWalk {
     private @Nullable String failure;
     private final RemovalLog removals = new RemovalLog();
     private String breakingId = "-";
+    private int recorded = -1;
 
     public RouteWalk(SpiritEntity spirit, Route route, BlockCoord target) {
         this.spirit = spirit;
@@ -63,6 +64,10 @@ public final class RouteWalk {
             return State.DONE;
         }
         RouteStep step = steps.get(next);
+        if (recorded != next) {
+            RouteHistory.record(spirit, step);
+            recorded = next;
+        }
         if (!breaking && ++stepTicks > STEP_TICKS) {
             String details = step.action() == RouteStep.Action.WALK ? walkState(step.cell()) : "";
             return fail("шаг " + step.action() + " в " + step.cell() + " не выполнен за " + STEP_TICKS + " тиков"

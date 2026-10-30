@@ -1,22 +1,29 @@
 package com.theminespirit.neoforge.policy;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.BreathSearch;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.ReflexAction;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Locale;
 import java.util.Optional;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 final class ReflexExecutor {
     static final double HOP_DISTANCE = 2.5;
     static final double RUN_SPEED = 1.3;
     static final double LAVA_PUSH = 0.15;
+    static final double SWIM_UP = 0.16;
     static final int BREATH_REFRESH_TICKS = 20;
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private BlockCoord lastTarget;
     private Optional<BlockCoord> breath = Optional.empty();
     private int breathAge = BREATH_REFRESH_TICKS;
+    private int attempts;
 
     void execute(SpiritEntity spirit, ReflexAction action) {
         switch (action) {
@@ -37,6 +44,7 @@ final class ReflexExecutor {
         spirit.getNavigation().stop();
         lastTarget = null;
         breathAge = BREATH_REFRESH_TICKS;
+        attempts = 0;
     }
 
     private void moveTo(SpiritEntity spirit, BlockCoord cell) {
@@ -67,20 +75,48 @@ final class ReflexExecutor {
 
     private void surface(SpiritEntity spirit) {
         if (++breathAge >= BREATH_REFRESH_TICKS) {
-            breathAge = 0;
-            BlockCoord feet = new BlockCoord(
-                    spirit.blockPosition().getX(),
-                    spirit.blockPosition().getY(),
-                    spirit.blockPosition().getZ());
-            breath = BreathSearch.nearest(new LevelSafetyView(spirit.level()), feet);
+            refreshBreath(spirit);
         }
         breath.ifPresent(cell -> moveTo(spirit, cell));
         swimUp(spirit);
     }
 
+    private void refreshBreath(SpiritEntity spirit) {
+        breathAge = 0;
+        attempts++;
+        BlockCoord feet = new BlockCoord(
+                spirit.blockPosition().getX(),
+                spirit.blockPosition().getY(),
+                spirit.blockPosition().getZ());
+        breath = BreathSearch.nearest(new LevelSafetyView(spirit.level()), feet);
+        LOGGER.info(
+                "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, цель {}, расстояние {}, "
+                        + "навигация завершена {}",
+                spirit.getName().getString(),
+                attempts,
+                feet,
+                spirit.getAirSupply(),
+                breath.map(BlockCoord::toString).orElse("не найдена — всплываю вертикально"),
+                breath.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
+                        .orElse("-"),
+                spirit.getNavigation().isDone());
+    }
+
+    private static double distance(BlockCoord from, BlockCoord to) {
+        double dx = from.x() - to.x();
+        double dy = from.y() - to.y();
+        double dz = from.z() - to.z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
     private void swimUp(SpiritEntity spirit) {
-        if (spirit.isInWater() || spirit.isInLava()) {
-            spirit.getJumpControl().jump();
+        if (!spirit.isInWater() && !spirit.isInLava()) {
+            return;
         }
+        if (spirit.isInWater()) {
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.max(motion.y, SWIM_UP), motion.z);
+        }
+        spirit.getJumpControl().jump();
     }
 }

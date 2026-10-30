@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.movement.DropProfile;
 import com.theminespirit.core.movement.Passage;
 import com.theminespirit.core.movement.TeleportTrail;
 import com.theminespirit.core.movement.Unstuck;
@@ -37,7 +38,8 @@ public final class StuckTeleport {
         Optional<BlockCoord> step = rules.step(
                 blockCoord(spirit.position()),
                 target,
-                cell -> MiningSafety.canStand(cell, safety) && allowedThere(spirit, cell),
+                cell -> MiningSafety.canStandOnGround(cell, safety, DropProfile.MAX_SAFE_DROP)
+                        && allowedThere(spirit, cell),
                 cell -> clearPath(spirit, cell),
                 trail::used);
         if (step.isEmpty()) {

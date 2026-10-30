@@ -11,7 +11,9 @@ import com.theminespirit.core.route.RoutePlanner;
 import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.core.route.RouteWorld;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -36,7 +38,7 @@ public final class RouteDetour {
         long micros = (System.nanoTime() - started) / NANOS_PER_MICRO;
         LOGGER.info(
                 "[route] дух {} ({}): из {} к {} — {}, цена {} тиков, сломать {}, поставить {}, шагов {}, конец {},"
-                        + " узлов {}, чтений {}, {} мкс, BreakVeto отказов {}, первые {}",
+                        + " вода {}, узлов {}, чтений {}, {} мкс, BreakVeto отказов {}, первые {}",
                 spirit.displayName(),
                 why,
                 from,
@@ -47,12 +49,29 @@ public final class RouteDetour {
                 route.places(),
                 route.steps().size(),
                 route.end(),
+                water(world, route),
                 route.nodes(),
                 route.reads(),
                 micros,
                 route.vetoCount(),
                 route.vetoes());
         return route.usable() ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
+    }
+
+    private static String water(RouteWorld world, Route route) {
+        int count = 0;
+        List<BlockCoord> first = new ArrayList<>();
+        for (RouteStep step : route.steps()) {
+            BlockCoord cell = step.cell();
+            if (step.action() == RouteStep.Action.WALK
+                    && RouteCell.kind(world.cell(cell.x(), cell.y(), cell.z())) == RouteCell.WATER) {
+                count++;
+                if (first.size() < 5) {
+                    first.add(cell);
+                }
+            }
+        }
+        return count == 0 ? "нет" : count + " " + first;
     }
 
     private static Route plan(RouteWorld world, BlockCoord from, BlockCoord target, int radius, int blocks) {

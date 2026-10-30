@@ -16,10 +16,12 @@ import com.theminespirit.core.policy.PolicyVerdict;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ReflexAction;
 import com.theminespirit.core.policy.ReflexSchedule;
+import com.theminespirit.core.policy.ReflexTimeout;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.tactics.Layer;
 import com.theminespirit.neoforge.LevelSafetyView;
+import com.theminespirit.neoforge.PositionTrace;
 import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -37,6 +39,7 @@ public final class SpiritPolicies {
     private final SpiritEntity spirit;
     private final LayerArbiter arbiter = new LayerArbiter();
     private final ReflexExecutor executor = new ReflexExecutor();
+    private final PositionTrace positions = new PositionTrace();
 
     private PolicyExemptions exemptions = PolicyExemptions.empty();
     private PolicyExemptions configured;
@@ -48,10 +51,9 @@ public final class SpiritPolicies {
     private Optional<BlockCoord> waterTarget = Optional.empty();
     private long waterSearchedAt = -ReflexSchedule.PERIOD_TICKS;
     private WorkZone workZone;
+    private final ReflexTimeout reflexTimeout = new ReflexTimeout();
     private Layer suspendedBy;
     private boolean hadReflex;
-    private String reflexKey;
-    private int reflexTicks;
     private long suppressedUntil = Long.MIN_VALUE;
     private int phase = -1;
 
@@ -69,6 +71,7 @@ public final class SpiritPolicies {
             return;
         }
         long now = level.getGameTime();
+        positions.tick(spirit);
         refreshExemptions();
         BodyFlags flags = bodyFlags();
         BlockPos feet = spirit.blockPosition();
@@ -234,14 +237,11 @@ public final class SpiritPolicies {
             return CLEAR;
         }
         if (!(candidate instanceof PolicyVerdict.Reflex reflex)) {
-            reflexKey = null;
-            reflexTicks = 0;
+            reflexTimeout.reset();
             return candidate;
         }
         String key = reflex.policy() + ":" + reflex.action().getClass().getSimpleName();
-        reflexTicks = key.equals(reflexKey) ? reflexTicks + 1 : 1;
-        if (reflexTicks < REFLEX_TIMEOUT_TICKS) {
-            reflexKey = key;
+        if (!reflexTimeout.expired(reflex.policy(), key, REFLEX_TIMEOUT_TICKS, spirit.isUnderWater())) {
             return candidate;
         }
         LOGGER.warn(
@@ -251,8 +251,7 @@ public final class SpiritPolicies {
                 REFLEX_TIMEOUT_TICKS,
                 reflex.reason());
         suppressedUntil = now + REFLEX_TIMEOUT_TICKS;
-        reflexKey = null;
-        reflexTicks = 0;
+        reflexTimeout.reset();
         return new PolicyVerdict.Reflex(
                 reflex.policy(),
                 new ReflexAction.StopMoving(),
