@@ -73,10 +73,11 @@ public final class RouteDetour {
             int blocks,
             Route route) {
         Set<BlockCoord> excluded = new HashSet<>();
+        Route current = route;
         for (int attempt = 0; attempt < MAX_VETO_REPLANS; attempt++) {
-            Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(world, from, route);
+            Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(world, from, current);
             if (veto.isEmpty()) {
-                return route;
+                return current;
             }
             Route.Veto found = veto.get();
             excluded.add(found.cell());
@@ -85,14 +86,14 @@ public final class RouteDetour {
                     spirit.displayName(),
                     found.cell(),
                     found.reason());
-            route = plan(
+            current = plan(
                     (x, y, z) -> excluded.contains(new BlockCoord(x, y, z)) ? RouteCell.BLOCKED : world.cell(x, y, z),
                     from,
                     target,
                     radius,
                     blocks);
         }
-        return route;
+        return current;
     }
 
     public static void removed(SpiritEntity spirit, RouteWalk walk) {
