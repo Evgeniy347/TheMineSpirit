@@ -21,22 +21,14 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jspecify.annotations.Nullable;
 
 public final class BoardScreen extends Screen {
     private static final String KEY = ModIdentity.MOD_ID + ".board.";
-    private static final ResourceLocation WINDOW =
-            ResourceLocation.withDefaultNamespace("textures/gui/advancements/window.png");
-    private static final ResourceLocation BACKGROUND =
-            ResourceLocation.withDefaultNamespace("textures/gui/advancements/backgrounds/stone.png");
-    private static final int BACKGROUND_TILE = 16;
-    private static final int WINDOW_CONTENT_WIDTH = 252;
-    private static final int WINDOW_CONTENT_HEIGHT = 140;
-    private static final int WINDOW_TEXTURE = 256;
     private static final int SCROLL_STEP = 12;
+    private static final int REFRESH_TICKS = 20;
     private static final int TITLE_COLOR = 0xFF404040;
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int MUTED_COLOR = 0xFFA0A0A0;
@@ -54,6 +46,7 @@ public final class BoardScreen extends Screen {
     private @Nullable Button statusButton;
     private @Nullable Button spiritButton;
     private boolean offline;
+    private int refreshTicks;
 
     public BoardScreen() {
         super(Component.translatable(KEY + "title"));
@@ -106,8 +99,8 @@ public final class BoardScreen extends Screen {
                 TEXT_COLOR);
         BoardLayout.Rect window = layout.window();
         BoardLayout.Rect inner = layout.inner();
-        blitPanel(graphics, window);
-        drawBackground(graphics, inner);
+        BoardPanel.blitPanel(graphics, window);
+        BoardPanel.drawBackground(graphics, inner);
         BoardTileView.Hover hovered = null;
         if (tiles == null || shown.isEmpty()) {
             Component message = Component.translatable(
@@ -118,32 +111,12 @@ public final class BoardScreen extends Screen {
             hovered = renderColumns(graphics, mouseX, mouseY);
         }
         graphics.drawString(font, title, inner.x(), window.y() + 6, TITLE_COLOR, false);
-        drawVersion(graphics, inner, window, "v" + BuildFingerprint.version());
+        BoardPanel.drawVersion(graphics, font, inner, window, "v" + BuildFingerprint.version());
         if (hovered != null) {
             List<Component> lines = hovered.material() == null
                     ? BoardTileView.tooltip(hovered.tile(), waitReasons, tilesById)
                     : BoardTileView.materialTooltip(hovered.material());
             graphics.renderComponentTooltip(font, lines, mouseX, mouseY);
-        }
-    }
-
-    private void drawVersion(GuiGraphics graphics, BoardLayout.Rect inner, BoardLayout.Rect window, String text) {
-        float scale = 0.5F;
-        float x = inner.x() + inner.width() - font.width(text) * scale - 2;
-        graphics.pose().pushPose();
-        graphics.pose().translate(x, window.y() + 7, 0);
-        graphics.pose().scale(scale, scale, 1.0F);
-        graphics.drawString(font, text, 0, 0, MUTED_COLOR, false);
-        graphics.pose().popPose();
-    }
-
-    private static void drawBackground(GuiGraphics graphics, BoardLayout.Rect inner) {
-        for (int tx = 0; tx < inner.width(); tx += BACKGROUND_TILE) {
-            for (int ty = 0; ty < inner.height(); ty += BACKGROUND_TILE) {
-                int w = Math.min(BACKGROUND_TILE, inner.width() - tx);
-                int h = Math.min(BACKGROUND_TILE, inner.height() - ty);
-                graphics.blit(BACKGROUND, inner.x() + tx, inner.y() + ty, 0, 0, w, h, BACKGROUND_TILE, BACKGROUND_TILE);
-            }
         }
     }
 
@@ -216,6 +189,18 @@ public final class BoardScreen extends Screen {
         return false;
     }
 
+    @Override
+    public void tick() {
+        super.tick();
+        if (tiles == null || offline) {
+            return;
+        }
+        if (++refreshTicks >= REFRESH_TICKS) {
+            refreshTicks = 0;
+            requestSnapshot();
+        }
+    }
+
     private void requestSnapshot() {
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
         if (connection == null || !connection.hasChannel(BoardViewChannel.REQUEST)) {
@@ -278,69 +263,5 @@ public final class BoardScreen extends Screen {
             case NAMED -> Component.literal(String.valueOf(filter.spiritName()));
         };
         return Component.translatable(KEY + "filter.spirit", value);
-    }
-
-    private static void blitPanel(GuiGraphics graphics, BoardLayout.Rect window) {
-        int x = window.x();
-        int y = window.y();
-        int width = window.width();
-        int height = window.height();
-        int left = BoardLayout.BORDER_LEFT;
-        int top = BoardLayout.BORDER_TOP;
-        int right = BoardLayout.BORDER_RIGHT;
-        int bottom = BoardLayout.BORDER_BOTTOM;
-        int innerWidth = width - left - right;
-        int innerHeight = height - top - bottom;
-        int sourceInnerWidth = WINDOW_CONTENT_WIDTH - left - right;
-        int sourceInnerHeight = WINDOW_CONTENT_HEIGHT - top - bottom;
-        if (width >= left + right && height >= top + bottom) {
-            blit(graphics, x, y, 0, 0, left, top);
-            blit(graphics, x + width - right, y, WINDOW_CONTENT_WIDTH - right, 0, right, top);
-            blit(graphics, x, y + height - bottom, 0, WINDOW_CONTENT_HEIGHT - bottom, left, bottom);
-            blit(
-                    graphics,
-                    x + width - right,
-                    y + height - bottom,
-                    WINDOW_CONTENT_WIDTH - right,
-                    WINDOW_CONTENT_HEIGHT - bottom,
-                    right,
-                    bottom);
-        }
-        if (innerWidth > 0 && height >= top + bottom) {
-            blitTiledX(graphics, x + left, y, left, 0, innerWidth, top);
-            blitTiledX(
-                    graphics, x + left, y + height - bottom, left, WINDOW_CONTENT_HEIGHT - bottom, innerWidth, bottom);
-        }
-        if (innerHeight > 0 && width >= left + right) {
-            blitTiledY(graphics, x, y + top, 0, top, left, innerHeight);
-            blitTiledY(graphics, x + width - right, y + top, WINDOW_CONTENT_WIDTH - right, top, right, innerHeight);
-        }
-        if (innerWidth > 0 && innerHeight > 0) {
-            for (int dx = 0; dx < innerWidth; dx += sourceInnerWidth) {
-                int partWidth = Math.min(sourceInnerWidth, innerWidth - dx);
-                for (int dy = 0; dy < innerHeight; dy += sourceInnerHeight) {
-                    int partHeight = Math.min(sourceInnerHeight, innerHeight - dy);
-                    blit(graphics, x + left + dx, y + top + dy, left, top, partWidth, partHeight);
-                }
-            }
-        }
-    }
-
-    private static void blitTiledX(GuiGraphics graphics, int destX, int destY, int u, int v, int width, int height) {
-        int step = WINDOW_CONTENT_WIDTH - BoardLayout.BORDER_LEFT - BoardLayout.BORDER_RIGHT;
-        for (int dx = 0; dx < width; dx += step) {
-            blit(graphics, destX + dx, destY, u, v, Math.min(step, width - dx), height);
-        }
-    }
-
-    private static void blitTiledY(GuiGraphics graphics, int destX, int destY, int u, int v, int width, int height) {
-        int step = WINDOW_CONTENT_HEIGHT - BoardLayout.BORDER_TOP - BoardLayout.BORDER_BOTTOM;
-        for (int dy = 0; dy < height; dy += step) {
-            blit(graphics, destX, destY + dy, u, v, width, Math.min(step, height - dy));
-        }
-    }
-
-    private static void blit(GuiGraphics graphics, int x, int y, int u, int v, int width, int height) {
-        graphics.blit(WINDOW, x, y, u, v, width, height, WINDOW_TEXTURE, WINDOW_TEXTURE);
     }
 }

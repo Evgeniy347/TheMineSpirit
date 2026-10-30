@@ -254,7 +254,11 @@ final class BoardTileView {
 
     private static Component detailsText(BoardTile tile) {
         Component spirit = tile.spirit() == null ? Component.literal("…") : Component.literal(tile.spirit());
-        return Component.translatable(KEY + "details", tile.priority(), spirit);
+        MutableComponent text = Component.translatable(KEY + "details", tile.priority(), spirit);
+        for (String detail : tile.details()) {
+            text.append(" · ").append(Component.literal(detail));
+        }
+        return text;
     }
 
     private static Component waitText(BoardWaitReasons.Wait wait, Map<String, BoardTile> byId) {

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.AbsentOwners;
+import com.theminespirit.core.board.ActivityCadence;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
@@ -88,6 +89,7 @@ public final class BoardService {
     private final Map<UUID, Launched> launched = new HashMap<>();
     private final DigOutWatch digOut;
     private final TaskStall stall = new TaskStall();
+    private long lastActivity;
     private final Map<String, Long> issuedGenerations = new HashMap<>();
     private final Map<String, Long> supplyClosed = new HashMap<>();
     private final AbsentOwners absentOwners = new AbsentOwners();
@@ -201,10 +203,14 @@ public final class BoardService {
             rebuild(level, now);
             return;
         }
+        if (ActivityCadence.due(lastActivity, now)) {
+            lastActivity = now;
+            reconcileActivities(SpiritCensus.all(level), false);
+        }
         if (now - lastDispatch >= EARLY_DISPATCH_TICKS && (freshTickets || holderFreed(level))) {
             lastDispatch = now;
             freshTickets = false;
-            issue(level, census(level), now);
+            issue(level, SpiritCensus.all(level), now);
         }
     }
 
@@ -227,7 +233,7 @@ public final class BoardService {
         }
         targets.keySet().retainAll(alive);
         issuedGenerations.keySet().retainAll(alive);
-        List<SpiritEntity> spirits = census(level);
+        List<SpiritEntity> spirits = SpiritCensus.all(level);
         cancelOrphans(level, spirits);
         settleOwners(spirits);
         StockParts parts = refreshStock(level, spirits);
@@ -507,19 +513,16 @@ public final class BoardService {
             return false;
         }
         launched.put(spirit.getUUID(), new Launched(activity, spirit.taskGeneration()));
-        board.occupy(spirit.getUUID(), activity, script, board.now());
+        board.occupy(spirit.getUUID(), activity, script, BoardActivities.targetOf(task), board.now());
         return true;
     }
 
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
         for (SpiritEntity spirit : spirits) {
-            Optional<BoardCase> occupation = occupationOf(spirit);
+            Optional<BoardOccupant.Occupation> occupation = occupationOf(spirit);
             if (occupation.isPresent()) {
-                board.occupy(
-                        spirit.getUUID(),
-                        occupation.get(),
-                        spirit.currentPlan().map(BoardActivities::scriptOf).orElse(null),
-                        board.now());
+                BoardOccupant.Occupation occ = occupation.get();
+                board.occupy(spirit.getUUID(), occ.boardCase(), occ.script(), occ.target(), board.now());
             } else {
                 board.vacate(spirit.getUUID());
             }
@@ -601,37 +604,15 @@ public final class BoardService {
         launched.remove(spirit.getUUID());
     }
 
-    private Optional<BoardCase> occupationOf(SpiritEntity spirit) {
+    private Optional<BoardOccupant.Occupation> occupationOf(SpiritEntity spirit) {
         UUID id = spirit.getUUID();
-        if (spirit.isRemoved()) {
-            return Optional.empty();
-        }
-        if (DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
-                && spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
-            return Optional.of(BoardCase.ACTIVITY_ESCAPE);
-        }
-        if (spirit.tactics().wantsControl() && board.assignedTo(id).isEmpty()) {
-            Optional<BoardCase> tactic = BoardActivities.caseOf(spirit.tactics().action());
-            if (tactic.isPresent()) {
-                return tactic;
-            }
-        }
-        boolean running = spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
         Launched own = launched.get(id);
         boolean ownActivity = own != null && own.generation() == spirit.taskGeneration();
-        if (running && ownActivity) {
-            return Optional.of(own.activity());
-        }
-        if (!board.assignedTo(id).isEmpty()) {
-            return Optional.empty();
-        }
-        if (running) {
-            return Optional.of(BoardCase.ACTIVITY_EXTERNAL);
-        }
-        if (spirit.isDefenceAssigned()) {
-            return Optional.of(BoardCase.ACTIVITY_DEFEND);
-        }
-        return Optional.empty();
+        return BoardOccupant.of(
+                spirit,
+                ownActivity,
+                own == null ? null : own.activity(),
+                !board.assignedTo(id).isEmpty());
     }
 
     private record Launched(BoardCase activity, long generation) {}
@@ -1147,15 +1128,5 @@ public final class BoardService {
                 .flatMap(Optional::stream)
                 .findFirst()
                 .orElse(new BlockCoord(0, 64, 0));
-    }
-
-    private static List<SpiritEntity> census(ServerLevel level) {
-        List<SpiritEntity> spirits = new ArrayList<>();
-        for (Entity entity : level.getAllEntities()) {
-            if (entity instanceof SpiritEntity spirit && !spirit.isRemoved() && spirit.isAlive() && !spirit.isDemo()) {
-                spirits.add(spirit);
-            }
-        }
-        return spirits;
     }
 }

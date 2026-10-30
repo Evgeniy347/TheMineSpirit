@@ -125,7 +125,7 @@ class BoardTests {
     void occupy_ExternalTaskScript_ShownOnActivity() {
         Board board = boardAt(0);
 
-        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_EXTERNAL, "chop_tree", 0);
+        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_EXTERNAL, "chop_tree", null, 0);
 
         assertEquals(
                 List.of("script=chop_tree"),

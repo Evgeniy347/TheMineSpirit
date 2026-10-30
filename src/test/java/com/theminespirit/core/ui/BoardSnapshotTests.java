@@ -87,6 +87,33 @@ class BoardSnapshotTests {
     }
 
     @Test
+    void build_TicketDetails_ReachTheTile() {
+        BoardTask task = new BoardTask(
+                "activity:1",
+                "ACTIVITY_CHOP",
+                15,
+                SPIRIT_UUID,
+                "ASSIGNED",
+                Map.of(),
+                Map.of(),
+                List.of(),
+                1,
+                1,
+                "always",
+                15,
+                List.of("script=chop_tree", "target=-203,68,-560"),
+                false);
+
+        BoardTile tile = BoardSnapshot.build(List.of(task), uuid -> "Тихон").get(0);
+
+        assertEquals(
+                List.of("script=chop_tree", "target=-203,68,-560"),
+                tile.details(),
+                "Скрипт и цель обязаны дойти до плитки: иначе на экране доски карточка не говорит, "
+                        + "чем дух занят и куда идёт");
+    }
+
+    @Test
     void build_UnknownSpirit_ShowsShortUuid() {
         List<BoardTile> tiles = BoardSnapshot.build(
                 List.of(task("work", 20, "ASSIGNED", Map.of(), List.of(), 1, SPIRIT_UUID, false)), uuid -> null);

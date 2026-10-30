@@ -50,6 +50,7 @@ public final class BoardRules {
         priorities.put(BoardCase.ACTIVITY_EXTERNAL, 95);
         priorities.put(BoardCase.ACTIVITY_EXPEDITION, 95);
         priorities.put(BoardCase.ACTIVITY_ESCAPE, 95);
+        extendedActivities(priorities);
         priorities.put(BoardCase.ACTIVITY_DEFEND, 29);
         priorities.put(BoardCase.ACTIVITY_UNLOAD, 25);
         priorities.put(BoardCase.ACTIVITY_CRAFT, 20);
@@ -116,5 +117,12 @@ public final class BoardRules {
         priorities.put(BoardCase.FILL_CRATER, 35);
         priorities.put(BoardCase.ENCHANT_SHELVES, 30);
         return Map.copyOf(priorities);
+    }
+
+    private static void extendedActivities(Map<BoardCase, Integer> priorities) {
+        priorities.put(BoardCase.ACTIVITY_BUILD, 94);
+        priorities.put(BoardCase.ACTIVITY_MOVE, 93);
+        priorities.put(BoardCase.ACTIVITY_SENSE, 92);
+        priorities.put(BoardCase.ACTIVITY_SOCIAL, 91);
     }
 }
