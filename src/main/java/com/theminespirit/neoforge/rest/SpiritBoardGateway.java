@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardJournal;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
@@ -33,7 +34,6 @@ import net.minecraft.server.level.ServerLevel;
 
 public final class SpiritBoardGateway implements BoardGateway {
     private static final String ID_PREFIX = "board-";
-    private static final int JOURNAL_SEARCH_LINES = 65_536;
 
     private final MinecraftServer server;
     private final ServerThreadCall serverCall;
@@ -67,7 +67,7 @@ public final class SpiritBoardGateway implements BoardGateway {
         return serverCall.call(
                 () -> BoardRegistry.get(server.overworld())
                         .journal()
-                        .findStatus(ticketId, JOURNAL_SEARCH_LINES)
+                        .findStatus(ticketId, BoardJournal.FIND_LINES)
                         .map(BoardTasks::fromJournal),
                 RestTuning.SERVER_CALL_TIMEOUT);
     }

@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +15,8 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public final class BoardJournal {
+    public static final int FIND_LINES = 65_536;
+
     private final Path path;
     private final Deque<String> pending = new ArrayDeque<>();
     private int enqueued;
@@ -143,71 +144,7 @@ public final class BoardJournal {
     }
 
     public Optional<BoardLogEntry> findStatus(String ticketId, int maxLines) {
-        Objects.requireNonNull(ticketId, "id задания не может быть null: журнал ищут по нему");
-        if (maxLines < 1) {
-            throw new IllegalArgumentException(
-                    "Предел строк поиска " + maxLines + " меньше 1: " + "пустой ответ не отдаётся");
-        }
-        if (!Files.exists(path)) {
-            return Optional.empty();
-        }
-        try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r");
-                ByteArrayOutputStream carry = new ByteArrayOutputStream()) {
-            long position = file.length();
-            byte[] chunk = new byte[64 * 1024];
-            int scanned = 0;
-            while (position > 0 && scanned < maxLines) {
-                int size = (int) Math.min(chunk.length, position);
-                position -= size;
-                file.seek(position);
-                file.readFully(chunk, 0, size);
-                byte[] carryBytes = carry.toByteArray();
-                byte[] all = new byte[size + carryBytes.length];
-                System.arraycopy(chunk, 0, all, 0, size);
-                System.arraycopy(carryBytes, 0, all, size, carryBytes.length);
-                carry.reset();
-                int end = all.length;
-                for (int index = all.length - 1; index >= 0; index--) {
-                    if (all[index] != '\n') {
-                        continue;
-                    }
-                    if (end > index + 1) {
-                        scanned++;
-                        Optional<BoardLogEntry> found = status(all, index + 1, end, ticketId);
-                        if (found.isPresent()) {
-                            return found;
-                        }
-                        if (scanned >= maxLines) {
-                            return Optional.empty();
-                        }
-                    }
-                    end = index;
-                }
-                carry.write(all, 0, end);
-            }
-            byte[] first = carry.toByteArray();
-            return first.length == 0 ? Optional.empty() : status(first, 0, first.length, ticketId);
-        } catch (IOException error) {
-            throw new IllegalStateException(
-                    "Журнал заданий '" + path + "' не прочитан для поиска '" + ticketId + "': " + error.getMessage(),
-                    error);
-        }
-    }
-
-    private static Optional<BoardLogEntry> status(byte[] bytes, int from, int to, String ticketId) {
-        String line = new String(bytes, from, to - from, StandardCharsets.UTF_8);
-        if (!line.contains("\"" + ticketId + "\"")) {
-            return Optional.empty();
-        }
-        try {
-            BoardLogEntry entry = BoardLog.parse(line);
-            if (entry.event() == BoardLog.Event.NOTE || !entry.ticketId().equals(ticketId)) {
-                return Optional.empty();
-            }
-            return Optional.of(entry);
-        } catch (RuntimeException broken) {
-            return Optional.empty();
-        }
+        return BoardJournalSearch.findStatus(path, pending, ticketId, maxLines);
     }
 
     private List<String> tailLines(int wanted) {
