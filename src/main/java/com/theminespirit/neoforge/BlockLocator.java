@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -78,6 +80,11 @@ public final class BlockLocator {
         }
 
         private void scan(SectionSlice slice, List<BlockPos> found) {
+            if (level instanceof ServerLevel server
+                    && !server.getForcedChunks().contains(ChunkPos.asLong(slice.sectionX(), slice.sectionZ()))) {
+                skippedChunks.add(ChunkPos.asLong(slice.sectionX(), slice.sectionZ()));
+                return;
+            }
             LevelChunk chunk = LoadedWorld.chunk(level, slice.sectionX(), slice.sectionZ(), skippedChunks);
             if (chunk == null) {
                 return;

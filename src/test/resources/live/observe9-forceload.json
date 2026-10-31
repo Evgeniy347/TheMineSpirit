@@ -1,0 +1,23 @@
+{
+  "source": "live-user-test-run/observe9-2026-10-30-1547.md: forceload query 15:45:57 (319 chunks) и /v1/bots сразу после рестарта",
+  "forceload": {
+    "minChunkX": -18,
+    "maxChunkX": -4,
+    "minChunkZ": -41,
+    "maxChunkZ": -21
+  },
+  "home": [-150, 72, -498],
+  "spirits": {
+    "spirit-2": {
+      "position": [-159, 67, -320],
+      "chunk": [-10, -20],
+      "outside": true,
+      "note": "замёрз на 1 ч 06 мин, пока не добавили forceload add -175 -335 -143 -304"
+    },
+    "spirit-3": {
+      "position": [-150, 72, -498],
+      "chunk": [-10, -32],
+      "outside": false
+    }
+  }
+}

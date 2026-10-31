@@ -39,7 +39,7 @@ src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
 src/main/java/com/theminespirit/neoforge/board/BoardService.java	1118
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	879
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	569
-src/main/java/com/theminespirit/neoforge/coordinator/SpiritCoordinator.java	400
+src/main/java/com/theminespirit/neoforge/coordinator/SpiritCoordinator.java	372
 src/main/java/com/theminespirit/neoforge/crafting/CraftScript.java	383
 src/main/java/com/theminespirit/neoforge/crafting/SmeltScript.java	308
 src/main/java/com/theminespirit/neoforge/demo/DemoSession.java	431
@@ -83,3 +83,4 @@ src/test/java/com/theminespirit/guards/GameTestIsolationGuardTests.java	352
 src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	484
 src/test/java/com/theminespirit/guards/ProductionCommentGuardTests.java	575
 src/test/java/com/theminespirit/guards/SucceedWhenReturnGuardTests.java	343
+src/test/java/com/theminespirit/core/board/graph/GraphWiringTests.java	301

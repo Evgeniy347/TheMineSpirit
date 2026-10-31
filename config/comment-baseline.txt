@@ -160,3 +160,4 @@ src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	[флак] �
 src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	запас на подходы полного прогона
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	[флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	иначе тест меряет скорость стройки, а не её результат.
+src/main/java/com/theminespirit/gametest/Observe9ScenesGameTests.java	[флак] шаг наблюдения 9 ждёт 900 тиков тактики, а не мгновенного события: бюджет двойной.
