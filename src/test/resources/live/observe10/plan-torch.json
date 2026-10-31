@@ -1,0 +1,28 @@
+{
+ "source": "world/data/theminespirit_settlement_plot.dat + theminespirit_placed_blocks.dat",
+ "anchor": [
+  -171,
+  71,
+  -489
+ ],
+ "mine": {
+  "id": "mine",
+  "x": -191,
+  "z": -519,
+  "width": 5,
+  "depth": 15,
+  "facing": "north"
+ },
+ "torch": {
+  "pos": [
+   -189,
+   60,
+   -507
+  ],
+  "block": "minecraft:wall_torch",
+  "placedByPlayer": true,
+  "inPlan": true,
+  "onPlot": true
+ },
+ "denyMatchesWallTorch": true
+}

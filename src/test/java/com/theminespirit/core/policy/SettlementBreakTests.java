@@ -31,6 +31,16 @@ class SettlementBreakTests {
     }
 
     @Test
+    void of_PlayerBlockInPlanCell_Own() {
+        assertEquals(
+                SettlementBreak.Check.OWN,
+                SettlementBreak.of(SettlementBreak.Origin.PLAYER, SettlementBreak.Place.PLAN),
+                "Метка «поставил игрок» не сильнее плана: факел спуска шахты лежал в наборе игрока и уходил "
+                        + "в чёрный список защиты, хотя его клетка — план (observe10: wall_torch 20 раз "
+                        + "держал шахту на 75%)");
+    }
+
+    @Test
     void place_PlanCellOffPlot_IsPlan() {
         assertEquals(
                 SettlementBreak.Place.PLAN,

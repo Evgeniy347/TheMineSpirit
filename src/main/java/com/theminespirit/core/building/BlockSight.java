@@ -7,6 +7,7 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public final class BlockSight {
@@ -37,6 +38,71 @@ public final class BlockSight {
             }
         }
         return result;
+    }
+
+    public static Optional<BlockCoord> firstBlocker(
+            Point eye, BlockCoord target, TerrainView world, Predicate<BlockCoord> passable) {
+        Objects.requireNonNull(eye, "Глаза духа не могут быть null: без них неизвестно, откуда смотреть");
+        Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, что видно");
+        Objects.requireNonNull(world, "Мир не может быть null: по нему проверяется проход луча");
+        Objects.requireNonNull(passable, "Проходимые клетки не могут быть null: пустое правило задаётся ложью");
+        Optional<BlockCoord> blocker = Optional.empty();
+        for (Point face : faces(target)) {
+            Optional<BlockCoord> found = walkBlocker(eye, face, target, world, passable);
+            if (found.isEmpty()) {
+                return Optional.empty();
+            }
+            if (blocker.isEmpty()) {
+                blocker = found;
+            }
+        }
+        return blocker;
+    }
+
+    private static Optional<BlockCoord> walkBlocker(
+            Point from, Point to, BlockCoord target, TerrainView world, Predicate<BlockCoord> passable) {
+        int x = (int) Math.floor(from.x());
+        int y = (int) Math.floor(from.y());
+        int z = (int) Math.floor(from.z());
+        double dx = to.x() - from.x();
+        double dy = to.y() - from.y();
+        double dz = to.z() - from.z();
+        int stepX = dx > 0 ? 1 : dx < 0 ? -1 : 0;
+        int stepY = dy > 0 ? 1 : dy < 0 ? -1 : 0;
+        int stepZ = dz > 0 ? 1 : dz < 0 ? -1 : 0;
+        double tMaxX = firstBoundary(from.x(), x, dx, stepX);
+        double tMaxY = firstBoundary(from.y(), y, dy, stepY);
+        double tMaxZ = firstBoundary(from.z(), z, dz, stepZ);
+        double tDeltaX = stepX == 0 ? Double.POSITIVE_INFINITY : 1.0 / Math.abs(dx);
+        double tDeltaY = stepY == 0 ? Double.POSITIVE_INFINITY : 1.0 / Math.abs(dy);
+        double tDeltaZ = stepZ == 0 ? Double.POSITIVE_INFINITY : 1.0 / Math.abs(dz);
+        for (int step = 0; step < MAX_STEPS; step++) {
+            if (x == target.x() && y == target.y() && z == target.z()) {
+                return Optional.empty();
+            }
+            if (tMaxX <= tMaxY && tMaxX <= tMaxZ) {
+                x += stepX;
+                tMaxX += tDeltaX;
+            } else if (tMaxY <= tMaxZ) {
+                y += stepY;
+                tMaxY += tDeltaY;
+            } else {
+                z += stepZ;
+                tMaxZ += tDeltaZ;
+            }
+            if (x == target.x() && y == target.y() && z == target.z()) {
+                return Optional.empty();
+            }
+            BlockCoord cell = new BlockCoord(x, y, z);
+            if (passable.test(cell)) {
+                continue;
+            }
+            Terrain terrain = world.at(cell);
+            if (terrain == Terrain.SOLID || terrain == Terrain.UNLOADED) {
+                return Optional.of(cell);
+            }
+        }
+        return Optional.of(new BlockCoord(x, y, z));
     }
 
     private static List<Point> faces(BlockCoord target) {

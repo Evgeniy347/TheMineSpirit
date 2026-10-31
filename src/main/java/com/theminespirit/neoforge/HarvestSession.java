@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
@@ -13,6 +12,7 @@ import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.DropRetries;
+import com.theminespirit.core.mining.MineVeinStands;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
@@ -83,6 +83,7 @@ public final class HarvestSession {
     private final Approach approach;
     private final TargetBuffer buffer = new TargetBuffer();
     private final ProgressWatchdog watchdog = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
+    private final ProgressWatchdog veinMining = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
     private final DropRetries dropRetries = new DropRetries(COLLECT_RADIUS);
 
     private State state = State.FIND;
@@ -181,9 +182,14 @@ public final class HarvestSession {
         }
 
         watchdog.tick();
-        if (watchdog.stalled()) {
+        if (vein && mined == 0) {
+            veinMining.tick();
+        }
+        ProgressWatchdog stalled =
+                watchdog.stalled() ? watchdog : vein && mined == 0 && veinMining.stalled() ? veinMining : null;
+        if (stalled != null) {
             return fail(HarvestReasonText.stallReason(
-                    reasonTally(), watchdog.limitTicks(), searching(), state.name(), targetForReason()));
+                    reasonTally(), stalled.limitTicks(), searching(), state.name(), targetForReason()));
         }
         switch (state) {
             case FIND -> find();
@@ -334,8 +340,13 @@ public final class HarvestSession {
         MiningPlanner.Outcome result =
                 MiningPlanner.next(origin, candidates, safety, approachFailures.excludedStands(), this::standReachable);
         if (result instanceof MiningPlanner.Exhausted exhausted) {
-            if ((exhausted.noStand() > 0 || exhausted.unreachable() > 0) && approachReachStand(origin, candidates)) {
-                return;
+            if (exhausted.noStand() > 0 || exhausted.unreachable() > 0) {
+                if (lastUnreachable == null && !candidates.isEmpty()) {
+                    lastUnreachable = candidates.get(0);
+                }
+                if (approachReachStand(origin, candidates)) {
+                    return;
+                }
             }
             unsafe += exhausted.unsafe();
             breakSkips.record(BreakSkipTally.Reason.NO_STAND, exhausted.noStand());
@@ -408,7 +419,7 @@ public final class HarvestSession {
                 return false;
             }
             if (mined == 0 && !skipWithoutTool) {
-                fail(tierReason(targetState));
+                fail(HarvestReasonText.tierReason(targetState, label));
                 return false;
             }
             noTool++;
@@ -430,30 +441,23 @@ public final class HarvestSession {
     }
 
     private boolean approachReachStand(BlockCoord origin, List<BlockCoord> candidates) {
-        ReachPlanner.World world = new ReachPlanner.World() {
-            @Override
-            public boolean ready(BlockCoord cell) {
-                return true;
-            }
-
-            @Override
-            public boolean standable(BlockCoord feet) {
-                return MiningSafety.canStand(feet, safety);
-            }
-        };
         List<BlockCoord> reachable =
                 vein ? candidates : candidates.stream().filter(this::exposed).toList();
-        Optional<BlockCoord> stand = ReachPlanner.nextStand(
-                SpiritReach.current(), origin, reachable, world, reachStandsTried, Set.copyOf(candidates));
+        Optional<BlockCoord> stand =
+                MineVeinStands.next(reachable, origin, safety, approachFailures.excludedStands(), reachStandsTried);
         if (stand.isEmpty()) {
+            unreachable++;
+            if (!reachable.isEmpty()) {
+                lastUnreachable = reachable.get(0);
+            }
+            return false;
+        }
+        if (kind == WorkKind.GATHER && !standReachable(stand.get())) {
+            unreachable++;
+            lastUnreachable = reachable.isEmpty() ? null : reachable.get(0);
             return false;
         }
         reachStandsTried.add(stand.get());
-        if (kind == WorkKind.GATHER && !standReachable(stand.get())) {
-            unreachable++;
-            lastUnreachable = candidates.isEmpty() ? null : candidates.get(0);
-            return false;
-        }
         currentTarget = null;
         currentStand = stand.get();
         beginApproach(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5));
@@ -568,6 +572,7 @@ public final class HarvestSession {
             return false;
         }
         BlockCoord target = currentTarget;
+        lastUnreachable = target;
         if (currentStand != null) {
             approachFailures.excludeStand(currentStand, target);
         }
@@ -642,6 +647,7 @@ public final class HarvestSession {
                 releaseReserved();
                 mined++;
                 watchdog.progress();
+                veinMining.progress();
                 collectRuns++;
                 collector = newCollector(currentTarget);
                 state = State.COLLECT;
@@ -722,16 +728,6 @@ public final class HarvestSession {
             return currentTarget;
         }
         return lastUnreachable;
-    }
-
-    private String tierReason(BlockState state) {
-        String kind = RequiredTier.kindOf(state);
-        String tier = RequiredTier.of(state);
-        String need = kind.isEmpty() ? "нужен инструмент" : "нужен инструмент (" + kind + ")";
-        if (tier.isEmpty()) {
-            return need + " для " + label + ": подходящего в инвентаре нет или он изношен";
-        }
-        return need + " для " + label + ": " + tier + " или лучше в инвентаре нет или он изношен";
     }
 
     private static BlockPos toPos(BlockCoord coord) {

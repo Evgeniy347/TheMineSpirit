@@ -1,0 +1,54 @@
+{
+ "tasks": [
+  {
+   "id": "first:build_mine",
+   "case": "BUILD_MINE",
+   "priority": 82,
+   "assignee": null,
+   "status": "PENDING",
+   "requiredItems": {
+    "cobblestone": 139
+   },
+   "missing": {},
+   "dependsOn": [],
+   "createdAt": 22573262,
+   "level": 1,
+   "cause": "graph:building:mine",
+   "effectivePriority": 82,
+   "modifiers": [],
+   "done": false,
+   "startedAt": 0,
+   "finishedAt": 0,
+   "durationTicks": 0,
+   "waitReason": "spirit-2 — занят: withdraw; spirit-3 — занят: chop_tree; spirit-1 — занят: mine_vein",
+   "supplyItem": null,
+   "supplyCount": 0
+  },
+  {
+   "id": "supply_gather:coal",
+   "case": "GATHER_MATERIALS",
+   "priority": 45,
+   "assignee": "f58b83b6-c9a0-406d-967a-822843debf54",
+   "status": "ASSIGNED",
+   "requiredItems": {},
+   "missing": {},
+   "dependsOn": [],
+   "createdAt": 22572462,
+   "level": 1,
+   "cause": "always",
+   "effectivePriority": 45,
+   "modifiers": [],
+   "done": false,
+   "startedAt": 22572762,
+   "finishedAt": 0,
+   "durationTicks": 518,
+   "waitReason": null,
+   "supplyItem": "coal",
+   "supplyCount": 1
+  }
+ ],
+ "counts": {
+  "done": 42756,
+  "reopened": 27831
+ }
+}

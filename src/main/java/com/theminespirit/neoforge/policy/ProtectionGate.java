@@ -10,7 +10,6 @@ import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.SettlementBreak;
-import com.theminespirit.core.policy.SettlementBreakProtection;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.town.FenceDemolition;
@@ -118,16 +117,10 @@ public final class ProtectionGate {
             SettlementBreak.Origin origin = placedByPlayer
                     ? SettlementBreak.Origin.PLAYER
                     : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
-            SettlementBreak.Place place = SettlementBreak.place(onPlot, inPlan);
-            decision = switch (SettlementBreak.of(origin, place)) {
-                case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
-                case OWN -> SettlementBreakProtection.own(PROTECTION, blockId(state), inProtectedZone);
-                case DEFAULT ->
-                    PROTECTION.check(
-                            blockId(state),
-                            neighbours(level, pos),
-                            new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
-            };
+            decision = SettlementBreak.decide(
+                    PROTECTION,
+                    new SettlementBreak.Facts(origin, onPlot, inPlan, blockId(state), inProtectedZone, unprotectArea),
+                    () -> neighbours(level, pos));
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
