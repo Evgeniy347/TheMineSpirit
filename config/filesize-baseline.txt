@@ -83,4 +83,3 @@ src/test/java/com/theminespirit/guards/GameTestIsolationGuardTests.java	352
 src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	484
 src/test/java/com/theminespirit/guards/ProductionCommentGuardTests.java	575
 src/test/java/com/theminespirit/guards/SucceedWhenReturnGuardTests.java	343
-src/test/java/com/theminespirit/core/board/graph/GraphWiringTests.java	301
