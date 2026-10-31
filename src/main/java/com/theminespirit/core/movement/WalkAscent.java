@@ -14,10 +14,15 @@ public final class WalkAscent {
         MOVE,
         JUMP,
         CLIMB,
+        SWIM,
         ARRIVED
     }
 
-    public record Body(boolean onGround, boolean inWater, boolean onClimbable) {}
+    public record Body(boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget) {
+        public Body(boolean onGround, boolean inWater, boolean onClimbable) {
+            this(onGround, inWater, onClimbable, false);
+        }
+    }
 
     public record Pose(BlockCoord feet, double x, double y, double z) {}
 
@@ -49,6 +54,9 @@ public final class WalkAscent {
         double centerZ = pose.feet().z() + CENTER;
         if (rising && body.onGround() && horizontal(pose, centerX, centerZ) > CellCentering.TOLERANCE) {
             return new Command(Step.ALIGN, centerX, pose.y(), centerZ);
+        }
+        if (body.waterTarget() || (body.inWater() && !body.onGround() && !body.onClimbable())) {
+            return new Command(Step.SWIM, targetX, cell.y(), targetZ);
         }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;
