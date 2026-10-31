@@ -2,6 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildingType;
+import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchemeFilter;
@@ -41,5 +43,24 @@ public final class SchemeAudit {
                         .filter(entry ->
                                 !entry.optional() && !SchematicBlocks.isSecondaryPart(entry.block(), entry.state()))
                         .toList());
+    }
+
+    public static Optional<MineLayout> mine(ScriptCall call) {
+        if (!"build_schematic".equals(call.script())
+                || !(call.params().get("file") instanceof String file)
+                || !(call.params().get("x") instanceof Integer x)
+                || !(call.params().get("y") instanceof Integer y)
+                || !(call.params().get("z") instanceof Integer z)) {
+            return Optional.empty();
+        }
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(file);
+        if (preset.isEmpty() || preset.get().type() != BuildingType.UNDERGROUND) {
+            return Optional.empty();
+        }
+        BuildRotation rotation =
+                call.params().get("rotation") instanceof String turn ? BuildRotation.parse(turn) : BuildRotation.NONE;
+        Preset found = preset.get();
+        return Optional.of(MineLayout.place(
+                found.schematic(), found.entry(), new BlockCoord(x, y, z), rotation, MineLayout.Extent.NONE));
     }
 }

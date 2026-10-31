@@ -19,7 +19,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class StuckStageLiveTests {
-    private static final Path DIR = Path.of("src/test/resources/live/observe13");
+    private static final Path DIR = Path.of("src/test/resources/live/observe13-stuck");
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final EatNeed FED = new EatNeed(20, 20, 20, 20);
 

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 class StillWatchLiveTests {
     private static final Path WATER = Path.of("src/test/resources/live/observe12-water-stuck.json");
     private static final Path BOTS = Path.of("src/test/resources/live/observe12-bots.json");
+    private static final Path OSCILLATION = Path.of("src/test/resources/live/observe13-water-oscillation.json");
     private static final long WINDOW = 1200;
 
     @Test
@@ -36,21 +37,44 @@ class StillWatchLiveTests {
     }
 
     @Test
-    void still_MovingSpirit_ResetsWindow() throws IOException {
+    void still_LiveOscillationInSmallArea_CountsAsStill() throws IOException {
+        JsonNode live = new ObjectMapper().readTree(Files.readString(OSCILLATION, StandardCharsets.UTF_8));
+        UUID spirit = UUID.fromString(live.get("spirit").asText());
+        StillWatch watch = new StillWatch();
+        boolean still = false;
+        for (int index = 0; index < live.get("positions").size(); index++) {
+            still = watch.still(
+                    spirit,
+                    coord(live.get("positions").get(index)),
+                    live.get("ticks").get(index).asLong(),
+                    WINDOW);
+        }
+
+        assertTrue(
+                still,
+                "spirit-1 в observe13 колебался между " + live.get("positions").get(0) + " и "
+                        + live.get("positions").get(1) + " (" + live.get("swim_stalled") + " SWIM_STALLED, спасений "
+                        + live.get("rescue_events") + "): колебание в малом радиусе — это неподвижность, иначе "
+                        + "смена клетки навсегда сбрасывает окно спасения");
+    }
+
+    @Test
+    void still_SpiritLeavingArea_ResetsWindow() throws IOException {
         JsonNode bots = new ObjectMapper().readTree(Files.readString(BOTS, StandardCharsets.UTF_8));
         UUID spirit = UUID.fromString(bots.get("bots").get(0).get("id").asText());
         StillWatch watch = new StillWatch();
         BlockCoord first = coord(bots.get("bots").get(0).get("position"));
-        BlockCoord moved = new BlockCoord(first.x() + 1, first.y(), first.z());
+        BlockCoord moved = new BlockCoord(first.x() + StillWatch.AREA_RADIUS + 1, first.y(), first.z());
 
         assertFalse(watch.still(spirit, first, 0, WINDOW), "Первый замер не застой");
         assertFalse(watch.still(spirit, first, WINDOW - 1, WINDOW), "До окна спасения нет");
         assertFalse(
                 watch.still(spirit, moved, WINDOW, WINDOW),
-                "Дух сдвинулся на блок: окно неподвижности начинается заново, иначе спасение сработает на идущем духе");
+                "Дух вышел из области " + StillWatch.AREA_RADIUS + " блоков: окно неподвижности начинается заново, "
+                        + "иначе спасение сработает на идущем духе");
         assertTrue(
                 watch.still(spirit, moved, WINDOW * 2, WINDOW),
-                "После сдвига дух снова стоит окно: спасение обязано помнить новую клетку");
+                "После выхода дух снова стоит окно: спасение обязано помнить новую область");
     }
 
     private static BlockCoord coord(JsonNode node) {

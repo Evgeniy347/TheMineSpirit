@@ -84,9 +84,14 @@ class StuckDispatchLiveTests {
                 board.claim(next.id(), chosen.get().id(), clock[0]),
                 "Тот же путь, что в игре: claimable → отказ выдачи → claim выдаёт задание достижимому духу");
         board.stuck().see(stuck, new BlockCoord(at.x() + 1, at.y(), at.z()));
+        assertTrue(
+                board.stuck().isStuck(stuck, clock[0]),
+                "Сдвиг на блок внутри области " + StuckSpirits.AREA_RADIUS + " — колебание, а не освобождение: "
+                        + "метка обязана держаться (observe13 N23)");
+        board.stuck().see(stuck, new BlockCoord(at.x() + StuckSpirits.AREA_RADIUS + 1, at.y(), at.z()));
         assertFalse(
                 board.stuck().isStuck(stuck, clock[0]),
-                "Дух освободился: смена позиции снимает запрет на новые задания");
+                "Дух вышел из области: смена позиции снимает запрет на новые задания");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

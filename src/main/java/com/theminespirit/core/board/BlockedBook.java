@@ -61,6 +61,42 @@ final class BlockedBook {
                 now));
     }
 
+    boolean require(String ticketId, Map<String, Integer> requiredItems) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: материалы освежают по id задания");
+        Objects.requireNonNull(requiredItems, "Материалы не могут быть null: пустые задают пустой картой");
+        BoardTicket ticket = tickets.get(ticketId);
+        BoardStatus status = statuses.get(ticketId);
+        if (ticket == null
+                || status == null
+                || (status != BoardStatus.PENDING
+                        && status != BoardStatus.WAITING_RESOURCES
+                        && status != BoardStatus.BLOCKED)) {
+            return false;
+        }
+        Map<String, Integer> items = Map.copyOf(requiredItems);
+        if (items.equals(ticket.requiredItems())) {
+            return false;
+        }
+        tickets.put(
+                ticketId,
+                new BoardTicket(
+                        ticket.id(),
+                        ticket.boardCase(),
+                        ticket.assignee(),
+                        ticket.priority(),
+                        ticket.createdAt(),
+                        ticket.level(),
+                        ticket.cause(),
+                        ticket.dependsOn(),
+                        items,
+                        ticket.modifiers()));
+        if (items.isEmpty() && (status == BoardStatus.WAITING_RESOURCES || status == BoardStatus.BLOCKED)) {
+            statuses.put(ticketId, BoardStatus.PENDING);
+            clear(ticketId);
+        }
+        return true;
+    }
+
     void unblock(StockView stock, long now) {
         for (BoardTicket ticket : List.copyOf(tickets.values())) {
             if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {

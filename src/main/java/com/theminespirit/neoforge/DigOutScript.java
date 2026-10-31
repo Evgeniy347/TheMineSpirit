@@ -2,9 +2,12 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.movement.DigOutObstacle;
 import com.theminespirit.core.movement.SealedSpace;
+import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.neoforge.movement.CheapBlocks;
 import com.theminespirit.neoforge.movement.RouteDetour;
 import com.theminespirit.neoforge.movement.RouteWalk;
 import java.util.List;
@@ -14,18 +17,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public final class DigOutScript implements ScriptInstance {
     private static final int MAX_STEPS = 96;
     private static final int STEP_TICKS = 60;
-    private static final String FLOOR_BLOCK = "minecraft:cobblestone";
     private static final int HOME_RADIUS = 2;
 
     private final SpiritEntity spirit;
@@ -133,11 +135,11 @@ public final class DigOutScript implements ScriptInstance {
         }
         BlockPos ahead = feet.relative(direction);
         for (BlockPos cell : List.of(feet.above(2), ahead.above(), ahead.above(2))) {
-            if (!passable(level, cell)) {
+            if (DigOutObstacle.obstacle(passable(level, cell), water(level, cell))) {
                 return dig(cell);
             }
         }
-        if (passable(level, ahead)) {
+        if (passable(level, ahead) || water(level, ahead)) {
             Optional<String> refusal = placeFloor(ahead);
             if (refusal.isPresent()) {
                 return turnOrFail("пол ступени " + ahead.toShortString() + " не подложить: " + refusal.get());
@@ -145,7 +147,7 @@ public final class DigOutScript implements ScriptInstance {
         }
         next = ahead.above();
         stepTicks = 0;
-        spirit.getNavigation().moveTo(next.getX() + 0.5, next.getY(), next.getZ() + 0.5, 1.0);
+        moveTo(next);
         return ScriptStatus.RUNNING;
     }
 
@@ -183,10 +185,22 @@ public final class DigOutScript implements ScriptInstance {
             next = null;
             return turnOrFail("не шагнул на ступень " + missed.toShortString() + " за " + STEP_TICKS + " тиков");
         }
-        if (spirit.getNavigation().isDone()) {
-            spirit.getNavigation().moveTo(next.getX() + 0.5, next.getY(), next.getZ() + 0.5, 1.0);
-        }
+        moveTo(next);
         return ScriptStatus.RUNNING;
+    }
+
+    private void moveTo(BlockPos cell) {
+        if (spirit.isInWater()) {
+            spirit.getNavigation().stop();
+            spirit.getMoveControl().setWantedPosition(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.max(motion.y, 0.2), motion.z);
+            spirit.getJumpControl().jump();
+            return;
+        }
+        if (spirit.getNavigation().isDone()) {
+            spirit.getNavigation().moveTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
+        }
     }
 
     private ScriptStatus dig(BlockPos cell) {
@@ -206,11 +220,20 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private Optional<String> placeFloor(BlockPos cell) {
-        return switch (placer.begin(cell, Blocks.COBBLESTONE.defaultBlockState(), FLOOR_BLOCK)) {
+        Optional<String> blockId = WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit));
+        if (blockId.isEmpty()) {
+            return Optional.of("в инвентаре нет дешёвых блоков для ступени");
+        }
+        String id = blockId.get();
+        return switch (placer.begin(cell, BlockStates.stateFor(id), id)) {
             case BlockPlacer.Started ignored -> Optional.empty();
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };
+    }
+
+    private static boolean water(Level level, BlockPos cell) {
+        return level.getFluidState(cell).is(FluidTags.WATER);
     }
 
     private ScriptStatus turnOrFail(String reason) {

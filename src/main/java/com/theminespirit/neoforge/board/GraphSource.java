@@ -9,8 +9,10 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
@@ -69,7 +71,7 @@ public final class GraphSource {
         String buildings = new TreeMap<>(state.buildings()) + " "
                 + plan.tasks().stream()
                         .filter(task -> task.id().startsWith("building:"))
-                        .map(task -> task.makes() + "=" + task.priority() + (task.feasible() ? "" : "?"))
+                        .map(task -> readiness(level, service, graph, scan.orElseThrow(), task))
                         .toList()
                 + " сундуков двора " + scan.orElseThrow().facts().chests() + " у "
                 + scan.orElseThrow().stage().workYard()
@@ -123,6 +125,23 @@ public final class GraphSource {
             events.add(CraftOrders.EVENT);
         }
         return Set.copyOf(events);
+    }
+
+    private static String readiness(
+            ServerLevel level,
+            BoardService service,
+            SupplyGraph graph,
+            FirstStepsRunner.StageScan scan,
+            GraphPlan.Task task) {
+        SupplyGraph.Building building = graph.buildings().get(task.makes());
+        if (building == null || !StageBuilt.ids().contains(task.makes())) {
+            return task.makes() + "=" + task.priority() + (task.feasible() ? "" : "?");
+        }
+        TownSnapshot.Progress progress =
+                FirstStepsRunner.progress(level, service, building.boardCase(), scan.stage(), scan.wood());
+        int percent = progress.total() == 0 ? 0 : progress.done() * 100 / progress.total();
+        return task.makes() + "=" + percent + "%(" + progress.done() + "/" + progress.total() + ")"
+                + (task.feasible() ? "" : "?");
     }
 
     private static boolean open(BoardStatus status) {

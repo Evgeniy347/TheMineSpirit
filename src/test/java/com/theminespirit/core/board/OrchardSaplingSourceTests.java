@@ -102,26 +102,26 @@ class OrchardSaplingSourceTests {
     }
 
     @Test
-    void supply_TorchCoal_SecondBranchIsCharcoal() {
+    void supply_TorchFuel_FirstBranchIsCharcoal() {
         TaskNode first = TorchPlans.supply(4).get(0);
 
         FallbackNode fallback = assertInstanceOf(
                 FallbackNode.class,
                 first,
-                "Уголь для факелов добывается с запасной веткой: без неё шахта без стоянки валит задание (N8)");
+                "Топливо для факелов добывается с запасной веткой: без неё шахта без стоянки валит задание (N8)");
 
         List<ScriptCall> branches = calls(fallback);
         assertTrue(
                 branches.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
-                                && "minecraft:coal".equals(call.params().get("item"))),
-                "Первая ветка — уголь из шахты: он дешевле обжига, когда руда достижима. Ветки: " + branches);
+                                && "minecraft:charcoal".equals(call.params().get("item"))),
+                "Первая ветка — древесный уголь обжигом: доска требует ровно то, что план добывает первым "
+                        + "(observe12 N19), а угольная руда в глубине не всегда достижима. Ветки: " + branches);
         assertTrue(
                 branches.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
-                                && "minecraft:charcoal".equals(call.params().get("item"))),
-                "Вторая ветка — древесный уголь обжигом: факел принимает и уголь, и древесный уголь. Ветки: "
-                        + branches);
+                                && "minecraft:coal".equals(call.params().get("item"))),
+                "Вторая ветка — уголь из шахты: факел принимает и уголь, и древесный уголь. Ветки: " + branches);
         assertEquals(
                 2,
                 branches.size(),
