@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.GroundsPlan;
@@ -23,11 +24,8 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
-import com.theminespirit.core.building.BuildRotation;
-import com.theminespirit.core.building.EarthCover;
+import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.MineLayout;
-import com.theminespirit.core.building.MineStone;
-import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -72,8 +70,26 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
 public final class FirstStepsRunner {
+    static final BuildGap.Schemes SCHEMES = new BuildGap.Schemes() {
+        @Override
+        public Optional<MineLayout> mine(ScriptCall call) {
+            return SchemeAudit.mine(call);
+        }
+
+        @Override
+        public Optional<List<Schematic.PlacedEntry>> entries(ScriptCall call) {
+            return SchemeAudit.entries(call);
+        }
+    };
     private static final Set<BoardCase> WOODEN_BUILDINGS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.BUILD_ORCHARD);
+    private static final Set<BoardCase> MISSING_BASED = EnumSet.of(
+            BoardCase.BUILD_MINE,
+            BoardCase.BUILD_FENCE,
+            BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_ORCHARD,
+            BoardCase.LIGHTING,
+            BoardCase.BUILD_STREETS);
     private static final int LAYOUT_SLACK_DIVISOR = 50;
     private static final Set<BoardCase> LAYOUT_STEPS = EnumSet.of(
             BoardCase.LIGHTING,
@@ -183,7 +199,7 @@ public final class FirstStepsRunner {
             ServerLevel level, StockView stock, StageScan scan, BoardCase caseValue) {
         String wood = BuildingWoodChoice.stored(level, caseValue, scan.stage(), scan.wood());
         TicketTarget target = targetFor(level, caseValue, scan.stage(), wood);
-        return need(level, stock, scan.stage(), new OpenStep(caseValue, target, Map.of(), wood), false);
+        return need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), false);
     }
 
     public static Map<String, Integer> open(
@@ -198,7 +214,7 @@ public final class FirstStepsRunner {
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, stage));
         }
-        Map<String, Integer> need = need(level, stock, stage, new OpenStep(caseValue, target, Map.of(), wood), blocked);
+        Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         if (!missing.isEmpty()) {
             LOGGER.info("Постройка этапа {} ждёт: не хватает {}", caseValue, missing);
@@ -208,44 +224,74 @@ public final class FirstStepsRunner {
         return Map.of();
     }
 
+    public static void refresh(
+            ServerLevel level, BoardService service, StockView stock, StageScan scan, BoardCase caseValue, long now) {
+        StageSite stage = scan.stage();
+        String wood = BuildingWoodChoice.stored(level, caseValue, stage, scan.wood());
+        TicketTarget target = targetFor(level, caseValue, stage, wood);
+        Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), false);
+        MaterialSource source = materialSource(level);
+        int parts = partsOf(caseValue);
+        StageWork work = target.work();
+        List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
+                ? FenceParts.of(level, work.site(), parts)
+                : List.of();
+        for (int part = 1; part <= parts; part++) {
+            TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
+            Map<String, Integer> reserve = part == 1 ? need : Map.of();
+            if (caseValue == BoardCase.BUILD_FENCE && work != null) {
+                partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
+                reserve = new HashMap<>(partNeed(level, source, partTarget, wood));
+                reserve.keySet().retainAll(need.keySet());
+            }
+            service.board().require(partId(caseValue, part), reserve);
+        }
+    }
+
     public static List<String> ticketIds(BoardCase caseValue) {
         return StageReopen.ids(caseValue);
     }
 
-    private static Map<String, Integer> need(
-            ServerLevel level, StockView stock, StageSite stage, OpenStep step, boolean blocked) {
+    private static Map<String, Integer> need(ServerLevel level, StockView stock, OpenStep step, boolean blocked) {
         BoardCase caseValue = step.caseValue();
         TicketTarget target = step.target();
         String wood = step.wood();
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
+        if (MISSING_BASED.contains(caseValue)) {
+            TaskNode plan = TicketPlans.plan(caseValue, 1, target);
+            need.putAll(BuildGap.need(plan, BuildGap.trace(plan, wood, probe(level), SCHEMES), source));
+            if (caseValue == BoardCase.BUILD_MINE) {
+                mineBlock(stock, need);
+            }
+            if (WOODEN_BUILDINGS.contains(caseValue)) {
+                if (blocked) {
+                    asPlanks(need, wood);
+                } else {
+                    dropOwnWood(need, stock, wood);
+                }
+            }
+            return need;
+        }
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             need.keySet().removeIf(item -> "chest".equals(item) || PlotLeveling.DEFAULT_BLOCK.equals(item));
         }
-        if (caseValue == BoardCase.BUILD_MINE) {
-            int floors = mineFloorsToBring(level, stage);
-            String block = stock.available().getOrDefault(COBBLESTONE, 0) >= floors
-                            || stock.available().getOrDefault(PlotLeveling.DEFAULT_BLOCK, 0) < floors
-                    ? COBBLESTONE
-                    : PlotLeveling.DEFAULT_BLOCK;
-            if (floors > 0) {
-                need.merge(block, floors, Integer::sum);
-            }
-        }
-        if (caseValue == BoardCase.LIGHTING || caseValue == BoardCase.BUILD_STREETS) {
-            minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
-        }
-        if (WOODEN_BUILDINGS.contains(caseValue)) {
-            minusPlaced(level, TicketPlans.plan(caseValue, 1, target), wood, need);
-            if (blocked) {
-                asPlanks(need, wood);
-            } else {
-                dropOwnWood(need, stock, wood);
-            }
-        }
         return need;
+    }
+
+    private static void mineBlock(StockView stock, Map<String, Integer> need) {
+        int floors = need.getOrDefault(COBBLESTONE, 0);
+        need.remove(COBBLESTONE);
+        if (floors <= 0) {
+            return;
+        }
+        String block = stock.available().getOrDefault(COBBLESTONE, 0) >= floors
+                        || stock.available().getOrDefault(PlotLeveling.DEFAULT_BLOCK, 0) < floors
+                ? COBBLESTONE
+                : PlotLeveling.DEFAULT_BLOCK;
+        need.merge(block, floors, Integer::sum);
     }
 
     private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
@@ -335,7 +381,7 @@ public final class FirstStepsRunner {
                 step.target(),
                 new StageRepair.Gap(missing, placed.total(), repairNeed(level, step)),
                 now);
-        if (repair == BoardOutcome.ACCEPTED || repair == BoardOutcome.DUPLICATE) {
+        if (StageAudit.keeps(repair)) {
             return true;
         }
         reopenParts(service, caseValue, parts);
@@ -344,7 +390,9 @@ public final class FirstStepsRunner {
 
     private static Map<String, Integer> repairNeed(ServerLevel level, OpenStep step) {
         Map<String, Integer> need = new HashMap<>(step.need());
-        minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
+        if (!MISSING_BASED.contains(step.caseValue())) {
+            minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
+        }
         return StageAudit.shortage(need);
     }
 
@@ -389,11 +437,8 @@ public final class FirstStepsRunner {
 
     private static Map<String, Integer> partNeed(
             ServerLevel level, MaterialSource source, TicketTarget target, String wood) {
-        Map<String, Integer> need = new HashMap<>();
-        materials(source, BoardCase.BUILD_FENCE, target)
-                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
-        minusPlaced(level, TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target), wood, need);
-        return need;
+        TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target);
+        return BuildGap.need(plan, BuildGap.trace(plan, wood, probe(level), SCHEMES), source);
     }
 
     private static PlotLeveling leveling(ServerLevel level, StageSite site) {
@@ -645,117 +690,38 @@ public final class FirstStepsRunner {
     }
 
     static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
-        if (step == BoardCase.BUILD_MINE) {
-            return mineAudit(level, stage);
-        }
         String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
         return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood);
     }
 
-    private static int mineFloorsToBring(ServerLevel level, StageSite stage) {
-        Optional<MineLayout> layout = mineLayout(stage);
-        if (layout.isEmpty()) {
-            return 0;
-        }
-        Map<BlockCoord, String> blocks = new HashMap<>();
-        for (List<BlockCoord> cells :
-                List.of(layout.get().floors(), layout.get().air())) {
-            for (BlockCoord cell : cells) {
-                BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
-                blocks.put(
-                        cell, BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
-            }
-        }
-        return MineStone.floorsToBring(layout.get(), blocks);
-    }
-
-    private static Placed mineFloors(ServerLevel level, StageSite stage) {
-        Optional<MineLayout> layout = mineLayout(stage);
-        if (layout.isEmpty()) {
-            return new Placed(0, 0);
-        }
-        int done = 0;
-        for (BlockCoord cell : layout.get().floors()) {
-            BlockState state = level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()));
-            if (SchematicBlocks.isFloorClass(
-                    BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString())) {
-                done++;
-            }
-        }
-        return new Placed(done, layout.get().floors().size());
-    }
-
-    private static Optional<MineLayout> mineLayout(StageSite stage) {
-        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
-        return preset.map(found -> MineLayout.place(
-                found.schematic(),
-                found.entry(),
-                stage.mineEntrance(),
-                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION),
-                MineLayout.Extent.NONE));
-    }
-
-    private static Placed mineAudit(ServerLevel level, StageSite stage) {
-        Optional<MineLayout> layout = mineLayout(stage);
-        if (layout.isEmpty()) {
-            return new Placed(0, 0);
-        }
-        int done = 0;
-        for (BlockCoord cell : layout.get().air()) {
-            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-            if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
-                done++;
-            }
-        }
-        return new Placed(done, layout.get().air().size()).plus(mineFloors(level, stage));
-    }
-
-    record Placed(int done, int total) {
-        Placed plus(Placed other) {
-            return new Placed(done + other.done, total + other.total);
-        }
-    }
+    record Placed(int done, int total) {}
 
     static Placed placedBlocks(ServerLevel level, TaskNode plan, String wood) {
-        return switch (plan) {
-            case FallbackNode fallback -> placedBlocks(level, fallback.steps().get(0), wood);
-            case SequenceNode sequence ->
-                sequence.steps().stream()
-                        .map(step -> placedBlocks(level, step, wood))
-                        .reduce(new Placed(0, 0), Placed::plus);
-            case ScriptCall call
-            when "place_block".equals(call.script())
-                    && call.params().get("block") instanceof String block
-                    && call.params().get("x") instanceof Integer x
-                    && call.params().get("y") instanceof Integer y
-                    && call.params().get("z") instanceof Integer z ->
-                new Placed(
-                        placed(level.getBlockState(new BlockPos(x, y, z)), bare(WoodSpecies.swap(block, wood))) ? 1 : 0,
-                        1);
-            case ScriptCall call
-            when SchemeAudit.entries(call).isPresent() -> {
-                int done = 0;
-                List<Schematic.PlacedEntry> entries = SchemeAudit.entries(call).orElseThrow();
-                for (Schematic.PlacedEntry entry : entries) {
-                    BlockCoord at = entry.pos();
-                    if (placed(
-                            level.getBlockState(new BlockPos(at.x(), at.y(), at.z())),
-                            bare(WoodSpecies.swap(entry.block(), wood)))) {
-                        done++;
-                    }
-                }
-                yield new Placed(done, entries.size());
+        BuildGap.Gap gap = BuildGap.trace(plan, wood, probe(level), SCHEMES);
+        return new Placed(gap.done(), gap.total());
+    }
+
+    static BuildGap.Probe probe(ServerLevel level) {
+        return new BuildGap.Probe() {
+            @Override
+            public String block(BlockCoord at) {
+                return BuiltInRegistries.BLOCK
+                        .getKey(level.getBlockState(new BlockPos(at.x(), at.y(), at.z()))
+                                .getBlock())
+                        .toString();
             }
-            default -> new Placed(0, 0);
+
+            @Override
+            public boolean passable(BlockCoord at) {
+                BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+                return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
+            }
         };
     }
 
     static boolean placed(BlockState state, String block) {
-        String actual = bare(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
-        return actual.equals(block)
-                || WoodSpecies.sameRole(actual, block)
-                || EarthCover.covers(actual, block)
-                || ("torch".equals(block) && "wall_torch".equals(actual));
+        return BlockMatch.matches(
+                BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString(), block);
     }
 
     private static Set<BoardCase> journalSteps(

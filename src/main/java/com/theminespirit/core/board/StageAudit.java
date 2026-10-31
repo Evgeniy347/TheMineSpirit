@@ -35,6 +35,11 @@ public final class StageAudit {
         return total > 0 && (long) missing * PERCENT > (long) rebuildPercent * total;
     }
 
+    public static boolean keeps(BoardOutcome outcome) {
+        Objects.requireNonNull(outcome, "Исход ремонта не может быть null: по нему решают, снимать ли отметку");
+        return outcome == BoardOutcome.ACCEPTED || outcome == BoardOutcome.DUPLICATE || outcome == BoardOutcome.BACKOFF;
+    }
+
     public static boolean progressed(int placedBefore, int placedAfter, int total) {
         return placedAfter > placedBefore || placedAfter >= total;
     }
