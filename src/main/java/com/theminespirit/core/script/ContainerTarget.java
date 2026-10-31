@@ -3,12 +3,20 @@ package com.theminespirit.core.script;
 import java.util.Objects;
 
 public sealed interface ContainerTarget
-        permits ContainerTarget.Nearest, ContainerTarget.Position, ContainerTarget.Auto {
+        permits ContainerTarget.Nearest,
+                ContainerTarget.Position,
+                ContainerTarget.Auto,
+                ContainerTarget.Warehouse,
+                ContainerTarget.Yard {
     ContainerTarget NEAREST = new Nearest();
     ContainerTarget AUTO = new Auto();
+    ContainerTarget WAREHOUSE = new Warehouse();
+    ContainerTarget YARD = new Yard();
 
     static ContainerTarget parse(String text) {
-        Objects.requireNonNull(text, "Цель контейнера не может быть null: 'nearest', 'auto' или координаты x,y,z");
+        Objects.requireNonNull(
+                text,
+                "Цель контейнера не может быть null: 'nearest', 'auto', 'warehouse', 'yard' " + "или координаты x,y,z");
         String trimmed = text.strip();
         if ("nearest".equalsIgnoreCase(trimmed)) {
             return NEAREST;
@@ -16,11 +24,17 @@ public sealed interface ContainerTarget
         if ("auto".equalsIgnoreCase(trimmed)) {
             return AUTO;
         }
+        if ("warehouse".equalsIgnoreCase(trimmed)) {
+            return WAREHOUSE;
+        }
+        if ("yard".equalsIgnoreCase(trimmed)) {
+            return YARD;
+        }
         String[] parts = trimmed.split(",", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException("Контейнер '" + text + "' задан неверно: ожидалось 'nearest', "
-                    + "'auto' или координаты блока x,y,z (например \"12,64,-7\"). Получено " + parts.length
-                    + " части вместо 3");
+                    + "'auto', 'warehouse', 'yard' или координаты блока x,y,z (например \"12,64,-7\"). Получено "
+                    + parts.length + " части вместо 3");
         }
         return new Position(
                 coordinate(parts[0].strip(), "x", text),
@@ -57,6 +71,10 @@ public sealed interface ContainerTarget
     record Nearest() implements ContainerTarget {}
 
     record Auto() implements ContainerTarget {}
+
+    record Warehouse() implements ContainerTarget {}
+
+    record Yard() implements ContainerTarget {}
 
     record Position(int x, int y, int z) implements ContainerTarget {}
 }

@@ -18,6 +18,7 @@ final class TicketStoragePlans {
     private static final String COUNT = "count";
     private static final String RADIUS = "radius";
     private static final String NEAREST = "nearest";
+    private static final String WAREHOUSE = "warehouse";
     private static final String ACQUIRE = "acquire";
     private static final String WITHDRAW = "withdraw";
     private static final String WAIT = "wait";
@@ -46,15 +47,7 @@ final class TicketStoragePlans {
                 gotoPoint(deposit),
                 new ScriptCall(
                         "deposit",
-                        Map.of(
-                                CONTAINER,
-                                target.deposit() == null ? NEAREST : containerId(deposit),
-                                ITEM,
-                                item,
-                                COUNT,
-                                batch,
-                                RADIUS,
-                                SUPPLY_CONTAINER_RADIUS))));
+                        Map.of(CONTAINER, WAREHOUSE, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS))));
     }
 
     static TaskNode gatherMaterials(TicketTarget target) {
@@ -62,7 +55,7 @@ final class TicketStoragePlans {
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
         BlockCoord deposit = target.deposit();
-        String container = deposit == null ? NEAREST : containerId(deposit);
+        String container = WAREHOUSE;
         return new SequenceNode(List.of(
                 gatherOnly(target),
                 deposit == null ? TicketPlans.gotoTarget(target) : gotoPoint(deposit),

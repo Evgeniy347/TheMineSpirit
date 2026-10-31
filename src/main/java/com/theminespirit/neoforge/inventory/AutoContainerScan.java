@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.Level;
 
@@ -31,13 +32,31 @@ final class AutoContainerScan {
         this.search = BlockLocator.search(level, center, radius, ContainerAccess.allowedBlocks());
     }
 
+    AutoContainerScan(Level level, List<BlockCoord> known) {
+        this.level = level;
+        this.search = null;
+        for (BlockCoord pos : known) {
+            candidates.add(new BlockPos(pos.x(), pos.y(), pos.z()));
+        }
+    }
+
+    static AutoContainerScan warehouse(Level level, BlockPos origin, boolean yardOnly) {
+        if (level instanceof ServerLevel server) {
+            BlockCoord at = new BlockCoord(origin.getX(), origin.getY(), origin.getZ());
+            return new AutoContainerScan(level, StorageFinder.positions(server, at, yardOnly));
+        }
+        return new AutoContainerScan(level, List.of());
+    }
+
     boolean tick() {
         if (collected) {
             return true;
         }
-        candidates.addAll(search.step(SLICES_PER_TICK));
-        if (!search.done()) {
-            return false;
+        if (search != null) {
+            candidates.addAll(search.step(SLICES_PER_TICK));
+            if (!search.done()) {
+                return false;
+            }
         }
         collect();
         collected = true;
@@ -91,7 +110,7 @@ final class AutoContainerScan {
     }
 
     int maxSlicesPerTick() {
-        return search.maxSlicesPerTick();
+        return search == null ? 0 : search.maxSlicesPerTick();
     }
 
     Level level() {

@@ -10,11 +10,14 @@ import com.theminespirit.core.inventory.StoragePoints;
 import com.theminespirit.core.inventory.UnloadedSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SettlementReach;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.terminal.CraftTerminalService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -25,13 +28,40 @@ public final class StorageFinder {
     private static final StateChangeLog CHANGES = new StateChangeLog();
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    private static final int YARD_SLACK = 3;
+
     private StorageFinder() {}
 
     public static Optional<BlockCoord> depositPoint(ServerLevel level, BlockCoord origin, String item, int count) {
-        StoragePoints.Choice choice =
-                StoragePoints.deposit(spots(level, origin), origin, new Stack(item, 0, Math.min(count, 64), 64));
+        return depositPoint(level, origin, item, count, Set.of());
+    }
+
+    public static Optional<BlockCoord> depositPoint(
+            ServerLevel level, BlockCoord origin, String item, int count, Set<BlockCoord> excluded) {
+        StoragePoints.Choice choice = StoragePoints.deposit(
+                spots(level, origin), origin, new Stack(item, 0, Math.min(count, 64), 64), excluded);
         report("deposit:" + item, choice, level);
         return Optional.ofNullable(choice.point());
+    }
+
+    public static List<BlockCoord> positions(ServerLevel level, BlockCoord origin, boolean yardOnly) {
+        List<BlockCoord> known = warehouse(level, origin);
+        if (!yardOnly) {
+            return known;
+        }
+        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        if (site.isEmpty()) {
+            return List.of();
+        }
+        StageSite stage = site.get();
+        List<BlockCoord> yard = new ArrayList<>();
+        for (BlockCoord pos : known) {
+            if (stage.yardColumn(pos.x(), pos.z())
+                    && Math.abs(pos.y() - stage.anchor().y()) <= YARD_SLACK) {
+                yard.add(pos);
+            }
+        }
+        return List.copyOf(yard);
     }
 
     public static Optional<BlockCoord> foodPoint(ServerLevel level, BlockCoord origin, String item, int count) {

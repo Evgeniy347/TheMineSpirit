@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class StoragePoints {
@@ -31,24 +32,35 @@ public final class StoragePoints {
     private StoragePoints() {}
 
     public static Choice deposit(List<Spot> spots, BlockCoord origin, Stack incoming) {
+        return deposit(spots, origin, incoming, Set.of());
+    }
+
+    public static Choice deposit(List<Spot> spots, BlockCoord origin, Stack incoming, Set<BlockCoord> excluded) {
         Objects.requireNonNull(spots, "Список контейнеров не может быть null: пустой задают пустым списком");
         Objects.requireNonNull(origin, "Позиция духа не может быть null: без неё не выбрать ближайший контейнер");
         Objects.requireNonNull(incoming, "Предмет не может быть null: без него непонятно, что сдавать");
-        List<ContainerSnapshot> snapshots = spots.stream().map(Spot::snapshot).toList();
+        Objects.requireNonNull(excluded, "Исключённые контейнеры не могут быть null: пустое множество — Set.of()");
+        List<Spot> usable = new ArrayList<>();
+        for (Spot spot : spots) {
+            if (!excluded.contains(spot.pos())) {
+                usable.add(spot);
+            }
+        }
+        List<ContainerSnapshot> snapshots = usable.stream().map(Spot::snapshot).toList();
         ContainerChoice choice = ContainerPicker.choose(snapshots, origin, incoming);
         if (choice instanceof ContainerChoice.Chosen chosen) {
-            Spot spot = spots.get(chosen.index());
+            Spot spot = usable.get(chosen.index());
             return new Choice(
                     spot.pos(),
                     spot.type(),
-                    describeDeposit(spots, origin, incoming, spot),
+                    describeDeposit(usable, origin, incoming, spot),
                     "chosen@" + coord(spot.pos()));
         }
         String reason = ((ContainerChoice.Refused) choice).reason();
         return new Choice(
                 null,
                 null,
-                "точка сдачи не выбрана: " + reason + "; " + describeDeposit(spots, origin, incoming, null),
+                "точка сдачи не выбрана: " + reason + "; " + describeDeposit(usable, origin, incoming, null),
                 "refused:" + reason);
     }
 
@@ -103,26 +115,30 @@ public final class StoragePoints {
     private static String describeDeposit(List<Spot> spots, BlockCoord origin, Stack incoming, @Nullable Spot chosen) {
         List<String> parts = new ArrayList<>();
         for (Spot spot : spots) {
-            String verdict = spot.equals(chosen) ? "выбрана" : depositVerdict(spot.snapshot(), incoming);
+            ContainerSnapshot snapshot = spot.snapshot();
+            String verdict = spot.equals(chosen)
+                    ? "выбрана (свободно " + snapshot.freeSlots() + " из " + snapshot.slotCount() + ")"
+                    : depositVerdict(snapshot, incoming);
             parts.add(coord(spot.pos()) + " " + spot.type() + " — " + verdict);
         }
         return "склад поселения от " + origin + ": [" + String.join("; ", parts) + "]";
     }
 
     private static String depositVerdict(ContainerSnapshot snapshot, Stack incoming) {
+        String slots = snapshot.freeSlots() + " из " + snapshot.slotCount();
         if (snapshot.freeSlots() == 0) {
-            return "полон: свободных слотов нет, неполной стопки нет";
+            return "полон: свободно " + slots + " слотов, неполной стопки нет";
         }
         if (snapshot.hasPartial(incoming)) {
-            return "подходит неполной стопкой, но выбрана ближайшая";
+            return "подходит неполной стопкой (свободно " + slots + "), но выбрана ближайшая";
         }
         if (snapshot.hasKind(incoming)) {
-            return "подходит по предмету, но выбрана ближайшая";
+            return "подходит по предмету (свободно " + slots + "), но выбрана ближайшая";
         }
         if (WarehouseSpace.canTakeNewSlot(snapshot, 0)) {
-            return "подходит свободным слотом, но выбрана ближайшая";
+            return "подходит свободным слотом (свободно " + slots + "), но выбрана ближайшая";
         }
-        return "нет свободного слота под '" + incoming.item() + "'";
+        return "нет свободного слота под '" + incoming.item() + "' (свободно " + slots + ")";
     }
 
     private static String describeFood(List<Spot> spots, BlockCoord origin, String item, @Nullable Spot chosen) {
