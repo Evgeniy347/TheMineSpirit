@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.observation.BlockCoord;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 final class HarvestReasonText {
@@ -70,6 +71,16 @@ final class HarvestReasonText {
             counts += "; недостижимо: " + tally.unreachable();
         }
         return counts;
+    }
+
+    static String tierReason(BlockState state, String label) {
+        String kind = RequiredTier.kindOf(state);
+        String tier = RequiredTier.of(state);
+        String need = kind.isEmpty() ? "нужен инструмент" : "нужен инструмент (" + kind + ")";
+        if (tier.isEmpty()) {
+            return need + " для " + label + ": подходящего в инвентаре нет или он изношен";
+        }
+        return need + " для " + label + ": " + tier + " или лучше в инвентаре нет или он изношен";
     }
 
     static String coordText(@Nullable BlockCoord target) {

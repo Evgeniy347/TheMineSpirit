@@ -117,16 +117,10 @@ public final class ProtectionGate {
             SettlementBreak.Origin origin = placedByPlayer
                     ? SettlementBreak.Origin.PLAYER
                     : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
-            SettlementBreak.Place place = SettlementBreak.place(onPlot, inPlan);
-            decision = switch (SettlementBreak.of(origin, place)) {
-                case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
-                case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone, inPlan);
-                case DEFAULT ->
-                    PROTECTION.check(
-                            blockId(state),
-                            neighbours(level, pos),
-                            new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
-            };
+            decision = SettlementBreak.decide(
+                    PROTECTION,
+                    new SettlementBreak.Facts(origin, onPlot, inPlan, blockId(state), inProtectedZone, unprotectArea),
+                    () -> neighbours(level, pos));
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;

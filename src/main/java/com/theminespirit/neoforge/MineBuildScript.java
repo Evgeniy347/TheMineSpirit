@@ -8,6 +8,8 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.mining.MineCellPlan;
+import com.theminespirit.core.mining.MineCellStands;
 import com.theminespirit.core.mining.MineColumn;
 import com.theminespirit.core.mining.MineDetour;
 import com.theminespirit.core.mining.MineDigOrder;
@@ -28,17 +30,16 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class MineBuildScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final double STAND_ARRIVAL = 0.6;
     private static final int SETTLE_TICKS = 5;
     private static final int MAX_ACTIONS_PER_COLUMN = 64;
     private static final List<String> FLOOR_MATERIALS =
@@ -48,6 +49,7 @@ final class MineBuildScript implements ScriptInstance {
         PICK,
         WALK,
         DIG,
+        AIM,
         SETTLE,
         TORCH,
         EXIT,
@@ -60,21 +62,20 @@ final class MineBuildScript implements ScriptInstance {
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private final Approach approach;
+    private final MineCellAim aim;
+    private final MineFinish finish;
     private final List<MineColumn> plan;
     private final Set<MineColumn> open = new HashSet<>();
     private final Set<MineColumn> closed = new HashSet<>();
     private final Set<BlockCoord> openCells = new HashSet<>();
     private final Set<BlockCoord> leftOres = new HashSet<>();
     private final Map<MineColumn, MineColumn> parents = new HashMap<>();
-    private final List<MineColumn> exitPath = new ArrayList<>();
     private final List<Schematic.PlacedEntry> torches;
     private final MineCells cells;
-    private final BuildRotation rotation;
     private final MineEntranceOpening entranceOpening;
 
     private Phase phase = Phase.PICK;
     private @Nullable MineColumn current;
-    private boolean walking;
     private final MineStepWalker stepWalker;
     private boolean breaking;
     private boolean dugHere;
@@ -94,13 +95,14 @@ final class MineBuildScript implements ScriptInstance {
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
+        this.aim = new MineCellAim(spirit);
         this.stepWalker = new MineStepWalker(approach, safety);
         this.plan = new ArrayList<>(MinePlan.order(MinePlan.columns(layout.floors(), layout.air()), layout.entrance()));
         this.torches = new ArrayList<>(layout.optional());
         Set<BlockCoord> walls = new HashSet<>(layout.floors());
         plan.forEach(column -> walls.remove(column.floor()));
         this.cells = new MineCells(level, walls);
-        this.rotation = rotation;
+        this.finish = new MineFinish(spirit, placer, approach, rotation, torches, parents, open);
         this.entranceOpening = MineEntranceOpening.of(plan, layout, safety);
         if (plan.isEmpty()) {
             LOGGER.info(
@@ -133,6 +135,7 @@ final class MineBuildScript implements ScriptInstance {
             case PICK -> pick();
             case WALK -> walk();
             case DIG -> dig();
+            case AIM -> aimTick();
             case SETTLE -> settle();
             case TORCH -> torch();
             case EXIT -> exit();
@@ -164,13 +167,14 @@ final class MineBuildScript implements ScriptInstance {
     public void cancel() {
         breaker.cancel();
         approach.cancel();
+        aim.reset();
         stepWalker.reset();
     }
 
     @Override
     public void suspend() {
         approach.suspend();
-        walking = false;
+        aim.reset();
         stepWalker.reset();
     }
 
@@ -190,14 +194,12 @@ final class MineBuildScript implements ScriptInstance {
                         + unreached.get(0).floor() + "): обход оставленной руды не соединил ход");
                 return;
             }
-            walking = false;
             phase = Phase.TORCH;
             return;
         }
         current = next.get();
         actions = 0;
         dugHere = false;
-        walking = false;
         phase = Phase.WALK;
     }
 
@@ -244,8 +246,11 @@ final class MineBuildScript implements ScriptInstance {
             return;
         }
         MineColumn column = current();
-        boolean falling = !level.getEntitiesOfClass(FallingBlockEntity.class, columnBox(column))
-                .isEmpty();
+        BlockCoord floor = column.floor();
+        AABB box = new AABB(
+                floor.x(), floor.y() + 1, floor.z(), floor.x() + 1, floor.y() + column.height() + 2, floor.z() + 1);
+        boolean falling =
+                !level.getEntitiesOfClass(FallingBlockEntity.class, box).isEmpty();
         if (falling || column.cells().stream().anyMatch(cell -> !cells.open(cell))) {
             phase = Phase.DIG;
             return;
@@ -369,14 +374,32 @@ final class MineBuildScript implements ScriptInstance {
             fail("нет булыжника на " + what + " в " + cell + ": проход без него затопит или дух провалится");
             return false;
         }
+        if (MineCellStands.occupies(new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()), cell)) {
+            aimAt(cell, new MineCellPlan.Seen(occupantText(cell), true, true, true));
+            return false;
+        }
         BlockPlacer.Begin begin = placer.beginWithoutSupport(toPos(cell), BlockStates.stateFor(material), material);
         if (begin instanceof BlockPlacer.Started) {
             return true;
         }
-        String reason = begin instanceof BlockPlacer.Refused refused
-                ? refused.message()
-                : ((BlockPlacer.Protected) begin).reason();
-        fail(what + " в " + cell + " не поставить: " + reason);
+        if (begin instanceof BlockPlacer.Refused refused) {
+            if (refused.reason() == BlockPlacer.RefuseReason.OCCUPIED) {
+                String other = occupantText(cell);
+                if (other != null) {
+                    aimAt(cell, new MineCellPlan.Seen(other, false, true, true));
+                    return false;
+                }
+            }
+            if (refused.reason() == BlockPlacer.RefuseReason.OUT_OF_REACH) {
+                aimAt(cell, new MineCellPlan.Seen(occupantText(cell), false, true, false));
+                return false;
+            }
+            fail(what + " в " + cell + " не поставить: " + refused.message()
+                    + MineCellAim.context(level, spirit, plan, cell));
+            return false;
+        }
+        fail(what + " в " + cell + " не поставить: " + ((BlockPlacer.Protected) begin).reason()
+                + MineCellAim.context(level, spirit, plan, cell));
         return false;
     }
 
@@ -387,13 +410,59 @@ final class MineBuildScript implements ScriptInstance {
             breaking = true;
             return;
         }
-        if (begin instanceof BlockBreaker.Refused refused && refused.reason() == BlockBreaker.RefuseReason.AIR) {
+        if (begin instanceof BlockBreaker.Refused refused) {
+            if (refused.reason() == BlockBreaker.RefuseReason.AIR) {
+                return;
+            }
+            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH) {
+                aimAt(cell, new MineCellPlan.Seen(occupantText(cell), false, true, false));
+                return;
+            }
+            if (refused.reason() == BlockBreaker.RefuseReason.NO_SIGHT) {
+                aimAt(cell, new MineCellPlan.Seen(occupantText(cell), false, false, true));
+                return;
+            }
+            fail("клетку шахты " + cell + " не выломать: " + refused.message()
+                    + MineCellAim.context(level, spirit, plan, cell));
             return;
         }
-        String reason = begin instanceof BlockBreaker.Refused refused
-                ? refused.message()
-                : ((BlockBreaker.Protected) begin).reason();
-        fail("клетку шахты " + cell + " не выломать: " + reason);
+        fail("клетку шахты " + cell + " не выломать: " + ((BlockBreaker.Protected) begin).reason()
+                + MineCellAim.context(level, spirit, plan, cell));
+    }
+
+    private void aimTick() {
+        switch (aim.tick()) {
+            case RUNNING -> {}
+            case RETRY -> phase = Phase.DIG;
+            case FAILED -> {
+                String reason = aim.failure();
+                BlockCoord cell = aim.cell();
+                String context = cell == null ? "" : MineCellAim.context(level, spirit, plan, cell);
+                fail((reason == null ? "подход к клетке шахты провалился" : reason) + context);
+            }
+        }
+    }
+
+    private void aimAt(BlockCoord cell, MineCellPlan.Seen seen) {
+        MineCellPlan.Plan cellPlan = MineCellPlan.of(
+                cell,
+                new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()),
+                safety,
+                seen,
+                stand -> !aim.tried(stand) && MineCellAim.occupant(level, spirit, stand) == null);
+        switch (cellPlan.kind()) {
+            case READY -> phase = Phase.DIG;
+            case WAIT -> aim.beginWait(cell, cellPlan.reason());
+            case APPROACH -> aim.beginApproach(cell, cellPlan.stands(), cellPlan.reason());
+            case REFUSE ->
+                fail("к клетке шахты " + cell + " не подойти: " + cellPlan.reason()
+                        + MineCellAim.context(level, spirit, plan, cell));
+        }
+    }
+
+    private @Nullable String occupantText(BlockCoord cell) {
+        LivingEntity other = MineCellAim.occupant(level, spirit, cell);
+        return other == null ? null : MineCellAim.describe(other);
     }
 
     private void breakTick() {
@@ -409,88 +478,19 @@ final class MineBuildScript implements ScriptInstance {
     }
 
     private void torch() {
-        Schematic.PlacedEntry entry = torches.isEmpty() ? null : torches.get(0);
-        if (entry == null || BlockItems.countIn(spirit.getInventory(), entry.block()) < 1) {
-            torches.clear();
-            beginExit();
-            return;
+        switch (finish.torchTick()) {
+            case RUNNING -> {}
+            case DONE -> phase = Phase.EXIT;
+            case FAILED -> fail(finish.failure());
         }
-        BlockPos pos = toPos(entry.pos());
-        MineColumn near = nearestOpen(entry.pos());
-        if (!level.getBlockState(pos).isAir() || near == null) {
-            torches.remove(0);
-            return;
-        }
-        BlockCoord stand = near.stand();
-        if (!walking) {
-            approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), STAND_ARRIVAL);
-            walking = true;
-        }
-        BlockState wanted = BlockStates.stateFor(entry.block(), entry.state());
-        if (rotation != BuildRotation.NONE) {
-            wanted = wanted.rotate(level, pos, SchematicSite.mcRotation(rotation));
-        }
-        switch (approach.tick()) {
-            case MOVING -> {}
-            case ARRIVED, STUCK, TIMEOUT -> {
-                walking = false;
-                torches.remove(0);
-                if (placer.begin(pos, wanted, entry.block()) instanceof BlockPlacer.Refused refused) {
-                    LOGGER.info("Шахта: факел в {} пропущен: {}", entry.pos(), refused.message());
-                }
-            }
-        }
-    }
-
-    private void beginExit() {
-        exitPath.clear();
-        BlockPos feet = spirit.blockPosition();
-        MineColumn step = nearestOpen(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
-        while (step != null) {
-            exitPath.add(step);
-            step = parents.get(step);
-        }
-        walking = false;
-        phase = Phase.EXIT;
     }
 
     private void exit() {
-        if (exitPath.isEmpty()) {
-            phase = Phase.DONE;
-            return;
+        switch (finish.exitTick()) {
+            case RUNNING -> {}
+            case DONE -> phase = Phase.DONE;
+            case FAILED -> fail(finish.failure());
         }
-        BlockCoord stand = exitPath.get(0).stand();
-        if (!walking) {
-            approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), STAND_ARRIVAL);
-            walking = true;
-        }
-        switch (approach.tick()) {
-            case MOVING -> {}
-            case ARRIVED -> {
-                walking = false;
-                exitPath.remove(0);
-            }
-            case STUCK, TIMEOUT ->
-                fail("выход наверх застрял у ступени " + stand + ": "
-                        + (approach.refusal() == null ? "путь не найден" : approach.refusal()));
-        }
-    }
-
-    private @Nullable MineColumn nearestOpen(BlockCoord near) {
-        MineColumn best = null;
-        long bestDistance = Long.MAX_VALUE;
-        for (MineColumn column : open) {
-            BlockCoord stand = column.stand();
-            long dx = (long) stand.x() - near.x();
-            long dy = (long) stand.y() - near.y();
-            long dz = (long) stand.z() - near.z();
-            long distance = dx * dx + dy * dy + dz * dz;
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = column;
-            }
-        }
-        return best;
     }
 
     private List<MineOres.Pick> picks(BlockState state) {
@@ -503,12 +503,6 @@ final class MineBuildScript implements ScriptInstance {
             throw new IllegalStateException("Колонка проходки не выбрана: фаза " + phase + " идёт после PICK");
         }
         return column;
-    }
-
-    private static AABB columnBox(MineColumn column) {
-        BlockCoord floor = column.floor();
-        return new AABB(
-                floor.x(), floor.y() + 1, floor.z(), floor.x() + 1, floor.y() + column.height() + 2, floor.z() + 1);
     }
 
     private ScriptStatus fail(String reason) {
