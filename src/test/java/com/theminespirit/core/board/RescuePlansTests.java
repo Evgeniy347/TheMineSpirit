@@ -80,6 +80,28 @@ class RescuePlansTests {
     }
 
     @Test
+    void plan_SelfStep_ReturnsToSettlementAfterPit() {
+        SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.STEP, new BlockCoord(10, 67, -5), 2, List.of());
+        BlockCoord home = new BlockCoord(10, 69, -5);
+
+        TaskNode plan = RescuePlans.plan(
+                        BoardCase.RESCUE_SPIRIT,
+                        TicketTarget.at(TRAPPED).withRescue(self).withRelocate(TRAPPED, home))
+                .orElseThrow();
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        List<ScriptCall> calls = new ArrayList<>();
+        collectCalls(plan, calls);
+        ScriptCall last = calls.get(calls.size() - 1);
+        assertEquals("goto", last.script(), "после выхода из ямы дух идёт к поселению");
+        assertEquals(
+                Map.of("x", home.x(), "y", home.y(), "z", home.z()),
+                last.params(),
+                "спасение возвращает духа к поселению, а не оставляет на краю ямы (observe11 N4)");
+        assertTrue(scripts(plan).contains("dig_out"), "из ямы дух выбирается на поверхность, а не остаётся в пещере");
+    }
+
+    @Test
     void plan_SelfDigWalled_BreaksTwoCellsThenWalks() {
         SelfEscape.Plan self = new SelfEscape.Plan(
                 SelfEscape.Method.DIG,

@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 class ChestMoveLiveTests {
     private static final Path BOARD = Path.of("src/test/resources/live/storefull_board.json");
     private static final Path OBSERVE = Path.of("src/test/resources/live/storefull_observe.json");
+    private static final Path OBSERVE11_BOARD = Path.of("src/test/resources/live/observe11-board.json");
 
     @Test
     void liveMoveTicket_DepositsIntoFreeYardChest_NotIntoPinnedFullChest() throws IOException {
@@ -47,6 +50,38 @@ class ChestMoveLiveTests {
                 calls.get(2).params().get("container"),
                 "deposit выбирает свободный сундук двора в момент сдачи; фиксированный полный сундук и дал "
                         + "«контейнер полон: перенесено 0 из " + count + "»");
+    }
+
+    @Test
+    void liveFarMoveTicket_RefusedByDistanceLimit_NotSentAcrossCaves() throws IOException {
+        JsonNode ticket = farMove();
+        String id = ticket.get("id").asText();
+        String item = ticket.get("supplyItem").asText();
+        int count = ticket.get("supplyCount").asInt();
+        BlockCoord from = from(id);
+        BlockCoord yard = new BlockCoord(-181, 69, -517);
+
+        TicketTarget target = TicketTarget.at(yard).withSupply(item, count).withRelocate(from, yard);
+
+        IllegalArgumentException refused = assertThrows(
+                IllegalArgumentException.class,
+                () -> TicketPlans.plan(BoardCase.SUPPLY_SITE, target),
+                "перенос из сундука -92,67,-113 не строится: до двора около 400 блоков через пещеры "
+                        + "(observe11 N2)");
+        assertTrue(
+                refused.getMessage().contains("предел"),
+                "отказ называет предел расстояния, а не молчит: " + refused.getMessage());
+    }
+
+    private static JsonNode farMove() throws IOException {
+        JsonNode board = new ObjectMapper().readTree(read(OBSERVE11_BOARD));
+        for (JsonNode task : board.get("tasks")) {
+            String id = task.get("id").asText();
+            if (id.startsWith("move:-92,67,-113:") && !task.get("supplyItem").isNull()) {
+                return task;
+            }
+        }
+        throw new AssertionError("на живой доске observe11 нет переноса из -92,67,-113: фикстура устарела");
     }
 
     private static JsonNode liveMove() throws IOException {
