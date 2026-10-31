@@ -16,6 +16,10 @@ public interface BoardGateway {
         return tasks().stream().filter(task -> task.id().equals(ticketId)).findFirst();
     }
 
+    default Optional<BoardTask> history(String ticketId) {
+        return Optional.empty();
+    }
+
     BoardTask submit(BoardTaskRequest request);
 
     BoardTask cancel(String ticketId);

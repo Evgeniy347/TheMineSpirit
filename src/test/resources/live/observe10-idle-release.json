@@ -1,0 +1,60 @@
+{
+ "source": {
+  "observation": "../live-user-test-run/observe10-2026-10-31-1212.md",
+  "rest": "GET http://localhost:8765/v1/board, /v1/bots (сервер 0.1.2596, 2026-10-31, тик 22689300)",
+  "note": "R7-R9: spirit-2 и spirit-3 idle 6364 тика без board_task; PENDING ждут пауз кейсов, BLOCKED после 5 провалов. Тикеты и причины взяты с живой доски, паузы и простой — из наблюдения."
+ },
+ "idle": {
+  "ticks": 6364,
+  "spirits": ["c48663b4-da59-43d9-9804-81a680580300", "caf11c6f-9a9a-408d-92ed-71726c762c19"],
+  "busy": ["f58b83b6-c9a0-406d-967a-822843debf54"]
+ },
+ "tasks": [
+  {
+   "id": "first:build_mine",
+   "case": "BUILD_MINE",
+   "priority": 85,
+   "assignee": "c48663b4-da59-43d9-9804-81a680580300",
+   "status": "PENDING",
+   "requiredItems": {"cobblestone": 139},
+   "dependsOn": [],
+   "createdAt": 22683262,
+   "level": 1,
+   "cause": "graph:building:mine",
+   "effectivePriority": 85,
+   "waitReason": "spirit-2 — на паузе кейса BUILD_MINE после 3 провалов"
+  },
+  {
+   "id": "supply_gather:oak_planks",
+   "case": "GATHER_MATERIALS",
+   "priority": 45,
+   "assignee": "c48663b4-da59-43d9-9804-81a680580300",
+   "status": "BLOCKED",
+   "requiredItems": {},
+   "dependsOn": [],
+   "createdAt": 22666562,
+   "level": 1,
+   "cause": "always",
+   "effectivePriority": 45,
+   "waitReason": "заблокировано после 5 провалов подряд: ждёт изменения условий (запасов или самого задания)",
+   "supplyItem": "oak_planks",
+   "supplyCount": 146
+  },
+  {
+   "id": "graph:chop_oak_log",
+   "case": "GATHER_MATERIALS",
+   "priority": 71,
+   "assignee": "c48663b4-da59-43d9-9804-81a680580300",
+   "status": "BLOCKED",
+   "requiredItems": {},
+   "dependsOn": [],
+   "createdAt": 22678262,
+   "level": 1,
+   "cause": "graph:chop_oak_log",
+   "effectivePriority": 71,
+   "waitReason": "заблокировано после 5 провалов подряд: ждёт изменения условий (запасов или самого задания)",
+   "supplyItem": "oak_log",
+   "supplyCount": 12
+  }
+ ]
+}

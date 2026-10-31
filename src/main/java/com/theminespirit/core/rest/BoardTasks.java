@@ -2,6 +2,8 @@ package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
+import com.theminespirit.core.board.BoardLog;
+import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
@@ -10,13 +12,53 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public final class BoardTasks {
     private BoardTasks() {}
+
+    public static BoardTask fromJournal(BoardLogEntry entry) {
+        Objects.requireNonNull(entry, "Запись журнала не может быть null: из неё строится карточка задания");
+        BoardStatus status = statusOf(entry.event());
+        boolean closed = status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED;
+        return new BoardTask(
+                entry.ticketId(),
+                entry.boardCase().name(),
+                entry.basePriority(),
+                entry.spirit(),
+                status.name(),
+                Map.of(),
+                Map.of(),
+                List.of(),
+                entry.tick(),
+                entry.level(),
+                entry.cause(),
+                entry.effectivePriority(),
+                entry.modifiers(),
+                status == BoardStatus.DONE,
+                0L,
+                closed ? entry.tick() : 0L,
+                0L,
+                null,
+                null,
+                0);
+    }
+
+    private static BoardStatus statusOf(BoardLog.Event event) {
+        return switch (event) {
+            case ASSIGNED -> BoardStatus.ASSIGNED;
+            case DONE -> BoardStatus.DONE;
+            case FAILED -> BoardStatus.FAILED;
+            case BLOCKED -> BoardStatus.BLOCKED;
+            case CANCELLED, DETACHED -> BoardStatus.CANCELLED;
+            case POSTED, SUBMITTED, UNBLOCKED, REOPENED, NOTE -> BoardStatus.PENDING;
+        };
+    }
 
     public static BoardTask of(Board board, BoardTicket ticket, StockView stock) {
         BoardStatus status = board.statusOf(ticket.id()).orElse(BoardStatus.PENDING);

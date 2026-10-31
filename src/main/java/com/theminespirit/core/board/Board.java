@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +35,7 @@ public final class Board {
     private final WaitNotes waitNotes = new WaitNotes();
     private final BlockedBook blocked;
     private final CasePauseBook casePauses = new CasePauseBook();
+    private final IdleRelease idleRelease;
     private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
     private final FailureHistory failHistory = new FailureHistory();
@@ -57,6 +57,7 @@ public final class Board {
                 events, "Слушатель переходов не может быть null: без него задают BoardEvents.NONE");
         this.blocked = new BlockedBook(
                 statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
+        this.idleRelease = new IdleRelease(casePauses, blocked);
     }
 
     public long now() {
@@ -90,6 +91,7 @@ public final class Board {
         ticketFailures.clear();
         blocked.clear();
         casePauses.clear();
+        idleRelease.clear();
         ledger.clear();
         ledger.restore(state.ledger());
         for (BoardState.Entry entry : state.entries()) {
@@ -289,6 +291,11 @@ public final class Board {
 
     public int releaseDetached() {
         return casePauses.releaseDetached();
+    }
+
+    public int releaseIdle(Set<UUID> present, Set<UUID> idle, long now) {
+        requireNow(now);
+        return idleRelease.tick(present, idle, now);
     }
 
     public int consecutiveFailures(UUID spirit, BoardCase boardCase) {
@@ -700,21 +707,7 @@ public final class Board {
     }
 
     private int evictOverflow() {
-        List<BoardTicket> unissued = new ArrayList<>();
-        for (BoardTicket ticket : tickets.values()) {
-            BoardStatus status = statuses.get(ticket.id());
-            if (status == BoardStatus.PENDING || status == BoardStatus.WAITING_RESOURCES) {
-                unissued.add(ticket);
-            }
-        }
-        unissued.sort(Comparator.comparingLong(BoardTicket::createdAt).thenComparing(BoardTicket::id));
-        int evicted = 0;
-        while (unissued.size() > BoardTuning.maxPending()) {
-            BoardTicket oldest = unissued.remove(0);
-            cancel(oldest.id());
-            evicted++;
-        }
-        return evicted;
+        return PendingEvict.evict(tickets, statuses, this::cancel);
     }
 
     private void noteCaseFailure(UUID spirit, BoardTicket ticket, long now) {

@@ -117,6 +117,7 @@ public final class TaskRoutes {
 
     private BoardTask knownBoardTask(String taskId) {
         return board.task(taskId)
+                .or(() -> board.history(taskId))
                 .orElseThrow(
                         () -> new ApiException(ErrorCode.NOT_FOUND, lostTaskMessage(taskId), Map.of(TASK_ID, taskId)));
     }
@@ -206,8 +207,9 @@ public final class TaskRoutes {
     }
 
     private static String lostTaskMessage(String taskId) {
-        return "Задача '" + taskId + "' не найдена: сервер перезапущен, задача утрачена — "
-                + "реестр REST-задач живёт в памяти и не переживает перезапуск; повторите постановку";
+        return "Задача '" + taskId + "' не найдена ни в реестре REST-задач, ни на доске, ни в журнале доски: "
+                + "сервер перезапущен или задание убрано, задача утрачена — реестр REST-задач живёт в памяти "
+                + "и не переживает перезапуск; повторите постановку";
     }
 
     private static String canonicalBotId(String raw) {
