@@ -92,7 +92,6 @@ public final class SpiritCoordinator {
             spirit.tactics().helpCall().ifPresent(helpCalls::add);
             entityQueries += CoordinatorTuning.SNAPSHOT_SPIRIT_QUERIES;
         }
-        expireStale(snapshots);
         reservations.expire(tick);
         Optional<Point> defendedPoint = defendedPoint(members);
         double radius = defendedPoint.isPresent() ? CoordinatorTuning.DEFENSE_RADIUS : 0;
@@ -133,34 +132,6 @@ public final class SpiritCoordinator {
             z += spirit.getZ();
         }
         return new Point(x / members.size(), y / members.size(), z / members.size());
-    }
-
-    private void expireStale(List<SpiritSnapshot> snapshots) {
-        List<UUID> seen = snapshots.stream().map(SpiritSnapshot::id).toList();
-        List<UUID> toRelease = new ArrayList<>();
-        for (UUID owner : new ArrayList<>(reservationsOwners())) {
-            if (!seen.contains(owner)) {
-                SpiritEntity spirit = level.getEntity(owner) instanceof SpiritEntity se ? se : null;
-                if (spirit == null || spirit.isRemoved()) {
-                    toRelease.add(owner);
-                }
-            }
-        }
-        for (UUID id : toRelease) {
-            reservations.releaseAll(id);
-            lastDirectives.remove(id);
-            lastUrgent.remove(id);
-            SpiritEntity spirit = level.getEntity(id) instanceof SpiritEntity se ? se : null;
-            if (spirit != null) {
-                spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
-                spirit.tactics().clearGuardZone();
-                spirit.tactics().setWard(null);
-            }
-        }
-    }
-
-    private List<UUID> reservationsOwners() {
-        return List.of();
     }
 
     public CoordinatorState snapshot() {
@@ -366,7 +337,8 @@ public final class SpiritCoordinator {
             tactics.setGuardZone(
                     new BlockCoord((int) Math.floor(safe.x()), (int) Math.floor(safe.y()), (int) Math.floor(safe.z())),
                     CoordinatorTuning.DEFENSE_POST_RADIUS);
-        } else if (post != null && (forcedTargetId != null || d.mode() == CombatMode.PROTECT)) {
+        } else if (post != null
+                && (forcedTargetId != null || d.mode() == CombatMode.PROTECT || d.mode() == CombatMode.GUARD_AREA)) {
             tactics.setGuardZone(
                     new BlockCoord((int) Math.floor(post.x()), (int) Math.floor(post.y()), (int) Math.floor(post.z())),
                     CoordinatorTuning.DEFENSE_POST_RADIUS);

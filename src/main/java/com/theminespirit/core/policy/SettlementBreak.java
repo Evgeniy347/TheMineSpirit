@@ -53,7 +53,7 @@ public final class SettlementBreak {
         Place place = place(facts.onPlot(), facts.inPlan());
         return switch (of(facts.origin(), place)) {
             case SETTLEMENT -> protection.checkSettlement(facts.blockId(), facts.inProtectedZone());
-            case OWN -> protection.checkOwn(facts.blockId(), facts.inProtectedZone(), facts.inPlan());
+            case OWN -> SettlementBreakProtection.own(protection, facts.blockId(), facts.inProtectedZone());
             case DEFAULT ->
                 protection.check(
                         facts.blockId(),

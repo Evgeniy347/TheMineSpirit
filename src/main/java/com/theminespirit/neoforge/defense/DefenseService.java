@@ -18,6 +18,7 @@ import com.theminespirit.core.tactics.EnemyProfiles;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.intellect.SettlementScanner;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public final class DefenseService {
         }
         List<DefenderCapability> defenders = new ArrayList<>();
         for (SpiritEntity spirit : members) {
-            if (spirit == null || spirit.isRemoved() || busy(spirit)) {
+            if (spirit == null || spirit.isRemoved() || busy(level, spirit)) {
                 continue;
             }
             DefenderReader.read(spirit).ifPresent(defenders::add);
@@ -96,8 +97,15 @@ public final class DefenseService {
         return probe.blockReads();
     }
 
-    private static boolean busy(SpiritEntity spirit) {
-        return spirit.currentTaskScript().isPresent() || spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
+    private static boolean busy(ServerLevel level, SpiritEntity spirit) {
+        if (spirit.currentTaskScript().isPresent()
+                || spirit.taskStatus().orElse(null) == RunStatus.RUNNING
+                || spirit.taskSuspendReason().isPresent()) {
+            return true;
+        }
+        return BoardRegistry.peek(level)
+                .flatMap(service -> service.board().occupation(spirit.getUUID()))
+                .isPresent();
     }
 
     private Set<String> charged(ServerLevel level, DefensePlan plan) {

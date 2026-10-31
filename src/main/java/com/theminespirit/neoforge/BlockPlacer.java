@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
+import org.jspecify.annotations.Nullable;
 
 public final class BlockPlacer {
     public enum RefuseReason {
@@ -80,7 +81,7 @@ public final class BlockPlacer {
                     "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
                             + ": ставить некуда");
         }
-        if (!livingEntities(level, target).isEmpty()) {
+        if (!livingEntities(level, target, spirit).isEmpty()) {
             return new Refused(
                     RefuseReason.OCCUPIED,
                     "клетку " + target.toShortString() + " занимает живое существо: ставить в него нельзя");
@@ -100,13 +101,9 @@ public final class BlockPlacer {
         if (action) {
             return PathTrample.trample(spirit, target);
         }
-        if (supportRequired && !hasSupport(level, target, state)) {
-            return new Refused(
-                    RefuseReason.NO_SUPPORT,
-                    "под клеткой " + target.toShortString() + " нет опоры (ниже "
-                            + BuiltInRegistries.BLOCK.getKey(
-                                    level.getBlockState(target.below()).getBlock())
-                            + "): блок без опоры обвалится или повиснет");
+        Begin guard = placementGuard(level, target, state, supportRequired);
+        if (guard != null) {
+            return guard;
         }
         Item wanted = BlockItems.itemFor(blockId);
         if (spirit.getInventory().countItem(wanted) < 1) {
@@ -141,6 +138,22 @@ public final class BlockPlacer {
             SettlementChestWatch.placed(server, target, level.getBlockState(target));
         }
         return new Started(target.immutable());
+    }
+
+    private @Nullable Begin placementGuard(Level level, BlockPos target, BlockState state, boolean supportRequired) {
+        if (supportRequired && !hasSupport(level, target, state)) {
+            return new Refused(
+                    RefuseReason.NO_SUPPORT,
+                    "под клеткой " + target.toShortString() + " нет опоры (ниже "
+                            + BuiltInRegistries.BLOCK.getKey(
+                                    level.getBlockState(target.below()).getBlock())
+                            + "): блок без опоры обвалится или повиснет");
+        }
+        if (!pairedChestHalf(state)) {
+            return null;
+        }
+        ChestPairCheck.Result pair = ChestPairCheck.inspect(spirit, level, target, state);
+        return pair.refused() ? new Refused(pair.reason(), pair.message()) : null;
     }
 
     private BlockCoord feet() {
@@ -195,10 +208,10 @@ public final class BlockPlacer {
         BlockPos second = secondPart(target, state);
         BlockState current = level.getBlockState(second);
         return (current.isAir() || current.canBeReplaced())
-                && livingEntities(level, second).isEmpty();
+                && livingEntities(level, second, spirit).isEmpty();
     }
 
-    private List<LivingEntity> livingEntities(Level level, BlockPos target) {
+    static List<LivingEntity> livingEntities(Level level, BlockPos target, SpiritEntity spirit) {
         return level.getEntitiesOfClass(
                 LivingEntity.class,
                 new AABB(target),

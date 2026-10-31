@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.inventory;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
@@ -14,8 +15,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
 
 public final class WithdrawScript extends ContainerTask {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private final TransferParams params;
     private final Set<Integer> tried = new HashSet<>();
     private String scanned = "";
@@ -48,12 +51,30 @@ public final class WithdrawScript extends ContainerTask {
         if (transferRemaining() <= 0) {
             return null;
         }
+        LOGGER.info(
+                "[withdraw] {}: контейнер{} — свободно {} из {} слотов, беру '{}' ×{}, осталось {}",
+                spirit.displayName(),
+                at(),
+                freeSlots(container),
+                container.getContainerSize(),
+                params.item(),
+                params.count(),
+                transferRemaining());
         return TransferRunner.filtered(
                 container, spirit.getInventory(), IdFilter.of(List.of(params.item())), transferRemaining());
     }
 
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
+        Container current = container;
+        LOGGER.info(
+                "[withdraw] {}: контейнер{} — свободно {} из {} слотов, перенесено {}, решение: {}",
+                spirit.displayName(),
+                at(),
+                current == null ? -1 : freeSlots(current),
+                current == null ? -1 : current.getContainerSize(),
+                moved,
+                shortage == TransferRunner.Shortage.NONE ? "взято" : "в контейнере не хватает предмета");
         return switch (shortage) {
             case NONE -> ScriptStatus.SUCCEEDED;
             case SOURCE_LACK ->
@@ -91,6 +112,15 @@ public final class WithdrawScript extends ContainerTask {
             return null;
         }
         tried.add(best);
+        ContainerSnapshot chosen = snapshots.get(best);
+        LOGGER.info(
+                "[withdraw] {}: контейнер {} — свободно {} из {} слотов, беру '{}' ×{}",
+                spirit.displayName(),
+                chosen.pos(),
+                chosen.freeSlots(),
+                chosen.slotCount(),
+                params.item(),
+                remaining);
         TransferRunner runner =
                 TransferRunner.filtered(scan.containers().get(best), spirit.getInventory(), filter, remaining);
         return new AutoMove(scan.containers().get(best), snapshots.get(best).pos(), best, runner);
@@ -104,6 +134,20 @@ public final class WithdrawScript extends ContainerTask {
         }
         return failed("в сундуках рядом только " + moved + " из " + params.count() + " '" + params.item()
                 + "': перенесено " + moved + ", остального нет ни в одном" + scanned);
+    }
+
+    private String at() {
+        return containerPos == null ? "" : " " + containerPos.toShortString();
+    }
+
+    private static int freeSlots(Container container) {
+        int free = 0;
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            if (container.getItem(slot).isEmpty()) {
+                free++;
+            }
+        }
+        return free;
     }
 
     private static boolean holds(ContainerSnapshot snapshot, IdFilter filter) {

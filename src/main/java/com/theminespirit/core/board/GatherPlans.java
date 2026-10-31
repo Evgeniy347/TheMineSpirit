@@ -13,8 +13,11 @@ import java.util.Optional;
 
 final class GatherPlans {
     private static final int LOGS_PER_TREE = 4;
+    private static final int PLANKS_PER_LOG = 4;
+    private static final String PLANKS_SUFFIX = "_planks";
     private static final int LEAVES_PER_SAPLING = 20;
     private static final String COUNT = "count";
+    private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String MINECRAFT = "minecraft:";
 
@@ -33,6 +36,10 @@ final class GatherPlans {
         if (stripped.isPresent()) {
             return stripped;
         }
+        Optional<TaskNode> planks = planksPlan(target, item, batch);
+        if (planks.isPresent()) {
+            return planks;
+        }
         Optional<TreeSpecies> tree = treeOf(item);
         if (tree.isEmpty()) {
             return Optional.empty();
@@ -45,7 +52,7 @@ final class GatherPlans {
                         new ScriptCall(
                                 "chop_tree",
                                 Map.of(
-                                        "species",
+                                        SPECIES,
                                         tree.get().id(),
                                         COUNT,
                                         trees,
@@ -67,7 +74,7 @@ final class GatherPlans {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(new ScriptCall(
                 "chop_tree",
-                Map.of("species", species.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", false)));
+                Map.of(SPECIES, species.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", false)));
         int left = leaves;
         while (left > 0) {
             int part = Math.min(left, CatalogLimits.COUNT_MAX);
@@ -85,6 +92,37 @@ final class GatherPlans {
         return Optional.of(new SequenceNode(steps));
     }
 
+    private static Optional<TaskNode> planksPlan(TicketTarget target, String item, int batch) {
+        String name = pathOf(item);
+        if (!name.endsWith(PLANKS_SUFFIX)) {
+            return Optional.empty();
+        }
+        String species = name.substring(0, name.length() - PLANKS_SUFFIX.length());
+        Optional<TreeSpecies> tree = TreeSpecies.ALL.stream()
+                .filter(candidate -> candidate.id().equals(species))
+                .findFirst();
+        if (tree.isEmpty()) {
+            return Optional.empty();
+        }
+        int logs = Math.max(1, (batch + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG);
+        int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (logs + LOGS_PER_TREE - 1) / LOGS_PER_TREE));
+        ScriptCall acquire = new ScriptCall("acquire", Map.of("item", item, COUNT, batch, "fresh", true));
+        return Optional.of(sequence(
+                TicketPlans.gotoTarget(target),
+                new ScriptCall(
+                        "chop_tree",
+                        Map.of(
+                                SPECIES,
+                                tree.get().id(),
+                                COUNT,
+                                trees,
+                                RADIUS,
+                                BoardTuning.chopRadius(),
+                                "replant",
+                                true)),
+                acquire));
+    }
+
     private static Optional<TaskNode> stripPlan(TicketTarget target, String item, int batch) {
         Optional<TreeSpecies> stripped = strippedSpeciesOf(item);
         if (stripped.isEmpty()) {
@@ -95,7 +133,7 @@ final class GatherPlans {
                 new ScriptCall("acquire", Map.of("item", ToolSet.itemId(BoardCase.CRAFT_WOODEN_AXE), COUNT, 1)),
                 new ScriptCall(
                         "strip_log",
-                        Map.of("species", stripped.get().id(), COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)),
+                        Map.of(SPECIES, stripped.get().id(), COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)),
                 new ScriptCall(
                         "collect_drops",
                         Map.of(RADIUS, CatalogLimits.DROP_RADIUS_MAX, "filter", List.of(pathOf(item))))));

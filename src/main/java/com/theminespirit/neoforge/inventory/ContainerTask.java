@@ -26,13 +26,13 @@ abstract class ContainerTask implements ScriptInstance {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     protected final SpiritEntity spirit;
+    protected Container container;
+    protected BlockPos containerPos;
 
     private final ContainerFinder finder;
     private final AutoContainerScan scan;
     private final ReachApproach approach;
     private Phase phase = Phase.FIND;
-    private Container container;
-    private BlockPos containerPos;
     private AutoMove current;
     private TransferRunner runner;
     private TransferRunner.Shortage lastShortage = TransferRunner.Shortage.NONE;
@@ -44,13 +44,9 @@ abstract class ContainerTask implements ScriptInstance {
 
     protected ContainerTask(SpiritEntity spirit, ContainerTarget target, int radius) {
         this.spirit = spirit;
-        if (target instanceof ContainerTarget.Auto) {
-            this.finder = null;
-            this.scan = new AutoContainerScan(spirit.level(), spirit.blockPosition(), radius);
-        } else {
-            this.finder = new ContainerFinder(spirit.level(), spirit.blockPosition(), target, radius);
-            this.scan = null;
-        }
+        ContainerScan.Choice choice = ContainerScan.of(spirit, target, radius);
+        this.finder = choice.finder();
+        this.scan = choice.scan();
         this.approach = ReachApproach.withRoutes(spirit);
     }
 
