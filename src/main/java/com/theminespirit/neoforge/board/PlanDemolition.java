@@ -3,22 +3,18 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.SubmitGate;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingCleanup;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
@@ -28,8 +24,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -48,7 +42,14 @@ final class PlanDemolition {
     private static final SubmitGate SUBMITS = new SubmitGate();
     private static final StateChangeLog CHANGES = new StateChangeLog();
 
-    private record Collected(List<BlockCoord> remove, List<String> notes, int excluded, int unreachable) {}
+    private record Collected(
+            List<BlockCoord> remove,
+            List<String> notes,
+            int excluded,
+            int unreachable,
+            BlockCoord stand,
+            BlockCoord top,
+            BlockCoord lowest) {}
 
     private PlanDemolition() {}
 
@@ -70,7 +71,7 @@ final class PlanDemolition {
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
                 .limit(BATCH)
                 .toList();
-        String id = idFor(stray);
+        String id = DemolitionTickets.idFor(stray);
         if (!SUBMITS.allow("demolish:" + world, id)) {
             warnExcluded(world, collected, now);
             if (CHANGES.changed("tidy-wait:" + world, id)) {
@@ -82,10 +83,15 @@ final class PlanDemolition {
             }
             return;
         }
-        if (!submit(service, site, stray, now, id)) {
+        List<PlannedBlock> blocks = stray.stream()
+                .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
+                .toList();
+        DemolitionTickets.Placement placement =
+                new DemolitionTickets.Placement(collected.stand(), collected.top(), collected.lowest());
+        if (!DemolitionTickets.submit(service, site, blocks, now, id, placement)) {
             return;
         }
-        supersede(level, service, id);
+        DemolitionTickets.supersede(level, service, id);
         if (CHANGES.changed("tidy:" + world, id)) {
             LOGGER.info(
                     "[tidy] {}: план уборки пересчитан в тик {} — в уборку {} из {}, первые {}; прошлый {}; "
@@ -95,7 +101,7 @@ final class PlanDemolition {
                     stray.size(),
                     findings.size(),
                     stray.stream().limit(SHOWN).toList(),
-                    previous(service),
+                    DemolitionTickets.previous(service),
                     collected.unreachable(),
                     collected.notes());
         }
@@ -138,13 +144,19 @@ final class PlanDemolition {
         int unreachableSkipped = 0;
         int excluded = 0;
         int reachableShown = 0;
+        BlockCoord stand = null;
+        BlockCoord top = null;
+        BlockCoord lowestCell = null;
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
             boolean plannedFence = finding.kind() == FloatingBlocks.Kind.FENCE
                     && site.fenceStrip().contains(at.x(), at.z());
             boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
             boolean blocked = unreachableCells.excluded(at);
-            boolean reachable = !blocked && FloatingScan.reachable(level, at);
+            boolean reachable = !blocked
+                    && (finding.kind() == FloatingBlocks.Kind.TREE
+                            ? FloatingScan.reachableTree(level, at)
+                            : FloatingScan.reachable(level, at));
             FloatingCleanup.Action action = FloatingCleanup.decide(
                     finding,
                     new FloatingCleanup.Rooms(
@@ -179,62 +191,31 @@ final class PlanDemolition {
                     remove.add(at);
                 }
                 case REMOVE -> {
+                    if (finding.kind() == FloatingBlocks.Kind.TREE && stand != null) {
+                        continue;
+                    }
                     if (reachableShown++ < SHOWN) {
                         notes.add(at + " — " + finding.reason() + ": стоянка рядом есть — в уборку");
                     }
-                    remove.add(at);
+                    remove.addAll(finding.cells());
+                    if (finding.kind() == FloatingBlocks.Kind.TREE) {
+                        stand = FloatingScan.standUnder(level, at);
+                        int highest = finding.cells().stream()
+                                .mapToInt(BlockCoord::y)
+                                .max()
+                                .orElse(at.y());
+                        int lowest = finding.cells().stream()
+                                .mapToInt(BlockCoord::y)
+                                .min()
+                                .orElse(at.y());
+                        top = new BlockCoord(at.x(), highest, at.z());
+                        lowestCell = new BlockCoord(at.x(), lowest, at.z());
+                    }
                 }
                 case SKIP_REGISTERED, SKIP_WAIT -> {}
             }
         }
-        return new Collected(remove, List.copyOf(notes), excluded, unreachableSkipped);
-    }
-
-    static String idFor(List<BlockCoord> stray) {
-        long hash = 17L;
-        for (BlockCoord at : stray) {
-            hash = hash * 31L + at.hashCode();
-        }
-        return PREFIX + Long.toUnsignedString(hash, 36);
-    }
-
-    private static void supersede(ServerLevel level, BoardService service, String keep) {
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
-            if (ticket.id().startsWith(PREFIX)
-                    && !ticket.id().equals(keep)
-                    && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.BLOCKED
-                    && service.cancel(level, ticket.id())) {
-                LOGGER.info("[tidy] старый заблокированный {} снят: набор уборки сменился на {}", ticket.id(), keep);
-            }
-        }
-    }
-
-    private static String previous(BoardService service) {
-        return service.board().all().stream()
-                .filter(ticket -> ticket.id().startsWith(PREFIX))
-                .max(Comparator.comparingLong(BoardTicket::createdAt))
-                .map(ticket -> ticket.id() + " ("
-                        + service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE) + ")")
-                .orElse("уборки ещё не было");
-    }
-
-    private static boolean submit(BoardService service, StageSite site, List<BlockCoord> stray, long now, String id) {
-        List<PlannedBlock> blocks = stray.stream()
-                .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
-                .toList();
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.DISMANTLE_SHELTER,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(stray.get(0)).withWork(new StageWork(site, blocks)));
-        return outcome == BoardOutcome.ACCEPTED;
+        return new Collected(remove, List.copyOf(notes), excluded, unreachableSkipped, stand, top, lowestCell);
     }
 
     private static boolean playerBuilding(ServerLevel level, BlockCoord at) {

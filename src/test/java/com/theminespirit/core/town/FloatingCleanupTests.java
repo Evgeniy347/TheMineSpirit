@@ -9,6 +9,25 @@ class FloatingCleanupTests {
     private static final BlockCoord AT = new BlockCoord(1, 70, 1);
 
     @Test
+    void decide_FloatingTreeOnPlayerPlot_IsRemoved() {
+        assertEquals(
+                FloatingCleanup.Action.REMOVE,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.TREE), new FloatingCleanup.Rooms(true, true, true, false)),
+                "Низ висящего дерева часто помечен игроком (там рос саженец), но крона без опоры — не постройка: "
+                        + "её рубят, иначе висящие брёвна остаются навсегда");
+    }
+
+    @Test
+    void decide_FloatingTreeWithoutStand_IsSkipped() {
+        assertEquals(
+                FloatingCleanup.Action.SKIP_UNREACHABLE,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.TREE), new FloatingCleanup.Rooms(true, false, true, false, false)),
+                "К висящему дереву без стоянки у земли не подойти: задача не выдаётся, пока нет подхода");
+    }
+
+    @Test
     void decide_PlayerBuilding_IsProtected() {
         assertEquals(
                 FloatingCleanup.Action.SKIP_PROTECTED,

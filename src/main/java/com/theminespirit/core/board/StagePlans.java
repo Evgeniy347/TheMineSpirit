@@ -28,6 +28,7 @@ public final class StagePlans {
     private static final String TABLE_BLOCK = "crafting_table";
     private static final String MINECRAFT = "minecraft:";
     private static final int CHEST_PLANKS = 20;
+    private static final int FELL_LAYER = 4;
     private static final int FURNACE_STONE = 8;
 
     private StagePlans() {}
@@ -53,7 +54,7 @@ public final class StagePlans {
             case CRAFT_BREWING_STAND -> Optional.of(brewStand(site.workYard()));
             case BUILD_HOUSE -> level == 1 ? Optional.of(hut(target, site)) : Optional.empty();
             case BUILD_STREETS -> Optional.of(PlanSteps.buildsOnly(target, work.builds()));
-            case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks()));
+            case DISMANTLE_SHELTER -> Optional.of(demolish(work.blocks(), target));
             default -> Optional.empty();
         };
     }
@@ -166,13 +167,57 @@ public final class StagePlans {
         return new SequenceNode(steps);
     }
 
-    private static TaskNode demolish(List<PlannedBlock> blocks) {
+    private static TaskNode demolish(List<PlannedBlock> blocks, TicketTarget target) {
+        if (target.to() != null) {
+            return fell(blocks, target);
+        }
         List<TaskNode> steps = new ArrayList<>();
         blocks.stream()
                 .sorted(Comparator.comparingInt((PlannedBlock block) -> SchematicBlocks.isBed(block.block()) ? 0 : 1)
                         .thenComparingInt((PlannedBlock block) -> block.at().y())
                         .thenComparing(PlannedBlock::at))
                 .forEach(block -> steps.add(PlanSteps.clear(block.at(), true)));
+        return new SequenceNode(steps);
+    }
+
+    private static TaskNode fell(List<PlannedBlock> blocks, TicketTarget target) {
+        BlockCoord stand = target.target();
+        BlockCoord to = target.to();
+        if (to == null) {
+            throw new IllegalArgumentException("Рубка висящего дерева без верхней клетки: не видно, до какой высоты "
+                    + "строить опору — цель задания обязана назвать верх ствола");
+        }
+        int top =
+                Math.max(blocks.stream().mapToInt(block -> block.at().y()).max().orElse(stand.y()), to.y());
+        int low = target.from() == null
+                ? blocks.stream().mapToInt(block -> block.at().y()).min().orElse(stand.y())
+                : Math.min(target.from().y(), stand.y());
+        int minX = blocks.stream().mapToInt(block -> block.at().x()).min().orElse(stand.x());
+        int maxX = blocks.stream().mapToInt(block -> block.at().x()).max().orElse(stand.x());
+        int minZ = blocks.stream().mapToInt(block -> block.at().z()).min().orElse(stand.z());
+        int maxZ = blocks.stream().mapToInt(block -> block.at().z()).max().orElse(stand.z());
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(PlanSteps.gotoPoint(stand));
+        for (int high = top; high >= low; high -= FELL_LAYER) {
+            int bottom = Math.max(low, high - FELL_LAYER + 1);
+            int support = high - stand.y();
+            if (support > 1) {
+                steps.add(new ScriptCall("pillar_up", Map.of("height", support, "down", false)));
+            }
+            steps.add(new ScriptCall(
+                    "clear_area",
+                    Map.of(
+                            "x1", minX,
+                            "y1", bottom,
+                            "z1", minZ,
+                            "x2", maxX,
+                            "y2", high,
+                            "z2", maxZ,
+                            "demolish", true)));
+            if (support > 1) {
+                steps.add(new ScriptCall("pillar_down", Map.of()));
+            }
+        }
         return new SequenceNode(steps);
     }
 }

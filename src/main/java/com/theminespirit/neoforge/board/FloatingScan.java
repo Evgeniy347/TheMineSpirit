@@ -1,12 +1,15 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.SettlementPlot;
+import com.theminespirit.core.forestry.TreeGroup;
+import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
+import com.theminespirit.core.town.FloatingWindow;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayRule;
 import com.theminespirit.neoforge.BlockStates;
@@ -30,8 +33,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class FloatingScan {
-    private static final int BELOW = 2;
-    private static final int ABOVE = 10;
     private static final String AIR = "minecraft:air";
     private static final BlockProtection PROTECTION = ProtectionConfig.load();
 
@@ -43,7 +44,7 @@ public final class FloatingScan {
             return List.of();
         }
         SettlementPlot measured = plot.orElseThrow();
-        return find(level, site, region, measured.min() - BELOW, measured.max() + ABOVE);
+        return find(level, site, region, FloatingWindow.bottomOf(measured), FloatingWindow.topOf(measured));
     }
 
     public static List<FloatingBlocks.Finding> find(
@@ -53,23 +54,68 @@ public final class FloatingScan {
             return List.of();
         }
         Scan scan = new Scan(level, PlotPlanBlocks.of(site));
-        Set<BlockCoord> seen = new LinkedHashSet<>(FloatingBlocks.find(area, bottom, top, scan).stream()
-                .map(FloatingBlocks.Finding::at)
-                .toList());
-        for (BlockCoord cell : placed(level, area)) {
-            if (cell.y() >= bottom && cell.y() <= top && area.contains(cell.x(), cell.z())) {
-                FloatingBlocks.classify(cell, scan).ifPresent(finding -> seen.add(finding.at()));
-            }
-        }
         List<FloatingBlocks.Finding> found = new ArrayList<>();
-        for (BlockCoord cell : seen) {
-            FloatingBlocks.classify(cell, scan).ifPresent(found::add);
+        Set<BlockCoord> seen = new LinkedHashSet<>();
+        for (FloatingBlocks.Finding finding : FloatingBlocks.find(area, bottom, top, scan)) {
+            if (!seen.add(finding.at())) {
+                continue;
+            }
+            classifyTree(finding, scan, seen, found);
+        }
+        for (BlockCoord cell : placed(level, area)) {
+            if (cell.y() >= bottom && cell.y() <= top && area.contains(cell.x(), cell.z()) && seen.add(cell)) {
+                FloatingBlocks.classify(cell, scan).ifPresent(finding -> classifyTree(finding, scan, seen, found));
+            }
         }
         return List.copyOf(found);
     }
 
+    private static void classifyTree(
+            FloatingBlocks.Finding finding, Scan scan, Set<BlockCoord> seen, List<FloatingBlocks.Finding> found) {
+        if (finding.kind() != FloatingBlocks.Kind.TREE) {
+            found.add(finding);
+            return;
+        }
+        Optional<TreeGroup> group = TreeGroup.of(finding.at(), scan.trees());
+        if (group.isEmpty()) {
+            found.add(finding);
+            return;
+        }
+        if (group.get().grounded()) {
+            return;
+        }
+        BlockCoord base = group.get().base();
+        seen.addAll(group.get().cells());
+        int ground = scan.groundBelow(base);
+        found.add(new FloatingBlocks.Finding(
+                base,
+                FloatingBlocks.Kind.TREE,
+                scan.blockId(base),
+                Math.max(0, base.y() - ground - 1),
+                "бревно висящего дерева без опоры, вне плана",
+                List.copyOf(group.get().cells())));
+    }
+
+    public static BlockCoord standUnder(ServerLevel level, BlockCoord base) {
+        return new BlockCoord(base.x(), groundBelow(level, base) + 1, base.z());
+    }
+
+    public static boolean reachableTree(ServerLevel level, BlockCoord base) {
+        return MiningSafety.canStand(standUnder(level, base), new LevelSafetyView(level));
+    }
+
     public static boolean reachable(ServerLevel level, BlockCoord at) {
         return !StandSpots.of(at, new LevelSafetyView(level), at).isEmpty();
+    }
+
+    private static int groundBelow(ServerLevel level, BlockCoord base) {
+        for (int y = base.y() - 1; y > level.getMinBuildHeight(); y--) {
+            BlockPos pos = new BlockPos(base.x(), y, base.z());
+            if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                return y;
+            }
+        }
+        return level.getMinBuildHeight();
     }
 
     private static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {
@@ -102,6 +148,20 @@ public final class FloatingScan {
             this.trees = new LevelTreeView(level, LOGS);
             this.registered =
                     Set.copyOf(SettlementChestStore.get(level).chests().all());
+        }
+
+        LevelTreeView trees() {
+            return trees;
+        }
+
+        int groundBelow(BlockCoord base) {
+            for (int y = base.y() - 1; y > level.getMinBuildHeight(); y--) {
+                BlockPos pos = new BlockPos(base.x(), y, base.z());
+                if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                    return y;
+                }
+            }
+            return level.getMinBuildHeight();
         }
 
         @Override

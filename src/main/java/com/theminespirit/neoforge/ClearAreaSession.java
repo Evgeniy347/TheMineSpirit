@@ -94,6 +94,7 @@ public class ClearAreaSession {
     private final boolean demolish;
     private final boolean keepGround;
     private final ClearBlocked blocked;
+    private final TreeFelling felling;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this(spirit, box, false);
@@ -115,16 +116,15 @@ public class ClearAreaSession {
         this.demolish = demolish;
         this.keepGround = keepGround;
         this.blocked = new ClearBlocked(level, box);
-        new TreeFelling(new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.ALL))).extend(remaining);
+        this.felling = new TreeFelling(new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.ALL)));
+        this.felling.extend(remaining);
     }
 
     public Outcome tick() {
         if (outcome != Outcome.RUNNING) {
             return outcome;
         }
-        if (spirit.isRemoved()) {
-            return fail("дух исчез во время расчистки");
-        }
+        if (spirit.isRemoved()) return fail("дух исчез во время расчистки");
         phaseTicks.merge(state, 1, Integer::sum);
         switch (state) {
             case PICK -> pick();
@@ -138,17 +138,13 @@ public class ClearAreaSession {
     public void cancel() {
         breaker.cancel();
         approach.cancel();
-        if (collector != null) {
-            collector.cancel();
-        }
+        if (collector != null) collector.cancel();
         reservations.releaseAll(spirit.getUUID());
     }
 
     public void suspend() {
         approach.suspend();
-        if (collector != null) {
-            collector.suspend();
-        }
+        if (collector != null) collector.suspend();
     }
 
     public boolean picking() {
@@ -207,11 +203,13 @@ public class ClearAreaSession {
     }
 
     private void pick() {
+        noteSkipped(felling.dropPartial(remaining));
         while (!remaining.isEmpty() && clear(remaining.get(0))) {
             remaining.remove(0);
         }
         apply(blocked.dropExcluded(remaining));
         apply(blocked.dropPlanned(remaining));
+        noteSkipped(felling.dropPartial(remaining));
         if (remaining.isEmpty()) {
             finish();
             return;
@@ -441,6 +439,7 @@ public class ClearAreaSession {
             case BREAKING -> {}
             case BROKEN -> {
                 removed++;
+                felling.removed(currentTarget);
                 blocked.reached(currentTarget);
                 brokenKinds.merge(brokenKind, 1, Integer::sum);
                 tally.removed();

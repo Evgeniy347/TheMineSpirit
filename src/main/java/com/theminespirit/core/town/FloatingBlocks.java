@@ -1,7 +1,11 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,15 +18,25 @@ public final class FloatingBlocks {
         REGISTERED_CHEST,
         STATION,
         STUMP,
+        TREE,
         OTHER
     }
 
-    public record Finding(BlockCoord at, Kind kind, String blockId, int height, String reason) {
+    public record Finding(BlockCoord at, Kind kind, String blockId, int height, String reason, List<BlockCoord> cells) {
+        public Finding(BlockCoord at, Kind kind, String blockId, int height, String reason) {
+            this(at, kind, blockId, height, reason, List.of(at));
+        }
+
         public Finding {
             Objects.requireNonNull(at, "Клетка находки не может быть null: по ней её снимают");
             Objects.requireNonNull(kind, "Вид находки не может быть null: от него зависит уборка");
             Objects.requireNonNull(blockId, "Имя блока не может быть null: по нему выбирают инструмент");
             Objects.requireNonNull(reason, "Причина не может быть null: её показывает аудит");
+            Objects.requireNonNull(cells, "Клетки находки не могут быть null: иначе нечего убирать");
+            if (!cells.contains(at)) {
+                throw new IllegalArgumentException("Клетка находки " + at + " обязана входить в её клетки " + cells
+                        + ": иначе уборка начнётся не с того блока");
+            }
         }
     }
 
@@ -88,15 +102,19 @@ public final class FloatingBlocks {
             return Optional.empty();
         }
         boolean log = world.log(at);
-        if (!log && world.natural(id)) {
+        boolean leaf = pathOf(id).endsWith("_leaves");
+        if (!log && !leaf && world.natural(id)) {
             return Optional.empty();
         }
-        boolean stump = log && !world.treeLog(at);
-        if (!stump && world.supported(at)) {
-            return Optional.empty();
+        boolean tree = (log || leaf) && floatingTree(at, world);
+        if (!tree) {
+            boolean stump = log && !world.treeLog(at);
+            if (!stump && world.supported(at)) {
+                return Optional.empty();
+            }
         }
         boolean registered = chestPath(pathOf(id)) && world.registeredChest(at);
-        Kind kind = kind(id, log, registered);
+        Kind kind = tree ? Kind.TREE : kind(id, log, registered);
         int height = Math.max(0, at.y() - world.groundY(at.x(), at.z()) - 1);
         return Optional.of(new Finding(at, kind, id, height, reason(kind, height)));
     }
@@ -132,9 +150,73 @@ public final class FloatingBlocks {
                 || path.endsWith("_fence_gate");
     }
 
+    private static boolean floatingTree(BlockCoord at, World world) {
+        BlockCoord start = at;
+        if (!world.log(start)) {
+            start = null;
+            for (int dx = -1; dx <= 1 && start == null; dx++) {
+                for (int dy = -1; dy <= 1 && start == null; dy++) {
+                    for (int dz = -1; dz <= 1 && start == null; dz++) {
+                        BlockCoord neighbour = new BlockCoord(at.x() + dx, at.y() + dy, at.z() + dz);
+                        if (world.log(neighbour)) {
+                            start = neighbour;
+                        }
+                    }
+                }
+            }
+            if (start == null) {
+                return false;
+            }
+        }
+        Set<BlockCoord> logs = new LinkedHashSet<>();
+        Set<BlockCoord> leaves = new LinkedHashSet<>();
+        Set<BlockCoord> seen = new HashSet<>();
+        Deque<BlockCoord> queue = new ArrayDeque<>();
+        logs.add(start);
+        seen.add(start);
+        queue.add(start);
+        while (!queue.isEmpty()) {
+            BlockCoord current = queue.poll();
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        BlockCoord next = new BlockCoord(current.x() + dx, current.y() + dy, current.z() + dz);
+                        if (!seen.add(next)) {
+                            continue;
+                        }
+                        if (world.log(next)) {
+                            if (logs.size() >= 128) {
+                                return false;
+                            }
+                            logs.add(next);
+                            queue.add(next);
+                        } else if (isLeaves(next, world)) {
+                            if (leaves.size() >= 512) {
+                                return false;
+                            }
+                            leaves.add(next);
+                        }
+                    }
+                }
+            }
+        }
+        return logs.stream().noneMatch(cell -> {
+            BlockCoord under = new BlockCoord(cell.x(), cell.y() - 1, cell.z());
+            return !logs.contains(under) && !leaves.contains(under) && world.supported(cell);
+        });
+    }
+
+    private static boolean isLeaves(BlockCoord at, World world) {
+        String id = world.blockId(at);
+        return id != null && pathOf(id).endsWith("_leaves");
+    }
+
     private static String reason(Kind kind, int height) {
         if (kind == Kind.STUMP) {
             return "бревно без дерева, вне плана";
+        }
+        if (kind == Kind.TREE) {
+            return "часть висящего дерева (ствол или листва), вне плана";
         }
         String place = "висит на высоте " + height + " над землёй, вне плана";
         if (kind == Kind.REGISTERED_CHEST) {
