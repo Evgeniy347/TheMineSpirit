@@ -522,7 +522,7 @@ public final class TicketPlans {
                             "deposit",
                             Map.of(
                                     CONTAINER,
-                                    NEAREST,
+                                    "auto",
                                     ITEM,
                                     item,
                                     COUNT,
