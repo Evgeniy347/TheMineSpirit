@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.ReachPlanner;
+import com.theminespirit.core.building.ReachStands;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
@@ -9,10 +11,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 public final class ReachApproach {
-    private static final int MAX_STANDS = 4;
+    private static final int MAX_STANDS = 8;
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final double STAND_ARRIVAL = 0.8;
 
     private final SpiritEntity spirit;
@@ -59,8 +64,8 @@ public final class ReachApproach {
                 tried.add(stand);
             }
             if (tried.size() >= MAX_STANDS || !nextStand()) {
-                refusal = "ни с одной стоянки не дотянуться до " + target + " ("
-                        + SpiritReach.current().describe() + "), испробованы стоянки " + tried
+                refusal = "ни одной достижимой стоянки у " + target + " ("
+                        + SpiritReach.current().describe() + "), проверены стоянки " + tried
                         + (refusal == null ? "" : "; " + refusal);
                 finish();
                 return Approach.State.STUCK;
@@ -114,8 +119,8 @@ public final class ReachApproach {
                 return MiningSafety.canStand(feet, safety);
             }
         };
-        Optional<BlockCoord> next =
-                ReachPlanner.nextStand(SpiritReach.current(), feet(), List.of(target), world, tried, Set.of(target));
+        Optional<BlockCoord> next = ReachStands.next(
+                SpiritReach.current(), feet(), List.of(target), world, tried, this::standReachable, MAX_STANDS);
         if (next.isEmpty()) {
             return false;
         }
@@ -127,6 +132,15 @@ public final class ReachApproach {
             approach.begin(point, STAND_ARRIVAL);
         }
         return true;
+    }
+
+    private boolean standReachable(BlockCoord feet) {
+        Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
+        boolean reachable = path != null && path.canReach();
+        if (!reachable) {
+            LOGGER.info("[move] {}: стоянка {} у {} недостижима — ищу следующую", spirit.displayName(), feet, target);
+        }
+        return reachable;
     }
 
     private void finish() {

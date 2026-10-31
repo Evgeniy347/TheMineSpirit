@@ -39,22 +39,23 @@ class TicketStoragePlansTests {
                 calls.get(2).params(),
                 "второй переход ведёт в точку с допустимым контейнером, а не в пустое место сдачи");
         assertEquals(
-                CHEST.x() + "," + CHEST.y() + "," + CHEST.z(),
+                "warehouse",
                 calls.get(3).params().get("container"),
-                "deposit сдаёт в конкретный сундук: поиск «nearest» от точки без контейнера уже проваливался");
+                "deposit выбирает свободный сундук склада в момент сдачи: закреплённый при постановке сундук "
+                        + "к этому времени уже полон, и перенос идёт «0 из N»");
     }
 
     @Test
-    void supplySite_NoDepositPoint_KeepsNearestAtSite() {
+    void supplySite_NoDepositPoint_KeepsWarehouseAtSite() {
         TaskNode plan =
                 TicketPlans.plan(BoardCase.SUPPLY_SITE, TicketTarget.at(SITE).withSupply("dirt", 4));
 
         ScriptCall deposit = find(plan, "deposit");
 
         assertEquals(
-                "nearest",
+                "warehouse",
                 deposit.params().get("container"),
-                "без выбранного контейнера план остаётся прежним: точка сдачи — ближайший контейнер у места");
+                "без выбранного контейнера сдача всё равно идёт на склад поселения — туда, где есть место");
         assertEquals(
                 Map.of("x", SITE.x(), "y", SITE.y(), "z", SITE.z()),
                 find(plan, "goto").params(),

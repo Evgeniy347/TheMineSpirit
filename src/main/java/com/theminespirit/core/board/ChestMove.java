@@ -27,8 +27,9 @@ public final class ChestMove {
         int count = Math.max(CatalogLimits.COUNT_MIN, Math.min(target.supplyCount(), CatalogLimits.COUNT_MAX));
         return new SequenceNode(List.of(
                 new ScriptCall("withdraw", Map.of("container", coord(from), "item", item, "count", count)),
+                new ScriptCall("goto", Map.of("x", to.x(), "y", to.y(), "z", to.z())),
                 new ScriptCall(
-                        "deposit", Map.of("container", coord(to), "item", item, "count", count, "leftover", true))));
+                        "deposit", Map.of("container", "yard", "item", item, "count", count, "leftover", true))));
     }
 
     public static String id(BlockCoord from, String item) {

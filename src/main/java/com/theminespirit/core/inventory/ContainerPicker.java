@@ -54,14 +54,24 @@ public final class ContainerPicker {
                     + "'. Проверьте, что в поселении есть сундук, бочка или шалкер-бокс";
         }
         int withKind = 0;
+        StringBuilder slots = new StringBuilder();
         for (ContainerSnapshot container : containers) {
             if (container.hasKind(incoming)) {
                 withKind++;
             }
+            if (slots.length() > 0) {
+                slots.append("; ");
+            }
+            slots.append(coord(container.pos()))
+                    .append(" — свободно ")
+                    .append(container.freeSlots())
+                    .append(" из ")
+                    .append(container.slotCount());
         }
         return "во всех " + containers.size() + " контейнерах склада нет свободного слота под '"
                 + incoming.item() + "': ни одного пустого слота, неполных стопок нет, контейнеров с таким "
-                + "предметом " + withKind + ". Освободите место или поставьте сундук";
+                + "предметом " + withKind + " [" + slots + "]. Освободите место, поставьте сундук "
+                + "или закажите его на доске";
     }
 
     private static int nearestMatching(
@@ -80,6 +90,10 @@ public final class ContainerPicker {
             }
         }
         return best;
+    }
+
+    private static String coord(BlockCoord pos) {
+        return pos.x() + "," + pos.y() + "," + pos.z();
     }
 
     private static long distanceSqr(BlockCoord from, BlockCoord to) {

@@ -19,12 +19,12 @@ class ChestMoveTests {
         List<ScriptCall> calls = ((SequenceNode) TicketPlans.plan(BoardCase.SUPPLY_SITE, target))
                 .steps().stream().map(ScriptCall.class::cast).toList();
         assertEquals(
-                List.of("withdraw:-153,72,-491:256", "deposit:-177,70,-484:256"),
+                List.of("withdraw:-153,72,-491:256", "goto:null:null", "deposit:yard:256"),
                 calls.stream()
                         .map(call -> call.script() + ":" + call.params().get("container") + ":"
                                 + call.params().get("count"))
                         .toList(),
-                "Старый сундук вне двора разбирается в сундук двора партиями ≤256: двор — единственный склад, "
-                        + "материалы из старого сундука доходят до заданий (INC-80)");
+                "Старый сундук вне двора разбирается в свободный сундук двора партиями ≤256: двор — единственный "
+                        + "склад, материалы из старого сундука доходят до заданий (INC-80, observe10 A3)");
     }
 }
