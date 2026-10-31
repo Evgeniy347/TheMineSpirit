@@ -18,6 +18,7 @@ public final class BoardSources {
     private final HiveWatch hive = new HiveWatch();
     private final PetWatch pets = new PetWatch();
     private final RescueWatch rescue = new RescueWatch();
+    private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
@@ -79,7 +80,7 @@ public final class BoardSources {
         guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
         guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));
         guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
-        guard.run("demand", () -> DemandWatch.tick(level, service, spirits, now));
+        guard.run("demand", () -> demand.tick(level, service, spirits, now));
         guard.run(
                 "repair_audit",
                 () -> SettlementPlotStore.get(level)

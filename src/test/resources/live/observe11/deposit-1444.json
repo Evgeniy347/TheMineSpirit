@@ -1,0 +1,33 @@
+{
+  "source": "observe11-2026-10-31-1440.md R0 14:44:33 [deposit] и 14:44:47 [storage]; JSON /v1/bots и observe сняты с живого сервера 0.1.2611",
+  "origin": [-181, 69, -519],
+  "requested": {"item": "minecraft:dirt", "count": 64},
+  "inventory": [
+    {"item": "minecraft:dirt", "count": 448},
+    {"item": "minecraft:chest", "count": 15},
+    {"item": "minecraft:oak_fence", "count": 55},
+    {"item": "minecraft:stone_axe", "count": 4},
+    {"item": "minecraft:stone_pickaxe", "count": 2},
+    {"item": "minecraft:stone_shovel", "count": 3}
+  ],
+  "containers": [
+    {
+      "pos": [-181, 69, -517],
+      "slots": 54,
+      "item": "minecraft:dirt",
+      "fullStacks": 53,
+      "partial": 56,
+      "comment": "[deposit] 14:44:33: свободно 0 из 54, перенесено 8 из 64"
+    },
+    {
+      "pos": [-178, 69, -517],
+      "slots": 54,
+      "comment": "[storage] 14:44:47: свободно 54 из 54"
+    },
+    {
+      "pos": [-171, 71, -487],
+      "slots": 27,
+      "comment": "второй свободный сундук склада (observe /v1/bots c48663b4)"
+    }
+  ]
+}

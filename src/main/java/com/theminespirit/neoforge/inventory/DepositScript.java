@@ -2,9 +2,8 @@ package com.theminespirit.neoforge.inventory;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.inventory.ContainerChoice;
-import com.theminespirit.core.inventory.ContainerPicker;
 import com.theminespirit.core.inventory.ContainerSnapshot;
+import com.theminespirit.core.inventory.DepositSpread;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
@@ -19,7 +18,8 @@ public final class DepositScript extends ContainerTask {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final TransferParams params;
-    private boolean planned;
+    private List<DepositSpread.Step> steps;
+    private int stepIndex;
     private String autoRefusal;
 
     public DepositScript(SpiritEntity spirit, TransferParams params) {
@@ -79,20 +79,23 @@ public final class DepositScript extends ContainerTask {
 
     @Override
     protected AutoMove nextAutoMove(AutoContainerScan scan) {
-        if (planned) {
+        if (steps == null) {
+            DepositSpread.Plan plan = DepositSpread.plan(scan.snapshots(), blockCoord(), kind(scan), params.count());
+            steps = plan.steps();
+            autoRefusal = plan.refusal();
+            if (steps.isEmpty() && autoRefusal != null) {
+                LOGGER.info(
+                        "[deposit] {}: {} — решение: заказать сундук или освободить место",
+                        spirit.displayName(),
+                        autoRefusal);
+                return null;
+            }
+        }
+        if (stepIndex >= steps.size() || transferRemaining() <= 0) {
             return null;
         }
-        planned = true;
-        ContainerChoice choice = ContainerPicker.choose(scan.snapshots(), blockCoord(), kind(scan));
-        if (choice instanceof ContainerChoice.Refused refused) {
-            autoRefusal = refused.reason();
-            LOGGER.info(
-                    "[deposit] {}: {} — решение: заказать сундук или освободить место",
-                    spirit.displayName(),
-                    refused.reason());
-            return null;
-        }
-        int index = ((ContainerChoice.Chosen) choice).index();
+        DepositSpread.Step step = steps.get(stepIndex++);
+        int index = step.index();
         ContainerSnapshot chosen = scan.snapshots().get(index);
         LOGGER.info(
                 "[deposit] {}: контейнер {} — свободно {} из {} слотов, кладу '{}' ×{}",
@@ -101,20 +104,23 @@ public final class DepositScript extends ContainerTask {
                 chosen.freeSlots(),
                 chosen.slotCount(),
                 params.item(),
-                params.count());
+                step.count());
         TransferRunner runner = TransferRunner.filtered(
                 spirit.getInventory(),
                 scan.containers().get(index),
                 IdFilter.of(List.of(params.item())),
-                params.count());
-        return new AutoMove(
-                scan.containers().get(index), scan.snapshots().get(index).pos(), index, runner);
+                Math.min(step.count(), transferRemaining()));
+        return new AutoMove(scan.containers().get(index), chosen.pos(), index, runner);
     }
 
     @Override
     protected ScriptStatus finishAuto() {
         if (autoRefusal != null) {
             return failed(autoRefusal);
+        }
+        if (transferRemaining() > 0 && lastShortage() != TransferRunner.Shortage.SOURCE_LACK) {
+            return failed("контейнеры склада полны: перенесено " + movedTotal() + " из " + params.count() + " '"
+                    + params.item() + "', остальное осталось у духа; нужен ещё сундук");
         }
         return finish(movedTotal(), lastShortage());
     }

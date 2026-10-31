@@ -158,7 +158,7 @@ abstract class ContainerTask implements ScriptInstance {
     }
 
     protected int transferRemaining() {
-        return Math.max(0, requestedCount() - movedBase);
+        return Math.max(0, requestedCount() - movedBase - autoMoved);
     }
 
     protected TransferRunner.Shortage lastShortage() {
