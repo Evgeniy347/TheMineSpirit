@@ -83,20 +83,17 @@ public final class FirstStepsRunner {
     };
     private static final Set<BoardCase> WOODEN_BUILDINGS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.BUILD_ORCHARD);
-    private static final Set<BoardCase> MISSING_BASED = EnumSet.of(
-            BoardCase.BUILD_MINE,
-            BoardCase.BUILD_FENCE,
-            BoardCase.BUILD_HOUSE,
-            BoardCase.BUILD_ORCHARD,
-            BoardCase.LIGHTING,
-            BoardCase.BUILD_STREETS);
     private static final int LAYOUT_SLACK_DIVISOR = 50;
-    private static final Set<BoardCase> LAYOUT_STEPS = EnumSet.of(
+    private static final Set<BoardCase> AUDIT_STEPS = EnumSet.of(
             BoardCase.LIGHTING,
             BoardCase.BUILD_FENCE,
             BoardCase.BUILD_ORCHARD,
             BoardCase.BUILD_HOUSE,
-            BoardCase.BUILD_STREETS);
+            BoardCase.BUILD_STREETS,
+            BoardCase.CLEAR_GROUNDS,
+            BoardCase.STOCK_CHESTS,
+            BoardCase.CRAFT_FURNACE,
+            BoardCase.BUILD_MINE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
@@ -215,6 +212,10 @@ public final class FirstStepsRunner {
             target = target.withLeveling(leveling(level, stage));
         }
         Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
+        if (AUDIT_STEPS.contains(caseValue)
+                && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), partsOf(caseValue), now)) {
+            return Map.of();
+        }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
         if (!missing.isEmpty()) {
             LOGGER.info("Постройка этапа {} ждёт: не хватает {}", caseValue, missing);
@@ -230,8 +231,12 @@ public final class FirstStepsRunner {
         String wood = BuildingWoodChoice.stored(level, caseValue, stage, scan.wood());
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), false);
-        MaterialSource source = materialSource(level);
         int parts = partsOf(caseValue);
+        if (AUDIT_STEPS.contains(caseValue)
+                && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), parts, now)) {
+            return;
+        }
+        MaterialSource source = materialSource(level);
         StageWork work = target.work();
         List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
                 ? FenceParts.of(level, work.site(), parts)
@@ -241,7 +246,7 @@ public final class FirstStepsRunner {
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE && work != null) {
                 partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
-                reserve = new HashMap<>(partNeed(level, source, partTarget, wood));
+                reserve = new HashMap<>(partNeed(source, partTarget, wood));
                 reserve.keySet().retainAll(need.keySet());
             }
             service.board().require(partId(caseValue, part), reserve);
@@ -258,25 +263,23 @@ public final class FirstStepsRunner {
         String wood = step.wood();
         MaterialSource source = materialSource(level);
         Map<String, Integer> need = new HashMap<>();
-        if (MISSING_BASED.contains(caseValue)) {
+        if (caseValue == BoardCase.BUILD_MINE) {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             need.putAll(BuildGap.need(plan, BuildGap.trace(plan, wood, probe(level), SCHEMES), source));
-            if (caseValue == BoardCase.BUILD_MINE) {
-                mineBlock(stock, need);
-            }
-            if (WOODEN_BUILDINGS.contains(caseValue)) {
-                if (blocked) {
-                    asPlanks(need, wood);
-                } else {
-                    dropOwnWood(need, stock, wood);
-                }
-            }
+            mineBlock(stock, need);
             return need;
         }
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             need.keySet().removeIf(item -> "chest".equals(item) || PlotLeveling.DEFAULT_BLOCK.equals(item));
+        }
+        if (WOODEN_BUILDINGS.contains(caseValue)) {
+            if (blocked) {
+                asPlanks(need, wood);
+            } else {
+                dropOwnWood(need, stock, wood);
+            }
         }
         return need;
     }
@@ -303,15 +306,6 @@ public final class FirstStepsRunner {
         Map<String, Integer> need = step.need();
         String wood = step.wood();
         int parts = partsOf(caseValue);
-        if (LAYOUT_STEPS.contains(caseValue)
-                || caseValue == BoardCase.CLEAR_GROUNDS
-                || caseValue == BoardCase.STOCK_CHESTS
-                || caseValue == BoardCase.CRAFT_FURNACE
-                || caseValue == BoardCase.BUILD_MINE) {
-            if (reopenDone(level, service, step, parts, now)) {
-                return;
-            }
-        }
         StageWork work = target.work();
         List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
                 ? FenceParts.of(level, work.site(), parts)
@@ -328,7 +322,7 @@ public final class FirstStepsRunner {
             }
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE) {
-                reserve = new HashMap<>(partNeed(level, source, partTarget, wood));
+                reserve = new HashMap<>(partNeed(source, partTarget, wood));
                 reserve.keySet().retainAll(need.keySet());
             }
             BoardOutcome submitted = service.submit(
@@ -359,19 +353,22 @@ public final class FirstStepsRunner {
         BoardCase caseValue = step.caseValue();
         StageWork work = Objects.requireNonNull(
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
-        if (service.board().statusOf(partId(caseValue, 1)).orElse(null) != BoardStatus.DONE
-                || (caseValue == BoardCase.BUILD_FENCE && !partsDone(service, caseValue, level, work.site()))) {
-            return false;
-        }
         Placed placed = audit(level, caseValue, work.site(), step.wood());
         int missing = placed.total() - placed.done();
-        if (missing == 0) {
+        BoardStatus base = service.board().statusOf(partId(caseValue, 1)).orElse(null);
+        boolean partsReady = caseValue != BoardCase.BUILD_FENCE || partsDone(service, caseValue, level, work.site());
+        StageAudit.Decision decision = StageAudit.decide(base, partsReady, placed.done(), placed.total());
+        if (decision == StageAudit.Decision.COMPLETE) {
+            StageClose.built(service, caseValue, parts);
             return true;
+        }
+        if (decision == StageAudit.Decision.OPEN) {
+            return false;
         }
         if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
             PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, placed.total(), true);
             BuildingWoodChoice.rebuilt(level, caseValue, work.site());
-            reopenParts(service, caseValue, parts);
+            StageClose.reopen(service, caseValue, parts);
             return false;
         }
         PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, placed.total(), false);
@@ -384,25 +381,16 @@ public final class FirstStepsRunner {
         if (StageAudit.keeps(repair)) {
             return true;
         }
-        reopenParts(service, caseValue, parts);
+        StageClose.reopen(service, caseValue, parts);
         return false;
     }
 
     private static Map<String, Integer> repairNeed(ServerLevel level, OpenStep step) {
         Map<String, Integer> need = new HashMap<>(step.need());
-        if (!MISSING_BASED.contains(step.caseValue())) {
+        if (step.caseValue() != BoardCase.BUILD_MINE) {
             minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
         }
         return StageAudit.shortage(need);
-    }
-
-    private static void reopenParts(BoardService service, BoardCase caseValue, int parts) {
-        for (int part = 1; part <= parts; part++) {
-            String id = partId(caseValue, part);
-            if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
-                service.reopen(id);
-            }
-        }
     }
 
     public static void dropOtherWood(ServerLevel level, BoardService service, Set<String> woods) {
@@ -435,10 +423,11 @@ public final class FirstStepsRunner {
         return StageReopen.partId(caseValue, part);
     }
 
-    private static Map<String, Integer> partNeed(
-            ServerLevel level, MaterialSource source, TicketTarget target, String wood) {
-        TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target);
-        return BuildGap.need(plan, BuildGap.trace(plan, wood, probe(level), SCHEMES), source);
+    private static Map<String, Integer> partNeed(MaterialSource source, TicketTarget target, String wood) {
+        Map<String, Integer> need = new HashMap<>();
+        materials(source, BoardCase.BUILD_FENCE, target)
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        return need;
     }
 
     private static PlotLeveling leveling(ServerLevel level, StageSite site) {

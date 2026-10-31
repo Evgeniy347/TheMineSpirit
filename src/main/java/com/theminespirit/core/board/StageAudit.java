@@ -35,6 +35,26 @@ public final class StageAudit {
         return total > 0 && (long) missing * PERCENT > (long) rebuildPercent * total;
     }
 
+    public enum Decision {
+        COMPLETE,
+        AUDIT,
+        OPEN
+    }
+
+    public static Decision decide(BoardStatus base, boolean partsDone, int done, int total) {
+        if (done < 0 || total < 0 || done > total) {
+            throw new IllegalArgumentException("Готовность постройки: " + done + " из " + total
+                    + " — поставленное не может быть больше плана, проверьте подсчёт блоков");
+        }
+        if (total > 0 && done >= total) {
+            return Decision.COMPLETE;
+        }
+        if (base != BoardStatus.DONE || !partsDone) {
+            return Decision.OPEN;
+        }
+        return Decision.AUDIT;
+    }
+
     public static boolean keeps(BoardOutcome outcome) {
         Objects.requireNonNull(outcome, "Исход ремонта не может быть null: по нему решают, снимать ли отметку");
         return outcome == BoardOutcome.ACCEPTED || outcome == BoardOutcome.DUPLICATE || outcome == BoardOutcome.BACKOFF;

@@ -61,6 +61,31 @@ final class BlockedBook {
                 now));
     }
 
+    boolean reprioritize(String ticketId, int priority) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: приоритет меняется у задания по id");
+        BoardTicket ticket = tickets.get(ticketId);
+        BoardStatus status = statuses.get(ticketId);
+        boolean open = status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED
+                || status == BoardStatus.BLOCKED;
+        if (ticket == null || !open || ticket.priority() == priority) {
+            return false;
+        }
+        tickets.put(ticketId, ticket.withPriority(priority));
+        return true;
+    }
+
+    boolean release(String ticketId) {
+        Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
+        if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
+            return false;
+        }
+        statuses.put(ticketId, BoardStatus.PENDING);
+        claims.remove(ticketId);
+        return true;
+    }
+
     boolean require(String ticketId, Map<String, Integer> requiredItems) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: материалы освежают по id задания");
         Objects.requireNonNull(requiredItems, "Материалы не могут быть null: пустые задают пустой картой");
