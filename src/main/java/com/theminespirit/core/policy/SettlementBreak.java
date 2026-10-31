@@ -23,6 +23,11 @@ public final class SettlementBreak {
         PLAN
     }
 
+    public enum Intent {
+        BREAK,
+        DEMOLISH
+    }
+
     private SettlementBreak() {}
 
     public static Place place(boolean onPlot, boolean inPlan) {
@@ -47,10 +52,22 @@ public final class SettlementBreak {
 
     public static BlockProtection.Decision decide(
             BlockProtection protection, Facts facts, Supplier<List<String>> neighbours) {
+        return decide(protection, facts, Intent.BREAK, neighbours);
+    }
+
+    public static BlockProtection.Decision decide(
+            BlockProtection protection, Facts facts, Intent intent, Supplier<List<String>> neighbours) {
         Objects.requireNonNull(protection, "Защита блоков не может быть null: без неё не решить, ломать ли");
         Objects.requireNonNull(facts, "Факты о блоке не могут быть null: без них не выбрать правило");
+        Objects.requireNonNull(intent, "Намерение ломки не может быть null: от него зависит, трогать ли план");
         Objects.requireNonNull(neighbours, "Соседи не могут быть null: без них не отличить постройку");
         Place place = place(facts.onPlot(), facts.inPlan());
+        if (place == Place.PLAN && intent == Intent.BREAK && facts.origin() == Origin.SPIRIT) {
+            return new BlockProtection.Refused(
+                    PolicyId.PROTECTED_BLOCKS,
+                    "блок '" + facts.blockId() + "' в клетке плана постройки поселения: его не добывают и не копают, "
+                            + "снимают только сносом по заданию (observe14: дух рубил стены хижины ради брёвен)");
+        }
         return switch (of(facts.origin(), place)) {
             case SETTLEMENT -> protection.checkSettlement(facts.blockId(), facts.inProtectedZone());
             case OWN -> SettlementBreakProtection.own(protection, facts.blockId(), facts.inProtectedZone());

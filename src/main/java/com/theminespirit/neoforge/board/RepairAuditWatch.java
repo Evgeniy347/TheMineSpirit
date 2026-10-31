@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.AuditCadence;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.TicketTarget;
@@ -25,15 +26,17 @@ import org.slf4j.Logger;
 final class RepairAuditWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<BlockCoord, Long> FIRST_SEEN = new HashMap<>();
+    private static long lastAudit = AuditCadence.NEVER;
 
     private RepairAuditWatch() {}
 
     static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
         RepairData rules = RepairData.loadDefault();
         long step = FIRST_SEEN.isEmpty() ? rules.auditIntervalTicks() : Math.max(1, rules.warnRepeatTicks());
-        if (now <= 0 || now % step != 0) {
+        if (now <= 0 || !AuditCadence.due(lastAudit, now, step)) {
             return;
         }
+        lastAudit = now;
         if (!service.board().ledger().has(BoardCase.BUILD_HOUSE, 1)) {
             return;
         }

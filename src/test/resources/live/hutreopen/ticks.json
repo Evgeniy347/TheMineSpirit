@@ -1,0 +1,15 @@
+{
+ "observe14BoardTick": 23139559,
+ "hutAssignedAt": 23181464,
+ "hutFinishedAt": 23182464,
+ "hutStatus": "DONE",
+ "hutRequiredItems": {
+  "jungle_log": 3
+ },
+ "repairStatus": "FAILED",
+ "repairSubmittedAt": 22861118,
+ "repairFailedAt": 22861518,
+ "repairMissing": 12,
+ "auditIntervalTicks": 24000,
+ "warnRepeatTicks": 1200
+}
