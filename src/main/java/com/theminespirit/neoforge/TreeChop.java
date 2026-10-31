@@ -97,7 +97,7 @@ final class TreeChop {
         }
         if (stand == null) {
             LOGGER.warn(
-                    "[chop] {}: у дерева {} нет достижимой стоянки на земле — рубка брошена",
+                    "[chop] {}: у дерева {} нет стоянки на земле — рубка брошена",
                     spirit.getName().getString(),
                     tree.base());
             return ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
