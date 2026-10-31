@@ -18,8 +18,16 @@ final class HarvestReasonText {
             BreakSkipTally skips) {}
 
     static String stopReason(
-            Tally tally, int radius, boolean vein, boolean gather, @Nullable BlockCoord lastUnreachable) {
+            Tally tally,
+            int radius,
+            boolean vein,
+            boolean gather,
+            @Nullable BlockCoord lastUnreachable,
+            @Nullable String tunnelRefusal) {
         String base = summary(tally) + "; подходящих блоков в радиусе " + radius + " не осталось";
+        if (vein && tunnelRefusal != null) {
+            return base + "; проход к руде не пройден: " + tunnelRefusal;
+        }
         if (vein && tally.skips().count(BreakSkipTally.Reason.NO_STAND) > 0) {
             return base + "; руда закрыта, нужен проход: блоки руды есть, но нет места для духа — прокопайте "
                     + "проход к руде (dig_descent или dig_area) и повторите mine_vein";
