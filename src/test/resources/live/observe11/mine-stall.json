@@ -1,0 +1,14 @@
+{
+  "source": "logs/latest.log 14:46:37 и 14:50:02, BoardService spirit first:build_mine",
+  "ticket": "first:build_mine",
+  "case": "BUILD_MINE",
+  "script": "build_schematic",
+  "outcome": "нет прогресса 3600 тиков (build_schematic, 4/build_schematic/0)",
+  "spirit": "f58b83b6-c9a0-406d-967a-822843debf54",
+  "feet": [-191, 69, -518],
+  "step": 4,
+  "totalSteps": 4,
+  "done": 0,
+  "target": 127,
+  "frozenTicks": 3600
+}
