@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildingLevels;
@@ -19,7 +18,6 @@ import com.theminespirit.core.town.TownEntry;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.OptionalInt;
 import org.slf4j.Logger;
 
@@ -41,7 +39,8 @@ final class StageRepair {
         if (upgrading(service, step)) {
             return BoardOutcome.DUPLICATE;
         }
-        String id = RepairPlan.PREFIX + step.name().toLowerCase(Locale.ROOT);
+        BoardTicket ticket = RepairPlan.ticket(step, gap.need(), now);
+        String id = ticket.id();
         int percent = total == 0 ? 0 : missing * PERCENT / total;
         if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
             Map<String, Integer> before =
@@ -51,18 +50,7 @@ final class StageRepair {
             }
             service.reopen(id);
         }
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.REPAIR_BUILDING,
-                        Optional.empty(),
-                        BoardRules.repairPriorityOf(step),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        gap.need()),
-                target.withWork(work.repairing(step.name())));
+        BoardOutcome outcome = service.submit(ticket, target.withWork(work.repairing(step.name())));
         if (outcome == BoardOutcome.ACCEPTED) {
             String name = label(step);
             LOGGER.info(

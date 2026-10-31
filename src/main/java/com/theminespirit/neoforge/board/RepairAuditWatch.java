@@ -3,7 +3,9 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.RepairAudit;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairData;
@@ -49,12 +51,31 @@ final class RepairAuditWatch {
                 now);
         if (report.damaged()) {
             repairWarnings(level, report, now);
+            requestRepair(level, service, site, report, now);
         }
         if (report.rebuild()) {
             FIRST_SEEN.clear();
             LOGGER.info(
                     "[repair] обход дома: повреждено больше {}% — нужна перестройка уровня", rules.rebuildPercent());
         }
+    }
+
+    private static void requestRepair(
+            ServerLevel level, BoardService service, StageSite site, RepairAudit.Report report, long now) {
+        String wood = BuildingWoodChoice.stored(level, BoardCase.BUILD_HOUSE, site, WoodSpecies.OAK);
+        Map<String, Integer> need = new HashMap<>();
+        RepairAudit.need(report)
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        if (need.isEmpty()) {
+            return;
+        }
+        TicketTarget target = FirstStepsRunner.targetFor(level, BoardCase.BUILD_HOUSE, site, wood);
+        StageRepair.submit(
+                service,
+                BoardCase.BUILD_HOUSE,
+                target,
+                new StageRepair.Gap(report.missing(), report.total(), Map.copyOf(need)),
+                now);
     }
 
     private static void repairWarnings(ServerLevel level, RepairAudit.Report report, long now) {

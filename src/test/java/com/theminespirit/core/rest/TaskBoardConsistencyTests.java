@@ -9,27 +9,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardJournal;
-import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
-import com.theminespirit.core.board.BoardState;
-import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.LiveBoardFixture;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.task.TaskRegistry;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -138,62 +131,7 @@ class TaskBoardConsistencyTests {
     }
 
     private static Board liveBoard() throws IOException {
-        JsonNode root;
-        try (InputStream stream = TaskBoardConsistencyTests.class.getResourceAsStream(LIVE_BOARD)) {
-            assertTrue(stream != null, "Фикстура живой доски " + LIVE_BOARD + " не найдена: тест без неё слеп");
-            root = new ObjectMapper().readTree(stream);
-        }
-        List<BoardState.Entry> entries = new ArrayList<>();
-        Set<String> ledger = new LinkedHashSet<>();
-        for (JsonNode task : root.get("tasks")) {
-            BoardCase boardCase = BoardCase.valueOf(task.get("case").asText());
-            BoardStatus status = BoardStatus.valueOf(task.get("status").asText());
-            String id = task.get("id").asText();
-            if (id.startsWith("first:") && status == BoardStatus.DONE) {
-                ledger.add(BoardLedger.key(boardCase, task.get("level").asInt(1)));
-            }
-            entries.add(new BoardState.Entry(
-                    new BoardTicket(
-                            id,
-                            boardCase,
-                            assignee(task),
-                            task.get("priority").asInt(),
-                            task.get("createdAt").asLong(),
-                            task.get("level").asInt(1),
-                            task.get("cause").asText(),
-                            strings(task.get("dependsOn")),
-                            items(task.get("requiredItems"))),
-                    status,
-                    null,
-                    null,
-                    0));
-        }
-        Board board = new Board(() -> 0);
-        board.restore(new BoardState(entries, ledger));
-        return board;
-    }
-
-    private static Optional<UUID> assignee(JsonNode task) {
-        JsonNode value = task.get("assignee");
-        return value == null || value.isNull() ? Optional.empty() : Optional.of(UUID.fromString(value.asText()));
-    }
-
-    private static List<String> strings(JsonNode node) {
-        return node == null
-                ? List.of()
-                : StreamSupport.stream(node.spliterator(), false)
-                        .map(JsonNode::asText)
-                        .toList();
-    }
-
-    private static Map<String, Integer> items(JsonNode node) {
-        Map<String, Integer> items = new LinkedHashMap<>();
-        if (node != null) {
-            node.fields()
-                    .forEachRemaining(
-                            entry -> items.put(entry.getKey(), entry.getValue().asInt()));
-        }
-        return Map.copyOf(items);
+        return LiveBoardFixture.load(LIVE_BOARD);
     }
 
     private static final class JournalBoardGateway implements BoardGateway {
