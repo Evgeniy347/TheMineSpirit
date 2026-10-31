@@ -1,10 +1,12 @@
 package com.theminespirit.core.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -76,8 +78,7 @@ class IdempotencyCacheTests {
         Thread duplicate = new Thread(() -> waited.set(cache.check(requestId, FP_ONE)));
         duplicate.setDaemon(true);
         duplicate.start();
-        ThreadStates.awaitState(
-                duplicate, Thread.State.WAITING, "Дубликат обязан ждать завершения первого запроса, а не получить New");
+        ThreadStates.awaitWaiting(duplicate, "Дубликат обязан ждать завершения первого запроса, а не получить New");
 
         cache.remember(requestId, FP_ONE, "{\"task_id\":\"t-1\"}");
         duplicate.join(TimeUnit.SECONDS.toMillis(5));
@@ -88,6 +89,40 @@ class IdempotencyCacheTests {
                 "После завершения первого запроса дубликат обязан получить повтор");
         assertEquals(
                 "{\"task_id\":\"t-1\"}", replay.storedResponse(), "Повтор обязан нести ответ первого запроса дословно");
+    }
+
+    @Test
+    void check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever() throws Exception {
+        IdempotencyCache cache = new IdempotencyCache(Duration.ofMillis(200));
+        String requestId = UUID.randomUUID().toString();
+        assertInstanceOf(
+                IdempotencyCache.Result.New.class,
+                cache.check(requestId, FP_ONE),
+                "Первый запрос обязан бронировать request_id как взятый в работу");
+
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Thread duplicate = new Thread(() -> {
+            try {
+                cache.check(requestId, FP_ONE);
+            } catch (Throwable thrown) {
+                failure.set(thrown);
+            }
+        });
+        duplicate.setDaemon(true);
+        duplicate.start();
+        duplicate.join(TimeUnit.SECONDS.toMillis(5));
+
+        assertFalse(
+                duplicate.isAlive(),
+                "Дубликат обязан прекратить ждать по пределу 200 мс, а не висеть вечно: "
+                        + "первый запрос мог упасть, не вызвав remember/release");
+        ApiException error = assertInstanceOf(
+                ApiException.class,
+                failure.get(),
+                "Не дождавшийся повтора дубликат обязан получить ошибку моста, а не молчание");
+        assertTrue(
+                error.getMessage().contains(requestId),
+                "Ошибка обязана называть request_id, по которому не дождались ответа: " + error.getMessage());
     }
 
     @Test
