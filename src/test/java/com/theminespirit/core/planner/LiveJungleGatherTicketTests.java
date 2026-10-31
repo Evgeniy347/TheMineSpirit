@@ -31,7 +31,7 @@ class LiveJungleGatherTicketTests {
             Path.of("src/test/resources/live/observe11-task-graph-make-jungle-log-2.json");
     private static final Path OAK_TICKET =
             Path.of("src/test/resources/live/observe11-task-supply-gather-oak-planks.json");
-    private static final Path BOARD = Path.of("src/test/resources/live/observe11-board.json");
+    private static final Path BOARD = Path.of("src/test/resources/live/observe11-n6-board.json");
     private static final Path WORLD = Path.of("src/test/resources/live/observe11-jungle-tree.json");
     private static final BlockCoord WORK_YARD = new BlockCoord(-181, 69, -519);
 

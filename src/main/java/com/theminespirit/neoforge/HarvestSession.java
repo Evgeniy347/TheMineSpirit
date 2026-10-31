@@ -5,13 +5,13 @@ import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.InventorySpace;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.DropRetries;
+import com.theminespirit.core.mining.MineTunnel;
 import com.theminespirit.core.mining.MineVeinStands;
 import com.theminespirit.core.mining.MiningPlanner;
 import com.theminespirit.core.mining.MiningSafety;
@@ -26,7 +26,6 @@ import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.StackMapper;
-import com.theminespirit.neoforge.inventory.UnloadScript;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,13 +34,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
@@ -61,7 +57,8 @@ public final class HarvestSession {
         APPROACH,
         BREAK,
         COLLECT,
-        DEPOSIT
+        DEPOSIT,
+        TUNNEL
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
@@ -95,12 +92,13 @@ public final class HarvestSession {
     private double closestApproach = Double.MAX_VALUE;
     private final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
     private final Set<BlockCoord> reachStandsTried = new HashSet<>();
+    private VeinTunnelSession tunnel;
+    private final Set<BlockCoord> tunnelTried = new HashSet<>();
+    private String tunnelRefusal;
     private DropCollector collector;
-    private UnloadScript deposit;
+    private HarvestDeposit deposit;
     private boolean depositTried;
-    private boolean depositMandatory;
     private boolean depositFreed;
-    private String depositBlockedItem;
     private WorkTarget reserved;
 
     private int mined;
@@ -114,8 +112,7 @@ public final class HarvestSession {
     private int collectRuns;
 
     private int entityQueries;
-    private final int surfaceY;
-    private final SoilCells soil;
+    private final GatherCells terrain;
 
     private HarvestSession(SpiritEntity spirit, Spec spec) {
         this.spirit = spirit;
@@ -130,8 +127,7 @@ public final class HarvestSession {
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
-        this.surfaceY = spirit.blockPosition().getY();
-        this.soil = new SoilCells(level);
+        this.terrain = new GatherCells(level, spirit.blockPosition().getY());
     }
 
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
@@ -198,6 +194,7 @@ public final class HarvestSession {
             case BREAK -> breakTick();
             case COLLECT -> collectTick();
             case DEPOSIT -> depositTick();
+            case TUNNEL -> tunnelTick();
         }
         return outcome;
     }
@@ -211,6 +208,9 @@ public final class HarvestSession {
         }
         if (deposit != null) {
             deposit.cancel();
+        }
+        if (tunnel != null) {
+            tunnel.cancel();
         }
     }
 
@@ -228,6 +228,9 @@ public final class HarvestSession {
         }
         if (deposit != null) {
             deposit.suspend();
+        }
+        if (tunnel != null) {
+            tunnel.suspend();
         }
     }
 
@@ -301,7 +304,8 @@ public final class HarvestSession {
             return;
         }
         if (targets.done()) {
-            fail(HarvestReasonText.stopReason(reasonTally(), radius, vein, kind == WorkKind.GATHER, lastUnreachable));
+            fail(HarvestReasonText.stopReason(
+                    reasonTally(), radius, vein, kind == WorkKind.GATHER, lastUnreachable, tunnelRefusal));
         }
     }
 
@@ -318,7 +322,7 @@ public final class HarvestSession {
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
         List<BlockCoord> candidates = buffer.targets(origin);
         if (kind == WorkKind.GATHER) {
-            candidates = shallow(candidates);
+            candidates = terrain.shallow(candidates, buffer);
             if (candidates.isEmpty()) {
                 state = State.FIND;
                 return;
@@ -328,7 +332,7 @@ public final class HarvestSession {
             boolean ownColumn = candidate.x() == origin.x() && candidate.z() == origin.z();
             if (SpiritReach.reachable(origin, candidate)
                     && !ownColumn
-                    && (vein || exposed(candidate))
+                    && (vein || terrain.exposed(candidate))
                     && !approachFailures.excludedStands().contains(origin)) {
                 if (acceptTarget(candidate)) {
                     currentStand = origin;
@@ -345,6 +349,9 @@ public final class HarvestSession {
                     lastUnreachable = candidates.get(0);
                 }
                 if (approachReachStand(origin, candidates)) {
+                    return;
+                }
+                if (vein && beginTunnel(origin, candidates)) {
                     return;
                 }
             }
@@ -370,22 +377,6 @@ public final class HarvestSession {
         beginApproach(
                 new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5));
         state = State.APPROACH;
-    }
-
-    private List<BlockCoord> shallow(List<BlockCoord> candidates) {
-        List<BlockCoord> kept = new ArrayList<>();
-        for (BlockCoord candidate : candidates) {
-            BlockState state = level.getBlockState(toPos(candidate));
-            boolean loose = state.is(BlockTags.SAND) || state.is(Blocks.GRAVEL);
-            boolean refused =
-                    state.is(BlockTags.DIRT) ? !soil.takeable(candidate) : loose && candidate.y() < surfaceY - 1;
-            if (refused) {
-                buffer.remove(candidate);
-            } else {
-                kept.add(candidate);
-            }
-        }
-        return kept;
     }
 
     private boolean standReachable(BlockCoord stand) {
@@ -429,20 +420,9 @@ public final class HarvestSession {
         return true;
     }
 
-    private boolean exposed(BlockCoord cell) {
-        BlockPos pos = toPos(cell);
-        for (Direction side : Direction.values()) {
-            BlockState neighbour = level.getBlockState(pos.relative(side));
-            if (neighbour.isAir() || neighbour.canBeReplaced()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean approachReachStand(BlockCoord origin, List<BlockCoord> candidates) {
         List<BlockCoord> reachable =
-                vein ? candidates : candidates.stream().filter(this::exposed).toList();
+                vein ? candidates : candidates.stream().filter(terrain::exposed).toList();
         Optional<BlockCoord> stand =
                 MineVeinStands.next(reachable, origin, safety, approachFailures.excludedStands(), reachStandsTried);
         if (stand.isEmpty()) {
@@ -463,6 +443,41 @@ public final class HarvestSession {
         beginApproach(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5));
         state = State.APPROACH;
         return true;
+    }
+
+    private boolean beginTunnel(BlockCoord origin, List<BlockCoord> candidates) {
+        if (tunnel != null) {
+            return true;
+        }
+        String refusal = tunnelRefusal;
+        for (BlockCoord candidate : candidates) {
+            if (!tunnelTried.add(candidate)) {
+                continue;
+            }
+            MineTunnel.Plan plan = MineTunnel.plan(candidate, origin, safety, radius);
+            tunnel = VeinTunnelSession.start(spirit, candidate, plan, safety);
+            if (tunnel != null) {
+                state = State.TUNNEL;
+                return true;
+            }
+            refusal = plan.refusal();
+        }
+        tunnelRefusal = refusal;
+        return false;
+    }
+
+    private void tunnelTick() {
+        watchdog.progress();
+        veinMining.progress();
+        VeinTunnelSession.Outcome progress = tunnel.tick();
+        if (progress == VeinTunnelSession.Outcome.RUNNING) {
+            return;
+        }
+        if (progress == VeinTunnelSession.Outcome.FAILED) {
+            tunnelRefusal = tunnel.failureReason();
+        }
+        tunnel = null;
+        state = State.PICK;
     }
 
     private void approachTick() {
@@ -545,13 +560,13 @@ public final class HarvestSession {
                 }
             }
             boolean fits = incoming.isEmpty() || InventorySpace.holds(inventory, incoming);
-            boolean nearlyFull = occupiedSlots() >= CatalogLimits.UNLOAD_TRIGGER_SLOTS;
+            boolean nearlyFull = HarvestDeposit.occupiedSlots(spirit) >= CatalogLimits.UNLOAD_TRIGGER_SLOTS;
             if (!fits || (nearlyFull && !depositTried)) {
                 if (!depositTried) {
                     startDeposit(incoming, !fits);
                     return;
                 }
-                fail(fullReason());
+                fail("инвентарь полон: не помещается добыча");
                 return;
             }
         }
@@ -594,11 +609,9 @@ public final class HarvestSession {
         int toolSlot = breaker.toolSlot();
         breaker.cancel();
         approach.cancel();
-        depositMandatory = mandatory;
-        depositBlockedItem = incoming.isEmpty() ? null : incoming.get(0).item();
         depositTried = true;
         depositFreed = false;
-        deposit = UnloadScript.relief(spirit, toolSlot);
+        deposit = new HarvestDeposit(spirit, incoming, mandatory, toolSlot);
         buffer.offer(List.of(currentTarget));
         currentTarget = null;
         currentStand = null;
@@ -606,38 +619,18 @@ public final class HarvestSession {
     }
 
     private void depositTick() {
-        ScriptStatus status = deposit.tick();
-        if (status == ScriptStatus.RUNNING) {
+        HarvestDeposit.Step step = deposit.tick();
+        if (step == HarvestDeposit.Step.RUNNING) {
             return;
         }
-        boolean moved = deposit.movedTotal() > 0;
+        String reason = deposit.failureReason();
+        depositFreed = deposit.freed();
         deposit = null;
-        if (status == ScriptStatus.SUCCEEDED && (moved || !depositMandatory)) {
-            depositFreed = moved;
-            state = State.PICK;
+        if (step == HarvestDeposit.Step.FAILED) {
+            fail(reason);
             return;
         }
-        if (!depositMandatory) {
-            state = State.PICK;
-            return;
-        }
-        fail(fullReason());
-    }
-
-    private String fullReason() {
-        return depositBlockedItem == null
-                ? "инвентарь полон: не помещается добыча"
-                : "инвентарь полон: не помещается " + depositBlockedItem;
-    }
-
-    private int occupiedSlots() {
-        int occupied = 0;
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            if (!spirit.getInventory().getItem(slot).isEmpty()) {
-                occupied++;
-            }
-        }
-        return occupied;
+        state = State.PICK;
     }
 
     private void breakTick() {
@@ -684,7 +677,7 @@ public final class HarvestSession {
         collector = null;
         currentTarget = null;
         currentStand = null;
-        if (depositFreed || occupiedSlots() < CatalogLimits.UNLOAD_TRIGGER_SLOTS) {
+        if (depositFreed || HarvestDeposit.occupiedSlots(spirit) < CatalogLimits.UNLOAD_TRIGGER_SLOTS) {
             depositTried = false;
             depositFreed = false;
         }

@@ -29,8 +29,8 @@ src/main/java/com/theminespirit/neoforge/DescentSession.java	359
 src/main/java/com/theminespirit/neoforge/DropCollector.java	476
 src/main/java/com/theminespirit/neoforge/FarmSession.java	688
 src/main/java/com/theminespirit/neoforge/FillSession.java	616
-src/main/java/com/theminespirit/neoforge/HarvestSession.java	745
-src/main/java/com/theminespirit/neoforge/MineBuildScript.java	521
+src/main/java/com/theminespirit/neoforge/HarvestSession.java	738
+src/main/java/com/theminespirit/neoforge/MineBuildScript.java	518
 src/main/java/com/theminespirit/neoforge/SafeMineSession.java	504
 src/main/java/com/theminespirit/neoforge/SchematicSite.java	363
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	767

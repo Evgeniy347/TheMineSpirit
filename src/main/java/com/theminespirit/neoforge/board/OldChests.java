@@ -9,6 +9,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ChestMove;
 import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
@@ -33,6 +34,7 @@ final class OldChests {
     private static final int YARD_SLACK = 3;
     private static final Set<BoardStatus> OPEN =
             Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
+    private static final StateChangeLog CHANGES = new StateChangeLog();
 
     private OldChests() {}
 
@@ -46,12 +48,22 @@ final class OldChests {
         if (yard.isEmpty() || old.isEmpty()) {
             return;
         }
+        List<BlockCoord> reachable = new ArrayList<>();
+        for (BlockCoord chest : old) {
+            if (reject(level, service, chest, yard.get(0))) {
+                continue;
+            }
+            reachable.add(chest);
+        }
+        if (reachable.isEmpty()) {
+            return;
+        }
         int moving = (int) service.board().all().stream()
                 .filter(ticket -> ticket.id().startsWith(ChestMove.PREFIX))
                 .filter(ticket ->
                         OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE)))
                 .count();
-        for (BlockCoord chest : old) {
+        for (BlockCoord chest : reachable) {
             Map<String, Integer> items = contents(level, chest);
             if (items.isEmpty()) {
                 store.forget(new BlockPos(chest.x(), chest.y(), chest.z()));
@@ -67,6 +79,37 @@ final class OldChests {
                 }
             }
         }
+    }
+
+    private static boolean reject(ServerLevel level, BoardService service, BlockCoord chest, BlockCoord yard) {
+        Optional<String> refusal = ChestMove.refusal(chest, yard);
+        if (refusal.isEmpty()) {
+            CHANGES.forget("relocate:" + chest);
+            return false;
+        }
+        String reason = refusal.orElseThrow();
+        int cancelled = 0;
+        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+            BoardStatus status = service.board().statusOf(ticket.id()).orElse(null);
+            if (!ticket.id().startsWith(ChestMove.PREFIX) || status == null || !OPEN.contains(status)) {
+                continue;
+            }
+            if (ticket.id().startsWith(ChestMove.PREFIX + coord(chest) + ":") && service.cancel(level, ticket.id())) {
+                cancelled++;
+            }
+        }
+        if (CHANGES.changed("relocate:" + chest, reason) || cancelled > 0) {
+            LOGGER.info(
+                    "[chests] перенос из сундука {} BLOCKED: {} (снято заданий {}, повторов не будет)",
+                    chest,
+                    reason,
+                    cancelled);
+        }
+        return true;
+    }
+
+    private static String coord(BlockCoord cell) {
+        return cell.x() + "," + cell.y() + "," + cell.z();
     }
 
     private static boolean submit(
