@@ -120,6 +120,7 @@ public final class ProtectionGate {
             decision = SettlementBreak.decide(
                     PROTECTION,
                     new SettlementBreak.Facts(origin, onPlot, inPlan, blockId(state), inProtectedZone, unprotectArea),
+                    demolish ? SettlementBreak.Intent.DEMOLISH : SettlementBreak.Intent.BREAK,
                     () -> neighbours(level, pos));
         }
         if (decision instanceof BlockProtection.Refused) {

@@ -52,6 +52,10 @@ final class GatherTargets implements HarvestTargets {
                     surfaceStone++;
                     continue;
                 }
+                if (plannedBySettlement(pos)) {
+                    settlementSkipped++;
+                    continue;
+                }
                 if (PlotGround.natural(level.getBlockState(pos)) && forbiddenBySettlement(pos)) {
                     settlementSkipped++;
                     continue;
@@ -89,6 +93,11 @@ final class GatherTargets implements HarvestTargets {
                     + "): там добывать нельзя";
         }
         return refusal == null && surfaceStone > 0 && search.done() ? StoneSource.REFUSAL : refusal;
+    }
+
+    private boolean plannedBySettlement(BlockPos pos) {
+        StageSite site = settlement;
+        return site != null && site.planCell(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private boolean forbiddenBySettlement(BlockPos pos) {
