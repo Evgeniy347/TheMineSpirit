@@ -1,0 +1,444 @@
+{
+ "source": "живой сервер 0.1.2657 (main 84526a57), /data get block всех половин сундуков склада + REST /v1/board, /v1/bots, observe",
+ "origin": [
+  -171,
+  69,
+  -489
+ ],
+ "containers": [
+  {
+   "pos": [
+    -181,
+    69,
+    -517
+   ],
+   "halves": [
+    "-181,69,-517",
+    "-180,69,-517"
+   ],
+   "items": [
+    {
+     "item": "minecraft:chest",
+     "count": 21
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:jungle_door",
+     "count": 13
+    },
+    {
+     "item": "minecraft:jungle_fence_gate",
+     "count": 22
+    },
+    {
+     "item": "minecraft:jungle_log",
+     "count": 1
+    },
+    {
+     "item": "minecraft:jungle_planks",
+     "count": 3
+    },
+    {
+     "item": "minecraft:jungle_sapling",
+     "count": 9
+    },
+    {
+     "item": "minecraft:oak_fence",
+     "count": 64
+    },
+    {
+     "item": "minecraft:oak_fence",
+     "count": 64
+    },
+    {
+     "item": "minecraft:oak_fence_gate",
+     "count": 32
+    },
+    {
+     "item": "minecraft:oak_planks",
+     "count": 3
+    },
+    {
+     "item": "minecraft:stripped_jungle_log",
+     "count": 3
+    },
+    {
+     "item": "minecraft:torch",
+     "count": 64
+    },
+    {
+     "item": "minecraft:torch",
+     "count": 25
+    },
+    {
+     "item": "minecraft:cocoa_beans",
+     "count": 15
+    },
+    {
+     "item": "minecraft:wheat_seeds",
+     "count": 64
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_sword",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_pickaxe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:bread",
+     "count": 64
+    },
+    {
+     "item": "minecraft:charcoal",
+     "count": 12
+    },
+    {
+     "item": "minecraft:stick",
+     "count": 64
+    },
+    {
+     "item": "minecraft:stick",
+     "count": 64
+    },
+    {
+     "item": "minecraft:stick",
+     "count": 64
+    },
+    {
+     "item": "minecraft:stick",
+     "count": 64
+    },
+    {
+     "item": "minecraft:stick",
+     "count": 64
+    },
+    {
+     "item": "minecraft:stick",
+     "count": 39
+    }
+   ]
+  },
+  {
+   "pos": [
+    -179,
+    69,
+    -517
+   ],
+   "halves": [
+    "-179,69,-517",
+    "-178,69,-517"
+   ],
+   "items": [
+    {
+     "item": "minecraft:crafting_table",
+     "count": 2
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 64
+    },
+    {
+     "item": "minecraft:dirt",
+     "count": 40
+    },
+    {
+     "item": "minecraft:jungle_fence",
+     "count": 64
+    },
+    {
+     "item": "minecraft:jungle_stairs",
+     "count": 20
+    },
+    {
+     "item": "minecraft:oak_door",
+     "count": 5
+    },
+    {
+     "item": "minecraft:oak_fence",
+     "count": 64
+    },
+    {
+     "item": "minecraft:oak_fence",
+     "count": 64
+    },
+    {
+     "item": "minecraft:oak_fence",
+     "count": 64
+    },
+    {
+     "item": "minecraft:oak_fence",
+     "count": 10
+    },
+    {
+     "item": "minecraft:oak_sapling",
+     "count": 21
+    },
+    {
+     "item": "minecraft:oak_stairs",
+     "count": 12
+    },
+    {
+     "item": "minecraft:stone",
+     "count": 16
+    },
+    {
+     "item": "minecraft:wheat_seeds",
+     "count": 5
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:stone_sword",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_axe",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:wooden_shovel",
+     "count": 1
+    },
+    {
+     "item": "minecraft:egg",
+     "count": 12
+    },
+    {
+     "item": "minecraft:feather",
+     "count": 1
+    },
+    {
+     "item": "minecraft:flint",
+     "count": 1
+    },
+    {
+     "item": "minecraft:raw_copper",
+     "count": 64
+    },
+    {
+     "item": "minecraft:raw_copper",
+     "count": 31
+    },
+    {
+     "item": "minecraft:cobbled_deepslate",
+     "count": 64
+    },
+    {
+     "item": "minecraft:cobbled_deepslate",
+     "count": 22
+    }
+   ]
+  }
+ ],
+ "requests": [
+  {
+   "item": "minecraft:cocoa_beans",
+   "count": 15,
+   "why": "есть только в -181/-180, ближайший -178/-179: прошлый [withdraw] берёт ближайший и переносит 0"
+  },
+  {
+   "item": "minecraft:dirt",
+   "count": 1000,
+   "why": "384 в -181/-180 и 744 в -178/-179: раскладка обязана взять из обоих"
+  }
+ ]
+}
