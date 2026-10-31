@@ -148,46 +148,7 @@ public final class TransferWatch {
         if (submitOrders(service, spirits, craftTicket, orders, now)) {
             return true;
         }
-        return !gather && heldByBusy(ingredients, crafter, orders, Map.of(), spirits, mapper);
-    }
-
-    private static boolean heldByBusy(
-            List<Ingredient> ingredients,
-            SpiritEntity crafter,
-            List<TransferOrder> orders,
-            Map<String, Integer> stored,
-            List<SpiritEntity> spirits,
-            StackMapper mapper) {
-        for (Ingredient ingredient : ingredients) {
-            int have = count(stacks(crafter.getInventory(), mapper), ingredient.item())
-                    + stored.getOrDefault(ingredient.item(), 0);
-            for (TransferOrder order : orders) {
-                if (order.item().equals(ingredient.item())) {
-                    have += order.count();
-                }
-            }
-            if (have >= ingredient.count()) {
-                continue;
-            }
-            for (SpiritEntity spirit : spirits) {
-                if (!spirit.getUUID().equals(crafter.getUUID())
-                        && busy(spirit)
-                        && count(stacks(spirit.getInventory(), mapper), ingredient.item()) > 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static int count(List<Stack> stacks, String item) {
-        int total = 0;
-        for (Stack stack : stacks) {
-            if (stack != null && stack.item().equals(item)) {
-                total += stack.count();
-            }
-        }
-        return total;
+        return !gather && TransferCarriers.awaitsDelivery(service.board(), craftTicket.id());
     }
 
     private static boolean ensureBuildTransfers(
@@ -269,8 +230,7 @@ public final class TransferWatch {
         if (submitOrders(service, spirits, build, orders, level.getGameTime())) {
             return true;
         }
-        Map<String, Integer> stored = chest ? chestStock(level, service, home, build.id()) : Map.of();
-        return heldByBusy(materials, builder, orders, stored, spirits, mapper);
+        return TransferCarriers.awaitsDelivery(service.board(), build.id());
     }
 
     private static boolean submitOrders(
