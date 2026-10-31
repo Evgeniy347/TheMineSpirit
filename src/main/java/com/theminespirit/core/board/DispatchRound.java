@@ -84,11 +84,19 @@ public final class DispatchRound {
         return List.copyOf(own);
     }
 
+    public Board board() {
+        return board;
+    }
+
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit) {
         return refusal(ticket, spirit, null);
     }
 
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
+        Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id());
+        if (stuck.isPresent()) {
+            return Optional.of("не двигается с тика " + stuck.orElseThrow().since() + ": ждёт освобождения");
+        }
         if (spirit.busyWith() != null) {
             return Optional.of("занят: " + spirit.busyWith());
         }

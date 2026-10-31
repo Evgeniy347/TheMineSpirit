@@ -24,7 +24,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 
 final class RescueWatch {
@@ -37,6 +36,7 @@ final class RescueWatch {
 
     Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         Set<String> live = new HashSet<>();
+        BlockCoord settlement = BoardService.homeOf(spirits);
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved() || digging(spirit)) {
                 continue;
@@ -55,7 +55,7 @@ final class RescueWatch {
             if (active(service, id)) {
                 continue;
             }
-            submit(level, service, id, spirit, feet, grid, now);
+            submit(level, service, id, spirit, feet, settlement, now);
         }
         return live;
     }
@@ -66,13 +66,13 @@ final class RescueWatch {
             String id,
             SpiritEntity spirit,
             BlockPos feet,
-            StuckSituation.Grid grid,
+            BlockCoord settlement,
             long now) {
         boolean tool = hasPickaxe(spirit);
         int steps = spirit.getInventory().countItem(Items.DIRT)
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
-        BlockCoord goal = spirit.home().orElseGet(() -> surface(level, feet));
-        Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, grid, tool, steps);
+        BlockCoord goal = SurfacePoint.of(level, spirit.home().orElse(settlement));
+        Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, new RescueGrid(level, feet), tool, steps);
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
         String what = "застрял в " + feet.toShortString() + " ("
                 + self.map(plan -> plan.method().name()).orElse("сам не выйдет") + "), задание спасения " + id
@@ -124,11 +124,6 @@ final class RescueWatch {
             }
         }
         return false;
-    }
-
-    private static BlockCoord surface(ServerLevel level, BlockPos feet) {
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, feet.getX(), feet.getZ());
-        return new BlockCoord(feet.getX(), y, feet.getZ());
     }
 
     private static BlockCoord coord(BlockPos pos) {

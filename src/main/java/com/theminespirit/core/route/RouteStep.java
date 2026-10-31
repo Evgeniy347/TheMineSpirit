@@ -6,6 +6,7 @@ import java.util.Objects;
 public record RouteStep(Action action, BlockCoord cell) {
     public enum Action {
         WALK,
+        SWIM,
         BREAK,
         PLACE,
         PILLAR

@@ -1,0 +1,34 @@
+{
+  "source": "observe12-2026-10-31-1650.md R0-R3 + /v1/bots (spirit-1)",
+  "spirit": "f58b83b6-c9a0-406d-967a-822843debf54",
+  "name": "spirit-1",
+  "feet": [
+    -104,
+    -52,
+    -380
+  ],
+  "target_step": [
+    -104,
+    -52,
+    -381
+  ],
+  "board_task": "graph:make:jungle_log",
+  "route": {
+    "status": "PARTIAL",
+    "end": [
+      -113,
+      5,
+      -441
+    ],
+    "water_cells": "24-38",
+    "break_veto": 278
+  },
+  "failure": {
+    "block": "minecraft:water",
+    "collision": false,
+    "on_ground": true,
+    "distance": 0.8,
+    "code": "NO_PROGRESS"
+  },
+  "still_ticks": 1804
+}

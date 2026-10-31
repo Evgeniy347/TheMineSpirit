@@ -60,7 +60,28 @@ public final class RouteDetour {
                 micros,
                 route.vetoCount(),
                 route.vetoes());
+        if (waterTrap(spirit, world, route, target)) {
+            return Optional.empty();
+        }
         return route.usable() ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
+    }
+
+    private static boolean waterTrap(SpiritEntity spirit, RouteWorld world, Route route, BlockCoord target) {
+        if (!spirit.isInWater() || route.status() != Route.Status.PARTIAL) {
+            return false;
+        }
+        BlockCoord end = route.end();
+        if (RouteCell.kind(world.cell(end.x(), end.y(), end.z())) != RouteCell.WATER) {
+            return false;
+        }
+        LOGGER.warn(
+                "[route] дух {}: из воды {} к {} построен только PARTIAL до воды {} — не иду: выхода к поверхности "
+                        + "нет (no_escape)",
+                spirit.displayName(),
+                spirit.blockPosition().toShortString(),
+                target,
+                end);
+        return true;
     }
 
     private static String water(RouteWorld world, Route route) {
@@ -68,7 +89,7 @@ public final class RouteDetour {
         List<BlockCoord> first = new ArrayList<>();
         for (RouteStep step : route.steps()) {
             BlockCoord cell = step.cell();
-            if (step.action() == RouteStep.Action.WALK
+            if ((step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM)
                     && RouteCell.kind(world.cell(cell.x(), cell.y(), cell.z())) == RouteCell.WATER) {
                 count++;
                 if (first.size() < 5) {

@@ -65,7 +65,7 @@ final class RouteReplay {
                 feet = up(cell, 1);
                 yield Optional.empty();
             }
-            case WALK -> walk(cell);
+            case WALK, SWIM -> walk(cell);
         };
     }
 
