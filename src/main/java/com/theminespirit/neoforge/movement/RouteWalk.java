@@ -11,12 +11,10 @@ import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -28,7 +26,6 @@ public final class RouteWalk {
     }
 
     private static final int STEP_TICKS = 60;
-    private static final double CENTER = 0.5;
     private static final double LIFT = 0.2;
     private static final double SPEED = 1.0;
 
@@ -69,7 +66,9 @@ public final class RouteWalk {
             recorded = next;
         }
         if (!breaking && ++stepTicks > STEP_TICKS) {
-            String details = step.action() == RouteStep.Action.WALK ? walkState(step.cell()) : "";
+            String details = step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM
+                    ? WalkReport.describe(spirit, step.cell())
+                    : "";
             return fail("шаг " + step.action() + " в " + step.cell() + " не выполнен за " + STEP_TICKS + " тиков"
                     + details);
         }
@@ -77,7 +76,7 @@ public final class RouteWalk {
             case BREAK -> breakCell(pos(step.cell()));
             case PLACE -> placeCell(pos(step.cell()));
             case PILLAR -> pillar(step.cell());
-            case WALK -> walk(step.cell());
+            case WALK, SWIM -> walk(step.cell());
         };
         if (refusal.isPresent()) {
             return fail(step.action() + " в " + step.cell() + ": " + refusal.get());
@@ -172,7 +171,7 @@ public final class RouteWalk {
     }
 
     private Optional<String> walk(BlockCoord cell) {
-        WalkAscent.Command command = WalkAscent.next(cell, pose(), body());
+        WalkAscent.Command command = WalkAscent.next(cell, pose(), body(cell));
         if (command.step() == WalkAscent.Step.ARRIVED) {
             advance();
             return Optional.empty();
@@ -184,6 +183,10 @@ public final class RouteWalk {
         } else if (command.step() == WalkAscent.Step.CLIMB) {
             Vec3 motion = spirit.getDeltaMovement();
             spirit.setDeltaMovement(motion.x, LIFT, motion.z);
+        } else if (command.step() == WalkAscent.Step.SWIM) {
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.max(motion.y, LIFT), motion.z);
+            spirit.getJumpControl().jump();
         }
         return Optional.empty();
     }
@@ -194,8 +197,10 @@ public final class RouteWalk {
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), spirit.getX(), spirit.getY(), spirit.getZ());
     }
 
-    private WalkAscent.Body body() {
-        return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable());
+    private WalkAscent.Body body(BlockCoord cell) {
+        BlockPos target = pos(cell);
+        boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER);
+        return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water);
     }
 
     private Optional<String> place(BlockPos cell) {
@@ -209,33 +214,6 @@ public final class RouteWalk {
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };
-    }
-
-    private String walkState(BlockCoord cell) {
-        Level level = spirit.level();
-        BlockPos pos = pos(cell);
-        BlockState state = level.getBlockState(pos);
-        boolean collision = !state.getCollisionShape(level, pos).isEmpty();
-        boolean climbable = state.is(BlockTags.CLIMBABLE);
-        boolean rising = cell.y() > spirit.blockPosition().getY();
-        String code = rising ? (climbable ? "CLIMB_STALLED" : "JUMP_STALLED") : "NO_PROGRESS";
-        if (collision) {
-            code = "CELL_BLOCKED";
-        }
-        double distance = horizontal(new Vec3(cell.x() + CENTER, cell.y(), cell.z() + CENTER));
-        return ": блок " + BlockStates.idOf(state)
-                + ", collision=" + collision
-                + ", climbable=" + climbable
-                + ", onGround=" + spirit.onGround()
-                + ", onClimbable=" + spirit.onClimbable()
-                + ", дистанция=" + String.format(Locale.ROOT, "%.2f", distance)
-                + ", код=" + code;
-    }
-
-    private double horizontal(Vec3 target) {
-        double dx = spirit.getX() - target.x;
-        double dz = spirit.getZ() - target.z;
-        return Math.sqrt(dx * dx + dz * dz);
     }
 
     private void advance() {

@@ -277,7 +277,10 @@ final class RouteMoves {
             return IMPOSSIBLE;
         }
         if (out != null) {
-            out.add(new RouteStep(RouteStep.Action.WALK, new BlockCoord(x, y, z)));
+            RouteStep.Action action = RouteCell.kind(cells.at(x, y, z)) == RouteCell.WATER
+                    ? RouteStep.Action.SWIM
+                    : RouteStep.Action.WALK;
+            out.add(new RouteStep(action, new BlockCoord(x, y, z)));
         }
         toX = x;
         toY = y;
