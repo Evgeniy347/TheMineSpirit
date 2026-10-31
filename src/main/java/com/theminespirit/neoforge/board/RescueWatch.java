@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.level.levelgen.Heightmap;
 import org.slf4j.Logger;
 
 final class RescueWatch {
@@ -65,8 +66,7 @@ final class RescueWatch {
         boolean tool = hasPickaxe(spirit);
         int steps = spirit.getInventory().countItem(Items.DIRT)
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
-        BlockCoord goal = spirit.home()
-                .orElseGet(() -> new BlockCoord(feet.getX(), feet.getY() + StuckSituation.PASSAGE_HEIGHT, feet.getZ()));
+        BlockCoord goal = spirit.home().orElseGet(() -> surface(level, feet));
         Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, grid, tool, steps);
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
         String what = "застрял в " + feet.toShortString() + " ("
@@ -80,7 +80,7 @@ final class RescueWatch {
                 id,
                 assignee.map(UUID::toString).orElse("любому свободному духу"),
                 IncidentSnapshots.record(level, spirit, what));
-        TicketTarget target = TicketTarget.at(coord(feet));
+        TicketTarget target = TicketTarget.at(coord(feet)).withRelocate(coord(feet), goal);
         if (self.isPresent()) {
             target = target.withRescue(self.orElseThrow());
         }
@@ -119,6 +119,11 @@ final class RescueWatch {
             }
         }
         return false;
+    }
+
+    private static BlockCoord surface(ServerLevel level, BlockPos feet) {
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, feet.getX(), feet.getZ());
+        return new BlockCoord(feet.getX(), y, feet.getZ());
     }
 
     private static BlockCoord coord(BlockPos pos) {

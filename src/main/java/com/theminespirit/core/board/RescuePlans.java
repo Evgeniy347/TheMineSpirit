@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class RescuePlans {
     public static final String GOTO = "goto";
@@ -27,13 +28,14 @@ public final class RescuePlans {
             return Optional.empty();
         }
         SelfEscape.Plan rescue = target.rescue();
+        BlockCoord goal = target.to();
         if (rescue != null) {
-            return Optional.of(selfPlan(rescue));
+            return Optional.of(withGoal(selfPlan(rescue), goal));
         }
         BlockCoord trapped = target.target();
         BlockCoord from = new BlockCoord(trapped.x() - 1, trapped.y(), trapped.z() - 1);
         BlockCoord to = new BlockCoord(trapped.x() + 1, trapped.y() + 1, trapped.z() + 1);
-        return Optional.of(new SequenceNode(List.of(
+        List<TaskNode> steps = new ArrayList<>(List.of(
                 new FallbackNode(List.of(
                         gotoPoint(trapped), new ScriptCall(WAIT, Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
                 new ScriptCall(
@@ -44,8 +46,25 @@ public final class RescuePlans {
                                 "z1", from.z(),
                                 "x2", to.x(),
                                 "y2", to.y(),
-                                "z2", to.z())),
-                gotoPoint(trapped))));
+                                "z2", to.z()))));
+        if (goal == null) {
+            steps.add(gotoPoint(trapped));
+        } else {
+            steps.add(digOut(goal));
+            steps.add(gotoPoint(goal));
+        }
+        return Optional.of(new SequenceNode(List.copyOf(steps)));
+    }
+
+    private static TaskNode withGoal(TaskNode escape, @Nullable BlockCoord goal) {
+        if (goal == null) {
+            return escape;
+        }
+        return new SequenceNode(List.of(escape, digOut(goal), gotoPoint(goal)));
+    }
+
+    private static ScriptCall digOut(BlockCoord point) {
+        return new ScriptCall("dig_out", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
     }
 
     private static TaskNode selfPlan(SelfEscape.Plan rescue) {

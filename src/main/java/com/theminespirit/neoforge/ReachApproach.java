@@ -29,6 +29,8 @@ public final class ReachApproach {
     private boolean active;
     private String refusal;
     private boolean routes;
+    private int rejected;
+    private String rejection;
 
     public ReachApproach(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -48,6 +50,8 @@ public final class ReachApproach {
         tried.clear();
         stand = null;
         refusal = null;
+        rejected = 0;
+        rejection = null;
         active = true;
     }
 
@@ -67,6 +71,12 @@ public final class ReachApproach {
                 refusal = "ни одной достижимой стоянки у " + target + " ("
                         + SpiritReach.current().describe() + "), проверены стоянки " + tried
                         + (refusal == null ? "" : "; " + refusal);
+                LOGGER.info(
+                        "[move] {}: цель {} — перебрано стоянок {}, ни одна не достижима ({})",
+                        spirit.displayName(),
+                        target,
+                        rejected,
+                        rejection == null ? "подходящих стоянок нет" : rejection);
                 finish();
                 return Approach.State.STUCK;
             }
@@ -138,7 +148,8 @@ public final class ReachApproach {
         Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
         boolean reachable = path != null && path.canReach();
         if (!reachable) {
-            LOGGER.info("[move] {}: стоянка {} у {} недостижима — ищу следующую", spirit.displayName(), feet, target);
+            rejected++;
+            rejection = path == null ? "путь до стоянки не построен" : "путь до стоянки не доводит";
         }
         return reachable;
     }
