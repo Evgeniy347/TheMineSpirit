@@ -11,7 +11,7 @@
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода и перезапуск сервера | только по согласованию с пользователем |
 | [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md) | роль главного агента: задания, приёмка, присмотр | если ты главный агент (Claude) |
 | [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | модели-исполнители и их качество | главному агенту — перед выбором исполнителя |
-| [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md), [docs/api/README.md](docs/api/README.md) | справочники подсистем | при работе с подсистемой |
+| [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md), [docs/api/README.md](docs/api/README.md), [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) | справочники подсистем | при работе с подсистемой |
 
 ## Правило — это сторож или тест, а не текст (владелец 19.10)
 
