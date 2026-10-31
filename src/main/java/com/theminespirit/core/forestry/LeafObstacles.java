@@ -32,7 +32,7 @@ public final class LeafObstacles {
         }
         List<BlockCoord> leaves = new ArrayList<>();
         for (BlockCoord cell : cells) {
-            if (view.isNaturalLeaves(cell)) {
+            if (view.isFoliageObstacle(cell)) {
                 leaves.add(cell);
             }
         }

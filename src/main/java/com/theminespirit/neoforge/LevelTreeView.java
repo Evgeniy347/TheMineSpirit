@@ -19,6 +19,7 @@ public final class LevelTreeView implements TreeView {
     private enum Kind {
         LOG,
         NATURAL_LEAVES,
+        VINES,
         SOIL,
         ARTIFICIAL,
         EMPTY,
@@ -180,6 +181,12 @@ public final class LevelTreeView implements TreeView {
     }
 
     @Override
+    public boolean isFoliageObstacle(BlockCoord coord) {
+        Kind kind = kind(coord);
+        return kind == Kind.NATURAL_LEAVES || kind == Kind.VINES;
+    }
+
+    @Override
     public boolean isSoil(BlockCoord coord) {
         return kind(coord) == Kind.SOIL;
     }
@@ -218,6 +225,9 @@ public final class LevelTreeView implements TreeView {
         }
         if (state.getBlock() instanceof LeavesBlock) {
             return state.getValue(LeavesBlock.PERSISTENT) ? Kind.ARTIFICIAL : Kind.NATURAL_LEAVES;
+        }
+        if (state.is(Blocks.VINE) || state.is(BlockTags.CAVE_VINES)) {
+            return Kind.VINES;
         }
         if (state.is(BlockTags.LOGS)) {
             return state.is(BlockTags.OVERWORLD_NATURAL_LOGS) ? Kind.OTHER : Kind.ARTIFICIAL;
