@@ -287,7 +287,7 @@ public final class ResourceResolver {
 
         private TaskNode smeltPlan(String item, int count, boolean topLevel) {
             List<TaskNode> steps = new ArrayList<>(4);
-            steps.add(resolve(knowledge.smeltInputFor(item), count, false));
+            ingredient(knowledge.smeltInputFor(item), count).ifPresent(steps::add);
             FuelPlanner.select(item, count, knowledge, path, remaining)
                     .ifPresent(fuel -> steps.add(resolve(fuel.fuel(), fuel.count(), false)));
             stationStep(item).ifPresent(steps::add);
