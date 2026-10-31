@@ -3,7 +3,7 @@ set -euo pipefail
 
 SERVER_DIR="${SERVER_DIR:-/opt/minecraft/server}"
 TMUX_SESSION="${TMUX_SESSION:-minecraft}"
-WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/world-backups}"
+WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 FORCELOAD_AREA="${FORCELOAD_AREA:--270 -587 -70 -387}"
 
 usage() {
