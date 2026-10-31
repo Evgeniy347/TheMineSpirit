@@ -1,0 +1,265 @@
+{
+ "source": {
+  "observation": "../live-user-test-run/observe10-2026-10-31-1212.md",
+  "rest": "GET http://localhost:8765/v1/board, /v1/bots, /v1/board/log, /v1/tasks/* (сервер 0.1.2596, 2026-10-31)",
+  "note": "REST-снимок реального сервера; разбитые клетки и провал chests:1 — из диагностики observe10"
+ },
+ "rest": {
+  "board_excerpt": [
+   {
+    "id": "first:stock_chests",
+    "case": "STOCK_CHESTS",
+    "priority": 40,
+    "assignee": "f58b83b6-c9a0-406d-967a-822843debf54",
+    "status": "DONE",
+    "requiredItems": {
+     "jungle_planks": 20
+    },
+    "missing": {},
+    "dependsOn": [],
+    "createdAt": 10854905,
+    "level": 1,
+    "cause": "always",
+    "effectivePriority": 40,
+    "modifiers": [],
+    "done": true,
+    "startedAt": 0,
+    "finishedAt": 0,
+    "durationTicks": 0,
+    "waitReason": null,
+    "supplyItem": null,
+    "supplyCount": 0
+   }
+  ],
+  "bots": {
+   "bots": [
+    {
+     "id": "c48663b4-da59-43d9-9804-81a680580300",
+     "name": "spirit-2",
+     "state": "busy",
+     "position": [
+      -160,
+      72,
+      -507
+     ],
+     "dimension": "minecraft:overworld",
+     "current_task": "graph:chop_oak_log",
+     "activity": "ACTIVITY_MOVE",
+     "script": "acquire",
+     "board_task": {
+      "id": "graph:chop_oak_log",
+      "case": "GATHER_MATERIALS",
+      "status": "ASSIGNED"
+     },
+     "tick": 22579759,
+     "position_tick": 22579759,
+     "state_since_tick": 22576407,
+     "food": 1.0
+    },
+    {
+     "id": "caf11c6f-9a9a-408d-92ed-71726c762c19",
+     "name": "spirit-3",
+     "state": "busy",
+     "position": [
+      -178,
+      68,
+      -514
+     ],
+     "dimension": "minecraft:overworld",
+     "current_task": "move:-152,72,-491:minecraft:stone_shovel",
+     "activity": null,
+     "script": null,
+     "board_task": {
+      "id": "move:-152,72,-491:minecraft:stone_shovel",
+      "case": "SUPPLY_SITE",
+      "status": "ASSIGNED"
+     },
+     "tick": 22579759,
+     "position_tick": 22579759,
+     "state_since_tick": 22579759,
+     "food": 1.0
+    },
+    {
+     "id": "f58b83b6-c9a0-406d-967a-822843debf54",
+     "name": "spirit-1",
+     "state": "busy",
+     "position": [
+      -189,
+      64,
+      -513
+     ],
+     "dimension": "minecraft:overworld",
+     "current_task": "graph:strip_oak_log",
+     "activity": "ACTIVITY_FORAGE",
+     "script": "goto",
+     "board_task": {
+      "id": "graph:strip_oak_log",
+      "case": "GATHER_MATERIALS",
+      "status": "ASSIGNED"
+     },
+     "tick": 22579759,
+     "position_tick": 22579759,
+     "state_since_tick": 22579759,
+     "food": 1.0
+    }
+   ]
+  },
+  "board_log": {
+   "entries": [
+    {
+     "event": "CANCELLED",
+     "tick": 22579753,
+     "ticketId": "activity:caf11c6f-9a9a-408d-92ed-71726c762c19",
+     "case": "ACTIVITY_UNLOAD",
+     "level": 1,
+     "cause": "always",
+     "basePriority": 25,
+     "effectivePriority": 25,
+     "modifiers": [
+      "script=withdraw",
+      "target=minecraft:stone_shovel"
+     ],
+     "spirit": "caf11c6f-9a9a-408d-92ed-71726c762c19",
+     "configHash": "e2dbe19f99ee",
+     "worldTime": 22579753
+    },
+    {
+     "event": "ASSIGNED",
+     "tick": 22579662,
+     "ticketId": "activity:f58b83b6-c9a0-406d-967a-822843debf54",
+     "case": "ACTIVITY_FORAGE",
+     "level": 1,
+     "cause": "always",
+     "basePriority": 20,
+     "effectivePriority": 20,
+     "modifiers": [
+      "script=acquire",
+      "target=-167,70,-500"
+     ],
+     "spirit": "f58b83b6-c9a0-406d-967a-822843debf54",
+     "configHash": "e2dbe19f99ee",
+     "worldTime": 22579662
+    },
+    {
+     "event": "ASSIGNED",
+     "tick": 22579662,
+     "ticketId": "graph:strip_oak_log",
+     "case": "GATHER_MATERIALS",
+     "level": 1,
+     "cause": "graph:strip_oak_log",
+     "basePriority": 45,
+     "effectivePriority": 24,
+     "modifiers": [],
+     "spirit": "f58b83b6-c9a0-406d-967a-822843debf54",
+     "configHash": "e2dbe19f99ee",
+     "worldTime": 22579662
+    },
+    {
+     "event": "POSTED",
+     "tick": 22579662,
+     "ticketId": "first:build_mine",
+     "case": "BUILD_MINE",
+     "level": 1,
+     "cause": "graph:building:mine",
+     "basePriority": 50,
+     "effectivePriority": 85,
+     "modifiers": [],
+     "spirit": null,
+     "configHash": "e2dbe19f99ee",
+     "worldTime": 22579662
+    },
+    {
+     "event": "SUBMITTED",
+     "tick": 22579662,
+     "ticketId": "first:build_mine",
+     "case": "BUILD_MINE",
+     "level": 1,
+     "cause": "graph:building:mine",
+     "basePriority": 50,
+     "effectivePriority": 85,
+     "modifiers": [],
+     "spirit": null,
+     "configHash": "e2dbe19f99ee",
+     "worldTime": 22579662
+    }
+   ]
+  },
+  "task_first_stock_chests": {
+   "id": "first:stock_chests",
+   "case": "STOCK_CHESTS",
+   "priority": 40,
+   "assignee": "f58b83b6-c9a0-406d-967a-822843debf54",
+   "status": "DONE",
+   "requiredItems": {
+    "jungle_planks": 20
+   },
+   "missing": {},
+   "dependsOn": [],
+   "createdAt": 10854905,
+   "level": 1,
+   "cause": "always",
+   "effectivePriority": 40,
+   "modifiers": [],
+   "done": true,
+   "startedAt": 0,
+   "finishedAt": 0,
+   "durationTicks": 0,
+   "waitReason": null,
+   "supplyItem": null,
+   "supplyCount": 0
+  },
+  "task_chests_1": {
+   "error": "HTTP Error 404: Not Found"
+  }
+ },
+ "failed_ticket": {
+  "id": "chests:1",
+  "case": "STOCK_CHESTS",
+  "status": "FAILED",
+  "spirit": "spirit-2",
+  "message": "не совпало со схемой 1 из 2 клеток: minecraft:chest@BlockCoord[x=-180,y=69,z=-517]; дух -183,61,-515; поставлено 1, очищено 0; причины: -180,69,-517 — ни с одной стоянки не дотянуться (в мире air, свободна true, опора false)"
+ },
+ "broken_container": {
+  "pos": [
+   -180,
+   69,
+   -517
+  ],
+  "block": "minecraft:air",
+  "chest_block": false,
+  "chest_type_property": false,
+  "chest_type": null,
+  "block_entity": "minecraft:chest"
+ },
+ "valid_half": {
+  "pos": [
+   -181,
+   69,
+   -517
+  ],
+  "block": "minecraft:chest",
+  "chest_block": true,
+  "chest_type_property": true,
+  "chest_type": "right",
+  "block_entity": "minecraft:chest"
+ },
+ "second_cell": {
+  "free": true,
+  "supported": false,
+  "reachable": false,
+  "stale": true
+ },
+ "block_without_entity": {
+  "pos": [
+   -171,
+   72,
+   -487
+  ],
+  "block": "minecraft:chest",
+  "chest_block": true,
+  "chest_type_property": true,
+  "chest_type": "single",
+  "block_entity": null,
+  "evidence": "[storage] клетки -171,72,-487/-486 отклонены «нет блочной сущности»"
+ }
+}

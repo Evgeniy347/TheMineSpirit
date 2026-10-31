@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.building.SettlementChests;
+import com.theminespirit.core.inventory.ContainerCell;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.inventory.StoragePoints;
@@ -75,6 +76,18 @@ public final class StorageFinder {
             String type = BuiltInRegistries.BLOCK
                     .getKey(level.getBlockState(at).getBlock())
                     .toString();
+            ContainerCell cell = ContainerCells.at(level, at);
+            ContainerCell.Problem problem = cell.problem();
+            if (problem != ContainerCell.Problem.NONE) {
+                if (CHANGES.changed(channel, "broken:" + problem + ":" + cell.describe())) {
+                    LOGGER.warn(
+                            "[storage] расхождение блока и BlockEntity {}: {} — {}",
+                            coord(pos),
+                            problem.text(),
+                            cell.describe());
+                }
+                continue;
+            }
             ContainerAccess.Open open = ContainerAccess.open(level, at);
             if (open instanceof ContainerAccess.Opened opened) {
                 CHANGES.forget(channel);
