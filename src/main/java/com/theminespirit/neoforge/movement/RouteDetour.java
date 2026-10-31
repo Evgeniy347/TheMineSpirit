@@ -34,7 +34,7 @@ public final class RouteDetour {
 
     public static Optional<RouteWalk> plan(SpiritEntity spirit, BlockCoord target, int radius, String why) {
         long now = spirit.level().getGameTime();
-        if (!THROTTLE.allow(spirit.getUUID(), now)) {
+        if (!"dig_out".equals(why) && !THROTTLE.allow(spirit.getUUID(), now)) {
             LOGGER.info(
                     "[route] дух {} ({}): перестроение подавлено, прошлый расчёт меньше {} тиков назад",
                     spirit.displayName(),
