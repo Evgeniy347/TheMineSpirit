@@ -24,11 +24,14 @@ public final class ChopTuning {
         return Math.min(requestedRadius, MAX_SEARCH_RADIUS);
     }
 
-    public static int extendedDistance(int requestedRadius) {
+    public static int extendTo(int requestedRadius, int nearestFar) {
         if (requestedRadius < 1) {
             throw new IllegalArgumentException("radius=" + requestedRadius
                     + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
         }
-        return Math.max(requestedRadius, MAX_SEARCH_RADIUS);
+        if (nearestFar < requestedRadius) {
+            return requestedRadius;
+        }
+        return Math.min(nearestFar, MAX_SEARCH_RADIUS);
     }
 }

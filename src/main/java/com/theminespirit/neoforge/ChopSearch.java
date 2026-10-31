@@ -27,9 +27,7 @@ final class ChopSearch {
     private final Set<Block> logBlocks;
     private final BlockCoord anchor;
     private final int radius;
-    private final int extendedDistance;
     private int maxDistance;
-    private boolean extended;
     private final TreeCandidates candidates = new TreeCandidates(ChopTuning.SEARCH_MAX_LOGS);
     private BlockLocator.Search search;
     private BlockCoord center;
@@ -42,7 +40,6 @@ final class ChopSearch {
         this.anchor = anchorFor(spirit);
         this.radius = params.radius();
         this.maxDistance = ChopTuning.maxDistance(radius);
-        this.extendedDistance = ChopTuning.extendedDistance(radius);
         this.center = coords(spirit.blockPosition());
         this.search = newSearch(center);
     }
@@ -81,11 +78,11 @@ final class ChopSearch {
     }
 
     boolean extend() {
-        if (extended || extendedDistance <= maxDistance) {
+        int target = ChopTuning.extendTo(maxDistance, nearestFar);
+        if (target <= maxDistance) {
             return false;
         }
-        extended = true;
-        maxDistance = extendedDistance;
+        maxDistance = target;
         center = coords(spirit.blockPosition());
         search = newSearch(center);
         nearestFar = -1;

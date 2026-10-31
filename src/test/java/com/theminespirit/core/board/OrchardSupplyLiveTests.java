@@ -52,7 +52,7 @@ class OrchardSupplyLiveTests {
         assertEquals(limit, plannedRadius, "Живой провал снят при пределе 100: план обязан просить тот же радиус");
         assertTrue(nearest > limit, "Живой провал говорит о дубе дальше запрошенного радиуса");
 
-        int extended = ChopTuning.extendedDistance(plannedRadius);
+        int extended = ChopTuning.extendTo(plannedRadius, nearest);
         assertTrue(
                 extended >= nearest,
                 "Дуб в " + nearest + " блоках не попадает в расширенный поиск " + extended
