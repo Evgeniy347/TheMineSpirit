@@ -8,6 +8,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,7 +29,15 @@ final class DispatchPick {
         for (SpiritEntity spirit : spirits) {
             entities.put(spirit.getUUID(), spirit);
             candidates.put(spirit.getUUID(), candidate(spirit));
+            round.board().stuck().see(spirit.getUUID(), at(spirit));
         }
+    }
+
+    private static BlockCoord at(SpiritEntity spirit) {
+        return new BlockCoord(
+                spirit.blockPosition().getX(),
+                spirit.blockPosition().getY(),
+                spirit.blockPosition().getZ());
     }
 
     @Nullable
@@ -60,7 +69,7 @@ final class DispatchPick {
         if (crafters.remembered(ticket.id()).filter(spirit.getUUID()::equals).isPresent()) {
             return spirit.displayName() + " — крафтер задания";
         }
-        return spirit.displayName() + " — ближайший свободный дух";
+        return spirit.displayName() + " — ближайший достижимый дух";
     }
 
     String why(BoardTicket ticket, @Nullable TicketTarget target) {

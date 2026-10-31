@@ -35,6 +35,7 @@ public final class Board {
     private final WaitNotes waitNotes = new WaitNotes();
     private final BlockedBook blocked;
     private final CasePauseBook casePauses = new CasePauseBook();
+    private final StuckSpirits stuckSpirits = new StuckSpirits();
     private final IdleRelease idleRelease;
     private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
@@ -91,6 +92,7 @@ public final class Board {
         ticketFailures.clear();
         blocked.clear();
         casePauses.clear();
+        stuckSpirits.clear();
         idleRelease.clear();
         ledger.clear();
         ledger.restore(state.ledger());
@@ -264,6 +266,9 @@ public final class Board {
         UUID holder = holder(ticket);
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
+            if (StuckCause.movement(reason)) {
+                stuckSpirits.mark(holder, now);
+            }
         }
         String previous = reason == null ? null : lastFailReasons.put(ticketId, reason);
         failHistory.note(ticketId, now, reason);
@@ -275,14 +280,18 @@ public final class Board {
         return true;
     }
 
+    public StuckSpirits stuck() {
+        return stuckSpirits;
+    }
+
     public boolean availableTo(UUID spirit, BoardCase boardCase, long now) {
         requireNow(now);
-        return casePauses.available(spirit, boardCase, now);
+        return !stuckSpirits.isStuck(spirit) && casePauses.available(spirit, boardCase, now);
     }
 
     public boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
         requireNow(now);
-        return casePauses.available(spirit, ticket, now);
+        return !stuckSpirits.isStuck(spirit) && casePauses.available(spirit, ticket, now);
     }
 
     public boolean caseDetached(UUID spirit, BoardCase boardCase) {
@@ -419,17 +428,6 @@ public final class Board {
             }
         }
         return List.copyOf(released);
-    }
-
-    public record HolderRelease(String ticketId, BoardCase boardCase, UUID holder, boolean activity) {
-        public HolderRelease {
-            Objects.requireNonNull(
-                    ticketId, "ticketId освобождения не может быть null: без id непонятно, какое задание вернулось");
-            Objects.requireNonNull(
-                    boardCase, "Кейс освобождения не может быть null: без него запись журнала не описать");
-            Objects.requireNonNull(
-                    holder, "holder освобождения не может быть null: погибший держатель известен всегда");
-        }
     }
 
     public void occupy(UUID spirit, BoardCase activity, long now) {

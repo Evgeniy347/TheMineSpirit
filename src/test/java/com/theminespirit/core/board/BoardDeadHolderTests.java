@@ -49,10 +49,10 @@ class BoardDeadHolderTests {
         board.submit(ticket("repair:build_house", BoardCase.REPAIR_BUILDING));
         board.claim("repair:build_house", dead, 0);
 
-        List<Board.HolderRelease> released = board.releaseDeadHolders(Set.of(UUID.randomUUID()));
+        List<HolderRelease> released = board.releaseDeadHolders(Set.of(UUID.randomUUID()));
 
         assertEquals(
-                List.of(new Board.HolderRelease("repair:build_house", BoardCase.REPAIR_BUILDING, dead, false)),
+                List.of(new HolderRelease("repair:build_house", BoardCase.REPAIR_BUILDING, dead, false)),
                 released,
                 "Задание с погибшим держателем возвращается в доступные: иначе восстановление постройки висит за мёртвым духом");
         assertEquals(
@@ -72,7 +72,7 @@ class BoardDeadHolderTests {
         board.submit(ticket("repair_tool:" + dead, BoardCase.REPAIR_TOOL, dead));
         board.claim("repair_tool:" + dead, dead, 0);
 
-        List<Board.HolderRelease> released = board.releaseDeadHolders(Set.of());
+        List<HolderRelease> released = board.releaseDeadHolders(Set.of());
 
         assertTrue(
                 released.size() == 1 && !released.get(0).activity(),
@@ -90,7 +90,7 @@ class BoardDeadHolderTests {
         board.submit(ticket("repair:build_house", BoardCase.REPAIR_BUILDING));
         board.claim("repair:build_house", live, 0);
 
-        List<Board.HolderRelease> released = board.releaseDeadHolders(Set.of(live));
+        List<HolderRelease> released = board.releaseDeadHolders(Set.of(live));
 
         assertEquals(List.of(), released, "Задание живого держателя не трогается: пересборка снимает только погибших");
         assertEquals(
@@ -104,7 +104,7 @@ class BoardDeadHolderTests {
         Board board = boardAt(0);
         board.submit(ticket("repair:build_house", BoardCase.REPAIR_BUILDING));
 
-        List<Board.HolderRelease> released = board.releaseDeadHolders(Set.of());
+        List<HolderRelease> released = board.releaseDeadHolders(Set.of());
 
         assertEquals(List.of(), released, "Задание без держателя не освобождается: ему не от кого освобождаться");
         assertEquals(
@@ -119,10 +119,10 @@ class BoardDeadHolderTests {
         UUID dead = UUID.randomUUID();
         board.occupy(dead, BoardCase.ACTIVITY_CHOP, 0);
 
-        List<Board.HolderRelease> released = board.releaseDeadHolders(Set.of(UUID.randomUUID()));
+        List<HolderRelease> released = board.releaseDeadHolders(Set.of(UUID.randomUUID()));
 
         assertEquals(
-                List.of(new Board.HolderRelease(BoardActivities.idOf(dead), BoardCase.ACTIVITY_CHOP, dead, true)),
+                List.of(new HolderRelease(BoardActivities.idOf(dead), BoardCase.ACTIVITY_CHOP, dead, true)),
                 released,
                 "Занятие погибшего духа снимается: иначе activity:<дух> висит и занимает место в выдаче");
         assertEquals(Optional.empty(), board.occupation(dead), "У погибшего духа не остаётся занятия на доске");
@@ -134,7 +134,7 @@ class BoardDeadHolderTests {
         UUID live = UUID.randomUUID();
         board.occupy(live, BoardCase.ACTIVITY_CHOP, 0);
 
-        List<Board.HolderRelease> released = board.releaseDeadHolders(Set.of(live));
+        List<HolderRelease> released = board.releaseDeadHolders(Set.of(live));
 
         assertEquals(List.of(), released, "Занятие живого духа не снимается пересборкой");
         assertEquals(
