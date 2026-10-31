@@ -10,6 +10,7 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.forestry.ChopTuning;
+import com.theminespirit.core.forestry.TreeChooser;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +32,7 @@ class LiveJungleGatherTicketTests {
     private static final Path OAK_TICKET =
             Path.of("src/test/resources/live/observe11-task-supply-gather-oak-planks.json");
     private static final Path BOARD = Path.of("src/test/resources/live/observe11-board.json");
+    private static final Path WORLD = Path.of("src/test/resources/live/observe11-jungle-tree.json");
     private static final BlockCoord WORK_YARD = new BlockCoord(-181, 69, -519);
 
     @Test
@@ -57,6 +60,27 @@ class LiveJungleGatherTicketTests {
                         + ChopTuning.maxDistance((Integer) chop.params().get("radius"))
                         + " вместо "
                         + chop.params().get("radius"));
+    }
+
+    @Test
+    void liveJungleTree_FiftyFiveBlocksAway_IsFoundOnlyByWideSearch() throws IOException {
+        JsonNode world = new ObjectMapper().readTree(read(WORLD));
+        JsonNode base = world.get("tree").get("base");
+        BlockCoord trunk = new BlockCoord(
+                base.get(0).asInt(), base.get(1).asInt(), base.get(2).asInt());
+        BlockCoord anchor = new BlockCoord(-181, 69, -513);
+        int radius = BoardTuning.chopRadius();
+
+        assertTrue(
+                TreeChooser.near(anchor, radius, trunk.x(), trunk.y(), trunk.z(), List.of(trunk), Set.of())
+                        .isPresent(),
+                "Живое дерево jungle в 55 блоках от поселения не попадает в поиск радиуса " + radius
+                        + ": дух снова останется без брёвен");
+        assertTrue(
+                TreeChooser.near(anchor, 32, trunk.x(), trunk.y(), trunk.z(), List.of(trunk), Set.of())
+                        .isEmpty(),
+                "Живое дерево в 55 блоках не должно находиться старым пределом 32: именно этот предел дал провал "
+                        + "observe11, и его снимает поиск до 100");
     }
 
     @Test
