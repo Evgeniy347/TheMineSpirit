@@ -5,7 +5,6 @@ import com.theminespirit.core.scene.SceneBlock;
 import com.theminespirit.core.scene.SceneGenerator;
 import com.theminespirit.core.scene.ScenePlan;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import java.util.SplittableRandom;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -20,25 +19,9 @@ final class GeneratedScene {
     static final int CENTER = 64;
     static final int SURFACE = 7;
     private static final int DIRT_DEPTH = 3;
-    private static final String SEED_PROPERTY = "theminespirit.gametest.seed";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final SplittableRandom FRESH = new SplittableRandom();
 
     private GeneratedScene() {}
-
-    static boolean fixedSeed() {
-        return !System.getProperty(SEED_PROPERTY, "").trim().isEmpty();
-    }
-
-    static long seed() {
-        String fixed = System.getProperty(SEED_PROPERTY, "").trim();
-        if (!fixed.isEmpty()) {
-            return Long.parseLong(fixed);
-        }
-        synchronized (FRESH) {
-            return FRESH.nextLong();
-        }
-    }
 
     static ScenePlan place(GameTestHelper helper, long seed, String batch) {
         ScenePlan plan = SceneGenerator.generate(seed);
