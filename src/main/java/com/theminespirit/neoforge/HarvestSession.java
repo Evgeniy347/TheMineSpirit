@@ -332,7 +332,7 @@ public final class HarvestSession {
             }
         }
         MiningPlanner.Outcome result =
-                MiningPlanner.next(origin, candidates, safety, approachFailures.excludedStands());
+                MiningPlanner.next(origin, candidates, safety, approachFailures.excludedStands(), this::standReachable);
         if (result instanceof MiningPlanner.Exhausted exhausted) {
             if ((exhausted.noStand() > 0 || exhausted.unreachable() > 0) && approachReachStand(origin, candidates)) {
                 return;

@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public final class MiningPlanner {
     private static final int STAND_RADIUS = 3;
@@ -17,11 +18,24 @@ public final class MiningPlanner {
     }
 
     public static Outcome next(BlockCoord from, List<BlockCoord> remaining, SafetyView view, Set<BlockCoord> excluded) {
+        return next(from, remaining, view, excluded, stand -> true);
+    }
+
+    public static Outcome next(
+            BlockCoord from,
+            List<BlockCoord> remaining,
+            SafetyView view,
+            Set<BlockCoord> excluded,
+            Predicate<BlockCoord> reachable) {
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней выбирается ближайшая цель");
         Objects.requireNonNull(remaining, "Список целей не может быть null: пустой набор задают пустым списком");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется безопасность цели");
         Objects.requireNonNull(
                 excluded, "Множество исключённых стоянок не может быть null: без него непонятно, что пропускать");
+        Objects.requireNonNull(
+                reachable,
+                "Проверка пути к стоянке не может быть null: без неё выбор цели снова возьмёт "
+                        + "блок, к которому дух не подойдёт");
         List<BlockCoord> ordered = new ArrayList<>(remaining);
         ordered.sort(Comparator.comparingLong((BlockCoord target) -> distanceSquared(from, target))
                 .thenComparing(Comparator.naturalOrder()));
@@ -46,11 +60,18 @@ public final class MiningPlanner {
             List<BlockCoord> open = new ArrayList<>(stands);
             open.removeIf(stand -> !StandSpots.walkable(stand, from));
             open.removeIf(excluded::contains);
-            if (open.isEmpty()) {
+            BlockCoord chosen = null;
+            for (BlockCoord stand : open) {
+                if (reachable.test(stand)) {
+                    chosen = stand;
+                    break;
+                }
+            }
+            if (chosen == null) {
                 unreachable++;
                 continue;
             }
-            Next candidate = new Next(target, open.get(0));
+            Next candidate = new Next(target, chosen);
             if (best == null || closer(candidate, best, from)) {
                 best = candidate;
                 bestStandSquared = distanceSquared(from, candidate.stand());

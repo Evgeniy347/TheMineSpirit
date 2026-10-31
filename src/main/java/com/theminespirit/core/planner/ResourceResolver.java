@@ -153,10 +153,10 @@ public final class ResourceResolver {
                 if (knowledge.isSmeltable(item)) {
                     return smeltPlan(item, count, topLevel);
                 }
+                if (knowledge.isCraftedProduct(item)) {
+                    throw CraftedItems.error(item);
+                }
                 if (knowledge.isGatherable(item)) {
-                    if (knowledge.isCraftedProduct(item) && !dropsFromAnotherBlock(item)) {
-                        throw CraftedItems.error(item);
-                    }
                     return gatherPlan(item, count, topLevel);
                 }
                 throw new UnplannableGoalException(

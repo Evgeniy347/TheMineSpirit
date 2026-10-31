@@ -276,4 +276,25 @@ class MiningPlannerTests {
                 "Замурованная цель идёт в счётчик без места, цель с исключёнными стоянками — в недостижимые: "
                         + "смешивание счётчиков врёт в причине отказа");
     }
+
+    @Test
+    void next_NearestStandUnreachable_ReturnsFartherReachableTarget() {
+        CellWorld world = new CellWorld()
+                .set(1, -1, 0, Cell.SOLID)
+                .set(10, 0, 0, Cell.SOLID)
+                .set(11, -1, 0, Cell.SOLID);
+
+        MiningPlanner.Outcome outcome = MiningPlanner.next(
+                FROM,
+                List.of(new BlockCoord(0, 0, 0), new BlockCoord(10, 0, 0)),
+                world,
+                Set.of(),
+                stand -> !stand.equals(new BlockCoord(1, 0, 0)));
+
+        assertEquals(
+                new MiningPlanner.Next(new BlockCoord(10, 0, 0), new BlockCoord(11, 0, 0)),
+                outcome,
+                "Цель без пути к стоянке не выбирается до старта: иначе дух идёт к ближнему блоку, не может "
+                        + "подойти и весь поход кончается «недостижимо: 22» вместо добычи дальнего дерева");
+    }
 }
