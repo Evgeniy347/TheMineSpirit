@@ -16,7 +16,13 @@ final class CasePauseBook {
         Objects.requireNonNull(spirit, "spirit не может быть null: пауза считается на конкретного духа");
         Objects.requireNonNull(boardCase, "boardCase не может быть null: пауза считается на конкретный кейс");
         CaseFailures known = failures.get(new SpiritCase(spirit, boardCase));
-        return known == null || (!known.detached && now >= known.pausedUntil);
+        if (known == null) {
+            return true;
+        }
+        if (known.detached) {
+            return released(known, now);
+        }
+        return now >= known.pausedUntil;
     }
 
     boolean available(UUID spirit, BoardTicket ticket, long now) {
@@ -26,14 +32,33 @@ final class CasePauseBook {
         if (known == null) {
             return true;
         }
-        if (known.detached) {
-            return false;
-        }
-        if (now >= known.pausedUntil) {
+        Optional<String> token = pauseToken(ticket);
+        if (changed(known, token)) {
+            release(known);
             return true;
         }
-        Optional<String> token = pauseToken(ticket);
+        if (known.detached) {
+            return released(known, now);
+        }
+        return now >= known.pausedUntil;
+    }
+
+    private static boolean released(CaseFailures known, long now) {
+        if (now < known.pausedUntil) {
+            return false;
+        }
+        release(known);
+        return true;
+    }
+
+    private static boolean changed(CaseFailures known, Optional<String> token) {
         return known.token.isPresent() && token.isPresent() && !known.token.equals(token);
+    }
+
+    private static void release(CaseFailures known) {
+        known.consecutive = 0;
+        known.detached = false;
+        known.pausedUntil = 0;
     }
 
     boolean detached(UUID spirit, BoardCase boardCase) {
@@ -61,17 +86,30 @@ final class CasePauseBook {
         SpiritCase key = new SpiritCase(spirit, ticket.boardCase());
         CaseFailures known = failures.computeIfAbsent(key, ignored -> new CaseFailures());
         Optional<String> token = pauseToken(ticket);
-        if (known.token.isPresent() && token.isPresent() && !known.token.equals(token)) {
+        if (changed(known, token)) {
             known.consecutive = 0;
+            known.detached = false;
         }
         known.token = token;
         known.consecutive++;
         known.pausedUntil = now + BoardBackoff.pauseTicks(known.consecutive);
         if (!known.detached && known.consecutive >= BoardTuning.caseFailLimit()) {
             known.detached = true;
+            known.pausedUntil = now + BoardTuning.caseFailPauseCapTicks();
             return true;
         }
         return false;
+    }
+
+    int releaseDetached() {
+        int released = 0;
+        for (CaseFailures known : failures.values()) {
+            if (known.detached) {
+                release(known);
+                released++;
+            }
+        }
+        return released;
     }
 
     void reset(UUID spirit, BoardCase boardCase) {

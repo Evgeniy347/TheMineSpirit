@@ -161,11 +161,28 @@ class BoardCaseFailureTests {
         assertEquals(
                 BoardOutcome.SPIRIT_PAUSED,
                 board.claim("first:after", SPIRIT_ONE, now[0]),
-                "Снятый кейс больше не выдаётся этому духу, даже когда пауза истекла");
+                "Снятый кейс не выдаётся этому духу до таймаута снятия: иначе он снова долбит тот же провал");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim("first:after", SPIRIT_TWO, now[0]),
                 "Снятие с одного духа не снимает кейс с доски: его берёт другой исполнитель");
+
+        long release = BoardTuning.caseFailPauseCapTicks();
+        for (int attempt = 1; attempt < limit; attempt++) {
+            release += BoardBackoff.pauseTicks(attempt);
+        }
+        now[0] = release - 1;
+        board.submit(ticket("first:late"));
+        assertEquals(
+                BoardOutcome.SPIRIT_PAUSED,
+                board.claim("first:late", SPIRIT_ONE, now[0]),
+                "За тик до таймаута снятый кейс ещё не возвращается духу");
+        now[0] = release;
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim("first:late", SPIRIT_ONE, now[0]),
+                "По истечении таймаута снятие кончается и дух снова берёт кейс: иначе одно снятие "
+                        + "навсегда паркует духа (живой прогон: idle 40 минут)");
     }
 
     @Test

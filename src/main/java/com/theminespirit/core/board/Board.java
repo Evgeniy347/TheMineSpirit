@@ -34,7 +34,7 @@ public final class Board {
     private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
     private final Map<String, String> lastFailReasons = new LinkedHashMap<>();
     private final WaitNotes waitNotes = new WaitNotes();
-    private final Map<String, Map<String, Integer>> blockedMissing = new LinkedHashMap<>();
+    private final BlockedBook blocked;
     private final CasePauseBook casePauses = new CasePauseBook();
     private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
@@ -55,6 +55,8 @@ public final class Board {
         this.nowTicks = nowTicks;
         this.events = Objects.requireNonNull(
                 events, "Слушатель переходов не может быть null: без него задают BoardEvents.NONE");
+        this.blocked = new BlockedBook(
+                statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
     }
 
     public long now() {
@@ -86,7 +88,7 @@ public final class Board {
         claimAssignees.clear();
         failTicks.clear();
         ticketFailures.clear();
-        blockedMissing.clear();
+        blocked.clear();
         casePauses.clear();
         ledger.clear();
         ledger.restore(state.ledger());
@@ -131,7 +133,7 @@ public final class Board {
             if (changed) {
                 ticketFailures.remove(ticket.id());
                 lastFailReasons.remove(ticket.id());
-                blockedMissing.remove(ticket.id());
+                blocked.clear(ticket.id());
             }
             events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
             return BoardOutcome.ACCEPTED;
@@ -235,7 +237,7 @@ public final class Board {
         events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         ticketFailures.remove(ticketId);
         lastFailReasons.remove(ticketId);
-        blockedMissing.remove(ticketId);
+        blocked.clear(ticketId);
         return true;
     }
 
@@ -283,6 +285,10 @@ public final class Board {
 
     public boolean caseDetached(UUID spirit, BoardCase boardCase) {
         return casePauses.detached(spirit, boardCase);
+    }
+
+    public int releaseDetached() {
+        return casePauses.releaseDetached();
     }
 
     public int consecutiveFailures(UUID spirit, BoardCase boardCase) {
@@ -496,7 +502,7 @@ public final class Board {
                 tickets.remove(ticket.id());
                 statuses.remove(ticket.id());
                 claimAssignees.remove(ticket.id());
-                blockedMissing.remove(ticket.id());
+                blocked.clear(ticket.id());
                 removed.add(ticket.id());
             }
         }
@@ -683,7 +689,7 @@ public final class Board {
             statuses.put(ticketId, BoardStatus.CANCELLED);
             ticketFailures.remove(ticketId);
             lastFailReasons.remove(ticketId);
-            blockedMissing.remove(ticketId);
+            blocked.clear(ticketId);
             events.transition(event, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         }
         for (BoardTicket dependant : tickets.values()) {
@@ -735,86 +741,11 @@ public final class Board {
         if (failures < BoardTuning.ticketFailLimit()) {
             return;
         }
-        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
-        statuses.put(ticket.id(), BoardStatus.BLOCKED);
-        blockedMissing.put(ticket.id(), missing);
-        blockNotes.add(new BoardLogEntry(
-                BoardLog.Event.BLOCKED,
-                now,
-                ticket.id(),
-                ticket.boardCase(),
-                ticket.level(),
-                ticket.cause(),
-                BoardRules.priorityOf(ticket.boardCase()),
-                ticket.priority(),
-                blockedReason(failures, missing, ticket.id()),
-                null,
-                ConfigStamp.current(),
-                now));
+        blocked.note(ticket, failures, ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock), now);
     }
 
     private void unblockChanged(StockView stock, long now) {
-        for (BoardTicket ticket : List.copyOf(tickets.values())) {
-            if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {
-                continue;
-            }
-            Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
-            Map<String, Integer> before = blockedMissing.getOrDefault(ticket.id(), Map.of());
-            if (!ShortageChange.improved(before, missing)) {
-                continue;
-            }
-            statuses.put(ticket.id(), BoardStatus.PENDING);
-            claimAssignees.remove(ticket.id());
-            ticketFailures.remove(ticket.id());
-            lastFailReasons.remove(ticket.id());
-            blockedMissing.remove(ticket.id());
-            blockNotes.add(new BoardLogEntry(
-                    BoardLog.Event.UNBLOCKED,
-                    now,
-                    ticket.id(),
-                    ticket.boardCase(),
-                    ticket.level(),
-                    ticket.cause(),
-                    BoardRules.priorityOf(ticket.boardCase()),
-                    ticket.priority(),
-                    changed(before, missing),
-                    null,
-                    ConfigStamp.current(),
-                    now));
-        }
-    }
-
-    private static List<String> reason(int failures, Map<String, Integer> missing) {
-        List<String> reason = new ArrayList<>();
-        reason.add("failures=" + failures);
-        missing.forEach((item, count) -> reason.add("missing=" + item + ":" + count));
-        return List.copyOf(reason);
-    }
-
-    private List<String> blockedReason(int failures, Map<String, Integer> missing, String ticketId) {
-        List<String> reason = new ArrayList<>(reason(failures, missing));
-        lastFailReasons.forEach((id, text) -> {
-            if (id.equals(ticketId)) {
-                reason.add("last=" + text);
-            }
-        });
-        List<String> history = failHistory.of(ticketId);
-        reason.add("history=" + String.join("; ", history));
-        return List.copyOf(reason);
-    }
-
-    private static List<String> changed(Map<String, Integer> before, Map<String, Integer> after) {
-        List<String> changed = new ArrayList<>(List.of("failures=0"));
-        Set<String> items = new HashSet<>(before.keySet());
-        items.addAll(after.keySet());
-        for (String item : items) {
-            int was = before.getOrDefault(item, 0);
-            int now = after.getOrDefault(item, 0);
-            if (was != now) {
-                changed.add("changed=" + item + ":" + was + "->" + now);
-            }
-        }
-        return List.copyOf(changed);
+        blocked.unblock(stock, now);
     }
 
     public List<String> failureHistory(String ticketId) {
