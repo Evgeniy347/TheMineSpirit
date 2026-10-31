@@ -16,22 +16,22 @@ public final class FloatingCleanup {
 
     public record Rooms(
             boolean yardReady,
-            boolean playerBuilding,
+            boolean protectedStructure,
             boolean chestEmpty,
             boolean stationNeeded,
             boolean reachable,
             boolean plannedFence) {
-        public Rooms(boolean yardReady, boolean playerBuilding, boolean chestEmpty, boolean stationNeeded) {
-            this(yardReady, playerBuilding, chestEmpty, stationNeeded, true, false);
+        public Rooms(boolean yardReady, boolean protectedStructure, boolean chestEmpty, boolean stationNeeded) {
+            this(yardReady, protectedStructure, chestEmpty, stationNeeded, true, false);
         }
 
         public Rooms(
                 boolean yardReady,
-                boolean playerBuilding,
+                boolean protectedStructure,
                 boolean chestEmpty,
                 boolean stationNeeded,
                 boolean reachable) {
-            this(yardReady, playerBuilding, chestEmpty, stationNeeded, reachable, false);
+            this(yardReady, protectedStructure, chestEmpty, stationNeeded, reachable, false);
         }
     }
 
@@ -47,7 +47,7 @@ public final class FloatingCleanup {
         if (finding.kind() == FloatingBlocks.Kind.TREE) {
             return rooms.reachable() ? Action.REMOVE : Action.SKIP_UNREACHABLE;
         }
-        if (rooms.playerBuilding()) {
+        if (rooms.protectedStructure()) {
             return Action.SKIP_PROTECTED;
         }
         if (rooms.plannedFence() && isFence(finding)) {

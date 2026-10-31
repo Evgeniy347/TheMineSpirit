@@ -52,7 +52,7 @@ public final class SettlementBreak {
         Objects.requireNonNull(neighbours, "Соседи не могут быть null: без них не отличить постройку");
         Place place = place(facts.onPlot(), facts.inPlan());
         return switch (of(facts.origin(), place)) {
-            case SETTLEMENT -> protection.checkSettlement(facts.blockId(), facts.inProtectedZone());
+            case SETTLEMENT -> settlement(protection, facts, neighbours);
             case OWN -> SettlementBreakProtection.own(protection, facts.blockId(), facts.inProtectedZone());
             case DEFAULT ->
                 protection.check(
@@ -61,6 +61,19 @@ public final class SettlementBreak {
                         new BlockProtection.Placement(
                                 facts.origin() == Origin.PLAYER, facts.inProtectedZone(), facts.unprotectArea()));
         };
+    }
+
+    private static BlockProtection.Decision settlement(
+            BlockProtection protection, Facts facts, Supplier<List<String>> neighbours) {
+        BlockProtection.Decision mechanisms = protection.checkSettlement(facts.blockId(), facts.inProtectedZone());
+        if (mechanisms instanceof BlockProtection.Refused) {
+            return mechanisms;
+        }
+        return protection.check(
+                facts.blockId(),
+                neighbours.get(),
+                new BlockProtection.Placement(
+                        facts.origin() == Origin.PLAYER, facts.inProtectedZone(), facts.unprotectArea()));
     }
 
     public static Check of(Origin origin, Place place) {

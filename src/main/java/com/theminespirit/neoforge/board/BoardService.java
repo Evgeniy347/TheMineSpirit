@@ -785,7 +785,7 @@ public final class BoardService {
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
-        TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)));
+        TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(SettlementHome.of(spirits)));
         TaskNode plan;
         try {
             plan = planOf(ticket, target);
@@ -904,7 +904,8 @@ public final class BoardService {
             board.noteWait(ticket.id(), null);
             TicketTarget target = gatherOnTop(
                     ticket,
-                    TransferTicket.restore(ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(homeOf(spirits)))),
+                    TransferTicket.restore(
+                            ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(SettlementHome.of(spirits)))),
                     spirit);
             Optional<TicketTarget> fitted = fitTransfer(ticket, target, spirit);
             if (fitted.isEmpty()) {
@@ -1026,12 +1027,16 @@ public final class BoardService {
     }
 
     public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
-        return targets.getOrDefault(ticketId, TicketTarget.at(homeOf(spirits)));
+        return targets.getOrDefault(ticketId, TicketTarget.at(SettlementHome.of(spirits)));
+    }
+
+    boolean hasTarget(String ticketId) {
+        return targets.containsKey(ticketId);
     }
 
     BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
         TicketTarget target = targets.get(ticketId);
-        return target != null ? target.target() : homeOf(spirits);
+        return target != null ? target.target() : SettlementHome.of(spirits);
     }
 
     private List<BlockCoord> gateCenters(List<SpiritEntity> spirits) {
@@ -1045,13 +1050,13 @@ public final class BoardService {
                 continue;
             }
             TicketTarget target = targets.get(ticket.id());
-            BlockCoord center = target != null ? target.target() : homeOf(spirits);
+            BlockCoord center = target != null ? target.target() : SettlementHome.of(spirits);
             if (!centers.contains(center)) {
                 centers.add(center);
             }
         }
         if (centers.isEmpty()) {
-            centers.add(homeOf(spirits));
+            centers.add(SettlementHome.of(spirits));
         }
         return centers;
     }
@@ -1079,7 +1084,7 @@ public final class BoardService {
                 supplyClosed,
                 now,
                 BoardTuning.failBackoffTicks());
-        BlockCoord home = homeOf(spirits);
+        BlockCoord home = SettlementHome.of(spirits);
         for (SupplyGate.Request request : decision.supply()) {
             SupplyTickets.issue(level, this, targets, home, request, BoardCase.SUPPLY_SITE, now);
         }
@@ -1106,13 +1111,5 @@ public final class BoardService {
         return status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED;
-    }
-
-    static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        return spirits.stream()
-                .map(SpiritEntity::home)
-                .flatMap(Optional::stream)
-                .findFirst()
-                .orElse(new BlockCoord(0, 64, 0));
     }
 }

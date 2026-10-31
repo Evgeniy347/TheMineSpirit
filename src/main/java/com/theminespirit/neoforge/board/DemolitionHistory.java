@@ -25,6 +25,14 @@ final class DemolitionHistory {
                                 || now - ticket.createdAt() < PlanDemolition.COOLDOWN);
     }
 
+    static List<BoardTicket> open(BoardService service) {
+        return service.board().all().stream()
+                .filter(ticket -> ticket.id().startsWith(PlanDemolition.PREFIX))
+                .filter(ticket ->
+                        OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE)))
+                .toList();
+    }
+
     static void supersede(ServerLevel level, BoardService service, String keep) {
         for (BoardTicket ticket : List.copyOf(service.board().all())) {
             if (ticket.id().startsWith(PlanDemolition.PREFIX)
