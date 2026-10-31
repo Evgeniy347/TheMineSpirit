@@ -12,7 +12,15 @@ public final class ChopTuning {
     public static final double CHOP_ARRIVAL = 0.6;
     public static final int COLLECT_RADIUS = 6;
     public static final int MAX_REJECTED_TREES = 8;
-    public static final int SETTLEMENT_RADIUS = 32;
+    public static final int MAX_SEARCH_RADIUS = 100;
 
     private ChopTuning() {}
+
+    public static int maxDistance(int requestedRadius) {
+        if (requestedRadius < 1) {
+            throw new IllegalArgumentException("radius=" + requestedRadius
+                    + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
+        }
+        return Math.min(requestedRadius, MAX_SEARCH_RADIUS);
+    }
 }
