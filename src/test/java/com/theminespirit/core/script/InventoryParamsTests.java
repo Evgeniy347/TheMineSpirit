@@ -36,6 +36,37 @@ class InventoryParamsTests {
     }
 
     @Test
+    void transferParams_LeftoverAbsent_DefaultsFalse() {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("container", "nearest");
+        params.put("item", "cobblestone");
+        params.put("count", 10);
+        params.put("radius", 8);
+
+        assertEquals(
+                false,
+                TransferParams.from(params).leftover(),
+                "обычный deposit не сдаёт весь излишек: иначе сборщик выложил бы в сундук и то, "
+                        + "что ещё нужно для постройки");
+    }
+
+    @Test
+    void transferParams_LeftoverTrue_ReadsFlag() {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("container", "auto");
+        params.put("item", "minecraft:cobblestone");
+        params.put("count", 64);
+        params.put("radius", 8);
+        params.put("leftover", true);
+
+        assertEquals(
+                true,
+                TransferParams.from(params).leftover(),
+                "store передаёт leftover=true: после названного предмета дух обязан сдать мусор "
+                        + "(observe14 N7: 128 cobble и 64 dirt оставались в инвентарях)");
+    }
+
+    @Test
     void transferParams_CoordinatesTarget_GivesPosition() {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("container", "12,64,-7");

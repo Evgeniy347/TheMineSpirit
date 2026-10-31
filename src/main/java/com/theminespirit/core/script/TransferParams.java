@@ -3,7 +3,7 @@ package com.theminespirit.core.script;
 import java.util.Map;
 import java.util.Objects;
 
-public record TransferParams(ContainerTarget container, String item, int count, int radius) {
+public record TransferParams(ContainerTarget container, String item, int count, int radius, boolean leftover) {
     public TransferParams {
         Objects.requireNonNull(container, "Контейнер не может быть null: 'nearest' или координаты x,y,z");
         if (item == null || item.isBlank()) {
@@ -28,6 +28,7 @@ public record TransferParams(ContainerTarget container, String item, int count, 
                 ContainerTarget.parse(ScriptArgs.requireString(params, "container")),
                 ScriptArgs.requireString(params, "item"),
                 ScriptArgs.requireInt(params, "count"),
-                ScriptArgs.requireInt(params, "radius"));
+                ScriptArgs.requireInt(params, "radius"),
+                ScriptArgs.optionalBoolean(params, "leftover", false));
     }
 }

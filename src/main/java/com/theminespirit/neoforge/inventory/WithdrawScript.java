@@ -3,14 +3,13 @@ package com.theminespirit.neoforge.inventory;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.ContainerSnapshot;
-import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.inventory.WithdrawSpread;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.script.ContainerTarget;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
@@ -20,12 +19,17 @@ import org.slf4j.Logger;
 public final class WithdrawScript extends ContainerTask {
     private static final Logger LOGGER = LogUtils.getLogger();
     private final TransferParams params;
-    private final Set<Integer> tried = new HashSet<>();
+    private List<WithdrawSpread.Step> steps;
+    private int stepIndex;
     private String scanned = "";
 
     public WithdrawScript(SpiritEntity spirit, TransferParams params) {
-        super(spirit, params.container(), params.radius());
+        super(spirit, scanTarget(params), params.radius());
         this.params = params;
+    }
+
+    private static ContainerTarget scanTarget(TransferParams params) {
+        return params.container() instanceof ContainerTarget.Nearest ? ContainerTarget.AUTO : params.container();
     }
 
     @Override
@@ -88,31 +92,22 @@ public final class WithdrawScript extends ContainerTask {
 
     @Override
     protected AutoMove nextAutoMove(AutoContainerScan scan) {
-        int remaining = params.count() - movedTotal();
+        int remaining = transferRemaining();
         if (remaining <= 0) {
             return null;
         }
-        IdFilter filter = IdFilter.of(List.of(params.item()));
         BlockCoord at = new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
-        int best = -1;
-        long bestDistance = Long.MAX_VALUE;
-        List<ContainerSnapshot> snapshots = scan.snapshots();
-        scanned = "; осмотрено контейнеров " + snapshots.size() + " у " + at;
-        for (int index = 0; index < snapshots.size(); index++) {
-            if (tried.contains(index) || !holds(snapshots.get(index), filter)) {
-                continue;
-            }
-            long distance = distance(snapshots.get(index).pos(), at);
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = index;
-            }
+        if (steps == null) {
+            steps = WithdrawSpread.plan(scan.snapshots(), at, params.item(), params.count())
+                    .steps();
+            scanned = "; осмотрено контейнеров " + scan.snapshots().size() + " у " + at;
         }
-        if (best < 0) {
+        if (stepIndex >= steps.size()) {
             return null;
         }
-        tried.add(best);
-        ContainerSnapshot chosen = snapshots.get(best);
+        WithdrawSpread.Step step = steps.get(stepIndex++);
+        int index = step.index();
+        ContainerSnapshot chosen = scan.snapshots().get(index);
         LOGGER.info(
                 "[withdraw] {}: контейнер {} — свободно {} из {} слотов, беру '{}' ×{}",
                 spirit.displayName(),
@@ -120,10 +115,13 @@ public final class WithdrawScript extends ContainerTask {
                 chosen.freeSlots(),
                 chosen.slotCount(),
                 params.item(),
-                remaining);
-        TransferRunner runner =
-                TransferRunner.filtered(scan.containers().get(best), spirit.getInventory(), filter, remaining);
-        return new AutoMove(scan.containers().get(best), snapshots.get(best).pos(), best, runner);
+                step.count());
+        TransferRunner runner = TransferRunner.filtered(
+                scan.containers().get(index),
+                spirit.getInventory(),
+                IdFilter.of(List.of(params.item())),
+                Math.min(step.count(), remaining));
+        return new AutoMove(scan.containers().get(index), chosen.pos(), index, runner);
     }
 
     @Override
@@ -148,21 +146,5 @@ public final class WithdrawScript extends ContainerTask {
             }
         }
         return free;
-    }
-
-    private static boolean holds(ContainerSnapshot snapshot, IdFilter filter) {
-        for (Stack stack : snapshot.slots()) {
-            if (stack != null && stack.count() > 0 && filter.matches(stack.item())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static long distance(BlockCoord a, BlockCoord b) {
-        long dx = (long) a.x() - b.x();
-        long dy = (long) a.y() - b.y();
-        long dz = (long) a.z() - b.z();
-        return dx * dx + dy * dy + dz * dz;
     }
 }

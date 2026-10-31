@@ -2,13 +2,18 @@ package com.theminespirit.neoforge.inventory;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.ContainerSnapshot;
+import com.theminespirit.core.inventory.DepositSelection;
 import com.theminespirit.core.inventory.DepositSpread;
+import com.theminespirit.core.inventory.KitFor;
+import com.theminespirit.core.inventory.Slice;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.Container;
 import org.slf4j.Logger;
@@ -92,7 +97,7 @@ public final class DepositScript extends ContainerTask {
             }
         }
         if (stepIndex >= steps.size() || transferRemaining() <= 0) {
-            return null;
+            return params.leftover() ? surplusMove(scan) : null;
         }
         DepositSpread.Step step = steps.get(stepIndex++);
         int index = step.index();
@@ -123,6 +128,85 @@ public final class DepositScript extends ContainerTask {
                     + params.item() + "', остальное осталось у духа; нужен ещё сундук");
         }
         return finish(movedTotal(), lastShortage());
+    }
+
+    private AutoMove surplusMove(AutoContainerScan scan) {
+        for (KindGroup group : surplusGroups(scan)) {
+            DepositSpread.Plan plan = DepositSpread.plan(scan.snapshots(), blockCoord(), group.kind, group.total());
+            if (plan.steps().isEmpty()) {
+                continue;
+            }
+            DepositSpread.Step step = plan.steps().get(0);
+            List<Slice> capped = capped(group.slices, step.count());
+            if (capped.isEmpty()) {
+                continue;
+            }
+            TransferRunner runner = TransferRunner.slices(
+                    spirit.getInventory(), scan.containers().get(step.index()), capped);
+            return new AutoMove(
+                    scan.containers().get(step.index()),
+                    scan.snapshots().get(step.index()).pos(),
+                    step.index(),
+                    runner);
+        }
+        return null;
+    }
+
+    private List<KindGroup> surplusGroups(AutoContainerScan scan) {
+        List<Stack> inventory = scan.mapper().map(spirit.getInventory());
+        BaseKit kit = KitFor.kitFor(spirit.currentActivity().orElse(null), spirit.isChild());
+        List<Slice> surplus = DepositSelection.surplus(inventory, kit, InventoryTables.values(), -1);
+        List<KindGroup> groups = new ArrayList<>();
+        for (Slice slice : surplus) {
+            Stack kind = inventory.get(slice.slot());
+            if (kind == null) {
+                continue;
+            }
+            KindGroup group = null;
+            for (KindGroup candidate : groups) {
+                if (candidate.kind.sameKindAs(kind)) {
+                    group = candidate;
+                    break;
+                }
+            }
+            if (group == null) {
+                group = new KindGroup(kind);
+                groups.add(group);
+            }
+            group.slices.add(slice);
+        }
+        return groups;
+    }
+
+    private static List<Slice> capped(List<Slice> slices, int limit) {
+        List<Slice> capped = new ArrayList<>();
+        int left = limit;
+        for (Slice slice : slices) {
+            if (left <= 0) {
+                break;
+            }
+            int count = Math.min(slice.count(), left);
+            capped.add(new Slice(slice.slot(), count));
+            left -= count;
+        }
+        return capped;
+    }
+
+    private static final class KindGroup {
+        private final Stack kind;
+        private final List<Slice> slices = new ArrayList<>();
+
+        private KindGroup(Stack kind) {
+            this.kind = kind;
+        }
+
+        private int total() {
+            int total = 0;
+            for (Slice slice : slices) {
+                total += slice.count();
+            }
+            return total;
+        }
     }
 
     private Stack kind(AutoContainerScan scan) {
