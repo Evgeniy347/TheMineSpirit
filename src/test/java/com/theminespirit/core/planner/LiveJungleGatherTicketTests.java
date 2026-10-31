@@ -1,6 +1,7 @@
 package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -84,28 +85,23 @@ class LiveJungleGatherTicketTests {
     }
 
     @Test
-    void liveOakPlanksTicket_WideTreeSearch_ChopsThenCrafts() throws IOException {
+    void liveOakPlanksTicket_AfterChop_CraftsFromLogsWithoutSeparateChopping() throws IOException {
         JsonNode ticket = ticket(OAK_TICKET);
         assertOnBoard(ticket);
         assertEquals("oak_planks", ticket.get("supplyItem").asText(), "Живой тикет обязан снабжать дубовыми досками");
 
         List<ScriptCall> steps = calls(livePlan(ticket));
-        ScriptCall chop = first(
-                steps,
-                call -> "chop_tree".equals(call.script())
-                        && "oak".equals(call.params().get("species")));
-        assertTrue(chop != null, "Живой supply_gather:oak_planks обязан рубить дубы: " + steps);
-        assertEquals(
-                BoardTuning.chopRadius(),
-                chop.params().get("radius"),
-                "Живой supply_gather:oak_planks обязан просить полный радиус рубки доски: " + steps);
-        assertEquals(
-                ChopTuning.maxDistance((Integer) chop.params().get("radius")),
-                chop.params().get("radius"),
-                "Рубка дубов снова упирается в предел 32: живой провал «ближайшее дерево 33» повторится");
+
         assertTrue(
                 steps.stream().anyMatch(call -> "acquire".equals(call.script())),
-                "После рубки план обязан крафтить доски через acquire: " + steps);
+                "План обязан крафтить доски через acquire: " + steps);
+        assertFalse(
+                steps.stream()
+                        .anyMatch(call -> "chop_tree".equals(call.script())
+                                && "oak".equals(call.params().get("species"))),
+                "План досок снова рубит дубы отдельным шагом перед acquire: провал рубки «деревья oak "
+                        + "закончились» валит задание, хотя брёвна уже лежат в инвентаре (observe12 N18). План: "
+                        + steps);
     }
 
     private static TaskNode livePlan(JsonNode ticket) {
