@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.ScriptProgressWatch;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.SelfEscape;
@@ -29,13 +30,17 @@ final class RescueWatch {
     static final String PREFIX = "rescue:";
     private static final String DIG_OUT = "dig_out";
     private static final Logger LOGGER = LogUtils.getLogger();
+    private final ScriptProgressWatch progress = new ScriptProgressWatch();
 
-    private RescueWatch() {}
+    RescueWatch() {}
 
-    static Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+    Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         Set<String> live = new HashSet<>();
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved() || digging(spirit)) {
+                continue;
+            }
+            if (progress.advancing(spirit.getUUID(), spirit.taskProgress().orElse(null), now)) {
                 continue;
             }
             BlockPos feet = spirit.blockPosition();

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StallWatch;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
@@ -30,7 +31,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -62,7 +62,7 @@ final class MineBuildScript implements ScriptInstance {
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private final Approach approach;
-    private final MineCellAim aim;
+    private final MineAimStep aim;
     private final MineFinish finish;
     private final List<MineColumn> plan;
     private final Set<MineColumn> open = new HashSet<>();
@@ -73,8 +73,10 @@ final class MineBuildScript implements ScriptInstance {
     private final List<Schematic.PlacedEntry> torches;
     private final MineCells cells;
     private final MineEntranceOpening entranceOpening;
-
+    private final StallWatch stall = new StallWatch();
     private Phase phase = Phase.PICK;
+    private Phase aimReturn = Phase.DIG;
+    private long ticks;
     private @Nullable MineColumn current;
     private final MineStepWalker stepWalker;
     private boolean breaking;
@@ -95,9 +97,9 @@ final class MineBuildScript implements ScriptInstance {
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
-        this.aim = new MineCellAim(spirit);
         this.stepWalker = new MineStepWalker(approach, safety);
         this.plan = new ArrayList<>(MinePlan.order(MinePlan.columns(layout.floors(), layout.air()), layout.entrance()));
+        this.aim = new MineAimStep(spirit, level, safety, plan);
         this.torches = new ArrayList<>(layout.optional());
         Set<BlockCoord> walls = new HashSet<>(layout.floors());
         plan.forEach(column -> walls.remove(column.floor()));
@@ -127,6 +129,8 @@ final class MineBuildScript implements ScriptInstance {
         if (spirit.isRemoved()) {
             return fail("дух исчез во время проходки шахты");
         }
+        ticks++;
+        watchStall();
         if (breaking) {
             breakTick();
             return outcome;
@@ -375,7 +379,7 @@ final class MineBuildScript implements ScriptInstance {
             return false;
         }
         if (MineCellStands.occupies(new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()), cell)) {
-            aimAt(cell, new MineCellPlan.Seen(occupantText(cell), true, true, true));
+            aimAt(cell, new MineCellPlan.Seen(aim.occupantText(cell), true, true, true));
             return false;
         }
         BlockPlacer.Begin begin = placer.beginWithoutSupport(toPos(cell), BlockStates.stateFor(material), material);
@@ -384,22 +388,20 @@ final class MineBuildScript implements ScriptInstance {
         }
         if (begin instanceof BlockPlacer.Refused refused) {
             if (refused.reason() == BlockPlacer.RefuseReason.OCCUPIED) {
-                String other = occupantText(cell);
+                String other = aim.occupantText(cell);
                 if (other != null) {
                     aimAt(cell, new MineCellPlan.Seen(other, false, true, true));
                     return false;
                 }
             }
             if (refused.reason() == BlockPlacer.RefuseReason.OUT_OF_REACH) {
-                aimAt(cell, new MineCellPlan.Seen(occupantText(cell), false, true, false));
+                aimAt(cell, new MineCellPlan.Seen(aim.occupantText(cell), false, true, false));
                 return false;
             }
-            fail(what + " в " + cell + " не поставить: " + refused.message()
-                    + MineCellAim.context(level, spirit, plan, cell));
+            fail(what + " в " + cell + " не поставить: " + refused.message() + aim.context(cell));
             return false;
         }
-        fail(what + " в " + cell + " не поставить: " + ((BlockPlacer.Protected) begin).reason()
-                + MineCellAim.context(level, spirit, plan, cell));
+        fail(what + " в " + cell + " не поставить: " + ((BlockPlacer.Protected) begin).reason() + aim.context(cell));
         return false;
     }
 
@@ -415,54 +417,49 @@ final class MineBuildScript implements ScriptInstance {
                 return;
             }
             if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH) {
-                aimAt(cell, new MineCellPlan.Seen(occupantText(cell), false, true, false));
+                aimAt(cell, new MineCellPlan.Seen(aim.occupantText(cell), false, true, false));
                 return;
             }
             if (refused.reason() == BlockBreaker.RefuseReason.NO_SIGHT) {
-                aimAt(cell, new MineCellPlan.Seen(occupantText(cell), false, false, true));
+                aimAt(cell, new MineCellPlan.Seen(aim.occupantText(cell), false, false, true));
                 return;
             }
-            fail("клетку шахты " + cell + " не выломать: " + refused.message()
-                    + MineCellAim.context(level, spirit, plan, cell));
+            fail("клетку шахты " + cell + " не выломать: " + refused.message() + aim.context(cell));
             return;
         }
-        fail("клетку шахты " + cell + " не выломать: " + ((BlockBreaker.Protected) begin).reason()
-                + MineCellAim.context(level, spirit, plan, cell));
+        fail("клетку шахты " + cell + " не выломать: " + ((BlockBreaker.Protected) begin).reason() + aim.context(cell));
+    }
+
+    private void watchStall() {
+        long loop = open.size() * 1_000_003L + dug * 1_001L + floors * 7L + plugs + closed.size() * 17L;
+        if (!stall.stalled(ticks, loop)) {
+            return;
+        }
+        MineStallNote.warn(spirit.getStringUUID() + ", фаза " + phase + ", колонка "
+                + (current == null ? "нет" : current.floor()) + ", дух "
+                + new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()) + ", открыто "
+                + open.size() + " из " + (plan.size() - closed.size()) + ", выкопано " + dug + ", полов "
+                + floors + ", пробок " + plugs + ", закрыто рудой " + closed.size());
     }
 
     private void aimTick() {
         switch (aim.tick()) {
             case RUNNING -> {}
-            case RETRY -> phase = Phase.DIG;
-            case FAILED -> {
-                String reason = aim.failure();
-                BlockCoord cell = aim.cell();
-                String context = cell == null ? "" : MineCellAim.context(level, spirit, plan, cell);
-                fail((reason == null ? "подход к клетке шахты провалился" : reason) + context);
-            }
+            case RESUME -> phase = aimReturn;
+            case FAILED -> fail(aim.failure());
         }
     }
 
     private void aimAt(BlockCoord cell, MineCellPlan.Seen seen) {
-        MineCellPlan.Plan cellPlan = MineCellPlan.of(
-                cell,
-                new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()),
-                safety,
-                seen,
-                stand -> !aim.tried(stand) && MineCellAim.occupant(level, spirit, stand) == null);
-        switch (cellPlan.kind()) {
-            case READY -> phase = Phase.DIG;
-            case WAIT -> aim.beginWait(cell, cellPlan.reason());
-            case APPROACH -> aim.beginApproach(cell, cellPlan.stands(), cellPlan.reason());
-            case REFUSE ->
-                fail("к клетке шахты " + cell + " не подойти: " + cellPlan.reason()
-                        + MineCellAim.context(level, spirit, plan, cell));
+        MineAimStep.Begin begin = aim.begin(cell, seen);
+        switch (begin.next()) {
+            case READY -> {}
+            case AIM -> {
+                aimReturn = phase;
+                phase = Phase.AIM;
+            }
+            case REFUSE -> fail(begin.failure());
         }
-    }
-
-    private @Nullable String occupantText(BlockCoord cell) {
-        LivingEntity other = MineCellAim.occupant(level, spirit, cell);
-        return other == null ? null : MineCellAim.describe(other);
     }
 
     private void breakTick() {
