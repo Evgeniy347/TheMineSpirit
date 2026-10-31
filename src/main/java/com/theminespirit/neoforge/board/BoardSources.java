@@ -17,7 +17,6 @@ public final class BoardSources {
     private final FishingWatch fishing = new FishingWatch();
     private final HiveWatch hive = new HiveWatch();
     private final PetWatch pets = new PetWatch();
-    private final IdleWatch idle = new IdleWatch();
     private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
@@ -74,7 +73,7 @@ public final class BoardSources {
                         now),
                 Set.of()));
         guard.run("evergreen", () -> EvergreenWatch.tick(level, service, spirits, now));
-        guard.run("idle", () -> idle.tick(service, spirits, now));
+        guard.run("idle", () -> IdleWatch.tick(service, spirits, now));
         guard.run("fishing", () -> fishing.tick(level, service, spirits, stock, now));
         guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
         guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));

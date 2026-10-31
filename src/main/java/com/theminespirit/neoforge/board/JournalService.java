@@ -11,6 +11,7 @@ import com.theminespirit.core.board.ConfigStamp;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
@@ -80,6 +81,10 @@ public final class JournalService {
 
     public List<BoardLogEntry> last(int limit) {
         return journal.last(limit);
+    }
+
+    public Optional<BoardLogEntry> findStatus(String ticketId, int maxLines) {
+        return journal.findStatus(ticketId, maxLines);
     }
 
     public int restore(BoardLedger ledger) {

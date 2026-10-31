@@ -67,26 +67,42 @@ final class BlockedBook {
             if (!improved && !expired(ticket.id(), now)) {
                 continue;
             }
-            statuses.put(ticket.id(), BoardStatus.PENDING);
-            claims.remove(ticket.id());
-            failures.remove(ticket.id());
-            reasons.remove(ticket.id());
-            missing.remove(ticket.id());
-            since.remove(ticket.id());
-            notes.add(new BoardLogEntry(
-                    BoardLog.Event.UNBLOCKED,
-                    now,
-                    ticket.id(),
-                    ticket.boardCase(),
-                    ticket.level(),
-                    ticket.cause(),
-                    BoardRules.priorityOf(ticket.boardCase()),
-                    ticket.priority(),
-                    changed(improved, before, missingNow),
-                    null,
-                    ConfigStamp.current(),
-                    now));
+            release(ticket, now, changed(improved, before, missingNow));
         }
+    }
+
+    int releaseAll(long now) {
+        int released = 0;
+        for (BoardTicket ticket : List.copyOf(tickets.values())) {
+            if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {
+                continue;
+            }
+            release(ticket, now, List.of("failures=0", "idle=" + BoardTuning.idleReleaseTicks()));
+            released++;
+        }
+        return released;
+    }
+
+    private void release(BoardTicket ticket, long now, List<String> change) {
+        statuses.put(ticket.id(), BoardStatus.PENDING);
+        claims.remove(ticket.id());
+        failures.remove(ticket.id());
+        reasons.remove(ticket.id());
+        missing.remove(ticket.id());
+        since.remove(ticket.id());
+        notes.add(new BoardLogEntry(
+                BoardLog.Event.UNBLOCKED,
+                now,
+                ticket.id(),
+                ticket.boardCase(),
+                ticket.level(),
+                ticket.cause(),
+                BoardRules.priorityOf(ticket.boardCase()),
+                ticket.priority(),
+                change,
+                null,
+                ConfigStamp.current(),
+                now));
     }
 
     void clear(String ticketId) {

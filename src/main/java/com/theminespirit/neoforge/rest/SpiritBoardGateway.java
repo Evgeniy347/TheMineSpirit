@@ -33,6 +33,7 @@ import net.minecraft.server.level.ServerLevel;
 
 public final class SpiritBoardGateway implements BoardGateway {
     private static final String ID_PREFIX = "board-";
+    private static final int JOURNAL_SEARCH_LINES = 65_536;
 
     private final MinecraftServer server;
     private final ServerThreadCall serverCall;
@@ -59,6 +60,16 @@ public final class SpiritBoardGateway implements BoardGateway {
     @Override
     public Optional<BoardTask> task(String ticketId) {
         return serverCall.call(() -> findTask(ticketId), RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
+    @Override
+    public Optional<BoardTask> history(String ticketId) {
+        return serverCall.call(
+                () -> BoardRegistry.get(server.overworld())
+                        .journal()
+                        .findStatus(ticketId, JOURNAL_SEARCH_LINES)
+                        .map(BoardTasks::fromJournal),
+                RestTuning.SERVER_CALL_TIMEOUT);
     }
 
     @Override

@@ -112,6 +112,13 @@ final class CasePauseBook {
         return released;
     }
 
+    int releaseAll(UUID spirit) {
+        Objects.requireNonNull(spirit, "spirit не может быть null: простой считается на конкретного духа");
+        int before = failures.size();
+        failures.entrySet().removeIf(entry -> entry.getKey().spirit().equals(spirit));
+        return before - failures.size();
+    }
+
     void reset(UUID spirit, BoardCase boardCase) {
         failures.remove(new SpiritCase(spirit, boardCase));
     }
