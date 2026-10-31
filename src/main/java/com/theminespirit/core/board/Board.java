@@ -363,18 +363,7 @@ public final class Board {
     }
 
     public boolean reprioritize(String ticketId, int priority) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: приоритет меняется у задания по id");
-        BoardTicket ticket = tickets.get(ticketId);
-        BoardStatus status = statuses.get(ticketId);
-        boolean open = status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED
-                || status == BoardStatus.BLOCKED;
-        if (ticket == null || !open || ticket.priority() == priority) {
-            return false;
-        }
-        tickets.put(ticketId, ticket.withPriority(priority));
-        return true;
+        return blocked.reprioritize(ticketId, priority);
     }
 
     public boolean reopen(String ticketId) {
@@ -395,14 +384,23 @@ public final class Board {
         return blocked.require(ticketId, requiredItems);
     }
 
-    public boolean release(String ticketId) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
-        if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
+    public boolean built(String ticketId) {
+        BoardTicket ticket = tickets.get(ticketId);
+        BoardStatus status = statuses.get(ticketId);
+        if (ticket == null || status == null || status == BoardStatus.DONE || status == BoardStatus.ASSIGNED) {
             return false;
         }
-        statuses.put(ticketId, BoardStatus.PENDING);
-        claimAssignees.remove(ticketId);
+        statuses.put(ticketId, BoardStatus.DONE);
+        ledger.complete(ticket.boardCase(), ticket.level());
+        events.transition(BoardLog.Event.DONE, ticket, null, nowTicks.getAsLong());
+        ticketFailures.remove(ticketId);
+        lastFailReasons.remove(ticketId);
+        blocked.clear(ticketId);
         return true;
+    }
+
+    public boolean release(String ticketId) {
+        return blocked.release(ticketId);
     }
 
     public List<HolderRelease> releaseDeadHolders(Set<UUID> live) {
