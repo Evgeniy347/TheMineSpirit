@@ -21,4 +21,19 @@ final class ThreadStates {
             }
         }
     }
+
+    static void awaitWaiting(Thread thread, String message) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (thread.getState() != Thread.State.WAITING && thread.getState() != Thread.State.TIMED_WAITING) {
+            if (System.nanoTime() > deadline) {
+                fail(message + "; состояние потока: " + thread.getState());
+            }
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                fail("Ожидание состояния потока прервано: " + message);
+            }
+        }
+    }
 }

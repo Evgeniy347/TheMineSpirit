@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
 public final class IdempotencyCache {
@@ -27,6 +29,20 @@ public final class IdempotencyCache {
     }
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
+    private final Duration waitTimeout;
+
+    public IdempotencyCache() {
+        this(RestTuning.IDEMPOTENCY_WAIT);
+    }
+
+    IdempotencyCache(Duration waitTimeout) {
+        this.waitTimeout = Objects.requireNonNull(
+                waitTimeout, "Предел ожидания повтора не может быть null: без него ожидание бесконечно");
+        if (waitTimeout.isZero() || waitTimeout.isNegative()) {
+            throw new IllegalArgumentException("Предел ожидания повтора " + waitTimeout
+                    + " обязан быть положительным: иначе дубликат не дождётся");
+        }
+    }
 
     public synchronized Result check(String requestId, String fingerprint) {
         Objects.requireNonNull(requestId, "requestId не может быть null: идемпотентность держится на UUID клиента");
@@ -39,9 +55,19 @@ public final class IdempotencyCache {
         if (!entry.fingerprint.equals(fingerprint)) {
             return new Result.Conflict();
         }
+        long deadline = System.nanoTime() + waitTimeout.toNanos();
         while (entry.inProgress()) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0L) {
+                throw new ApiException(
+                        ErrorCode.INTERNAL,
+                        "Повтор request_id " + requestId + " не дождался ответа первого запроса за "
+                                + ServerThreadCall.formatSeconds(waitTimeout) + " с: первый запрос завис или упал, "
+                                + "не сохранив ответ; повторите запрос позже",
+                        Map.of("request_id", requestId, "timeout_ms", waitTimeout.toMillis()));
+            }
             try {
-                wait();
+                TimeUnit.NANOSECONDS.timedWait(this, remaining);
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
                 throw new ApiException(

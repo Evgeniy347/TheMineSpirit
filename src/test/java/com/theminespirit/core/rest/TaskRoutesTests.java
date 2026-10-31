@@ -384,10 +384,8 @@ class TaskRoutesTests {
         AtomicReference<Throwable> secondFailure = new AtomicReference<>();
         Thread second = postInBackground(body, secondOpened, secondFailure);
         second.start();
-        ThreadStates.awaitState(
-                second,
-                Thread.State.WAITING,
-                "Дубликат с тем же request_id обязан ждать результат первого, а не получить 409 «дух занят»");
+        ThreadStates.awaitWaiting(
+                second, "Дубликат с тем же request_id обязан ждать результат первого, а не получить 409 «дух занят»");
 
         releaseFirst.countDown();
         first.join(TimeUnit.SECONDS.toMillis(5));
@@ -436,8 +434,7 @@ class TaskRoutesTests {
         AtomicReference<Throwable> secondFailure = new AtomicReference<>();
         Thread second = postInBackground(body, secondOpened, secondFailure);
         second.start();
-        ThreadStates.awaitState(
-                second, Thread.State.WAITING, "Дубликат обязан ждать результат первого, пока тот не провалится");
+        ThreadStates.awaitWaiting(second, "Дубликат обязан ждать результат первого, пока тот не провалится");
 
         releaseFirst.countDown();
         first.join(TimeUnit.SECONDS.toMillis(5));
