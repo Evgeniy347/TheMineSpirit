@@ -36,7 +36,7 @@ final class RescueWatch {
 
     Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         Set<String> live = new HashSet<>();
-        BlockCoord settlement = BoardService.homeOf(spirits);
+        BlockCoord settlement = SettlementHome.of(spirits);
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved() || digging(spirit)) {
                 continue;

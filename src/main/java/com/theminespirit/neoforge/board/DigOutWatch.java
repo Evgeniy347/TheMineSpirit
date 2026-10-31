@@ -45,7 +45,7 @@ final class DigOutWatch {
     }
 
     void tick(ServerLevel level, List<SpiritEntity> spirits, long now) {
-        BlockCoord settlementHome = BoardService.homeOf(spirits);
+        BlockCoord settlementHome = SettlementHome.of(spirits);
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
                 continue;

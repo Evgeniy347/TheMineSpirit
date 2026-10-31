@@ -92,6 +92,16 @@ class FloatingCleanupTests {
     }
 
     @Test
+    void decide_ProtectedStation_IsSkippedInsteadOfRelocated() {
+        assertEquals(
+                FloatingCleanup.Action.SKIP_PROTECTED,
+                FloatingCleanup.decide(
+                        finding(FloatingBlocks.Kind.STATION), new FloatingCleanup.Rooms(true, true, false, true)),
+                "Станция внутри готовой постройки не ломается и не переносится: она часть мира (observe14: печь "
+                        + "−169,71,−489), а не висящий остаток; иначе уборка вечно падает на PROTECTED_BLOCKS");
+    }
+
+    @Test
     void decide_UnreachableStump_IsLeftAlone() {
         assertEquals(
                 FloatingCleanup.Action.SKIP_UNREACHABLE,

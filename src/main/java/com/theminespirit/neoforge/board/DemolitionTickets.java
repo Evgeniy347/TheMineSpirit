@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
@@ -28,9 +29,6 @@ final class DemolitionTickets {
 
     static boolean submit(
             BoardService service, StageSite site, List<PlannedBlock> blocks, long now, String id, Placement placement) {
-        TicketTarget target = placement.stand() == null
-                ? TicketTarget.at(blocks.get(0).at())
-                : TicketTarget.at(placement.stand()).withRelocate(placement.lowest(), placement.top());
         BoardOutcome outcome = service.submit(
                 new BoardTicket(
                         id,
@@ -42,7 +40,32 @@ final class DemolitionTickets {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of()),
-                target.withWork(new StageWork(site, blocks)));
+                target(site, blocks, placement));
         return outcome == BoardOutcome.ACCEPTED;
+    }
+
+    static void restore(
+            BoardService service, BoardTicket ticket, StageSite site, List<PlannedBlock> blocks, Placement placement) {
+        service.submit(ticket, target(site, blocks, placement));
+    }
+
+    static Placement treePlacement(BlockCoord stand, FloatingBlocks.Finding finding) {
+        int highest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .max()
+                .orElse(finding.at().y());
+        int lowest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .min()
+                .orElse(finding.at().y());
+        return new Placement(
+                stand, new BlockCoord(stand.x(), highest, stand.z()), new BlockCoord(stand.x(), lowest, stand.z()));
+    }
+
+    static TicketTarget target(StageSite site, List<PlannedBlock> blocks, Placement placement) {
+        TicketTarget target = placement.stand() == null
+                ? TicketTarget.at(blocks.get(0).at())
+                : TicketTarget.at(placement.stand()).withRelocate(placement.lowest(), placement.top());
+        return target.withWork(new StageWork(site, blocks));
     }
 }
