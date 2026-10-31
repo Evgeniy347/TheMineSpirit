@@ -85,7 +85,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
             return true;
         }
         return ownBlock(id)
-                .map(block -> GatherPolicy.check(block.toString()) instanceof GatherPolicy.Allowed)
+                .map(block -> GatherPolicy.sourceCheck(block.toString()) instanceof GatherPolicy.Allowed)
                 .orElse(false);
     }
 
@@ -143,7 +143,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
         ResourceLocation location = ResourceLocation.tryParse(qualified);
         return location != null
                 && BuiltInRegistries.BLOCK.containsKey(location)
-                && GatherPolicy.check(qualified) instanceof GatherPolicy.Allowed;
+                && GatherPolicy.sourceCheck(qualified) instanceof GatherPolicy.Allowed;
     }
 
     @Override

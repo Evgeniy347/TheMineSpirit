@@ -70,6 +70,26 @@ class CraftedMaterialPlanTests {
                         + "Шаги: " + calls);
     }
 
+    @Test
+    void gatherMaterials_StrippedLog_PlansAxeBeforeStripping() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS, TicketTarget.at(SITE).withSupply("stripped_oak_log", 4));
+
+        List<ScriptCall> calls = calls(plan);
+        int axe = index(calls, call -> "acquire".equals(call.script()) && axe(call));
+        int strip = index(calls, call -> "strip_log".equals(call.script()));
+
+        assertTrue(
+                axe >= 0 && strip > axe,
+                "Обтёсывание брёвен без топора падает: «нет топора для обтёсывания брёвен породы oak» "
+                        + "(observe9, F). Как надо: сначала acquire топора, потом strip_log. Шаги: " + calls);
+    }
+
+    private static boolean axe(ScriptCall call) {
+        Object item = call.params().get("item");
+        return item instanceof String id && id.endsWith("_axe");
+    }
+
     private static boolean stone(ScriptCall call) {
         Object item = call.params().get("item");
         return item instanceof String id

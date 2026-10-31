@@ -1,5 +1,6 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.planner.CraftedItems;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -52,6 +53,19 @@ public final class GatherPolicy {
                 return new Refused("блок '" + blockId + "' запрещён для gather: семейство '" + suffix
                         + "' — контейнеры, кровати или их варианты");
             }
+        }
+        return new Allowed();
+    }
+
+    public static Decision sourceCheck(String blockId) {
+        Decision base = check(blockId);
+        if (base instanceof Refused) {
+            return base;
+        }
+        String path = namespacePath(blockId);
+        if (CraftedItems.isCrafted(path)) {
+            return new Refused("блок '" + blockId + "' — крафтовый предмет: размещённые копии в постройках не "
+                    + "источник добычи; нужен рецепт или природное сырьё");
         }
         return new Allowed();
     }

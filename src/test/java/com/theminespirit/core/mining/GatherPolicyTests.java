@@ -111,4 +111,21 @@ class GatherPolicyTests {
                 () -> GatherPolicy.check(null),
                 "GatherPolicy.check(null) обязан отказывать: без id непонятно, что запрещать");
     }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"oak_planks", "minecraft:oak_planks", "oak_fence", "oak_stairs", "glass", "chest"})
+    void sourceCheck_CraftedFamily_IsRefused(String blockId) {
+        assertTrue(
+                GatherPolicy.sourceCheck(blockId) instanceof GatherPolicy.Refused,
+                "Крафтовый '" + blockId + "' нельзя брать из мира как ресурс: размещённые доски и заборы — "
+                        + "постройки, а не запас духа (observe9: supply_gather:oak_planks искал доски блоком)");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"oak_log", "minecraft:oak_log", "stone", "dirt", "oak_leaves"})
+    void sourceCheck_NaturalBlock_IsAllowed(String blockId) {
+        assertTrue(
+                GatherPolicy.sourceCheck(blockId) instanceof GatherPolicy.Allowed,
+                "Природный блок '" + blockId + "' обязан оставаться источником добычи");
+    }
 }

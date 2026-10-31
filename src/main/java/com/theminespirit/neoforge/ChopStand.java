@@ -3,11 +3,15 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.forestry.ChopStands;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -18,31 +22,49 @@ final class ChopStand {
 
     static @Nullable BlockPos first(SpiritEntity spirit, Tree target) {
         Vec3 from = spirit.position();
-        return best(spirit.level(), target, null, pos -> from.distanceToSqr(Vec3.atBottomCenterOf(pos)));
+        return best(
+                spirit.level(),
+                target,
+                null,
+                pos -> from.distanceToSqr(Vec3.atBottomCenterOf(pos)),
+                pos -> reachable(spirit, pos));
     }
 
     static @Nullable BlockPos second(SpiritEntity spirit, Tree target, List<BlockCoord> rest, @Nullable BlockPos used) {
-        return best(spirit.level(), target, used, pos -> nearest(pos, rest));
+        return best(spirit.level(), target, used, pos -> nearest(pos, rest), pos -> reachable(spirit, pos));
     }
 
     private static @Nullable BlockPos best(
-            Level level, Tree target, @Nullable BlockPos used, ToDoubleFunction<BlockPos> score) {
-        BlockPos best = null;
-        double bestScore = Double.MAX_VALUE;
+            Level level,
+            Tree target,
+            @Nullable BlockPos used,
+            ToDoubleFunction<BlockPos> score,
+            Predicate<BlockPos> reachable) {
+        List<BlockPos> candidates = new ArrayList<>();
         for (BlockCoord stand : ChopStands.stands(target, feet -> isStandable(level, toPos(feet)))) {
             BlockPos pos = toPos(stand);
-            if (pos.equals(used)) {
-                continue;
-            }
-            boolean diagonal = pos.getX() != target.base().x()
-                    && pos.getZ() != target.base().z();
-            double value = score.applyAsDouble(pos) + (diagonal ? DIAGONAL_PENALTY : 0);
-            if (value < bestScore) {
-                bestScore = value;
-                best = pos;
+            if (!pos.equals(used)) {
+                candidates.add(pos);
             }
         }
-        return best;
+        candidates.sort(Comparator.comparingDouble(pos -> value(pos, target, score)));
+        for (BlockPos pos : candidates) {
+            if (reachable.test(pos)) {
+                return pos;
+            }
+        }
+        return null;
+    }
+
+    private static double value(BlockPos pos, Tree target, ToDoubleFunction<BlockPos> score) {
+        boolean diagonal =
+                pos.getX() != target.base().x() && pos.getZ() != target.base().z();
+        return score.applyAsDouble(pos) + (diagonal ? DIAGONAL_PENALTY : 0);
+    }
+
+    private static boolean reachable(SpiritEntity spirit, BlockPos stand) {
+        Path path = spirit.getNavigation().createPath(stand, 1);
+        return path != null && path.canReach();
     }
 
     private static BlockPos toPos(BlockCoord coord) {

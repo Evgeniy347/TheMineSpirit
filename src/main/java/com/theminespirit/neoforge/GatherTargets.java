@@ -56,7 +56,7 @@ final class GatherTargets implements HarvestTargets {
                     settlementSkipped++;
                     continue;
                 }
-                if (GatherPolicy.check(id) instanceof GatherPolicy.Allowed) {
+                if (GatherPolicy.sourceCheck(id) instanceof GatherPolicy.Allowed) {
                     allowed.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
                 }
             }
@@ -110,7 +110,7 @@ final class GatherTargets implements HarvestTargets {
             if (IdFilter.isPattern(pattern)) {
                 continue;
             }
-            if (GatherPolicy.check(pattern) instanceof GatherPolicy.Refused refused) {
+            if (GatherPolicy.sourceCheck(pattern) instanceof GatherPolicy.Refused refused) {
                 return refused.reason();
             }
         }

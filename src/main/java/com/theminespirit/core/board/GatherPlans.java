@@ -92,6 +92,7 @@ final class GatherPlans {
         }
         return Optional.of(sequence(
                 TicketPlans.gotoTarget(target),
+                new ScriptCall("acquire", Map.of("item", ToolSet.itemId(BoardCase.CRAFT_WOODEN_AXE), COUNT, 1)),
                 new ScriptCall(
                         "strip_log",
                         Map.of("species", stripped.get().id(), COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)),
