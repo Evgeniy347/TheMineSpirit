@@ -10,6 +10,7 @@ import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import com.theminespirit.neoforge.movement.RouteDetour;
 import com.theminespirit.neoforge.movement.RouteWalk;
+import com.theminespirit.neoforge.movement.SurfaceRoute;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public final class DigOutScript implements ScriptInstance {
-    private static final int MAX_STEPS = 96;
+    private static final int MAX_STEPS = 160;
     private static final int STEP_TICKS = 60;
     private static final int HOME_RADIUS = 2;
 
@@ -154,8 +155,10 @@ public final class DigOutScript implements ScriptInstance {
     private boolean followRoute() {
         if (!routePlanned) {
             routePlanned = true;
-            route = RouteDetour.plan(spirit, new BlockCoord(target.x(), target.y(), target.z()), HOME_RADIUS, "dig_out")
-                    .orElse(null);
+            route = SurfaceRoute.plan(spirit)
+                    .orElseGet(() -> RouteDetour.plan(
+                                    spirit, new BlockCoord(target.x(), target.y(), target.z()), HOME_RADIUS, "dig_out")
+                            .orElse(null));
         }
         RouteWalk current = route;
         if (current == null) {

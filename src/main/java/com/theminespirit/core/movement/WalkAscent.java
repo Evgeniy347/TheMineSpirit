@@ -15,6 +15,7 @@ public final class WalkAscent {
         JUMP,
         CLIMB,
         SWIM,
+        DIVE,
         ARRIVED
     }
 
@@ -56,7 +57,8 @@ public final class WalkAscent {
             return new Command(Step.ALIGN, centerX, pose.y(), centerZ);
         }
         if (body.waterTarget() || (body.inWater() && !body.onGround() && !body.onClimbable())) {
-            return new Command(Step.SWIM, targetX, cell.y(), targetZ);
+            Step swim = cell.y() < pose.feet().y() ? Step.DIVE : Step.SWIM;
+            return new Command(swim, targetX, cell.y(), targetZ);
         }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;

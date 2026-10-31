@@ -176,6 +176,12 @@ public final class RouteWalk {
             advance();
             return Optional.empty();
         }
+        if (command.step() == WalkAscent.Step.SWIM || command.step() == WalkAscent.Step.CLIMB) {
+            Optional<String> support = ensureSupport(cell);
+            if (support.isPresent()) {
+                return support;
+            }
+        }
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(command.x(), command.y(), command.z(), SPEED);
         if (command.step() == WalkAscent.Step.JUMP) {
@@ -187,8 +193,38 @@ public final class RouteWalk {
             Vec3 motion = spirit.getDeltaMovement();
             spirit.setDeltaMovement(motion.x, Math.max(motion.y, LIFT), motion.z);
             spirit.getJumpControl().jump();
+        } else if (command.step() == WalkAscent.Step.DIVE) {
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.min(motion.y, 0.0), motion.z);
         }
         return Optional.empty();
+    }
+
+    private Optional<String> ensureSupport(BlockCoord cell) {
+        if (!spirit.isInWater()) {
+            return Optional.empty();
+        }
+        BlockPos target = pos(cell);
+        BlockPos feet = spirit.blockPosition();
+        if (target.getY() <= feet.getY()) {
+            return Optional.empty();
+        }
+        BlockPos below = target.below();
+        Level level = spirit.level();
+        if (!level.getBlockState(below).getCollisionShape(level, below).isEmpty()) {
+            return Optional.empty();
+        }
+        if (!below.equals(feet)) {
+            return place(below);
+        }
+        if (spirit.getY() < below.getY() + 0.6) {
+            spirit.getNavigation().stop();
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x, Math.max(motion.y, LIFT), motion.z);
+            spirit.getJumpControl().jump();
+            return Optional.empty();
+        }
+        return place(below);
     }
 
     private WalkAscent.Pose pose() {

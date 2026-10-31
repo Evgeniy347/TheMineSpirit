@@ -6,6 +6,8 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.PitEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -108,7 +110,10 @@ final class DigOutWatch {
                 countRescue(spirit.getUUID(), now));
         host.releaseAssigned(spirit);
         host.forgetLaunch(spirit);
-        spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())));
+        TaskNode escape = new SequenceNode(List.of(
+                new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())),
+                new ScriptCall("goto", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()))));
+        spirit.startTask(escape);
     }
 
     private void climbOut(SpiritEntity spirit, long now) {

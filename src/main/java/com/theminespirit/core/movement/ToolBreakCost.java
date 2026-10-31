@@ -6,6 +6,9 @@ public final class ToolBreakCost {
     public static final List<String> CHEAP_ORDER = List.of(
             "dirt",
             "cobblestone",
+            "cobbled_deepslate",
+            "tuff",
+            "deepslate",
             "gravel",
             "sand",
             "oak_planks",
