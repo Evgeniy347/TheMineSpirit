@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 class SupplyGatherLiveTicketTests {
     private static final Path TICKET = Path.of("src/test/resources/live/observe12-task-supply-gather-oak-planks.json");
-    private static final Path BOARD = Path.of("src/test/resources/live/observe12-board.json");
+    private static final Path BOARD = Path.of("src/test/resources/live/observe12-planks6-board.json");
     private static final BlockCoord HOME = new BlockCoord(-179, 68, -515);
     private static final int LUMBER_PER_TREE = 4;
     private static final int LOGS_IN_HAND = 37;
