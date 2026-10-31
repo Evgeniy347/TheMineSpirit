@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
@@ -54,6 +55,9 @@ final class TicketStoragePlans {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
+        if (SchematicActions.isActionPlaced(item)) {
+            return gatherOnly(target);
+        }
         BlockCoord deposit = target.deposit();
         String container = "auto";
         return new SequenceNode(List.of(

@@ -1,0 +1,48 @@
+{
+ "tasks": [
+  {
+   "id": "graph:make:dirt_path:2",
+   "case": "GATHER_MATERIALS",
+   "priority": 100,
+   "assignee": "caf11c6f-9a9a-408d-92ed-71726c762c19",
+   "status": "BLOCKED",
+   "requiredItems": {},
+   "missing": {},
+   "dependsOn": [],
+   "createdAt": 23268164,
+   "level": 1,
+   "cause": "graph:building:orchard_oak",
+   "effectivePriority": 100,
+   "modifiers": [],
+   "done": false,
+   "startedAt": 0,
+   "finishedAt": 0,
+   "durationTicks": 0,
+   "waitReason": "заблокировано после 5 провалов подряд: ждёт изменения условий (запасов или самого задания)",
+   "supplyItem": "dirt_path",
+   "supplyCount": 10
+  },
+  {
+   "id": "graph:make:dirt_path",
+   "case": "GATHER_MATERIALS",
+   "priority": 100,
+   "assignee": "c48663b4-da59-43d9-9804-81a680580300",
+   "status": "BLOCKED",
+   "requiredItems": {},
+   "missing": {},
+   "dependsOn": [],
+   "createdAt": 23268264,
+   "level": 1,
+   "cause": "graph:building:orchard_oak",
+   "effectivePriority": 100,
+   "modifiers": [],
+   "done": false,
+   "startedAt": 0,
+   "finishedAt": 0,
+   "durationTicks": 0,
+   "waitReason": "заблокировано после 5 провалов подряд: ждёт изменения условий (запасов или самого задания)",
+   "supplyItem": "dirt_path",
+   "supplyCount": 10
+  }
+ ]
+}
