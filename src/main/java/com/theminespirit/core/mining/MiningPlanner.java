@@ -27,6 +27,25 @@ public final class MiningPlanner {
             SafetyView view,
             Set<BlockCoord> excluded,
             Predicate<BlockCoord> reachable) {
+        return plan(from, remaining, view, excluded, reachable, false);
+    }
+
+    public static Outcome nextReachable(
+            BlockCoord from,
+            List<BlockCoord> remaining,
+            SafetyView view,
+            Set<BlockCoord> excluded,
+            Predicate<BlockCoord> reachable) {
+        return plan(from, remaining, view, excluded, reachable, true);
+    }
+
+    private static Outcome plan(
+            BlockCoord from,
+            List<BlockCoord> remaining,
+            SafetyView view,
+            Set<BlockCoord> excluded,
+            Predicate<BlockCoord> reachable,
+            boolean pathChecked) {
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней выбирается ближайшая цель");
         Objects.requireNonNull(remaining, "Список целей не может быть null: пустой набор задают пустым списком");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется безопасность цели");
@@ -58,7 +77,9 @@ public final class MiningPlanner {
                 continue;
             }
             List<BlockCoord> open = new ArrayList<>(stands);
-            open.removeIf(stand -> !StandSpots.walkable(stand, from));
+            if (!pathChecked) {
+                open.removeIf(stand -> !StandSpots.walkable(stand, from));
+            }
             open.removeIf(excluded::contains);
             BlockCoord chosen = null;
             for (BlockCoord stand : open) {

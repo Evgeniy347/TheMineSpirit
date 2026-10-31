@@ -38,24 +38,30 @@ final class PlanSteps {
 
     static TaskNode clear(BlockCoord at, boolean demolish) {
         return new FallbackNode(List.of(
-                new ScriptCall(
-                        "clear_area",
-                        Map.of(
-                                "x1",
-                                at.x(),
-                                "y1",
-                                at.y(),
-                                "z1",
-                                at.z(),
-                                "x2",
-                                at.x(),
-                                "y2",
-                                at.y(),
-                                "z2",
-                                at.z(),
-                                "demolish",
-                                demolish)),
+                new ScriptCall("clear_area", clearParams(at, demolish)),
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
+    }
+
+    static TaskNode clearStrict(BlockCoord at) {
+        return new ScriptCall("clear_area", clearParams(at, true));
+    }
+
+    private static Map<String, Object> clearParams(BlockCoord at, boolean demolish) {
+        return Map.of(
+                "x1",
+                at.x(),
+                "y1",
+                at.y(),
+                "z1",
+                at.z(),
+                "x2",
+                at.x(),
+                "y2",
+                at.y(),
+                "z2",
+                at.z(),
+                "demolish",
+                demolish);
     }
 
     static TaskNode place(PlannedBlock block, TicketTarget target) {

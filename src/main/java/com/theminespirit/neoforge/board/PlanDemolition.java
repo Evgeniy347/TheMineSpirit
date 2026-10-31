@@ -8,6 +8,7 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.DemolitionRetry;
 import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.SubmitGate;
@@ -26,11 +27,9 @@ import com.theminespirit.neoforge.UnreachableCellsStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -38,22 +37,21 @@ import org.slf4j.Logger;
 
 final class PlanDemolition {
     static final String PREFIX = "demolish:";
+    static final long COOLDOWN = 600;
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final long COOLDOWN = 600;
     private static final int BATCH = 48;
     private static final int SHOWN = 4;
     private static final int PROTECTED_SHOWN = 10;
-    private static final Set<BoardStatus> OPEN =
-            EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
     private static final SubmitGate SUBMITS = new SubmitGate();
     private static final StateChangeLog CHANGES = new StateChangeLog();
+    private static final DemolitionRetry RETRIES = new DemolitionRetry();
 
     private record Collected(List<BlockCoord> remove, List<String> notes, int excluded, int unreachable) {}
 
     private PlanDemolition() {}
 
     static void tick(ServerLevel level, BoardService service, StageSite site, TownPlan town, long now) {
-        if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1) || busy(service, now)) {
+        if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1) || DemolitionHistory.busy(service, now)) {
             return;
         }
         String world = level.dimension().location().toString();
@@ -71,7 +69,19 @@ final class PlanDemolition {
                 .limit(BATCH)
                 .toList();
         String id = idFor(stray);
-        if (!SUBMITS.allow("demolish:" + world, id)) {
+        if (RETRIES.waiting(id, now)) {
+            warnExcluded(world, collected, now);
+            if (CHANGES.changed("tidy-retry:" + world, id + "@" + RETRIES.until(id))) {
+                LOGGER.info(
+                        "[tidy] {}: набор уборки ждёт повтора до тика {} — прошлая уборка закрылась без факта "
+                                + "мира; {}",
+                        id,
+                        RETRIES.until(id),
+                        collected.notes());
+            }
+            return;
+        }
+        if (!SUBMITS.allow("demolish:" + world, RETRIES.signature(id))) {
             warnExcluded(world, collected, now);
             if (CHANGES.changed("tidy-wait:" + world, id)) {
                 LOGGER.info(
@@ -85,7 +95,8 @@ final class PlanDemolition {
         if (!submit(service, site, stray, now, id)) {
             return;
         }
-        supersede(level, service, id);
+        RETRIES.submitted(id, now, COOLDOWN);
+        DemolitionHistory.supersede(level, service, id);
         if (CHANGES.changed("tidy:" + world, id)) {
             LOGGER.info(
                     "[tidy] {}: план уборки пересчитан в тик {} — в уборку {} из {}, первые {}; прошлый {}; "
@@ -95,7 +106,7 @@ final class PlanDemolition {
                     stray.size(),
                     findings.size(),
                     stray.stream().limit(SHOWN).toList(),
-                    previous(service),
+                    DemolitionHistory.previous(service),
                     collected.unreachable(),
                     collected.notes());
         }
@@ -198,26 +209,6 @@ final class PlanDemolition {
         return PREFIX + Long.toUnsignedString(hash, 36);
     }
 
-    private static void supersede(ServerLevel level, BoardService service, String keep) {
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
-            if (ticket.id().startsWith(PREFIX)
-                    && !ticket.id().equals(keep)
-                    && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.BLOCKED
-                    && service.cancel(level, ticket.id())) {
-                LOGGER.info("[tidy] старый заблокированный {} снят: набор уборки сменился на {}", ticket.id(), keep);
-            }
-        }
-    }
-
-    private static String previous(BoardService service) {
-        return service.board().all().stream()
-                .filter(ticket -> ticket.id().startsWith(PREFIX))
-                .max(Comparator.comparingLong(BoardTicket::createdAt))
-                .map(ticket -> ticket.id() + " ("
-                        + service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE) + ")")
-                .orElse("уборки ещё не было");
-    }
-
     private static boolean submit(BoardService service, StageSite site, List<BlockCoord> stray, long now, String id) {
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
@@ -273,14 +264,6 @@ final class PlanDemolition {
                 LOGGER.info("[tidy] задание {} возвращено в доску: станция встанет по плану", ticket.id());
             }
         }
-    }
-
-    private static boolean busy(BoardService service, long now) {
-        return service.board().all().stream()
-                .filter(ticket -> ticket.id().startsWith(PREFIX))
-                .anyMatch(ticket ->
-                        OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE))
-                                || now - ticket.createdAt() < COOLDOWN);
     }
 
     private static BlockPos pos(BlockCoord cell) {
