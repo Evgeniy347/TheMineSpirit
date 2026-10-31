@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.SettlementStage;
@@ -82,7 +83,8 @@ final class StageReopen {
 
     private static boolean onBoard(Board board, BoardCase step) {
         for (String id : ids(step)) {
-            if (board.statusOf(id).isPresent()) {
+            BoardStatus status = board.statusOf(id).orElse(null);
+            if (status != null && status != BoardStatus.FAILED) {
                 return true;
             }
         }

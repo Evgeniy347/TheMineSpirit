@@ -365,7 +365,7 @@ public final class BlockBreaker {
         boolean wearsTool = broken.getDestroySpeed(level, brokenPos) != 0.0F;
         finish();
         if (level instanceof ServerLevel server) {
-            SettlementChestWatch.broken(server, brokenPos, broken);
+            BreakNotice.broken(server, brokenPos, broken, spirit);
         }
         level.destroyBlock(brokenPos, false, spirit);
         spirit.hunger().onBlockBroken();

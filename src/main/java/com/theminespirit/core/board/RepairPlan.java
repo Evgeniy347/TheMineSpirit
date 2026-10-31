@@ -6,6 +6,8 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -14,6 +16,21 @@ public final class RepairPlan {
     public static final String PREFIX = "repair:";
 
     private RepairPlan() {}
+
+    public static BoardTicket ticket(BoardCase step, Map<String, Integer> need, long now) {
+        Objects.requireNonNull(step, "Шаг ремонта не может быть null: по нему выбирается схема восстановления");
+        Objects.requireNonNull(need, "Нехватка ремонта не может быть null: пустую задают пустой картой");
+        return new BoardTicket(
+                PREFIX + step.name().toLowerCase(Locale.ROOT),
+                BoardCase.REPAIR_BUILDING,
+                Optional.empty(),
+                BoardRules.repairPriorityOf(step),
+                now,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.copyOf(need));
+    }
 
     public static Optional<TicketTarget> target(TaskNode plan) {
         Objects.requireNonNull(plan, "План постройки не может быть null: схема восстановления берётся из него");

@@ -101,6 +101,17 @@ public final class RepairAudit {
         return new Report(expected.size(), missing, false, fixes);
     }
 
+    public static Map<String, Integer> need(Report report) {
+        Objects.requireNonNull(report, "Отчёт ремонта не может быть null: нехватку берут из него");
+        Map<String, Integer> need = new LinkedHashMap<>();
+        for (Fix fix : report.fixes()) {
+            if (fix.action() == Action.PLACE) {
+                need.merge(id(fix.wanted()), 1, Integer::sum);
+            }
+        }
+        return Map.copyOf(need);
+    }
+
     public static boolean rebuild(int missing, int total, int rebuildPercent) {
         if (missing < 0 || total < 0 || missing > total) {
             throw new IllegalArgumentException("Аудит ремонта: нет " + missing + " из " + total
