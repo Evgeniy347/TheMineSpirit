@@ -2,9 +2,8 @@ package com.theminespirit.neoforge.inventory;
 
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.BaseKit;
-import com.theminespirit.core.inventory.ContainerChoice;
-import com.theminespirit.core.inventory.ContainerPicker;
 import com.theminespirit.core.inventory.DepositSelection;
+import com.theminespirit.core.inventory.DepositSpread;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.Slice;
 import com.theminespirit.core.inventory.Stack;
@@ -24,8 +23,6 @@ public final class UnloadScript extends ContainerTask {
     private final int protectedSlot;
     private final int reservePercent;
     private final String activity;
-    private List<KindGroup> groups;
-    private int groupIndex;
     private boolean refusedOnce;
     private String lastRefusal;
 
@@ -82,30 +79,42 @@ public final class UnloadScript extends ContainerTask {
 
     @Override
     protected AutoMove nextAutoMove(AutoContainerScan scan) {
-        if (groups == null) {
-            groups = groupByKind(scan);
-        }
-        while (groupIndex < groups.size()) {
-            KindGroup group = groups.get(groupIndex++);
-            ContainerChoice choice = ContainerPicker.choose(scan.snapshots(), blockCoord(), group.kind, reservePercent);
-            if (choice instanceof ContainerChoice.Refused refused) {
+        for (KindGroup group : groupByKind(scan)) {
+            DepositSpread.Plan plan =
+                    DepositSpread.plan(scan.snapshots(), blockCoord(), group.kind, group.total(), reservePercent);
+            if (plan.steps().isEmpty()) {
                 refusedOnce = true;
-                lastRefusal = refused.reason();
+                lastRefusal = plan.refusal();
                 continue;
             }
-            int index = ((ContainerChoice.Chosen) choice).index();
+            DepositSpread.Step step = plan.steps().get(0);
+            int index = step.index();
             TransferRunner runner = TransferRunner.slices(
-                    spirit.getInventory(), scan.containers().get(index), group.slices);
+                    spirit.getInventory(), scan.containers().get(index), capped(group.slices, step.count()));
             return new AutoMove(
                     scan.containers().get(index), scan.snapshots().get(index).pos(), index, runner);
         }
         return null;
     }
 
+    private static List<Slice> capped(List<Slice> slices, int limit) {
+        List<Slice> capped = new ArrayList<>();
+        int left = limit;
+        for (Slice slice : slices) {
+            if (left <= 0) {
+                break;
+            }
+            int count = Math.min(slice.count(), left);
+            capped.add(new Slice(slice.slot(), count));
+            left -= count;
+        }
+        return capped;
+    }
+
     @Override
     protected ScriptStatus finishAuto() {
         if (movedTotal() == 0 && refusedOnce) {
-            return failed(lastRefusal);
+            return failed(lastRefusal == null ? "контейнеры склада заполнены: излишек остался у духа" : lastRefusal);
         }
         return ScriptStatus.SUCCEEDED;
     }
@@ -163,6 +172,14 @@ public final class UnloadScript extends ContainerTask {
 
         private KindGroup(Stack kind) {
             this.kind = kind;
+        }
+
+        private int total() {
+            int total = 0;
+            for (Slice slice : slices) {
+                total += slice.count();
+            }
+            return total;
         }
     }
 }

@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BuildingLevels;
+import com.theminespirit.core.board.DemandChange;
 import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.WoolRules;
@@ -16,11 +17,11 @@ import org.slf4j.Logger;
 
 final class DemandWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static String last = "";
+    private final DemandChange changes = new DemandChange();
 
-    private DemandWatch() {}
+    DemandWatch() {}
 
-    static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+    void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         BoardLedger ledger = service.board().ledger();
         DemandRules rules = DataTables.INSTANCE.demand().current();
         ChestSpaceWatch.Space space = ChestSpaceWatch.space(level);
@@ -34,16 +35,13 @@ final class DemandWatch {
                 SettlementStage.missing(ledger),
                 ledger.has(BoardCase.LIGHTING, 1) ? 0 : 1);
         Optional<DemandRules.Need> need = rules.next(facts);
-        report(need, now);
+        report(level.dimension().location().toString(), need, now);
     }
 
-    private static void report(Optional<DemandRules.Need> need, long now) {
-        String line = need.map(value -> value.kind() + ":" + value.subject() + ":" + value.level())
-                .orElse("");
-        if (line.equals(last)) {
+    private void report(String level, Optional<DemandRules.Need> need, long now) {
+        if (!changes.changed(level, need)) {
             return;
         }
-        last = line;
         if (need.isEmpty()) {
             LOGGER.info("[demand] все нужды поселения закрыты: следующая стройка выбирается этапом или графом");
             return;
