@@ -25,7 +25,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BuildGapMineTests {
-    private static final String LIVE_BOARD = "/live/observe12/board.json";
+    private static final String LIVE_BOARD = "/live/observe12-minereopen/board.json";
     private static final MaterialSource FAKE = new MaterialSource() {
         @Override
         public int outputCount(String item) {

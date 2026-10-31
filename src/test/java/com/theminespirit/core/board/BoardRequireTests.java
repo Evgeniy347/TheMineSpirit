@@ -10,7 +10,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class BoardRequireTests {
-    private static final String LIVE_BOARD = "/live/observe12/board.json";
+    private static final String LIVE_BOARD = "/live/observe12-minereopen/board.json";
 
     @Test
     void require_LiveFence_ReleasesBlockedTicketWithoutStalePlanks() throws IOException {

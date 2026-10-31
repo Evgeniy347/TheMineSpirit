@@ -1,0 +1,64 @@
+package com.theminespirit.core.board;
+
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import org.jspecify.annotations.Nullable;
+
+public final class StuckSpirits {
+    public record Stuck(@Nullable BlockCoord at, long since) {
+        public Stuck {
+            if (since < 0) {
+                throw new IllegalArgumentException(
+                        "Тик застревания " + since + " отрицателен: отметка ставится только вперёд");
+            }
+        }
+    }
+
+    private final Map<UUID, BlockCoord> seen = new LinkedHashMap<>();
+    private final Map<UUID, Stuck> stuck = new LinkedHashMap<>();
+
+    public void see(UUID spirit, BlockCoord at) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: позиция наблюдается у конкретного духа");
+        Objects.requireNonNull(at, "Позиция не может быть null: по ней видно, сдвинулся ли дух");
+        BlockCoord previous = seen.put(spirit, at);
+        Stuck known = stuck.get(spirit);
+        if (known == null) {
+            return;
+        }
+        BlockCoord origin = known.at() == null ? previous : known.at();
+        if (origin != null && !origin.equals(at)) {
+            stuck.remove(spirit);
+            return;
+        }
+        if (known.at() == null) {
+            stuck.put(spirit, new Stuck(at, known.since()));
+        }
+    }
+
+    public void mark(UUID spirit, long now) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: застревает конкретный дух");
+        if (now < 0) {
+            throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание не ставится в прошлое");
+        }
+        stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now));
+    }
+
+    public Optional<Stuck> of(UUID spirit) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: застревание читается у конкретного духа");
+        return Optional.ofNullable(stuck.get(spirit));
+    }
+
+    public boolean isStuck(UUID spirit) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: застревание читается у конкретного духа");
+        return stuck.containsKey(spirit);
+    }
+
+    public void clear() {
+        seen.clear();
+        stuck.clear();
+    }
+}

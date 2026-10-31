@@ -135,7 +135,7 @@ class RoutePlannerTests {
 
         for (RouteStep step : route.steps()) {
             BlockCoord cell = step.cell();
-            if (step.action() != RouteStep.Action.WALK
+            if ((step.action() != RouteStep.Action.WALK && step.action() != RouteStep.Action.SWIM)
                     || RouteCell.kind(world.cell(cell.x(), cell.y(), cell.z())) != RouteCell.WATER) {
                 continue;
             }

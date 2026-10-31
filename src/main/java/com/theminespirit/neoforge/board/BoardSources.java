@@ -18,6 +18,7 @@ public final class BoardSources {
     private final HiveWatch hive = new HiveWatch();
     private final PetWatch pets = new PetWatch();
     private final RescueWatch rescue = new RescueWatch();
+    private final TransferDriftWatch transferDrift = new TransferDriftWatch();
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
@@ -99,6 +100,7 @@ public final class BoardSources {
             guard.run("pets", () -> pets.tick(level, spirits, now));
         }
         live.addAll(guard.call("transfer", () -> TransferWatch.liveCauses(service), Set.of()));
+        guard.run("transfer_drift", () -> transferDrift.tick(level, service, spirits));
         guard.run("wool", () -> wool.tick(level, service, spirits, stock, now));
         if (wool.live()) {
             live.add(WoolWatch.CAUSE);

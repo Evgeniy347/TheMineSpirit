@@ -1,10 +1,12 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.PitEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayDeque;
@@ -16,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
@@ -33,6 +36,7 @@ final class DigOutWatch {
     private final Map<UUID, Long> nextCheck = new HashMap<>();
     private final Map<UUID, String> lastCheck = new HashMap<>();
     private final Map<UUID, Deque<Long>> rescues = new HashMap<>();
+    private final StillWatch still = new StillWatch();
 
     DigOutWatch(BoardService host) {
         this.host = host;
@@ -48,6 +52,7 @@ final class DigOutWatch {
             boolean digging = DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
                     && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
             boolean paused = now < pausedUntil.getOrDefault(spirit.getUUID(), 0L);
+            boolean stillNow = still.still(spirit.getUUID(), coord(feet), now, PAUSE_TICKS);
             if (DigOutScript.open(level, feet)) {
                 if (!digging && !paused && host.idleOrActivity(spirit)) {
                     climbOut(spirit, now);
@@ -68,23 +73,42 @@ final class DigOutWatch {
                             sky,
                             spirit.currentTaskScript().orElse("-")),
                     now);
-            if (!sealed) {
+            if (sealed) {
+                rescue(spirit, level, settlementHome, now, "замурован", air, sky);
                 continue;
             }
-            BlockCoord home = spirit.home().orElse(settlementHome);
-            pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
-            LOGGER.warn(
-                    "[incident] дух {} замурован в {}: воздуха к поверхности нет — копает лестницу вверх к дому {};"
-                            + " ближайший воздух над духом {}, небо над ним {}, спасений за 10 мин: {}",
-                    spirit.displayName(),
-                    feet.toShortString(),
-                    home,
-                    airText(air),
-                    sky ? "есть" : "нет",
-                    countRescue(spirit.getUUID(), now));
-            host.releaseAssigned(spirit);
-            spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", home.x(), "y", home.y(), "z", home.z())));
+            if (stillNow && !digging && !paused && inWater(level, feet)) {
+                rescue(spirit, level, settlementHome, now, "не сдвинулся " + PAUSE_TICKS + " тиков в воде", air, sky);
+            }
         }
+    }
+
+    private void rescue(
+            SpiritEntity spirit,
+            ServerLevel level,
+            BlockCoord settlementHome,
+            long now,
+            String why,
+            int air,
+            boolean sky) {
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord goal = SurfacePoint.of(level, settlementHome);
+        pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
+        LOGGER.warn(
+                "[incident] дух {} {} в {} (опора {}, вода={}, no_escape=true): выходит к поверхности у поселения {};"
+                        + " ближайший воздух над духом {}, небо над ним {}, спасений за 10 мин: {}",
+                spirit.displayName(),
+                why,
+                feet.toShortString(),
+                BlockStates.idOf(level.getBlockState(feet.below())),
+                inWater(level, feet),
+                goal,
+                airText(air),
+                sky ? "есть" : "нет",
+                countRescue(spirit.getUUID(), now));
+        host.releaseAssigned(spirit);
+        host.forgetLaunch(spirit);
+        spirit.startTask(new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())));
     }
 
     private void climbOut(SpiritEntity spirit, long now) {
@@ -155,6 +179,15 @@ final class DigOutWatch {
         }
         times.addLast(now);
         return times.size();
+    }
+
+    private static boolean inWater(Level level, BlockPos feet) {
+        return level.getFluidState(feet).is(FluidTags.WATER)
+                || level.getFluidState(feet.above()).is(FluidTags.WATER);
+    }
+
+    private static BlockCoord coord(BlockPos pos) {
+        return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private static String airText(int air) {

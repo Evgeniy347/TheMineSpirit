@@ -18,6 +18,7 @@ import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.HerdCycles;
+import com.theminespirit.core.board.HolderRelease;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
@@ -76,7 +77,6 @@ public final class BoardService {
     private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
-
     private final Board board;
     private final HerdCycles animals;
     private final StockReader stockReader;
@@ -560,7 +560,7 @@ public final class BoardService {
             }
             board.complete(ticket.id());
         }
-        for (Board.HolderRelease freed : board.releaseDeadHolders(live)) {
+        for (HolderRelease freed : board.releaseDeadHolders(live)) {
             if (freed.activity()) {
                 cards.forget(freed.holder());
             }

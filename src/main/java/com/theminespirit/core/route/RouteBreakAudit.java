@@ -48,7 +48,7 @@ public final class RouteBreakAudit {
                 feet = new BlockCoord(cell.x(), cell.y() + 1, cell.z());
                 yield Optional.empty();
             }
-            case WALK -> {
+            case WALK, SWIM -> {
                 feet = cell;
                 yield Optional.empty();
             }

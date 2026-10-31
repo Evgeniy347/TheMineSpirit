@@ -16,14 +16,14 @@ public final class GameTestSeeding {
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
-        if (!(event.getServer() instanceof GameTestServer server) || !GeneratedScene.fixedSeed()) {
+        if (!(event.getServer() instanceof GameTestServer server)) {
             return;
         }
-        long seed = GeneratedScene.seed();
+        long seed = GameTestWorldSeed.resolve();
         server.overworld().random.setSeed(seed);
         LOGGER.info(
                 "[scene] сид {}: случайность мира засеяна до старта тестов — место сетки тестов и случайные тики "
-                        + "повторяются от прогона к прогону",
+                        + "повторяются от прогона к прогону; другой мир — scripts/test.sh gametest --seed N",
                 seed);
     }
 }
