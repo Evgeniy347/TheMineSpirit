@@ -55,7 +55,6 @@ class StuckDispatchLiveTests {
                 board.claim(fenceTicket.id(), stuck, clock[0]),
                 "Живой ticket " + fenceTicket.id() + " выдаётся застрявшему spirit-1, как в observe12");
         board.fail(fenceTicket.id(), stock, stall);
-        clock[0] += BoardTuning.caseFailPauseCapTicks();
 
         List<DispatchRound.Candidate> candidates = new ArrayList<>();
         candidates.add(candidate(stuck, "spirit-1"));
@@ -85,7 +84,9 @@ class StuckDispatchLiveTests {
                 board.claim(next.id(), chosen.get().id(), clock[0]),
                 "Тот же путь, что в игре: claimable → отказ выдачи → claim выдаёт задание достижимому духу");
         board.stuck().see(stuck, new BlockCoord(at.x() + 1, at.y(), at.z()));
-        assertFalse(board.stuck().isStuck(stuck), "Дух освободился: смена позиции снимает запрет на новые задания");
+        assertFalse(
+                board.stuck().isStuck(stuck, clock[0]),
+                "Дух освободился: смена позиции снимает запрет на новые задания");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

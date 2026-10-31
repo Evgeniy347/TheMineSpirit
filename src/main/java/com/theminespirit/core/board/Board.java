@@ -128,6 +128,13 @@ public final class Board {
             boolean changed = (current == BoardStatus.BLOCKED && !ticket.sameDetails(existing))
                     || (current == BoardStatus.DONE && ticket.replacesDone(existing, stage));
             boolean retry = current == BoardStatus.FAILED && stage && !recentlyFailed(ticket.id(), now);
+            if (current == BoardStatus.BLOCKED) {
+                if (changed) {
+                    tickets.put(ticket.id(), ticket);
+                    events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
+                }
+                return BoardOutcome.DUPLICATE;
+            }
             if (!changed && !retry) {
                 return BoardOutcome.DUPLICATE;
             }
@@ -286,12 +293,12 @@ public final class Board {
 
     public boolean availableTo(UUID spirit, BoardCase boardCase, long now) {
         requireNow(now);
-        return !stuckSpirits.isStuck(spirit) && casePauses.available(spirit, boardCase, now);
+        return !stuckSpirits.isStuck(spirit, now) && casePauses.available(spirit, boardCase, now);
     }
 
     public boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
         requireNow(now);
-        return !stuckSpirits.isStuck(spirit) && casePauses.available(spirit, ticket, now);
+        return !stuckSpirits.isStuck(spirit, now) && casePauses.available(spirit, ticket, now);
     }
 
     public boolean caseDetached(UUID spirit, BoardCase boardCase) {
@@ -366,19 +373,7 @@ public final class Board {
         if (ticket == null || !open || ticket.priority() == priority) {
             return false;
         }
-        tickets.put(
-                ticketId,
-                new BoardTicket(
-                        ticket.id(),
-                        ticket.boardCase(),
-                        ticket.assignee(),
-                        priority,
-                        ticket.createdAt(),
-                        ticket.level(),
-                        ticket.cause(),
-                        ticket.dependsOn(),
-                        ticket.requiredItems(),
-                        ticket.modifiers()));
+        tickets.put(ticketId, ticket.withPriority(priority));
         return true;
     }
 

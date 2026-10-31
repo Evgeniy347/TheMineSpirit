@@ -47,14 +47,24 @@ public final class StuckSpirits {
         stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now));
     }
 
-    public Optional<Stuck> of(UUID spirit) {
+    public Optional<Stuck> of(UUID spirit, long now) {
         Objects.requireNonNull(spirit, "Дух не может быть null: застревание читается у конкретного духа");
-        return Optional.ofNullable(stuck.get(spirit));
+        if (now < 0) {
+            throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание читается только вперёд");
+        }
+        Stuck known = stuck.get(spirit);
+        if (known == null) {
+            return Optional.empty();
+        }
+        if (now - known.since() >= BoardTuning.idleReleaseTicks()) {
+            stuck.remove(spirit);
+            return Optional.empty();
+        }
+        return Optional.of(known);
     }
 
-    public boolean isStuck(UUID spirit) {
-        Objects.requireNonNull(spirit, "Дух не может быть null: застревание читается у конкретного духа");
-        return stuck.containsKey(spirit);
+    public boolean isStuck(UUID spirit, long now) {
+        return of(spirit, now).isPresent();
     }
 
     public void clear() {

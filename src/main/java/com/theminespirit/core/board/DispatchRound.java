@@ -93,7 +93,7 @@ public final class DispatchRound {
     }
 
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
-        Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id());
+        Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id(), now);
         if (stuck.isPresent()) {
             return Optional.of("не двигается с тика " + stuck.orElseThrow().since() + ": ждёт освобождения");
         }
