@@ -31,6 +31,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 public final class FloatingScan {
     private static final String AIR = "minecraft:air";
@@ -96,12 +97,31 @@ public final class FloatingScan {
                 List.copyOf(group.get().cells())));
     }
 
-    public static BlockCoord standUnder(ServerLevel level, BlockCoord base) {
-        return new BlockCoord(base.x(), groundBelow(level, base) + 1, base.z());
-    }
-
-    public static boolean reachableTree(ServerLevel level, BlockCoord base) {
-        return MiningSafety.canStand(standUnder(level, base), new LevelSafetyView(level));
+    public static @Nullable BlockCoord standBeside(ServerLevel level, List<BlockCoord> cells) {
+        int minX = cells.stream().mapToInt(BlockCoord::x).min().orElseThrow();
+        int maxX = cells.stream().mapToInt(BlockCoord::x).max().orElseThrow();
+        int minZ = cells.stream().mapToInt(BlockCoord::z).min().orElseThrow();
+        int maxZ = cells.stream().mapToInt(BlockCoord::z).max().orElseThrow();
+        int lowY = cells.stream().mapToInt(BlockCoord::y).min().orElseThrow();
+        int[][] around = {
+            {minX - 1, minZ},
+            {maxX + 1, minZ},
+            {minX - 1, maxZ},
+            {maxX + 1, maxZ},
+            {(minX + maxX) / 2, minZ - 1},
+            {(minX + maxX) / 2, maxZ + 1},
+            {minX - 1, (minZ + maxZ) / 2},
+            {maxX + 1, (minZ + maxZ) / 2}
+        };
+        LevelSafetyView safety = new LevelSafetyView(level);
+        for (int[] column : around) {
+            int ground = groundBelow(level, new BlockCoord(column[0], lowY, column[1]));
+            BlockCoord stand = new BlockCoord(column[0], ground + 1, column[1]);
+            if (MiningSafety.canStand(stand, safety)) {
+                return stand;
+            }
+        }
+        return null;
     }
 
     public static boolean reachable(ServerLevel level, BlockCoord at) {

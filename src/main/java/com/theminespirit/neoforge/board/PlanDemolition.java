@@ -144,18 +144,19 @@ final class PlanDemolition {
         int unreachableSkipped = 0;
         int excluded = 0;
         int reachableShown = 0;
-        BlockCoord stand = null;
-        BlockCoord top = null;
-        BlockCoord lowestCell = null;
+        DemolitionTickets.Placement placement = null;
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
             boolean plannedFence = finding.kind() == FloatingBlocks.Kind.FENCE
                     && site.fenceStrip().contains(at.x(), at.z());
             boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
             boolean blocked = unreachableCells.excluded(at);
+            BlockCoord treeStand = finding.kind() == FloatingBlocks.Kind.TREE
+                    ? FloatingScan.standBeside(level, finding.cells())
+                    : null;
             boolean reachable = !blocked
                     && (finding.kind() == FloatingBlocks.Kind.TREE
-                            ? FloatingScan.reachableTree(level, at)
+                            ? treeStand != null
                             : FloatingScan.reachable(level, at));
             FloatingCleanup.Action action = FloatingCleanup.decide(
                     finding,
@@ -191,7 +192,7 @@ final class PlanDemolition {
                     remove.add(at);
                 }
                 case REMOVE -> {
-                    if (finding.kind() == FloatingBlocks.Kind.TREE && stand != null) {
+                    if (finding.kind() == FloatingBlocks.Kind.TREE && placement != null) {
                         continue;
                     }
                     if (reachableShown++ < SHOWN) {
@@ -199,23 +200,33 @@ final class PlanDemolition {
                     }
                     remove.addAll(finding.cells());
                     if (finding.kind() == FloatingBlocks.Kind.TREE) {
-                        stand = FloatingScan.standUnder(level, at);
-                        int highest = finding.cells().stream()
-                                .mapToInt(BlockCoord::y)
-                                .max()
-                                .orElse(at.y());
-                        int lowest = finding.cells().stream()
-                                .mapToInt(BlockCoord::y)
-                                .min()
-                                .orElse(at.y());
-                        top = new BlockCoord(at.x(), highest, at.z());
-                        lowestCell = new BlockCoord(at.x(), lowest, at.z());
+                        placement = treePlacement(treeStand, finding);
                     }
                 }
                 case SKIP_REGISTERED, SKIP_WAIT -> {}
             }
         }
-        return new Collected(remove, List.copyOf(notes), excluded, unreachableSkipped, stand, top, lowestCell);
+        return new Collected(
+                remove,
+                List.copyOf(notes),
+                excluded,
+                unreachableSkipped,
+                placement == null ? null : placement.stand(),
+                placement == null ? null : placement.top(),
+                placement == null ? null : placement.lowest());
+    }
+
+    private static DemolitionTickets.Placement treePlacement(BlockCoord stand, FloatingBlocks.Finding finding) {
+        int highest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .max()
+                .orElse(finding.at().y());
+        int lowest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .min()
+                .orElse(finding.at().y());
+        return new DemolitionTickets.Placement(
+                stand, new BlockCoord(stand.x(), highest, stand.z()), new BlockCoord(stand.x(), lowest, stand.z()));
     }
 
     private static boolean playerBuilding(ServerLevel level, BlockCoord at) {
