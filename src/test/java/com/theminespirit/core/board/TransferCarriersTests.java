@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,51 @@ class TransferCarriersTests {
                 List.of(round.refusal(house, self), TransferCarriers.carrying(board, CRAFT, Set.of())),
                 "INC-86: передача, план которой не собрался, снимается, и держатель в ту же пересборку свободен для "
                         + "других заданий; иначе он вечно «несёт ингредиенты» и стопорит всю доску");
+    }
+
+    private static Board boardWithBuild() {
+        Board board = new Board(() -> 0);
+        board.submit(new BoardTicket(
+                "first:build_fence",
+                BoardCase.BUILD_FENCE,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_FENCE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of()));
+        return board;
+    }
+
+    @Test
+    void awaitsDelivery_NoTransfer_FenceNotHeldByBusyHolder() {
+        Board board = boardWithBuild();
+
+        assertFalse(
+                TransferCarriers.awaitsDelivery(board, "first:build_fence"),
+                "Занятый дух с палками в кармане — не носильщик: передачу ему не выдать, а держателем его считать "
+                        + "значит держать ограду вечно в «носильщиков нет» (observe8 №3)");
+        assertTrue(
+                board.claimable(new StockView(Map.of()), 0).stream()
+                        .anyMatch(ticket -> "first:build_fence".equals(ticket.id())),
+                "Без свободных носильщиков задание всё равно продвигается: исполнитель берёт ограду в работу и "
+                        + "забирает ингредиенты со склада или крафтит палки сам, а не ждёт вечно");
+    }
+
+    @Test
+    void awaitsDelivery_OpenTransfer_TrueUntilClosed() {
+        Board board = boardWithTransfer();
+
+        assertTrue(
+                TransferCarriers.awaitsDelivery(board, CRAFT),
+                "Пока передача открыта, исполнитель ждёт доставку: иначе начнёт работу без ингредиентов");
+
+        board.cancel(TRANSFER);
+
+        assertFalse(
+                TransferCarriers.awaitsDelivery(board, CRAFT),
+                "Закрытая передача не держит исполнителя: иначе ожидание не кончается никогда");
     }
 
     @Test

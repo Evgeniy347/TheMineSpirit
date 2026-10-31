@@ -41,6 +41,22 @@ public final class TransferCarriers {
         return carriers;
     }
 
+    public static boolean awaitsDelivery(Board board, String craftId) {
+        Objects.requireNonNull(board, "Доска не может быть null: ожидание передачи считается по ней");
+        for (BoardTicket ticket : board.all()) {
+            if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !cause(craftId).equals(ticket.cause())) {
+                continue;
+            }
+            BoardStatus status = board.statusOf(ticket.id()).orElse(null);
+            if (status == BoardStatus.PENDING
+                    || status == BoardStatus.WAITING_RESOURCES
+                    || status == BoardStatus.ASSIGNED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Set<UUID> planned(Board board, String craftId) {
         Objects.requireNonNull(board, "Доска не может быть null: передачи берутся с неё");
         Set<UUID> holders = new HashSet<>();
