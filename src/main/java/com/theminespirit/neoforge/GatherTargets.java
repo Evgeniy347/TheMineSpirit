@@ -1,5 +1,10 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.forestry.ChopTuning;
+import com.theminespirit.core.forestry.NotATree;
+import com.theminespirit.core.forestry.TreeDetection;
+import com.theminespirit.core.forestry.TreeShape;
+import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.mining.StoneSource;
 import com.theminespirit.core.observation.BlockCoord;
@@ -8,6 +13,7 @@ import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -18,11 +24,17 @@ import org.jspecify.annotations.Nullable;
 
 final class GatherTargets implements HarvestTargets {
     private final Level level;
-    private final BlockLocator.Search search;
+    private final BlockPos center;
+    private int radius;
+    private final Set<Block> blocks;
+    private BlockLocator.Search search;
     private final String refusal;
     private int slices;
     private final boolean settled;
     private int surfaceStone;
+    private final @Nullable LevelTreeView treeView;
+    private final boolean treeLogs;
+    private int stumpsSkipped;
 
     private final @Nullable StageSite settlement;
     private int settlementSkipped;
@@ -36,12 +48,25 @@ final class GatherTargets implements HarvestTargets {
                         .orElse(null)
                 : null;
         this.settled = settled;
-        this.search = BlockLocator.search(level, center, radius, BlockSets.resolve(filter));
+        this.center = center;
+        this.radius = radius;
+        this.blocks = BlockSets.resolve(filter);
+        this.search = BlockLocator.search(level, center, radius, blocks);
+        this.treeLogs = exactLog(filter) != null;
+        this.treeView = treeLogs ? new LevelTreeView(level, blocks) : null;
         this.refusal = exactRefusal(filter);
     }
 
     @Override
     public List<BlockCoord> advance() {
+        List<BlockCoord> allowed = scan();
+        if (!allowed.isEmpty()) {
+            return allowed;
+        }
+        return extendSearch() ? advance() : List.of();
+    }
+
+    private List<BlockCoord> scan() {
         for (int i = 0; i < MAX_SLICES_PER_TICK && !search.done(); i++) {
             slices++;
             List<BlockPos> found = search.step(1);
@@ -56,8 +81,13 @@ final class GatherTargets implements HarvestTargets {
                     settlementSkipped++;
                     continue;
                 }
+                BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+                if (treeView != null && stump(cell)) {
+                    stumpsSkipped++;
+                    continue;
+                }
                 if (GatherPolicy.sourceCheck(id) instanceof GatherPolicy.Allowed) {
-                    allowed.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+                    allowed.add(cell);
                 }
             }
             if (!allowed.isEmpty()) {
@@ -65,6 +95,38 @@ final class GatherTargets implements HarvestTargets {
             }
         }
         return List.of();
+    }
+
+    private boolean extendSearch() {
+        if (!treeLogs) {
+            return false;
+        }
+        int next = Math.min(ChopTuning.MAX_SEARCH_RADIUS, Math.max(radius + 1, radius * 2));
+        if (next <= radius) {
+            return false;
+        }
+        radius = next;
+        search = BlockLocator.search(level, center, radius, blocks);
+        return true;
+    }
+
+    private boolean stump(BlockCoord cell) {
+        TreeDetection detection = TreeShape.detect(cell, treeView);
+        return detection instanceof NotATree notATree
+                && (notATree.reason() == NotATree.Reason.NO_LEAVES || notATree.reason() == NotATree.Reason.NOT_A_TRUNK);
+    }
+
+    private static @Nullable TreeSpecies exactLog(IdFilter filter) {
+        for (String pattern : filter.patterns()) {
+            if (IdFilter.isPattern(pattern)) {
+                continue;
+            }
+            String id = pattern.startsWith("minecraft:") ? pattern : "minecraft:" + pattern;
+            if (TreeSpecies.ofLog(id).isPresent()) {
+                return TreeSpecies.ofLog(id).orElseThrow();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -84,6 +146,10 @@ final class GatherTargets implements HarvestTargets {
 
     @Override
     public String refusalReason() {
+        if (refusal == null && treeLogs && stumpsSkipped > 0 && search.done() && surfaceStone == 0) {
+            return "подходящие брёвна — только пни без кроны (" + stumpsSkipped
+                    + "): нужен настоящий ствол с листвой, а не остаток дерева";
+        }
         if (refusal == null && settlementSkipped > 0 && search.done() && surfaceStone == 0) {
             return "подходящие блоки только на участке поселения или в пещерах под ним (" + settlementSkipped
                     + "): там добывать нельзя";

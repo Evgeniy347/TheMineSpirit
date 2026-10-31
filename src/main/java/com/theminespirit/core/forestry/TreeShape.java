@@ -61,6 +61,9 @@ public final class TreeShape {
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES) {
             return new NotATree(NotATree.Reason.NO_LEAVES, Set.copyOf(logs));
         }
+        if (logs.size() < ChopTuning.MIN_TRUNK_LOGS) {
+            return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
+        }
         return new Tree(base, List.copyOf(logs));
     }
 
