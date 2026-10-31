@@ -32,6 +32,13 @@ public record BoardTiming(long startedAt, long finishedAt) {
         return Math.max(0L, end - startedAt);
     }
 
+    public static void require(long now) {
+        if (now < 0) {
+            throw new IllegalArgumentException("now равен " + now + " и отрицателен: время пересборки "
+                    + "не может идти назад, иначе сортировка сломается");
+        }
+    }
+
     public static BoardTiming attempt(BoardStatus status, BoardTiming journal, boolean activity, long createdAt) {
         Objects.requireNonNull(status, "Статус не может быть null: по нему решают, идёт задание или закрыто");
         Objects.requireNonNull(journal, "Время журнала не может быть null: без него нечего уточнять");

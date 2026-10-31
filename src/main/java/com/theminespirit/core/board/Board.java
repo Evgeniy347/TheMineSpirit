@@ -151,14 +151,14 @@ public final class Board {
 
     public boolean recentlyFailed(String ticketId, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: откат считается по id задания");
-        requireNow(now);
+        BoardTiming.require(now);
         Long failedAt = failTicks.get(ticketId);
         return failedAt != null && now - failedAt < BoardTuning.failBackoffTicks();
     }
 
     public List<BoardTicket> claimable(StockView stock, long now) {
         Objects.requireNonNull(stock, "stock не может быть null: гейт без снимка запасов не проверить");
-        requireNow(now);
+        BoardTiming.require(now);
         unblockChanged(stock, now);
         refreshGateStatuses(stock);
         List<BoardTicket> ready = new ArrayList<>();
@@ -190,7 +190,7 @@ public final class Board {
     public BoardOutcome claim(String ticketId, UUID spirit, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: выдача идёт по id задания");
         Objects.requireNonNull(spirit, "spirit не может быть null: выдача идёт конкретному духу");
-        requireNow(now);
+        BoardTiming.require(now);
         BoardTicket ticket = tickets.get(ticketId);
         if (ticket == null) {
             return BoardOutcome.NOT_FOUND;
@@ -276,12 +276,12 @@ public final class Board {
     }
 
     public boolean availableTo(UUID spirit, BoardCase boardCase, long now) {
-        requireNow(now);
+        BoardTiming.require(now);
         return casePauses.available(spirit, boardCase, now);
     }
 
     public boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
-        requireNow(now);
+        BoardTiming.require(now);
         return casePauses.available(spirit, ticket, now);
     }
 
@@ -294,7 +294,7 @@ public final class Board {
     }
 
     public int releaseIdle(Set<UUID> present, Set<UUID> idle, long now) {
-        requireNow(now);
+        BoardTiming.require(now);
         return idleRelease.tick(present, idle, now);
     }
 
@@ -387,6 +387,10 @@ public final class Board {
         return true;
     }
 
+    public boolean require(String ticketId, Map<String, Integer> requiredItems) {
+        return blocked.require(ticketId, requiredItems);
+    }
+
     public boolean release(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: возврат идёт по id задания");
         if (!tickets.containsKey(ticketId) || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
@@ -438,7 +442,7 @@ public final class Board {
 
     public void occupy(UUID spirit, BoardCase activity, @Nullable String script, @Nullable String target, long now) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие показывается на конкретного духа");
-        requireNow(now);
+        BoardTiming.require(now);
         String id = BoardActivities.idOf(spirit);
         BoardTicket current = tickets.get(id);
         List<String> details = BoardActivities.details(script, target);
@@ -478,7 +482,7 @@ public final class Board {
                 liveCauses,
                 "liveCauses не может быть null: без живых причин "
                         + "непонятно, что актуально — пустой набор задают пустым множеством");
-        requireNow(now);
+        BoardTiming.require(now);
         List<String> detached = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
             BoardStatus status = statuses.get(ticket.id());
@@ -520,7 +524,7 @@ public final class Board {
     }
 
     public int prune(long now) {
-        requireNow(now);
+        BoardTiming.require(now);
         int removed = 0;
         List<String> removableIds = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
@@ -744,12 +748,5 @@ public final class Board {
     public List<String> failureHistory(String ticketId) {
         Objects.requireNonNull(ticketId, "id задания не может быть null: история читается по заданию");
         return failHistory.of(ticketId);
-    }
-
-    private void requireNow(long now) {
-        if (now < 0) {
-            throw new IllegalArgumentException("now равен " + now + " и отрицателен: время пересборки "
-                    + "не может идти назад, иначе сортировка сломается");
-        }
     }
 }
