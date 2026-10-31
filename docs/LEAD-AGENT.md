@@ -50,9 +50,9 @@ Claude, который ведёт проект: ставит задания ис
 ## Снимки мира
 
 - Снимок без остановки сервера: на сервере `/opt/minecraft/server/scripts/world-snapshot.sh [метка]`.
-  Архив `world-<дата_время>[-метка].tar.zst` (≈85 МБ, 2 с) ложится в `/opt/minecraft/world-backups/`;
+  Архив `world-<дата_время>[-метка].tar.zst` (≈85 МБ, 2 с) ложится в `/opt/minecraft/backups/world/`;
   скрипт сам делает `save-off` → `save-all flush` → архив → `save-on`.
-- Cron `domovoy` снимает архив каждые 10 минут, лог — `~/logs/world-snapshot.log`. Ротация: всё за 24 ч,
+- Cron `domovoy` снимает архив каждые 10 минут, лог — `/opt/minecraft/logs/world-snapshot.log`. Ротация: всё за 24 ч,
   дальше по одному в час на 7 дней, дальше по одному в день на 30 дней; архивы с меткой не удаляются,
   при нехватке места (меньше 10 ГБ) удаляются самые старые.
 - Откат: `/opt/minecraft/server/scripts/world-restore.sh [-y] <архив>` (без имени — список). Скрипт
