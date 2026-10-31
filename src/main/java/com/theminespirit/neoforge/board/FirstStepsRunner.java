@@ -109,7 +109,6 @@ public final class FirstStepsRunner {
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String FENCE_PART_PREFIX = "fence:";
     private static final String COBBLESTONE = "cobblestone";
-    private static final String FURNACE_ITEM = "furnace";
     private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
     private static final int LEVELING_SHOWN = 6;
@@ -277,6 +276,7 @@ public final class FirstStepsRunner {
         if (LAYOUT_STEPS.contains(caseValue)
                 || caseValue == BoardCase.CLEAR_GROUNDS
                 || caseValue == BoardCase.STOCK_CHESTS
+                || caseValue == BoardCase.CRAFT_FURNACE
                 || caseValue == BoardCase.BUILD_MINE) {
             if (reopenDone(level, service, step, parts, now)) {
                 return;
@@ -621,7 +621,6 @@ public final class FirstStepsRunner {
         Set<String> tools = toolStock(stock);
         Set<BoardCase> done = journalSteps(service, false, level, stage);
         Set<BoardCase> blocked = journalSteps(service, true, level, stage);
-        boolean furnaceAvailable = furnace || stock.available().getOrDefault(FURNACE_ITEM, 0) > 0;
         boolean journal = world == PlanWorld.JOURNAL;
         boolean plotLevel = journal || PlotLeveling.isLevel(stage.anchor(), stage.level(), plotFeet(level, stage));
         boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, site, journal);
@@ -632,10 +631,11 @@ public final class FirstStepsRunner {
                 groundsCleared,
                 plotLevel,
                 chests,
+                built(level, done, BoardCase.STOCK_CHESTS, site, journal),
                 craftingStation,
                 tools,
                 mineEntrance,
-                furnaceAvailable,
+                built(level, done, BoardCase.CRAFT_FURNACE, site, journal),
                 fence,
                 lighting,
                 built(level, done, BoardCase.BUILD_HOUSE, site, journal),

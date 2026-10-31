@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 
 public final class StageBuilt {
     public static final String ORCHARD = "orchard_oak";
-    private static final int YARD_CHESTS = 2;
     private static final Map<String, Predicate<SettlementFacts>> BUILT = built();
 
     private StageBuilt() {}
@@ -35,9 +34,9 @@ public final class StageBuilt {
                 "clearing",
                 facts -> (done(facts, BoardCase.CLEAR_GROUNDS) || facts.groundsCleared())
                         && (done(facts, BoardCase.CLEAR_GROUNDS) || facts.plotLevel()));
-        built.put("chests", facts -> facts.chests() >= YARD_CHESTS);
+        built.put("chests", SettlementFacts::yard);
         built.put("mine", SettlementFacts::mineEntrance);
-        built.put("furnace", facts -> done(facts, BoardCase.CRAFT_FURNACE) || facts.furnace());
+        built.put("furnace", SettlementFacts::furnace);
         built.put("brewing_stand", facts -> done(facts, BoardCase.CRAFT_BREWING_STAND));
         built.put("lighting", SettlementFacts::lighting);
         built.put("fence", SettlementFacts::fence);

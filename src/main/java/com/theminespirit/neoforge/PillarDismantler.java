@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +53,12 @@ final class PillarDismantler {
             if (!isOwnMarked(pos)) {
                 continue;
             }
+            if (planned(pos)) {
+                failureReason = "блок столба " + cell + " принадлежит плану постройки этапа: свои столбы "
+                        + "разбирают вне построек, иначе хижина и двор теряют блоки";
+                outcome = Outcome.FAILED;
+                return outcome;
+            }
             BlockState state = level.getBlockState(pos);
             if (state.isAir()) {
                 unmark(pos);
@@ -90,6 +97,14 @@ final class PillarDismantler {
 
     String failureReason() {
         return failureReason;
+    }
+
+    private boolean planned(BlockPos pos) {
+        return level instanceof ServerLevel server
+                && SettlementPlotStore.get(server)
+                        .site()
+                        .map(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ()))
+                        .orElse(false);
     }
 
     private boolean isOwnMarked(BlockPos pos) {
