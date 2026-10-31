@@ -48,6 +48,23 @@ class Observe14ProtectionTests {
     }
 
     @Test
+    void decide_NaturalStoneInMinePlanCell_BreakStillAllowed() {
+        BlockProtection protection = ProtectionConfig.readClasspath();
+
+        BlockProtection.Decision decision = SettlementBreak.decide(
+                protection,
+                new SettlementBreak.Facts(SettlementBreak.Origin.UNKNOWN, true, true, "minecraft:stone", false, false),
+                SettlementBreak.Intent.BREAK,
+                () -> Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, "minecraft:air"));
+
+        assertInstanceOf(
+                BlockProtection.Allowed.class,
+                decision,
+                "Клетка шахты — тоже план: запрет добычи не имеет права остановить копание породы, иначе спуск "
+                        + "в шахту встаёт на первом блоке (observe14: шахта 96%)");
+    }
+
+    @Test
     void decide_SameLiveHutPlanBlockDemolishedByTask_StillAllowed() throws IOException {
         JsonNode root = MAPPER.readTree(Files.readString(EDITS, StandardCharsets.UTF_8));
         JsonNode event = root.get("events").get(0);

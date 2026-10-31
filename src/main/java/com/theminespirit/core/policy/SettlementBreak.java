@@ -62,7 +62,7 @@ public final class SettlementBreak {
         Objects.requireNonNull(intent, "Намерение ломки не может быть null: от него зависит, трогать ли план");
         Objects.requireNonNull(neighbours, "Соседи не могут быть null: без них не отличить постройку");
         Place place = place(facts.onPlot(), facts.inPlan());
-        if (place == Place.PLAN && intent == Intent.BREAK && facts.origin() != Origin.PLAYER) {
+        if (place == Place.PLAN && intent == Intent.BREAK && facts.origin() == Origin.SPIRIT) {
             return new BlockProtection.Refused(
                     PolicyId.PROTECTED_BLOCKS,
                     "блок '" + facts.blockId() + "' в клетке плана постройки поселения: его не добывают и не копают, "
