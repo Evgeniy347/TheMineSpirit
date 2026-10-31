@@ -10,6 +10,7 @@ import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.SettlementBreak;
+import com.theminespirit.core.policy.SettlementBreakProtection;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.town.FenceDemolition;
@@ -120,7 +121,7 @@ public final class ProtectionGate {
             SettlementBreak.Place place = SettlementBreak.place(onPlot, inPlan);
             decision = switch (SettlementBreak.of(origin, place)) {
                 case SETTLEMENT -> PROTECTION.checkSettlement(blockId(state), inProtectedZone);
-                case OWN -> PROTECTION.checkOwn(blockId(state), inProtectedZone, inPlan);
+                case OWN -> SettlementBreakProtection.own(PROTECTION, blockId(state), inProtectedZone);
                 case DEFAULT ->
                     PROTECTION.check(
                             blockId(state),
