@@ -51,8 +51,8 @@ final class TorchPlans {
         int crafts = (torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT;
         return List.of(
                 new FallbackNode(List.of(
-                        new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:coal", COUNT, crafts)),
-                        new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:charcoal", COUNT, crafts)))),
+                        new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:charcoal", COUNT, crafts)),
+                        new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:coal", COUNT, crafts)))),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, crafts)),
                 new ScriptCall(
                         CRAFT, Map.of(ITEM, TORCH, COUNT, torches, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));

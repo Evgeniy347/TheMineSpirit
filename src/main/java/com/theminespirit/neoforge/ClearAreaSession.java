@@ -228,11 +228,11 @@ public class ClearAreaSession {
             prepareBreak();
             return;
         }
-        MiningPlanner.Outcome result = MiningPlanner.next(from, top, safety, approachFailures.excludedStands());
+        MiningPlanner.Outcome result = ClearPlanning.next(spirit, from, top, safety, approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted) {
             List<BlockCoord> solid =
                     remaining.stream().filter(cell -> !clear(cell)).toList();
-            result = MiningPlanner.next(from, solid, safety, approachFailures.excludedStands());
+            result = ClearPlanning.next(spirit, from, solid, safety, approachFailures.excludedStands());
         }
         if (result instanceof MiningPlanner.Exhausted) {
             apply(blocked.exhausted(

@@ -13,7 +13,6 @@ import java.util.Optional;
 
 final class GatherPlans {
     private static final int LOGS_PER_TREE = 4;
-    private static final int PLANKS_PER_LOG = 4;
     private static final String PLANKS_SUFFIX = "_planks";
     private static final int LEAVES_PER_SAPLING = 20;
     private static final String COUNT = "count";
@@ -104,23 +103,8 @@ final class GatherPlans {
         if (tree.isEmpty()) {
             return Optional.empty();
         }
-        int logs = Math.max(1, (batch + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG);
-        int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (logs + LOGS_PER_TREE - 1) / LOGS_PER_TREE));
         ScriptCall acquire = new ScriptCall("acquire", Map.of("item", item, COUNT, batch, "fresh", true));
-        return Optional.of(sequence(
-                TicketPlans.gotoTarget(target),
-                new ScriptCall(
-                        "chop_tree",
-                        Map.of(
-                                SPECIES,
-                                tree.get().id(),
-                                COUNT,
-                                trees,
-                                RADIUS,
-                                BoardTuning.chopRadius(),
-                                "replant",
-                                true)),
-                acquire));
+        return Optional.of(sequence(TicketPlans.gotoTarget(target), acquire));
     }
 
     private static Optional<TaskNode> stripPlan(TicketTarget target, String item, int batch) {

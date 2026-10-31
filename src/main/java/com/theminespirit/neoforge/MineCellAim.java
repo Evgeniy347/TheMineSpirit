@@ -96,7 +96,7 @@ final class MineCellAim {
             return Outcome.FAILED;
         }
         if (!walking) {
-            return failure == null ? Outcome.RUNNING : Outcome.FAILED;
+            return Outcome.RUNNING;
         }
         return switch (approach.tick()) {
             case MOVING -> Outcome.RUNNING;

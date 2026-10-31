@@ -18,6 +18,7 @@ final class BlockedBook {
     private final FailureHistory history;
     private final List<BoardLogEntry> notes;
     private final Map<String, Map<String, Integer>> missing = new LinkedHashMap<>();
+    private final Map<String, Map<String, Integer>> available = new LinkedHashMap<>();
     private final Map<String, Long> since = new LinkedHashMap<>();
 
     BlockedBook(
@@ -40,6 +41,10 @@ final class BlockedBook {
     void note(BoardTicket ticket, int failuresSoFar, Map<String, Integer> missingNow, long now) {
         statuses.put(ticket.id(), BoardStatus.BLOCKED);
         missing.put(ticket.id(), missingNow);
+        Map<String, Integer> have = new LinkedHashMap<>();
+        ticket.requiredItems()
+                .forEach((item, need) -> have.put(item, Math.max(0, need - missingNow.getOrDefault(item, 0))));
+        available.put(ticket.id(), Map.copyOf(have));
         since.putIfAbsent(ticket.id(), now);
         notes.add(new BoardLogEntry(
                 BoardLog.Event.BLOCKED,
@@ -99,7 +104,7 @@ final class BlockedBook {
             }
             Map<String, Integer> missingNow = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
             Map<String, Integer> before = missing.getOrDefault(ticket.id(), Map.of());
-            boolean improved = ShortageChange.improved(before, missingNow);
+            boolean improved = improved(ticket.id(), stock);
             if (!improved && !expired(ticket.id(), now)) {
                 continue;
             }
@@ -125,6 +130,7 @@ final class BlockedBook {
         failures.remove(ticket.id());
         reasons.remove(ticket.id());
         missing.remove(ticket.id());
+        available.remove(ticket.id());
         since.remove(ticket.id());
         notes.add(new BoardLogEntry(
                 BoardLog.Event.UNBLOCKED,
@@ -143,12 +149,24 @@ final class BlockedBook {
 
     void clear(String ticketId) {
         missing.remove(ticketId);
+        available.remove(ticketId);
         since.remove(ticketId);
     }
 
     void clear() {
         missing.clear();
+        available.clear();
         since.clear();
+    }
+
+    private boolean improved(String ticketId, StockView stock) {
+        Map<String, Integer> before = available.getOrDefault(ticketId, Map.of());
+        for (Map.Entry<String, Integer> entry : before.entrySet()) {
+            if (stock.available().getOrDefault(entry.getKey(), 0) > entry.getValue()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean expired(String ticketId, long now) {

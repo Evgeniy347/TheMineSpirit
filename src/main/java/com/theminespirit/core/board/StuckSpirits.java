@@ -9,6 +9,8 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public final class StuckSpirits {
+    public static final int AREA_RADIUS = 4;
+
     public record Stuck(@Nullable BlockCoord at, long since) {
         public Stuck {
             if (since < 0) {
@@ -30,13 +32,19 @@ public final class StuckSpirits {
             return;
         }
         BlockCoord origin = known.at() == null ? previous : known.at();
-        if (origin != null && !origin.equals(at)) {
+        if (origin != null && !near(origin, at)) {
             stuck.remove(spirit);
             return;
         }
         if (known.at() == null) {
             stuck.put(spirit, new Stuck(at, known.since()));
         }
+    }
+
+    private static boolean near(BlockCoord origin, BlockCoord at) {
+        return Math.abs(origin.x() - at.x()) <= AREA_RADIUS
+                && Math.abs(origin.y() - at.y()) <= AREA_RADIUS
+                && Math.abs(origin.z() - at.z()) <= AREA_RADIUS;
     }
 
     public void mark(UUID spirit, long now) {
@@ -47,14 +55,24 @@ public final class StuckSpirits {
         stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now));
     }
 
-    public Optional<Stuck> of(UUID spirit) {
+    public Optional<Stuck> of(UUID spirit, long now) {
         Objects.requireNonNull(spirit, "Дух не может быть null: застревание читается у конкретного духа");
-        return Optional.ofNullable(stuck.get(spirit));
+        if (now < 0) {
+            throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание читается только вперёд");
+        }
+        Stuck known = stuck.get(spirit);
+        if (known == null) {
+            return Optional.empty();
+        }
+        if (now - known.since() >= BoardTuning.idleReleaseTicks()) {
+            stuck.remove(spirit);
+            return Optional.empty();
+        }
+        return Optional.of(known);
     }
 
-    public boolean isStuck(UUID spirit) {
-        Objects.requireNonNull(spirit, "Дух не может быть null: застревание читается у конкретного духа");
-        return stuck.containsKey(spirit);
+    public boolean isStuck(UUID spirit, long now) {
+        return of(spirit, now).isPresent();
     }
 
     public void clear() {

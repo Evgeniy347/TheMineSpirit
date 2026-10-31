@@ -176,7 +176,7 @@ public final class StagePlans {
                 .sorted(Comparator.comparingInt((PlannedBlock block) -> SchematicBlocks.isBed(block.block()) ? 0 : 1)
                         .thenComparingInt((PlannedBlock block) -> block.at().y())
                         .thenComparing(PlannedBlock::at))
-                .forEach(block -> steps.add(PlanSteps.clear(block.at(), true)));
+                .forEach(block -> steps.add(PlanSteps.clearStrict(block.at())));
         return new SequenceNode(steps);
     }
 

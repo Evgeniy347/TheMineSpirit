@@ -1,11 +1,15 @@
 package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +36,26 @@ class CharcoalFuelResolveTests {
     }
 
     @Test
+    void resolve_CharcoalWithLogsInInventory_DoesNotGatherInput() {
+        TaskNode plan = ResourceResolver.resolve("charcoal", 1, woodKnowledge(), Map.of("oak_log", 2));
+        List<ScriptCall> steps = new ArrayList<>();
+        collect(plan, steps);
+
+        assertTrue(
+                steps.stream()
+                        .anyMatch(call -> "smelt".equals(call.script())
+                                && "charcoal".equals(call.params().get("item"))),
+                "Обжиг древесного угля обязан остаться в плане: " + steps);
+        assertFalse(
+                steps.stream()
+                        .anyMatch(call -> "gather".equals(call.script())
+                                && "oak_log".equals(call.params().get("block"))),
+                "Брёвна уже в инвентаре — обжиг обязан взять их, а не идти рубить дерево: " + steps
+                        + ". В observe12 acquire charcoal падал «подходящих блоков в радиусе 32 не осталось» "
+                        + "при 8 брёвнах за спиной");
+    }
+
+    @Test
     void select_PrefixedCharcoal_SkipsCoalFuel() {
         FuelPlanner.FuelRequirement fuel = FuelPlanner.select(
                         "minecraft:charcoal", 1, woodKnowledge(), Set.of(), Map.of())
@@ -50,6 +74,17 @@ class CharcoalFuelResolveTests {
                         Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
                         Map.of("charcoal", "oak_log"))
                 .withGatherSource("coal", "coal_ore");
+    }
+
+    private static void collect(TaskNode node, List<ScriptCall> found) {
+        switch (node) {
+            case ScriptCall call -> found.add(call);
+            case SequenceNode sequence -> sequence.steps().forEach(step -> collect(step, found));
+            case FallbackNode fallback -> fallback.steps().forEach(step -> collect(step, found));
+            default ->
+                throw new IllegalArgumentException("Узел " + node.getClass().getSimpleName()
+                        + " не разбирается: тест ждёт script, sequence, fallback");
+        }
     }
 
     private static ScriptCall craft(String item, int count) {

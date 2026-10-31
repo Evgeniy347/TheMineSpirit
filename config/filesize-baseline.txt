@@ -1,4 +1,4 @@
-src/main/java/com/theminespirit/core/board/Board.java	750
+src/main/java/com/theminespirit/core/board/Board.java	745
 src/main/java/com/theminespirit/core/board/TicketPlans.java	896
 src/main/java/com/theminespirit/core/board/graph/GraphPlanner.java	548
 src/main/java/com/theminespirit/core/board/graph/RecipeImport.java	555

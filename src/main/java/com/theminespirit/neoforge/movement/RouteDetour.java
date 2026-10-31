@@ -8,6 +8,7 @@ import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteBreakAudit;
 import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RouteStep;
+import com.theminespirit.core.route.RouteThrottle;
 import com.theminespirit.core.route.RouteWorld;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -24,6 +25,7 @@ public final class RouteDetour {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long NANOS_PER_MICRO = 1_000L;
     private static final int MAX_VETO_REPLANS = 3;
+    private static final RouteThrottle THROTTLE = new RouteThrottle();
 
     private record PlanRequest(
             RouteWorld world, BlockCoord from, BlockCoord target, int radius, int blocks, LevelSafetyView safety) {}
@@ -31,6 +33,15 @@ public final class RouteDetour {
     private RouteDetour() {}
 
     public static Optional<RouteWalk> plan(SpiritEntity spirit, BlockCoord target, int radius, String why) {
+        long now = spirit.level().getGameTime();
+        if (!THROTTLE.allow(spirit.getUUID(), now)) {
+            LOGGER.info(
+                    "[route] дух {} ({}): перестроение подавлено, прошлый расчёт меньше {} тиков назад",
+                    spirit.displayName(),
+                    why,
+                    RouteThrottle.MIN_TICKS);
+            return Optional.empty();
+        }
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         RouteWorld world = new RouteLevelView(spirit);

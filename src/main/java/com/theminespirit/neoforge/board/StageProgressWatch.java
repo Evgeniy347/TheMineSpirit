@@ -4,18 +4,25 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildProgressNote;
+import com.theminespirit.core.board.DemolishAudit;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -75,6 +82,9 @@ final class StageProgressWatch {
 
     @Nullable
     String emptyResult(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
+        if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER) {
+            return demolishResult(level, target);
+        }
         Integer before = placedAtIssue.remove(ticket.id());
         logOverall(level, ticket, target);
         if (before == null) {
@@ -94,6 +104,22 @@ final class StageProgressWatch {
         return "стройка закрыта без результата: поставлено " + after.get().done() + " из "
                 + after.get().total()
                 + ", как и при выдаче — нет материала или подхода, задание не считается сделанным";
+    }
+
+    private static @Nullable String demolishResult(ServerLevel level, @Nullable TicketTarget target) {
+        if (target == null || target.work() == null) {
+            return "разбор закрыт без факта мира: у задания нет списка блоков для сверки";
+        }
+        List<PlannedBlock> planned = target.work().blocks();
+        List<BlockCoord> standing = new ArrayList<>();
+        for (PlannedBlock block : planned) {
+            BlockCoord at = block.at();
+            BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
+            if (!state.isAir() && state.getFluidState().isEmpty()) {
+                standing.add(at);
+            }
+        }
+        return DemolishAudit.stillStanding(planned.size(), standing).orElse(null);
     }
 
     private void logOverall(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {

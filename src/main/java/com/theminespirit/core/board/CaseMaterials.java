@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 public final class CaseMaterials {
     private static final String MINECRAFT_PREFIX = "minecraft:";
     private static final String ITEM = "item";
+    private static final List<String> FUEL_ALTERNATIVES = List.of("charcoal", "coal");
 
     private CaseMaterials() {}
 
@@ -48,10 +49,11 @@ public final class CaseMaterials {
         while (!queue.isEmpty()) {
             switch (queue.poll()) {
                 case ScriptCall call -> {
+                    Taken taken = new Taken(acquired, placed, crafted);
                     if (craftOnly == null) {
-                        addCall(need, new Taken(acquired, placed, crafted), call, source);
+                        addCall(need, taken, call, source);
                     } else if ("craft".equals(call.script()) && craftOnly.equals(normalize(text(call, ITEM)))) {
-                        addCraft(need, call, source);
+                        addCraft(need, taken, call, source);
                     }
                 }
                 case SequenceNode sequence -> queue.addAll(sequence.steps());
@@ -93,7 +95,7 @@ public final class CaseMaterials {
     private static void addCall(Map<String, Integer> need, Taken taken, ScriptCall call, MaterialSource source) {
         switch (call.script()) {
             case "craft" -> {
-                addCraft(need, call, source);
+                addCraft(need, taken, call, source);
                 merge(taken.crafted(), normalize(text(call, ITEM)), integer(call, "count"));
             }
             case "build_schematic" -> addSchematic(taken.placed(), call, source);
@@ -103,7 +105,7 @@ public final class CaseMaterials {
         }
     }
 
-    private static void addCraft(Map<String, Integer> need, ScriptCall call, MaterialSource source) {
+    private static void addCraft(Map<String, Integer> need, Taken taken, ScriptCall call, MaterialSource source) {
         String item = text(call, ITEM);
         int count = integer(call, "count");
         int output = source.outputCount(item);
@@ -114,9 +116,24 @@ public final class CaseMaterials {
         for (Ingredient ingredient : source.ingredientsFor(item)) {
             long total = ingredient.count() * crafts;
             if (total > 0) {
-                merge(need, normalize(ingredient.item()), (int) Math.min(total, Integer.MAX_VALUE));
+                String planned = plannedFuel(taken, normalize(ingredient.item()));
+                merge(need, planned, (int) Math.min(total, Integer.MAX_VALUE));
             }
         }
+    }
+
+    private static String plannedFuel(Taken taken, String ingredient) {
+        if (!FUEL_ALTERNATIVES.contains(ingredient)) {
+            return ingredient;
+        }
+        if (taken.acquired().getOrDefault(ingredient, 0) > 0) {
+            return ingredient;
+        }
+        return FUEL_ALTERNATIVES.stream()
+                .filter(fuel -> !fuel.equals(ingredient))
+                .filter(fuel -> taken.acquired().getOrDefault(fuel, 0) > 0)
+                .findFirst()
+                .orElse(ingredient);
     }
 
     private static void addSchematic(Map<String, Integer> placed, ScriptCall call, MaterialSource source) {
