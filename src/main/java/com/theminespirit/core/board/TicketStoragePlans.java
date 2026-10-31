@@ -55,7 +55,7 @@ final class TicketStoragePlans {
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
         BlockCoord deposit = target.deposit();
-        String container = WAREHOUSE;
+        String container = "auto";
         return new SequenceNode(List.of(
                 gatherOnly(target),
                 deposit == null ? TicketPlans.gotoTarget(target) : gotoPoint(deposit),

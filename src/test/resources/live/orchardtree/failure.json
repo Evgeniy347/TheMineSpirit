@@ -1,0 +1,17 @@
+{
+ "source": "ssh domovoy@192.168.0.147: logs/latest.log 19:53:23 supply_gather:oak_planks failure",
+ "ticket": "supply_gather:oak_planks",
+ "case": "GATHER_MATERIALS",
+ "supplyItem": "oak_planks",
+ "supplyCount": 147,
+ "anchor": [
+  -171,
+  69,
+  -489
+ ],
+ "limit": 100,
+ "nearestTree": 109,
+ "rejectedNotTrees": 27,
+ "unreachable": 0,
+ "protected": 0
+}
