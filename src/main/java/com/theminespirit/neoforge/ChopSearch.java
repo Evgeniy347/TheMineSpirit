@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 
 final class ChopSearch {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int SETTLEMENT_PROXIMITY = 80;
+    private static final int SETTLEMENT_PROXIMITY = ChopTuning.MAX_SEARCH_RADIUS;
     private final SpiritEntity spirit;
     private final Set<Block> logBlocks;
     private final BlockCoord anchor;
@@ -39,7 +39,7 @@ final class ChopSearch {
         this.logBlocks = logBlocks;
         this.anchor = anchorFor(spirit);
         this.radius = params.radius();
-        this.maxDistance = Math.min(radius, ChopTuning.SETTLEMENT_RADIUS);
+        this.maxDistance = ChopTuning.maxDistance(radius);
         this.center = coords(spirit.blockPosition());
         this.search = newSearch(center);
     }

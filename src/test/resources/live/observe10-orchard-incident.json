@@ -1,0 +1,874 @@
+{
+ "source": "ssh domovoy@192.168.0.147: world/theminespirit/incidents/20261031-125706-026-spirit-3.nbt (25^3 snapshot around -179,69,-517)",
+ "failure": {
+  "ticket": "first:build_orchard",
+  "at": [
+   -179,
+   69,
+   -517
+  ],
+  "anchor": [
+   -171,
+   69,
+   -489
+  ],
+  "limit": 32,
+  "nearestTree": 33,
+  "rejectedNotTrees": 22
+ },
+ "region": {
+  "min": [
+   -172,
+   67,
+   -508
+  ],
+  "max": [
+   -168,
+   73,
+   -504
+  ]
+ },
+ "blocks": [
+  {
+   "x": -172,
+   "y": 67,
+   "z": -508,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -171,
+   "y": 67,
+   "z": -508,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -170,
+   "y": 67,
+   "z": -508,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -169,
+   "y": 67,
+   "z": -508,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -168,
+   "y": 67,
+   "z": -508,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -172,
+   "y": 67,
+   "z": -507,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -171,
+   "y": 67,
+   "z": -507,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -170,
+   "y": 67,
+   "z": -507,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -169,
+   "y": 67,
+   "z": -507,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -168,
+   "y": 67,
+   "z": -507,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -172,
+   "y": 67,
+   "z": -506,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -171,
+   "y": 67,
+   "z": -506,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -170,
+   "y": 67,
+   "z": -506,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -169,
+   "y": 67,
+   "z": -506,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -168,
+   "y": 67,
+   "z": -506,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -172,
+   "y": 67,
+   "z": -505,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -171,
+   "y": 67,
+   "z": -505,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -170,
+   "y": 67,
+   "z": -505,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -169,
+   "y": 67,
+   "z": -505,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -168,
+   "y": 67,
+   "z": -505,
+   "block": "minecraft:dirt"
+  },
+  {
+   "x": -172,
+   "y": 68,
+   "z": -508,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -171,
+   "y": 68,
+   "z": -508,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -170,
+   "y": 68,
+   "z": -508,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -169,
+   "y": 68,
+   "z": -508,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -168,
+   "y": 68,
+   "z": -508,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -172,
+   "y": 68,
+   "z": -507,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -171,
+   "y": 68,
+   "z": -507,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -170,
+   "y": 68,
+   "z": -507,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -169,
+   "y": 68,
+   "z": -507,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -168,
+   "y": 68,
+   "z": -507,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -172,
+   "y": 68,
+   "z": -506,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -171,
+   "y": 68,
+   "z": -506,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -170,
+   "y": 68,
+   "z": -506,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -169,
+   "y": 68,
+   "z": -506,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -168,
+   "y": 68,
+   "z": -506,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -172,
+   "y": 68,
+   "z": -505,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -171,
+   "y": 68,
+   "z": -505,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -170,
+   "y": 68,
+   "z": -505,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -169,
+   "y": 68,
+   "z": -505,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -168,
+   "y": 68,
+   "z": -505,
+   "block": "minecraft:grass_block"
+  },
+  {
+   "x": -172,
+   "y": 69,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 69,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 69,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 69,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 69,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 69,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 69,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 69,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 69,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 69,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 69,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 69,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 69,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 69,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 69,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 69,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 69,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 69,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 69,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 69,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 70,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 70,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 70,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 70,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 70,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 70,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 70,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 70,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 70,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 70,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 70,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 70,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 70,
+   "z": -506,
+   "block": "minecraft:oak_log",
+   "axis": "y"
+  },
+  {
+   "x": -169,
+   "y": 70,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 70,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 70,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 70,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 70,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 70,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 70,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 71,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 71,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 71,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 71,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 71,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 71,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 71,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 71,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 71,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 71,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 71,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 71,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 71,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 71,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 71,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 71,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 71,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 71,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 71,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 71,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 72,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 72,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 72,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 72,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 72,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 72,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 72,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 72,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 72,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 72,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 72,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 72,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 72,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 72,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 72,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 72,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 72,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 72,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 72,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 72,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 73,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 73,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 73,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 73,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 73,
+   "z": -508,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 73,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 73,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 73,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 73,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 73,
+   "z": -507,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 73,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 73,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 73,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 73,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 73,
+   "z": -506,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -172,
+   "y": 73,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -171,
+   "y": 73,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -170,
+   "y": 73,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -169,
+   "y": 73,
+   "z": -505,
+   "block": "minecraft:air"
+  },
+  {
+   "x": -168,
+   "y": 73,
+   "z": -505,
+   "block": "minecraft:air"
+  }
+ ]
+}
