@@ -211,6 +211,7 @@ class GraphWiringTests {
                 false,
                 false,
                 1,
+                false,
                 true,
                 Set.of(),
                 false,
@@ -233,6 +234,41 @@ class GraphWiringTests {
                 built.get("chests"),
                 "Сундуков двора меньше двух — двор не готов, даже если шаг в журнале сделан: " + built);
         assertEquals(StageBuilt.ids(), built.keySet(), "Каждая постройка этапа 1 получает состояние для графа");
+    }
+
+    @Test
+    void stageBuilt_OldChestsNearHome_DamagedYardStillPlanned() {
+        SettlementFacts facts = new SettlementFacts(
+                true,
+                true,
+                true,
+                4,
+                false,
+                true,
+                Set.of(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                Set.of(BoardCase.STOCK_CHESTS, BoardCase.CRAFT_FURNACE),
+                Set.of());
+
+        Map<String, Built> built = StageBuilt.of(facts);
+
+        assertEquals(
+                Built.PLANNED,
+                built.get("chests"),
+                "Сундуки вне схемы двора не делают двор построенным: иначе задание двора не переиздаётся, "
+                        + "а `spirit plan` показывает 0% повреждена: " + built);
+        assertEquals(
+                Built.PLANNED,
+                built.get("furnace"),
+                "Печь не на месте схемы двора — печь двора не построена, даже если шаг в журнале сделан: " + built);
     }
 
     @Test

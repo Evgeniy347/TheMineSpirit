@@ -8,6 +8,7 @@ public record SettlementFacts(
         boolean groundsCleared,
         boolean plotLevel,
         int chests,
+        boolean yard,
         boolean craftingStation,
         Set<String> tools,
         boolean mineEntrance,

@@ -65,6 +65,18 @@ class StageSiteTests {
     }
 
     @Test
+    void planCell_HutBlocks_ProtectedFromSpiritDismantle() throws IOException {
+        Schematic hut = SchematicTextParser.parse(Files.readString(ROOT.resolve("hut_1.txt")), "hut_1")
+                .schematic();
+        for (Schematic.PlacedEntry entry : hut.entries(SITE.houseOrigin())) {
+            assertTrue(
+                    SITE.planCell(entry.pos().x(), entry.pos().y(), entry.pos().z()),
+                    "Блок хижины " + entry.pos() + " обязан быть клеткой плана: иначе разбор своего столба "
+                            + "и рубка принимают стену за обломок и снимают её (хижина 97%)");
+        }
+    }
+
+    @Test
     void mine_ColumnAndPassage_InsideMinePlot() {
         BlockCoord entrance = SITE.mineEntrance();
         assertTrue(

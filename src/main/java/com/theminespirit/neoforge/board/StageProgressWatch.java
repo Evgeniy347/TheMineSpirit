@@ -27,6 +27,8 @@ final class StageProgressWatch {
             BoardCase.LIGHTING,
             BoardCase.BUILD_ORCHARD,
             BoardCase.BUILD_STREETS,
+            BoardCase.STOCK_CHESTS,
+            BoardCase.CRAFT_FURNACE,
             BoardCase.REPAIR_BUILDING);
     private final Map<String, Integer> placedAtIssue = new HashMap<>();
     private final Map<String, FirstStepsRunner.Placed> overallAtIssue = new HashMap<>();

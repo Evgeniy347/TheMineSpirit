@@ -7,9 +7,11 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardScenario;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.StageTicket;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -21,6 +23,8 @@ import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownFixtures;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class StageOneAcceptanceTests {
@@ -106,6 +110,41 @@ class StageOneAcceptanceTests {
                                 .filter(ticket -> StageTicket.stage(ticket.id()))
                                 .map(ticket -> ticket.id() + "=" + scenario.status(ticket.id()))
                                 .toList());
+    }
+
+    @Test
+    void board_StageOne_DamagedYardIsNotBuiltByOldChests() {
+        SettlementFacts facts = new SettlementFacts(
+                true,
+                true,
+                true,
+                3,
+                false,
+                true,
+                Set.of(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                Set.of(BoardCase.STOCK_CHESTS, BoardCase.CRAFT_FURNACE),
+                Set.of());
+
+        Map<String, Built> built = StageBuilt.of(facts);
+
+        assertEquals(
+                Built.PLANNED,
+                built.get("chests"),
+                "Двор с чужими сундуками не считается построенным: иначе шаг двора не переиздаётся и ремонт не "
+                        + "запускается, а приёмка этапа 1 считает двор готовым при 0%: " + built);
+        assertEquals(
+                Built.PLANNED,
+                built.get("furnace"),
+                "Печь не на месте схемы двора — двор не построен, даже если шаги в журнале сделаны: " + built);
     }
 
     @Test
