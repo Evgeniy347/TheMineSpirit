@@ -92,19 +92,6 @@ public final class FirstStepsRunner {
     private static final Set<BoardCase> EXACT_STEPS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
     private static final String FIRST_PREFIX = "first:";
-    private static final List<BoardCase> STAGE_STEPS = List.of(
-            BoardCase.CRAFTING_STATION,
-            BoardCase.CLEAR_GROUNDS,
-            BoardCase.STOCK_CHESTS,
-            BoardCase.BUILD_MINE,
-            BoardCase.CRAFT_FURNACE,
-            BoardCase.LIGHTING,
-            BoardCase.BUILD_FENCE,
-            BoardCase.BUILD_HOUSE,
-            BoardCase.BUILD_ORCHARD,
-            BoardCase.BUILD_STREETS,
-            BoardCase.CRAFT_SMITHING_TABLE,
-            BoardCase.CRAFT_ANVIL);
     private static final String MINECRAFT = "minecraft:";
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String FENCE_PART_PREFIX = "fence:";
@@ -161,7 +148,8 @@ public final class FirstStepsRunner {
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
         dropOtherWood(level, service, BuildingWoodChoice.allowed(level, wood));
-        return Optional.of(new StageScan(stage, wood, home, scan.facts(), scan.furnaceBlock()));
+        StageScan stageScan = new StageScan(stage, wood, home, scan.facts(), scan.furnaceBlock());
+        return Optional.of(StageSchedule.reopen(level, service, stock, stageScan, spirits.size(), now));
     }
 
     private static void dropOwnWood(Map<String, Integer> need, StockView stock, String wood) {
@@ -221,11 +209,7 @@ public final class FirstStepsRunner {
     }
 
     public static List<String> ticketIds(BoardCase caseValue) {
-        List<String> ids = new ArrayList<>();
-        for (int part = 1; part <= partsOf(caseValue); part++) {
-            ids.add(partId(caseValue, part));
-        }
-        return List.copyOf(ids);
+        return StageReopen.ids(caseValue);
     }
 
     private static Map<String, Integer> need(
@@ -396,18 +380,11 @@ public final class FirstStepsRunner {
     }
 
     private static int partsOf(BoardCase caseValue) {
-        return switch (caseValue) {
-            case CLEAR_GROUNDS -> GroundsPlan.CLEAR_PARTS;
-            case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
-            default -> 1;
-        };
+        return StageReopen.ids(caseValue).size();
     }
 
     static String partId(BoardCase caseValue, int part) {
-        if (part == 1) {
-            return FIRST_PREFIX + caseValue.name().toLowerCase(Locale.ROOT);
-        }
-        return (caseValue == BoardCase.BUILD_FENCE ? FENCE_PART_PREFIX : CLEAR_PART_PREFIX) + part;
+        return StageReopen.partId(caseValue, part);
     }
 
     private static Map<String, Integer> partNeed(
@@ -784,7 +761,7 @@ public final class FirstStepsRunner {
     private static Set<BoardCase> journalSteps(
             BoardService service, boolean blocked, ServerLevel level, StageSite stage) {
         Set<BoardCase> steps = EnumSet.noneOf(BoardCase.class);
-        for (BoardCase step : STAGE_STEPS) {
+        for (BoardCase step : StageReopen.STEPS) {
             String id = FIRST_PREFIX + step.name().toLowerCase(Locale.ROOT);
             boolean match = blocked
                     ? service.board().statusOf(id).orElse(null) == BoardStatus.BLOCKED
