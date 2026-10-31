@@ -10,6 +10,7 @@ final class TreeGrid implements TreeView {
     private static final char AIR = '.';
     private static final char LOG = 'L';
     private static final char LEAVES = '@';
+    private static final char VINES = 'V';
     private static final char SOIL = '#';
     private static final char PLANKS = 'P';
 
@@ -41,6 +42,11 @@ final class TreeGrid implements TreeView {
 
     TreeGrid leaves(int x, int y, int z) {
         put(new BlockCoord(x, y, z), LEAVES);
+        return this;
+    }
+
+    TreeGrid vines(int x, int y, int z) {
+        put(new BlockCoord(x, y, z), VINES);
         return this;
     }
 
@@ -89,6 +95,12 @@ final class TreeGrid implements TreeView {
     public boolean isNaturalLeaves(BlockCoord coord) {
         leavesReads++;
         return cell(coord) == LEAVES;
+    }
+
+    @Override
+    public boolean isFoliageObstacle(BlockCoord coord) {
+        char cell = cell(coord);
+        return cell == LEAVES || cell == VINES;
     }
 
     @Override

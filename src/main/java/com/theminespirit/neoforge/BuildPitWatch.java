@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.TaskStall;
+import com.theminespirit.core.board.StallWatch;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
@@ -27,9 +27,7 @@ final class BuildPitWatch {
     private final Level level;
     private final SchematicSite site;
     private final BuildKey buildKey;
-    private long signature = Long.MIN_VALUE;
-    private long lastProgress = -1;
-    private boolean reported;
+    private final StallWatch watch = new StallWatch();
     private @Nullable BlockCoord lastStand;
 
     BuildPitWatch(SpiritEntity spirit, Level level, SchematicSite site, BuildKey buildKey) {
@@ -41,16 +39,7 @@ final class BuildPitWatch {
 
     boolean stalled(long ticks, int placed, int cleared, int trips) {
         long now = placed * 1_000_003L + cleared * 1_001L + trips;
-        if (now != signature) {
-            signature = now;
-            lastProgress = ticks;
-            reported = false;
-        }
-        if (reported || lastProgress < 0 || ticks - lastProgress < TaskStall.NO_PROGRESS_TICKS) {
-            return false;
-        }
-        reported = true;
-        return true;
+        return watch.stalled(ticks, now);
     }
 
     void stalledReport(BlockCoord feet, int placed, int cleared, int trips, Map<BlockCoord, String> blocked) {
@@ -65,7 +54,7 @@ final class BuildPitWatch {
                 "Стройка {}: {} тиков без прогресса (поставлено {}, очищено {}, заходов {}), дух {}; первые "
                         + "недостижимые: {}",
                 buildKey,
-                TaskStall.NO_PROGRESS_TICKS,
+                StallWatch.REPORT_TICKS,
                 placed,
                 cleared,
                 trips,

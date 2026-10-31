@@ -17,6 +17,7 @@ public final class BoardSources {
     private final FishingWatch fishing = new FishingWatch();
     private final HiveWatch hive = new HiveWatch();
     private final PetWatch pets = new PetWatch();
+    private final RescueWatch rescue = new RescueWatch();
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
@@ -107,7 +108,7 @@ public final class BoardSources {
             live.add(HiveWatch.CAUSE);
         }
         live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level, service, spirits, now), Set.of()));
-        live.addAll(guard.call("rescue", () -> RescueWatch.tick(level, service, spirits, now), Set.of()));
+        live.addAll(guard.call("rescue", () -> rescue.tick(level, service, spirits, now), Set.of()));
         return live;
     }
 }

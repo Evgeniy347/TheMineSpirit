@@ -7,6 +7,10 @@ public interface TreeView {
 
     boolean isNaturalLeaves(BlockCoord coord);
 
+    default boolean isFoliageObstacle(BlockCoord coord) {
+        return isNaturalLeaves(coord);
+    }
+
     boolean isSoil(BlockCoord coord);
 
     boolean isArtificial(BlockCoord coord);
