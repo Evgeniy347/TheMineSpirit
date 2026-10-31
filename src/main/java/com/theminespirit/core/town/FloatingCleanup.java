@@ -44,6 +44,9 @@ public final class FloatingCleanup {
     public static Action decide(FloatingBlocks.Finding finding, Rooms rooms) {
         Objects.requireNonNull(finding, "Находка не может быть null: решение принимается по её виду");
         Objects.requireNonNull(rooms, "Обстановка не может быть null: без неё не ясно, есть ли куда убрать");
+        if (finding.kind() == FloatingBlocks.Kind.TREE) {
+            return rooms.reachable() ? Action.REMOVE : Action.SKIP_UNREACHABLE;
+        }
         if (rooms.playerBuilding()) {
             return Action.SKIP_PROTECTED;
         }

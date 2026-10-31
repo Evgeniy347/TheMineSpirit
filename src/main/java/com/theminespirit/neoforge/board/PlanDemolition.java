@@ -3,8 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
@@ -12,14 +10,12 @@ import com.theminespirit.core.board.DemolitionRetry;
 import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.SubmitGate;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingCleanup;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
@@ -28,8 +24,6 @@ import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -46,7 +40,14 @@ final class PlanDemolition {
     private static final StateChangeLog CHANGES = new StateChangeLog();
     private static final DemolitionRetry RETRIES = new DemolitionRetry();
 
-    private record Collected(List<BlockCoord> remove, List<String> notes, int excluded, int unreachable) {}
+    private record Collected(
+            List<BlockCoord> remove,
+            List<String> notes,
+            int excluded,
+            int unreachable,
+            BlockCoord stand,
+            BlockCoord top,
+            BlockCoord lowest) {}
 
     private PlanDemolition() {}
 
@@ -68,7 +69,7 @@ final class PlanDemolition {
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
                 .limit(BATCH)
                 .toList();
-        String id = idFor(stray);
+        String id = DemolitionTickets.idFor(stray);
         if (RETRIES.waiting(id, now)) {
             warnExcluded(world, collected, now);
             if (CHANGES.changed("tidy-retry:" + world, id + "@" + RETRIES.until(id))) {
@@ -92,7 +93,12 @@ final class PlanDemolition {
             }
             return;
         }
-        if (!submit(service, site, stray, now, id)) {
+        List<PlannedBlock> blocks = stray.stream()
+                .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
+                .toList();
+        DemolitionTickets.Placement placement =
+                new DemolitionTickets.Placement(collected.stand(), collected.top(), collected.lowest());
+        if (!DemolitionTickets.submit(service, site, blocks, now, id, placement)) {
             return;
         }
         RETRIES.submitted(id, now, COOLDOWN);
@@ -149,13 +155,20 @@ final class PlanDemolition {
         int unreachableSkipped = 0;
         int excluded = 0;
         int reachableShown = 0;
+        DemolitionTickets.Placement placement = null;
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
             boolean plannedFence = finding.kind() == FloatingBlocks.Kind.FENCE
                     && site.fenceStrip().contains(at.x(), at.z());
             boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
             boolean blocked = unreachableCells.excluded(at);
-            boolean reachable = !blocked && FloatingScan.reachable(level, at);
+            BlockCoord treeStand = finding.kind() == FloatingBlocks.Kind.TREE
+                    ? FloatingScan.standBeside(level, finding.cells())
+                    : null;
+            boolean reachable = !blocked
+                    && (finding.kind() == FloatingBlocks.Kind.TREE
+                            ? treeStand != null
+                            : FloatingScan.reachable(level, at));
             FloatingCleanup.Action action = FloatingCleanup.decide(
                     finding,
                     new FloatingCleanup.Rooms(
@@ -190,42 +203,41 @@ final class PlanDemolition {
                     remove.add(at);
                 }
                 case REMOVE -> {
+                    if (finding.kind() == FloatingBlocks.Kind.TREE && placement != null) {
+                        continue;
+                    }
                     if (reachableShown++ < SHOWN) {
                         notes.add(at + " — " + finding.reason() + ": стоянка рядом есть — в уборку");
                     }
-                    remove.add(at);
+                    remove.addAll(finding.cells());
+                    if (finding.kind() == FloatingBlocks.Kind.TREE) {
+                        placement = treePlacement(treeStand, finding);
+                    }
                 }
                 case SKIP_REGISTERED, SKIP_WAIT -> {}
             }
         }
-        return new Collected(remove, List.copyOf(notes), excluded, unreachableSkipped);
+        return new Collected(
+                remove,
+                List.copyOf(notes),
+                excluded,
+                unreachableSkipped,
+                placement == null ? null : placement.stand(),
+                placement == null ? null : placement.top(),
+                placement == null ? null : placement.lowest());
     }
 
-    static String idFor(List<BlockCoord> stray) {
-        long hash = 17L;
-        for (BlockCoord at : stray) {
-            hash = hash * 31L + at.hashCode();
-        }
-        return PREFIX + Long.toUnsignedString(hash, 36);
-    }
-
-    private static boolean submit(BoardService service, StageSite site, List<BlockCoord> stray, long now, String id) {
-        List<PlannedBlock> blocks = stray.stream()
-                .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
-                .toList();
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.DISMANTLE_SHELTER,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(stray.get(0)).withWork(new StageWork(site, blocks)));
-        return outcome == BoardOutcome.ACCEPTED;
+    private static DemolitionTickets.Placement treePlacement(BlockCoord stand, FloatingBlocks.Finding finding) {
+        int highest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .max()
+                .orElse(finding.at().y());
+        int lowest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .min()
+                .orElse(finding.at().y());
+        return new DemolitionTickets.Placement(
+                stand, new BlockCoord(stand.x(), highest, stand.z()), new BlockCoord(stand.x(), lowest, stand.z()));
     }
 
     private static boolean playerBuilding(ServerLevel level, BlockCoord at) {
