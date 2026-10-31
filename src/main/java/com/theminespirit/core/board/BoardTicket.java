@@ -81,6 +81,15 @@ public record BoardTicket(
         }
     }
 
+    public BoardTicket withPriority(int next) {
+        if (next < 0 || next > BoardTuning.MAX_PRIORITY) {
+            throw new IllegalArgumentException("Приоритет " + next + " вне диапазона [0, " + BoardTuning.MAX_PRIORITY
+                    + "]: доска сравнивает задания с ремонтом");
+        }
+        return new BoardTicket(
+                id, boardCase, assignee, next, createdAt, level, cause, dependsOn, requiredItems, modifiers);
+    }
+
     public BoardTicket withFailure(@Nullable String reason) {
         if (reason == null || reason.isBlank()) {
             return this;

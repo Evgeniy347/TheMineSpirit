@@ -29,7 +29,7 @@ class StuckOscillationLiveTests {
         stuck.see(spirit, second);
 
         assertTrue(
-                stuck.isStuck(spirit),
+                stuck.isStuck(spirit, 100),
                 "spirit-1 в observe13 ходил между " + first + " и " + second + " в воде: это колебание, а не "
                         + "движение; снятие метки на любой смене клетки снова отдаёт ему задания (N23)");
     }
@@ -47,7 +47,7 @@ class StuckOscillationLiveTests {
         stuck.see(spirit, far);
 
         assertFalse(
-                stuck.isStuck(spirit),
+                stuck.isStuck(spirit, 100),
                 "Дух ушёл дальше " + StuckSpirits.AREA_RADIUS + " блоков: метка застревания снимается, иначе он "
                         + "навсегда выпадает из раздачи");
     }

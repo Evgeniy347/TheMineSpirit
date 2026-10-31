@@ -34,8 +34,8 @@ public final class BoardWhy {
             return Optional.of("откат после провала: задание вернётся в очередь после паузы");
         }
         Optional<UUID> holder = ticket.assignee();
-        if (holder.isPresent() && board.stuck().of(holder.get()).isPresent()) {
-            StuckSpirits.Stuck stuck = board.stuck().of(holder.get()).orElseThrow();
+        if (holder.isPresent() && board.stuck().of(holder.get(), now).isPresent()) {
+            StuckSpirits.Stuck stuck = board.stuck().of(holder.get(), now).orElseThrow();
             return Optional.of("держатель застрял с тика " + stuck.since()
                     + (stuck.at() == null ? "" : " в " + stuck.at())
                     + ": задание ждёт, пока дух освободится");
