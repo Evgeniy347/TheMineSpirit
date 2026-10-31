@@ -85,23 +85,40 @@ class LiveJungleGatherTicketTests {
     }
 
     @Test
-    void liveOakPlanksTicket_AfterChop_CraftsFromLogsWithoutSeparateChopping() throws IOException {
+    void liveOakPlanksTicket_MissingTrees_FallsBackToCrafting() throws IOException {
         JsonNode ticket = ticket(OAK_TICKET);
         assertOnBoard(ticket);
         assertEquals("oak_planks", ticket.get("supplyItem").asText(), "Живой тикет обязан снабжать дубовыми досками");
 
-        List<ScriptCall> steps = calls(livePlan(ticket));
+        TaskNode plan = livePlan(ticket);
+        List<ScriptCall> steps = calls(plan);
 
         assertTrue(
                 steps.stream().anyMatch(call -> "acquire".equals(call.script())),
                 "План обязан крафтить доски через acquire: " + steps);
+        ScriptCall chop = first(steps, call -> "chop_tree".equals(call.script()));
         assertFalse(
-                steps.stream()
-                        .anyMatch(call -> "chop_tree".equals(call.script())
-                                && "oak".equals(call.params().get("species"))),
-                "План досок снова рубит дубы отдельным шагом перед acquire: провал рубки «деревья oak "
-                        + "закончились» валит задание, хотя брёвна уже лежат в инвентаре (observe12 N18). План: "
-                        + steps);
+                chop == null,
+                "План досок снова идёт в сбор пней без рубки: после observe14 настоящий дуб ищется только "
+                        + "рубкой целого дерева, иначе задание бьётся в (−144,72,−503). План: " + steps);
+        assertTrue(
+                fallbackContains(plan, "chop_tree", "acquire"),
+                "Рубка обязана быть запасной веткой перед acquire: при отсутствии деревьев провал рубки "
+                        + "не должен валить крафт из брёвен в инвентаре (observe12 N18). План: " + steps);
+    }
+
+    private static boolean fallbackContains(TaskNode node, String first, String second) {
+        if (node instanceof FallbackNode fallback) {
+            List<String> scripts = fallback.steps().stream()
+                    .flatMap(step -> calls(step).stream())
+                    .map(ScriptCall::script)
+                    .toList();
+            return scripts.contains(first) && scripts.contains(second);
+        }
+        if (node instanceof SequenceNode sequence) {
+            return sequence.steps().stream().anyMatch(step -> fallbackContains(step, first, second));
+        }
+        return false;
     }
 
     private static TaskNode livePlan(JsonNode ticket) {
