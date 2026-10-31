@@ -17,6 +17,10 @@ final class GatherPlans {
     private static final String PLANKS_SUFFIX = "_planks";
     private static final int LEAVES_PER_SAPLING = 20;
     private static final String COUNT = "count";
+    private static final String ITEM = "item";
+    private static final String ACQUIRE = "acquire";
+    private static final String DIRT_PATH = "dirt_path";
+    private static final String WOODEN_SHOVEL = "minecraft:wooden_shovel";
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String MINECRAFT = "minecraft:";
@@ -40,12 +44,16 @@ final class GatherPlans {
         if (planks.isPresent()) {
             return planks;
         }
+        Optional<TaskNode> path = pathPlan(target, item, batch);
+        if (path.isPresent()) {
+            return path;
+        }
         Optional<TreeSpecies> tree = treeOf(item);
         if (tree.isEmpty()) {
             return Optional.empty();
         }
         int trees = Math.min(CatalogLimits.COUNT_MAX, (batch + LOGS_PER_TREE - 1) / LOGS_PER_TREE);
-        ScriptCall acquire = new ScriptCall("acquire", Map.of("item", item, COUNT, batch, "fresh", true));
+        ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         return Optional.of(sequence(
                 TicketPlans.gotoTarget(target),
                 new FallbackNode(List.of(
@@ -106,7 +114,7 @@ final class GatherPlans {
         }
         int logs = Math.max(1, (batch + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG);
         int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (logs + LOGS_PER_TREE - 1) / LOGS_PER_TREE));
-        ScriptCall acquire = new ScriptCall("acquire", Map.of("item", item, COUNT, batch, "fresh", true));
+        ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         return Optional.of(sequence(
                 TicketPlans.gotoTarget(target),
                 new FallbackNode(List.of(
@@ -124,6 +132,18 @@ final class GatherPlans {
                         acquire))));
     }
 
+    private static Optional<TaskNode> pathPlan(TicketTarget target, String item, int batch) {
+        if (!DIRT_PATH.equals(pathOf(item))) {
+            return Optional.empty();
+        }
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(TicketPlans.gotoTarget(target));
+        steps.add(new ScriptCall(ACQUIRE, Map.of(ITEM, WOODEN_SHOVEL, COUNT, 1)));
+        steps.add(new ScriptCall(
+                "gather", Map.of("block", DIRT_PATH, COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
+        return Optional.of(new SequenceNode(steps));
+    }
+
     private static Optional<TaskNode> stripPlan(TicketTarget target, String item, int batch) {
         Optional<TreeSpecies> stripped = strippedSpeciesOf(item);
         if (stripped.isEmpty()) {
@@ -131,7 +151,7 @@ final class GatherPlans {
         }
         return Optional.of(sequence(
                 TicketPlans.gotoTarget(target),
-                new ScriptCall("acquire", Map.of("item", ToolSet.itemId(BoardCase.CRAFT_WOODEN_AXE), COUNT, 1)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, ToolSet.itemId(BoardCase.CRAFT_WOODEN_AXE), COUNT, 1)),
                 new ScriptCall(
                         "strip_log",
                         Map.of(SPECIES, stripped.get().id(), COUNT, batch, RADIUS, BoardTuning.chopRadius())),
