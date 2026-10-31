@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class SupplyGatherLiveTicketTests {
@@ -58,7 +59,7 @@ class SupplyGatherLiveTicketTests {
     }
 
     @Test
-    void liveTicket_Planks_AcquireCraftsFromLogsNeverGathersPlanks() throws IOException {
+    void liveTicket_Planks_ChopsTreesThenCraftsNeverGathersPlanks() throws IOException {
         JsonNode ticket = new ObjectMapper().readTree(read(TICKET));
         BoardCase boardCase = BoardCase.valueOf(ticket.get("case").asText());
         int level = ticket.get("level").asInt();
@@ -66,12 +67,21 @@ class SupplyGatherLiveTicketTests {
         int count = ticket.get("supplyCount").asInt();
 
         TaskNode plan = TicketPlans.plan(boardCase, level, TicketTarget.at(HOME).withSupply(item, count));
-        ScriptCall acquire = calls(plan).stream()
-                .filter(call -> "acquire".equals(call.script()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("План живого supply_gather без acquire: " + calls(plan)));
+        List<ScriptCall> steps = calls(plan);
 
-        TaskNode subplan = acquireSubplan(acquire);
+        int chop = index(
+                steps,
+                call -> "chop_tree".equals(call.script())
+                        && "oak".equals(call.params().get("species")));
+        int acquire = index(steps, call -> "acquire".equals(call.script()));
+        assertTrue(
+                chop >= 0 && acquire > chop,
+                "Живой supply_gather:oak_planks не рубит дубы до крафта: " + steps
+                        + ". Доски делаются из брёвен, брёвна берутся рубкой деревьев (chop_tree), "
+                        + "а не поломкой размещённых брёвен/досок в постройках");
+
+        ScriptCall acquireCall = steps.get(acquire);
+        TaskNode subplan = acquireSubplan(acquireCall);
         List<ScriptCall> resolved = calls(subplan);
 
         assertFalse(
@@ -81,11 +91,15 @@ class SupplyGatherLiveTicketTests {
         assertTrue(
                 resolved.stream().anyMatch(call -> "craft".equals(call.script()) && crafts(call, item)),
                 "Подплан acquire обязан крафтить доски: " + resolved);
-        assertTrue(
-                resolved.stream()
-                        .anyMatch(call -> "gather".equals(call.script())
-                                && "oak_log".equals(call.params().get("block"))),
-                "Доски делаются из брёвен: подплан обязан добывать oak_log, а не размещённые доски: " + resolved);
+    }
+
+    private static int index(List<ScriptCall> calls, Predicate<ScriptCall> match) {
+        for (int i = 0; i < calls.size(); i++) {
+            if (match.test(calls.get(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private static TaskNode acquireSubplan(ScriptCall call) {
