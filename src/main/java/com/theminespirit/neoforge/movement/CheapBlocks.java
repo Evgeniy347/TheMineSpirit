@@ -6,10 +6,10 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-final class CheapBlocks {
+public final class CheapBlocks {
     private CheapBlocks() {}
 
-    static Map<String, Integer> counts(SpiritEntity spirit) {
+    public static Map<String, Integer> counts(SpiritEntity spirit) {
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (String id : ToolBreakCost.CHEAP_ORDER) {
             counts.put(id, BlockItems.countIn(spirit.getInventory(), id));
