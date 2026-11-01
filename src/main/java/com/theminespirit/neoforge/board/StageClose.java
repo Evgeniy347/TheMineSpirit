@@ -24,6 +24,16 @@ final class StageClose {
         }
     }
 
+    static void drop(BoardService service, BoardCase caseValue, int parts) {
+        for (int part = 1; part <= parts; part++) {
+            String id = FirstStepsRunner.partId(caseValue, part);
+            BoardStatus status = service.board().statusOf(id).orElse(null);
+            if (status != null && status != BoardStatus.DONE && status != BoardStatus.ASSIGNED) {
+                service.board().cancel(id);
+            }
+        }
+    }
+
     static void reopen(BoardService service, BoardCase caseValue, int parts) {
         for (int part = 1; part <= parts; part++) {
             String id = FirstStepsRunner.partId(caseValue, part);

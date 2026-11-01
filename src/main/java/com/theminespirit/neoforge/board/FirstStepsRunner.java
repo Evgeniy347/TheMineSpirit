@@ -273,7 +273,7 @@ public final class FirstStepsRunner {
             }
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE) {
-                reserve = new HashMap<>(partNeed(source, partTarget, wood));
+                reserve = new HashMap<>(StageSettle.partNeed(source, partTarget, wood));
                 reserve.keySet().retainAll(need.keySet());
             }
             BoardOutcome submitted = service.submit(
@@ -304,11 +304,11 @@ public final class FirstStepsRunner {
         BoardCase caseValue = step.caseValue();
         StageWork work = Objects.requireNonNull(
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
-        Placed placed = audit(level, caseValue, work.site(), step.wood());
-        int missing = placed.total() - placed.done();
+        BuildGap.Gap gap = gap(level, caseValue, work.site(), step.wood());
+        int missing = gap.shortage();
         BoardStatus base = service.board().statusOf(partId(caseValue, 1)).orElse(null);
         boolean partsReady = caseValue != BoardCase.BUILD_FENCE || partsDone(service, caseValue, level, work.site());
-        StageAudit.Decision decision = StageAudit.decide(base, partsReady, placed.done(), placed.total());
+        StageAudit.Decision decision = StageAudit.decide(base, partsReady, gap.done(), gap.total());
         if (decision == StageAudit.Decision.COMPLETE) {
             StageClose.built(service, caseValue, parts);
             return true;
@@ -316,32 +316,28 @@ public final class FirstStepsRunner {
         if (decision == StageAudit.Decision.OPEN) {
             return false;
         }
-        if (StageAudit.unbuilt(missing, placed.total(), BoardTuning.rebuildPercent())) {
-            PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, placed.total(), true);
+        if (StageAudit.unbuilt(missing, gap.total(), BoardTuning.rebuildPercent())) {
+            PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, gap.total(), true);
             BuildingWoodChoice.rebuilt(level, caseValue, work.site());
             StageClose.reopen(service, caseValue, parts);
             return false;
         }
-        PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, placed.total(), false);
+        PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, gap.total(), false);
+        if (base != BoardStatus.DONE) {
+            StageClose.drop(service, caseValue, parts);
+        }
+        TicketTarget repairTarget = StageSettle.repairTarget(caseValue, step.target(), gap);
         BoardOutcome repair = StageRepair.submit(
                 service,
                 caseValue,
-                step.target(),
-                new StageRepair.Gap(missing, placed.total(), repairNeed(level, step)),
+                repairTarget,
+                new StageRepair.Gap(missing, gap.total(), StageSettle.repairNeed(level, step, repairTarget)),
                 now);
         if (StageAudit.keeps(repair)) {
             return true;
         }
         StageClose.reopen(service, caseValue, parts);
         return false;
-    }
-
-    private static Map<String, Integer> repairNeed(ServerLevel level, OpenStep step) {
-        Map<String, Integer> need = new HashMap<>(step.need());
-        if (step.caseValue() != BoardCase.BUILD_MINE) {
-            minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
-        }
-        return StageAudit.shortage(need);
     }
 
     public static void dropOtherWood(ServerLevel level, BoardService service, Set<String> woods) {
@@ -372,13 +368,6 @@ public final class FirstStepsRunner {
 
     static String partId(BoardCase caseValue, int part) {
         return StageReopen.partId(caseValue, part);
-    }
-
-    static Map<String, Integer> partNeed(MaterialSource source, TicketTarget target, String wood) {
-        Map<String, Integer> need = new HashMap<>();
-        materials(source, BoardCase.BUILD_FENCE, target)
-                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
-        return need;
     }
 
     private static PlotLeveling leveling(ServerLevel level, StageSite site) {
@@ -612,10 +601,13 @@ public final class FirstStepsRunner {
 
     private static boolean built(
             ServerLevel level, Set<BoardCase> done, BoardCase step, StoneSite site, boolean journal) {
-        if (!done.contains(step) || journal) {
+        if (journal) {
             return done.contains(step);
         }
         Placed placed = audit(level, step, site.stage(), site.wood());
+        if (placed.total() == 0) {
+            return done.contains(step);
+        }
         if (EXACT_STEPS.contains(step)) {
             return placed.done() == placed.total();
         }
@@ -630,8 +622,14 @@ public final class FirstStepsRunner {
     }
 
     static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
+        BuildGap.Gap gap = gap(level, step, stage, fallback);
+        return new Placed(gap.done(), gap.total());
+    }
+
+    static BuildGap.Gap gap(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
         String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
-        return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood);
+        return BuildGap.trace(
+                TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood, probe(level), SCHEMES);
     }
 
     record Placed(int done, int total) {}

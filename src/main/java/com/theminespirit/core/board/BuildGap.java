@@ -42,6 +42,7 @@ public final class BuildGap {
             Map<String, Integer> required,
             Map<String, Integer> placed,
             Map<String, Integer> missingItems,
+            Map<BlockCoord, String> missingCells,
             List<String> missing) {
         public int done() {
             return placed.values().stream().mapToInt(Integer::intValue).sum();
@@ -109,6 +110,7 @@ public final class BuildGap {
         private final Map<String, Integer> required = new LinkedHashMap<>();
         private final Map<String, Integer> placed = new LinkedHashMap<>();
         private final Map<String, Integer> missingItems = new LinkedHashMap<>();
+        private final Map<BlockCoord, String> missingCells = new LinkedHashMap<>();
         private final List<String> missing = new ArrayList<>();
 
         private Accumulator(String wood, Probe probe, Schemes schemes) {
@@ -150,7 +152,12 @@ public final class BuildGap {
         private void expect(BlockCoord at, String block) {
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
             String standing = probe.block(at);
-            count(at, item, () -> BlockMatch.matches(standing, item), " ожидается " + item + ", стоит " + standing);
+            count(
+                    at,
+                    item,
+                    block,
+                    () -> BlockMatch.matches(standing, item),
+                    " ожидается " + item + ", стоит " + standing);
         }
 
         private void mine(MineLayout layout) {
@@ -160,27 +167,34 @@ public final class BuildGap {
                 count(
                         cell,
                         floor,
+                        "minecraft:cobblestone",
                         () -> SchematicBlocks.isFloorClass(standing),
                         " ожидается " + floor + ", стоит " + standing);
             }
             for (BlockCoord cell : layout.air()) {
                 String standing = probe.block(cell);
-                count(cell, DIG, () -> probe.passable(cell), " копать: " + standing);
+                count(cell, DIG, "minecraft:air", () -> probe.passable(cell), " копать: " + standing);
             }
         }
 
-        private void count(BlockCoord at, String item, BooleanSupplier done, String suffix) {
+        private void count(BlockCoord at, String item, String block, BooleanSupplier done, String suffix) {
             required.merge(item, 1, Integer::sum);
             if (done.getAsBoolean()) {
                 placed.merge(item, 1, Integer::sum);
             } else {
                 missingItems.merge(item, 1, Integer::sum);
+                missingCells.put(at, block);
                 missing.add(at + suffix);
             }
         }
 
         private Gap gap() {
-            return new Gap(Map.copyOf(required), Map.copyOf(placed), Map.copyOf(missingItems), List.copyOf(missing));
+            return new Gap(
+                    Map.copyOf(required),
+                    Map.copyOf(placed),
+                    Map.copyOf(missingItems),
+                    Map.copyOf(missingCells),
+                    List.copyOf(missing));
         }
     }
 
