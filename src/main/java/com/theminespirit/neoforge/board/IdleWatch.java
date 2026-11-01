@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.RepeatLog;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
@@ -11,10 +13,19 @@ import org.slf4j.Logger;
 
 final class IdleWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final String CHANNEL = "idle";
 
-    private IdleWatch() {}
+    private final RepeatLog repeats;
 
-    static void tick(BoardService service, List<SpiritEntity> spirits, long now) {
+    IdleWatch() {
+        this(BoardTuning.logSummaryTicks());
+    }
+
+    IdleWatch(long summaryTicks) {
+        this.repeats = new RepeatLog(summaryTicks);
+    }
+
+    void tick(BoardService service, List<SpiritEntity> spirits, long now) {
         if (spirits.isEmpty()) {
             return;
         }
@@ -28,12 +39,26 @@ final class IdleWatch {
             }
         }
         int released = service.board().releaseIdle(present, idle, now);
-        if (released > 0) {
-            LOGGER.info(
-                    "[idle] простой духов {}: снято пауз кейсов и блокировок {}, доска снова раздаёт",
-                    idle.size(),
-                    released);
+        if (released <= 0) {
+            repeats.clear(CHANNEL);
+            return;
         }
+        repeats.note(CHANNEL, released, now).ifPresent(summary -> {
+            if (summary.count() == 1) {
+                LOGGER.info(
+                        "[idle] простой духов {}: снято пауз кейсов и блокировок {}, доска снова раздаёт",
+                        idle.size(),
+                        released);
+            } else {
+                LOGGER.info(
+                        "[idle] сводка: простой повторялся {} раз за окно, снято пауз и блокировок всего {} "
+                                + "(за раз {}–{}), доска снова раздаёт",
+                        summary.count(),
+                        summary.total(),
+                        summary.min(),
+                        summary.max());
+            }
+        });
     }
 
     private static boolean isIdle(BoardService service, SpiritEntity spirit) {

@@ -277,7 +277,7 @@ public final class ChopTreeScript implements ScriptInstance {
         tree = null;
         chopping = false;
         if (chopped >= params.count()) {
-            LOGGER.info("Дух {} завершил chop_tree: {}", spirit.getUUID(), summary());
+            LOGGER.info("[wood] дух {} завершил chop_tree: {}", spirit.getUUID(), summary());
             return ScriptStatus.SUCCEEDED;
         }
         return ScriptStatus.RUNNING;

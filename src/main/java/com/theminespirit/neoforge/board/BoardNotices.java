@@ -53,8 +53,9 @@ final class BoardNotices {
             }
             waiting.add(ticket.id());
             String reason = BoardWhy.waitReason(board, ticket, stock, now).orElse(null);
-            pending.observe(ticket.id(), reason, now).ifPresent(LOGGER::warn);
+            pending.observe(ticket.id(), reason, now);
         }
         pending.retain(waiting);
+        pending.summary(now).ifPresent(LOGGER::warn);
     }
 }

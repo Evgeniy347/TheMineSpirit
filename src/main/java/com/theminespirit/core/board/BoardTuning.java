@@ -35,6 +35,8 @@ public final class BoardTuning {
 
     public static final long IDLE_RELEASE_TICKS = 1200;
 
+    public static final long LOG_SUMMARY_TICKS = 6000;
+
     public static final int CASE_FAIL_LIMIT = 3;
 
     public static final int TICKET_FAIL_LIMIT = 5;
@@ -68,7 +70,8 @@ public final class BoardTuning {
             "enchantCheckInterval",
             "transferRadiusBlocks",
             "transferMaxCount",
-            "rebuildPercent");
+            "rebuildPercent",
+            "logSummaryTicks");
 
     private BoardTuning() {}
 
@@ -136,6 +139,10 @@ public final class BoardTuning {
 
     public static long idleReleaseTicks() {
         return Math.min(IDLE_RELEASE_TICKS, caseFailPauseTicks());
+    }
+
+    public static long logSummaryTicks() {
+        return interval("logSummaryTicks", LOG_SUMMARY_TICKS);
     }
 
     public static int ticketFailLimit() {

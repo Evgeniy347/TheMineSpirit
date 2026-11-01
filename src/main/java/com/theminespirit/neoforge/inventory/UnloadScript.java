@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.inventory;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.DepositSelection;
@@ -17,8 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
 
 public final class UnloadScript extends ContainerTask {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final UnloadParams params;
     private final int protectedSlot;
     private final int reservePercent;
@@ -70,6 +74,9 @@ public final class UnloadScript extends ContainerTask {
 
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
+        if (moved > 0) {
+            LOGGER.info("[deposit] дух {} разгрузил {} предметов", spirit.displayName(), moved);
+        }
         return switch (shortage) {
             case NONE, SOURCE_LACK -> ScriptStatus.SUCCEEDED;
             case DEST_FULL ->
@@ -113,6 +120,9 @@ public final class UnloadScript extends ContainerTask {
 
     @Override
     protected ScriptStatus finishAuto() {
+        if (movedTotal() > 0) {
+            LOGGER.info("[deposit] дух {} разгрузил {} предметов в склад", spirit.displayName(), movedTotal());
+        }
         if (movedTotal() == 0 && refusedOnce) {
             return failed(lastRefusal == null ? "контейнеры склада заполнены: излишек остался у духа" : lastRefusal);
         }
