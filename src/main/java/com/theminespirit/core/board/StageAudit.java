@@ -58,6 +58,11 @@ public final class StageAudit {
         return Decision.AUDIT;
     }
 
+    public static boolean repairBlockedByUpgrade(BoardCase step, boolean upgrading) {
+        Objects.requireNonNull(step, "Кейс ремонта не может быть null: от него зависит, ждать ли апгрейд");
+        return upgrading && step != BoardCase.BUILD_MINE;
+    }
+
     public static boolean keeps(BoardOutcome outcome) {
         Objects.requireNonNull(outcome, "Исход ремонта не может быть null: по нему решают, снимать ли отметку");
         return outcome == BoardOutcome.ACCEPTED || outcome == BoardOutcome.DUPLICATE || outcome == BoardOutcome.BACKOFF;

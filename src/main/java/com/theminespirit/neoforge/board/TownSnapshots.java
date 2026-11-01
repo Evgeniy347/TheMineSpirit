@@ -34,13 +34,7 @@ public final class TownSnapshots {
         String wood = plot.orElseThrow().wood();
         Map<String, TownSnapshot.Progress> progress = new LinkedHashMap<>();
         progress.put(StageSites.HUT, step(level, service, BoardCase.BUILD_HOUSE, stage, wood));
-        progress.put(
-                StageSites.YARD,
-                sum(
-                        sum(
-                                step(level, service, BoardCase.STOCK_CHESTS, stage, wood),
-                                step(level, service, BoardCase.CRAFT_FURNACE, stage, wood)),
-                        YardFloorWatch.progress(level, stage)));
+        progress.put(StageSites.YARD, YardFloorWatch.progress(level, stage));
         progress.put(StageSites.MINE, step(level, service, BoardCase.BUILD_MINE, stage, wood));
         progress.put(StageSites.ORCHARD, step(level, service, BoardCase.BUILD_ORCHARD, stage, wood));
         progress.put(TownPlanner.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));
@@ -84,10 +78,5 @@ public final class TownSnapshots {
     private static TownSnapshot.Progress step(
             ServerLevel level, BoardService service, BoardCase step, StageSite site, String wood) {
         return FirstStepsRunner.progress(level, service, step, site, wood);
-    }
-
-    private static TownSnapshot.Progress sum(TownSnapshot.Progress first, TownSnapshot.Progress second) {
-        return new TownSnapshot.Progress(
-                first.done() + second.done(), first.total() + second.total(), first.damaged() || second.damaged());
     }
 }

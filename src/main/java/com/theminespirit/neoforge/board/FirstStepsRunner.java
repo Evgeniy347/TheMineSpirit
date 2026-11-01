@@ -427,7 +427,7 @@ public final class FirstStepsRunner {
     }
 
     public static TicketTarget targetFor(ServerLevel level, BoardCase caseValue, StageSite stage, String wood) {
-        BlockCoord point = BEFORE_YARD.contains(caseValue) ? stage.anchor() : stage.workYard();
+        BlockCoord point = BEFORE_YARD.contains(caseValue) ? Stations.at(level, caseValue, stage) : stage.workYard();
         TicketTarget target = TicketTarget.at(point).withWork(StageBuilds.of(level, caseValue, stage, 0));
         if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
             target = target.withWood(wood);

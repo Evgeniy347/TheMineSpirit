@@ -8,16 +8,13 @@ import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.core.town.YardFloor;
-import com.theminespirit.core.town.YardScheme;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +25,6 @@ import org.slf4j.Logger;
 
 final class YardFloorWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String YARD = "yard_1";
     private static final int MAX_DEPTH = 12;
     private static final int EVERY = 600;
     private static final String REPAIR = RepairPlan.PREFIX + "stock_chests";
@@ -89,11 +85,16 @@ final class YardFloorWatch {
 
     private static YardFloor.Audit audit(ServerLevel level, StageSite site) {
         List<BlockCoord> stations = new ArrayList<>();
-        for (Schematic.PlacedEntry entry : entries(site)) {
-            String block = entry.block();
-            if ((block.endsWith("chest") || block.endsWith("crafting_table") || block.endsWith("furnace"))
-                    && block(level, entry.pos()).endsWith(block)) {
-                stations.add(entry.pos());
+        var yard = site.yard();
+        int y = site.anchor().y();
+        for (int x = yard.x(); x < yard.x() + yard.width(); x++) {
+            for (int z = yard.z(); z < yard.z() + yard.depth(); z++) {
+                for (int dy = -3; dy <= 1; dy++) {
+                    BlockCoord cell = new BlockCoord(x, y + dy, z);
+                    if (station(block(level, cell))) {
+                        stations.add(cell);
+                    }
+                }
             }
         }
         return YardFloor.of(stations, MAX_DEPTH, cell -> {
@@ -102,13 +103,8 @@ final class YardFloorWatch {
         });
     }
 
-    private static List<Schematic.PlacedEntry> entries(StageSite site) {
-        return DataTables.INSTANCE
-                .presets()
-                .current()
-                .byId(YARD)
-                .map(preset -> preset.schematic().entries(YardScheme.origin(site)))
-                .orElse(List.of());
+    private static boolean station(String block) {
+        return block.endsWith("chest") || block.endsWith("crafting_table") || block.endsWith("furnace");
     }
 
     private static String block(ServerLevel level, BlockCoord cell) {
