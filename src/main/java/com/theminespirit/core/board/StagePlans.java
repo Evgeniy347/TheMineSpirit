@@ -27,6 +27,8 @@ public final class StagePlans {
     private static final String FURNACE = "minecraft:furnace";
     private static final String TABLE_BLOCK = "crafting_table";
     private static final String MINECRAFT = "minecraft:";
+    private static final String COBBLESTONE = MINECRAFT + "cobblestone";
+    private static final String SUPPORT = MINECRAFT + "dirt";
     private static final int CHEST_PLANKS = 20;
     private static final int FELL_LAYER = 4;
     private static final int FURNACE_STONE = 8;
@@ -141,7 +143,7 @@ public final class StagePlans {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(yard));
         steps.add(PlanSteps.withdraw("minecraft:blaze_rod", 1));
-        steps.add(PlanSteps.withdraw("minecraft:cobblestone", 3));
+        steps.add(PlanSteps.withdraw(COBBLESTONE, 3));
         steps.add(new ScriptCall(
                 "craft",
                 Map.of(
@@ -159,7 +161,7 @@ public final class StagePlans {
     private static TaskNode station(TicketTarget target, BlockCoord yard, List<SchemeBuild> builds) {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(yard));
-        steps.add(PlanSteps.withdraw("minecraft:cobblestone", FURNACE_STONE));
+        steps.add(PlanSteps.withdraw(COBBLESTONE, FURNACE_STONE));
         for (SchemeBuild build : builds) {
             steps.add(PlanSteps.craft(FURNACE, 1));
             steps.add(PlanSteps.build(build, target.wood()));
@@ -180,6 +182,29 @@ public final class StagePlans {
         return new SequenceNode(steps);
     }
 
+    private static void clearParts(List<TaskNode> steps, int minX, int maxX, int minZ, int maxZ, int bottom, int high) {
+        int height = high - bottom + 1;
+        int area = Math.max(1, CatalogLimits.BUILD_VOLUME_MAX / Math.max(1, height));
+        int xStep = Math.max(1, Math.min(maxX - minX + 1, area));
+        int zStep = Math.max(1, area / xStep);
+        for (int x = minX; x <= maxX; x += xStep) {
+            int x2 = Math.min(maxX, x + xStep - 1);
+            for (int z = minZ; z <= maxZ; z += zStep) {
+                int z2 = Math.min(maxZ, z + zStep - 1);
+                steps.add(new ScriptCall(
+                        "clear_area",
+                        Map.of(
+                                "x1", x,
+                                "y1", bottom,
+                                "z1", z,
+                                "x2", x2,
+                                "y2", high,
+                                "z2", z2,
+                                "demolish", true)));
+            }
+        }
+    }
+
     private static TaskNode fell(List<PlannedBlock> blocks, TicketTarget target) {
         BlockCoord stand = target.target();
         BlockCoord to = target.to();
@@ -197,23 +222,18 @@ public final class StagePlans {
         int minZ = blocks.stream().mapToInt(block -> block.at().z()).min().orElse(stand.z());
         int maxZ = blocks.stream().mapToInt(block -> block.at().z()).max().orElse(stand.z());
         List<TaskNode> steps = new ArrayList<>();
+        int supportMax = Math.max(0, top - stand.y());
+        if (supportMax > 0) {
+            steps.add(PlanSteps.acquire(SUPPORT, Math.min(supportMax, CatalogLimits.COUNT_MAX)));
+        }
         steps.add(PlanSteps.gotoPoint(stand));
         for (int high = top; high >= low; high -= FELL_LAYER) {
             int bottom = Math.max(low, high - FELL_LAYER + 1);
             int support = high - stand.y();
             if (support > 1) {
-                steps.add(new ScriptCall("pillar_up", Map.of("height", support, "down", false)));
+                steps.add(new ScriptCall("pillar_up", Map.of("height", support, "block", SUPPORT, "down", false)));
             }
-            steps.add(new ScriptCall(
-                    "clear_area",
-                    Map.of(
-                            "x1", minX,
-                            "y1", bottom,
-                            "z1", minZ,
-                            "x2", maxX,
-                            "y2", high,
-                            "z2", maxZ,
-                            "demolish", true)));
+            clearParts(steps, minX, maxX, minZ, maxZ, bottom, high);
             if (support > 1) {
                 steps.add(new ScriptCall("pillar_down", Map.of()));
             }

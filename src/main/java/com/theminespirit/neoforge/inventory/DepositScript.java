@@ -7,6 +7,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.DepositSelection;
+import com.theminespirit.core.inventory.DepositSource;
 import com.theminespirit.core.inventory.DepositSpread;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.Slice;
@@ -30,6 +31,7 @@ public final class DepositScript extends ContainerTask {
     private List<DepositSpread.Step> steps;
     private int stepIndex;
     private String autoRefusal;
+    private boolean nothingToDeposit;
 
     public DepositScript(SpiritEntity spirit, TransferParams params) {
         super(spirit, params.container(), params.radius());
@@ -63,19 +65,27 @@ public final class DepositScript extends ContainerTask {
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         Container current = container;
-        String decision =
-                shortage == TransferRunner.Shortage.NONE ? "предметы приняты" : "нужен второй контейнер или сундук";
+        String verdict = switch (shortage) {
+            case NONE -> "предметы приняты";
+            case SOURCE_LACK ->
+                params.leftover()
+                        ? "излишек '" + params.item() + "' сдан весь"
+                        : "у духа нет остальных '" + params.item() + "'";
+            case DEST_FULL -> "нужен второй контейнер или сундук";
+        };
         note(
-                "finish|" + at() + "|" + (current == null ? -1 : freeSlots(current)) + "|" + moved + "|" + shortage,
+                "finish|" + at() + "|" + (current == null ? -1 : freeSlots(current)) + "|" + moved + "|" + verdict,
                 PREFIX + spirit.displayName() + ": контейнер" + at() + " — свободно "
                         + (current == null ? -1 : freeSlots(current)) + " из "
                         + (current == null ? -1 : current.getContainerSize()) + " слотов, перенесено " + moved
-                        + ", решение: " + decision);
+                        + ", решение: " + verdict);
         return switch (shortage) {
             case NONE -> ScriptStatus.SUCCEEDED;
             case SOURCE_LACK ->
-                failed("в инвентаре только " + moved + " из " + params.count() + " '" + params.item() + "': перенесено "
-                        + moved + ", остального у духа нет");
+                params.leftover()
+                        ? ScriptStatus.SUCCEEDED
+                        : failed("в инвентаре только " + moved + " из " + params.count() + " '" + params.item()
+                                + "': перенесено " + moved + ", остального у духа нет");
             case DEST_FULL ->
                 failed("контейнер полон" + at() + ": перенесено " + moved + " из " + params.count() + " '"
                         + params.item() + "', остальное осталось у духа; нужен второй контейнер или сундук");
@@ -85,6 +95,20 @@ public final class DepositScript extends ContainerTask {
     @Override
     protected AutoMove nextAutoMove(AutoContainerScan scan) {
         if (steps == null) {
+            DepositSource.Decision decision = DepositSource.of(available(scan), params.leftover(), params.item());
+            if (!decision.transfer()) {
+                nothingToDeposit = decision.success();
+                if (nothingToDeposit) {
+                    note(
+                            "nothing|" + params.item(),
+                            PREFIX + spirit.displayName() + ": '" + params.item()
+                                    + "' в инвентаре нет — сдавать нечего");
+                } else {
+                    autoRefusal = decision.reason();
+                    note("decision|" + autoRefusal, PREFIX + spirit.displayName() + ": " + autoRefusal);
+                }
+                return null;
+            }
             DepositSpread.Plan plan = DepositSpread.plan(scan.snapshots(), blockCoord(), kind(scan), params.count());
             steps = plan.steps();
             autoRefusal = plan.refusal();
@@ -117,6 +141,9 @@ public final class DepositScript extends ContainerTask {
 
     @Override
     protected ScriptStatus finishAuto() {
+        if (nothingToDeposit) {
+            return ScriptStatus.SUCCEEDED;
+        }
         if (autoRefusal != null) {
             return failed(autoRefusal);
         }
@@ -204,6 +231,17 @@ public final class DepositScript extends ContainerTask {
             }
             return total;
         }
+    }
+
+    private int available(AutoContainerScan scan) {
+        IdFilter filter = IdFilter.of(List.of(params.item()));
+        int total = 0;
+        for (Stack stack : scan.mapper().map(spirit.getInventory())) {
+            if (stack != null && filter.matches(stack.item())) {
+                total += stack.count();
+            }
+        }
+        return total;
     }
 
     private Stack kind(AutoContainerScan scan) {

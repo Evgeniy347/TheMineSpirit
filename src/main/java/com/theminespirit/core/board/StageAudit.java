@@ -49,6 +49,9 @@ public final class StageAudit {
         if (total > 0 && done >= total) {
             return Decision.COMPLETE;
         }
+        if (done > 0 && base != BoardStatus.ASSIGNED) {
+            return Decision.AUDIT;
+        }
         if (base != BoardStatus.DONE || !partsDone) {
             return Decision.OPEN;
         }

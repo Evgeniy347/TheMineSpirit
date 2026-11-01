@@ -44,6 +44,9 @@ public final class MineStepStands {
             addReachable(column, from, view, reachable, stands);
         }
         if (stands.isEmpty()) {
+            addVisible(column, from, view, stands);
+        }
+        if (stands.isEmpty()) {
             return new Choice(List.of(), reason(column, parentStand, view, reachable));
         }
         return new Choice(new ArrayList<>(stands), "");
@@ -75,6 +78,17 @@ public final class MineStepStands {
                 return;
             }
             consider(column, stand, view, reachable, stands);
+        }
+    }
+
+    private static void addVisible(MineColumn column, BlockCoord from, SafetyView view, Set<BlockCoord> stands) {
+        for (BlockCoord stand : StandSpots.of(column.stand(), view, from)) {
+            if (stands.size() >= MAX_STANDS) {
+                return;
+            }
+            if (!shaft(column, stand) && MiningSafety.canStand(stand, view) && visibleFrom(column, stand, view)) {
+                stands.add(stand);
+            }
         }
     }
 

@@ -72,7 +72,7 @@ final class MineBuildScript implements ScriptInstance {
     private final Map<MineColumn, MineColumn> parents = new HashMap<>();
     private final List<Schematic.PlacedEntry> torches;
     private final MineCells cells;
-    private final MineEntranceOpening entranceOpening;
+    private final MineOpening entranceOpening;
     private final StallWatch stall = new StallWatch();
     private Phase phase = Phase.PICK;
     private Phase aimReturn = Phase.DIG;
@@ -105,7 +105,7 @@ final class MineBuildScript implements ScriptInstance {
         plan.forEach(column -> walls.remove(column.floor()));
         this.cells = new MineCells(level, walls);
         this.finish = new MineFinish(spirit, placer, approach, rotation, torches, parents, open);
-        this.entranceOpening = MineEntranceOpening.of(plan, layout, safety);
+        this.entranceOpening = MineOpening.of(safety);
         if (plan.isEmpty()) {
             LOGGER.info(
                     "[mine] {}: вход {} уже на глубине цели спуска — 0 ступеней, уровень считается достигнутым",
