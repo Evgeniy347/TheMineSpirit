@@ -37,8 +37,10 @@ public final class TownSnapshots {
         progress.put(
                 StageSites.YARD,
                 sum(
-                        step(level, service, BoardCase.STOCK_CHESTS, stage, wood),
-                        step(level, service, BoardCase.CRAFT_FURNACE, stage, wood)));
+                        sum(
+                                step(level, service, BoardCase.STOCK_CHESTS, stage, wood),
+                                step(level, service, BoardCase.CRAFT_FURNACE, stage, wood)),
+                        YardFloorWatch.progress(level, stage)));
         progress.put(StageSites.MINE, step(level, service, BoardCase.BUILD_MINE, stage, wood));
         progress.put(StageSites.ORCHARD, step(level, service, BoardCase.BUILD_ORCHARD, stage, wood));
         progress.put(TownPlanner.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));

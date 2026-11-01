@@ -46,6 +46,9 @@ public final class StagePlans {
         StageSite site = work.site();
         if (boardCase == BoardCase.REPAIR_BUILDING && !work.repairs().isEmpty()) {
             BoardCase repaired = BoardCase.valueOf(work.repairs());
+            if (repaired == BoardCase.STOCK_CHESTS && !work.blocks().isEmpty()) {
+                return Optional.of(PlanSteps.placeAll(target, work.blocks(), List.of()));
+            }
             return Optional.of(
                     TicketPlans.plan(repaired, 1, target.withWork(new StageWork(site, work.blocks(), work.builds()))));
         }
