@@ -28,6 +28,7 @@ public final class StagePlans {
     private static final String TABLE_BLOCK = "crafting_table";
     private static final String MINECRAFT = "minecraft:";
     private static final String COBBLESTONE = MINECRAFT + "cobblestone";
+    private static final String SUPPORT = MINECRAFT + "dirt";
     private static final int CHEST_PLANKS = 20;
     private static final int FELL_LAYER = 4;
     private static final int FURNACE_STONE = 8;
@@ -223,14 +224,14 @@ public final class StagePlans {
         List<TaskNode> steps = new ArrayList<>();
         int supportMax = Math.max(0, top - stand.y());
         if (supportMax > 0) {
-            steps.add(PlanSteps.acquire(COBBLESTONE, Math.min(supportMax, CatalogLimits.COUNT_MAX)));
+            steps.add(PlanSteps.acquire(SUPPORT, Math.min(supportMax, CatalogLimits.COUNT_MAX)));
         }
         steps.add(PlanSteps.gotoPoint(stand));
         for (int high = top; high >= low; high -= FELL_LAYER) {
             int bottom = Math.max(low, high - FELL_LAYER + 1);
             int support = high - stand.y();
             if (support > 1) {
-                steps.add(new ScriptCall("pillar_up", Map.of("height", support, "block", COBBLESTONE, "down", false)));
+                steps.add(new ScriptCall("pillar_up", Map.of("height", support, "block", SUPPORT, "down", false)));
             }
             clearParts(steps, minX, maxX, minZ, maxZ, bottom, high);
             if (support > 1) {

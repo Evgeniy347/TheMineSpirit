@@ -49,14 +49,14 @@ class LiveFloatingTicketTests {
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
-                                && "minecraft:cobblestone".equals(call.params().get("item"))),
-                "У духа в кроне пустой инвентарь: план обязан сначала взять булыжник (сундуки двора/добыча), "
+                                && "minecraft:dirt".equals(call.params().get("item"))),
+                "У духа в кроне пустой инвентарь: план обязан сначала взять землю (сундуки двора/добыча), "
                         + "иначе pillar_up падает «нет материала для столба» — так observe16 и остался без [clear]. "
                         + "План: " + calls);
         assertEquals(
-                "minecraft:cobblestone",
+                "minecraft:dirt",
                 pillar.params().get("block"),
-                "pillar_up обязан ставить именно добытый булыжник, а не выбирать пустую землю. План: "
+                "pillar_up обязан ставить именно добытую землю, а не выбирать пустой булыжник. План: "
                         + pillar.params());
         assertTrue(
                 calls.stream().anyMatch(call -> "pillar_down".equals(call.script())),
