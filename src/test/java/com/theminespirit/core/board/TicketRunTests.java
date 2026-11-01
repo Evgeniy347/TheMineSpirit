@@ -66,4 +66,16 @@ class TicketRunTests {
                         + "прогресс такого скрипта заданию не принадлежит, поэтому задание заново стартует свой план "
                         + "(observe15 B2), иначе сторож прогресса берёт чужой RunProgress");
     }
+
+    @Test
+    void decide_UnknownGenerationRunningWithoutTarget_StaysRunning() {
+        long unknown = SpiritReading.UNKNOWN_GENERATION;
+
+        assertEquals(
+                TicketRun.RUNNING,
+                TicketRun.decide(unknown, 6, RunStatus.RUNNING, false, false),
+                "После рестарта цель задания ещё не восстановлена источниками: перезапускать план вслепую "
+                        + "нельзя — он встанет по умолчанию у точки сбора, а не на своём участке. Как только "
+                        + "источники вернут цель, следующая сборка доски перезапустит задание (observe15 B2)");
+    }
 }

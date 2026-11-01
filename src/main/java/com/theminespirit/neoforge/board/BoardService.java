@@ -26,7 +26,6 @@ import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TaskStall;
-import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolCraft;
@@ -40,7 +39,6 @@ import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.husbandry.SpeciesIds;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
@@ -705,7 +703,8 @@ public final class BoardService {
                     issuedGenerations.getOrDefault(ticket.id(), SpiritReading.UNKNOWN_GENERATION),
                     spirit.taskGeneration(),
                     status,
-                    spirit.tactics().wantsControl());
+                    spirit.tactics().wantsControl(),
+                    targets.containsKey(ticket.id()));
             switch (run) {
                 case SUCCEEDED, FAILED -> {
                     if (run == TicketRun.SUCCEEDED
@@ -788,7 +787,7 @@ public final class BoardService {
         TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(SettlementHome.of(spirits)));
         TaskNode plan;
         try {
-            plan = planOf(ticket, target);
+            plan = JobLaunch.plan(ticket, target);
             JobLaunch.start(board, cards, spirit, ticket.id(), plan);
         } catch (RuntimeException failure) {
             LOGGER.warn(
@@ -806,12 +805,6 @@ public final class BoardService {
                 spirit.displayName(),
                 ticket.id(),
                 ticket.boardCase());
-    }
-
-    private static TaskNode planOf(BoardTicket ticket, TicketTarget target) {
-        return TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
-                ? new ScriptCall("eat", Map.of())
-                : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
     }
 
     private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success, @Nullable String verdict) {
@@ -919,7 +912,7 @@ public final class BoardService {
             }
             TaskNode plan;
             try {
-                plan = planOf(ticket, target);
+                plan = JobLaunch.plan(ticket, target);
             } catch (RuntimeException failure) {
                 if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
                     dropGoallessRepair(ticket);

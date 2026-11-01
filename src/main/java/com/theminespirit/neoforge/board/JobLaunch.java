@@ -3,8 +3,13 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 
@@ -12,6 +17,14 @@ final class JobLaunch {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private JobLaunch() {}
+
+    static TaskNode plan(BoardTicket ticket, TicketTarget target) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: план строится по его кейсу");
+        Objects.requireNonNull(target, "Цель не может быть null: без неё план не собрать");
+        return TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
+                ? new ScriptCall("eat", Map.of())
+                : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
+    }
 
     static void start(Board board, ActivityCards cards, SpiritEntity spirit, String ticketId, TaskNode plan) {
         Objects.requireNonNull(board, "Доска не может быть null: занятие снимается с неё");
