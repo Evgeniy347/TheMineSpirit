@@ -94,14 +94,12 @@ final class RescueWatch {
         BlockCoord goal = spirit.home().orElse(settlement);
         Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, new RescueGrid(level, feet), tool, steps);
         boolean relocate = true;
-        if (self.isEmpty()
-                && !StuckSituation.detect(coord(feet), new RescueGrid(level, feet))
-                        .stuck()) {
-            Optional<BlockCoord> near = nearby(coord(feet), new RescueGrid(level, feet));
+        if (self.isEmpty()) {
+            Optional<SelfEscape.Plan> near = SelfEscape.nearby(coord(feet), new RescueGrid(level, feet));
             if (near.isPresent()) {
-                goal = near.orElseThrow();
+                goal = near.orElseThrow().target();
                 relocate = false;
-                self = Optional.of(new SelfEscape.Plan(SelfEscape.Method.STEP, goal, 1, List.of()));
+                self = near;
             }
         }
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
@@ -135,36 +133,6 @@ final class RescueWatch {
                         List.of(),
                         Map.of()),
                 target);
-    }
-
-    private static Optional<BlockCoord> nearby(BlockCoord feet, RescueGrid grid) {
-        int[][] sides = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-        for (int[] side : sides) {
-            Optional<BlockCoord> cell = open(feet, grid, side[0], side[1]);
-            if (cell.isPresent()) {
-                return cell;
-            }
-        }
-        for (int radius = 1; radius <= StillWatch.AREA_RADIUS; radius++) {
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius || dx == 0 || dz == 0) {
-                        continue;
-                    }
-                    Optional<BlockCoord> cell = open(feet, grid, dx, dz);
-                    if (cell.isPresent()) {
-                        return cell;
-                    }
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static Optional<BlockCoord> open(BlockCoord feet, RescueGrid grid, int dx, int dz) {
-        BlockCoord lower = new BlockCoord(feet.x() + dx, feet.y(), feet.z() + dz);
-        BlockCoord upper = new BlockCoord(lower.x(), lower.y() + 1, lower.z());
-        return grid.passable(lower) && grid.passable(upper) ? Optional.of(lower) : Optional.empty();
     }
 
     private static boolean digging(SpiritEntity spirit) {
