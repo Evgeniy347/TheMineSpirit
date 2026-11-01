@@ -108,7 +108,6 @@ public final class FirstStepsRunner {
     private static final String MINECRAFT = "minecraft:";
     private static final String CLEAR_PART_PREFIX = "clear:";
     private static final String FENCE_PART_PREFIX = "fence:";
-    private static final String COBBLESTONE = "cobblestone";
     private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
     private static final int LEVELING_SHOWN = 6;
@@ -266,8 +265,11 @@ public final class FirstStepsRunner {
         if (caseValue == BoardCase.BUILD_MINE) {
             TaskNode plan = TicketPlans.plan(caseValue, 1, target);
             need.putAll(BuildGap.need(plan, BuildGap.trace(plan, wood, probe(level), SCHEMES), source));
-            mineBlock(stock, need);
+            StageMaterialNeed.mine(stock, need);
             return need;
+        }
+        if (caseValue == BoardCase.BUILD_ORCHARD) {
+            return StageMaterialNeed.orchard(level, target, wood);
         }
         materials(source, caseValue, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
@@ -282,19 +284,6 @@ public final class FirstStepsRunner {
             }
         }
         return need;
-    }
-
-    private static void mineBlock(StockView stock, Map<String, Integer> need) {
-        int floors = need.getOrDefault(COBBLESTONE, 0);
-        need.remove(COBBLESTONE);
-        if (floors <= 0) {
-            return;
-        }
-        String block = stock.available().getOrDefault(COBBLESTONE, 0) >= floors
-                        || stock.available().getOrDefault(PlotLeveling.DEFAULT_BLOCK, 0) < floors
-                ? COBBLESTONE
-                : PlotLeveling.DEFAULT_BLOCK;
-        need.merge(block, floors, Integer::sum);
     }
 
     private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}

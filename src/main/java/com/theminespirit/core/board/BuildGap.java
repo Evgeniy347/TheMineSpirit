@@ -65,6 +65,10 @@ public final class BuildGap {
         return probeState.gap();
     }
 
+    public static Map<String, Integer> requirements(TaskNode plan, String wood, Probe probe, Schemes schemes) {
+        return trace(plan, wood, probe, schemes).missingItems();
+    }
+
     public static Map<String, Integer> need(TaskNode plan, Gap gap, MaterialSource source) {
         Set<String> crafted = new HashSet<>();
         collectCrafted(plan, crafted);

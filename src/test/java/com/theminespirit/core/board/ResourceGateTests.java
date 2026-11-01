@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -183,5 +184,22 @@ class ResourceGateTests {
                 new StockView(Map.of("dirt", 0)),
                 new StockView(Map.of("dirt", 9, "torch", 4)),
                 new StockView(Map.of("oak_fence", 100, "cobblestone", 128, "wheat", 8)));
+    }
+
+    @Test
+    void missing_ActionPlacedDirtPath_DoesNotWaitForStock() {
+        StockNeed need = new StockNeed(Map.of("dirt_path", 20, "torch", 4));
+        StockView stock = new StockView(Map.of());
+
+        Map<String, Integer> missing = ResourceGate.missing(need, stock);
+
+        assertFalse(
+                missing.containsKey("dirt_path"),
+                "Дорожка сада делается лопатой по земле, а не лежит на складе: гейт не должен ждать её как предмет. "
+                        + "Нехватка: " + missing);
+        assertEquals(
+                4,
+                missing.get("torch"),
+                "Факелы сада — обычный материал: их нехватка обязана остаться гейту. Нехватка: " + missing);
     }
 }
