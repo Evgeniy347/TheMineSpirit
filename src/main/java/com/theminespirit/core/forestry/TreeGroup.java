@@ -18,8 +18,8 @@ public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean gr
         Objects.requireNonNull(logs, "Брёвна дерева не могут быть null: без них нечего рубить");
         Objects.requireNonNull(leaves, "Листва дерева не может быть null: дерево рубится вместе с ней");
         Objects.requireNonNull(base, "Низ дерева не может быть null: от него считается подход и опора");
-        if (logs.isEmpty()) {
-            throw new IllegalArgumentException("Дерево без брёвен: группа обязана содержать хотя бы нижнее бревно");
+        if (logs.isEmpty() && leaves.isEmpty()) {
+            throw new IllegalArgumentException("Пустая группа: ни брёвен, ни листвы — убирать нечего");
         }
     }
 
@@ -30,7 +30,9 @@ public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean gr
         Set<BlockCoord> leaves = new LinkedHashSet<>();
         if (view.isLog(start)) {
             logs.add(start);
-        } else if (!view.isNaturalLeaves(start)) {
+        } else if (view.isNaturalLeaves(start)) {
+            leaves.add(start);
+        } else {
             return Optional.empty();
         }
         Set<BlockCoord> seen = new LinkedHashSet<>();
@@ -58,15 +60,13 @@ public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean gr
                 }
             }
         }
-        if (logs.isEmpty()) {
-            return Optional.empty();
-        }
-        BlockCoord base = logs.stream()
+        Set<BlockCoord> anchors = logs.isEmpty() ? leaves : logs;
+        BlockCoord base = anchors.stream()
                 .min(Comparator.comparingInt(BlockCoord::y)
                         .thenComparingInt(BlockCoord::x)
                         .thenComparingInt(BlockCoord::z))
                 .orElseThrow();
-        boolean grounded = logs.stream().anyMatch(cell -> {
+        boolean grounded = anchors.stream().anyMatch(cell -> {
             BlockCoord under = below(cell);
             return !logs.contains(under) && !leaves.contains(under) && !view.isEmpty(under);
         });

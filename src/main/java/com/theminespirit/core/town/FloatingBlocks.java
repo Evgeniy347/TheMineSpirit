@@ -155,7 +155,9 @@ public final class FloatingBlocks {
         Set<BlockCoord> leaves = new LinkedHashSet<>();
         if (world.log(at)) {
             logs.add(at);
-        } else if (!isLeaves(at, world)) {
+        } else if (isLeaves(at, world)) {
+            leaves.add(at);
+        } else {
             return false;
         }
         Set<BlockCoord> seen = new HashSet<>();
@@ -188,10 +190,11 @@ public final class FloatingBlocks {
                 }
             }
         }
-        if (logs.isEmpty()) {
+        Set<BlockCoord> anchors = logs.isEmpty() ? leaves : logs;
+        if (anchors.isEmpty()) {
             return false;
         }
-        return logs.stream().noneMatch(cell -> {
+        return anchors.stream().noneMatch(cell -> {
             BlockCoord under = new BlockCoord(cell.x(), cell.y() - 1, cell.z());
             return !logs.contains(under) && !leaves.contains(under) && world.supported(cell);
         });
