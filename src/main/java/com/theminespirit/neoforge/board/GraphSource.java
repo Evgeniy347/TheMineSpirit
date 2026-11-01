@@ -52,6 +52,7 @@ public final class GraphSource {
                 .with(events)
                 .withRoutes(routes.events(), routes.world());
         GraphState state = GraphInputs.state(level, service, spirits, stock, scan.orElseThrow(), graph, around);
+        settleBuilt(level, service, stock, scan.orElseThrow(), graph, state);
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
         GraphPost post = new GraphPost(
@@ -125,6 +126,21 @@ public final class GraphSource {
             events.add(CraftOrders.EVENT);
         }
         return Set.copyOf(events);
+    }
+
+    private static void settleBuilt(
+            ServerLevel level,
+            BoardService service,
+            StockView stock,
+            FirstStepsRunner.StageScan scan,
+            SupplyGraph graph,
+            GraphState state) {
+        for (SupplyGraph.Building building : graph.buildings().values()) {
+            if (!StageBuilt.ids().contains(building.id()) || state.built(building.id()) == GraphState.Built.BUILT) {
+                continue;
+            }
+            StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
+        }
     }
 
     private static String readiness(

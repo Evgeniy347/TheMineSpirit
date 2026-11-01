@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildProgressNote;
 import com.theminespirit.core.board.DemolishAudit;
+import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketPlans;
@@ -162,6 +163,13 @@ final class StageProgressWatch {
             ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
         if (target == null || target.work() == null || !BUILDS.contains(ticket.boardCase())) {
             return Optional.empty();
+        }
+        if (target.leveling() != null) {
+            LevelRepair.Progress progress = LevelRepair.progress(target.leveling(), at -> {
+                BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+                return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
+            });
+            return Optional.of(new FirstStepsRunner.Placed(progress.done(), progress.total()));
         }
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         FirstStepsRunner.Placed placed = FirstStepsRunner.placedBlocks(

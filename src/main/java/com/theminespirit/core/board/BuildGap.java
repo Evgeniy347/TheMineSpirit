@@ -149,14 +149,19 @@ public final class BuildGap {
 
         private void expect(BlockCoord at, String block) {
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
-            count(at, item, () -> BlockMatch.matches(probe.block(at), item), " " + item);
+            String standing = probe.block(at);
+            count(at, item, () -> BlockMatch.matches(standing, item), " ожидается " + item + ", стоит " + standing);
         }
 
         private void mine(MineLayout layout) {
             String floor = bare(SchematicBlocks.itemOf(SchematicBlocks.placementBlock(SchematicBlocks.FLOOR)));
             for (BlockCoord cell : layout.floors()) {
                 String standing = probe.block(cell);
-                count(cell, floor, () -> SchematicBlocks.isFloorClass(standing), " " + floor);
+                count(
+                        cell,
+                        floor,
+                        () -> SchematicBlocks.isFloorClass(standing),
+                        " ожидается " + floor + ", стоит " + standing);
             }
             for (BlockCoord cell : layout.air()) {
                 String standing = probe.block(cell);

@@ -146,7 +146,10 @@ final class GraphPost {
         GraphPlan.Task task = ticket.task();
         BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
         if (FirstStepsRunner.ticketIds(boardCase).stream().anyMatch(this::open)) {
-            FirstStepsRunner.refresh(level, service, stock, scan, boardCase, now);
+            StageSettle.refresh(level, service, stock, scan, boardCase, now);
+            return true;
+        }
+        if (StageSettle.settle(level, service, stock, scan, boardCase, now)) {
             return true;
         }
         if (StageOpen.full(service.board(), spirits.size())) {
