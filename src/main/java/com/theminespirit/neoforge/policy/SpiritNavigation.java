@@ -1,5 +1,8 @@
 package com.theminespirit.neoforge.policy;
 
+import com.theminespirit.core.policy.WaterTasks;
+import com.theminespirit.neoforge.SpiritBrain;
+import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
@@ -15,7 +18,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     @Override
     protected PathFinder createPathFinder(int maxVisitedNodes) {
-        this.nodeEvaluator = new SpiritNodeEvaluator();
+        this.nodeEvaluator = new SpiritNodeEvaluator(this::waterAllowed);
         this.nodeEvaluator.setCanPassDoors(true);
         this.nodeEvaluator.setCanOpenDoors(true);
         return new PathFinder(this.nodeEvaluator, maxVisitedNodes);
@@ -23,5 +26,13 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     public PathType classify(PathfindingContext context, BlockPos pos) {
         return nodeEvaluator.getPathType(context, pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private boolean waterAllowed() {
+        return mob instanceof SpiritEntity spirit
+                && spirit.brainIfPresent()
+                        .flatMap(SpiritBrain::currentScript)
+                        .map(WaterTasks::allowsSwimming)
+                        .orElse(false);
     }
 }

@@ -73,7 +73,7 @@ public final class SpiritPolicies {
         long now = level.getGameTime();
         positions.tick(spirit);
         refreshExemptions();
-        BodyFlags flags = bodyFlags();
+        BodyFlags flags = BodyFlagsReader.read(spirit);
         BlockPos feet = spirit.blockPosition();
         boolean blockChanged = !feet.equals(lastFeet);
         lastFeet = feet;
@@ -89,7 +89,11 @@ public final class SpiritPolicies {
         Layer owner = arbiter.step(verdict, spirit.tactics().wantsControl(), hasRunningTask());
         updateSuspension(owner);
         if (verdict instanceof PolicyVerdict.Reflex reflex) {
-            executor.execute(spirit, reflex.action());
+            if (reflex.policy() == PolicyId.WATER && reflex.action() instanceof ReflexAction.StopMoving) {
+                executor.leaveWater(spirit);
+            } else {
+                executor.execute(spirit, reflex.action());
+            }
         } else if (hadReflex) {
             executor.release(spirit);
         }
@@ -152,13 +156,6 @@ public final class SpiritPolicies {
             PathingConfigurator.apply(spirit, exemptions);
             configured = exemptions;
         }
-    }
-
-    private BodyFlags bodyFlags() {
-        boolean swimmingAllowed =
-                hasRunningTask() || spirit.tactics().exemptions().has(PolicyId.WATER);
-        return new BodyFlags(
-                spirit.isInLava(), spirit.isOnFire(), spirit.isInWater() && !swimmingAllowed, spirit.hurtTime > 0);
     }
 
     private boolean hasRunningTask() {
@@ -241,7 +238,7 @@ public final class SpiritPolicies {
             return candidate;
         }
         String key = reflex.policy() + ":" + reflex.action().getClass().getSimpleName();
-        if (!reflexTimeout.expired(reflex.policy(), key, REFLEX_TIMEOUT_TICKS, spirit.isUnderWater())) {
+        if (!reflexTimeout.expired(reflex.policy(), key, REFLEX_TIMEOUT_TICKS, spirit.isInWater())) {
             return candidate;
         }
         LOGGER.warn(
