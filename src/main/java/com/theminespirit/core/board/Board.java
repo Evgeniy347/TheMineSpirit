@@ -90,7 +90,7 @@ public final class Board {
         stuckSpirits.clear();
         blocked.restore(state.blocked());
         casePauses.restore(state.pauses());
-        stuckSpirits.restore(state.stuck());
+        stuckSpirits.restore(state.stuck(), nowTicks.getAsLong());
         idleRelease.clear();
         ledger.clear();
         ledger.restore(state.ledger());
@@ -99,12 +99,8 @@ public final class Board {
             tickets.put(ticket.id(), ticket);
             statuses.put(ticket.id(), entry.status());
             if (entry.holder() != null) claimAssignees.put(ticket.id(), entry.holder());
-            if (entry.failedAt() != null) {
-                failTicks.put(ticket.id(), entry.failedAt());
-            }
-            if (entry.failures() > 0) {
-                ticketFailures.put(ticket.id(), entry.failures());
-            }
+            if (entry.failedAt() != null) failTicks.put(ticket.id(), entry.failedAt());
+            if (entry.failures() > 0) ticketFailures.put(ticket.id(), entry.failures());
         }
     }
 
@@ -582,7 +578,9 @@ public final class Board {
     }
 
     private @Nullable UUID holder(BoardTicket ticket) {
-        return ticket.assignee().orElseGet(() -> claimAssignees.get(ticket.id()));
+        return claimAssignees.containsKey(ticket.id())
+                ? claimAssignees.get(ticket.id())
+                : ticket.assignee().orElse(null);
     }
 
     public List<BoardTicket> all() {
