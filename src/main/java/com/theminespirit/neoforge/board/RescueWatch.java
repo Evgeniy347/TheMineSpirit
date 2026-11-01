@@ -91,7 +91,7 @@ final class RescueWatch {
         boolean tool = hasPickaxe(spirit);
         int steps = spirit.getInventory().countItem(Items.DIRT)
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
-        BlockCoord goal = SurfacePoint.of(level, spirit.home().orElse(settlement));
+        BlockCoord goal = spirit.home().orElse(settlement);
         Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, new RescueGrid(level, feet), tool, steps);
         boolean relocate = true;
         if (self.isEmpty()

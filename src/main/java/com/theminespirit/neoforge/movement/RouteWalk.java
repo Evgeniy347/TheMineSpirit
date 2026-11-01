@@ -184,14 +184,9 @@ public final class RouteWalk {
             }
         }
         spirit.getNavigation().stop();
-        if (command.step() == WalkAscent.Step.MOVE && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
-            spirit.getMoveControl().setWantedPosition(command.x(), spirit.getY(), command.z(), SPEED);
-            Vec3 toward = new Vec3(command.x() - spirit.getX(), 0.0, command.z() - spirit.getZ());
-            if (toward.lengthSqr() > 1e-6) {
-                Vec3 push = toward.normalize().scale(EDGE_PUSH);
-                Vec3 motion = spirit.getDeltaMovement();
-                spirit.setDeltaMovement(motion.x + push.x, motion.y, motion.z + push.z);
-            }
+        boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
+        if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
+            pushOff(command);
             return Optional.empty();
         }
         spirit.getMoveControl().setWantedPosition(command.x(), command.y(), command.z(), SPEED);
@@ -209,6 +204,16 @@ public final class RouteWalk {
             spirit.setDeltaMovement(motion.x, Math.min(motion.y, 0.0), motion.z);
         }
         return Optional.empty();
+    }
+
+    private void pushOff(WalkAscent.Command command) {
+        spirit.getMoveControl().setWantedPosition(command.x(), spirit.getY(), command.z(), SPEED);
+        Vec3 toward = new Vec3(command.x() - spirit.getX(), 0.0, command.z() - spirit.getZ());
+        if (toward.lengthSqr() > 1e-6) {
+            Vec3 push = toward.normalize().scale(EDGE_PUSH);
+            Vec3 motion = spirit.getDeltaMovement();
+            spirit.setDeltaMovement(motion.x + push.x, motion.y, motion.z + push.z);
+        }
     }
 
     private Optional<String> ensureSupport(BlockCoord cell) {

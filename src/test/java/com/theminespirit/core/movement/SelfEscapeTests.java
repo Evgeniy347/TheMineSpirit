@@ -72,6 +72,22 @@ class SelfEscapeTests {
     }
 
     @Test
+    void plan_FreeRoofGoalBelow_Descends() {
+        Set<BlockCoord> air = Set.of(new BlockCoord(11, 64, 10), new BlockCoord(11, 65, 10));
+
+        SelfEscape.Plan plan = SelfEscape.plan(FEET, new BlockCoord(10, 50, 10), grid(air, (x, z) -> 64), false, 0)
+                .orElseThrow();
+
+        assertEquals(
+                SelfEscape.Method.DESCEND,
+                plan.method(),
+                "дух на крыше/уступе видит проход, но цель ниже: это не пустой выход, а спуск");
+        assertEquals(new BlockCoord(10, 50, 10), plan.target(), "спуск ведёт к цели");
+        assertEquals(0, plan.rise(), "спуск не поднимает духа");
+        assertTrue(plan.blocks().isEmpty(), "спуск не ломает блоки постройки");
+    }
+
+    @Test
     void plan_DeepPitWithBlocks_PlacesSteps() {
         SelfEscape.Plan plan = SelfEscape.plan(FEET, new BlockCoord(10, 70, 10), pit(), false, 3)
                 .orElseThrow();
