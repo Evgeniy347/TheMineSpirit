@@ -81,7 +81,8 @@ public final class BlockLocator {
 
         private void scan(SectionSlice slice, List<BlockPos> found) {
             if (level instanceof ServerLevel server
-                    && !server.getForcedChunks().contains(ChunkPos.asLong(slice.sectionX(), slice.sectionZ()))) {
+                    && !server.getForcedChunks().contains(ChunkPos.asLong(slice.sectionX(), slice.sectionZ()))
+                    && !WorkZoneRegistry.holds(server, slice.sectionX(), slice.sectionZ())) {
                 skippedChunks.add(ChunkPos.asLong(slice.sectionX(), slice.sectionZ()));
                 return;
             }
