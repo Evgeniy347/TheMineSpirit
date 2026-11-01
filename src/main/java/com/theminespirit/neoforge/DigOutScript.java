@@ -35,6 +35,7 @@ public final class DigOutScript implements ScriptInstance {
     private final Level level;
     private final GotoParams target;
     private final boolean fromPit;
+    private final boolean descending;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private Direction direction;
@@ -53,6 +54,7 @@ public final class DigOutScript implements ScriptInstance {
         this.level = spirit.level();
         this.target = target;
         this.fromPit = open(level, spirit.blockPosition());
+        this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit);
         this.placer = new BlockPlacer(spirit);
     }
@@ -121,7 +123,10 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         BlockPos feet = spirit.blockPosition();
-        if ((open(level, feet) && !fromPit) || feet.getY() >= target.y()) {
+        boolean goalReached = descending
+                ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
+                : feet.getY() >= target.y();
+        if ((open(level, feet) && !fromPit) || goalReached) {
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -154,11 +159,15 @@ public final class DigOutScript implements ScriptInstance {
 
     private boolean followRoute() {
         if (route == null && routeRetries < 3) {
-            route = SurfaceRoute.plan(spirit)
-                    .orElseGet(() -> RouteDetour.plan(
-                                    spirit, new BlockCoord(target.x(), target.y(), target.z()), HOME_RADIUS, "dig_out")
+            BlockCoord goal = new BlockCoord(target.x(), target.y(), target.z());
+            route = (descending ? SurfaceRoute.planDescent(spirit, goal) : SurfaceRoute.plan(spirit))
+                    .orElseGet(() -> RouteDetour.plan(spirit, goal, HOME_RADIUS, "dig_out")
                             .orElse(null));
             routeRetries++;
+        }
+        if (descending && route == null && routeRetries >= 3) {
+            fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
+            return false;
         }
         RouteWalk current = route;
         if (current == null) {

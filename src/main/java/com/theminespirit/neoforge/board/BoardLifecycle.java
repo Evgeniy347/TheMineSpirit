@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.neoforge.SpiritConfig;
+import com.theminespirit.neoforge.TickWatch;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -22,7 +23,12 @@ public final class BoardLifecycle {
             return;
         }
         for (ServerLevel level : event.getServer().getAllLevels()) {
-            BoardRegistry.get(level).tick(level, level.getGameTime());
+            long watch = TickWatch.start();
+            try {
+                BoardRegistry.get(level).tick(level, level.getGameTime());
+            } finally {
+                TickWatch.done("BoardService", watch);
+            }
         }
     }
 

@@ -80,6 +80,29 @@ class RescuePlansTests {
     }
 
     @Test
+    void plan_SelfDescend_DigOutThenGoto() {
+        SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.DESCEND, new BlockCoord(10, 40, -5), 0, List.of());
+        BlockCoord home = new BlockCoord(10, 39, -5);
+
+        TaskNode plan = RescuePlans.plan(
+                        BoardCase.RESCUE_SPIRIT,
+                        TicketTarget.at(TRAPPED).withRescue(self).withRelocate(TRAPPED, home))
+                .orElseThrow();
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                List.of("dig_out", "goto"),
+                scripts(plan),
+                "с крыши дух спускается через dig_out и только потом идёт к поселению");
+        List<ScriptCall> calls = new ArrayList<>();
+        collectCalls(plan, calls);
+        assertEquals(
+                Map.of("x", home.x(), "y", home.y(), "z", home.z()),
+                calls.get(0).params(),
+                "спуск ведёт к дому на земле, а не к крыше");
+    }
+
+    @Test
     void plan_SelfGoto_WalksWithoutBreaking() {
         SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.GOTO, new BlockCoord(10, 67, -5), 0, List.of());
 

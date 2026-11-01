@@ -43,17 +43,23 @@ public final class RoutePlanner {
     }
 
     public static Route plan(RouteWorld world, BlockCoord start, Goal goal, RouteRules rules, int blocks) {
+        return plan(world, start, goal, rules, blocks, RouteBudget.UNLIMITED);
+    }
+
+    public static Route plan(
+            RouteWorld world, BlockCoord start, Goal goal, RouteRules rules, int blocks, RouteBudget budget) {
         Objects.requireNonNull(world, "Мир маршрута не может быть null: без клеток путь не построить");
         Objects.requireNonNull(start, "Старт не может быть null: без него неизвестно, откуда идти");
         Objects.requireNonNull(goal, "Цель не может быть null: без неё неизвестно, куда идти");
         Objects.requireNonNull(rules, "Правила маршрута не могут быть null: без цен ходов A* не работает");
+        Objects.requireNonNull(budget, "Бюджет поиска не может быть null: без него предел работы неизвестен");
         if (blocks < 0) {
             throw new IllegalArgumentException("Запас блоков " + blocks + " отрицателен: считайте блоки в инвентаре");
         }
-        return new RoutePlanner(world, goal, rules).search(start, blocks);
+        return new RoutePlanner(world, goal, rules).search(start, blocks, budget);
     }
 
-    private Route search(BlockCoord start, int blocks) {
+    private Route search(BlockCoord start, int blocks, RouteBudget budget) {
         int first = node(start.x(), start.y(), start.z());
         costs[first] = 0.0;
         placesLeft[first] = blocks;
@@ -61,6 +67,9 @@ public final class RoutePlanner {
         push(first, weighted(estimates[first]));
         int best = first;
         while (heapSize > 0) {
+            if (budget.exhausted()) {
+                break;
+            }
             int current = pop();
             BlockCoord at = coord(current);
             if (goal.isSatisfied(at)) {

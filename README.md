@@ -28,7 +28,7 @@
 | `scripts/schematic.sh show <файл\|id> [поворот]` | шапка, материалы и срезы по слоям постройки (с поворотом) | срезы `y0…` и строки `НАРУШЕНИЕ`, если есть |
 | `scripts/testing/check-strategist.sh` | тесты агента-стратега (`python3 -m unittest`, сценарии, сторожа) и сценарии надзора `scripts/strategist.sh` на фейковом REST; сервер Minecraft и настоящий opencode не нужны | все строки `OK` |
 | `cd agents/strategist && python3 -m unittest discover -s tests -t .` | только Python-тесты агента-стратега | `OK` в последней строке |
-| `scripts/publish.sh` | собирает мод и ставит jar на сервер `/opt/minecraft/server`, перезапуская его, если он работал. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
+| `scripts/publish.sh` | публикует мод одним запуском: сборка, снимок мира, jar на сервер, пак клиента, страница «Сервер», тег; `--temp` — живая сборка без тега, `--sync` — согласовать пак и страницу с `mods/`. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
 
 Первая сборка скачивает Gradle, Minecraft и NeoForge — несколько минут; дальше секунды.
 
@@ -165,7 +165,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/gametest.sh](scripts/gametest.sh) | обёртка над `scripts/test.sh gametest` (совместимость) |
 | [scripts/prove-red.sh](scripts/prove-red.sh) | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |
 | [scripts/schematic.sh](scripts/schematic.sh) | постройки текстом: `show` (материалы, срезы), `check` (сторожа) |
-| [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер — только по согласованию |
+| [scripts/publish.sh](scripts/publish.sh) | сборка и публикация мода целиком (сервер, пак клиента, страница, тег) — только по согласованию; `--temp`/`--sync` |
 | [scripts/world-snapshot.sh](scripts/world-snapshot.sh), [scripts/world-restore.sh](scripts/world-restore.sh) | снимок мира в архив без остановки сервера и откат на архив; cron каждые 10 минут |
 | [scripts/server-cleanup.sh](scripts/server-cleanup.sh) | уборка сервера по cron: `tmp/` старше суток, `logs/` старше 14 дней |
 | [scripts/live-debug.sh](scripts/live-debug.sh), [scripts/live-debug/](scripts/live-debug/), [scripts/dev-server.sh](scripts/dev-server.sh), [scripts/dev-server/](scripts/dev-server/) | живая отладка: копия сервера на ПК, замок, hotswap, eval, брейкпоинты; [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) |

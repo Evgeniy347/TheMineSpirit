@@ -16,15 +16,22 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
+import org.jspecify.annotations.Nullable;
 
 public final class SurfaceEscape {
     public static final int MAX_VISITS = 20_000;
     private static final int MAX_FALL = 3;
+    private static final int MAX_WATER_FALL = 32;
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     private SurfaceEscape() {}
 
     public static Optional<List<BlockCoord>> path(BlockCoord start, RouteWorld world, Predicate<BlockCoord> sky) {
+        return path(start, world, sky, null);
+    }
+
+    public static Optional<List<BlockCoord>> path(
+            BlockCoord start, RouteWorld world, Predicate<BlockCoord> sky, @Nullable BlockCoord preferred) {
         Objects.requireNonNull(start, "Старт не может быть null: без него путь к небу не начать");
         Objects.requireNonNull(world, "Мир не может быть null: без него не видно прохода");
         Objects.requireNonNull(sky, "Признак неба не может быть null: без него путь некуда вести");
@@ -33,8 +40,10 @@ public final class SurfaceEscape {
         }
         Map<BlockCoord, BlockCoord> parent = new HashMap<>();
         Set<BlockCoord> seen = new HashSet<>();
-        Queue<BlockCoord> queue =
-                new PriorityQueue<>(Comparator.comparingInt(BlockCoord::y).reversed());
+        Comparator<BlockCoord> order = preferred == null
+                ? Comparator.comparingInt(BlockCoord::y).reversed()
+                : Comparator.comparingDouble((BlockCoord cell) -> distance(cell, preferred));
+        Queue<BlockCoord> queue = new PriorityQueue<>(order);
         seen.add(start);
         queue.add(start);
         BlockCoord found = null;
@@ -116,16 +125,29 @@ public final class SurfaceEscape {
     }
 
     private static void addFall(List<BlockCoord> moves, RouteWorld world, int x, int y, int z) {
-        for (int depth = 1; depth <= MAX_FALL; depth++) {
+        for (int depth = 1; depth <= MAX_WATER_FALL; depth++) {
             BlockCoord landing = new BlockCoord(x, y - depth, z);
             if (!passable(world, landing)) {
                 return;
             }
-            if (supported(world, landing) || climbable(world, landing)) {
+            if (water(world, landing)) {
                 moves.add(landing);
                 return;
             }
+            if (solid(kind(world, new BlockCoord(x, landing.y() - 1, z))) || climbable(world, landing)) {
+                if (depth <= MAX_FALL) {
+                    moves.add(landing);
+                }
+                return;
+            }
         }
+    }
+
+    private static double distance(BlockCoord from, BlockCoord to) {
+        double dx = from.x() - to.x();
+        double dy = from.y() - to.y();
+        double dz = from.z() - to.z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     private static boolean passable(RouteWorld world, BlockCoord cell) {
