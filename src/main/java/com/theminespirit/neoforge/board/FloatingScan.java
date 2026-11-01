@@ -20,7 +20,6 @@ import com.theminespirit.neoforge.PlotGround;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -55,24 +54,10 @@ public final class FloatingScan {
         if (area.isEmpty()) {
             return List.of();
         }
-        Scan scan = new Scan(level, PlotPlanBlocks.of(site));
-        List<FloatingBlocks.Finding> found = new ArrayList<>();
-        Set<BlockCoord> seen = new LinkedHashSet<>();
-        for (FloatingBlocks.Finding finding : FloatingBlocks.find(area, bottom, top, scan)) {
-            if (!seen.add(finding.at())) {
-                continue;
-            }
-            classifyTree(finding, scan, seen, found);
-        }
-        for (BlockCoord cell : placed(level, area)) {
-            if (cell.y() >= bottom && cell.y() <= top && area.contains(cell.x(), cell.z()) && seen.add(cell)) {
-                FloatingBlocks.classify(cell, scan).ifPresent(finding -> classifyTree(finding, scan, seen, found));
-            }
-        }
-        return List.copyOf(found);
+        return FloatingScanCycle.full(level, site, area, bottom, top);
     }
 
-    private static void classifyTree(
+    static void classifyTree(
             FloatingBlocks.Finding finding, Scan scan, Set<BlockCoord> seen, List<FloatingBlocks.Finding> found) {
         if (finding.kind() != FloatingBlocks.Kind.TREE) {
             found.add(finding);
@@ -124,7 +109,7 @@ public final class FloatingScan {
         return level.getMinBuildHeight();
     }
 
-    private static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {
+    static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         List<BlockCoord> cells = new ArrayList<>();
         int x1 = area.minX() >> 4;
@@ -139,7 +124,7 @@ public final class FloatingScan {
         return cells;
     }
 
-    private static final class Scan implements FloatingBlocks.World {
+    static final class Scan implements FloatingBlocks.World {
         private static final Set<Block> LOGS = BuiltInRegistries.BLOCK.stream()
                 .filter(block -> block.defaultBlockState().is(BlockTags.LOGS))
                 .collect(Collectors.toUnmodifiableSet());
