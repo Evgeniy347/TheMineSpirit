@@ -93,6 +93,7 @@ public final class BoardService {
     private final AbsentOwners absentOwners = new AbsentOwners();
     private final StageProgressWatch progress = new StageProgressWatch();
     private final BoardNotices notices = new BoardNotices();
+    private final BoardIncidents incidents = new BoardIncidents();
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private final TransferWait transferWait = new TransferWait();
@@ -770,12 +771,13 @@ public final class BoardService {
                 feet.toShortString(),
                 spirit.tactics().wantsControl(),
                 spirit.taskSuspendReason().orElse(null));
-        LOGGER.warn(
-                "[incident] дух {}: {} {}; задание провалено; {}",
-                spirit.displayName(),
-                ticket.id(),
+        incidents.stalled(
+                spirit,
+                ticket,
+                targets.get(ticket.id()),
                 reason,
-                IncidentText.of(spirit, ticket, targets.get(ticket.id()), reason));
+                board.statusOf(ticket.id()).orElse(null),
+                board.now());
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
@@ -819,6 +821,7 @@ public final class BoardService {
                 case CAPTURE_ANIMAL -> animals.cycle(speciesFor(ticket)).captured(ticket.id());
                 case BUILD_PEN -> completePen(ticket.id());
                 case LURE_ANIMAL -> animals.cycle(speciesFor(ticket)).lured();
+                case RESCUE_SPIRIT -> incidents.rescued(spirit, ticket);
                 default -> {}
             }
         } else {
@@ -826,16 +829,13 @@ public final class BoardService {
                     ticket.id(),
                     stock,
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null));
-            LOGGER.warn(
-                    "[incident] дух {} ({}) провалил задание доски {} (кейс {}): {}; статус {}; доска выдаёт "
-                            + "следующее задание; {}",
-                    spirit.displayName(),
-                    spirit.getUUID(),
-                    ticket.id(),
-                    ticket.boardCase(),
+            incidents.failed(
+                    spirit,
+                    ticket,
+                    targets.get(ticket.id()),
                     why,
                     board.statusOf(ticket.id()).orElse(null),
-                    IncidentText.of(spirit, ticket, targets.get(ticket.id()), why));
+                    board.now());
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }

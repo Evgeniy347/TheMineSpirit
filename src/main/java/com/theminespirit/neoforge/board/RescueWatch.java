@@ -6,6 +6,8 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.ChangeSummary;
 import com.theminespirit.core.board.ScriptProgressWatch;
 import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.board.TaskStall;
@@ -37,6 +39,18 @@ final class RescueWatch {
     private final ScriptProgressWatch progress = new ScriptProgressWatch();
     private final StillWatch still = new StillWatch();
     private final Map<UUID, String> causes = new HashMap<>();
+    private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
+
+    private record Sighting(String id, String cause, SpiritEntity spirit, BlockPos feet, BlockCoord settlement) {}
+
+    private record Rescue(
+            SpiritEntity spirit,
+            BlockPos feet,
+            String id,
+            String method,
+            Optional<UUID> assignee,
+            boolean tool,
+            int steps) {}
 
     RescueWatch() {}
 
@@ -48,9 +62,14 @@ final class RescueWatch {
 
     Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         Set<String> live = new HashSet<>();
+        Set<String> presentIds = new HashSet<>();
         BlockCoord settlement = SettlementHome.of(spirits);
         for (SpiritEntity spirit : spirits) {
-            if (spirit.isRemoved() || digging(spirit)) {
+            if (spirit.isRemoved()) {
+                continue;
+            }
+            presentIds.add(PREFIX + spirit.getUUID());
+            if (digging(spirit)) {
                 continue;
             }
             if (progress.advancing(spirit.getUUID(), spirit.taskProgress().orElse(null), now)) {
@@ -74,24 +93,19 @@ final class RescueWatch {
             causes.put(spirit.getUUID(), cause);
             live.remove(id);
             live.add(cause);
-            submit(level, service, cause, spirit, feet, settlement, now);
+            submit(level, service, new Sighting(id, cause, spirit, feet, settlement), now);
         }
+        log.retain(presentIds);
         return live;
     }
 
-    private static void submit(
-            ServerLevel level,
-            BoardService service,
-            String cause,
-            SpiritEntity spirit,
-            BlockPos feet,
-            BlockCoord settlement,
-            long now) {
-        String id = PREFIX + spirit.getUUID();
+    private void submit(ServerLevel level, BoardService service, Sighting sighting, long now) {
+        SpiritEntity spirit = sighting.spirit();
+        BlockPos feet = sighting.feet();
         boolean tool = hasPickaxe(spirit);
         int steps = spirit.getInventory().countItem(Items.DIRT)
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
-        BlockCoord goal = spirit.home().orElse(settlement);
+        BlockCoord goal = spirit.home().orElse(sighting.settlement());
         Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, new RescueGrid(level, feet), tool, steps);
         boolean relocate = true;
         if (self.isEmpty()) {
@@ -103,17 +117,8 @@ final class RescueWatch {
             }
         }
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
-        String what = "застрял в " + feet.toShortString() + " ("
-                + self.map(plan -> plan.method().name()).orElse("сам не выйдет") + "), задание спасения " + id
-                + " выдано " + assignee.map(UUID::toString).orElse("любому свободному духу");
-        LOGGER.warn(
-                "[incident] дух {} застрял в {} ({}): задание спасения {} выдано {}; {}",
-                spirit.displayName(),
-                feet.toShortString(),
-                self.map(plan -> plan.method().name()).orElse("сам не выйдет"),
-                id,
-                assignee.map(UUID::toString).orElse("любому свободному духу"),
-                IncidentSnapshots.record(level, spirit, what));
+        String method = self.map(plan -> plan.method().name()).orElse("сам не выйдет");
+        note(level, new Rescue(spirit, feet, sighting.id(), method, assignee, tool, steps), now);
         TicketTarget target = TicketTarget.at(coord(feet));
         if (relocate) {
             target = target.withRelocate(coord(feet), goal);
@@ -123,16 +128,49 @@ final class RescueWatch {
         }
         service.submit(
                 new BoardTicket(
-                        id,
+                        sighting.id(),
                         BoardCase.RESCUE_SPIRIT,
                         assignee,
                         BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
                         now,
                         1,
-                        cause,
+                        sighting.cause(),
                         List.of(),
                         Map.of()),
                 target);
+    }
+
+    private void note(ServerLevel level, Rescue rescue, long now) {
+        String where = rescue.feet().toShortString();
+        String state = rescue.method() + "|" + where + "|" + rescue.tool() + "|" + rescue.steps();
+        String tool = rescue.tool() ? "есть" : "нет";
+        log.note(rescue.id(), state, 1, now).ifPresent(summary -> {
+            if (summary.changed()) {
+                String what = "застрял в " + where + " (" + rescue.method() + "), задание спасения " + rescue.id();
+                LOGGER.warn(
+                        "[rescue] дух {} застрял в {} ({}): задание спасения {} выдано {}; материал столба: "
+                                + "земля+булыжник {}, кирка {}; {}",
+                        rescue.spirit().displayName(),
+                        where,
+                        rescue.method(),
+                        rescue.id(),
+                        rescue.assignee().map(UUID::toString).orElse("любому свободному духу"),
+                        rescue.steps(),
+                        tool,
+                        IncidentSnapshots.record(level, rescue.spirit(), what));
+                return;
+            }
+            LOGGER.warn(
+                    "[rescue] сводка: дух {} стоит в {} ({}), задание {} выдавалось {} раз за окно; "
+                            + "материал столба {}, кирка {}",
+                    rescue.spirit().displayName(),
+                    where,
+                    rescue.method(),
+                    rescue.id(),
+                    summary.count(),
+                    rescue.steps(),
+                    tool);
+        });
     }
 
     private static boolean digging(SpiritEntity spirit) {

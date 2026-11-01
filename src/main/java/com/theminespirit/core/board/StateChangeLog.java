@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class StateChangeLog {
     private final Map<String, String> states = new HashMap<>();
@@ -21,5 +22,10 @@ public final class StateChangeLog {
     public void forget(String channel) {
         Objects.requireNonNull(channel, "Канал журнала не может быть null: забывать нечего");
         states.remove(channel);
+    }
+
+    public void retain(Set<String> channels) {
+        Objects.requireNonNull(channels, "Список живых каналов не может быть null: пустой задают Set.of()");
+        states.keySet().retainAll(channels);
     }
 }

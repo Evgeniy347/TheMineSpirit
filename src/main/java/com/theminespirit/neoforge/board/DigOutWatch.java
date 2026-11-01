@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.ChangeSummary;
 import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.PitEscape;
@@ -39,6 +41,7 @@ final class DigOutWatch {
     private final Map<UUID, String> lastCheck = new HashMap<>();
     private final Map<UUID, Deque<Long>> rescues = new HashMap<>();
     private final StillWatch still = new StillWatch();
+    private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
 
     DigOutWatch(BoardService host) {
         this.host = host;
@@ -96,18 +99,32 @@ final class DigOutWatch {
         BlockPos feet = spirit.blockPosition();
         BlockCoord goal = SurfacePoint.of(level, settlementHome);
         pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
-        LOGGER.warn(
-                "[incident] дух {} {} в {} (опора {}, вода={}, no_escape=true): выходит к поверхности у поселения {};"
-                        + " ближайший воздух над духом {}, небо над ним {}, спасений за 10 мин: {}",
-                spirit.displayName(),
-                why,
-                feet.toShortString(),
-                BlockStates.idOf(level.getBlockState(feet.below())),
-                inWater(level, feet),
-                goal,
-                airText(air),
-                sky ? "есть" : "нет",
-                countRescue(spirit.getUUID(), now));
+        String state = why + "|" + feet.toShortString() + "|" + airText(air) + "|" + sky;
+        log.note(spirit.getUUID().toString(), state, 1, now).ifPresent(summary -> {
+            if (!summary.changed()) {
+                LOGGER.warn(
+                        "[incident] сводка: дух {} {} в {}: спасение выдавалось {} раз за окно, воздух {}, небо {}",
+                        spirit.displayName(),
+                        why,
+                        feet.toShortString(),
+                        summary.count(),
+                        airText(air),
+                        sky ? "есть" : "нет");
+                return;
+            }
+            LOGGER.warn(
+                    "[incident] дух {} {} в {} (опора {}, вода={}, no_escape=true): выходит к поверхности у поселения "
+                            + "{}; ближайший воздух над духом {}, небо над ним {}, спасений за 10 мин: {}",
+                    spirit.displayName(),
+                    why,
+                    feet.toShortString(),
+                    BlockStates.idOf(level.getBlockState(feet.below())),
+                    inWater(level, feet),
+                    goal,
+                    airText(air),
+                    sky ? "есть" : "нет",
+                    countRescue(spirit.getUUID(), now));
+        });
         host.releaseAssigned(spirit);
         host.forgetLaunch(spirit);
         TaskNode escape = new SequenceNode(List.of(

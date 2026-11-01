@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -29,8 +31,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.AnvilBlock;
+import org.slf4j.Logger;
 
 final class RepairWatch {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private RepairWatch() {}
 
     static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
@@ -45,7 +50,7 @@ final class RepairWatch {
                     ? Optional.empty()
                     : repairableTool(spirit, () -> anvils.computeIfAbsent(home.get(), at -> anvilNear(level, at)));
             if (item.isPresent()) {
-                service.submit(
+                BoardOutcome outcome = service.submit(
                         new BoardTicket(
                                 id,
                                 BoardCase.REPAIR_TOOL,
@@ -57,6 +62,13 @@ final class RepairWatch {
                                 List.of(),
                                 Map.of()),
                         TicketTarget.at(home.orElseThrow()).withCraft(item.orElseThrow(), 0));
+                if (outcome == BoardOutcome.ACCEPTED) {
+                    LOGGER.info(
+                            "[repair] дух {}: инструмент {} изношен, задание {}",
+                            spirit.displayName(),
+                            item.orElseThrow(),
+                            id);
+                }
                 continue;
             }
             cancelWaiting(service, id);

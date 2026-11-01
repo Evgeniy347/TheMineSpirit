@@ -296,7 +296,7 @@ public final class FirstStepsRunner {
             }
         }
         if (outcome == BoardOutcome.ACCEPTED) {
-            LOGGER.info("Постройка этапа {} открыта: материалы на месте", caseValue);
+            LOGGER.info("[layout] постройка этапа {} открыта: материалы на месте", caseValue);
         }
     }
 

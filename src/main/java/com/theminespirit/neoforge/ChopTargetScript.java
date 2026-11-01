@@ -123,7 +123,7 @@ public final class ChopTargetScript implements ScriptInstance {
         plantedSaplings = outcome.plantedSaplings();
         skippedCells = outcome.skippedCells();
         lackedSaplings = outcome.lackedSaplings();
-        LOGGER.info("Дух {} завершил chop_target: {}", spirit.getUUID(), summary());
+        LOGGER.info("[wood] дух {} завершил chop_target: {}", spirit.getUUID(), summary());
         return ScriptStatus.SUCCEEDED;
     }
 
