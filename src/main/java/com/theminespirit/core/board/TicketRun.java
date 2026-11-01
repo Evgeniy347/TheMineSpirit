@@ -17,6 +17,9 @@ public enum TicketRun {
         if (known && issuedGeneration != currentGeneration) {
             return status == RunStatus.RUNNING || externalControl ? DISPLACED : RESUME;
         }
+        if (!known && status == RunStatus.RUNNING && !externalControl) {
+            return RESUME;
+        }
         if (status == RunStatus.SUCCEEDED) {
             return SUCCEEDED;
         }

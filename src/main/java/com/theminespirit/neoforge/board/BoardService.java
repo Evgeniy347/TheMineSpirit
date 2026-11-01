@@ -789,7 +789,7 @@ public final class BoardService {
         TaskNode plan;
         try {
             plan = planOf(ticket, target);
-            spirit.startTask(plan);
+            JobLaunch.start(board, cards, spirit, ticket.id(), plan);
         } catch (RuntimeException failure) {
             LOGGER.warn(
                     "[incident] дух {} не продолжил задание {} после вытеснения: {}; задание возвращено доске",
@@ -941,7 +941,7 @@ public final class BoardService {
                         spirit.displayName());
             }
             try {
-                spirit.startTask(plan);
+                JobLaunch.start(board, cards, spirit, ticket.id(), plan);
             } catch (RuntimeException failure) {
                 LOGGER.error(
                         "Задание {}: дух {} не принял задание: {}",

@@ -54,4 +54,16 @@ class TicketRunTests {
         assertEquals(TicketRun.FAILED, TicketRun.decide(unknown, 6, RunStatus.FAILED, false), "После рестарта");
         assertEquals(TicketRun.RUNNING, TicketRun.decide(unknown, 6, RunStatus.CANCELLED, false), "Без поколения");
     }
+
+    @Test
+    void decide_UnknownGenerationRunning_ResumeOwnPlan() {
+        long unknown = SpiritReading.UNKNOWN_GENERATION;
+
+        assertEquals(
+                TicketRun.RESUME,
+                TicketRun.decide(unknown, 6, RunStatus.RUNNING, false),
+                "После рестарта поколение задания неизвестно, а дух может выполнять чужой фоновый скрипт: "
+                        + "прогресс такого скрипта заданию не принадлежит, поэтому задание заново стартует свой план "
+                        + "(observe15 B2), иначе сторож прогресса берёт чужой RunProgress");
+    }
 }
