@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.ToDoubleFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -59,7 +60,10 @@ final class ChopStand {
 
     private static boolean isStandable(Level level, BlockPos pos) {
         BlockPos below = pos.below();
-        return (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced())
+        return !level.getBlockState(pos).is(BlockTags.LEAVES)
+                && !level.getBlockState(pos.above()).is(BlockTags.LEAVES)
+                && !level.getBlockState(below).is(BlockTags.LEAVES)
+                && (level.getBlockState(pos).isAir() || level.getBlockState(pos).canBeReplaced())
                 && (level.getBlockState(pos.above()).isAir()
                         || level.getBlockState(pos.above()).canBeReplaced())
                 && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP)
