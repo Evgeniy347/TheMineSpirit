@@ -87,15 +87,17 @@
 Временное — в `/opt/minecraft/tmp/` (cron чистит старше суток), логи — в `/opt/minecraft/logs/` (ротация 14 дней),
 бекапы — в `/opt/minecraft/backups/`, снимки мира — `backups/world/`.
 Своё клади только в эти каталоги: корень `/opt/minecraft`, домашний каталог и `/tmp` — не свалка.
-После работы удаляй за собой; миры, конфиги, git и jar текущей версии без согласования не трогай.
-Чистит `scripts/server-cleanup.sh` по cron.
+После работы удаляй за собой; миры, конфиги и jar текущей версии без согласования не трогай.
+Чистит `scripts/server-cleanup.sh` по cron (его кладёт туда `scripts/publish.sh`).
 Ручное копирование jar в `/opt/minecraft/server/mods` и правка пака клиента/`mod.json` запрещены: сервер,
 пак лаунчера и страница обновляются одним `scripts/publish.sh` (живая сборка — `--temp`, возврат — из main).
 `scripts/start.sh` сам сверяет их при запуске.
 
 ## Сервер
 
-Сервер — `/opt/minecraft/server` со своим README; мир коммитит только его `scripts/snapshot.sh`.
+Сервер — `/opt/minecraft/server`. Его скрипты и конфиги — в `server/` этого репозитория, на сервер их
+раскладывает `scripts/publish.sh`; вручную на сервере не править. Мир в git не хранится: снимки —
+`server/scripts/world-snapshot.sh` (tar-архивы в `/opt/minecraft/backups/world/`), откат — `world-restore.sh`.
 Логи сервера содержат ники и IP игроков: не публиковать и не коммитить.
 
 ## Живая проверка

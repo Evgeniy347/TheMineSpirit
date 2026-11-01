@@ -6,6 +6,9 @@ SERVER_DIR="${SERVER_DIR:-/opt/minecraft/server}"
 CLIENT_DIR="${CLIENT_DIR:-/opt/minecraft/client}"
 GATEWAY_DIR="${GATEWAY_DIR:-/opt/gateway}"
 STATUS_REL="users/admin/sites/the-mine-spirit/server/mod.json"
+SERVER_FILES="$MOD_DIR/server"
+WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
+CLEANUP_SCRIPT_DIR="${CLEANUP_SCRIPT_DIR:-/opt/minecraft/scripts}"
 
 assume_yes=false
 dry_run=false
@@ -16,10 +19,11 @@ usage() {
     cat <<'EOF'
 Использование: scripts/publish.sh [опции]
 
-Публикует мод одним запуском: сборка → снимок мира (полная) → jar в mods/ сервера →
-пак клиента и раздача лаунчера (/opt/minecraft/client/publish.sh) → перезапуск сервера →
-страница «Сервер» (mod.json) → тег (полная). Вручную копировать jar и править пак/страницу
-не нужно и запрещено: иначе клиент разойдётся с сервером.
+Публикует мод одним запуском: сборка → раскладка скриптов и конфигов сервера из server/ →
+снимок мира в архив (полная) → jar в mods/ сервера → пак клиента и раздача лаунчера
+(/opt/minecraft/client/publish.sh) → перезапуск сервера → страница «Сервер» (mod.json) →
+тег (полная). Вручную копировать jar, скрипты и править пак/страницу не нужно и запрещено:
+иначе клиент или сервер разойдутся с репозиторием.
 
 Публикация и перезапуск выполняются ТОЛЬКО ПО СОГЛАСОВАНИЮ С ПОЛЬЗОВАТЕЛЕМ:
 без явного подтверждения (или флага -y) скрипт не меняет ничего.
@@ -75,6 +79,74 @@ sha256_of() {
 server_jars() {
     find "$SERVER_DIR/mods" -maxdepth 1 -name 'theminespirit-*.jar' -printf '%T@ %p\n' 2>/dev/null \
         | sort -rn | cut -d' ' -f2-
+}
+
+deploy_server_files() {
+    local files="$SERVER_FILES" name
+    if [ ! -d "$files" ]; then
+        echo "ОШИБКА: нет $files — скрипты и конфиги сервера не разложить" >&2
+        return 1
+    fi
+    mkdir -p "$SERVER_DIR/scripts" "$SERVER_DIR/config" "$CLEANUP_SCRIPT_DIR"
+    for name in common.sh console.sh install-neoforge.sh start.sh stop.sh world-snapshot.sh world-restore.sh; do
+        if [ ! -f "$files/scripts/$name" ]; then
+            echo "ОШИБКА: нет $files/scripts/$name" >&2
+            return 1
+        fi
+        if ! cp -f "$files/scripts/$name" "$SERVER_DIR/scripts/$name"; then
+            echo "ОШИБКА: не скопировать $name в $SERVER_DIR/scripts" >&2
+            return 1
+        fi
+    done
+    chmod 755 "$SERVER_DIR"/scripts/*.sh
+    rm -f "$SERVER_DIR/scripts/snapshot.sh"
+    if ! cp -a "$files"/config/. "$SERVER_DIR/config/"; then
+        echo "ОШИБКА: не скопировать конфиги из $files/config в $SERVER_DIR/config" >&2
+        return 1
+    fi
+    for name in server.properties ops.json whitelist.json banned-ips.json banned-players.json eula.txt user_jvm_args.txt; do
+        if [ ! -f "$files/$name" ]; then
+            echo "ОШИБКА: нет $files/$name" >&2
+            return 1
+        fi
+        if ! cp -f "$files/$name" "$SERVER_DIR/$name"; then
+            echo "ОШИБКА: не скопировать $name в $SERVER_DIR" >&2
+            return 1
+        fi
+    done
+    if ! cp -f "$files/run.sh" "$SERVER_DIR/run.sh" || ! cp -f "$files/README.md" "$SERVER_DIR/README.md"; then
+        echo "ОШИБКА: не скопировать run.sh/README.md в $SERVER_DIR" >&2
+        return 1
+    fi
+    chmod 755 "$SERVER_DIR/run.sh"
+    if [ -f "$MOD_DIR/scripts/server-cleanup.sh" ]; then
+        if ! cp -f "$MOD_DIR/scripts/server-cleanup.sh" "$CLEANUP_SCRIPT_DIR/server-cleanup.sh"; then
+            echo "ОШИБКА: не скопировать server-cleanup.sh в $CLEANUP_SCRIPT_DIR" >&2
+            return 1
+        fi
+        chmod 755 "$CLEANUP_SCRIPT_DIR/server-cleanup.sh"
+    fi
+    echo "Скрипты и конфиги сервера разложены: $files → $SERVER_DIR"
+}
+
+snapshot_world() {
+    local version="$1" script="$SERVER_DIR/scripts/world-snapshot.sh" snapshot_label archive
+    snapshot_label="publish-$version"
+    if [ ! -x "$script" ]; then
+        echo "ОШИБКА: нет $script — снимок мира перед выкладкой не сделать" >&2
+        return 1
+    fi
+    echo "Снимок мира ($snapshot_label)..."
+    if ! "$script" "$snapshot_label"; then
+        echo "ОШИБКА: снимок мира не создан, публикация остановлена до остановки сервера" >&2
+        return 1
+    fi
+    archive="$(ls -1t "$WORLD_BACKUPS"/world-*-"$snapshot_label".tar.zst 2>/dev/null | head -n 1)"
+    if [ -z "$archive" ]; then
+        echo "ОШИБКА: архива с меткой $snapshot_label нет в $WORLD_BACKUPS (снимок пропущен другим процессом?)" >&2
+        return 1
+    fi
+    echo "Снимок мира: $(basename "$archive")"
 }
 
 update_page() {
@@ -238,24 +310,25 @@ if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
     echo "  2. поиск build/libs/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
+    echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR"
     if [ "$mode" = full ]; then
-        echo "  3. снимок мира: $SERVER_DIR/scripts/snapshot.sh (если есть)"
+        echo "  4. снимок мира: $SERVER_DIR/scripts/world-snapshot.sh publish-<версия>"
     else
-        echo "  3. снимок мира пропускается (--temp)"
+        echo "  4. снимок мира пропускается (--temp)"
     fi
-    echo "  4. удаление старых $SERVER_DIR/mods/theminespirit-*.jar"
-    echo "  5. копирование нового jar в $SERVER_DIR/mods/"
+    echo "  5. удаление старых $SERVER_DIR/mods/theminespirit-*.jar"
+    echo "  6. копирование нового jar в $SERVER_DIR/mods/"
     if $do_restart; then
-        echo "  6. перезапуск сервера, если tmux-сессия активна (stop.sh/start.sh)"
+        echo "  7. перезапуск сервера, если tmux-сессия активна (stop.sh/start.sh)"
     else
-        echo "  6. перезапуск сервера отключён (--no-restart)"
+        echo "  7. перезапуск сервера отключён (--no-restart)"
     fi
-    echo "  7. пак клиента: $CLIENT_DIR/pack/mods/theminespirit-<версия>.jar и $CLIENT_DIR/publish.sh"
-    echo "  8. версия и дата установки в mod.json страницы «Сервер» ($GATEWAY_DIR/$STATUS_REL) и коммит в gateway"
+    echo "  8. пак клиента: $CLIENT_DIR/pack/mods/theminespirit-<версия>.jar и $CLIENT_DIR/publish.sh"
+    echo "  9. версия и дата установки в mod.json страницы «Сервер» ($GATEWAY_DIR/$STATUS_REL) и коммит в gateway"
     if [ "$mode" = full ]; then
-        echo "  9. тег v<версия> в git и отправка тега в remote backup (если настроен)"
+        echo " 10. тег v<версия> в git и отправка тега в remote backup (если настроен)"
     else
-        echo "  9. тег и backup пропускаются (--temp)"
+        echo " 10. тег и backup пропускаются (--temp)"
     fi
     echo "Изменения не вносились."
     exit 0
@@ -282,6 +355,12 @@ if [ "$size" -lt 4096 ]; then
     exit 1
 fi
 echo "Найден $(basename "$jar") ($size байт)"
+version="$(version_of "$jar")"
+
+if ! deploy_server_files; then
+    echo "ОШИБКА: скрипты и конфиги сервера не разложены, публикация отменена" >&2
+    exit 1
+fi
 
 if [ -f "$SERVER_DIR/scripts/common.sh" ]; then
     source "$SERVER_DIR/scripts/common.sh"
@@ -297,12 +376,7 @@ if is_running; then
 fi
 
 if [ "$mode" = full ]; then
-    if [ -x "$SERVER_DIR/scripts/snapshot.sh" ]; then
-        echo "Снимок мира..."
-        "$SERVER_DIR/scripts/snapshot.sh"
-    else
-        echo "snapshot.sh не найден, снимок мира пропущен."
-    fi
+    snapshot_world "$version"
 fi
 
 if $do_restart && $was_running; then
@@ -362,7 +436,6 @@ if [ "$mode" = temp ]; then
     exit 0
 fi
 
-version="$(version_of "$installed")"
 tag="v${version}"
 if git -C "$MOD_DIR" rev-parse -q --verify "refs/tags/$tag" >/dev/null 2>&1; then
     echo "Тег $tag уже существует"

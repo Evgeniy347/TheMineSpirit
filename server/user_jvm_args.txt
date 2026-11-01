@@ -1,0 +1,4 @@
+-Xms2G
+-Xmx4G
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+--add-modules=jdk.jshell,jdk.jdi
