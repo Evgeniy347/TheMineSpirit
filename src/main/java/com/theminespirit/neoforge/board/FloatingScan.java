@@ -108,10 +108,10 @@ public final class FloatingScan {
             {maxX + 1, minZ},
             {minX - 1, maxZ},
             {maxX + 1, maxZ},
-            {(minX + maxX) / 2, minZ - 1},
-            {(minX + maxX) / 2, maxZ + 1},
-            {minX - 1, (minZ + maxZ) / 2},
-            {maxX + 1, (minZ + maxZ) / 2}
+            {(int) (((long) minX + maxX) / 2), minZ - 1},
+            {(int) (((long) minX + maxX) / 2), maxZ + 1},
+            {minX - 1, (int) (((long) minZ + maxZ) / 2)},
+            {maxX + 1, (int) (((long) minZ + maxZ) / 2)}
         };
         LevelSafetyView safety = new LevelSafetyView(level);
         for (int[] column : around) {
