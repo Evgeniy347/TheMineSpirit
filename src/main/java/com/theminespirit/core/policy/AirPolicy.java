@@ -1,7 +1,7 @@
 package com.theminespirit.core.policy;
 
 public final class AirPolicy {
-    public static final int AIR_ALARM_TICKS = 100;
+    public static final int AIR_ALARM_TICKS = 200;
 
     private AirPolicy() {}
 
