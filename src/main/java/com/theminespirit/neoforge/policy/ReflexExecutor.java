@@ -25,20 +25,41 @@ final class ReflexExecutor {
     private Optional<BlockCoord> breath = Optional.empty();
     private int breathAge = BREATH_REFRESH_TICKS;
     private int attempts;
+    private long lastLog = Long.MIN_VALUE;
 
     void execute(SpiritEntity spirit, ReflexAction action) {
         switch (action) {
             case ReflexAction.Flee flee -> moveTo(spirit, flee.cell());
-            case ReflexAction.ExitWater exit -> {
-                moveTo(spirit, exit.cell());
-                swimUp(spirit);
-            }
+            case ReflexAction.ExitWater exit -> exitWater(spirit, exit.cell());
             case ReflexAction.StepOutOfPortal step -> moveTo(spirit, step.cell());
             case ReflexAction.ReturnToZone back -> moveTo(spirit, back.cell());
             case ReflexAction.Surface ignored -> surface(spirit);
             case ReflexAction.StopMoving ignored -> release(spirit);
             case ReflexAction.Eat ignored -> spirit.hunger().eatBest();
         }
+    }
+
+    void leaveWater(SpiritEntity spirit) {
+        if (!spirit.isInWater()) {
+            release(spirit);
+            return;
+        }
+        BlockCoord feet = feet(spirit);
+        Optional<BlockCoord> bank = BreathSearch.nearest(new LevelSafetyView(spirit.level()), feet);
+        if (attempts == 0) {
+            spirit.getNavigation().stop();
+        }
+        attempts++;
+        if (logTime(spirit)) {
+            LOGGER.info(
+                    "[water] дух {}: выход из воды, попытка {}, ноги {}, цель {}",
+                    spirit.getName().getString(),
+                    attempts,
+                    feet,
+                    bank.map(BlockCoord::toString).orElse("берег не найден — держусь поверхности"));
+        }
+        bank.ifPresent(cell -> swimTo(spirit, cell));
+        swimUp(spirit);
     }
 
     void release(SpiritEntity spirit) {
@@ -88,25 +109,49 @@ final class ReflexExecutor {
             spirit.getNavigation().stop();
         }
         attempts++;
-        BlockCoord feet = new BlockCoord(
-                spirit.blockPosition().getX(),
-                spirit.blockPosition().getY(),
-                spirit.blockPosition().getZ());
+        BlockCoord feet = feet(spirit);
         LevelSafetyView view = new LevelSafetyView(spirit.level());
         Optional<BlockCoord> air = BreathSearch.nearest(view, feet);
         breath = BreathSearch.nextStep(view, feet);
-        LOGGER.info(
-                "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, шаг {}, воздух {}, расстояние {}, "
-                        + "навигация завершена {}",
-                spirit.getName().getString(),
-                attempts,
-                feet,
-                spirit.getAirSupply(),
-                breath.map(BlockCoord::toString).orElse("не найден — всплываю вертикально"),
-                air.map(BlockCoord::toString).orElse("не найден"),
-                air.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
-                        .orElse("-"),
-                spirit.getNavigation().isDone());
+        if (logTime(spirit)) {
+            LOGGER.info(
+                    "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, шаг {}, воздух {}, расстояние {}, "
+                            + "навигация завершена {}",
+                    spirit.getName().getString(),
+                    attempts,
+                    feet,
+                    spirit.getAirSupply(),
+                    breath.map(BlockCoord::toString).orElse("не найден — всплываю вертикально"),
+                    air.map(BlockCoord::toString).orElse("не найден"),
+                    air.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
+                            .orElse("-"),
+                    spirit.getNavigation().isDone());
+        }
+    }
+
+    private void exitWater(SpiritEntity spirit, BlockCoord local) {
+        if (spirit.isInWater()) {
+            leaveWater(spirit);
+            return;
+        }
+        moveTo(spirit, local);
+        swimUp(spirit);
+    }
+
+    private boolean logTime(SpiritEntity spirit) {
+        long now = spirit.level().getGameTime();
+        if (lastLog != Long.MIN_VALUE && now - lastLog < 100) {
+            return false;
+        }
+        lastLog = now;
+        return true;
+    }
+
+    private static BlockCoord feet(SpiritEntity spirit) {
+        return new BlockCoord(
+                spirit.blockPosition().getX(),
+                spirit.blockPosition().getY(),
+                spirit.blockPosition().getZ());
     }
 
     private void swimTo(SpiritEntity spirit, BlockCoord cell) {

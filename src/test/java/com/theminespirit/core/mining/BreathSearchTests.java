@@ -149,4 +149,33 @@ class BreathSearchTests {
             default -> Cell.SOLID;
         };
     }
+
+    @Test
+    void nearest_BankOneAboveWater_FindsStandByFloorWater() {
+        CellWorld world = new CellWorld().set(0, 0, 0, Cell.WATER).set(1, 0, 0, Cell.SOLID);
+
+        assertEquals(
+                Optional.of(new BlockCoord(1, 1, 0)),
+                BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
+                "Берег на блок выше воды (observe17: озеро -324,55,-472, суша y62-63) обязан находиться: "
+                        + "вода касается пола стоянки, а не её ног; иначе дух остаётся в озере");
+    }
+
+    @Test
+    void nearest_WideLakeSurface_FindsFarBankBeyondOldBudget() {
+        CellWorld world = new CellWorld();
+        for (int x = 0; x <= 60; x++) {
+            for (int z = 0; z <= 60; z++) {
+                world.set(x, 0, z, Cell.WATER);
+            }
+        }
+        world.set(61, -1, 30, Cell.SOLID);
+
+        assertEquals(
+                Optional.of(new BlockCoord(61, 0, 30)),
+                BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
+                "Широкое озеро 61×61: берег в 91 шаге обязан находиться поиском по поверхности. "
+                        + "Старый бюджет 512 уходил в объём воды и возвращал поверхность — дух кружил в озере "
+                        + "(observe17 A2, [air]=781)");
+    }
 }

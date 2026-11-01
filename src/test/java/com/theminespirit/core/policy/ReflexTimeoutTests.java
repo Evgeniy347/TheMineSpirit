@@ -24,6 +24,18 @@ class ReflexTimeoutTests {
     }
 
     @Test
+    void expired_WaterUnderWaterForLongerThanLimit_KeepsReflex() {
+        ReflexTimeout timeout = new ReflexTimeout();
+
+        for (int tick = 0; tick < 500; tick++) {
+            assertFalse(
+                    timeout.expired(PolicyId.WATER, "WATER:ExitWater", LIMIT, true),
+                    "Рефлекс выхода из воды нельзя глушить на тике " + tick + ": после " + LIMIT + " тиков дух "
+                            + "останавливается в озере и снова уплывает по маршруту (observe17 A2/N5, [air]=781)");
+        }
+    }
+
+    @Test
     void expired_LavaReflexAfterLimit_Stops() {
         ReflexTimeout timeout = new ReflexTimeout();
 
@@ -34,8 +46,8 @@ class ReflexTimeoutTests {
         }
         assertTrue(
                 timeout.expired(PolicyId.LAVA_FIRE, "LAVA_FIRE:Flee", LIMIT, true),
-                "Предел глушит любой рефлекс, кроме всплытия под водой: даже флаг «голова под водой» не спасает "
-                        + "духа от бесконечного бегства из лавы");
+                "Предел глушит любой рефлекс, кроме воды: даже флаг «в воде» не спасает духа от бесконечного "
+                        + "бегства из лавы");
     }
 
     @Test
