@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -62,14 +63,17 @@ class StuckStageLiveTests {
         Optional<DispatchRound.Candidate> afterIdle = new DispatchRound(board, clock[0]).choose(mine, candidates);
 
         assertTrue(
-                afterIdle.isPresent(),
-                "Простаивающий дух без задачи не может быть исключён навсегда: после паузы "
-                        + BoardTuning.idleReleaseTicks() + " тиков метка «застрял» снимается, и он снова "
-                        + "получает задание (observe13 N22: spirit-3 idle 18 минут)");
+                afterIdle.isEmpty(),
+                "Стоящий дух не получает заданий и после паузы: пока он не сдвинулся и не спасён, доска "
+                        + "держит запрет (observe15 B1/A11)");
+        board.stuck().see(spirit, new BlockCoord(at.x() + StuckSpirits.AREA_RADIUS + 1, at.y(), at.z()));
+        assertTrue(
+                new DispatchRound(board, clock[0]).choose(mine, candidates).isPresent(),
+                "Дух сдвинулся дальше области колебания — запрет снимается, и задание снова выдаётся");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(mine.id(), spirit, clock[0]),
-                "Тот же путь, что в игре: раздача -> claim обязан выдать задание освободившемуся духу");
+                "Тот же путь, что в игре: раздача -> claim выдаёт задание освободившемуся духу");
     }
 
     @Test
@@ -142,6 +146,42 @@ class StuckStageLiveTests {
                 BoardOutcome.CLAIMED,
                 board.claim(house.id(), UUID.randomUUID(), clock[0]),
                 "После паузы задание снова выдаётся, а не висит вечно");
+    }
+
+    @Test
+    void rescueTicket_StuckSpirit_IssuedThroughBoard() throws IOException {
+        JsonNode bot = bot(read("bots.json"), "spirit-3");
+        UUID spirit = UUID.fromString(bot.get("id").asText());
+        long now = bot.get("tick").asLong();
+        Board board = new Board(() -> now);
+        BoardTicket rescue = new BoardTicket(
+                "rescue:" + spirit,
+                BoardCase.RESCUE_SPIRIT,
+                Optional.of(spirit),
+                BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
+                now,
+                1,
+                "rescue:" + spirit,
+                List.of(),
+                Map.of());
+        assertEquals(BoardOutcome.ACCEPTED, board.submit(rescue), "Живое задание спасения принимается доской");
+        board.stuck().mark(spirit, now);
+
+        Optional<DispatchRound.Candidate> chosen =
+                new DispatchRound(board, now).choose(rescue, List.of(candidate(spirit, "spirit-3")));
+
+        assertTrue(
+                chosen.isPresent(),
+                "Задание спасения выдаётся самому застрявшему духу: иначе метка «застрял» запрещает "
+                        + "единственный способ сдвинуться (observe15 B1)");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim(rescue.id(), spirit, now),
+                "Claim спасения проходит через путь доски, несмотря на метку застревания");
+        assertTrue(board.complete(rescue.id()), "Успешное спасение закрывает задание");
+        assertFalse(
+                board.stuck().isStuck(spirit, now),
+                "Успешное спасение снимает метку «застрял»: дух снова получает обычные задания (observe15 B1)");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

@@ -49,13 +49,9 @@ public final class Board {
     }
 
     public Board(LongSupplier nowTicks, BoardEvents events) {
-        Objects.requireNonNull(
-                nowTicks,
-                "nowTicks не может быть null: доска считает просрочку "
-                        + "и сортировку по времени, без часов задания жили бы вечно");
+        Objects.requireNonNull(nowTicks, "nowTicks не может быть null: без часов доска не считает просрочку");
         this.nowTicks = nowTicks;
-        this.events = Objects.requireNonNull(
-                events, "Слушатель переходов не может быть null: без него задают BoardEvents.NONE");
+        this.events = Objects.requireNonNull(events, "Слушатель переходов не может быть null: иначе BoardEvents.NONE");
         this.blocked = new BlockedBook(
                 statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
         this.idleRelease = new IdleRelease(casePauses, blocked);
@@ -73,9 +69,7 @@ public final class Board {
             }
             entries.add(new BoardState.Entry(
                     ticket,
-                    Objects.requireNonNull(
-                            statuses.get(ticket.id()),
-                            "У билета '" + ticket.id() + "' нет статуса: доска хранит их вместе"),
+                    Objects.requireNonNull(statuses.get(ticket.id()), "У билета '" + ticket.id() + "' нет статуса"),
                     claimAssignees.get(ticket.id()),
                     failTicks.get(ticket.id()),
                     ticketFailures.getOrDefault(ticket.id(), 0)));
@@ -104,9 +98,7 @@ public final class Board {
             BoardTicket ticket = entry.ticket();
             tickets.put(ticket.id(), ticket);
             statuses.put(ticket.id(), entry.status());
-            if (entry.holder() != null) {
-                claimAssignees.put(ticket.id(), entry.holder());
-            }
+            if (entry.holder() != null) claimAssignees.put(ticket.id(), entry.holder());
             if (entry.failedAt() != null) {
                 failTicks.put(ticket.id(), entry.failedAt());
             }
@@ -131,7 +123,9 @@ public final class Board {
             boolean stage = StageTicket.stage(ticket.id());
             boolean changed = (current == BoardStatus.BLOCKED && !ticket.sameDetails(existing))
                     || (current == BoardStatus.DONE && ticket.replacesDone(existing, stage));
-            boolean retry = current == BoardStatus.FAILED && stage && !recentlyFailed(ticket.id(), now);
+            boolean retry = current == BoardStatus.FAILED
+                    && !recentlyFailed(ticket.id(), now)
+                    && (stage || ticket.boardCase() == BoardCase.RESCUE_SPIRIT);
             if (current == BoardStatus.BLOCKED) {
                 if (changed) {
                     tickets.put(ticket.id(), ticket);
@@ -246,6 +240,9 @@ public final class Board {
         UUID holder = holder(ticket);
         if (holder != null) {
             casePauses.reset(holder, ticket.boardCase());
+            if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
+                stuckSpirits.release(holder);
+            }
         }
         statuses.put(ticketId, BoardStatus.DONE);
         ledger.complete(ticket.boardCase(), ticket.level());
@@ -302,7 +299,8 @@ public final class Board {
 
     public boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
         BoardTiming.require(now);
-        return !stuckSpirits.isStuck(spirit, now) && casePauses.available(spirit, ticket, now);
+        boolean rescue = ticket.boardCase() == BoardCase.RESCUE_SPIRIT;
+        return (rescue || !stuckSpirits.isStuck(spirit, now)) && casePauses.available(spirit, ticket, now);
     }
 
     public boolean caseDetached(UUID spirit, BoardCase boardCase) {
@@ -728,7 +726,7 @@ public final class Board {
         if (failures < BoardTuning.ticketFailLimit()) {
             return;
         }
-        blocked.note(ticket, failures, ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock), now);
+        blocked.note(ticket, failures, ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock), stock, now);
     }
 
     private void unblockChanged(StockView stock, long now) {

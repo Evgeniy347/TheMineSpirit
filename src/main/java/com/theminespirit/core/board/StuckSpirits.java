@@ -66,15 +66,16 @@ public final class StuckSpirits {
         if (known == null) {
             return Optional.empty();
         }
-        if (now - known.since() >= BoardTuning.idleReleaseTicks()) {
-            stuck.remove(spirit);
-            return Optional.empty();
-        }
         return Optional.of(known);
     }
 
     public boolean isStuck(UUID spirit, long now) {
         return of(spirit, now).isPresent();
+    }
+
+    public void release(UUID spirit) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: спасение снимает метку с конкретного духа");
+        stuck.remove(spirit);
     }
 
     public List<BoardState.Stuck> snapshot() {

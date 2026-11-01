@@ -127,6 +127,53 @@ class BoardRestartStateLiveTests {
                         + "(observe14 A11); карточка: " + card);
     }
 
+    @Test
+    void blockedTicket_SameStockAtAssignment_DoesNotUnblockImmediately() throws IOException {
+        JsonNode boardJson = read("board.json");
+        JsonNode bot = bot(read("bots.json"), "spirit-3");
+        long[] clock = {bot.get("tick").asLong()};
+        Board board = new Board(() -> clock[0]);
+        JsonNode task = task(boardJson, "first:build_orchard");
+        BoardTicket ticket = ticket(task);
+        StockView stock = new StockView(Map.of("stick", 128, "charcoal", 128, "coal", 128));
+        List<String> reasons = List.of(
+                "нет прогресса 3600 тиков (chop_tree, 2/chop_tree/0)",
+                "застрял в (-172, 77, -516): перенос не найден",
+                "не хватило материала 'minecraft:stick'",
+                "не удалось добрать coal",
+                "задание стоит 1200 тиков: подход не двигается");
+        for (int attempt = 0; attempt < BoardTuning.ticketFailLimit(); attempt++) {
+            if (attempt == 0) {
+                assertEquals(
+                        BoardOutcome.ACCEPTED, board.submit(ticket), "Живой сад ставится на попытку " + (attempt + 1));
+            }
+            assertEquals(
+                    BoardOutcome.CLAIMED,
+                    board.claim(ticket.id(), UUID.randomUUID(), clock[0]),
+                    "Попытка " + (attempt + 1) + " выдана духу");
+            assertTrue(board.fail(ticket.id(), stock, reasons.get(attempt)), "Попытка " + (attempt + 1) + " провалена");
+            if (attempt + 1 < BoardTuning.ticketFailLimit()) {
+                clock[0] += BoardTuning.caseFailPauseCapTicks();
+                assertEquals(
+                        BoardOutcome.ACCEPTED,
+                        board.submit(ticket),
+                        "Этапное задание переоткрывается перед следующей попыткой");
+            }
+        }
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(ticket.id()).orElse(null),
+                "После " + BoardTuning.ticketFailLimit() + " провалов сад заблокирован");
+
+        board.claimable(stock, clock[0]);
+
+        assertEquals(
+                BoardStatus.BLOCKED,
+                board.statusOf(ticket.id()).orElse(null),
+                "Тот же запас, что при блокировке, не снимает BLOCKED: раньше «изменилось: failures=0» "
+                        + "возникало от сравнения запаса с потребностью (observe15 B3)");
+    }
+
     private static JsonNode read(String name) throws IOException {
         return MAPPER.readTree(Files.readString(DIR.resolve(name), StandardCharsets.UTF_8));
     }
