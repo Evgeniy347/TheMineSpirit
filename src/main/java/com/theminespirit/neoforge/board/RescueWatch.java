@@ -7,9 +7,8 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
-import com.theminespirit.core.board.RepeatLog;
+import com.theminespirit.core.board.ChangeSummary;
 import com.theminespirit.core.board.ScriptProgressWatch;
-import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketTarget;
@@ -40,8 +39,7 @@ final class RescueWatch {
     private final ScriptProgressWatch progress = new ScriptProgressWatch();
     private final StillWatch still = new StillWatch();
     private final Map<UUID, String> causes = new HashMap<>();
-    private final StateChangeLog states = new StateChangeLog();
-    private final RepeatLog repeats = new RepeatLog(BoardTuning.logSummaryTicks());
+    private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
 
     private record Sighting(String id, String cause, SpiritEntity spirit, BlockPos feet, BlockCoord settlement) {}
 
@@ -64,10 +62,14 @@ final class RescueWatch {
 
     Set<String> tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
         Set<String> live = new HashSet<>();
-        Set<String> stuckIds = new HashSet<>();
+        Set<String> presentIds = new HashSet<>();
         BlockCoord settlement = SettlementHome.of(spirits);
         for (SpiritEntity spirit : spirits) {
-            if (spirit.isRemoved() || digging(spirit)) {
+            if (spirit.isRemoved()) {
+                continue;
+            }
+            presentIds.add(PREFIX + spirit.getUUID());
+            if (digging(spirit)) {
                 continue;
             }
             if (progress.advancing(spirit.getUUID(), spirit.taskProgress().orElse(null), now)) {
@@ -82,7 +84,6 @@ final class RescueWatch {
             if (!verdict.stuck() && !(marked && standing)) {
                 continue;
             }
-            stuckIds.add(id);
             String cause = causes.getOrDefault(spirit.getUUID(), id);
             live.add(cause);
             if (active(service, id)) {
@@ -94,8 +95,7 @@ final class RescueWatch {
             live.add(cause);
             submit(level, service, new Sighting(id, cause, spirit, feet, settlement), now);
         }
-        states.retain(stuckIds);
-        repeats.retain(stuckIds);
+        log.retain(presentIds);
         return live;
     }
 
@@ -144,34 +144,33 @@ final class RescueWatch {
         String where = rescue.feet().toShortString();
         String state = rescue.method() + "|" + where + "|" + rescue.tool() + "|" + rescue.steps();
         String tool = rescue.tool() ? "есть" : "нет";
-        if (states.changed(rescue.id(), state)) {
-            repeats.clear(rescue.id());
-            repeats.note(rescue.id(), 1, now);
-            String what = "застрял в " + where + " (" + rescue.method() + "), задание спасения " + rescue.id();
-            LOGGER.warn(
-                    "[rescue] дух {} застрял в {} ({}): задание спасения {} выдано {}; материал столба: "
-                            + "земля+булыжник {}, кирка {}; {}",
-                    rescue.spirit().displayName(),
-                    where,
-                    rescue.method(),
-                    rescue.id(),
-                    rescue.assignee().map(UUID::toString).orElse("любому свободному духу"),
-                    rescue.steps(),
-                    tool,
-                    IncidentSnapshots.record(level, rescue.spirit(), what));
-            return;
-        }
-        repeats.note(rescue.id(), 1, now)
-                .ifPresent(summary -> LOGGER.warn(
-                        "[rescue] сводка: дух {} стоит в {} ({}), задание {} выдавалось {} раз за окно; "
-                                + "материал столба {}, кирка {}",
+        log.note(rescue.id(), state, 1, now).ifPresent(summary -> {
+            if (summary.changed()) {
+                String what = "застрял в " + where + " (" + rescue.method() + "), задание спасения " + rescue.id();
+                LOGGER.warn(
+                        "[rescue] дух {} застрял в {} ({}): задание спасения {} выдано {}; материал столба: "
+                                + "земля+булыжник {}, кирка {}; {}",
                         rescue.spirit().displayName(),
                         where,
                         rescue.method(),
                         rescue.id(),
-                        summary.count(),
+                        rescue.assignee().map(UUID::toString).orElse("любому свободному духу"),
                         rescue.steps(),
-                        tool));
+                        tool,
+                        IncidentSnapshots.record(level, rescue.spirit(), what));
+                return;
+            }
+            LOGGER.warn(
+                    "[rescue] сводка: дух {} стоит в {} ({}), задание {} выдавалось {} раз за окно; "
+                            + "материал столба {}, кирка {}",
+                    rescue.spirit().displayName(),
+                    where,
+                    rescue.method(),
+                    rescue.id(),
+                    summary.count(),
+                    rescue.steps(),
+                    tool);
+        });
     }
 
     private static boolean digging(SpiritEntity spirit) {

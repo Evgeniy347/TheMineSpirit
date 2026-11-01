@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.inventory;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.ChangeSummary;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.ContainerSnapshot;
@@ -20,9 +22,11 @@ import org.slf4j.Logger;
 
 public final class DepositScript extends ContainerTask {
     private static final int FALLBACK_MAX_STACK = 64;
+    private static final String PREFIX = "[deposit] ";
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final TransferParams params;
+    private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
     private List<DepositSpread.Step> steps;
     private int stepIndex;
     private String autoRefusal;
@@ -47,15 +51,11 @@ public final class DepositScript extends ContainerTask {
         if (transferRemaining() <= 0) {
             return null;
         }
-        LOGGER.info(
-                "[deposit] {}: контейнер{} — свободно {} из {} слотов, кладу '{}' ×{}, осталось {}",
-                spirit.displayName(),
-                at(),
-                freeSlots(container),
-                container.getContainerSize(),
-                params.item(),
-                params.count(),
-                transferRemaining());
+        note(
+                "put|" + at() + "|" + freeSlots(container) + "|" + params.item() + "|" + transferRemaining(),
+                PREFIX + spirit.displayName() + ": контейнер" + at() + " — свободно " + freeSlots(container)
+                        + " из " + container.getContainerSize() + " слотов, кладу '" + params.item() + "' ×"
+                        + params.count() + ", осталось " + transferRemaining());
         return TransferRunner.filtered(
                 spirit.getInventory(), container, IdFilter.of(List.of(params.item())), transferRemaining());
     }
@@ -63,14 +63,14 @@ public final class DepositScript extends ContainerTask {
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         Container current = container;
-        LOGGER.info(
-                "[deposit] {}: контейнер{} — свободно {} из {} слотов, перенесено {}, решение: {}",
-                spirit.displayName(),
-                at(),
-                current == null ? -1 : freeSlots(current),
-                current == null ? -1 : current.getContainerSize(),
-                moved,
-                shortage == TransferRunner.Shortage.NONE ? "предметы приняты" : "нужен второй контейнер или сундук");
+        String decision =
+                shortage == TransferRunner.Shortage.NONE ? "предметы приняты" : "нужен второй контейнер или сундук";
+        note(
+                "finish|" + at() + "|" + (current == null ? -1 : freeSlots(current)) + "|" + moved + "|" + shortage,
+                PREFIX + spirit.displayName() + ": контейнер" + at() + " — свободно "
+                        + (current == null ? -1 : freeSlots(current)) + " из "
+                        + (current == null ? -1 : current.getContainerSize()) + " слотов, перенесено " + moved
+                        + ", решение: " + decision);
         return switch (shortage) {
             case NONE -> ScriptStatus.SUCCEEDED;
             case SOURCE_LACK ->
@@ -89,10 +89,10 @@ public final class DepositScript extends ContainerTask {
             steps = plan.steps();
             autoRefusal = plan.refusal();
             if (steps.isEmpty() && autoRefusal != null) {
-                LOGGER.info(
-                        "[deposit] {}: {} — решение: заказать сундук или освободить место",
-                        spirit.displayName(),
-                        autoRefusal);
+                note(
+                        "refusal|" + autoRefusal,
+                        PREFIX + spirit.displayName() + ": " + autoRefusal
+                                + " — решение: заказать сундук или освободить место");
                 return null;
             }
         }
@@ -102,14 +102,11 @@ public final class DepositScript extends ContainerTask {
         DepositSpread.Step step = steps.get(stepIndex++);
         int index = step.index();
         ContainerSnapshot chosen = scan.snapshots().get(index);
-        LOGGER.info(
-                "[deposit] {}: контейнер {} — свободно {} из {} слотов, кладу '{}' ×{}",
-                spirit.displayName(),
-                chosen.pos(),
-                chosen.freeSlots(),
-                chosen.slotCount(),
-                params.item(),
-                step.count());
+        note(
+                "auto|" + chosen.pos() + "|" + chosen.freeSlots() + "|" + params.item() + "|" + step.count(),
+                PREFIX + spirit.displayName() + ": контейнер " + chosen.pos() + " — свободно "
+                        + chosen.freeSlots() + " из " + chosen.slotCount() + " слотов, кладу '" + params.item()
+                        + "' ×" + step.count());
         TransferRunner runner = TransferRunner.filtered(
                 spirit.getInventory(),
                 scan.containers().get(index),
@@ -239,5 +236,16 @@ public final class DepositScript extends ContainerTask {
 
     private BlockCoord blockCoord() {
         return new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ());
+    }
+
+    private void note(String state, String text) {
+        long now = spirit.level().getGameTime();
+        log.note(spirit.getUUID().toString(), state, 1, now).ifPresent(summary -> {
+            if (summary.changed()) {
+                LOGGER.info(text);
+                return;
+            }
+            LOGGER.info(PREFIX + "сводка: {} повторов за окно, по одному разу на состояние: {}", summary.count(), text);
+        });
     }
 }
