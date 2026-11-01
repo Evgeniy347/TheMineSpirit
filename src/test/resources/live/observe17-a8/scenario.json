@@ -1,0 +1,9 @@
+{
+  "source": "observe17-2026-11-01-1216.md, пункт A8",
+  "home": [-181, 73, -520],
+  "mine": [-189, 63, -518],
+  "settlementRadius": 32,
+  "spirits": 5,
+  "freeWorkers": 1,
+  "refusedAtStart": 10
+}

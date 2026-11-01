@@ -23,6 +23,7 @@ public final class TacticalIntellect {
     private final OutsideGate outsideGate = OutsideGate.withDefaults();
     private List<EnemyFact> enemies = List.of();
     private @Nullable Point vein;
+    private @Nullable Point home;
     private boolean weaponStock;
     private boolean playerEscort;
 
@@ -54,6 +55,10 @@ public final class TacticalIntellect {
 
     public void trackVein(Point knownVein) {
         vein = knownVein;
+    }
+
+    public void trackHome(@Nullable Point knownHome) {
+        home = knownHome;
     }
 
     public void trackWeaponStock(boolean available) {
@@ -128,7 +133,8 @@ public final class TacticalIntellect {
                 view.inventoryFills(),
                 view.stations());
         List<String> refusals = new ArrayList<>();
-        List<ActivityDemand> demands = admitOutside(workers, DemandModel.evaluate(view, catalog), refusals);
+        List<String> notes = new ArrayList<>();
+        List<ActivityDemand> demands = admitOutside(workers, DemandModel.evaluate(view, catalog), refusals, notes);
         ActivityPlan plan = assigner.assign(workers, demands, ledger, now);
         for (ActivityAssignment assignment : plan.assignments()) {
             ledger.assign(assignment.spirit(), assignment.activity(), assignment.since(), assignment.demand());
@@ -140,11 +146,11 @@ public final class TacticalIntellect {
         reservations.expire(now);
         Optional<Expedition> expedition =
                 vein == null ? Optional.empty() : expeditions.plan(view, workers.freeWorkers(), vein);
-        return new TacticalDecision(List.copyOf(orders), strengths, plan, expedition, refusals);
+        return new TacticalDecision(List.copyOf(orders), strengths, plan, expedition, refusals, notes);
     }
 
     private List<ActivityDemand> admitOutside(
-            SettlementView workers, List<ActivityDemand> demands, List<String> refusals) {
+            SettlementView workers, List<ActivityDemand> demands, List<String> refusals, List<String> notes) {
         List<ActivityDemand> allowed = new ArrayList<>();
         boolean evening = outsideGate.isEvening(workers.dayFraction());
         for (ActivityDemand demand : demands) {
@@ -159,13 +165,24 @@ public final class TacticalIntellect {
                     party++;
                 }
             }
-            OutsideGate.Decision decision = outsideGate.admitExternal(party, playerEscort, evening);
+            OutsideGate.Decision decision =
+                    outsideGate.admitExternal(party, playerEscort, evening, settlementTarget(demand.id()), home);
             if (decision instanceof OutsideGate.Refused refused) {
                 refusals.add(demand.id() + ": " + refused.reason());
             } else {
+                if (decision instanceof OutsideGate.Inside inside) {
+                    notes.add(demand.id() + ": " + inside.note());
+                }
                 allowed.add(demand);
             }
         }
         return allowed;
+    }
+
+    private @Nullable Point settlementTarget(ActivityId id) {
+        if (id != ActivityId.MINE) {
+            return null;
+        }
+        return vein != null ? vein : home;
     }
 }
