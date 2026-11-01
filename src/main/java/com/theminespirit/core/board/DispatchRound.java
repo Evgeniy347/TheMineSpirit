@@ -109,7 +109,7 @@ public final class DispatchRound {
         if (held.getOrDefault(spirit.id(), 0) >= BoardTuning.maxActivePerSpirit()) {
             return Optional.of("держит " + heldIds(spirit.id()));
         }
-        if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()) {
+        if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent() && !reassignable(ticket, now)) {
             return Optional.of("задание другого духа");
         }
         if (!board.availableTo(spirit.id(), ticket, now)) {
@@ -132,6 +132,13 @@ public final class DispatchRound {
 
     public boolean fits(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
         return refusal(ticket, spirit, supplyItem).isEmpty();
+    }
+
+    private boolean reassignable(BoardTicket ticket, long now) {
+        return ticket.boardCase() == BoardCase.TRANSFER_ITEM
+                && ticket.assignee()
+                        .filter(owner -> board.stuck().isStuck(owner, now))
+                        .isPresent();
     }
 
     public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference) {
