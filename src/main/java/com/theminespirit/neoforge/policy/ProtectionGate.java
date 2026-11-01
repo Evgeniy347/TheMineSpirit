@@ -62,6 +62,13 @@ public final class ProtectionGate {
                 .orElse(false);
     }
 
+    private static boolean mineCell(ServerLevel level, BlockCoord coord) {
+        return SettlementPlotStore.get(level)
+                .site()
+                .map(site -> site.mineColumn(coord.x(), coord.z()) || site.minePassage(coord.x(), coord.z()))
+                .orElse(false);
+    }
+
     private static boolean inFenceStrip(ServerLevel level, BlockCoord coord, String blockId) {
         return SettlementPlotStore.get(level)
                 .site()
@@ -112,7 +119,7 @@ public final class ProtectionGate {
                 spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
                 placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
                 onPlot = onSettlementPlot(server, coord);
-                inPlan = inPlan(server, coord);
+                inPlan = inPlan(server, coord) && !mineCell(server, coord);
             }
             SettlementBreak.Origin origin = placedByPlayer
                     ? SettlementBreak.Origin.PLAYER

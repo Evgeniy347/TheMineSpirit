@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.MineColumn;
+import com.theminespirit.core.mining.MineWalls;
 import com.theminespirit.core.observation.BlockCoord;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +13,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 final class MineCells {
-    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     private final Level level;
     private final Set<BlockCoord> walls;
@@ -37,16 +36,7 @@ final class MineCells {
     }
 
     List<BlockCoord> wallsOf(MineColumn column) {
-        List<BlockCoord> found = new ArrayList<>();
-        for (BlockCoord cell : column.cells()) {
-            for (int[] side : SIDES) {
-                BlockCoord wall = new BlockCoord(cell.x() + side[0], cell.y(), cell.z() + side[1]);
-                if (walls.contains(wall)) {
-                    found.add(wall);
-                }
-            }
-        }
-        return found;
+        return MineWalls.of(column, walls);
     }
 
     private static BlockPos toPos(BlockCoord cell) {

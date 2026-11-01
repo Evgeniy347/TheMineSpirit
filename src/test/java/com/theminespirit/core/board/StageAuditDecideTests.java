@@ -62,8 +62,9 @@ class StageAuditDecideTests {
                 StageAudit.decide(null, true, 0, FENCE_TOTAL),
                 "Шаг без тикета и без блоков в мире открывается обычным планом");
         assertEquals(
-                StageAudit.Decision.OPEN,
+                StageAudit.Decision.AUDIT,
                 StageAudit.decide(BoardStatus.FAILED, false, 20, FENCE_TOTAL),
-                "Недоделанная постройка без DONE открывается планом, а не ремонтом: ремонт закрывает DONE-шаги");
+                "Частично стоящая постройка чинится по недостающим блокам, а не перевыдаётся полным планом: "
+                        + "иначе ограда 70/71 висит без задач");
     }
 }

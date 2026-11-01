@@ -1,9 +1,16 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.PlannedBlock;
+import com.theminespirit.core.town.SchemeBuild;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import java.util.EnumSet;
@@ -55,7 +62,7 @@ final class StageSettle {
             Map<String, Integer> reserve = part == 1 ? need : Map.of();
             if (caseValue == BoardCase.BUILD_FENCE && work != null) {
                 partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
-                reserve = new HashMap<>(FirstStepsRunner.partNeed(source, partTarget, wood));
+                reserve = new HashMap<>(partNeed(source, partTarget, wood));
                 reserve.keySet().retainAll(need.keySet());
             }
             service.board().require(FirstStepsRunner.partId(caseValue, part), reserve);
@@ -83,5 +90,49 @@ final class StageSettle {
                 new FirstStepsRunner.OpenStep(caseValue, target, need, wood),
                 FirstStepsRunner.partsOf(caseValue),
                 now);
+    }
+
+    static Map<String, Integer> repairNeed(ServerLevel level, FirstStepsRunner.OpenStep step, TicketTarget target) {
+        if (step.caseValue() == BoardCase.BUILD_MINE) {
+            return StageAudit.shortage(new HashMap<>(step.need()));
+        }
+        if (step.caseValue() == BoardCase.BUILD_FENCE) {
+            TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target);
+            BuildGap.Gap gap =
+                    BuildGap.trace(plan, step.wood(), FirstStepsRunner.probe(level), FirstStepsRunner.SCHEMES);
+            return StageAudit.shortage(BuildGap.need(plan, gap, FirstStepsRunner.materialSource(level)));
+        }
+        Map<String, Integer> need = new HashMap<>(step.need());
+        FirstStepsRunner.minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
+        return StageAudit.shortage(need);
+    }
+
+    static TicketTarget repairTarget(BoardCase caseValue, TicketTarget target, BuildGap.Gap gap) {
+        StageWork work = target.work();
+        if (caseValue != BoardCase.BUILD_FENCE
+                || work == null
+                || gap.missingCells().isEmpty()) {
+            return target;
+        }
+        List<PlannedBlock> blocks = work.blocks().stream()
+                .filter(block -> gap.missingCells().containsKey(block.at()))
+                .toList();
+        List<SchemeBuild> builds = work.builds().stream()
+                .filter(build -> gap.missingCells().keySet().stream()
+                        .anyMatch(at -> Math.abs(at.x() - build.origin().x()) <= 4
+                                && Math.abs(at.z() - build.origin().z()) <= 4
+                                && Math.abs(at.y() - build.origin().y()) <= 5))
+                .toList();
+        if (blocks.isEmpty() && builds.isEmpty()) {
+            return target;
+        }
+        return target.withWork(new StageWork(work.site(), blocks, builds));
+    }
+
+    static Map<String, Integer> partNeed(MaterialSource source, TicketTarget target, String wood) {
+        Map<String, Integer> need = new HashMap<>();
+        FirstStepsRunner.materials(source, BoardCase.BUILD_FENCE, target)
+                .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
+        return need;
     }
 }
