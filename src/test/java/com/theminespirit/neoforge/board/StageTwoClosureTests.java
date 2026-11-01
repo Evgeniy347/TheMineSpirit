@@ -1,11 +1,14 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardStages;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.SettlementStage;
+import com.theminespirit.core.board.StageGate;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
@@ -49,6 +52,31 @@ class StageTwoClosureTests {
                 Set.of("barn"),
                 SettlementStage.missing(board.ledger()).keySet(),
                 "Остаток этапа 2 после всех построек плана — только амбар");
+    }
+
+    @Test
+    void held_NextStageTicket_ListedWhenPreviousStageOpen() {
+        Board board = stageTwoReady();
+        BoardTicket mine = new BoardTicket(
+                "mine_level_2",
+                BoardCase.BUILD_MINE,
+                Optional.empty(),
+                50,
+                0L,
+                2,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        board.submit(mine);
+        board.ledger().gate(new StageGate(1, Map.of("BUILD_MINE", 1)));
+
+        assertEquals(
+                List.of("mine_level_2"),
+                BoardStages.held(board),
+                "Задача этапа 2 при незакрытом этапе 1 снимается с доски, а не висит и падает");
+        assertTrue(
+                board.ledger().stageGate().missing().containsKey("BUILD_MINE"),
+                "Причина снятия видна на доске: этап 1 не закрыт, шахта не готова в мире");
     }
 
     @Test

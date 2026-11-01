@@ -5,7 +5,6 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
-import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.rest.BoardTask;
 import com.theminespirit.core.rest.BoardTasks;
@@ -91,8 +90,7 @@ public final class BoardViewChannel {
     public static BoardStage stage(ServerLevel level) {
         return BoardRegistry.peek(level)
                 .or(() -> BoardRegistry.peek(level.getServer().overworld()))
-                .map(service ->
-                        new BoardStage(SettlementStage.of(service.board().ledger())))
+                .map(service -> new BoardStage(service.board().ledger().stage()))
                 .orElse(BoardStage.FIRST);
     }
 

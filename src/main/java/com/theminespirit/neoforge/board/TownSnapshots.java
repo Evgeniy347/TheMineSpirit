@@ -24,12 +24,13 @@ public final class TownSnapshots {
     public static Optional<TownSnapshot> current(ServerLevel level) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<TownPlan> town = store.town();
-        Optional<StageSite> site = store.site();
+        BoardService service = BoardRegistry.get(level);
+        int stageValue = service.board().ledger().stage();
+        Optional<StageSite> site = store.site(stageValue).or(store::site);
         Optional<SettlementPlot> plot = store.plot();
         if (town.isEmpty() || site.isEmpty() || plot.isEmpty()) {
             return Optional.empty();
         }
-        BoardService service = BoardRegistry.get(level);
         StageSite stage = site.orElseThrow();
         String wood = plot.orElseThrow().wood();
         Map<String, TownSnapshot.Progress> progress = new LinkedHashMap<>();
@@ -46,7 +47,7 @@ public final class TownSnapshots {
         progress.put(TownPlanner.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));
         progress.put(TownPlanner.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
         List<List<BlockCoord>> paths = PathNetworkService.segments(level);
-        return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, progress, paths));
+        return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, stageValue, progress, paths));
     }
 
     public static Optional<TownMapView.Bounds> markerBounds(ServerLevel level) {

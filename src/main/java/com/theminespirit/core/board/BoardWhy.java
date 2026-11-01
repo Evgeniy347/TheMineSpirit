@@ -23,6 +23,11 @@ public final class BoardWhy {
         if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
             return Optional.empty();
         }
+        if (!SettlementStage.allows(
+                ticket.boardCase(), ticket.level(), board.ledger().stage())) {
+            return Optional.of("этап " + board.ledger().stage() + " не закрыт целиком: в мире не готово "
+                    + board.ledger().stageGate().missing());
+        }
         if (!board.dependenciesMet(ticket)) {
             return Optional.of("ждёт предшественников: " + ticket.dependsOn());
         }

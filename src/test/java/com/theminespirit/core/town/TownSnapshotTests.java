@@ -36,6 +36,18 @@ class TownSnapshotTests {
     }
 
     @Test
+    void of_ActualStage_ShowsItInsteadOfSiteStage() {
+        TownSnapshot snapshot = TownSnapshot.of(PLAN, SITE, 2, Map.of(), List.of());
+
+        assertEquals(1, SITE.stage(), "Место этапа остаётся первым: по нему меряется готовность этапа 1");
+        assertEquals(
+                2,
+                snapshot.stage(),
+                "Снимок показывает действительный этап поселения, а не этап места постройки: spirit plan "
+                        + "не печатает «этап 1» вечно");
+    }
+
+    @Test
     void of_Plan_ContourAndStreetsComplete() {
         TownSnapshot snapshot = TownSnapshot.of(PLAN, SITE, Map.of(), List.of());
 

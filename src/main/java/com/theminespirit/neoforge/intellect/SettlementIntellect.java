@@ -103,7 +103,7 @@ public final class SettlementIntellect {
         lastTick = tick;
         decideCalls++;
         BoardService boardService = BoardRegistry.get(level);
-        stage = SettlementStage.of(boardService.board().ledger());
+        stage = boardService.board().ledger().stage();
         StockReader.Stocks stocks = StockReader.read(level, members, home, BoardReserve.items(boardService.board()));
         stockReads += stocks.reads();
         stockContainers += stocks.containers();

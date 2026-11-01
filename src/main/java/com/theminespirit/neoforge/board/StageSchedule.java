@@ -24,6 +24,7 @@ final class StageSchedule {
             int spirits,
             long now) {
         Objects.requireNonNull(level, "Уровень не может быть null: шаги этапа открываются в мире");
+        StageWorldGate.apply(level, service, scan.stage(), scan.wood());
         for (BoardCase step :
                 StageReopen.missing(service.board(), StageReopen.STEPS, BoardTuning.stageCaseLimit(spirits))) {
             Map<String, Integer> missing = FirstStepsRunner.open(
