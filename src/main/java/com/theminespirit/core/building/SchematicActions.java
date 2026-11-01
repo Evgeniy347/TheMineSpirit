@@ -27,6 +27,11 @@ public final class SchematicActions {
 
     private SchematicActions() {}
 
+    public static boolean buildEntry(String blockId, boolean hasItem) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, входит ли он в стройку");
+        return hasItem || isActionPlaced(blockId);
+    }
+
     public static boolean isActionPlaced(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, ставится ли он действием");
         return DIRT_PATH.equals(SchematicBlocks.path(blockId));

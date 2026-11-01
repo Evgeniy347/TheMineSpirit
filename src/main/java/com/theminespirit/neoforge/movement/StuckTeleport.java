@@ -15,6 +15,8 @@ import com.theminespirit.neoforge.policy.NightLeashGate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -89,6 +91,11 @@ public final class StuckTeleport {
 
     private static boolean allowedThere(SpiritEntity spirit, BlockCoord cell) {
         if (NightLeashGate.refusal(spirit, cell) != null) {
+            return false;
+        }
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        if (spirit.level().getBlockState(pos).is(BlockTags.LEAVES)
+                || spirit.level().getBlockState(pos.below()).is(BlockTags.LEAVES)) {
             return false;
         }
         return spirit.workZone().map(zone -> zone.excess(cell) == 0).orElse(true);

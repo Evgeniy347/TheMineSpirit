@@ -56,6 +56,9 @@ public final class RouteLevelView implements RouteWorld {
             return RouteCell.BLOCKED;
         }
         BlockState state = level.getBlockState(cursor);
+        if (state.is(BlockTags.LEAVES)) {
+            return RouteCell.BLOCKED;
+        }
         FluidState fluid = state.getFluidState();
         if (fluid.is(FluidTags.LAVA) || hazard(state)) {
             return RouteCell.LAVA;

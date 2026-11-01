@@ -1,0 +1,28 @@
+{
+ "tasks": [
+  {
+   "id": "first:build_orchard",
+   "case": "BUILD_ORCHARD",
+   "priority": 100,
+   "assignee": null,
+   "status": "DONE",
+   "requiredItems": {
+    "dirt_path": 3
+   },
+   "missing": {},
+   "dependsOn": [],
+   "createdAt": 23784238,
+   "level": 1,
+   "cause": "graph:building:orchard_oak",
+   "effectivePriority": 100,
+   "modifiers": [],
+   "done": true,
+   "startedAt": 23780538,
+   "finishedAt": 23787338,
+   "durationTicks": 6800,
+   "waitReason": null,
+   "supplyItem": null,
+   "supplyCount": 0
+  }
+ ]
+}

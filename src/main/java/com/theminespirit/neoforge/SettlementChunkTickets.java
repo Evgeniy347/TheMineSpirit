@@ -8,7 +8,6 @@ import com.theminespirit.core.chunk.SettlementChunks;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -35,12 +34,12 @@ public final class SettlementChunkTickets {
         event.register(CONTROLLER);
     }
 
-    static void tick(ServerLevel level, boolean anyPlayerOnline) {
+    static void tick(ServerLevel level) {
         TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
         Set<ChunkCoord> settlement = SettlementChunks.forPlan(
                 plan, SettlementAnchorStore.get(level).anchors(), SettlementChunks.WORK_RADIUS_BLOCKS);
         Set<ChunkCoord> held = HELD.getOrDefault(level, Set.of());
-        ChunkDiff diff = SettlementChunks.transition(held, settlement, anyPlayerOnline);
+        ChunkDiff diff = ChunkDiff.between(held, settlement);
         if (!diff.isEmpty()) {
             for (ChunkCoord chunk : diff.toRemove()) {
                 CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), false, true);
@@ -57,11 +56,8 @@ public final class SettlementChunkTickets {
     }
 
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
-        if (!level.getServer().getPlayerList().getPlayers().isEmpty()) {
-            return;
-        }
-        for (UUID owner : new ArrayList<>(helper.getEntityTickets().keySet())) {
-            helper.removeAllTickets(owner);
+        if (level == null || helper == null) {
+            throw new IllegalArgumentException("Билеты поселения без уровня или без набора билетов не проверить");
         }
     }
 }

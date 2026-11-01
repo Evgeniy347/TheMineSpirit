@@ -87,11 +87,11 @@ public final class StuckSpirits {
         return List.copyOf(states);
     }
 
-    public void restore(List<BoardState.Stuck> states) {
+    public void restore(List<BoardState.Stuck> states, long now) {
         seen.clear();
         stuck.clear();
         for (BoardState.Stuck state : states) {
-            stuck.put(state.spirit(), new Stuck(state.at(), state.since()));
+            stuck.put(state.spirit(), new Stuck(state.at(), Math.max(now, state.since())));
             if (state.at() != null) {
                 seen.put(state.spirit(), state.at());
             }

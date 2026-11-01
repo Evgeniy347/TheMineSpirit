@@ -1,0 +1,14 @@
+{
+  "source": "observe16: /v1/bots копии 2026-11-01, town plan и forceload add из dev-server",
+  "note": "x −48 и x −324 — духи вне базовых 540 чанков, там сервер пишет «не тикает 200 тиков»",
+  "town": {"minX": -235, "minZ": -553, "width": 129, "depth": 129, "anchor": [-170, 69, -500]},
+  "baseForceloadBlocks": {"minX": -270, "minZ": -587, "maxX": -70, "maxZ": -387},
+  "spirits": {
+    "spirit-1": [-234, 68, -583],
+    "spirit-2": [-48, 65, -518],
+    "spirit-3": [-243, 71, -572],
+    "spirit-4": [-173, 69, -517],
+    "spirit-5": [-324, 55, -472]
+  },
+  "radiusChunks": 3
+}

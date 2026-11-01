@@ -55,7 +55,7 @@ class ChopSearchLiveOrchardTests {
         assertEquals(
                 BoardTuning.chopRadius(),
                 plannedRadius,
-                "План сада обязан просить полный радиус рубки из board.json, иначе поиск снова упрётся в 32");
+                "План заготовки брёвен обязан просить полный радиус рубки из board.json, иначе поиск снова упрётся в 32");
         assertEquals(
                 plannedRadius,
                 ChopTuning.maxDistance(plannedRadius),
@@ -109,10 +109,14 @@ class ChopSearchLiveOrchardTests {
     }
 
     private static int plannedChopRadius(JsonNode ticket) {
-        ScriptCall chop = calls(plan(ticket)).stream()
+        TaskNode forest = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS,
+                ticket.get("level").asInt(),
+                TicketTarget.at(new BlockCoord(-171, 69, -489)).withSupply("oak_log", 8));
+        ScriptCall chop = calls(forest).stream()
                 .filter(call -> "chop_tree".equals(call.script()))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("В плане сада нет рубки дерева для саженцев"));
+                .orElseThrow(() -> new AssertionError("В плане заготовки брёвен нет рубки дерева"));
         return (Integer) chop.params().get("radius");
     }
 

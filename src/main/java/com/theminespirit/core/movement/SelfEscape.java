@@ -36,8 +36,43 @@ public final class SelfEscape {
 
     private static final List<int[]> SIDES =
             List.of(new int[] {1, 0}, new int[] {-1, 0}, new int[] {0, 1}, new int[] {0, -1});
+    private static final int NEARBY_RADIUS = 24;
 
     private SelfEscape() {}
+
+    public static Optional<Plan> nearby(BlockCoord feet, StuckSituation.Grid grid) {
+        Objects.requireNonNull(feet, "Ноги духа не могут быть null: от них ищется соседняя клетка");
+        Objects.requireNonNull(grid, "Сетка клеток не может быть null: без неё не видно прохода");
+        if (StuckSituation.detect(feet, grid).stuck()) {
+            return Optional.empty();
+        }
+        for (int[] side : SIDES) {
+            Optional<BlockCoord> cell = open(feet, grid, side[0], side[1]);
+            if (cell.isPresent()) {
+                return Optional.of(new Plan(Method.GOTO, cell.orElseThrow(), 0, List.of()));
+            }
+        }
+        for (int radius = 1; radius <= NEARBY_RADIUS; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius || dx == 0 || dz == 0) {
+                        continue;
+                    }
+                    Optional<BlockCoord> cell = open(feet, grid, dx, dz);
+                    if (cell.isPresent()) {
+                        return Optional.of(new Plan(Method.GOTO, cell.orElseThrow(), 0, List.of()));
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<BlockCoord> open(BlockCoord feet, StuckSituation.Grid grid, int dx, int dz) {
+        BlockCoord lower = new BlockCoord(feet.x() + dx, feet.y(), feet.z() + dz);
+        BlockCoord upper = new BlockCoord(lower.x(), lower.y() + 1, lower.z());
+        return grid.passable(lower) && grid.passable(upper) ? Optional.of(lower) : Optional.empty();
+    }
 
     public static Optional<Plan> plan(
             BlockCoord feet, BlockCoord goal, StuckSituation.Grid grid, boolean tool, int stepBlocks) {

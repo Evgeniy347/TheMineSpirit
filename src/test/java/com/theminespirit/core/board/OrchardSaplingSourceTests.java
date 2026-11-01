@@ -22,27 +22,28 @@ class OrchardSaplingSourceTests {
     private static final String LEAVES = "oak_leaves";
 
     @Test
-    void plan_Orchard_SaplingsComeFromLeavesNotPlacedOnes() {
-        List<ScriptCall> calls = calls(orchardPlan());
+    void plan_SaplingSupply_SaplingsComeFromLeavesNotPlacedOnes() {
+        StageSite site = TownFixtures.flatSite();
+        TicketTarget target = TicketTarget.at(site.workYard()).withSupply(SAPLING, 24);
+        List<ScriptCall> calls = calls(TicketPlans.plan(BoardCase.GATHER_MATERIALS, 1, target));
 
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "gather".equals(call.script())
                                 && LEAVES.equals(call.params().get("block"))),
-                "Саженцы сада берутся с листвы: размещённый саженец — посаженное дерево, а не запас (N8). План: "
-                        + calls);
+                "Саженцы берутся с листвы: размещённый саженец — посаженное дерево, а не запас (N8). План: " + calls);
         assertTrue(
                 calls.stream()
                         .anyMatch(call -> "chop_tree".equals(call.script())
                                 && "oak".equals(call.params().get("species"))
                                 && Boolean.FALSE.equals(call.params().get("replant"))),
-                "Перед сбором листвы сад валит дуб без пересадки — листва даёт саженцы только с поваленного "
+                "Перед сбором листвы дуб валят без пересадки — листва даёт саженцы только с поваленного "
                         + "дерева. План: " + calls);
         assertFalse(
                 calls.stream()
                         .anyMatch(call -> "acquire".equals(call.script())
                                 && SAPLING.equals(call.params().get("item"))),
-                "Сад не просит acquire саженца: acquire уходил в «добыть oak_sapling ×4» из мира и падал "
+                "Добыча саженцев не просит acquire: acquire уходил в «добыть oak_sapling ×4» из мира и падал "
                         + "без стоянки. План: " + calls);
     }
 
@@ -127,6 +128,20 @@ class OrchardSaplingSourceTests {
                 branches.size(),
                 "Веток ровно две: уголь и древесный уголь, иначе раздел «сколько угля» расходится с планом. "
                         + "Ветки: " + branches);
+    }
+
+    @Test
+    void planOrchard_OptionalSaplings_DoNotBlockBuild() {
+        List<ScriptCall> calls = calls(orchardPlan());
+
+        assertFalse(
+                calls.stream().anyMatch(call -> "chop_tree".equals(call.script())),
+                "Саженцы в схеме сада помечены мягкими и не входят в 24 обязательных блока: рубка дерева ради них "
+                        + "не должна стоять перед стройкой и валить её «нет прогресса». План: " + calls);
+        assertTrue(
+                calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
+                "Стройка сада обязана идти без ожидания необязательных саженцев: дорожки и факелы ставятся "
+                        + "сразу. План: " + calls);
     }
 
     private static TaskNode orchardPlan() {

@@ -65,7 +65,7 @@ final class PlanDemolition {
         boolean yardReady = service.board().ledger().has(BoardCase.STOCK_CHESTS, 1)
                 && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
-        List<FloatingBlocks.Finding> findings = FloatingScan.find(level, site, town.region());
+        List<FloatingBlocks.Finding> findings = FloatingScanCycle.find(level, site, town.region());
         Collected collected = collect(level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level));
         List<BlockCoord> stray = collected.remove().stream()
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))

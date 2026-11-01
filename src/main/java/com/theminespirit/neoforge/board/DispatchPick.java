@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
@@ -46,7 +47,14 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            return own != null && round.fits(ticket, own, supply) ? entities.get(own.id()) : null;
+            if (own != null && round.fits(ticket, own, supply)) {
+                return entities.get(own.id());
+            }
+            boolean stuck = own != null
+                    && round.board().stuck().isStuck(own.id(), round.board().now());
+            if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !stuck) {
+                return null;
+            }
         }
         Optional<UUID> crafter = crafters.remembered(ticket.id());
         if (crafter.filter(round::awaited).isPresent()) {

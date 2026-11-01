@@ -612,7 +612,7 @@ public final class TicketPlans {
                 .schematic();
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            if (!SchematicActions.isNotBought(entry.block(), entry.state())) {
+            if (!entry.optional() && !SchematicActions.isNotBought(entry.block(), entry.state())) {
                 counts.merge(SchematicBlocks.itemOf(entry.block()), 1, Integer::sum);
             }
         }

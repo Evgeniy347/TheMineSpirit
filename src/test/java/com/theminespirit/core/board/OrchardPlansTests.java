@@ -74,11 +74,10 @@ class OrchardPlansTests {
                 WoodSpecies.OAK.equals(plot.wood()) ? "oak" : plot.wood(),
                 build.params().get("wood"),
                 "Порода схемы — порода постройки графа, а не порода поселения");
-        assertTrue(
-                calls(plan).stream()
-                        .anyMatch(call -> "gather".equals(call.script())
-                                && "jungle_leaves".equals(call.params().get("block"))),
-                "Сад джунглей берёт саженцы с листвы джунгля, а не из размещённых саженцев: " + calls(plan));
+        assertFalse(
+                calls(plan).stream().anyMatch(call -> "chop_tree".equals(call.script())),
+                "Дополнительный сад не блокируется рубкой ради необязательных саженцев: сначала стройка "
+                        + "дорожек и факелов. План: " + calls(plan));
     }
 
     @Test

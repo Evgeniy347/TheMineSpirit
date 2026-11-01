@@ -622,8 +622,7 @@ public final class FirstStepsRunner {
     }
 
     static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
-        BuildGap.Gap gap = gap(level, step, stage, fallback);
-        return new Placed(gap.done(), gap.total());
+        return BuiltAuditCache.of(level, step, stage, fallback);
     }
 
     static BuildGap.Gap gap(ServerLevel level, BoardCase step, StageSite stage, String fallback) {

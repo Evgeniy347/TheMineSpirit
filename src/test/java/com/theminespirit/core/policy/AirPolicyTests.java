@@ -12,15 +12,15 @@ class AirPolicyTests {
     static Stream<Arguments> table() {
         return Stream.of(
                 Arguments.of("полный запас под водой", 300, true, false),
-                Arguments.of("запас 101: ещё тихо", 101, true, false),
-                Arguments.of("запас 100: граница тревоги", 100, true, true),
-                Arguments.of("запас 99", 99, true, true),
+                Arguments.of("запас 201: ещё тихо", 201, true, false),
+                Arguments.of("запас 200: граница тревоги", 200, true, true),
+                Arguments.of("запас 199", 199, true, true),
                 Arguments.of("запас 1", 1, true, true),
                 Arguments.of("запас 0", 0, true, true),
                 Arguments.of("запас ушёл в минус: тонем", -20, true, true),
                 Arguments.of("запас 50, голова над водой", 50, false, false),
                 Arguments.of("запас 0, голова над водой", 0, false, false),
-                Arguments.of("запас 100, голова над водой", 100, false, false));
+                Arguments.of("запас 200, голова над водой", 200, false, false));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -46,11 +46,12 @@ class AirPolicyTests {
     }
 
     @Test
-    void alarm_Constant_IsOneHundredTicks() {
+    void alarm_Constant_IsTwoHundredTicks() {
         assertEquals(
-                100,
+                200,
                 AirPolicy.AIR_ALARM_TICKS,
-                "Тревога при запасе воздуха 100 тиков (5 секунд): дух всплывает до того, как начнёт тонуть");
+                "Тревога при запасе воздуха 200 тиков (10 секунд): 5 секунд не хватило, чтобы обойти уступ земли "
+                        + "и подняться с глубины 7 в затопленной шахте observe16 N5 — дух утонул с воздухом -12");
     }
 
     @Test

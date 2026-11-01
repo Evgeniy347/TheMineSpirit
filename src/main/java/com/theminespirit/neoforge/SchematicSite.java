@@ -67,7 +67,7 @@ final class SchematicSite {
         this.schematic = schematic;
         this.origin = origin;
         this.entries = schematic.entries(origin, rotation).stream()
-                .filter(entry -> BlockItems.hasBlockItem(entry.block()))
+                .filter(entry -> SchematicActions.buildEntry(entry.block(), BlockItems.hasBlockItem(entry.block())))
                 .toList();
         List<Schematic.PlacedEntry> firstParts = new ArrayList<>();
         for (Schematic.PlacedEntry entry : entries) {

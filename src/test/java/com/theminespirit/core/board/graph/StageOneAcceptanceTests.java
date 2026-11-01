@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardCase;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.Test;
 class StageOneAcceptanceTests {
     private static final int GRAPH_LIMIT = 4000;
     private static final int BOARD_ROUNDS = 18;
-    private static final String SAPLING = "minecraft:oak_sapling";
 
     @Test
     void simulate_ThreeSpiritsAndStock_ReachesStageTwoWithoutBlocked() {
@@ -167,22 +167,17 @@ class StageOneAcceptanceTests {
     }
 
     @Test
-    void plan_Orchard_SaplingsComeFromFelledTreeNotGardenSpot() {
+    void planOrchard_OptionalSaplings_DoNotBlockBuild() {
         TaskNode plan = plan(BoardCase.BUILD_ORCHARD, List.of());
         List<ScriptCall> calls = calls(plan);
 
+        assertFalse(
+                calls.stream().anyMatch(call -> "chop_tree".equals(call.script())),
+                "Необязательные саженцы не стоят перед стройкой: иначе сад валится «нет прогресса» на рубке, "
+                        + "хотя дорожки и факелы можно ставить сразу. План: " + calls);
         assertTrue(
-                calls.stream()
-                        .anyMatch(call -> "chop_tree".equals(call.script())
-                                && "oak".equals(call.params().get("species"))
-                                && Boolean.FALSE.equals(call.params().get("replant"))),
-                "Сад валит дуб без пересадки: саженцы даёт листва поваленного дерева, а не посаженный саженец "
-                        + "в точке сада (N8). План: " + calls);
-        assertTrue(
-                calls.stream()
-                        .noneMatch(call -> "acquire".equals(call.script())
-                                && SAPLING.equals(call.params().get("item"))),
-                "Сад не просит acquire саженца из мира: цель — дерево, а не центр участка (N8). План: " + calls);
+                calls.stream().anyMatch(call -> "build_schematic".equals(call.script())),
+                "Стройка сада идёт без ожидания необязательных саженцев. План: " + calls);
     }
 
     private static TaskNode plan(BoardCase boardCase, List<SchemeBuild> builds) {

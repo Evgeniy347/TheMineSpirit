@@ -16,6 +16,7 @@ final class ReflexExecutor {
     static final double RUN_SPEED = 1.3;
     static final double LAVA_PUSH = 0.15;
     static final double SWIM_UP = 0.16;
+    static final double SWIM_STEER = 0.12;
     static final int BREATH_REFRESH_TICKS = 20;
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -74,32 +75,48 @@ final class ReflexExecutor {
     }
 
     private void surface(SpiritEntity spirit) {
-        if (++breathAge >= BREATH_REFRESH_TICKS) {
+        if (++breathAge >= BREATH_REFRESH_TICKS || breath.isEmpty()) {
             refreshBreath(spirit);
         }
-        breath.ifPresent(cell -> moveTo(spirit, cell));
+        breath.ifPresent(cell -> swimTo(spirit, cell));
         swimUp(spirit);
     }
 
     private void refreshBreath(SpiritEntity spirit) {
         breathAge = 0;
+        if (attempts == 0) {
+            spirit.getNavigation().stop();
+        }
         attempts++;
         BlockCoord feet = new BlockCoord(
                 spirit.blockPosition().getX(),
                 spirit.blockPosition().getY(),
                 spirit.blockPosition().getZ());
-        breath = BreathSearch.nearest(new LevelSafetyView(spirit.level()), feet);
+        LevelSafetyView view = new LevelSafetyView(spirit.level());
+        Optional<BlockCoord> air = BreathSearch.nearest(view, feet);
+        breath = BreathSearch.nextStep(view, feet);
         LOGGER.info(
-                "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, цель {}, расстояние {}, "
+                "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, шаг {}, воздух {}, расстояние {}, "
                         + "навигация завершена {}",
                 spirit.getName().getString(),
                 attempts,
                 feet,
                 spirit.getAirSupply(),
-                breath.map(BlockCoord::toString).orElse("не найдена — всплываю вертикально"),
-                breath.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
+                breath.map(BlockCoord::toString).orElse("не найден — всплываю вертикально"),
+                air.map(BlockCoord::toString).orElse("не найден"),
+                air.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
                         .orElse("-"),
                 spirit.getNavigation().isDone());
+    }
+
+    private void swimTo(SpiritEntity spirit, BlockCoord cell) {
+        double dx = cell.x() + 0.5 - spirit.getX();
+        double dz = cell.z() + 0.5 - spirit.getZ();
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        Vec3 motion = spirit.getDeltaMovement();
+        double vx = horizontal > 0.5 ? dx / horizontal * SWIM_STEER : motion.x;
+        double vz = horizontal > 0.5 ? dz / horizontal * SWIM_STEER : motion.z;
+        spirit.setDeltaMovement(vx, motion.y, vz);
     }
 
     private static double distance(BlockCoord from, BlockCoord to) {
@@ -110,13 +127,14 @@ final class ReflexExecutor {
     }
 
     private void swimUp(SpiritEntity spirit) {
-        if (!spirit.isInWater() && !spirit.isInLava()) {
-            return;
-        }
         if (spirit.isInWater()) {
             Vec3 motion = spirit.getDeltaMovement();
             spirit.setDeltaMovement(motion.x, Math.max(motion.y, SWIM_UP), motion.z);
+            spirit.getJumpControl().jump();
+            return;
         }
-        spirit.getJumpControl().jump();
+        if (spirit.isInLava()) {
+            spirit.getJumpControl().jump();
+        }
     }
 }

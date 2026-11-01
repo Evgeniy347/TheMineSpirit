@@ -7,6 +7,7 @@ import com.theminespirit.core.board.ForceloadWatch;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.WorkZoneRegistry;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +28,7 @@ public final class ForceloadGuard {
 
     static void tick(ServerLevel level, List<SpiritEntity> spirits, Board board, Map<String, TicketTarget> targets) {
         var forced = level.getForcedChunks();
-        LongPredicate isForced = forced::contains;
+        LongPredicate isForced = key -> forced.contains(key) || WorkZoneRegistry.holds(level, key);
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
                 continue;

@@ -69,4 +69,18 @@ public final class SettlementChunks {
         Set<ChunkCoord> desired = anyPlayerOnline ? settlement : Set.of();
         return ChunkDiff.between(held, desired);
     }
+
+    public static Set<ChunkCoord> workZone(
+            @Nullable TownPlan plan, Collection<BlockCoord> anchors, Collection<BlockCoord> spirits, int spiritRadius) {
+        Objects.requireNonNull(spirits, "spirits не может быть null: без них зона работ — только поселение");
+        if (spiritRadius < 0) {
+            throw new IllegalArgumentException("Радиус чанков духа не может быть отрицательным: " + spiritRadius);
+        }
+        Set<ChunkCoord> chunks = new TreeSet<>(forPlan(plan, anchors, WORK_RADIUS_BLOCKS));
+        for (BlockCoord spirit : new LinkedHashSet<>(spirits)) {
+            chunks.addAll(ChunkSquare.chunks(
+                    new ChunkCoord(Math.floorDiv(spirit.x(), 16), Math.floorDiv(spirit.z(), 16)), spiritRadius));
+        }
+        return Collections.unmodifiableSet(chunks);
+    }
 }
