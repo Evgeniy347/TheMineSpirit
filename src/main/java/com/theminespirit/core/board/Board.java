@@ -80,7 +80,8 @@ public final class Board {
                     failTicks.get(ticket.id()),
                     ticketFailures.getOrDefault(ticket.id(), 0)));
         }
-        return new BoardState(entries, ledger.keys());
+        return new BoardState(
+                entries, ledger.keys(), blocked.snapshot(), casePauses.snapshot(), stuckSpirits.snapshot());
     }
 
     public void restore(BoardState state) {
@@ -93,6 +94,9 @@ public final class Board {
         blocked.clear();
         casePauses.clear();
         stuckSpirits.clear();
+        blocked.restore(state.blocked());
+        casePauses.restore(state.pauses());
+        stuckSpirits.restore(state.stuck());
         idleRelease.clear();
         ledger.clear();
         ledger.restore(state.ledger());
@@ -189,11 +193,11 @@ public final class Board {
     }
 
     public void noteWait(String ticketId, @Nullable String reason) {
-        waitNotes.note(ticketId, reason);
+        waitNotes.note(ticketId, reason, nowTicks.getAsLong());
     }
 
     public Optional<String> waitNote(String ticketId) {
-        return waitNotes.of(ticketId);
+        return waitNotes.of(ticketId, nowTicks.getAsLong());
     }
 
     public BoardOutcome claim(String ticketId, UUID spirit, long now) {
@@ -404,9 +408,7 @@ public final class Board {
     }
 
     public List<HolderRelease> releaseDeadHolders(Set<UUID> live) {
-        Objects.requireNonNull(
-                live,
-                "live не может быть null: без живых духов непонятно, чей держатель погиб — пустой набор задают пустым множеством");
+        Objects.requireNonNull(live, "live не может быть null: без живых духов не понять, чей держатель погиб");
         List<HolderRelease> released = new ArrayList<>();
         for (BoardTicket ticket : List.copyOf(tickets.values())) {
             if (statuses.get(ticket.id()) != BoardStatus.ASSIGNED) {
@@ -469,10 +471,7 @@ public final class Board {
     }
 
     public List<String> retain(Set<String> liveCauses, long now) {
-        Objects.requireNonNull(
-                liveCauses,
-                "liveCauses не может быть null: без живых причин "
-                        + "непонятно, что актуально — пустой набор задают пустым множеством");
+        Objects.requireNonNull(liveCauses, "liveCauses не может быть null: без живых причин не понять, что актуально");
         BoardTiming.require(now);
         List<String> detached = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {

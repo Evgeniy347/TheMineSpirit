@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -125,6 +127,33 @@ final class CasePauseBook {
 
     void clear() {
         failures.clear();
+    }
+
+    List<BoardState.Pause> snapshot() {
+        List<BoardState.Pause> states = new ArrayList<>();
+        for (Map.Entry<SpiritCase, CaseFailures> entry : failures.entrySet()) {
+            CaseFailures known = entry.getValue();
+            states.add(new BoardState.Pause(
+                    entry.getKey().spirit(),
+                    entry.getKey().boardCase(),
+                    known.consecutive,
+                    known.pausedUntil,
+                    known.detached,
+                    known.token.orElse(null)));
+        }
+        return List.copyOf(states);
+    }
+
+    void restore(List<BoardState.Pause> states) {
+        failures.clear();
+        for (BoardState.Pause state : states) {
+            CaseFailures known = new CaseFailures();
+            known.consecutive = state.consecutive();
+            known.pausedUntil = state.pausedUntil();
+            known.detached = state.detached();
+            known.token = Optional.ofNullable(state.token());
+            failures.put(new SpiritCase(state.spirit(), state.boardCase()), known);
+        }
     }
 
     private static Optional<String> pauseToken(BoardTicket ticket) {

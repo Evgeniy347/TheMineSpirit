@@ -8,20 +8,30 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 final class WaitNotes {
-    private final Map<String, String> notes = new LinkedHashMap<>();
+    private record Note(String reason, long since) {}
 
-    void note(String ticketId, @Nullable String reason) {
+    private final Map<String, Note> notes = new LinkedHashMap<>();
+
+    void note(String ticketId, @Nullable String reason, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания пишется на задание");
         if (reason == null) {
             notes.remove(ticketId);
         } else {
-            notes.put(ticketId, reason);
+            notes.put(ticketId, new Note(reason, now));
         }
     }
 
-    Optional<String> of(String ticketId) {
+    Optional<String> of(String ticketId, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: причина ожидания читается по заданию");
-        return Optional.ofNullable(notes.get(ticketId));
+        Note note = notes.get(ticketId);
+        if (note == null) {
+            return Optional.empty();
+        }
+        if (now - note.since() >= BoardTuning.boardIntervalTicks()) {
+            notes.remove(ticketId);
+            return Optional.empty();
+        }
+        return Optional.of(note.reason());
     }
 
     void forget(String ticketId) {

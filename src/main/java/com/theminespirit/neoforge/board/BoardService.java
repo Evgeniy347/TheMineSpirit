@@ -530,9 +530,8 @@ public final class BoardService {
                 board.vacate(spirit.getUUID());
             }
         }
-        if (!census) {
-            return;
-        }
+        WaitRefresh.tick(board, spirits, targets, stock, crafters, board.now());
+        if (!census) return;
     }
 
     private void dropAbsentOwners(List<SpiritEntity> spirits, long now) {
