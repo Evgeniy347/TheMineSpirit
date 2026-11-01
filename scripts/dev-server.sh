@@ -217,6 +217,9 @@ while [ -d "\$TREE" ] && kill -0 "\$OWNER" 2>/dev/null; do
     sleep 20
 done
 pid=\$(cat "\$COPY_POSIX/pid" 2>/dev/null || true)
+if [ -z "\$pid" ]; then
+    pid=\$(powershell.exe -NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -like '*livedebug.copy=$name*' } | Select-Object -First 1 -ExpandProperty ProcessId" 2>/dev/null | tr -d '\r' | head -n 1)
+fi
 if [ -n "\$pid" ]; then
     powershell.exe -NoProfile -NonInteractive -Command "Stop-Process -Id \$pid -Force -ErrorAction SilentlyContinue" >/dev/null 2>&1 || true
 fi
