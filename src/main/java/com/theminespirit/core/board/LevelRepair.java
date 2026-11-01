@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public final class LevelRepair {
     public static final String ID = RepairPlan.PREFIX + "level";
@@ -30,6 +31,28 @@ public final class LevelRepair {
                 .map(LevelRepair::box)
                 .toList();
         return new PlotLeveling(cut, fill, PlotLeveling.DEFAULT_BLOCK);
+    }
+
+    public record Progress(int done, int total) {}
+
+    public static Progress progress(PlotLeveling leveling, Predicate<BlockCoord> empty) {
+        Objects.requireNonNull(leveling, "План выравнивания не может быть null: без него нечего проверять");
+        Objects.requireNonNull(empty, "Проверка клетки не может быть null: по ней видно, срезано ли лишнее");
+        int total = 0;
+        int done = 0;
+        for (PlotLeveling.Box box : leveling.cut()) {
+            total++;
+            if (empty.test(new BlockCoord(box.x1(), box.y1(), box.z1()))) {
+                done++;
+            }
+        }
+        for (PlotLeveling.Box box : leveling.fill()) {
+            total++;
+            if (!empty.test(new BlockCoord(box.x1(), box.y1(), box.z1()))) {
+                done++;
+            }
+        }
+        return new Progress(done, total);
     }
 
     public static TaskNode plan(TicketTarget target) {

@@ -12,6 +12,7 @@ import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingWindow;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayRule;
+import com.theminespirit.core.town.TreeSupport;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.LevelTreeView;
@@ -98,25 +99,10 @@ public final class FloatingScan {
     }
 
     public static @Nullable BlockCoord standBeside(ServerLevel level, List<BlockCoord> cells) {
-        int minX = cells.stream().mapToInt(BlockCoord::x).min().orElseThrow();
-        int maxX = cells.stream().mapToInt(BlockCoord::x).max().orElseThrow();
-        int minZ = cells.stream().mapToInt(BlockCoord::z).min().orElseThrow();
-        int maxZ = cells.stream().mapToInt(BlockCoord::z).max().orElseThrow();
-        int lowY = cells.stream().mapToInt(BlockCoord::y).min().orElseThrow();
-        int[][] around = {
-            {minX - 1, minZ},
-            {maxX + 1, minZ},
-            {minX - 1, maxZ},
-            {maxX + 1, maxZ},
-            {(int) (((long) minX + maxX) / 2), minZ - 1},
-            {(int) (((long) minX + maxX) / 2), maxZ + 1},
-            {minX - 1, (int) (((long) minZ + maxZ) / 2)},
-            {maxX + 1, (int) (((long) minZ + maxZ) / 2)}
-        };
         LevelSafetyView safety = new LevelSafetyView(level);
-        for (int[] column : around) {
-            int ground = groundBelow(level, new BlockCoord(column[0], lowY, column[1]));
-            BlockCoord stand = new BlockCoord(column[0], ground + 1, column[1]);
+        for (BlockCoord column : TreeSupport.candidates(cells)) {
+            int ground = groundBelow(level, column);
+            BlockCoord stand = new BlockCoord(column.x(), ground + 1, column.z());
             if (MiningSafety.canStand(stand, safety)) {
                 return stand;
             }

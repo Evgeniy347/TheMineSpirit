@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
@@ -91,10 +92,16 @@ final class PlotAudit {
             return;
         }
         LOGGER.info(
-                "[plot] восстановление выравнивания {}: лишних блоков выше уровня {}, первые {}",
+                "[plot] восстановление выравнивания {}: лишних блоков выше уровня {} (ожидается air), первые {}",
                 id,
                 extras.size(),
-                extras.stream().limit(3).toList());
+                extras.stream()
+                        .limit(3)
+                        .map(cell -> cell + " стоят "
+                                + BuiltInRegistries.BLOCK
+                                        .getKey(level.getBlockState(pos(cell)).getBlock())
+                                        .toString())
+                        .toList());
         service.journal()
                 .recordEntry(BoardLog.note(
                         LevelRepair.ID,

@@ -4,6 +4,7 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.TickWatch;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,7 +38,12 @@ public final class CoordinatorLifecycle {
             }
             Map<SettlementKey, List<SpiritEntity>> groups = census(level);
             for (Map.Entry<SettlementKey, List<SpiritEntity>> group : groups.entrySet()) {
-                CoordinatorRegistry.get(level, group.getKey()).tick(group.getValue(), tick);
+                long watch = TickWatch.start();
+                try {
+                    CoordinatorRegistry.get(level, group.getKey()).tick(group.getValue(), tick);
+                } finally {
+                    TickWatch.done("SpiritCoordinator", watch);
+                }
             }
             CoordinatorRegistry.pruneIdle(level, tick);
         }

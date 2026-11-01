@@ -17,6 +17,7 @@ import com.theminespirit.core.town.FloatingCleanup;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.core.town.TreeSupport;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.UnreachableCellsStore;
@@ -25,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Container;
 import org.slf4j.Logger;
 
@@ -247,9 +249,12 @@ final class PlanDemolition {
         boolean plannedFence =
                 finding.kind() == FloatingBlocks.Kind.FENCE && site.fenceStrip().contains(at.x(), at.z());
         boolean needed = finding.kind() == FloatingBlocks.Kind.STATION && needed(level, plan, finding.blockId());
+        boolean stump = finding.kind() == FloatingBlocks.Kind.STUMP
+                && TreeSupport.isolatedLog(
+                        at, cell -> level.getBlockState(pos(cell)).is(BlockTags.LOGS));
         return new FloatingCleanup.Rooms(
                 yardReady,
-                DemolitionGuard.protectedForDemolish(level, at, finding.blockId(), plan),
+                DemolitionGuard.protectedForDemolish(level, at, finding.blockId(), plan, stump),
                 empty(level, at),
                 needed,
                 reachable,

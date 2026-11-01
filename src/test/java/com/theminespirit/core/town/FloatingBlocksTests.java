@@ -103,6 +103,20 @@ class FloatingBlocksTests {
     }
 
     @Test
+    void classify_LeafCloudWithoutLogs_IsFloatingTree() {
+        Fake world = new Fake();
+        world.put(9, 70, 9, "minecraft:oak_leaves");
+        world.put(10, 70, 9, "minecraft:oak_leaves");
+
+        FloatingBlocks.Finding finding = world.only(9, 70, 9);
+
+        assertEquals(
+                FloatingBlocks.Kind.TREE,
+                finding.kind(),
+                "Связная листва без брёвен и без опоры — остаток кроны: он обязан попасть в уборку, а не в OTHER");
+    }
+
+    @Test
     void classify_PlannedFence_IsNotReported() {
         Fake world = new Fake();
         world.put(5, 69, 5, "minecraft:oak_fence");
