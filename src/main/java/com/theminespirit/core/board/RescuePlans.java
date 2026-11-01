@@ -30,6 +30,10 @@ public final class RescuePlans {
         SelfEscape.Plan rescue = target.rescue();
         BlockCoord goal = target.to();
         if (rescue != null) {
+            if (rescue.method() == SelfEscape.Method.DESCEND) {
+                BlockCoord point = goal == null ? rescue.target() : goal;
+                return Optional.of(new SequenceNode(List.of(digOut(point), gotoPoint(point))));
+            }
             return Optional.of(withGoal(selfPlan(rescue), goal));
         }
         BlockCoord trapped = target.target();
@@ -68,6 +72,9 @@ public final class RescuePlans {
     }
 
     private static TaskNode selfPlan(SelfEscape.Plan rescue) {
+        if (rescue.method() == SelfEscape.Method.DESCEND) {
+            return digOut(rescue.target());
+        }
         if (rescue.method() == SelfEscape.Method.GOTO) {
             return gotoPoint(rescue.target());
         }

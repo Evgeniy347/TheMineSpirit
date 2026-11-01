@@ -11,6 +11,7 @@ public final class SelfEscape {
     public enum Method {
         DIG,
         STEP,
+        DESCEND,
         GOTO
     }
 
@@ -49,6 +50,9 @@ public final class SelfEscape {
         }
         StuckSituation.Verdict verdict = StuckSituation.detect(feet, grid);
         if (!verdict.stuck()) {
+            if (goal.y() < feet.y()) {
+                return Optional.of(new Plan(Method.DESCEND, goal, 0, List.of()));
+            }
             return Optional.empty();
         }
         if (verdict.kind() == StuckSituation.Kind.DEEP_PIT) {
