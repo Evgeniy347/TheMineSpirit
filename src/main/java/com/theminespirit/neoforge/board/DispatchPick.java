@@ -126,6 +126,7 @@ final class DispatchPick {
                 new EatNeed(
                         spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
                                 Math.ceil(spirit.getMaxHealth())),
-                new SpiritView(control, false, status == RunStatus.RUNNING));
+                new SpiritView(control, false, status == RunStatus.RUNNING),
+                spirit.isInWater());
     }
 }
