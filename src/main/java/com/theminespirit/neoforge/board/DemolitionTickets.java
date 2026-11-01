@@ -1,9 +1,11 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
@@ -13,11 +15,30 @@ import com.theminespirit.core.town.StageWork;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
 
 final class DemolitionTickets {
     record Placement(BlockCoord stand, BlockCoord top, BlockCoord lowest) {}
 
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final StateChangeLog CHANGES = new StateChangeLog();
+
     private DemolitionTickets() {}
+
+    static void warnExcluded(String world, int excluded, List<String> notes, long now) {
+        if (excluded == 0) {
+            return;
+        }
+        String signature = excluded + ":" + notes;
+        if (!CHANGES.changed("tidy-excluded:" + world, signature)) {
+            return;
+        }
+        LOGGER.warn(
+                "[tidy] участок не расчищается в тик {}: исключено недостижимых {} из висящих; {}",
+                now,
+                excluded,
+                notes);
+    }
 
     static String idFor(List<BlockCoord> stray) {
         long hash = 17L;
