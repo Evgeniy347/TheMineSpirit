@@ -8,7 +8,7 @@ RUN_ROOT="$REPO/run-live"
 SSH="${LIVE_DEV_SSH:-domovoy@192.168.0.147}"
 SERVER_DIR="${LIVE_DEV_SERVER_DIR:-/opt/minecraft/server}"
 BACKUPS="${LIVE_DEV_BACKUPS:-/opt/minecraft/backups/world}"
-MAX_COPIES="${LIVE_DEV_MAX:-2}"
+MAX_COPIES="${LIVE_DEV_MAX:-4}"
 OWNER="${LIVE_DEV_OWNER_PID:-$PPID}"
 TTL="${LIVE_DEV_LEASE_TTL:-180}"
 LIVE_DEBUG="$REPO/scripts/live-debug.sh"
@@ -526,7 +526,7 @@ status   PID, порты, аренда, краткий ответ /v1/bots.
 list     все копии дерева.
 setup    только подготовка базы.
 
-Переменные: LIVE_DEV_OWNER_PID (PID агента; ставит opencode-task.sh), LIVE_DEV_MAX (2),
+Переменные: LIVE_DEV_OWNER_PID (PID агента; ставит opencode-task.sh), LIVE_DEV_MAX (4),
 LIVE_DEV_BASE, LIVE_DEV_SSH, LIVE_DEV_NAME, LIVE_DEV_LEASE_TTL (180 с).
 USAGE
         ;;
