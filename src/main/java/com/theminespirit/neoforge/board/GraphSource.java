@@ -30,9 +30,30 @@ import org.slf4j.Logger;
 public final class GraphSource {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double HOSTILE_RADIUS = 16;
+    private static final long GRAPH_INTERVAL_TICKS = 600;
+    private static final long DEEP_INTERVAL_TICKS = 1200;
 
     private final GraphNotes notes = new GraphNotes();
     private String lastBuildings = "";
+    private long lastCycle = -1;
+    private long lastDeep = -1;
+    private Set<String> lastLive = Set.of();
+
+    private record Half(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            FirstStepsRunner.StageScan scan,
+            GraphSurroundings.Around around,
+            GraphState state,
+            GraphPlan plan,
+            SupplyGraph graph,
+            GraphTickets.Result result,
+            long now,
+            boolean deep) {}
+
+    private Half pending;
 
     public Set<String> tick(
             ServerLevel level,
@@ -41,52 +62,92 @@ public final class GraphSource {
             StockView stock,
             Set<String> events,
             long now) {
+        if (pending != null) {
+            return finish(pending);
+        }
+        if (lastCycle >= 0 && now >= lastCycle && now - lastCycle < GRAPH_INTERVAL_TICKS) {
+            return live();
+        }
+        lastCycle = now;
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
         Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
         if (scan.isEmpty()) {
-            return Set.of();
+            lastLive = Set.of();
+            return lastLive;
         }
-        RouteWatch.Result routes = RouteWatch.tick(level, scan.orElseThrow().home());
-        GraphSurroundings.Around around = GraphSurroundings.of(
-                        level, service, scan.orElseThrow().home())
+        FirstStepsRunner.StageScan stageScan = scan.orElseThrow();
+        RouteWatch.Result routes = RouteWatch.tick(level, stageScan.home());
+        GraphSurroundings.Around around = GraphSurroundings.of(level, service, stageScan.home())
                 .with(events)
                 .withRoutes(routes.events(), routes.world());
-        GraphState state = GraphInputs.state(level, service, spirits, stock, scan.orElseThrow(), graph, around);
-        settleBuilt(level, service, stock, scan.orElseThrow(), graph, state);
+        GraphState state = GraphInputs.state(level, service, spirits, stock, stageScan, graph, around);
+        boolean deep = lastDeep < 0 || now < lastDeep || now - lastDeep >= DEEP_INTERVAL_TICKS;
+        if (deep) {
+            lastDeep = now;
+            settleBuilt(level, service, stock, stageScan, graph, state);
+        }
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
+        pending = new Half(level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep);
+        return live();
+    }
+
+    private Set<String> finish(Half half) {
         GraphPost post = new GraphPost(
-                level, service, spirits, stock, new GraphPost.Site(scan.orElseThrow(), around), graph, now);
+                half.level(),
+                half.service(),
+                half.spirits(),
+                half.stock(),
+                new GraphPost.Site(half.scan(), half.around()),
+                half.graph(),
+                half.now());
         List<String> unconnected = new ArrayList<>();
-        for (GraphTickets.Ticket ticket : result.post()) {
+        Set<String> present = new HashSet<>();
+        for (var existing : half.service().board().all()) {
+            present.add(existing.id());
+        }
+        for (GraphTickets.Ticket ticket : half.result().post()) {
+            if (present.contains(ticket.id())) {
+                continue;
+            }
             if (!post.post(ticket)) {
                 unconnected.add(ticket.id());
             }
         }
-        for (GraphPlan.Task task : plan.tasks()) {
+        for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
-                GraphTicketIds.ids(task, graph).forEach(id -> service.board().reprioritize(id, task.priority()));
+                GraphTicketIds.ids(task, half.graph())
+                        .forEach(id -> half.service().board().reprioritize(id, task.priority()));
             }
         }
-        report(plan, result, unconnected, now);
-        String buildings = new TreeMap<>(state.buildings()) + " "
-                + plan.tasks().stream()
-                        .filter(task -> task.id().startsWith("building:"))
-                        .map(task -> readiness(level, service, graph, scan.orElseThrow(), task))
-                        .toList()
-                + " сундуков двора " + scan.orElseThrow().facts().chests() + " у "
-                + scan.orElseThrow().stage().workYard()
-                + " на доску "
-                + result.post().stream()
-                        .map(GraphTickets.Ticket::id)
-                        .filter(id -> id.contains("building:"))
-                        .toList();
-        if (!buildings.equals(lastBuildings)) {
-            lastBuildings = buildings;
-            LOGGER.info("[graph] постройки {}", buildings);
+        report(half.plan(), half.result(), unconnected, half.now());
+        if (half.deep()) {
+            String buildings = new TreeMap<>(half.state().buildings()) + " "
+                    + half.plan().tasks().stream()
+                            .filter(task -> task.id().startsWith("building:"))
+                            .map(task -> readiness(half.level(), half.service(), half.graph(), half.scan(), task))
+                            .toList()
+                    + " сундуков двора " + half.scan().facts().chests() + " у "
+                    + half.scan().stage().workYard()
+                    + " на доску "
+                    + half.result().post().stream()
+                            .map(GraphTickets.Ticket::id)
+                            .filter(id -> id.contains("building:"))
+                            .toList();
+            if (!buildings.equals(lastBuildings)) {
+                lastBuildings = buildings;
+                LOGGER.info("[graph] постройки {}", buildings);
+            }
         }
-        tellStrategist(level, graph, state, plan, now);
-        return result.live();
+        tellStrategist(half.level(), half.graph(), half.state(), half.plan(), half.now());
+        lastLive = half.result().live();
+        pending = null;
+        return live();
+    }
+
+    private Set<String> live() {
+        Set<String> cached = lastLive;
+        return cached == null ? Set.of() : cached;
     }
 
     public static Set<String> events(

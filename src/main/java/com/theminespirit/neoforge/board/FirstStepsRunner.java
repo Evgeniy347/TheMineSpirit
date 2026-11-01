@@ -630,8 +630,7 @@ public final class FirstStepsRunner {
     }
 
     static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
-        String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
-        return placedBlocks(level, TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood);
+        return BuiltAuditCache.of(level, step, stage, fallback);
     }
 
     record Placed(int done, int total) {}
