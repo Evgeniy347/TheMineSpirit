@@ -71,6 +71,10 @@ public final class SelfEscape {
     private static Optional<BlockCoord> open(BlockCoord feet, StuckSituation.Grid grid, int dx, int dz) {
         BlockCoord lower = new BlockCoord(feet.x() + dx, feet.y(), feet.z() + dz);
         BlockCoord upper = new BlockCoord(lower.x(), lower.y() + 1, lower.z());
+        BlockCoord below = new BlockCoord(lower.x(), lower.y() - 1, lower.z());
+        if (grid.leaf(lower) || grid.leaf(upper) || grid.leaf(below)) {
+            return Optional.empty();
+        }
         return grid.passable(lower) && grid.passable(upper) ? Optional.of(lower) : Optional.empty();
     }
 

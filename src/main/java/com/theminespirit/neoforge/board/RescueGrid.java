@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.movement.StuckSituation;
 import com.theminespirit.core.observation.BlockCoord;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
@@ -39,6 +40,12 @@ final class RescueGrid implements StuckSituation.Grid {
     public boolean swimmable(BlockCoord cell) {
         BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
         return level.isLoaded(pos) && level.getFluidState(pos).is(FluidTags.WATER);
+    }
+
+    @Override
+    public boolean leaf(BlockCoord cell) {
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        return level.isLoaded(pos) && level.getBlockState(pos).is(BlockTags.LEAVES);
     }
 
     @Override
