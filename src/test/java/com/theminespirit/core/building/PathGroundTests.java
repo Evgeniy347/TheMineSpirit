@@ -14,6 +14,21 @@ class PathGroundTests {
     }
 
     @Test
+    void raisedPath_AirAboveGrass_IsSupportedPath() {
+        assertTrue(
+                PathGround.raisedPath("minecraft:air", "minecraft:grass_block"),
+                "Дорожка сада ставится на траву, даже если клетка схемы в воздухе: иначе BuildSchematic не может "
+                        + "положить тропинку на ровную поверхность");
+    }
+
+    @Test
+    void raisedPath_StoneAboveGrass_IsNotPath() {
+        assertFalse(
+                PathGround.raisedPath("minecraft:stone", "minecraft:grass_block"),
+                "Занятую клетку дорожкой не заменяют");
+    }
+
+    @Test
     void openAbove_Stone_IsNotOpenForPath() {
         assertFalse(
                 PathGround.openAbove("minecraft:stone"),
