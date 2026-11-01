@@ -41,12 +41,22 @@ row() {
     row 30030 1 40 bash.exe 'bash.exe -c sleep 30'
     row 30040 1 70 bash.exe 'bash.exe -c stale'
     row 30050 1 40 java.exe 'java -cp gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain gradlew test'
+    row 40001 999 60 java.exe 'java.exe -Dlivedebug.copy=copy-live -jar server.jar nogui'
 } >"$list"
 
-expect_killed=(101 103 109 111 114 117 118 119 120 30040)
-expect_kept=(104 105 106 107 108 110 112 113 115 116 200 30001 30002 30003 30004 30010 30011 30030 30050)
+expect_killed=(101 103 109 111 114 117 118 119 120 30040 50002 50003)
+expect_kept=(104 105 106 107 108 110 112 113 115 116 200 30001 30002 30003 30004 30010 30011 30030 30050 40001 50001)
 
-ORPHAN_SWEEP_WIN_LIST="$list" bash "$sweep" --dry-run >"$work/dry.out" 2>&1
+live="$work/live"
+mkdir -p "$live/copy-live" "$live/copy-dead" "$live/copy-tree"
+now="$(date +%s)"
+printf '%s|%s|%s|%s|%s|%s
+' "$PWD" "$$" "$((now + 3600))" copy-live 50001 "$live/copy-live" >"$live/copy-live/owner.lease"
+printf '%s|%s|%s|%s|%s|%s
+' "$PWD" 999999 1 copy-dead 50002 "$live/copy-dead" >"$live/copy-dead/owner.lease"
+printf '%s|%s|%s|%s|%s|%s
+' "$work/missing-tree" "$$" "$((now + 3600))" copy-tree 50003 "$live/copy-tree" >"$live/copy-tree/owner.lease"
+ORPHAN_SWEEP_WIN_LIVE_ROOT="$live" ORPHAN_SWEEP_WIN_LIST="$list" bash "$sweep" --dry-run >"$work/dry.out" 2>&1
 code=$?
 [ "$code" = 0 ] && echo "OK dry_run_exit: код 0" || { echo "FAIL dry_run_exit: код $code"; failed=1; }
 
@@ -72,7 +82,7 @@ killer="$work/killer.sh"
 kill_log="$work/killed.pids"
 printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$1" >> "%s"\n' "$kill_log" >"$killer"
 chmod +x "$killer"
-ORPHAN_SWEEP_WIN_LIST="$list" ORPHAN_SWEEP_WIN_KILL="$killer" bash "$sweep" >"$work/kill.out" 2>&1
+ORPHAN_SWEEP_WIN_LIVE_ROOT="$live" ORPHAN_SWEEP_WIN_LIST="$list" ORPHAN_SWEEP_WIN_KILL="$killer" bash "$sweep" >"$work/kill.out" 2>&1
 code=$?
 [ "$code" = 0 ] && echo "OK sweep_exit: код 0" || { echo "FAIL sweep_exit: код $code"; failed=1; }
 
@@ -99,9 +109,21 @@ fi
 [ "$(wc -l < "$kill_log" 2>/dev/null || echo 0)" = "${#expect_killed[@]}" ] \
     && echo "OK kill_count: убито ${#expect_killed[@]}" \
     || { echo "FAIL kill_count: строк $(wc -l < "$kill_log" 2>/dev/null || echo 0), ожидалось ${#expect_killed[@]}"; failed=1; }
+if [ -e "$live/copy-dead" ] || [ -e "$live/copy-tree" ]; then
+    echo "FAIL live_copy_dead_removed: каталог погашенной копии остался"
+    failed=1
+else
+    echo "OK live_copy_dead_removed"
+fi
+if [ -e "$live/copy-live" ]; then
+    echo "OK live_copy_kept"
+else
+    echo "FAIL live_copy_kept: каталог живой копии удалён"
+    failed=1
+fi
 
 rm -f "$kill_log"
-ORPHAN_SWEEP_WIN_LIST="$list" ORPHAN_SWEEP_WIN_KILL="$killer" bash "$sweep" --dry-run >"$work/dry2.out" 2>&1
+ORPHAN_SWEEP_WIN_LIVE_ROOT="$live" ORPHAN_SWEEP_WIN_LIST="$list" ORPHAN_SWEEP_WIN_KILL="$killer" bash "$sweep" --dry-run >"$work/dry2.out" 2>&1
 if [ -e "$kill_log" ]; then
     echo "FAIL dry_run_no_kill: в dry-run убийца вызван"
     failed=1
@@ -111,7 +133,7 @@ fi
 
 empty="$work/empty.tsv"
 : >"$empty"
-ORPHAN_SWEEP_WIN_LIST="$empty" bash "$sweep" --dry-run >"$work/empty.out" 2>&1
+ORPHAN_SWEEP_WIN_LIVE_ROOT="$live" ORPHAN_SWEEP_WIN_LIST="$empty" bash "$sweep" --dry-run >"$work/empty.out" 2>&1
 grep -q "осиротевших процессов нет" "$work/empty.out" \
     && echo "OK empty_list: пустой список назван" \
     || { echo "FAIL empty_list: пустой список не назван"; failed=1; }

@@ -158,7 +158,7 @@ public final class LiveDebug {
         }
         Path root = Path.of(env("LIVE_DEBUG_CLASSES", "build/classes/java/main"));
         Map<ReferenceType, byte[]> changes = new LinkedHashMap<>();
-        int skipped = 0;
+        Map<String, byte[]> fresh = new LinkedHashMap<>();
         for (String name : names) {
             Path base = root.resolve(name.replace('.', '/') + ".class");
             if (!Files.isRegularFile(base)) {
@@ -183,22 +183,41 @@ public final class LiveDebug {
                         match = type;
                     }
                 }
+                byte[] bytes = Files.readAllBytes(path);
                 if (match == null) {
-                    skipped++;
-                    continue;
+                    fresh.put(target, bytes);
+                } else {
+                    changes.put(match, bytes);
                 }
-                changes.put(match, Files.readAllBytes(path));
             }
         }
-        if (changes.isEmpty()) {
-            throw new ReflectiveFailure("ни один класс не загружен на сервере (пропущено " + skipped + ")");
+        if (changes.isEmpty() && fresh.isEmpty()) {
+            throw new ReflectiveFailure("нечего менять: классы не найдены");
         }
-        vm.redefineClasses(changes);
+        if (!fresh.isEmpty()) {
+            withRestThread(() -> {
+                ArrayType byteArray = arrayOfBytes();
+                Method defineClass = findMethod(modLoader.referenceType(), "defineClass", "(Ljava/lang/String;[BII)Ljava/lang/Class;");
+                if (defineClass == null) {
+                    throw new ReflectiveFailure("у загрузчика модов нет defineClass");
+                }
+                for (Map.Entry<String, byte[]> entry : fresh.entrySet()) {
+                    byte[] bytes = entry.getValue();
+                    modLoader.invokeMethod(eventThread, defineClass,
+                            List.of(vm.mirrorOf(entry.getKey()), array(bytes, byteArray), vm.mirrorOf(0), vm.mirrorOf(bytes.length)), 0);
+                    callValues(vm.classesByName("java.lang.Class").get(0), "forName", CLASS_FOR_NAME,
+                            Arrays.asList(vm.mirrorOf(entry.getKey()), vm.mirrorOf(true), modLoader));
+                }
+            });
+        }
+        if (!changes.isEmpty()) {
+            vm.redefineClasses(changes);
+        }
         for (Map.Entry<ReferenceType, byte[]> entry : changes.entrySet()) {
             System.out.println("переопределён " + entry.getKey().name() + " (" + entry.getValue().length + " байт)");
         }
-        if (skipped > 0) {
-            System.out.println("пропущено незагруженных: " + skipped);
+        for (Map.Entry<String, byte[]> entry : fresh.entrySet()) {
+            System.out.println("определён " + entry.getKey() + " (" + entry.getValue().length + " байт)");
         }
     }
 
