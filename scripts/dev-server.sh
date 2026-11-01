@@ -335,8 +335,14 @@ start_copy() {
     local name="$1"
     local dir
     dir="$(copy_path "$name")"
+    say "сборка мода"
+    mkdir -p "$REPO/build/live-debug"
+    if ! (cd "$REPO" && ./gradlew -q assemble > "$REPO/build/live-debug/assemble.log" 2>&1); then
+        tail -20 "$REPO/build/live-debug/assemble.log" >&2
+        die "assemble упал: копия не поднята"
+    fi
     local jar
-    jar="$(ls -1t "$REPO"/build/libs/theminespirit-*.jar 2>/dev/null | grep -vE -- '-(sources|javadoc)\.jar$' | head -n 1)"
+    jar="$(ls -1t "$REPO"/build/libs/theminespirit-*.jar 2>/dev/null | grep -vE -- '-(sources|javadoc)\.jar$' | head -n 1 || true)"
     [ -n "$jar" ] || die "нет собранного мода: ./gradlew assemble"
     say "сборка: $(basename "$jar")"
     mkdir -p "$dir/logs" "$dir/mods"
@@ -413,7 +419,7 @@ up() {
     local dir
     dir="$(copy_path "$name")"
     local done_flag=0
-    trap 'rmdir "'"$RUN_ROOT/.up-$name.lock"'" 2>/dev/null || true; if [ "$done_flag" = 0 ] && [ "${LIVE_DEV_KEEP_FAILED:-0}" != 1 ]; then stop_copy "'"$name"'" || true; fi' EXIT
+    trap 'rmdir "'"$RUN_ROOT/.up-$name.lock"'" 2>/dev/null || true; if [ "${done_flag:-0}" = 0 ] && [ "${LIVE_DEV_KEEP_FAILED:-0}" != 1 ]; then stop_copy "'"$name"'" || true; fi' EXIT
     stop_copy "$name" || true
     local live
     live="$(count_live_copies)"
