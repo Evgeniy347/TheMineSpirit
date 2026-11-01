@@ -169,7 +169,13 @@ public final class SpiritBrain {
         if (runner == null) {
             return;
         }
-        RunStatus status = runner.tick();
+        long watch = TickWatch.start();
+        RunStatus status;
+        try {
+            status = runner.tick();
+        } finally {
+            TickWatch.done("SpiritBrain", watch);
+        }
         if (status != RunStatus.RUNNING) {
             recordResult();
             runner = null;

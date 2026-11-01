@@ -6,12 +6,15 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteBreakAudit;
+import com.theminespirit.core.route.RouteBudget;
 import com.theminespirit.core.route.RouteCell;
+import com.theminespirit.core.route.RouteFailures;
 import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.core.route.RouteThrottle;
 import com.theminespirit.core.route.RouteWorld;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.TickWatch;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,15 +29,26 @@ public final class RouteDetour {
     private static final long NANOS_PER_MICRO = 1_000L;
     private static final int MAX_VETO_REPLANS = 3;
     private static final RouteThrottle THROTTLE = new RouteThrottle();
+    private static final RouteFailures FAILURES = new RouteFailures();
+    private static final long PLAN_BUDGET_MILLIS = 450;
+    private static final long PLAN_BUDGET_NANOS = PLAN_BUDGET_MILLIS * 1_000_000L;
+    private static final long FAIL_TTL_TICKS = 1200;
 
     private record PlanRequest(
-            RouteWorld world, BlockCoord from, BlockCoord target, int radius, int blocks, LevelSafetyView safety) {}
+            RouteWorld world,
+            BlockCoord from,
+            BlockCoord target,
+            int radius,
+            int blocks,
+            LevelSafetyView safety,
+            RouteBudget budget) {}
 
     private RouteDetour() {}
 
     public static Optional<RouteWalk> plan(SpiritEntity spirit, BlockCoord target, int radius, String why) {
         long now = spirit.level().getGameTime();
-        if (!"dig_out".equals(why) && !THROTTLE.allow(spirit.getUUID(), now)) {
+        boolean rescue = "dig_out".equals(why);
+        if (!rescue && !THROTTLE.allow(spirit.getUUID(), now)) {
             LOGGER.info(
                     "[route] дух {} ({}): перестроение подавлено, прошлый расчёт меньше {} тиков назад",
                     spirit.displayName(),
@@ -47,34 +61,58 @@ public final class RouteDetour {
         RouteWorld world = new RouteLevelView(spirit);
         LevelSafetyView safety = new LevelSafetyView(spirit.level());
         int blocks = RouteLevelView.blocks(spirit);
-        long started = System.nanoTime();
-        PlanRequest request = new PlanRequest(world, from, target, radius, blocks, safety);
-        Route route = plan(request);
-        route = withoutVetoed(spirit, request, route);
-        long micros = (System.nanoTime() - started) / NANOS_PER_MICRO;
-        LOGGER.info(
-                "[route] дух {} ({}): из {} к {} — {}, цена {} тиков, сломать {}, поставить {}, шагов {}, конец {},"
-                        + " вода {}, узлов {}, чтений {}, {} мкс, BreakVeto отказов {}, первые {}",
-                spirit.displayName(),
-                why,
-                from,
-                target,
-                route.status(),
-                String.format(Locale.ROOT, "%.1f", route.cost()),
-                route.count(RouteStep.Action.BREAK),
-                route.places(),
-                route.steps().size(),
-                route.end(),
-                water(world, route),
-                route.nodes(),
-                route.reads(),
-                micros,
-                route.vetoCount(),
-                route.vetoes());
-        if (waterTrap(spirit, world, route, target)) {
+        RouteFailures.Key key = new RouteFailures.Key(spirit.getUUID(), from, target, radius, blocks);
+        if (!rescue && FAILURES.recentlyFailed(key, now, FAIL_TTL_TICKS)) {
+            LOGGER.info(
+                    "[route] дух {} ({}): тот же безрезультатный расчёт к {} уже был меньше {} тиков назад — "
+                            + "взят из кэша",
+                    spirit.displayName(),
+                    why,
+                    target,
+                    FAIL_TTL_TICKS);
             return Optional.empty();
         }
-        return route.usable() ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
+        long started = System.nanoTime();
+        long deadline = started + PLAN_BUDGET_NANOS;
+        RouteBudget budget = () -> System.nanoTime() >= deadline;
+        boolean trapped;
+        Route route;
+        try {
+            PlanRequest request = new PlanRequest(world, from, target, radius, blocks, safety, budget);
+            route = withoutVetoed(spirit, request, plan(request));
+            long micros = (System.nanoTime() - started) / NANOS_PER_MICRO;
+            LOGGER.info(
+                    "[route] дух {} ({}): из {} к {} — {}, цена {} тиков, сломать {}, поставить {}, шагов {}, конец {},"
+                            + " вода {}, узлов {}, чтений {}, {} мкс, BreakVeto отказов {}, первые {}",
+                    spirit.displayName(),
+                    why,
+                    from,
+                    target,
+                    route.status(),
+                    String.format(Locale.ROOT, "%.1f", route.cost()),
+                    route.count(RouteStep.Action.BREAK),
+                    route.places(),
+                    route.steps().size(),
+                    route.end(),
+                    water(world, route),
+                    route.nodes(),
+                    route.reads(),
+                    micros,
+                    route.vetoCount(),
+                    route.vetoes());
+            trapped = waterTrap(spirit, world, route, target);
+        } finally {
+            TickWatch.done("RouteDetour", started);
+        }
+        boolean usable = route.usable() && !trapped;
+        if (!rescue) {
+            if (usable) {
+                FAILURES.forget(spirit.getUUID());
+            } else {
+                FAILURES.remember(key, now);
+            }
+        }
+        return usable ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
     }
 
     private static boolean waterTrap(SpiritEntity spirit, RouteWorld world, Route route, BlockCoord target) {
@@ -112,20 +150,24 @@ public final class RouteDetour {
     }
 
     private static Route plan(PlanRequest request) {
-        return ApproachRoute.plan(
+        return ApproachRoute.plan(new ApproachRoute.Request(
                 request.world(),
                 request.from(),
                 request.target(),
                 Math.max(0, request.radius()),
                 DataTables.INSTANCE.route().current(),
                 request.blocks(),
-                request.safety());
+                request.safety(),
+                request.budget()));
     }
 
     private static Route withoutVetoed(SpiritEntity spirit, PlanRequest request, Route route) {
         Set<BlockCoord> excluded = new HashSet<>();
         Route current = route;
         for (int attempt = 0; attempt < MAX_VETO_REPLANS; attempt++) {
+            if (request.budget().exhausted()) {
+                return current;
+            }
             Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(request.world(), request.from(), current);
             if (veto.isEmpty()) {
                 return current;
@@ -145,7 +187,8 @@ public final class RouteDetour {
                     request.target(),
                     request.radius(),
                     request.blocks(),
-                    request.safety()));
+                    request.safety(),
+                    request.budget()));
         }
         return current;
     }
