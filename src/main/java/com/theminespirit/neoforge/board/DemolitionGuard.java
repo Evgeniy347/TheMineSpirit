@@ -19,14 +19,20 @@ final class DemolitionGuard {
     private DemolitionGuard() {}
 
     static boolean protectedForDemolish(ServerLevel level, BlockCoord at, String blockId, PlotPlanBlocks.Plan plan) {
+        return protectedForDemolish(level, at, blockId, plan, false);
+    }
+
+    static boolean protectedForDemolish(
+            ServerLevel level, BlockCoord at, String blockId, PlotPlanBlocks.Plan plan, boolean ignorePlayerMark) {
         BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         if (placed.isSpiritMarked(pos)) {
             return false;
         }
         List<String> ids = neighbours(level, pos);
-        SettlementBreak.Origin origin =
-                placed.isMarked(pos) ? SettlementBreak.Origin.PLAYER : SettlementBreak.Origin.UNKNOWN;
+        SettlementBreak.Origin origin = placed.isMarked(pos) && !ignorePlayerMark
+                ? SettlementBreak.Origin.PLAYER
+                : SettlementBreak.Origin.UNKNOWN;
         SettlementBreak.Facts facts = new SettlementBreak.Facts(origin, true, plan.planned(at), blockId, false, false);
         BlockProtection.Decision decision = SettlementBreak.decide(PROTECTION, facts, () -> ids);
         return decision instanceof BlockProtection.Refused || BuildingSeeds.adjacentToStructure(ids);

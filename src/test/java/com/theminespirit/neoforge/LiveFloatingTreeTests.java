@@ -49,6 +49,19 @@ class LiveFloatingTreeTests {
     }
 
     @Test
+    void liveJungleCrown_Extend_IncludesFarLeaves() throws IOException {
+        LiveFloatingWorld world = LiveFloatingWorld.load();
+        List<BlockCoord> cells = new ArrayList<>(List.of(CROWN_BASE));
+
+        new TreeFelling(world).extend(cells);
+
+        assertTrue(
+                cells.contains(new BlockCoord(-166, 96, -510)),
+                "Крона живого дерева держится листвой за листву: без обхода листвы дальние листья "
+                        + "(-167..-173,79..85,-516..-517 из observe15) остаются висеть. Список: " + cells);
+    }
+
+    @Test
     void liveFloatingJungleCrown_PartialGroup_IsDroppedWhole() throws IOException {
         LiveFloatingWorld world = LiveFloatingWorld.load();
         TreeFelling felling = new TreeFelling(world);

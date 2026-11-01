@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.SettlementPlot;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 class LiveFloatingBlockTests {
     private static final BlockCoord MID_TRUNK = new BlockCoord(-163, 90, -507);
     private static final BlockCoord CROWN_LEAF = new BlockCoord(-163, 98, -507);
+    private static final BlockCoord FAR_CROWN_LEAF = new BlockCoord(-166, 96, -510);
 
     @Test
     void liveCrownTop_PlotSurvey_StaysInsideAuditWindow() {
@@ -43,6 +45,32 @@ class LiveFloatingBlockTests {
                         .filter(cell -> cell.x() == -163 && cell.z() == -507)
                         .count(),
                 "Клетка нижнего бревна не может быть стоянкой опоры: иначе pillar_up ставит блок в ствол");
+    }
+
+    @Test
+    void liveFarCrownLeaf_FloatingTree_IsReported() throws IOException {
+        LiveFloatingWorld world = LiveFloatingWorld.load();
+
+        FloatingBlocks.Finding finding =
+                FloatingBlocks.classify(FAR_CROWN_LEAF, world).orElseThrow();
+
+        assertEquals(
+                FloatingBlocks.Kind.TREE,
+                finding.kind(),
+                "Листва -166,96,-510 соединена с кроной только листвой, а не бревном: BFS обязан ходить "
+                        + "по листве, иначе живая крона остаётся OTHER и в уборку не попадает (observe15 B7, 203 листа)");
+    }
+
+    @Test
+    void liveStump_FewAdjacentLogs_IsIsolated() throws IOException {
+        LiveFloatingWorld world = LiveFloatingWorld.load();
+
+        assertTrue(
+                TreeSupport.isolatedLog(new BlockCoord(-156, 70, -497), world::isLog),
+                "Одинокий пенёк окупаемой вырубки не должен считаться постройкой игрока: под ним нет ствола");
+        assertFalse(
+                TreeSupport.isolatedLog(new BlockCoord(-163, 90, -507), world::isLog),
+                "Бревно в 2x2 стволе не одиноко: его нельзя выдавать за отдельный пенёк и сносить как остаток");
     }
 
     @Test
