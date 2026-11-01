@@ -54,3 +54,6 @@ TestResults/
 __pycache__/
 *.pyc
 .vs/
+
+# Live server copies
+run-live/

@@ -168,7 +168,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/publish.sh](scripts/publish.sh) | сборка и установка мода на сервер — только по согласованию |
 | [scripts/world-snapshot.sh](scripts/world-snapshot.sh), [scripts/world-restore.sh](scripts/world-restore.sh) | снимок мира в архив без остановки сервера и откат на архив; cron каждые 10 минут |
 | [scripts/server-cleanup.sh](scripts/server-cleanup.sh) | уборка сервера по cron: `tmp/` старше суток, `logs/` старше 14 дней |
-| [scripts/live-debug.sh](scripts/live-debug.sh), [scripts/live-debug/](scripts/live-debug/) | живая отладка: замок одного агента, hotswap, eval, брейкпоинты; [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) |
+| [scripts/live-debug.sh](scripts/live-debug.sh), [scripts/live-debug/](scripts/live-debug/), [scripts/dev-server.sh](scripts/dev-server.sh), [scripts/dev-server/](scripts/dev-server/) | живая отладка: копия сервера на ПК, замок, hotswap, eval, брейкпоинты; [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) |
 | [scripts/progress.sh](scripts/progress.sh) | прогресс плана: «сделано N» из `todo.md` + открытые пункты |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh), [scripts/opencode-start.sh](scripts/opencode-start.sh) | исполнитель opencode с надзором (ПК / сервер в tmux) |
 | [scripts/opencode-status.sh](scripts/opencode-status.sh), [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | статус исполнителя; сводка в Telegram раз в 5 мин |

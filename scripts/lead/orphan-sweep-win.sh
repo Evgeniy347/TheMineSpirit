@@ -79,6 +79,7 @@ select_orphans() {
         sub(/\.exe$/, "", n)
         if (n == "gradledaemon" || n == "minecraft" || n == "claude") return 1
         c = lower(name " " cmd)
+        if (c ~ /livedebug\.copy=/) return 1
         if (c ~ /gradledaemon/ || c ~ /minecraft/) return 1
         if (c ~ /@opencode-aidesktop/ || c ~ /opencode-aidesktop/) return 1
         if (c ~ /(^|[\/\\ ])claude(\.exe)?([ \t]|$)/) return 1
@@ -131,6 +132,50 @@ kill_pid() {
     fi
 }
 
+guard_live_copies() {
+    local script_repo live_root lease tree owner expiry name jpid copy now safe
+    script_repo="$(cd "$(dirname "$0")/../.." && pwd)"
+    live_root="${ORPHAN_SWEEP_WIN_LIVE_ROOT:-$(dirname "$script_repo")}"
+    now="$(date +%s)"
+    local seen=""
+    local leases
+    if [ -n "${ORPHAN_SWEEP_WIN_LIVE_ROOT:-}" ]; then
+        leases=("$live_root"/*/owner.lease)
+    else
+        leases=("$live_root"/*/run-live/*/owner.lease "$script_repo"/run-live/*/owner.lease)
+    fi
+    for lease in "${leases[@]}"; do
+        [ -f "$lease" ] || continue
+        case " $seen " in *" $lease "*) continue ;; esac
+        seen="$seen $lease"
+        IFS='|' read -r tree owner expiry name jpid copy <"$lease" || continue
+        [ -n "$copy" ] || copy="$(dirname "$lease")"
+        safe=0
+        if [ -n "${ORPHAN_SWEEP_WIN_LIVE_ROOT:-}" ]; then
+            case "$copy" in "$live_root"/*) safe=1 ;; esac
+        else
+            case "$copy" in */run-live/*) safe=1 ;; esac
+        fi
+        if [ "$safe" = 0 ]; then
+            echo "orphan-sweep-win: пропускаю копию вне run-live: $copy" >&2
+            continue
+        fi
+        if [ -n "$tree" ] && [ -d "$tree" ] && kill -0 "${owner:-0}" 2>/dev/null && [ "${expiry:-0}" -gt "$now" ]; then
+            continue
+        fi
+        if [ "$DRY_RUN" = 1 ]; then
+            echo "dry-run: погасил бы копию $name pid=$jpid (владелец $owner, срок $expiry)"
+            continue
+        fi
+        if [ -n "$jpid" ]; then
+            kill_pid "$jpid"
+        fi
+        rm -rf "$copy"
+        echo "orphan-sweep-win: погашена копия $name pid=$jpid (владелец $owner, срок $expiry)"
+    done
+}
+
+guard_live_copies
 found="$(process_table | select_orphans)"
 if [ -z "$found" ]; then
     [ "$DRY_RUN" = 1 ] && echo "dry-run: осиротевших процессов нет"

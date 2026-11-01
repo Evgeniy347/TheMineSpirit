@@ -11,6 +11,8 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$REPO/scripts/live-debug"
 OUT="$REPO/build/live-debug/classes"
 SERVER_DIR="/opt/minecraft/server"
+LOCAL=0
+RUN_DIR=""
 
 if ! [[ "$AGENT" =~ ^[A-Za-z0-9_.@-]+$ ]]; then
     echo "LIVE_DEBUG_AGENT содержит недопустимые символы: $AGENT" >&2
@@ -90,6 +92,7 @@ require_lock() {
 }
 
 need_lock() {
+    [ "$LOCAL" = 1 ] && return 0
     require_lock || {
         lock_remote status || true
         exit 3
@@ -115,22 +118,33 @@ win_path() {
     fi
 }
 
+classes_arg() {
+    if [ -n "${LIVE_DEBUG_CLASSES:-}" ]; then
+        win_path "$LIVE_DEBUG_CLASSES"
+    else
+        win_path "$REPO/build/classes/java/main"
+    fi
+}
+
 run_client() {
     build_tool
     LIVE_DEBUG_HOST="$HOST" \
     LIVE_DEBUG_PORT="$PORT" \
     LIVE_DEBUG_REST="$REST" \
     LIVE_DEBUG_HELPER="$(win_path "$OUT/livedebug")" \
-    LIVE_DEBUG_CLASSES="$(win_path "$REPO/build/classes/java/main")" \
+    LIVE_DEBUG_CLASSES="$(classes_arg)" \
     LIVE_DEBUG_TIMEOUT="${LIVE_DEBUG_TIMEOUT:-120}" \
-    LIVE_DEBUG_JARS="${LIVE_DEBUG_JARS:-}" \
     LIVE_DEBUG_JARS_FILE="$(win_path "$REPO/build/live-debug/server-classpath.txt")" \
         java -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 --add-modules jdk.jdi -cp "$(win_path "$OUT")" LiveDebug "$@"
 }
 
 prepare_classpath() {
     mkdir -p "$REPO/build/live-debug"
-    server_classpath > "$REPO/build/live-debug/server-classpath.txt"
+    if [ "$LOCAL" = 1 ]; then
+        printf '%s' "${LIVE_DEBUG_JARS:-}" > "$REPO/build/live-debug/server-classpath.txt"
+    else
+        server_classpath > "$REPO/build/live-debug/server-classpath.txt"
+    fi
 }
 
 server_classpath() {
@@ -142,23 +156,57 @@ server_classpath() {
         | sed 's/:$//'
 }
 
+if [ "${1:-}" = "--run" ]; then
+    RUN_DIR="${2:-}"
+    [ -n "$RUN_DIR" ] || die "укажите каталог копии: live-debug.sh --run <каталог> <команда>"
+    shift 2
+    [ -f "$RUN_DIR/debug.env" ] || die "нет $RUN_DIR/debug.env"
+    set -a
+    . "$RUN_DIR/debug.env"
+    set +a
+    LOCAL=1
+    REPO="${LIVE_DEBUG_TREE:-$REPO}"
+    SRC="$REPO/scripts/live-debug"
+    OUT="$REPO/build/live-debug/classes"
+    HOST="${LIVE_DEBUG_HOST:-127.0.0.1}"
+    PORT="${LIVE_DEBUG_PORT:-5005}"
+    REST="${LIVE_DEBUG_REST:-http://127.0.0.1:8765}"
+    AGENT="${LIVE_DEBUG_AGENT:-live}"
+fi
+
 command="${1:-help}"
 shift || true
 
 case "$command" in
     lock)
-        lock_remote acquire
+        if [ "$LOCAL" = 1 ]; then
+            echo "копия принадлежит дереву: замок основного сервера не нужен"
+        else
+            lock_remote acquire
+        fi
         ;;
     unlock)
-        lock_remote release
+        if [ "$LOCAL" = 1 ]; then
+            echo "у копии нет отдельного замка"
+        else
+            lock_remote release
+        fi
         ;;
     status)
+        if [ "$LOCAL" = 1 ]; then
+            echo "копия: ${LIVE_DEBUG_COPY:-$RUN_DIR}"
+            echo "PID: ${LIVE_DEBUG_PID:-нет}; JDWP: $PORT; REST: $REST"
+            curl -s --max-time 3 "$REST/v1/bots" 2>/dev/null | head -c 200 || true
+            echo
+            exit 0
+        fi
         lock_remote status
         ssh "$SSH" "ss -ltn | grep -E ':(25565|8765|$PORT)\b' || true" || true
         curl -s --max-time 3 "$REST/v1/bots" 2>/dev/null | head -c 160 || true
         echo
         ;;
     start)
+        [ "$LOCAL" = 1 ] && die "для копии: scripts/dev-server.sh up"
         need_lock
         ssh "$SSH" "cd $SERVER_DIR && scripts/start.sh && tmux send-keys -t minecraft 'difficulty peaceful' Enter \
             && tmux send-keys -t minecraft 'forceload add -270 -587 -70 -387' Enter" \
@@ -170,6 +218,7 @@ case "$command" in
         echo "сервер и JDWP на $PORT готовы"
         ;;
     stop)
+        [ "$LOCAL" = 1 ] && die "для копии: scripts/dev-server.sh down"
         if [ "${1:-}" = "--server" ]; then
             need_lock
             ssh "$SSH" "cd $SERVER_DIR && scripts/stop.sh"
@@ -225,6 +274,7 @@ scripts/live-debug.sh <команда> [аргументы]
   start                   поднять сервер с JDWP и вернуть peaceful/forceload
   status                  замок, порты, /v1/bots
   init                    внедрить JShell-мост в процесс сервера
+  --run <каталог> <cmd>   команда против копии сервера (debug.env из dev-server.sh)
   eval '<код>'            выполнить фрагмент в моде; @файл или - (stdin)
   hotswap <класс> [...]   compileJava и redefine классов на живом сервере
   break <класс:строка> [-i] [--thread имя]   брейкпоинт; -i — REPL до cont

@@ -21,7 +21,17 @@ import org.junit.jupiter.api.Test;
 
 class EncodingGuardTests {
     private static final Set<String> SKIP_DIRECTORIES = Set.of(
-            ".git", ".gradle", ".idea", ".vs", ".codegraph", "build", "TestResults", "temp-scripts", "run", "run-data");
+            ".git",
+            ".gradle",
+            ".idea",
+            ".vs",
+            ".codegraph",
+            "build",
+            "TestResults",
+            "temp-scripts",
+            "run",
+            "run-data",
+            "run-live");
     private static final byte[] BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     @Test

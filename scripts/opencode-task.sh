@@ -2,6 +2,7 @@
 set -uo pipefail
 
 REPO_DIR="${OPENCODE_REPO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+export LIVE_DEV_OWNER_PID="$$"
 ORPHAN_SWEEP_WIN="${OPENCODE_ORPHAN_SWEEP_WIN:-$REPO_DIR/scripts/lead/orphan-sweep-win.sh}"
 sweep_orphans() {
     [ -z "${OPENCODE_NO_SWEEP:-}" ] || return 0
@@ -38,6 +39,9 @@ POLL_SECONDS=2
 current_pid=""
 finish_run() {
     [ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null
+    if [ -f "$REPO_DIR/scripts/dev-server.sh" ]; then
+        bash "$REPO_DIR/scripts/dev-server.sh" down --tree >/dev/null 2>&1 || true
+    fi
     sweep_orphans
 }
 trap finish_run EXIT

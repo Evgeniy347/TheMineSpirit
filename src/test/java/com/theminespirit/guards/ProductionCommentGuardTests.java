@@ -324,7 +324,7 @@ class ProductionCommentGuardTests {
             if (SKIPPED_DIRECTORIES.contains(segment)) {
                 return false;
             }
-            if ("generated".equals(segment) || "src/main/resources".equals(segment)) {
+            if ("generated".equals(segment) || "src/main/resources".equals(segment) || "run-live".equals(segment)) {
                 return false;
             }
         }
