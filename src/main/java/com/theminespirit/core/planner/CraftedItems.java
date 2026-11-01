@@ -22,7 +22,8 @@ public final class CraftedItems {
             "_bed",
             "_carpet",
             "_pane",
-            "_wall");
+            "_wall",
+            "_bricks");
 
     private static final Set<String> EXACT = Set.of(
             "torch",
