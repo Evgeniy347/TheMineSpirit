@@ -151,30 +151,17 @@ public final class FloatingBlocks {
     }
 
     private static boolean floatingTree(BlockCoord at, World world) {
-        BlockCoord start = at;
-        if (!world.log(start)) {
-            start = null;
-            for (int dx = -1; dx <= 1 && start == null; dx++) {
-                for (int dy = -1; dy <= 1 && start == null; dy++) {
-                    for (int dz = -1; dz <= 1 && start == null; dz++) {
-                        BlockCoord neighbour = new BlockCoord(at.x() + dx, at.y() + dy, at.z() + dz);
-                        if (world.log(neighbour)) {
-                            start = neighbour;
-                        }
-                    }
-                }
-            }
-            if (start == null) {
-                return false;
-            }
-        }
         Set<BlockCoord> logs = new LinkedHashSet<>();
         Set<BlockCoord> leaves = new LinkedHashSet<>();
+        if (world.log(at)) {
+            logs.add(at);
+        } else if (!isLeaves(at, world)) {
+            return false;
+        }
         Set<BlockCoord> seen = new HashSet<>();
         Deque<BlockCoord> queue = new ArrayDeque<>();
-        logs.add(start);
-        seen.add(start);
-        queue.add(start);
+        seen.add(at);
+        queue.add(at);
         while (!queue.isEmpty()) {
             BlockCoord current = queue.poll();
             for (int dx = -1; dx <= 1; dx++) {
@@ -195,10 +182,14 @@ public final class FloatingBlocks {
                                 return false;
                             }
                             leaves.add(next);
+                            queue.add(next);
                         }
                     }
                 }
             }
+        }
+        if (logs.isEmpty()) {
+            return false;
         }
         return logs.stream().noneMatch(cell -> {
             BlockCoord under = new BlockCoord(cell.x(), cell.y() - 1, cell.z());

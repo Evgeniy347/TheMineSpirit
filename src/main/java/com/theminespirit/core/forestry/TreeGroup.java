@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean grounded, BlockCoord base) {
     private static final int MAX_LEAVES = 512;
@@ -27,17 +26,17 @@ public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean gr
     public static Optional<TreeGroup> of(BlockCoord start, TreeView view) {
         Objects.requireNonNull(start, "Клетка начала не может быть null: от неё разбирается дерево");
         Objects.requireNonNull(view, "Вид мира не может быть null: без него дерево не собрать");
-        BlockCoord log = logNear(start, view);
-        if (log == null) {
-            return Optional.empty();
-        }
         Set<BlockCoord> logs = new LinkedHashSet<>();
         Set<BlockCoord> leaves = new LinkedHashSet<>();
+        if (view.isLog(start)) {
+            logs.add(start);
+        } else if (!view.isNaturalLeaves(start)) {
+            return Optional.empty();
+        }
         Set<BlockCoord> seen = new LinkedHashSet<>();
         Deque<BlockCoord> queue = new ArrayDeque<>();
-        logs.add(log);
-        seen.add(log);
-        queue.add(log);
+        seen.add(start);
+        queue.add(start);
         while (!queue.isEmpty()) {
             BlockCoord current = queue.poll();
             for (BlockCoord neighbour : neighbours(current)) {
@@ -55,8 +54,12 @@ public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean gr
                         return Optional.empty();
                     }
                     leaves.add(neighbour);
+                    queue.add(neighbour);
                 }
             }
+        }
+        if (logs.isEmpty()) {
+            return Optional.empty();
         }
         BlockCoord base = logs.stream()
                 .min(Comparator.comparingInt(BlockCoord::y)
@@ -74,18 +77,6 @@ public record TreeGroup(Set<BlockCoord> logs, Set<BlockCoord> leaves, boolean gr
         Set<BlockCoord> all = new LinkedHashSet<>(logs);
         all.addAll(leaves);
         return Set.copyOf(all);
-    }
-
-    private static @Nullable BlockCoord logNear(BlockCoord start, TreeView view) {
-        if (view.isLog(start)) {
-            return start;
-        }
-        for (BlockCoord neighbour : neighbours(start)) {
-            if (view.isLog(neighbour)) {
-                return neighbour;
-            }
-        }
-        return null;
     }
 
     private static BlockCoord below(BlockCoord coord) {
