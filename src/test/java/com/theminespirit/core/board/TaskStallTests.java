@@ -55,6 +55,41 @@ class TaskStallTests {
     }
 
     @Test
+    void noProgress_MovingToTree_SameCounterKeepsWorking() {
+        TaskStall stall = new TaskStall();
+        long now = 0;
+        stall.noProgress(SPIRIT, "2/chop_tree/0", new BlockCoord(0, 64, 0), now, false);
+
+        for (int step = 1; step <= 8; step++) {
+            now += TaskStall.NO_PROGRESS_TICKS / 4;
+            assertFalse(
+                    stall.noProgress(SPIRIT, "2/chop_tree/0", new BlockCoord(step * 12, 64, 0), now, false),
+                    "Дух идёт к дереву, счётчик деревьев ещё 0: подход — подшаг chop_tree, а не застой задания "
+                            + "(observe16 B2: сад валил дуб за 3600 тиков дороги)");
+        }
+    }
+
+    @Test
+    void noProgress_StoppedAfterMove_FailsAfterLimit() {
+        TaskStall stall = new TaskStall();
+        BlockCoord tree = new BlockCoord(96, 64, 0);
+        stall.noProgress(SPIRIT, "2/chop_tree/0", new BlockCoord(0, 64, 0), 0, false);
+
+        for (int step = 1; step <= 3; step++) {
+            assertFalse(
+                    stall.noProgress(SPIRIT, "2/chop_tree/0", new BlockCoord(step * 32, 64, 0), step * 300, false),
+                    "Дух ещё идёт к дереву: подход — это движение");
+        }
+        long arrived = 900 + TaskStall.NO_PROGRESS_TICKS - 1;
+        assertFalse(
+                stall.noProgress(SPIRIT, "2/chop_tree/0", tree, arrived, false),
+                "Дух на месте меньше предела: застоя ещё нет");
+        assertTrue(
+                stall.noProgress(SPIRIT, "2/chop_tree/0", tree, arrived + 1, false),
+                "Дух встал у дерева и счётчик не растёт весь предел: это настоящий застой, задание проваливается");
+    }
+
+    @Test
     void noProgress_PausedByPolicy_RestartsClockInsteadOfFailing() {
         TaskStall stall = new TaskStall();
         stall.noProgress(SPIRIT, "2/chop_tree/1", 0);

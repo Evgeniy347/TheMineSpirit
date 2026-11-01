@@ -759,7 +759,7 @@ public final class BoardService {
         String key = spirit.taskProgress()
                 .map(p -> p.step() + "/" + p.currentScript() + "/" + p.done())
                 .orElse("-");
-        boolean idle = stall.noProgress(spirit.getUUID(), key, board.now(), paused);
+        boolean idle = stall.noProgress(spirit.getUUID(), key, at, board.now(), paused);
         if (!standing && !idle) {
             return;
         }

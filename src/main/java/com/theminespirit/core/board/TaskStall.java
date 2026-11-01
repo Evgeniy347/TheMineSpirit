@@ -15,25 +15,33 @@ public final class TaskStall {
     private final Map<UUID, Seen> seen = new HashMap<>();
     private final Map<UUID, Progress> progress = new HashMap<>();
 
-    private record Progress(String key, long since) {}
+    private record Progress(String key, @Nullable BlockCoord pos, long since) {}
 
     public boolean noProgress(UUID spirit, String key, long now) {
-        return noProgress(spirit, key, now, false);
+        return noProgress(spirit, key, null, now, false);
     }
 
     public boolean noProgress(UUID spirit, String key, long now, boolean paused) {
+        return noProgress(spirit, key, null, now, paused);
+    }
+
+    public boolean noProgress(UUID spirit, String key, @Nullable BlockCoord pos, long now, boolean paused) {
         Objects.requireNonNull(spirit, "Дух не может быть null: прогресс считается на конкретного духа");
         Objects.requireNonNull(key, "Ключ прогресса не может быть null: без него не видно, сдвинулась ли задача");
         Progress last = progress.get(spirit);
         if (paused) {
-            progress.put(spirit, new Progress(key, now));
+            progress.put(spirit, new Progress(key, pos, now));
             return false;
         }
-        if (last == null || !last.key().equals(key)) {
-            progress.put(spirit, new Progress(key, now));
+        if (last == null || !last.key().equals(key) || moved(last.pos(), pos)) {
+            progress.put(spirit, new Progress(key, pos, now));
             return false;
         }
         return now - last.since() >= NO_PROGRESS_TICKS;
+    }
+
+    private static boolean moved(@Nullable BlockCoord before, @Nullable BlockCoord now) {
+        return before != null && now != null && !near(before, now);
     }
 
     private record Seen(@Nullable String script, BlockCoord pos, long since) {}
