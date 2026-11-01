@@ -184,6 +184,27 @@ final class BlockedBook {
         since.clear();
     }
 
+    List<BoardState.Blocked> snapshot() {
+        List<BoardState.Blocked> states = new ArrayList<>();
+        for (Map.Entry<String, Map<String, Integer>> entry : missing.entrySet()) {
+            String id = entry.getKey();
+            states.add(new BoardState.Blocked(
+                    id, entry.getValue(), available.getOrDefault(id, Map.of()), since.getOrDefault(id, 0L)));
+        }
+        return List.copyOf(states);
+    }
+
+    void restore(List<BoardState.Blocked> states) {
+        missing.clear();
+        available.clear();
+        since.clear();
+        for (BoardState.Blocked state : states) {
+            missing.put(state.ticketId(), state.missing());
+            available.put(state.ticketId(), state.available());
+            since.put(state.ticketId(), state.since());
+        }
+    }
+
     private boolean improved(String ticketId, StockView stock) {
         Map<String, Integer> before = available.getOrDefault(ticketId, Map.of());
         for (Map.Entry<String, Integer> entry : before.entrySet()) {

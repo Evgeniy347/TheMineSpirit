@@ -26,7 +26,7 @@ public final class BoardStateStore extends SavedData {
     public static final String NAME = "theminespirit_board";
 
     private static final String VERSION_KEY = "Version";
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
     private static final String ENTRIES_KEY = "Entries";
     private static final String LEDGER_KEY = "Ledger";
     private static final String BUILD_KEY = "Build";
@@ -62,8 +62,8 @@ public final class BoardStateStore extends SavedData {
         BoardStateStore store = new BoardStateStore();
         ListTag entries = tag.getList(ENTRIES_KEY, Tag.TAG_COMPOUND);
         int version = tag.getInt(VERSION_KEY);
-        if (version != VERSION && !entries.isEmpty()) {
-            throw new IllegalStateException("Доска записана версией " + version + ", поддерживается " + VERSION
+        if ((version < 1 || version > VERSION) && !entries.isEmpty()) {
+            throw new IllegalStateException("Доска записана версией " + version + ", поддерживается до " + VERSION
                     + ": обновите мод, старое состояние доски не читается");
         }
         List<BoardState.Entry> restored = new ArrayList<>();
@@ -75,7 +75,9 @@ public final class BoardStateStore extends SavedData {
         for (int index = 0; index < marks.size(); index++) {
             ledger.add(marks.getString(index));
         }
-        store.state = new BoardState(restored, ledger);
+        BoardStateNbt.Parts parts =
+                version >= 2 ? BoardStateNbt.read(tag) : new BoardStateNbt.Parts(List.of(), List.of(), List.of());
+        store.state = new BoardState(restored, ledger, parts.blocked(), parts.pauses(), parts.stuck());
         store.build = tag.getString(BUILD_KEY);
         return store;
     }
@@ -93,6 +95,7 @@ public final class BoardStateStore extends SavedData {
             marks.add(StringTag.valueOf(key));
         }
         tag.put(LEDGER_KEY, marks);
+        BoardStateNbt.write(tag, state);
         tag.putString(BUILD_KEY, build);
         return tag;
     }
