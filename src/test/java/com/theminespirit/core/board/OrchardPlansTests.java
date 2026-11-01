@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -98,6 +99,25 @@ class OrchardPlansTests {
                         .anyMatch(call -> "craft".equals(call.script())
                                 && "minecraft:torch".equals(call.params().get("item"))),
                 "Сад обязан планировать крафт факелов: без этого стройка открывается без ресурсов");
+        assertTrue(
+                torchFallback(TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target)),
+                "Крафт факелов не должен валить всю стройку, если факелы уже стоят, а угля нет: запасной шаг "
+                        + "пропускает его и строит дорожки");
+    }
+
+    private static boolean torchFallback(TaskNode node) {
+        if (node instanceof SequenceNode sequence) {
+            for (TaskNode step : sequence.steps()) {
+                if (torchFallback(step)) {
+                    return true;
+                }
+            }
+        }
+        if (node instanceof FallbackNode fallback && fallback.steps().size() == 2) {
+            TaskNode last = fallback.steps().get(1);
+            return last instanceof ScriptCall call && "wait".equals(call.script());
+        }
+        return false;
     }
 
     private static List<ScriptCall> calls(TaskNode plan) {
@@ -106,6 +126,8 @@ class OrchardPlansTests {
             out.add(call);
         } else if (plan instanceof SequenceNode sequence) {
             sequence.steps().forEach(step -> out.addAll(calls(step)));
+        } else if (plan instanceof FallbackNode fallback) {
+            fallback.steps().forEach(step -> out.addAll(calls(step)));
         }
         return out;
     }
