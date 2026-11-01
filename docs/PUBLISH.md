@@ -8,13 +8,17 @@
 `scripts/publish.sh` (из main, на сервере) делает публикацию целиком:
 
 1. сборка `./gradlew --quiet assemble` и самый свежий `build/libs/theminespirit-*.jar` с проверкой размера;
-2. снимок мира `$SERVER_DIR/scripts/snapshot.sh`;
-3. остановка сервера (tmux `minecraft`), удаление старых `$SERVER_DIR/mods/theminespirit-*.jar`, новый jar;
-4. пак клиента: `$CLIENT_DIR/pack/mods/` получает тот же jar, `/opt/minecraft/client/publish.sh` пересобирает
+2. раскладка скриптов и конфигов сервера из `server/` репозитория в `$SERVER_DIR` (scripts, config,
+   `server.properties`, списки игроков, `user_jvm_args.txt`, `run.sh`, README; `scripts/server-cleanup.sh` —
+   в `/opt/minecraft/scripts`); старый git-снимок на сервере убирается;
+3. снимок мира `$SERVER_DIR/scripts/world-snapshot.sh publish-<версия>` — tar-архив в
+   `/opt/minecraft/backups/world/`, без git; если архив с меткой не создан, публикация останавливается;
+4. остановка сервера (tmux `minecraft`), удаление старых `$SERVER_DIR/mods/theminespirit-*.jar`, новый jar;
+5. пак клиента: `$CLIENT_DIR/pack/mods/` получает тот же jar, `/opt/minecraft/client/publish.sh` пересобирает
    packwiz-раздачу и `TheMineSpirit.zip`;
-5. запуск сервера, если он работал;
-6. `mod.json` страницы «Сервер» — версия, дата, sha256 установленного jar (скрипт `publish-status.sh`);
-7. тег `v<версия>` в git и отправка тега в remote `backup` (если настроен).
+6. запуск сервера, если он работал;
+7. `mod.json` страницы «Сервер» — версия, дата, sha256 установленного jar (скрипт `publish-status.sh`);
+8. тег `v<версия>` в git и отправка тега в remote `backup` (если настроен).
 
 Версия — `0.1.N`, где N — число коммитов HEAD; минор 0.1 поднимается вручную в `gradle.properties`.
 Перед тегом скрипт сверяет sha256 серверного jar, пака клиента и `mod.json`; при расхождении публикация
@@ -23,10 +27,11 @@
 
 ## Временная сборка для живой проверки
 
-`scripts/publish.sh --temp -y` — из своего дерева задачи (не main): jar, пак клиента и страница обновляются
-до версии этой ветки, но снимок мира, тег и отправка тега в `backup` пропускаются. Возврат на main — обычный
-`scripts/publish.sh -y` из `/opt/minecraft/the-mine-spirit`. Ручное копирование jar в `mods/` и правка
-пака/страницы запрещены; так клиент разошёлся с сервером.
+`scripts/publish.sh --temp -y` — из своего дерева задачи (не main): скрипты и конфиги сервера из `server/`
+раскладываются, jar, пак клиента и страница обновляются до версии этой ветки, но снимок мира, тег и отправка
+тега в `backup` пропускаются. Возврат на main — обычный `scripts/publish.sh -y` из
+`/opt/minecraft/the-mine-spirit`. Ручное копирование jar в `mods/` и правка пака/страницы запрещены; так
+клиент разошёлся с сервером.
 
 ## Согласование после рестарта и ручных правок
 
@@ -46,4 +51,5 @@
 Сборка упала или jar не найден — сервер не тронут. Сбой обновления пака или страницы — сервер уже обновлён,
 скрипт печатает причину и возвращает 1; исправление — `scripts/publish.sh --sync` (или перезапуск сервера,
 который синхронизирует сам). Откат мода — публикация прежней версии из main (по согласованию).
-Мир откатывается только по правилам сервера (`/opt/minecraft/server/README.md`). Повторная публикация безопасна.
+Мир откатывается только по правилам сервера (`/opt/minecraft/server/README.md`): `world-restore.sh` на архив
+из `/opt/minecraft/backups/world/`. Повторная публикация безопасна.

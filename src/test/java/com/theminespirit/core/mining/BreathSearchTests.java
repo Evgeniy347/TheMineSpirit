@@ -125,17 +125,18 @@ class BreathSearchTests {
         }
         try (InputStream in = BreathSearchTests.class.getResourceAsStream("/live/drownfall/shaft.txt")) {
             assertTrue(in != null, "Фикстура /live/drownfall/shaft.txt обязана быть в тестовых ресурсах");
-            new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
-                    .lines()
-                    .filter(line -> !line.isBlank() && !line.startsWith("#"))
-                    .forEach(line -> {
-                        StringTokenizer parts = new StringTokenizer(line);
-                        world.set(
-                                Integer.parseInt(parts.nextToken()),
-                                Integer.parseInt(parts.nextToken()),
-                                Integer.parseInt(parts.nextToken()),
-                                cell(parts.nextToken().charAt(0)));
-                    });
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                reader.lines()
+                        .filter(line -> !line.isBlank() && !line.startsWith("#"))
+                        .forEach(line -> {
+                            StringTokenizer parts = new StringTokenizer(line);
+                            world.set(
+                                    Integer.parseInt(parts.nextToken()),
+                                    Integer.parseInt(parts.nextToken()),
+                                    Integer.parseInt(parts.nextToken()),
+                                    cell(parts.nextToken().charAt(0)));
+                        });
+            }
         } catch (IOException error) {
             throw new UncheckedIOException("Фикстура /live/drownfall/shaft.txt не прочитана", error);
         }
