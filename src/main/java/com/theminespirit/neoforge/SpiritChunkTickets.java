@@ -54,10 +54,6 @@ public final class SpiritChunkTickets {
 
     private static void validateTickets(ServerLevel level, TicketHelper helper) {
         Set<UUID> owners = new LinkedHashSet<>(helper.getEntityTickets().keySet());
-        if (level.getServer().getPlayerList().getPlayers().isEmpty()) {
-            owners.forEach(helper::removeAllTickets);
-            return;
-        }
         Set<UUID> keep = SpiritTicketRetention.keepAtLoad(
                 owners, SpiritRegistry.find(level).map(SpiritRegistry::alive));
         for (UUID owner : owners) {
