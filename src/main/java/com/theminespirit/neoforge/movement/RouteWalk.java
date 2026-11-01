@@ -27,6 +27,7 @@ public final class RouteWalk {
 
     private static final int STEP_TICKS = 60;
     private static final double LIFT = 0.2;
+    private static final double EDGE_PUSH = 0.25;
     private static final double SPEED = 1.0;
 
     private final SpiritEntity spirit;
@@ -183,6 +184,16 @@ public final class RouteWalk {
             }
         }
         spirit.getNavigation().stop();
+        if (command.step() == WalkAscent.Step.MOVE && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
+            spirit.getMoveControl().setWantedPosition(command.x(), spirit.getY(), command.z(), SPEED);
+            Vec3 toward = new Vec3(command.x() - spirit.getX(), 0.0, command.z() - spirit.getZ());
+            if (toward.lengthSqr() > 1e-6) {
+                Vec3 push = toward.normalize().scale(EDGE_PUSH);
+                Vec3 motion = spirit.getDeltaMovement();
+                spirit.setDeltaMovement(motion.x + push.x, motion.y, motion.z + push.z);
+            }
+            return Optional.empty();
+        }
         spirit.getMoveControl().setWantedPosition(command.x(), command.y(), command.z(), SPEED);
         if (command.step() == WalkAscent.Step.JUMP) {
             spirit.getJumpControl().jump();

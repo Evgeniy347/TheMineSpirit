@@ -79,7 +79,7 @@ final class DigOutWatch {
                 rescue(spirit, level, settlementHome, now, "замурован", air, sky);
                 continue;
             }
-            if (stillNow && !digging && !paused && inWater(level, feet)) {
+            if (stillNow && !digging && !paused && inWater(level, feet) && !sky) {
                 rescue(spirit, level, settlementHome, now, "не сдвинулся " + PAUSE_TICKS + " тиков в воде", air, sky);
             }
         }
@@ -112,7 +112,7 @@ final class DigOutWatch {
         host.forgetLaunch(spirit);
         TaskNode escape = new SequenceNode(List.of(
                 new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())),
-                new ScriptCall("goto", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()))));
+                new ScriptCall("walk_careful", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()))));
         spirit.startTask(escape);
     }
 

@@ -91,7 +91,11 @@ public final class SurfaceEscape {
             }
             BlockCoord down = new BlockCoord(nx, y - 1, nz);
             if (passable(world, down)) {
-                moves.add(down);
+                if (supported(world, down) || climbable(world, down)) {
+                    moves.add(down);
+                } else {
+                    addFall(moves, world, nx, y - 1, nz);
+                }
             }
         }
         BlockCoord up = new BlockCoord(x, y + 1, z);
@@ -102,7 +106,11 @@ public final class SurfaceEscape {
         }
         BlockCoord down = new BlockCoord(x, y - 1, z);
         if (passable(world, down)) {
-            moves.add(down);
+            if (supported(world, down) || climbable(world, down)) {
+                moves.add(down);
+            } else {
+                addFall(moves, world, x, y, z);
+            }
         }
         return moves;
     }
