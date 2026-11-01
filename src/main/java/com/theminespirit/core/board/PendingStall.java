@@ -93,7 +93,7 @@ public final class PendingStall {
             ids.add(entry.getKey() + " с тика " + entry.getValue().since());
         }
         return "[board] PENDING дольше " + STALL_TICKS + " тиков: " + stalled.size()
-                + " заданий с той же причиной; причины: " + String.join("; ", parts)
+                + " заданий висят; причины: " + String.join("; ", parts)
                 + "; ждут: " + String.join(", ", ids) + "; сейчас " + now
                 + " — проверьте, почему доска не выдаёт задание";
     }

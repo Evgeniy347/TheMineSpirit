@@ -33,7 +33,7 @@ class PendingStallTests {
         assertTrue(
                 text.contains("spirit-1 — занят: goto"),
                 "Сводка обязана повторять waitReason: без неё непонятно, " + "чего ждёт доска");
-        assertTrue(text.contains("1 заданий"), "Сводка обязана называть число висящих: по нему видно масштаб");
+        assertTrue(text.contains("1 заданий висят"), "Сводка обязана называть число висящих: по нему видно масштаб");
         assertTrue(
                 text.contains(String.valueOf(PendingStall.STALL_TICKS)),
                 "Сводка обязана называть предел ожидания: " + "по нему настраивают порог");
