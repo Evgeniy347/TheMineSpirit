@@ -40,10 +40,12 @@ final class JobLaunch {
         }
         spirit.startTask(plan);
         if (activity != null || background) {
+            String script =
+                    BoardActivities.cardScript(spirit.currentTaskScript().orElse(null), plan);
             LOGGER.info(
                     "[board] задание {} стартует скрипт {}, activity {} отменена",
                     ticketId,
-                    spirit.currentTaskScript().orElse("?"),
+                    script == null ? "?" : script,
                     prior == null ? BoardActivities.idOf(spirit.getUUID()) : prior);
         }
     }
