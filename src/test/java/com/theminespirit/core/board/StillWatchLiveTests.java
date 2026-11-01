@@ -17,6 +17,7 @@ class StillWatchLiveTests {
     private static final Path WATER = Path.of("src/test/resources/live/observe12-water-stuck.json");
     private static final Path BOTS = Path.of("src/test/resources/live/observe12-bots.json");
     private static final Path OSCILLATION = Path.of("src/test/resources/live/observe13-water-oscillation.json");
+    private static final Path CYCLE = Path.of("src/test/resources/live/waterstuck/water-cycle.json");
     private static final long WINDOW = 1200;
 
     @Test
@@ -56,6 +57,27 @@ class StillWatchLiveTests {
                         + live.get("positions").get(1) + " (" + live.get("swim_stalled") + " SWIM_STALLED, спасений "
                         + live.get("rescue_events") + "): колебание в малом радиусе — это неподвижность, иначе "
                         + "смена клетки навсегда сбрасывает окно спасения");
+    }
+
+    @Test
+    void still_LiveVerticalCycle_CountsAsStillWithWaterRadius() throws IOException {
+        JsonNode live = new ObjectMapper().readTree(Files.readString(CYCLE, StandardCharsets.UTF_8));
+        UUID spirit = UUID.fromString(live.get("spirit").asText());
+        StillWatch watch = new StillWatch();
+        boolean still = false;
+        for (int index = 0; index < live.get("positions").size(); index++) {
+            still = watch.still(
+                    spirit,
+                    coord(live.get("positions").get(index)),
+                    live.get("ticks").get(index).asLong(),
+                    WINDOW);
+        }
+
+        assertTrue(
+                still,
+                "spirit-1 в observe15 ходил по кругу " + live.get("positions").get(0) + " ↔ "
+                        + live.get("positions").get(1) + " (перепад " + live.get("cycle_span")
+                        + "): для воды это неподвижность в области 24, иначе спасение не срабатывает");
     }
 
     @Test

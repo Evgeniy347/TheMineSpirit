@@ -10,7 +10,8 @@ import java.util.Optional;
 public final class SelfEscape {
     public enum Method {
         DIG,
-        STEP
+        STEP,
+        GOTO
     }
 
     public record Plan(Method method, BlockCoord target, int rise, List<BlockCoord> blocks) {

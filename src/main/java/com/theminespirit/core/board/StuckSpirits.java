@@ -1,7 +1,9 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -64,15 +66,36 @@ public final class StuckSpirits {
         if (known == null) {
             return Optional.empty();
         }
-        if (now - known.since() >= BoardTuning.idleReleaseTicks()) {
-            stuck.remove(spirit);
-            return Optional.empty();
-        }
         return Optional.of(known);
     }
 
     public boolean isStuck(UUID spirit, long now) {
         return of(spirit, now).isPresent();
+    }
+
+    public void release(UUID spirit) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: спасение снимает метку с конкретного духа");
+        stuck.remove(spirit);
+    }
+
+    public List<BoardState.Stuck> snapshot() {
+        List<BoardState.Stuck> states = new ArrayList<>();
+        for (Map.Entry<UUID, Stuck> entry : stuck.entrySet()) {
+            Stuck state = entry.getValue();
+            states.add(new BoardState.Stuck(entry.getKey(), state.at(), state.since()));
+        }
+        return List.copyOf(states);
+    }
+
+    public void restore(List<BoardState.Stuck> states) {
+        seen.clear();
+        stuck.clear();
+        for (BoardState.Stuck state : states) {
+            stuck.put(state.spirit(), new Stuck(state.at(), state.since()));
+            if (state.at() != null) {
+                seen.put(state.spirit(), state.at());
+            }
+        }
     }
 
     public void clear() {

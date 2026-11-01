@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.SchematicActions;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,9 @@ public final class ResourceGate {
         Objects.requireNonNull(stock, "stock не может быть null: гейт без снимка запасов не проверить");
         Map<String, Integer> missing = new HashMap<>();
         for (Map.Entry<String, Integer> entry : need.items().entrySet()) {
+            if (SchematicActions.isActionPlaced(entry.getKey())) {
+                continue;
+            }
             int shortage = entry.getValue() - stock.available().getOrDefault(entry.getKey(), 0);
             if (shortage > 0) {
                 missing.put(entry.getKey(), shortage);

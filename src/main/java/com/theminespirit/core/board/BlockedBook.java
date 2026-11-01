@@ -38,12 +38,13 @@ final class BlockedBook {
         this.notes = Objects.requireNonNull(notes, "Журнал блокировок не может быть null: переходы пишутся в него");
     }
 
-    void note(BoardTicket ticket, int failuresSoFar, Map<String, Integer> missingNow, long now) {
+    void note(BoardTicket ticket, int failuresSoFar, Map<String, Integer> missingNow, StockView stock, long now) {
         statuses.put(ticket.id(), BoardStatus.BLOCKED);
         missing.put(ticket.id(), missingNow);
         Map<String, Integer> have = new LinkedHashMap<>();
         ticket.requiredItems()
-                .forEach((item, need) -> have.put(item, Math.max(0, need - missingNow.getOrDefault(item, 0))));
+                .keySet()
+                .forEach(item -> have.put(item, stock.available().getOrDefault(item, 0)));
         available.put(ticket.id(), Map.copyOf(have));
         since.putIfAbsent(ticket.id(), now);
         notes.add(new BoardLogEntry(
@@ -182,6 +183,27 @@ final class BlockedBook {
         missing.clear();
         available.clear();
         since.clear();
+    }
+
+    List<BoardState.Blocked> snapshot() {
+        List<BoardState.Blocked> states = new ArrayList<>();
+        for (Map.Entry<String, Map<String, Integer>> entry : missing.entrySet()) {
+            String id = entry.getKey();
+            states.add(new BoardState.Blocked(
+                    id, entry.getValue(), available.getOrDefault(id, Map.of()), since.getOrDefault(id, 0L)));
+        }
+        return List.copyOf(states);
+    }
+
+    void restore(List<BoardState.Blocked> states) {
+        missing.clear();
+        available.clear();
+        since.clear();
+        for (BoardState.Blocked state : states) {
+            missing.put(state.ticketId(), state.missing());
+            available.put(state.ticketId(), state.available());
+            since.put(state.ticketId(), state.since());
+        }
     }
 
     private boolean improved(String ticketId, StockView stock) {

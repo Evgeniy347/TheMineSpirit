@@ -45,7 +45,7 @@ public final class DigOutScript implements ScriptInstance {
     private int turns;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
-    private boolean routePlanned;
+    private int routeRetries;
     private @Nullable RouteWalk route;
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
@@ -153,12 +153,12 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
-        if (!routePlanned) {
-            routePlanned = true;
+        if (route == null && routeRetries < 3) {
             route = SurfaceRoute.plan(spirit)
                     .orElseGet(() -> RouteDetour.plan(
                                     spirit, new BlockCoord(target.x(), target.y(), target.z()), HOME_RADIUS, "dig_out")
                             .orElse(null));
+            routeRetries++;
         }
         RouteWalk current = route;
         if (current == null) {

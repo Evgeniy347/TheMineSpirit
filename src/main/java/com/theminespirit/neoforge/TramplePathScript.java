@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.building.PathGround;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -18,7 +19,6 @@ import org.slf4j.Logger;
 
 final class TramplePathScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int MAX_REFUSALS = 64;
 
     private final SpiritEntity spirit;
     private final int count;
@@ -27,7 +27,6 @@ final class TramplePathScript implements ScriptInstance {
     private final Approach approach;
     private final Set<BlockPos> tried = new HashSet<>();
     private int trampled;
-    private int refusals;
     private boolean exhausted;
     private String failureReason;
 
@@ -96,18 +95,14 @@ final class TramplePathScript implements ScriptInstance {
     }
 
     private boolean trample(BlockPos pos) {
+        if (!PathGround.openAbove(BlockStates.idOf(spirit.level().getBlockState(pos.above())))) {
+            return false;
+        }
         BlockPlacer.Begin begin = placer.begin(pos, Blocks.DIRT_PATH.defaultBlockState(), "minecraft:dirt_path");
         if (begin instanceof BlockPlacer.Started) {
             trampled++;
             LOGGER.info("Дух {} утоптал дорожку в {}: {}", spirit.getUUID(), toCoord(pos), trampled);
             return true;
-        }
-        if (begin instanceof BlockPlacer.Protected) {
-            return false;
-        }
-        refusals++;
-        if (refusals > MAX_REFUSALS) {
-            exhausted = true;
         }
         return false;
     }

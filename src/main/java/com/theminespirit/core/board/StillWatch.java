@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class StillWatch {
-    public static final int AREA_RADIUS = 4;
+    public static final int AREA_RADIUS = 24;
 
     private record Area(BlockCoord min, BlockCoord max, long since) {}
 

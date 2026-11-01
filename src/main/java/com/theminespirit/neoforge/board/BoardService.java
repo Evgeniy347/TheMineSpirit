@@ -121,8 +121,7 @@ public final class BoardService {
             JournalService journal,
             @Nullable BoardStateStore store) {
         this.board = Objects.requireNonNull(board, "board не может быть null: очередь заданий живёт в ядре");
-        this.animals = Objects.requireNonNull(
-                animals, "animals не может быть null: циклы животных по видам — составная часть доски");
+        this.animals = Objects.requireNonNull(animals, "animals не может быть null: циклы животных по видам");
         this.stockReader =
                 Objects.requireNonNull(stockReader, "stockReader не может быть null: снимок запасов собирает адаптер");
         this.sources = Objects.requireNonNull(sources, "sources не может быть null: источники событий доски");
@@ -131,6 +130,7 @@ public final class BoardService {
         this.store = store;
         if (store != null) {
             store.restoreInto(board);
+            RescueWatch.cancelRestored(board);
             String build = BuildFingerprint.current();
             if (!build.equals(store.build())) {
                 List<String> reset = resetForNewRules();
@@ -530,9 +530,8 @@ public final class BoardService {
                 board.vacate(spirit.getUUID());
             }
         }
-        if (!census) {
-            return;
-        }
+        WaitRefresh.tick(board, spirits, targets, stock, crafters, board.now());
+        if (!census) return;
     }
 
     private void dropAbsentOwners(List<SpiritEntity> spirits, long now) {
