@@ -84,16 +84,6 @@ public final class FirstStepsRunner {
     private static final Set<BoardCase> WOODEN_BUILDINGS =
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.BUILD_ORCHARD);
     private static final int LAYOUT_SLACK_DIVISOR = 50;
-    private static final Set<BoardCase> AUDIT_STEPS = EnumSet.of(
-            BoardCase.LIGHTING,
-            BoardCase.BUILD_FENCE,
-            BoardCase.BUILD_ORCHARD,
-            BoardCase.BUILD_HOUSE,
-            BoardCase.BUILD_STREETS,
-            BoardCase.CLEAR_GROUNDS,
-            BoardCase.STOCK_CHESTS,
-            BoardCase.CRAFT_FURNACE,
-            BoardCase.BUILD_MINE);
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int SCAN_RADIUS = 16;
     private static final String GATHER_PREFIX = "gather:";
@@ -212,7 +202,7 @@ public final class FirstStepsRunner {
             target = target.withLeveling(leveling(level, stage));
         }
         Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
-        if (AUDIT_STEPS.contains(caseValue)
+        if (StageSettle.AUDIT_STEPS.contains(caseValue)
                 && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), partsOf(caseValue), now)) {
             return Map.of();
         }
@@ -225,39 +215,11 @@ public final class FirstStepsRunner {
         return Map.of();
     }
 
-    public static void refresh(
-            ServerLevel level, BoardService service, StockView stock, StageScan scan, BoardCase caseValue, long now) {
-        StageSite stage = scan.stage();
-        String wood = BuildingWoodChoice.stored(level, caseValue, stage, scan.wood());
-        TicketTarget target = targetFor(level, caseValue, stage, wood);
-        Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), false);
-        int parts = partsOf(caseValue);
-        if (AUDIT_STEPS.contains(caseValue)
-                && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), parts, now)) {
-            return;
-        }
-        MaterialSource source = materialSource(level);
-        StageWork work = target.work();
-        List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
-                ? FenceParts.of(level, work.site(), parts)
-                : List.of();
-        for (int part = 1; part <= parts; part++) {
-            TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
-            Map<String, Integer> reserve = part == 1 ? need : Map.of();
-            if (caseValue == BoardCase.BUILD_FENCE && work != null) {
-                partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
-                reserve = new HashMap<>(partNeed(source, partTarget, wood));
-                reserve.keySet().retainAll(need.keySet());
-            }
-            service.board().require(partId(caseValue, part), reserve);
-        }
-    }
-
     public static List<String> ticketIds(BoardCase caseValue) {
         return StageReopen.ids(caseValue);
     }
 
-    private static Map<String, Integer> need(ServerLevel level, StockView stock, OpenStep step, boolean blocked) {
+    static Map<String, Integer> need(ServerLevel level, StockView stock, OpenStep step, boolean blocked) {
         BoardCase caseValue = step.caseValue();
         TicketTarget target = step.target();
         String wood = step.wood();
@@ -297,7 +259,7 @@ public final class FirstStepsRunner {
         need.merge(block, floors, Integer::sum);
     }
 
-    private record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
+    record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
 
     private static void openStep(ServerLevel level, BoardService service, OpenStep step, StepOrder order, long now) {
         MaterialSource source = materialSource(level);
@@ -349,7 +311,7 @@ public final class FirstStepsRunner {
         }
     }
 
-    private static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
+    static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
         BoardCase caseValue = step.caseValue();
         StageWork work = Objects.requireNonNull(
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
@@ -415,7 +377,7 @@ public final class FirstStepsRunner {
                         && active(service, ticket.id()));
     }
 
-    private static int partsOf(BoardCase caseValue) {
+    static int partsOf(BoardCase caseValue) {
         return StageReopen.ids(caseValue).size();
     }
 
@@ -423,7 +385,7 @@ public final class FirstStepsRunner {
         return StageReopen.partId(caseValue, part);
     }
 
-    private static Map<String, Integer> partNeed(MaterialSource source, TicketTarget target, String wood) {
+    static Map<String, Integer> partNeed(MaterialSource source, TicketTarget target, String wood) {
         Map<String, Integer> need = new HashMap<>();
         materials(source, BoardCase.BUILD_FENCE, target)
                 .forEach((item, count) -> need.merge(WoodSpecies.swap(item, wood), count, Integer::sum));
