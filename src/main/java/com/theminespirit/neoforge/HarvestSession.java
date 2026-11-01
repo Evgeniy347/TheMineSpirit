@@ -40,7 +40,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
@@ -380,8 +379,7 @@ public final class HarvestSession {
     }
 
     private boolean standReachable(BlockCoord stand) {
-        Path path = spirit.getNavigation().createPath(new BlockPos(stand.x(), stand.y(), stand.z()), 1);
-        return path != null && path.canReach();
+        return HarvestStands.reachable(spirit, stand);
     }
 
     private void beginApproach(Vec3 point) {
