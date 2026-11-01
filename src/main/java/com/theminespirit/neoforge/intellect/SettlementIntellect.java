@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.SettlementStage;
@@ -45,10 +44,8 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import org.slf4j.Logger;
 
 public final class SettlementIntellect {
-    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final TacticalIntellect intellect;
     private final ActivityCatalog catalog;
@@ -60,7 +57,7 @@ public final class SettlementIntellect {
     private int stage = 1;
     private SettlementView lastView;
     private TacticalDecision lastDecision;
-    private List<String> lastRefusals = List.of();
+    private final DecisionLog decisions = new DecisionLog();
     private long lastTick = Long.MIN_VALUE;
     private int decideCalls;
     private int stockReads;
@@ -115,11 +112,12 @@ public final class SettlementIntellect {
         intellect.trackEnemies(scan.enemies());
         intellect.trackWeaponStock(stocks.lots().weapons() > 0);
         intellect.trackVein(veinBelow(home, view));
+        intellect.trackHome(home.orElse(null));
         intellect.trackPlayerEscort(
                 playerEscort(level, home, intellect.outsideGate().escortRadius()));
         TacticalDecision decision = intellect.decide(view, ledger, reservations, queue, tick);
         lastDecision = decision;
-        logRefusals(decision.refusals());
+        decisions.tick(decision.refusals(), decision.notes());
         applyStrengths(BoardRegistry.get(level), members, decision, home, tick);
         applyActivities(level, members, snapshots, decision, view, home, tick);
         expeditions.update(level, decision.expedition(), members, tick);
@@ -163,16 +161,6 @@ public final class SettlementIntellect {
 
     public int taskFailures() {
         return starter.failures();
-    }
-
-    private void logRefusals(List<String> refusals) {
-        if (refusals.equals(lastRefusals)) {
-            return;
-        }
-        lastRefusals = refusals;
-        for (String refusal : refusals) {
-            LOGGER.info("Внешняя работа не назначена: {}", refusal);
-        }
     }
 
     private static boolean playerEscort(ServerLevel level, Optional<Point> home, double radius) {

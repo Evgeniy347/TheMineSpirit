@@ -10,6 +10,7 @@ import com.theminespirit.core.intellect.activity.DefendActivity;
 import com.theminespirit.core.intellect.activity.FarmActivity;
 import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
+import com.theminespirit.core.tactics.Point;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,80 @@ class TacticalIntellectOutsideTests {
         assertTrue(
                 decision.refusals().stream().anyMatch(reason -> reason.contains("MINE") && reason.contains("одиночку")),
                 "Отказ обязан попасть в журнал решений с причиной, фактически: " + decision.refusals());
+    }
+
+    @Test
+    void decide_OneWorkerKnownSettlementVein_MineAssigned() {
+        TacticalIntellect mind = intellect();
+        mind.trackHome(new Point(-181, 73, -520));
+        mind.trackVein(new Point(-189, 63, -518));
+
+        TacticalDecision decision = mind.decide(
+                needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
+
+        assertTrue(
+                has(decision, ActivityId.MINE),
+                "Шахта поселения внутри границы: даже один дух получает добычу, иначе MINE не назначается на старте");
+        assertTrue(
+                decision.refusals().isEmpty(),
+                "Внутри поселения отказа по границе быть не может, фактически: " + decision.refusals());
+        assertTrue(
+                decision.notes().stream()
+                        .anyMatch(note -> note.contains("MINE")
+                                && note.contains("радиус")
+                                && note.contains("-189.0 63.0 -518.0")),
+                "Журнал обязан назвать проверенную границу и цель, фактически: " + decision.notes());
+    }
+
+    @Test
+    void decide_OneWorkerHomeWithoutVein_MineAssignedAtOwnShaft() {
+        TacticalIntellect mind = intellect();
+        mind.trackHome(new Point(-181, 73, -520));
+
+        TacticalDecision decision = mind.decide(
+                needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
+
+        assertTrue(
+                has(decision, ActivityId.MINE),
+                "Без известной жилы работа идёт у ствола поселения под домом: это не выход наружу");
+        assertTrue(
+                decision.refusals().isEmpty(),
+                "У своего ствола отказ по границе невозможен даже в одиночку, фактически: " + decision.refusals());
+        assertTrue(
+                decision.notes().stream()
+                        .anyMatch(note -> note.contains("MINE") && note.contains("-181.0 73.0 -520.0")),
+                "Журнал обязан назвать ствол поселения как цель внутри границы, фактически: " + decision.notes());
+    }
+
+    @Test
+    void decide_OneWorkerNoHome_RefusalNamesBoundary() {
+        TacticalDecision decision = intellect()
+                .decide(needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
+
+        assertTrue(
+                decision.refusals().stream()
+                        .anyMatch(reason -> reason.contains("MINE")
+                                && reason.contains("радиус")
+                                && reason.contains("цель неизвестна")),
+                "Без дома границу проверить нечем: отказ обязан назвать границу и причину, фактически: "
+                        + decision.refusals());
+    }
+
+    @Test
+    void decide_OneWorkerKnownVeinEvening_MineAssignedInsideSettlement() {
+        TacticalIntellect mind = intellect();
+        mind.trackHome(new Point(-181, 73, -520));
+        mind.trackVein(new Point(-189, 63, -518));
+
+        TacticalDecision decision = mind.decide(
+                needyAt(List.of(FIRST), 0.5), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
+
+        assertTrue(
+                has(decision, ActivityId.MINE),
+                "Работа внутри поселения — не выход наружу: ночной запрет на неё не распространяется");
+        assertTrue(
+                decision.refusals().isEmpty(),
+                "Внутри поселения ночного отказа по границе быть не может, фактически: " + decision.refusals());
     }
 
     @Test
