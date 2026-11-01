@@ -142,7 +142,7 @@ verify_publication() {
 }
 
 sync_existing() {
-    local jars=() jar name version pack status needs=0 old
+    local jars=() jar name version pack status pack_needs=0 page_needs=0 old
     mapfile -t jars < <(server_jars)
     if [ "${#jars[@]}" -eq 0 ]; then
         echo "mods/: мода нет, синхронизировать нечего"
@@ -155,29 +155,35 @@ sync_existing() {
         for old in "${jars[@]:1}"; do
             rm -f "$old"
         done
-        needs=1
     fi
     name="${jar##*/}"
     version="$(version_of "$jar")"
     pack="$CLIENT_DIR/pack/mods/$name"
     for old in "$CLIENT_DIR"/pack/mods/theminespirit-*.jar; do
         [ -e "$old" ] || continue
-        [ "$old" = "$pack" ] || needs=1
+        [ "$old" = "$pack" ] || pack_needs=1
     done
-    [ "$(sha256_of "$pack")" = "$(sha256_of "$jar")" ] || needs=1
+    [ "$(sha256_of "$pack")" = "$(sha256_of "$jar")" ] || pack_needs=1
     status="$GATEWAY_DIR/$STATUS_REL"
     if [ ! -f "$status" ] \
         || ! grep -q "\"version\": \"$version\"" "$status" \
         || ! grep -q "\"sha256\": \"$(sha256_of "$jar")\"" "$status"; then
-        needs=1
+        page_needs=1
     fi
-    if [ "$needs" -eq 0 ]; then
+    if [ "$pack_needs" -eq 0 ] && [ "$page_needs" -eq 0 ]; then
         echo "Клиент и страница совпадают с $name ($version), синхронизация не нужна"
         return 0
     fi
-    echo "Рассинхрон: сервер $name ($version), пак клиента и страница приводятся к нему"
-    sync_client_pack "$jar"
-    update_page "$jar"
+    if [ "$pack_needs" -eq 1 ]; then
+        echo "Рассинхрон пака: сервер $name ($version), пак клиента приводится к нему"
+        sync_client_pack "$jar"
+    else
+        echo "Пак клиента совпадает с $name ($version)"
+    fi
+    if [ "$page_needs" -eq 1 ]; then
+        echo "Рассинхрон страницы: записываю $name ($version) в mod.json"
+        update_page "$jar"
+    fi
     verify_publication "$jar"
 }
 
