@@ -38,8 +38,8 @@ public final class TreeSupport {
         int minZ = cells.stream().mapToInt(BlockCoord::z).min().orElseThrow();
         int maxZ = cells.stream().mapToInt(BlockCoord::z).max().orElseThrow();
         int lowY = cells.stream().mapToInt(BlockCoord::y).min().orElseThrow();
-        int midX = minX + (maxX - minX) / 2;
-        int midZ = minZ + (maxZ - minZ) / 2;
+        int midX = (int) (((long) minX + maxX) / 2);
+        int midZ = (int) (((long) minZ + maxZ) / 2);
         int[][] around = {
             {minX - 1, minZ}, {maxX + 1, minZ}, {minX - 1, maxZ}, {maxX + 1, maxZ},
             {midX, minZ - 1}, {midX, maxZ + 1}, {minX - 1, midZ}, {maxX + 1, midZ}

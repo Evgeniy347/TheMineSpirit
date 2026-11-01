@@ -31,10 +31,10 @@ Claude, который ведёт проект: ставит задания ис
 - Отчёт исполнителя + `git log main..ветка`: сторожа не ослаблены, тесты не отключены. Слияние на ПК в main
   (хук гоняет unit); конфликт — по смыслу сам или исполнителю той ветки.
 - Выкладка (`scripts/publish.sh` — только сборка `assemble`, без тестов): `git push server main:lead/main`, на
-  сервере `merge --ff-only lead/main`, `push backup main`, `publish.sh -y` (повтор при сбое), после рестарта
-  `difficulty peaceful` и `forceload add -270 -587 -70 -387`, клиентский пак — заменить `theminespirit-*.jar` и
-  `client/publish.sh`. Выкладывать готовое или по просьбе владельца, затем проверить лог (`ERROR`, `[plot]`,
-  `[clear]`) и духов по REST.
+  сервере `merge --ff-only lead/main`, `push backup main`, `publish.sh -y` из main (повтор при сбое). Скрипт сам
+  ставит jar, обновляет пак клиента, страницу «Сервер» и тег; вручную пак не трогать. Живая сборка — `--temp`
+  из дерева задачи, возврат — `publish.sh -y` из main. После рестарта — `difficulty peaceful` и
+  `forceload add -270 -587 -70 -387`, затем проверить лог (`ERROR`, `[plot]`, `[clear]`) и духов по REST.
 - После слияния — уборка: worktree и ветка (`git branch -d`), чужие ветки владельца (`owner/*`, `wt-owner`) не
   трогать.
 
