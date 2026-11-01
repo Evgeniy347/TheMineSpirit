@@ -38,7 +38,9 @@ final class TorchPlans {
             }
         });
         if (torches > 0) {
-            steps.addAll(supply(torches));
+            steps.add(new FallbackNode(List.of(
+                    new SequenceNode(supply(torches)),
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
     }
 
