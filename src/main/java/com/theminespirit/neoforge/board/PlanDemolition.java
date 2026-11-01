@@ -48,7 +48,8 @@ final class PlanDemolition {
             int unreachable,
             BlockCoord stand,
             BlockCoord top,
-            BlockCoord lowest) {}
+            BlockCoord lowest,
+            List<BlockCoord> treeCells) {}
 
     private PlanDemolition() {}
 
@@ -67,9 +68,10 @@ final class PlanDemolition {
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
         List<FloatingBlocks.Finding> findings = FloatingScan.find(level, site, town.region());
         Collected collected = collect(level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level));
-        List<BlockCoord> stray = collected.remove().stream()
+        List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
+        List<BlockCoord> stray = candidates.stream()
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
-                .limit(BATCH)
+                .limit(collected.treeCells().isEmpty() ? BATCH : candidates.size())
                 .toList();
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
@@ -80,7 +82,7 @@ final class PlanDemolition {
             return;
         }
         if (stray.isEmpty()) {
-            warnExcluded(world, collected, now);
+            DemolitionTickets.warnExcluded(world, collected.excluded(), collected.notes(), now);
             return;
         }
         String id = DemolitionTickets.idFor(stray);
@@ -88,7 +90,7 @@ final class PlanDemolition {
             return;
         }
         if (!SUBMITS.allow("demolish:" + world, RETRIES.signature(id))) {
-            warnExcluded(world, collected, now);
+            DemolitionTickets.warnExcluded(world, collected.excluded(), collected.notes(), now);
             if (CHANGES.changed("tidy-wait:" + world, id)) {
                 LOGGER.info(
                         "[tidy] {}: набор уборки не изменился — повторно не выдаём (первый {}); {}",
@@ -130,7 +132,7 @@ final class PlanDemolition {
         if (!RETRIES.waiting(id, now)) {
             return false;
         }
-        warnExcluded(world, collected, now);
+        DemolitionTickets.warnExcluded(world, collected.excluded(), collected.notes(), now);
         if (CHANGES.changed("tidy-retry:" + world, id + "@" + RETRIES.until(id))) {
             LOGGER.info(
                     "[tidy] {}: набор уборки ждёт повтора до тика {} — прошлая уборка закрылась без факта "
@@ -140,21 +142,6 @@ final class PlanDemolition {
                     collected.notes());
         }
         return true;
-    }
-
-    private static void warnExcluded(String world, Collected collected, long now) {
-        if (collected.excluded() == 0) {
-            return;
-        }
-        String signature = collected.excluded() + ":" + collected.notes();
-        if (!CHANGES.changed("tidy-excluded:" + world, signature)) {
-            return;
-        }
-        LOGGER.warn(
-                "[tidy] участок не расчищается в тик {}: исключено недостижимых {} из висящих; {}",
-                now,
-                collected.excluded(),
-                collected.notes());
     }
 
     private static Collected collect(
@@ -172,6 +159,7 @@ final class PlanDemolition {
         int excluded = 0;
         int reachableShown = 0;
         DemolitionTickets.Placement placement = null;
+        List<BlockCoord> treeCells = List.of();
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
             boolean blocked = unreachableCells.excluded(at);
@@ -223,6 +211,7 @@ final class PlanDemolition {
                     remove.addAll(finding.cells());
                     if (finding.kind() == FloatingBlocks.Kind.TREE) {
                         placement = DemolitionTickets.treePlacement(treeStand, finding);
+                        treeCells = List.copyOf(finding.cells());
                     }
                 }
                 case SKIP_REGISTERED, SKIP_WAIT -> {}
@@ -235,7 +224,8 @@ final class PlanDemolition {
                 unreachableSkipped,
                 placement == null ? null : placement.stand(),
                 placement == null ? null : placement.top(),
-                placement == null ? null : placement.lowest());
+                placement == null ? null : placement.lowest(),
+                treeCells);
     }
 
     private static FloatingCleanup.Rooms rooms(

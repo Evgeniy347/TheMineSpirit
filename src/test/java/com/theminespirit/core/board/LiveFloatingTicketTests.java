@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -9,6 +10,7 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
@@ -45,6 +47,18 @@ class LiveFloatingTicketTests {
                 ((Integer) pillar.params().get("height")) >= 10,
                 "Опора обязана довести духа до верхних брёвен y≈97, а не на пару блоков. План: " + pillar.params());
         assertTrue(
+                calls.stream()
+                        .anyMatch(call -> "acquire".equals(call.script())
+                                && "minecraft:cobblestone".equals(call.params().get("item"))),
+                "У духа в кроне пустой инвентарь: план обязан сначала взять булыжник (сундуки двора/добыча), "
+                        + "иначе pillar_up падает «нет материала для столба» — так observe16 и остался без [clear]. "
+                        + "План: " + calls);
+        assertEquals(
+                "minecraft:cobblestone",
+                pillar.params().get("block"),
+                "pillar_up обязан ставить именно добытый булыжник, а не выбирать пустую землю. План: "
+                        + pillar.params());
+        assertTrue(
                 calls.stream().anyMatch(call -> "pillar_down".equals(call.script())),
                 "Временную опору надо разобрать, иначе уборка оставит в поселении свой столб. План: " + calls);
         assertTrue(
@@ -53,6 +67,38 @@ class LiveFloatingTicketTests {
                                 && ((Integer) call.params().get("y2")) >= 96),
                 "Рубка обязана доставать до верхних брёвен и листвы y≈97, а не только до нижнего блока. План: "
                         + calls);
+    }
+
+    @Test
+    void liveWideTidySet_Plan_SplitsClearBoxesUnderScriptLimit() {
+        StageSite site = TownFixtures.flatSite();
+        List<PlannedBlock> blocks = List.of(
+                new PlannedBlock(new BlockCoord(-300, 84, -600), StagePlans.AIR),
+                new PlannedBlock(new BlockCoord(-100, 84, -400), StagePlans.AIR));
+        TicketTarget target = TicketTarget.at(GROUND)
+                .withWork(new StageWork(site, blocks))
+                .withRelocate(new BlockCoord(-300, 84, -600), new BlockCoord(-100, 84, -600));
+        TaskNode plan = StagePlans.plan(BoardCase.DISMANTLE_SHELTER, 1, target).orElseThrow();
+
+        List<ScriptCall> clears = calls(plan).stream()
+                .filter(call -> "clear_area".equals(call.script()))
+                .toList();
+        assertTrue(!clears.isEmpty(), "План уборки обязан содержать clear_area. План: " + calls(plan));
+        for (ScriptCall call : clears) {
+            int volume =
+                    ((Integer) call.params().get("x2") - (Integer) call.params().get("x1") + 1)
+                            * ((Integer) call.params().get("y2")
+                                    - (Integer) call.params().get("y1")
+                                    + 1)
+                            * ((Integer) call.params().get("z2")
+                                    - (Integer) call.params().get("z1")
+                                    + 1);
+            assertTrue(
+                    volume <= CatalogLimits.BUILD_VOLUME_MAX,
+                    "Живой тикет собрал пятна по всей базе: clear_area с объёмом " + volume + " больше предела "
+                            + CatalogLimits.BUILD_VOLUME_MAX + " падает с IllegalArgumentException (observe16: "
+                            + "«Объём clear_area 4352 больше предела 4096»). План: " + clears);
+        }
     }
 
     private static List<PlannedBlock> crownBlocks(JsonNode fixture) {
