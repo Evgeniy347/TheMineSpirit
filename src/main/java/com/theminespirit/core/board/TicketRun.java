@@ -13,9 +13,21 @@ public enum TicketRun {
 
     public static TicketRun decide(
             long issuedGeneration, long currentGeneration, @Nullable RunStatus status, boolean externalControl) {
+        return decide(issuedGeneration, currentGeneration, status, externalControl, true);
+    }
+
+    public static TicketRun decide(
+            long issuedGeneration,
+            long currentGeneration,
+            @Nullable RunStatus status,
+            boolean externalControl,
+            boolean targetKnown) {
         boolean known = issuedGeneration != SpiritReading.UNKNOWN_GENERATION;
         if (known && issuedGeneration != currentGeneration) {
             return status == RunStatus.RUNNING || externalControl ? DISPLACED : RESUME;
+        }
+        if (!known && status == RunStatus.RUNNING && !externalControl) {
+            return targetKnown ? RESUME : RUNNING;
         }
         if (status == RunStatus.SUCCEEDED) {
             return SUCCEEDED;
