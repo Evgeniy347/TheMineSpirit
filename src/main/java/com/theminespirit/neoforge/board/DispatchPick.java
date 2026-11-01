@@ -61,6 +61,12 @@ final class DispatchPick {
             return null;
         }
         List<DispatchRound.Candidate> preference = new ArrayList<>(candidates.values());
+        if (target != null) {
+            preference.removeIf(spirit -> DispatchRound.tooLowForCleanup(
+                    ticket.boardCase(),
+                    (int) Math.floor(entities.get(spirit.id()).getY()),
+                    target.target().y()));
+        }
         preference.sort(Comparator.<DispatchRound.Candidate>comparingInt(
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))

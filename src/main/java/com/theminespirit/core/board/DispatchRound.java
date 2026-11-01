@@ -46,6 +46,10 @@ public final class DispatchRound {
         this.held = new HashMap<>(board.assignedCounts());
     }
 
+    public static boolean tooLowForCleanup(BoardCase boardCase, int spiritY, int targetY) {
+        return boardCase == BoardCase.DISMANTLE_SHELTER && spiritY < targetY - 4;
+    }
+
     public enum BusyMode {
         IDLE,
         WORK,
@@ -105,7 +109,7 @@ public final class DispatchRound {
 
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
         if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER && spirit.wet()) {
-            return Optional.of("в воде: до стоянки уборки не дойдёт");
+            return Optional.of("в воде или под крышей: до стоянки уборки не дойдёт");
         }
         if (ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
             Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id(), now);

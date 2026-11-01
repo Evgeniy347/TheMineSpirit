@@ -120,6 +120,19 @@ class DispatchRoundTests {
     }
 
     @Test
+    void tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup() {
+        assertTrue(
+                DispatchRound.tooLowForCleanup(BoardCase.DISMANTLE_SHELTER, 55, 69),
+                "Дух в затопленной шахте (y=55) не дойдёт до стоянки уборки на y=69: observe17 — 53 «не дошёл до»");
+        assertTrue(
+                !DispatchRound.tooLowForCleanup(BoardCase.DISMANTLE_SHELTER, 65, 69),
+                "Дух на четыре блока ниже стоянки ещё может подойти: порог не должен отсекать соседнюю клетку");
+        assertTrue(
+                !DispatchRound.tooLowForCleanup(BoardCase.GATHER_MATERIALS, 55, 69),
+                "Порог касается только уборки висящего, а не обычных заданий");
+    }
+
+    @Test
     void busyWith_NoCurrentScript_NamesPlanStepInsteadOfTask() {
         TaskNode plan = new SequenceNode(List.of(
                 new ScriptCall("goto", Map.of("x", 1, "y", 64, "z", 2)), new ScriptCall("chop_tree", Map.of())));
