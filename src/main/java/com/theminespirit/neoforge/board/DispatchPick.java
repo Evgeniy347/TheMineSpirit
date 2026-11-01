@@ -61,6 +61,12 @@ final class DispatchPick {
             return null;
         }
         List<DispatchRound.Candidate> preference = new ArrayList<>(candidates.values());
+        if (target != null) {
+            preference.removeIf(spirit -> DispatchRound.tooLowForCleanup(
+                    ticket.boardCase(),
+                    (int) Math.floor(entities.get(spirit.id()).getY()),
+                    target.target().y()));
+        }
         preference.sort(Comparator.<DispatchRound.Candidate>comparingInt(
                         spirit -> crafter.filter(spirit.id()::equals).isPresent() ? 0 : 1)
                 .thenComparingDouble(spirit -> distance(entities.get(spirit.id()), target))
@@ -126,6 +132,7 @@ final class DispatchPick {
                 new EatNeed(
                         spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
                                 Math.ceil(spirit.getMaxHealth())),
-                new SpiritView(control, false, status == RunStatus.RUNNING));
+                new SpiritView(control, false, status == RunStatus.RUNNING),
+                spirit.isInWater());
     }
 }
