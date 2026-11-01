@@ -80,6 +80,21 @@ class RescuePlansTests {
     }
 
     @Test
+    void plan_SelfGoto_WalksWithoutBreaking() {
+        SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.GOTO, new BlockCoord(10, 67, -5), 0, List.of());
+
+        TaskNode plan = RescuePlans.plan(
+                        BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED).withRescue(self))
+                .orElseThrow();
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                List.of("goto"),
+                scripts(plan),
+                "Стоящий в открытом месте дух спасается шагом к цели, без ломки блоков постройки");
+    }
+
+    @Test
     void plan_SelfStep_ReturnsToSettlementAfterPit() {
         SelfEscape.Plan self = new SelfEscape.Plan(SelfEscape.Method.STEP, new BlockCoord(10, 67, -5), 2, List.of());
         BlockCoord home = new BlockCoord(10, 69, -5);

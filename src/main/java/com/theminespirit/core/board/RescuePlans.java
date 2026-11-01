@@ -68,6 +68,9 @@ public final class RescuePlans {
     }
 
     private static TaskNode selfPlan(SelfEscape.Plan rescue) {
+        if (rescue.method() == SelfEscape.Method.GOTO) {
+            return gotoPoint(rescue.target());
+        }
         if (rescue.method() == SelfEscape.Method.STEP) {
             return new SequenceNode(
                     List.of(new ScriptCall("pillar_up", Map.of("height", rescue.rise())), gotoPoint(rescue.target())));
