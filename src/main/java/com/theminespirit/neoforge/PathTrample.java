@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.PathGround;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
@@ -18,6 +19,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -31,7 +33,10 @@ final class PathTrample {
     static BlockPlacer.Begin trample(SpiritEntity spirit, BlockPos target) {
         Level level = spirit.level();
         String current = BlockStates.idOf(level.getBlockState(target));
-        if (!SchematicActions.isTrampleGround(current)) {
+        boolean trample = SchematicActions.isTrampleGround(current);
+        boolean raised =
+                !trample && PathGround.raisedPath(current, BlockStates.idOf(level.getBlockState(target.below())));
+        if (!trample && !raised) {
             return new BlockPlacer.Refused(
                     BlockPlacer.RefuseReason.NO_SUPPORT,
                     "тропинку топчут по земле или траве, а в " + target.toShortString() + " стоит " + current);
@@ -42,6 +47,15 @@ final class PathTrample {
                     BlockPlacer.RefuseReason.NO_MATERIAL, "нет лопаты для тропинки: сначала нужна лопата");
         }
         ItemStack shovel = spirit.getInventory().getItem(slot);
+        if (raised) {
+            level.setBlock(target, Blocks.DIRT_PATH.defaultBlockState(), Block.UPDATE_ALL);
+            SpiritGesture.workOn(spirit, target);
+            shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
+            if (level instanceof ServerLevel server) {
+                PlacedBlocksData.get(server).markSpirit(target);
+            }
+            return new BlockPlacer.Started(target.immutable());
+        }
         UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, shovel, topFace(target));
         InteractionResult result = shovel.getItem().useOn(context);
         if (!result.consumesAction() || !level.getBlockState(target).is(Blocks.DIRT_PATH)) {
