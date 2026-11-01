@@ -6,6 +6,8 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ScriptProgressWatch;
+import com.theminespirit.core.board.StillWatch;
+import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.SelfEscape;
@@ -31,6 +33,7 @@ final class RescueWatch {
     private static final String DIG_OUT = "dig_out";
     private static final Logger LOGGER = LogUtils.getLogger();
     private final ScriptProgressWatch progress = new ScriptProgressWatch();
+    private final StillWatch still = new StillWatch();
 
     RescueWatch() {}
 
@@ -47,10 +50,12 @@ final class RescueWatch {
             BlockPos feet = spirit.blockPosition();
             StuckSituation.Grid grid = new RescueGrid(level, feet);
             StuckSituation.Verdict verdict = StuckSituation.detect(coord(feet), grid);
-            if (!verdict.stuck()) {
+            String id = PREFIX + spirit.getUUID();
+            boolean marked = service.board().stuck().of(spirit.getUUID(), now).isPresent();
+            boolean standing = still.still(spirit.getUUID(), coord(feet), now, TaskStall.STALL_TICKS);
+            if (!verdict.stuck() && !(marked && standing)) {
                 continue;
             }
-            String id = PREFIX + spirit.getUUID();
             live.add(id);
             if (active(service, id)) {
                 continue;
@@ -73,6 +78,11 @@ final class RescueWatch {
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
         BlockCoord goal = SurfacePoint.of(level, spirit.home().orElse(settlement));
         Optional<SelfEscape.Plan> self = SelfEscape.plan(coord(feet), goal, new RescueGrid(level, feet), tool, steps);
+        if (self.isEmpty()
+                && !StuckSituation.detect(coord(feet), new RescueGrid(level, feet))
+                        .stuck()) {
+            self = Optional.of(new SelfEscape.Plan(SelfEscape.Method.STEP, goal, 1, List.of()));
+        }
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
         String what = "застрял в " + feet.toShortString() + " ("
                 + self.map(plan -> plan.method().name()).orElse("сам не выйдет") + "), задание спасения " + id

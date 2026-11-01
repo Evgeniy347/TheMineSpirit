@@ -66,10 +66,6 @@ public final class StuckSpirits {
         if (known == null) {
             return Optional.empty();
         }
-        if (now - known.since() >= BoardTuning.idleReleaseTicks()) {
-            stuck.remove(spirit);
-            return Optional.empty();
-        }
         return Optional.of(known);
     }
 

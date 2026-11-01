@@ -62,14 +62,17 @@ class StuckStageLiveTests {
         Optional<DispatchRound.Candidate> afterIdle = new DispatchRound(board, clock[0]).choose(mine, candidates);
 
         assertTrue(
-                afterIdle.isPresent(),
-                "Простаивающий дух без задачи не может быть исключён навсегда: после паузы "
-                        + BoardTuning.idleReleaseTicks() + " тиков метка «застрял» снимается, и он снова "
-                        + "получает задание (observe13 N22: spirit-3 idle 18 минут)");
+                afterIdle.isEmpty(),
+                "Стоящий дух не получает заданий и после паузы: пока он не сдвинулся и не спасён, доска "
+                        + "держит запрет (observe15 B1/A11)");
+        board.stuck().see(spirit, new BlockCoord(at.x() + StuckSpirits.AREA_RADIUS + 1, at.y(), at.z()));
+        assertTrue(
+                new DispatchRound(board, clock[0]).choose(mine, candidates).isPresent(),
+                "Дух сдвинулся дальше области колебания — запрет снимается, и задание снова выдаётся");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(mine.id(), spirit, clock[0]),
-                "Тот же путь, что в игре: раздача -> claim обязан выдать задание освободившемуся духу");
+                "Тот же путь, что в игре: раздача -> claim выдаёт задание освободившемуся духу");
     }
 
     @Test

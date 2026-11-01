@@ -728,7 +728,7 @@ public final class Board {
         if (failures < BoardTuning.ticketFailLimit()) {
             return;
         }
-        blocked.note(ticket, failures, ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock), now);
+        blocked.note(ticket, failures, ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock), stock, now);
     }
 
     private void unblockChanged(StockView stock, long now) {

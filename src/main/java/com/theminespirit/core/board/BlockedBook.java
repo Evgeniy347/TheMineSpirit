@@ -38,12 +38,13 @@ final class BlockedBook {
         this.notes = Objects.requireNonNull(notes, "Журнал блокировок не может быть null: переходы пишутся в него");
     }
 
-    void note(BoardTicket ticket, int failuresSoFar, Map<String, Integer> missingNow, long now) {
+    void note(BoardTicket ticket, int failuresSoFar, Map<String, Integer> missingNow, StockView stock, long now) {
         statuses.put(ticket.id(), BoardStatus.BLOCKED);
         missing.put(ticket.id(), missingNow);
         Map<String, Integer> have = new LinkedHashMap<>();
         ticket.requiredItems()
-                .forEach((item, need) -> have.put(item, Math.max(0, need - missingNow.getOrDefault(item, 0))));
+                .keySet()
+                .forEach(item -> have.put(item, stock.available().getOrDefault(item, 0)));
         available.put(ticket.id(), Map.copyOf(have));
         since.putIfAbsent(ticket.id(), now);
         notes.add(new BoardLogEntry(
