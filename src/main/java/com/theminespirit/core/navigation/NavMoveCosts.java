@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/pathing/movement/movements/*), лицензия
-// LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/movement/movements/*), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import static com.theminespirit.core.navigation.NavActionCosts.CENTER_AFTER_FALL_COST;
@@ -25,6 +24,29 @@ final class NavMoveCosts {
     private static final double SQRT_2 = Math.sqrt(2);
 
     private NavMoveCosts() {}
+
+    static void jump(NavContext context, int x, int y, int z, int dx, int dz, NavMoveResult out) {
+        for (int distance = 2; distance <= 4; distance++) {
+            for (int step = 1; step < distance; step++) {
+                int gapX = x + dx * step;
+                int gapZ = z + dz * step;
+                if (!context.world().passable(gapX, y, gapZ)
+                        || !context.world().passable(gapX, y + 1, gapZ)
+                        || context.world().walkable(gapX, y - 1, gapZ)
+                        || context.world().water(gapX, y, gapZ)) {
+                    return;
+                }
+            }
+            int nx = x + dx * distance;
+            int nz = z + dz * distance;
+            if (context.world().passable(nx, y, nz)
+                    && context.world().passable(nx, y + 1, nz)
+                    && context.world().walkable(nx, y - 1, nz)) {
+                set(out, nx, y, nz, WALK_ONE_BLOCK_COST * distance + JUMP_ONE_BLOCK_COST);
+                return;
+            }
+        }
+    }
 
     static void fall(NavContext context, int x, int y, int z, int dx, int dz, NavMoveResult out) {
         int nx = x + dx;
@@ -117,6 +139,11 @@ final class NavMoveCosts {
     }
 
     static void pillar(NavContext context, int x, int y, int z, NavMoveResult out) {
+        if ((context.world().water(x, y, z) || context.world().water(x, y + 1, z))
+                && (context.world().water(x, y + 1, z) || context.world().passable(x, y + 1, z))) {
+            set(out, x, y + 1, z, WALK_ONE_IN_WATER_COST);
+            return;
+        }
         if (context.world().climbable(x, y, z)) {
             set(out, x, y + 1, z, LADDER_UP_ONE_COST);
             return;

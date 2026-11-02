@@ -149,7 +149,19 @@ final class DeadCodeExemptions {
                     "Прототип графа внешних троп для разведки дальности пути: docs/research/pathfinding-range.md"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/movement/network/BreadcrumbTrail.java|method|BreadcrumbTrail#backtrack",
-                    "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"));
+                    "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
+                    "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavPathSplicer.java|method|NavPathSplicer#splice",
+                    "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavSegmentedPlanner.java|method|NavSegmentedPlanner#follow",
+                    "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/route/RouteBreakAudit.java|method|RouteBreakAudit#firstVeto",
+                    "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"));
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(

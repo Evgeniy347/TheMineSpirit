@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/pathing/movement/CalculationContext.java),
-// лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/movement/CalculationContext.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import java.util.Objects;

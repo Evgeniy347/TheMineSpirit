@@ -8,9 +8,6 @@ import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.neoforge.movement.CheapBlocks;
-import com.theminespirit.neoforge.movement.RouteDetour;
-import com.theminespirit.neoforge.movement.RouteWalk;
-import com.theminespirit.neoforge.movement.SurfaceRoute;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,8 +43,7 @@ public final class DigOutScript implements ScriptInstance {
     private int turns;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
-    private int routeRetries;
-    private @Nullable RouteWalk route;
+    private @Nullable DigOutRoute routeFollow;
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this.spirit = spirit;
@@ -158,30 +154,18 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
-        if (route == null && routeRetries < 3) {
-            BlockCoord goal = new BlockCoord(target.x(), target.y(), target.z());
-            route = (descending ? SurfaceRoute.planDescent(spirit, goal) : SurfaceRoute.plan(spirit))
-                    .orElseGet(() -> RouteDetour.plan(spirit, goal, HOME_RADIUS, "dig_out")
-                            .orElse(null));
-            routeRetries++;
+        if (routeFollow == null) {
+            routeFollow = new DigOutRoute(
+                    spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS);
         }
-        if (descending && route == null && routeRetries >= 3) {
-            fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
-            return false;
-        }
-        RouteWalk current = route;
-        if (current == null) {
-            return false;
-        }
-        RouteWalk.State state = current.tick();
-        if (state == RouteWalk.State.RUNNING) {
+        DigOutRoute.State state = routeFollow.tick();
+        if (state == DigOutRoute.State.RUNNING) {
             return true;
         }
-        if (state == RouteWalk.State.FAILED) {
-            RouteDetour.failed(spirit, current);
+        if (state == DigOutRoute.State.DESCENT_FAILED) {
+            fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
         }
-        RouteDetour.removed(spirit, current);
-        route = null;
+        routeFollow = null;
         return false;
     }
 
@@ -279,9 +263,9 @@ public final class DigOutScript implements ScriptInstance {
 
     @Override
     public void cancel() {
-        if (route != null) {
-            route.cancel();
-            route = null;
+        if (routeFollow != null) {
+            routeFollow.cancel();
+            routeFollow = null;
         }
         if (breaking) {
             breaker.cancel();

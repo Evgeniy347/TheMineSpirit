@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/api/java/baritone/api/pathing/movement/ActionCosts.java),
-// лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, api/pathing/movement/ActionCosts.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 public interface NavActionCosts {

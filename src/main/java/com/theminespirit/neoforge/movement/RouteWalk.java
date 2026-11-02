@@ -1,20 +1,15 @@
 package com.theminespirit.neoforge.movement;
 
 import com.theminespirit.core.movement.WalkAscent;
-import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteStep;
-import com.theminespirit.neoforge.BlockBreaker;
-import com.theminespirit.neoforge.BlockPlacer;
-import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -33,16 +28,12 @@ public final class RouteWalk {
     private final List<RouteStep> steps;
     private final BlockCoord target;
     private final double cost;
-    private final BlockBreaker breaker;
-    private final BlockPlacer placer;
     private final SwimStep swimmer;
+    private final PassageWalk passages;
+    private final RouteMutations mutations;
     private int next;
     private int stepTicks;
-    private boolean breaking;
-    private boolean pillarPlaced;
     private @Nullable String failure;
-    private final RemovalLog removals = new RemovalLog();
-    private String breakingId = "-";
     private int recorded = -1;
 
     public RouteWalk(SpiritEntity spirit, Route route, BlockCoord target) {
@@ -50,22 +41,31 @@ public final class RouteWalk {
         this.steps = route.steps();
         this.target = target;
         this.cost = route.cost();
-        this.breaker = new BlockBreaker(spirit);
-        this.placer = new BlockPlacer(spirit);
         this.swimmer = new SwimStep(spirit);
+        this.passages = new PassageWalk(spirit);
+        this.mutations = new RouteMutations(spirit, this);
     }
 
     public State tick() {
-        if (failure != null) return State.FAILED;
-        if (next >= steps.size()) return State.DONE;
+        if (failure != null) {
+            return State.FAILED;
+        }
+        if (next >= steps.size()) {
+            return State.DONE;
+        }
         RouteStep step = steps.get(next);
+        if (passages.openToward(step.cell())) {
+            return State.RUNNING;
+        }
         if ((step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM)
                 && SwimStep.far(spirit, step.cell())) {
             return fail("дух сошёл с маршрута: шаг " + step.cell() + " дальше соседней клетки");
         }
-        if (recorded != next) RouteHistory.record(spirit, step);
+        if (recorded != next) {
+            RouteHistory.record(spirit, step);
+        }
         recorded = next;
-        if (!breaking && ++stepTicks > STEP_TICKS) {
+        if (!mutations.busy() && ++stepTicks > STEP_TICKS) {
             String details = step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM
                     ? WalkReport.describe(spirit, step.cell())
                     : "";
@@ -73,11 +73,11 @@ public final class RouteWalk {
                     + details);
         }
         Optional<String> refusal = switch (step.action()) {
-            case BREAK -> breakCell(pos(step.cell()));
-            case PLACE -> placeCell(pos(step.cell()));
-            case PILLAR -> pillar(step.cell());
             case SWIM -> swimmer.tick(step.cell()) ? advance() : Optional.<String>empty();
             case WALK -> walk(step.cell());
+            case BREAK -> mutations.breakCell(pos(step.cell()));
+            case PLACE -> mutations.placeCell(pos(step.cell()));
+            case PILLAR -> mutations.pillar(step.cell());
         };
         if (refusal.isPresent()) {
             return fail(step.action() + " в " + step.cell() + ": " + refusal.get());
@@ -90,7 +90,7 @@ public final class RouteWalk {
     }
 
     public RemovalLog removals() {
-        return removals;
+        return mutations.removals();
     }
 
     public String failure() {
@@ -102,87 +102,19 @@ public final class RouteWalk {
     }
 
     public void cancel() {
-        if (breaking) {
-            breaker.cancel();
-            breaking = false;
-        }
+        passages.settle();
+        mutations.cancel();
         spirit.getNavigation().stop();
-    }
-
-    private Optional<String> breakCell(BlockPos cell) {
-        Level level = spirit.level();
-        if (breaking) {
-            BlockBreaker.Progress progress = breaker.tick();
-            if (progress == BlockBreaker.Progress.BREAKING) {
-                return Optional.empty();
-            }
-            breaking = false;
-            if (progress == BlockBreaker.Progress.BROKEN) {
-                removals.removed(breakingId, new BlockCoord(cell.getX(), cell.getY(), cell.getZ()));
-            }
-        }
-        if (level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) {
-            advance();
-            return Optional.empty();
-        }
-        return switch (breaker.begin(cell)) {
-            case BlockBreaker.Started ignored -> {
-                breaking = true;
-                breakingId = BlockStates.idOf(level.getBlockState(cell));
-                yield Optional.empty();
-            }
-            case BlockBreaker.Refused refused -> Optional.of(refused.message());
-            case BlockBreaker.Protected refused -> Optional.of(refused.reason());
-        };
-    }
-
-    private Optional<String> placeCell(BlockPos cell) {
-        Level level = spirit.level();
-        if (!level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) {
-            advance();
-            return Optional.empty();
-        }
-        Optional<String> placed = place(cell);
-        if (placed.isEmpty()) {
-            advance();
-        }
-        return placed;
-    }
-
-    private Optional<String> pillar(BlockCoord cell) {
-        BlockPos below = pos(cell);
-        if (pillarPlaced) {
-            if (spirit.onGround() && spirit.blockPosition().getY() == cell.y() + 1) {
-                pillarPlaced = false;
-                advance();
-            }
-            return Optional.empty();
-        }
-        spirit.getNavigation().stop();
-        if (spirit.onGround()) {
-            spirit.getJumpControl().jump();
-            return Optional.empty();
-        }
-        if (spirit.getY() > cell.y() + 1.0) {
-            Optional<String> placed = place(below);
-            pillarPlaced = placed.isEmpty();
-            return placed;
-        }
-        return Optional.empty();
     }
 
     private Optional<String> walk(BlockCoord cell) {
-        if (spirit.isInWater()) return swimmer.exit(cell) ? advance() : Optional.<String>empty();
+        if (spirit.isInWater()) {
+            return swimmer.exit(cell) ? advance() : Optional.<String>empty();
+        }
         WalkAscent.Command command = WalkAscent.next(cell, pose(), body(cell));
         if (command.step() == WalkAscent.Step.ARRIVED) {
             advance();
             return Optional.empty();
-        }
-        if (command.step() == WalkAscent.Step.SWIM || command.step() == WalkAscent.Step.CLIMB) {
-            Optional<String> support = ensureSupport(cell);
-            if (support.isPresent()) {
-                return support;
-            }
         }
         spirit.getNavigation().stop();
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
@@ -229,33 +161,6 @@ public final class RouteWalk {
         }
     }
 
-    private Optional<String> ensureSupport(BlockCoord cell) {
-        if (!spirit.isInWater()) {
-            return Optional.empty();
-        }
-        BlockPos target = pos(cell);
-        BlockPos feet = spirit.blockPosition();
-        if (target.getY() <= feet.getY()) {
-            return Optional.empty();
-        }
-        BlockPos below = target.below();
-        Level level = spirit.level();
-        if (!level.getBlockState(below).getCollisionShape(level, below).isEmpty()) {
-            return Optional.empty();
-        }
-        if (!below.equals(feet)) {
-            return place(below);
-        }
-        if (spirit.getY() < below.getY() + 0.6) {
-            spirit.getNavigation().stop();
-            Vec3 motion = spirit.getDeltaMovement();
-            spirit.setDeltaMovement(motion.x, Math.max(motion.y, LIFT), motion.z);
-            spirit.getJumpControl().jump();
-            return Optional.empty();
-        }
-        return place(below);
-    }
-
     private WalkAscent.Pose pose() {
         BlockPos feet = spirit.blockPosition();
         return new WalkAscent.Pose(
@@ -269,22 +174,14 @@ public final class RouteWalk {
         return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water);
     }
 
-    private Optional<String> place(BlockPos cell) {
-        Optional<String> blockId = WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit));
-        if (blockId.isEmpty()) {
-            return Optional.of("в инвентаре нет дешёвых блоков для постановки");
-        }
-        String id = blockId.get();
-        return switch (placer.beginWithoutSupport(cell, BlockStates.stateFor(id), id)) {
-            case BlockPlacer.Started ignored -> Optional.empty();
-            case BlockPlacer.Refused refused -> Optional.of(refused.message());
-            case BlockPlacer.Protected refused -> Optional.of(refused.reason());
-        };
+    Optional<String> advanceStep() {
+        return advance();
     }
 
     private Optional<String> advance() {
         next++;
         stepTicks = 0;
+        passages.settle();
         return Optional.<String>empty();
     }
 
