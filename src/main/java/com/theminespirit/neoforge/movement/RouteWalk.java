@@ -30,10 +30,10 @@ public final class RouteWalk {
     private final double cost;
     private final SwimStep swimmer;
     private final PassageWalk passages;
+    private final RouteMutations mutations;
     private int next;
     private int stepTicks;
     private @Nullable String failure;
-    private final RemovalLog removals = new RemovalLog();
     private int recorded = -1;
 
     public RouteWalk(SpiritEntity spirit, Route route, BlockCoord target) {
@@ -43,6 +43,7 @@ public final class RouteWalk {
         this.cost = route.cost();
         this.swimmer = new SwimStep(spirit);
         this.passages = new PassageWalk(spirit);
+        this.mutations = new RouteMutations(spirit, this);
     }
 
     public State tick() {
@@ -64,7 +65,7 @@ public final class RouteWalk {
             RouteHistory.record(spirit, step);
         }
         recorded = next;
-        if (++stepTicks > STEP_TICKS) {
+        if (!mutations.busy() && ++stepTicks > STEP_TICKS) {
             String details = step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM
                     ? WalkReport.describe(spirit, step.cell())
                     : "";
@@ -74,7 +75,9 @@ public final class RouteWalk {
         Optional<String> refusal = switch (step.action()) {
             case SWIM -> swimmer.tick(step.cell()) ? advance() : Optional.<String>empty();
             case WALK -> walk(step.cell());
-            case BREAK, PLACE, PILLAR -> Optional.of("навигация не меняет мир: шаг " + step.action());
+            case BREAK -> mutations.breakCell(pos(step.cell()));
+            case PLACE -> mutations.placeCell(pos(step.cell()));
+            case PILLAR -> mutations.pillar(step.cell());
         };
         if (refusal.isPresent()) {
             return fail(step.action() + " в " + step.cell() + ": " + refusal.get());
@@ -87,7 +90,7 @@ public final class RouteWalk {
     }
 
     public RemovalLog removals() {
-        return removals;
+        return mutations.removals();
     }
 
     public String failure() {
@@ -100,6 +103,7 @@ public final class RouteWalk {
 
     public void cancel() {
         passages.settle();
+        mutations.cancel();
         spirit.getNavigation().stop();
     }
 
@@ -168,6 +172,10 @@ public final class RouteWalk {
         boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER)
                 || spirit.level().getFluidState(target.below()).is(FluidTags.WATER);
         return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water);
+    }
+
+    Optional<String> advanceStep() {
+        return advance();
     }
 
     private Optional<String> advance() {
