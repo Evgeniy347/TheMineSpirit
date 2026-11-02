@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class BoardTransitions {
     private static final Set<BoardLog.Event> LOGGED =
-            Set.of(BoardLog.Event.DONE, BoardLog.Event.FAILED, BoardLog.Event.REOPENED, BoardLog.Event.CANCELLED);
+            Set.of(BoardLog.Event.DONE, BoardLog.Event.REOPENED, BoardLog.Event.CANCELLED);
     private static final String REASON_PREFIX = "reason=";
     private static final String UNKNOWN_REASON = "не записана";
 

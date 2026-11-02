@@ -1,8 +1,11 @@
 package com.theminespirit.neoforge.policy;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.ChangeSummary;
 import com.theminespirit.core.mining.BreathSearch;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.observation.StateSignature;
 import com.theminespirit.core.policy.ReflexAction;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -26,6 +29,7 @@ final class ReflexExecutor {
     private int breathAge = BREATH_REFRESH_TICKS;
     private int attempts;
     private long lastLog = Long.MIN_VALUE;
+    private final ChangeSummary airLog = new ChangeSummary(BoardTuning.logSummaryTicks());
 
     void execute(SpiritEntity spirit, ReflexAction action) {
         switch (action) {
@@ -67,6 +71,7 @@ final class ReflexExecutor {
         lastTarget = null;
         breathAge = BREATH_REFRESH_TICKS;
         attempts = 0;
+        airLog.clear("air");
     }
 
     private void moveTo(SpiritEntity spirit, BlockCoord cell) {
@@ -113,20 +118,32 @@ final class ReflexExecutor {
         LevelSafetyView view = new LevelSafetyView(spirit.level());
         Optional<BlockCoord> air = BreathSearch.nearest(view, feet);
         breath = BreathSearch.nextStep(view, feet);
-        if (logTime(spirit)) {
+        int supply = spirit.getAirSupply();
+        long now = spirit.level().getGameTime();
+        airLog.note("air", "surface|" + StateSignature.air(supply), supply, now).ifPresent(summary -> {
+            if (summary.changed()) {
+                LOGGER.info(
+                        "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, шаг {}, воздух {}, "
+                                + "расстояние {}, навигация завершена {}",
+                        spirit.getName().getString(),
+                        attempts,
+                        feet,
+                        supply,
+                        breath.map(BlockCoord::toString).orElse("не найден — всплываю вертикально"),
+                        air.map(BlockCoord::toString).orElse("не найден"),
+                        air.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
+                                .orElse("-"),
+                        spirit.getNavigation().isDone());
+                return;
+            }
             LOGGER.info(
-                    "[air] дух {}: всплытие, попытка {}, ноги {}, запас воздуха {}, шаг {}, воздух {}, расстояние {}, "
-                            + "навигация завершена {}",
+                    "[air] сводка: дух {} всплывал {} проверок за окно, воздух {}–{}, ноги {}",
                     spirit.getName().getString(),
-                    attempts,
-                    feet,
-                    spirit.getAirSupply(),
-                    breath.map(BlockCoord::toString).orElse("не найден — всплываю вертикально"),
-                    air.map(BlockCoord::toString).orElse("не найден"),
-                    air.map(cell -> String.format(Locale.ROOT, "%.1f", distance(feet, cell)))
-                            .orElse("-"),
-                    spirit.getNavigation().isDone());
-        }
+                    summary.count(),
+                    summary.min(),
+                    summary.max(),
+                    feet);
+        });
     }
 
     private void exitWater(SpiritEntity spirit, BlockCoord local) {

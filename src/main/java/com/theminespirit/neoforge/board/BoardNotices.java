@@ -1,12 +1,14 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BlockNoteLog;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardNoticeText;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BoardWhy;
 import com.theminespirit.core.board.PendingStall;
 import com.theminespirit.core.board.StatusNote;
@@ -20,11 +22,27 @@ final class BoardNotices {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final PendingStall pending = new PendingStall();
+    private final BlockNoteLog blockNotes = new BlockNoteLog(BoardTuning.logSummaryTicks());
 
     void blocks(Board board, JournalService journal, StockView stock, long now) {
+        Set<String> alive = new HashSet<>();
+        for (BoardTicket ticket : board.all()) {
+            alive.add(ticket.id());
+        }
+        blockNotes.retain(alive);
         for (BoardLogEntry entry : board.drainBlocks()) {
             journal.recordEntry(entry);
-            LOGGER.info(BoardNoticeText.line(board, entry, stock, now));
+            blockNotes.observe(entry, now).ifPresent(summary -> {
+                if (summary.changed()) {
+                    LOGGER.info(BoardNoticeText.line(board, entry, stock, now));
+                    return;
+                }
+                LOGGER.info(
+                        "[board] сводка: задание {} {} повторялось {} раз за окно",
+                        entry.ticketId(),
+                        entry.event(),
+                        summary.count());
+            });
         }
     }
 

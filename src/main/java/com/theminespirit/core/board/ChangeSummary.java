@@ -26,6 +26,11 @@ public final class ChangeSummary {
                 .map(summary -> new Summary(false, summary.count(), summary.min(), summary.max(), summary.total()));
     }
 
+    public void clear(String key) {
+        states.forget(key);
+        repeats.clear(key);
+    }
+
     public void retain(Set<String> keys) {
         states.retain(keys);
         repeats.retain(keys);

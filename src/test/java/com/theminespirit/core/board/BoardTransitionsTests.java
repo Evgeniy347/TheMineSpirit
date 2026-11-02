@@ -35,20 +35,16 @@ class BoardTransitionsTests {
     }
 
     @Test
-    void line_Failed_NamesFailureReason() {
-        String line = BoardTransitions.line(
-                        BoardLog.Event.FAILED,
-                        ticket("first:build_orchard").withFailure("не удалось добыть charcoal ×1"),
-                        3,
-                        "spirit-3")
-                .orElseThrow();
-
-        assertTrue(line.contains("FAILED"), "latest.log обязан писать переход FAILED: иначе провал ищут в board-log");
+    void line_Failed_IsNotDuplicatedByTransition() {
         assertTrue(
-                line.contains("не удалось добыть charcoal ×1"),
-                "Строка FAILED повторяет причину провала: по ней чинят механику, а не угадывают");
-        assertTrue(
-                line.contains("попыток=3"), "Строка FAILED называет число провалов: по нему видно предел блокировки");
+                BoardTransitions.line(
+                                BoardLog.Event.FAILED,
+                                ticket("first:build_orchard").withFailure("не удалось добыть charcoal ×1"),
+                                3,
+                                "spirit-3")
+                        .isEmpty(),
+                "FAILED уже пишет [incident] с причиной, снимком и инвентарём: вторая строка на тот же провал "
+                        + "делит лог на три части и прячет причину (observe18 B10)");
     }
 
     @Test

@@ -59,6 +59,17 @@ class ChangeSummaryTests {
     }
 
     @Test
+    void clear_StateAfterEpisode_StartsChangedAgain() {
+        ChangeSummary log = new ChangeSummary(6000);
+        log.note("air", "surface|full", 300, 10);
+        log.clear("air");
+
+        assertTrue(
+                log.note("air", "surface|full", 300, 20).orElseThrow().changed(),
+                "Новый приступ после выхода из воды снова первый: старое состояние эпизода не глушит его строку");
+    }
+
+    @Test
     void retain_ForgottenKey_StartsChangedAgain() {
         ChangeSummary log = new ChangeSummary(6000);
         log.note("rescue", "сам не выйдет", 1, 10);
