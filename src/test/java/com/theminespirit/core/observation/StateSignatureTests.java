@@ -16,38 +16,27 @@ class StateSignatureTests {
     }
 
     @Test
-    void spirit_ScriptChange_ChangesSignature() {
+    void spirit_WaterChange_ChangesSignature() {
         assertNotEquals(
-                StateSignature.spirit("chop_tree", 300, false, true),
-                StateSignature.spirit("acquire", 300, false, true),
-                "Смена скрипта — смена состояния: [pos] обязан показать её сразу, а не через окно сводки");
-    }
-
-    @Test
-    void spirit_WaterOrGroundChange_ChangesSignature() {
-        assertNotEquals(
-                StateSignature.spirit("goto", 300, false, true),
-                StateSignature.spirit("goto", 300, true, true),
+                StateSignature.spirit(300, false),
+                StateSignature.spirit(300, true),
                 "Вход в воду — смена состояния: без строки [pos] утопление ищут по пустому логу");
+    }
+
+    @Test
+    void spirit_SameWaterAndAir_KeepsSignature() {
+        assertEquals(
+                StateSignature.spirit(300, false),
+                StateSignature.spirit(300, false),
+                "Обычная ходьба, прыжки и смена скрипта не печатают [pos] каждые 5 секунд: позицию и скрипт "
+                        + "берут из /v1/bots и сводки раз в окно");
+    }
+
+    @Test
+    void spirit_AirThreshold_ChangesSignature() {
         assertNotEquals(
-                StateSignature.spirit("goto", 300, false, true),
-                StateSignature.spirit("goto", 300, false, false),
-                "Отрыв от земли — смена состояния: падение и прыжок обязаны попадать в лог");
-    }
-
-    @Test
-    void spirit_SameStateInNewCell_KeepsSignature() {
-        assertEquals(
-                StateSignature.spirit("chop_tree", 300, false, true),
-                StateSignature.spirit("chop_tree", 300, false, true),
-                "Обычная ходьба без смены скрипта, воды и опоры не должна печатать [pos] каждые 5 секунд");
-    }
-
-    @Test
-    void spirit_BlankScript_IsNamedDash() {
-        assertEquals(
-                "-|false|true|full",
-                StateSignature.spirit("  ", 300, false, true),
-                "Пустой скрипт называется «-»: строка без имени скрипта не должна менять состояние на пустое");
+                StateSignature.spirit(100, true),
+                StateSignature.spirit(99, true),
+                "Запас воздуха ниже порога — смена состояния: [pos] показывает её сразу, не дожидаясь сводки");
     }
 }

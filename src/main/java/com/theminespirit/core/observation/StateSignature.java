@@ -1,7 +1,5 @@
 package com.theminespirit.core.observation;
 
-import org.jspecify.annotations.Nullable;
-
 public final class StateSignature {
     private static final int LOW_AIR = 100;
     private static final int CRITICAL_AIR = 50;
@@ -18,8 +16,7 @@ public final class StateSignature {
         return airSupply < LOW_AIR ? "low" : "full";
     }
 
-    public static String spirit(@Nullable String script, int airSupply, boolean inWater, boolean onGround) {
-        String current = script == null || script.isBlank() ? "-" : script;
-        return current + "|" + inWater + "|" + onGround + "|" + air(airSupply);
+    public static String spirit(int airSupply, boolean inWater) {
+        return inWater + "|" + air(airSupply);
     }
 }

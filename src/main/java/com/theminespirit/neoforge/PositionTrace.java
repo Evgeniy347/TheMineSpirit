@@ -24,7 +24,7 @@ public final class PositionTrace {
         int air = spirit.getAirSupply();
         boolean water = spirit.isInWater();
         boolean ground = spirit.onGround();
-        String next = StateSignature.spirit(script, air, water, ground);
+        String next = StateSignature.spirit(air, water);
         boolean changed = !next.equals(state);
         if (!changed && lastCheck != Long.MIN_VALUE && now - lastCheck < CHECK_TICKS) {
             return;
