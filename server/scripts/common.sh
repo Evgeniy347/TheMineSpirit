@@ -6,6 +6,8 @@ MOD_DIR="${MOD_DIR:-/opt/minecraft/the-mine-spirit}"
 TMUX_SESSION="minecraft"
 NEOFORGE_VERSION="21.1.257"
 PUBLISH_SYNC_LOG="${PUBLISH_SYNC_LOG:-/opt/minecraft/logs/publish-sync.log}"
+TMP_DIR="${TMP_DIR:-/opt/minecraft/tmp}"
+STOP_MARKER="${STOP_MARKER:-$TMP_DIR/server-stop.lock}"
 
 is_running() {
     tmux has-session -t "$TMUX_SESSION" 2>/dev/null

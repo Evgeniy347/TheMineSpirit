@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.rest.BoardRoutes;
+import com.theminespirit.core.rest.HealthGateway;
+import com.theminespirit.core.rest.HealthRoutes;
 import com.theminespirit.core.rest.IdempotencyCache;
 import com.theminespirit.core.rest.PlanningService;
 import com.theminespirit.core.rest.PolicyRoutes;
@@ -18,11 +20,20 @@ public final class RestRouter {
     private RestRouter() {}
 
     public static Router create(SpiritBotGateway gateway) {
-        return create(gateway, new SseSlots());
+        return create(gateway, new SseSlots(), HealthGateway.unknown());
+    }
+
+    public static Router create(SpiritBotGateway gateway, HealthGateway health) {
+        return create(gateway, new SseSlots(), health);
     }
 
     public static Router create(SpiritBotGateway gateway, SseSlots slots) {
+        return create(gateway, slots, HealthGateway.unknown());
+    }
+
+    public static Router create(SpiritBotGateway gateway, SseSlots slots, HealthGateway health) {
         List<Route> routes = new ArrayList<>(V1Routes.routes(gateway, SpiritScripts.catalog()));
+        routes.addAll(HealthRoutes.of(health));
         PlanningService planning = new PlanningService(SpiritScripts.catalog(), SpiritScripts.conditionCatalog());
         SpiritTaskGateway taskGateway = new SpiritTaskGateway(gateway.index(), gateway.serverCall(), planning);
         SpiritBoardGateway boardGateway = new SpiritBoardGateway(gateway.server());

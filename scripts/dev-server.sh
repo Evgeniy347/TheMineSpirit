@@ -231,6 +231,23 @@ HB
     echo $! >"$dir/heartbeat.pid"
 }
 
+toml_path() {
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -m "$1"
+    else
+        printf '%s' "$1"
+    fi
+}
+
+rest_option() {
+    local file="$1" key="$2" value="$3"
+    if grep -qE "^[[:space:]]*$key[[:space:]]*=" "$file"; then
+        sed -i -e "s|^[[:space:]]*$key[[:space:]]*=.*|$key = \"$value\"|" "$file"
+    else
+        printf '\t%s = "%s"\n' "$key" "$value" >>"$file"
+    fi
+}
+
 patch_copy() {
     local dir="$1"
     sed -i \
@@ -248,6 +265,8 @@ patch_copy() {
         -e "s/^[[:space:]]*port = .*/port = $REST_PORT/" \
         -e "s/^[[:space:]]*bindAddress = .*/bindAddress = \"127.0.0.1\"/" \
         "$dir/config/theminespirit-rest.toml"
+    rest_option "$dir/config/theminespirit-rest.toml" heartbeatFile "$(toml_path "$dir/logs/tick.heartbeat")"
+    rest_option "$dir/config/theminespirit-rest.toml" debugLeaseFile "$(toml_path "$dir/debug.lease")"
 }
 
 fetch_world() {

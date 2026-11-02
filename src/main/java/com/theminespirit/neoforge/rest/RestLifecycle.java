@@ -1,10 +1,12 @@
 package com.theminespirit.neoforge.rest;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.rest.HealthGateway;
 import com.theminespirit.core.task.TaskRegistry;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.util.Optional;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.bus.api.IEventBus;
@@ -12,6 +14,7 @@ import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 
 public final class RestLifecycle {
@@ -20,6 +23,7 @@ public final class RestLifecycle {
     private static IEventBus gameBus;
     private static SpiritIndex index;
     private static RestServer server;
+    private static ServerHealth health;
 
     private RestLifecycle() {}
 
@@ -27,12 +31,13 @@ public final class RestLifecycle {
         gameBus = bus;
         bus.addListener(RestLifecycle::onAboutToStart);
         bus.addListener(RestLifecycle::onStarted);
+        bus.addListener(RestLifecycle::onTick);
         bus.addListener(RestLifecycle::onStopping);
         bus.addListener(RestLifecycle::onStopped);
     }
 
     public static Optional<RestServer> tryStart(
-            MinecraftServer minecraft, SpiritIndex spirits, String bindAddress, int port) {
+            MinecraftServer minecraft, SpiritIndex spirits, HealthGateway healthGateway, String bindAddress, int port) {
         InetAddress address;
         try {
             address = InetAddress.getByName(bindAddress);
@@ -47,7 +52,8 @@ public final class RestLifecycle {
         }
         SpiritBotGateway gateway = new SpiritBotGateway(minecraft, spirits, gameBus, new TaskRegistry());
         try {
-            RestServer started = RestServer.start(address, port, RestRouter.create(gateway), gateway::stop);
+            RestServer started =
+                    RestServer.start(address, port, RestRouter.create(gateway, healthGateway), gateway::stop);
             LOGGER.info(
                     "REST-мост слушает {}:{} (без авторизации: доступ ограничивайте адресом привязки и файрволом)",
                     address.getHostAddress(),
@@ -76,6 +82,10 @@ public final class RestLifecycle {
             LOGGER.info("REST-мост не запущен: он поднимается только на выделенном сервере");
             return;
         }
+        health = new ServerHealth(
+                Path.of(RestConfig.heartbeatFile()),
+                Path.of(RestConfig.debugLeaseFile()),
+                RestConfig.hangAfterSeconds() * 1000L);
         if (!RestConfig.enabled()) {
             LOGGER.info("REST-мост выключен: enabled=false в {}", RestConfig.FILE_NAME);
             return;
@@ -84,11 +94,18 @@ public final class RestLifecycle {
             LOGGER.error("REST-мост не запущен: индекс духов не создан, ServerAboutToStartEvent не был получен");
             return;
         }
-        server = tryStart(event.getServer(), index, RestConfig.bindAddress(), RestConfig.port())
+        server = tryStart(event.getServer(), index, health, RestConfig.bindAddress(), RestConfig.port())
                 .orElse(null);
     }
 
+    private static void onTick(ServerTickEvent.Post event) {
+        if (health != null) {
+            health.onTick(event.getServer());
+        }
+    }
+
     private static void onStopping(ServerStoppingEvent ignoredEvent) {
+        health = null;
         if (server != null) {
             server.stop();
             server = null;

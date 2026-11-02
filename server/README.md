@@ -25,6 +25,7 @@
 |---|---|---|
 | [scripts/start.sh](scripts/start.sh) | запускает сервер в tmux-сессии `minecraft`, ждёт готовности; перед запуском зовёт `publish.sh --sync` и, если пак клиента или страница разошлись с `mods/`, обновляет их (лог — `/opt/minecraft/logs/publish-sync.log`) | `Сервер запущен` |
 | [scripts/stop.sh](scripts/stop.sh) | корректно останавливает сервер с сохранением мира | `Сервер остановлен` |
+| [scripts/hang-watch.sh](scripts/hang-watch.sh) | сторож зависания: тик стоит дольше порога → `jcmd Thread.print` в `logs/hang-*.txt`, строка в `logs/hang.log`, перезапуск `stop.sh` → kill по PID → `start.sh`; пауза живой отладки и идущая остановка пропускаются | дамп и `hang.log` |
 | [scripts/console.sh](scripts/console.sh) | консоль сервера; выйти, не останавливая: `Ctrl+B`, затем `D` | приглашение консоли |
 | [scripts/world-snapshot.sh](scripts/world-snapshot.sh) | консистентный архив мира без остановки сервера: `save-off` → `save-all flush` → `tar --zstd` → `save-on`; метка (`before-<что>`, `publish-<версия>`) защищает архив от ротации | `снимок готов: …` |
 | [scripts/world-restore.sh](scripts/world-restore.sh) | откат мира на архив: снимок `before-restore` → остановка → разворот → запуск; без архива печатает список | `Мир восстановлен` |
@@ -37,6 +38,8 @@
 
 - **Мир в git не коммитится.** Снимок — `scripts/world-snapshot.sh [метка]`, откат — `scripts/world-restore.sh`.
   Cron снимает архив каждые 10 минут в `/opt/minecraft/backups/world/`; архивы с меткой ротация не удаляет.
+- Cron раз в минуту зовёт `scripts/hang-watch.sh` (строку ставит `publish.sh`): зависший тик снимается дампом
+  в `/opt/minecraft/logs/hang-*.txt` и перезапуском, отметка — `/opt/minecraft/logs/hang.log`.
 - Скрипты и конфиги правятся в репозитории мода (`server/`), на сервер их кладёт `scripts/publish.sh`.
   Ручная правка на сервере будет перезаписана публикацией.
 - Мир, конфиги и jar текущей версии без согласования с пользователем не трогать.

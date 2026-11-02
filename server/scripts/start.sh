@@ -3,6 +3,8 @@
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 
+rm -f "$STOP_MARKER"
+
 if is_running; then
     echo "Сервер уже запущен (tmux: $TMUX_SESSION)"
     exit 0

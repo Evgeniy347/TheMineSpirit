@@ -88,7 +88,7 @@ deploy_server_files() {
         return 1
     fi
     mkdir -p "$SERVER_DIR/scripts" "$SERVER_DIR/config" "$CLEANUP_SCRIPT_DIR"
-    for name in common.sh console.sh install-neoforge.sh start.sh stop.sh world-snapshot.sh world-restore.sh; do
+    for name in common.sh console.sh hang-watch.sh install-neoforge.sh start.sh stop.sh world-snapshot.sh world-restore.sh; do
         if [ ! -f "$files/scripts/$name" ]; then
             echo "ОШИБКА: нет $files/scripts/$name" >&2
             return 1
@@ -126,7 +126,35 @@ deploy_server_files() {
         fi
         chmod 755 "$CLEANUP_SCRIPT_DIR/server-cleanup.sh"
     fi
+    if ! install_hang_watch_cron; then
+        return 1
+    fi
     echo "Скрипты и конфиги сервера разложены: $files → $SERVER_DIR"
+}
+
+install_hang_watch_cron() {
+    local script="$SERVER_DIR/scripts/hang-watch.sh"
+    local log="/opt/minecraft/logs/hang-watch.log"
+    local line current
+    if ! command -v crontab >/dev/null 2>&1; then
+        echo "ВНИМАНИЕ: crontab не найден — сторож зависания не поставлен в cron" >&2
+        return 0
+    fi
+    line="* * * * * $script >>$log 2>&1"
+    current="$(crontab -l 2>/dev/null || true)"
+    if printf '%s\n' "$current" | grep -Fq "$script"; then
+        echo "cron сторожа зависания уже стоит: $script"
+        return 0
+    fi
+    mkdir -p "$(dirname "$log")"
+    if ! {
+        [ -z "$current" ] || printf '%s\n' "$current"
+        printf '%s\n' "$line"
+    } | crontab -; then
+        echo "ОШИБКА: не поставить cron сторожа зависания ($script)" >&2
+        return 1
+    fi
+    echo "cron сторожа зависания поставлен: раз в минуту"
 }
 
 snapshot_world() {
@@ -310,7 +338,7 @@ if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
     echo "  2. поиск build/libs/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
-    echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR"
+    echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR (cron сторожа зависания)"
     if [ "$mode" = full ]; then
         echo "  4. снимок мира: $SERVER_DIR/scripts/world-snapshot.sh publish-<версия>"
     else

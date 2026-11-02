@@ -3,6 +3,10 @@
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 
+mkdir -p "$TMP_DIR"
+printf '%s\n' "$$" >"$STOP_MARKER"
+trap 'rm -f "$STOP_MARKER"' EXIT
+
 if ! is_running; then
     echo "Сервер не запущен"
     exit 0

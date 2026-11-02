@@ -166,7 +166,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/prove-red.sh](scripts/prove-red.sh) | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |
 | [scripts/schematic.sh](scripts/schematic.sh) | постройки текстом: `show` (материалы, срезы), `check` (сторожа) |
 | [scripts/publish.sh](scripts/publish.sh) | сборка и публикация мода целиком (раскладка `server/`, снимок мира в архив, сервер, пак клиента, страница, тег) — только по согласованию; `--temp`/`--sync` |
-| [server/](server/README.md), [server/scripts/world-snapshot.sh](server/scripts/world-snapshot.sh), [server/scripts/world-restore.sh](server/scripts/world-restore.sh) | скрипты и конфиги сервера (источник для `publish.sh`), снимок мира в tar-архив и откат; cron каждые 10 минут; мир в git не хранится |
+| [server/](server/README.md), [server/scripts/world-snapshot.sh](server/scripts/world-snapshot.sh), [server/scripts/world-restore.sh](server/scripts/world-restore.sh), [server/scripts/hang-watch.sh](server/scripts/hang-watch.sh) | скрипты и конфиги сервера (источник для `publish.sh`), снимок мира в tar-архив и откат, сторож зависания тика с дампом и перезапуском; cron каждые 10 минут и раз в минуту; мир в git не хранится |
 | [scripts/server-cleanup.sh](scripts/server-cleanup.sh) | уборка сервера по cron: `tmp/` старше суток, `logs/` старше 14 дней |
 | [scripts/live-debug.sh](scripts/live-debug.sh), [scripts/live-debug/](scripts/live-debug/), [scripts/dev-server.sh](scripts/dev-server.sh), [scripts/dev-server/](scripts/dev-server/) | живая отладка: копия сервера на ПК, замок, hotswap, eval, брейкпоинты; [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) |
 | [scripts/progress.sh](scripts/progress.sh) | прогресс плана: «сделано N» из `todo.md` + открытые пункты |
@@ -177,7 +177,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | сторож памяти domovoy (SIGSTOP/SIGCONT тяжёлой java) |
 | [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `orphan-sweep-win.sh`, `res-pc.ps1`, `keepawake.ps1` |
 | [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh), [scripts/git-hooks/](scripts/git-hooks/) | хуки: формат коммита, зелёный коммит, запрет перезаписи истории |
-| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-orphan-sweep-win.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh` |
+| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-orphan-sweep-win.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh`, `check-hang-watch.sh` |
 
 ## Структура
 
