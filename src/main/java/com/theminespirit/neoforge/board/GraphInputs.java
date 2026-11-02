@@ -73,7 +73,13 @@ final class GraphInputs {
                                 .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)),
                         level,
                         graph));
-        return FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan);
+        return MoreInputs.apply(
+                FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan),
+                level,
+                service,
+                spirits,
+                scan,
+                graph);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
