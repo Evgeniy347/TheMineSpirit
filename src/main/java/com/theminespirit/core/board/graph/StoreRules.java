@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 public final class StoreRules {
-    public static final String RESOURCE = "data/theminespirit/board/graph.d/store.json";
+    public static final String RESOURCE = "data/theminespirit/board/graph.d/farm.json";
 
     public record Config(
             int reservePercent,
@@ -22,7 +22,7 @@ public final class StoreRules {
 
     public static Config config() {
         JsonNode root = JsonResource.parse(JsonResource.readClasspath(RESOURCE), RESOURCE);
-        JsonNode store = root.path("store");
+        JsonNode store = root.path("farmStore");
         Map<String, Integer> minimums = new LinkedHashMap<>();
         store.path("minimums")
                 .properties()

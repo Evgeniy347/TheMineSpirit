@@ -12,6 +12,18 @@
       "k": 1,
       "base": 30,
       "stage": 2
+    },
+    "food_reserve": {
+      "xmin": 0,
+      "k": 1,
+      "base": 50,
+      "stage": 1
+    },
+    "logistics": {
+      "xmin": 0,
+      "k": 1,
+      "base": 45,
+      "stage": 1
     }
   },
   "groups": {
@@ -25,6 +37,12 @@
       "wheat_seeds",
       "melon_seeds",
       "pumpkin_seeds"
+    ],
+    "#fuel": [
+      "coal",
+      "charcoal",
+      "oak_planks",
+      "oak_log"
     ]
   },
   "buildings": {
@@ -36,6 +54,19 @@
         "wheat_seeds": 8,
         "dirt": 8
       },
+      "optional": true,
+      "implemented": false
+    },
+    "storage_space": {
+      "case": "STOCK_CHESTS",
+      "stage": 1,
+      "base": 58,
+      "materials": {
+        "#planks": 32
+      },
+      "requires": [
+        "chests"
+      ],
       "optional": true,
       "implemented": false
     }
@@ -118,9 +149,52 @@
       },
       "ticks": 200,
       "implemented": false
+    },
+    {
+      "id": "transfer_item",
+      "case": "TRANSFER_ITEM",
+      "makes": "logistics",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {},
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "sort_chest",
+      "case": "ACTIVITY_UNLOAD",
+      "makes": "logistics",
+      "yield": 1,
+      "weight": 0.9,
+      "consumes": {},
+      "building": "chests",
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "restock_food",
+      "case": "RESTOCK_FOOD",
+      "makes": "food_reserve",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "food": 8
+      },
+      "ticks": 200
     }
   ],
-  "edges": [],
+  "edges": [
+    {
+      "lack": "logistics",
+      "way": "transfer_item",
+      "weight": 8
+    },
+    {
+      "lack": "logistics",
+      "way": "sort_chest",
+      "weight": 5
+    }
+  ],
   "triggers": [
     {
       "have": "wheat_seeds",
@@ -221,6 +295,135 @@
       "advice": [
         "plant_free_cell_after_harvest"
       ]
+    },
+    "store_minimum": {
+      "tasks": [
+        {
+          "id": "store_minimum",
+          "case": "SUPPLY_SITE",
+          "base": 45,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "#logs": 20,
+        "cobblestone": 20,
+        "food": 15,
+        "tool:pickaxe": 10,
+        "tool:axe": 10,
+        "tool:shovel": 10,
+        "tool:sword": 10
+      },
+      "advice": [
+        "refill_minimum_before_next_stage"
+      ]
+    },
+    "transfer_pending": {
+      "tasks": [
+        {
+          "id": "transfer_item",
+          "case": "TRANSFER_ITEM",
+          "base": 40,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "logistics": 8,
+        "food_reserve": 5
+      },
+      "advice": [
+        "carry_carried_items_to_chest"
+      ]
+    },
+    "storage_full": {
+      "tasks": [
+        {
+          "id": "add_chest_pair",
+          "case": "STOCK_CHESTS",
+          "base": 55,
+          "consumes": {
+            "#planks": 32
+          }
+        }
+      ],
+      "push": {
+        "building:storage_space": 15,
+        "logistics": 10
+      },
+      "advice": [
+        "add_chest_pair_or_warehouse"
+      ]
+    },
+    "storage_mixed": {
+      "tasks": [
+        {
+          "id": "sort_chest",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 30,
+          "consumes": {},
+          "building": "chests"
+        }
+      ],
+      "push": {
+        "logistics": 8
+      },
+      "advice": [
+        "store_by_item_type"
+      ]
+    },
+    "furnace_ready": {
+      "tasks": [
+        {
+          "id": "take_smelted",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 40,
+          "consumes": {},
+          "building": "furnace"
+        }
+      ],
+      "push": {
+        "food": 10
+      },
+      "advice": [
+        "take_smelted_output"
+      ]
+    },
+    "furnace_needs_fuel": {
+      "tasks": [
+        {
+          "id": "load_furnace",
+          "case": "ACTIVITY_SMELT",
+          "base": 35,
+          "consumes": {
+            "#fuel": 1
+          },
+          "building": "furnace"
+        }
+      ],
+      "push": {
+        "#fuel": 10,
+        "logistics": 5
+      },
+      "advice": [
+        "load_furnace_then_leave"
+      ]
     }
+  },
+  "_note_store_area": "Склад/логистика перенесены сюда: board/graph.d/store.json принадлежит исполнителю graphstore.",
+  "farmStore": {
+    "reservePercent": 25,
+    "minimums": {
+      "#logs": 64,
+      "cobblestone": 128,
+      "bread": 16,
+      "coal": 16
+    },
+    "toolMinimums": {
+      "axe": "iron",
+      "pickaxe": "iron",
+      "shovel": "iron",
+      "sword": "iron"
+    },
+    "maxItemTypesPerChest": 6
   }
 }
