@@ -38,7 +38,10 @@ final class HouseLevels {
         int levelValue = next.getAsInt();
         BoardLedger ledger = service.board().ledger();
         if (BuildingLevels.state(BoardCase.BUILD_HOUSE, levelValue, ledger) != BuildingLevels.State.UPGRADING
-                || !SettlementStage.allows(BoardCase.BUILD_HOUSE, levelValue, ledger)
+                || !SettlementStage.allows(
+                        BoardCase.BUILD_HOUSE,
+                        levelValue,
+                        service.board().ledger().stage())
                 || FirstStepsRunner.stageOneBuilding(service)) {
             return;
         }

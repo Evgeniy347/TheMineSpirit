@@ -4,7 +4,6 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.MaterialSource;
-import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.StockView;
@@ -51,7 +50,7 @@ final class GraphInputs {
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph,
             GraphSurroundings.Around around) {
-        int stage = SettlementStage.of(service.board().ledger());
+        int stage = service.board().ledger().stage();
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         return new GraphState(
                         GraphNames.stock(
@@ -155,7 +154,7 @@ final class GraphInputs {
         BoardLedger ledger = service.board().ledger();
         Map<String, Built> states = new HashMap<>();
         StageRules rules = DataTables.INSTANCE.stages().current();
-        int stage = SettlementStage.of(ledger);
+        int stage = service.board().ledger().stage();
         if (stage > rules.stages().size()) {
             return states;
         }

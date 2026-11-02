@@ -74,16 +74,23 @@ public final class SettlementPlotStore extends SavedData {
     }
 
     public Optional<StageSite> site() {
+        return site(FIRST_STAGE);
+    }
+
+    public Optional<StageSite> site(int stage) {
+        if (stage < 1) {
+            throw new IllegalArgumentException("Этап " + stage + ": этапы считаются с первого");
+        }
         SettlementPlot current = plot;
         TownPlan plan = town;
         if (current == null || plan == null) {
             return Optional.empty();
         }
         StageSite cached = site;
-        if (cached == null || cached.anchor().y() != current.anchor().y()) {
+        if (cached == null || cached.anchor().y() != current.anchor().y() || cached.stage() != stage) {
             Optional<StageSite> found = StageSites.find(
                     plan,
-                    FIRST_STAGE,
+                    stage,
                     current.anchor().y(),
                     DataTables.INSTANCE.town().current());
             if (found.isEmpty()) {

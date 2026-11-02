@@ -92,6 +92,47 @@ class DispatchRoundTests {
     }
 
     @Test
+    void refusal_WetSpiritOnCleanup_IsRefusedUntilItDries() {
+        UUID id = new UUID(0, 7);
+        DispatchRound.Candidate wet =
+                new DispatchRound.Candidate(id, "spirit-wet", null, List.of(), FED, SpiritView.free(), true);
+        Board board = new Board(() -> 0);
+        BoardTicket cleanup = new BoardTicket(
+                "demolish:x",
+                BoardCase.DISMANTLE_SHELTER,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        board.submit(cleanup);
+        DispatchRound round = new DispatchRound(board, 0);
+
+        assertTrue(
+                round.refusal(cleanup, wet).isPresent(),
+                "Дух в воде не дойдёт до стоянки уборки (observe17: s1 в затопленной шахте, «не дошёл до»): "
+                        + "уборку надо отдать сухому духу, а не ближайшему по координате");
+        DispatchRound.Candidate dry =
+                new DispatchRound.Candidate(id, "spirit-dry", null, List.of(), FED, SpiritView.free(), false);
+        assertTrue(round.refusal(cleanup, dry).isEmpty(), "Сухой дух уборку берёт: иначе висящее останется навсегда");
+    }
+
+    @Test
+    void tooLowForCleanup_DeepSpirit_IsRefusedOnlyForCleanup() {
+        assertTrue(
+                DispatchRound.tooLowForCleanup(BoardCase.DISMANTLE_SHELTER, 55, 69),
+                "Дух в затопленной шахте (y=55) не дойдёт до стоянки уборки на y=69: observe17 — 53 «не дошёл до»");
+        assertTrue(
+                !DispatchRound.tooLowForCleanup(BoardCase.DISMANTLE_SHELTER, 65, 69),
+                "Дух на четыре блока ниже стоянки ещё может подойти: порог не должен отсекать соседнюю клетку");
+        assertTrue(
+                !DispatchRound.tooLowForCleanup(BoardCase.GATHER_MATERIALS, 55, 69),
+                "Порог касается только уборки висящего, а не обычных заданий");
+    }
+
+    @Test
     void busyWith_NoCurrentScript_NamesPlanStepInsteadOfTask() {
         TaskNode plan = new SequenceNode(List.of(
                 new ScriptCall("goto", Map.of("x", 1, "y", 64, "z", 2)), new ScriptCall("chop_tree", Map.of())));

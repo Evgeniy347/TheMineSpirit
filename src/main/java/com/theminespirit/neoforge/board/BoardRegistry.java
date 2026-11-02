@@ -14,7 +14,9 @@ public final class BoardRegistry {
         if (level == null) {
             throw new IllegalArgumentException("level не может быть null: доска привязана к своему уровню");
         }
-        return BY_LEVEL.computeIfAbsent(level, BoardService::create);
+        BoardService service = BY_LEVEL.computeIfAbsent(level, BoardService::create);
+        StageBootstrap.apply(level, service);
+        return service;
     }
 
     public static Optional<BoardService> peek(ServerLevel level) {
@@ -26,6 +28,7 @@ public final class BoardRegistry {
             return;
         }
         BY_LEVEL.remove(level);
+        StageBootstrap.forget(level);
     }
 
     public static void closeAll() {

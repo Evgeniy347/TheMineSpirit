@@ -14,6 +14,19 @@ public final class BoardLedger {
     private final Set<String> built = new LinkedHashSet<>();
     private long doneTotal;
     private long reopenedTotal;
+    private @Nullable StageGate gate;
+
+    public void gate(StageGate next) {
+        gate = Objects.requireNonNull(next, "Гейт этапа не может быть null: без него неясно, что открыто");
+    }
+
+    public StageGate stageGate() {
+        return gate == null ? SettlementStage.gate(this) : gate;
+    }
+
+    public int stage() {
+        return stageGate().stage();
+    }
 
     public static String key(BoardCase boardCase, int level) {
         Objects.requireNonNull(boardCase, "Кейс отметки не может быть null: без него непонятно, что стоит");

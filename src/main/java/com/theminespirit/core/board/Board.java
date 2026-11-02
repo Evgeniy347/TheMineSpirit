@@ -109,7 +109,7 @@ public final class Board {
         if (BoardActivities.isActivity(ticket.boardCase())) {
             return BoardOutcome.NOT_A_TICKET;
         }
-        if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger)) {
+        if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger.stage())) {
             return BoardOutcome.STAGE_LOCKED;
         }
         long now = nowTicks.getAsLong();

@@ -10,6 +10,7 @@ import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.RepairReopen;
+import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSites;
@@ -36,7 +37,7 @@ final class StageRepair {
         if (work == null) {
             throw new IllegalArgumentException("Восстановление " + step + " без места этапа: план не передан");
         }
-        if (upgrading(service, step)) {
+        if (StageAudit.repairBlockedByUpgrade(step, upgrading(service, step))) {
             return BoardOutcome.DUPLICATE;
         }
         BoardTicket ticket = RepairPlan.ticket(step, gap.need(), now);

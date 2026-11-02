@@ -97,8 +97,15 @@ public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> scheme
     }
 
     public Map<String, Integer> missingOf(BoardLedger ledger) {
-        int current = stageOf(ledger);
-        return current > stages.size() ? Map.of() : missing(stages.get(current - 1), ledger);
+        return missingOf(ledger, stageOf(ledger));
+    }
+
+    public Map<String, Integer> missingOf(BoardLedger ledger, int stage) {
+        Objects.requireNonNull(ledger, "Журнал доски не может быть null: остаток этапа читается по построенному");
+        if (stage < 1) {
+            throw new IllegalArgumentException("Этап " + stage + ": этапы считаются с первого");
+        }
+        return stage > stages.size() ? Map.of() : missing(stages.get(stage - 1), ledger);
     }
 
     private Map<String, Integer> missing(Stage stage, BoardLedger ledger) {

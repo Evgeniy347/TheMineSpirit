@@ -2,10 +2,10 @@ package com.theminespirit.neoforge.crafting;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.crafting.IngredientSpec;
-import com.theminespirit.core.crafting.Obtainability;
 import com.theminespirit.core.crafting.RecipeChooser;
 import com.theminespirit.core.crafting.RecipeCurator;
 import com.theminespirit.core.crafting.RecipeIndex;
+import com.theminespirit.core.crafting.RecipeReachability;
 import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.mining.DropTable;
@@ -40,13 +40,13 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     private final RecipeIndex index;
     private final Map<String, Integer> available;
     private final String species;
-    private final Obtainability obtainability =
-            new Obtainability(item -> craftRecipe(item, Map.of()), this::smeltRecipes, RecipeKnowledge::gatherable);
+    private final RecipeReachability reach;
 
     private RecipeKnowledge(RecipeIndex index, Map<String, Integer> available, String species) {
         this.index = index;
         this.available = available;
         this.species = species;
+        this.reach = new RecipeReachability(index, this::isGatherable);
     }
 
     public RecipeKnowledge preferring(Map<String, Integer> stock, String woodSpecies) {
@@ -244,11 +244,11 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private Optional<String> pickObtainable(Stream<String> candidates) {
-        return candidates.filter(alternative -> canObtain(alternative)).findFirst();
+        return candidates.filter(this::canObtain).findFirst();
     }
 
     private boolean canObtain(String item) {
-        return obtainability.canObtain(item);
+        return reach.canObtain(item);
     }
 
     private static RecipeIndex buildIndex(RecipeManager manager, HolderLookup.Provider registries) {

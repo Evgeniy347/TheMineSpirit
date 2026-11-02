@@ -14,7 +14,18 @@ import org.jspecify.annotations.Nullable;
 
 public final class DispatchRound {
     public record Candidate(
-            UUID id, String name, @Nullable String busyWith, List<String> items, EatNeed eat, SpiritView view) {
+            UUID id,
+            String name,
+            @Nullable String busyWith,
+            List<String> items,
+            EatNeed eat,
+            SpiritView view,
+            boolean wet) {
+        public Candidate(
+                UUID id, String name, @Nullable String busyWith, List<String> items, EatNeed eat, SpiritView view) {
+            this(id, name, busyWith, items, eat, view, false);
+        }
+
         public Candidate {
             Objects.requireNonNull(id, "Id духа выдачи не может быть null: задание выдаётся конкретному духу");
             Objects.requireNonNull(name, "Имя духа выдачи не может быть null: оно пишется в причину ожидания");
@@ -33,6 +44,10 @@ public final class DispatchRound {
         this.board = Objects.requireNonNull(board, "Доска раунда выдачи не может быть null: задания берутся с неё");
         this.now = now;
         this.held = new HashMap<>(board.assignedCounts());
+    }
+
+    public static boolean tooLowForCleanup(BoardCase boardCase, int spiritY, int targetY) {
+        return boardCase == BoardCase.DISMANTLE_SHELTER && spiritY < targetY - 4;
     }
 
     public enum BusyMode {
@@ -93,6 +108,9 @@ public final class DispatchRound {
     }
 
     public Optional<String> refusal(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
+        if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER && spirit.wet()) {
+            return Optional.of("в воде или под крышей: до стоянки уборки не дойдёт");
+        }
         if (ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
             Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id(), now);
             if (stuck.isPresent()) {

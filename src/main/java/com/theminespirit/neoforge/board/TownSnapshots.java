@@ -24,29 +24,24 @@ public final class TownSnapshots {
     public static Optional<TownSnapshot> current(ServerLevel level) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<TownPlan> town = store.town();
+        BoardService service = BoardRegistry.get(level);
+        int stageValue = service.board().ledger().stage();
         Optional<StageSite> site = store.site();
         Optional<SettlementPlot> plot = store.plot();
         if (town.isEmpty() || site.isEmpty() || plot.isEmpty()) {
             return Optional.empty();
         }
-        BoardService service = BoardRegistry.get(level);
         StageSite stage = site.orElseThrow();
         String wood = plot.orElseThrow().wood();
         Map<String, TownSnapshot.Progress> progress = new LinkedHashMap<>();
         progress.put(StageSites.HUT, step(level, service, BoardCase.BUILD_HOUSE, stage, wood));
-        progress.put(
-                StageSites.YARD,
-                sum(
-                        sum(
-                                step(level, service, BoardCase.STOCK_CHESTS, stage, wood),
-                                step(level, service, BoardCase.CRAFT_FURNACE, stage, wood)),
-                        YardFloorWatch.progress(level, stage)));
+        progress.put(StageSites.YARD, YardFloorWatch.progress(level, stage));
         progress.put(StageSites.MINE, step(level, service, BoardCase.BUILD_MINE, stage, wood));
         progress.put(StageSites.ORCHARD, step(level, service, BoardCase.BUILD_ORCHARD, stage, wood));
         progress.put(TownPlanner.FENCE, step(level, service, BoardCase.BUILD_FENCE, stage, wood));
         progress.put(TownPlanner.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
         List<List<BlockCoord>> paths = PathNetworkService.segments(level);
-        return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, progress, paths));
+        return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, stageValue, progress, paths));
     }
 
     public static Optional<TownMapView.Bounds> markerBounds(ServerLevel level) {
@@ -84,10 +79,5 @@ public final class TownSnapshots {
     private static TownSnapshot.Progress step(
             ServerLevel level, BoardService service, BoardCase step, StageSite site, String wood) {
         return FirstStepsRunner.progress(level, service, step, site, wood);
-    }
-
-    private static TownSnapshot.Progress sum(TownSnapshot.Progress first, TownSnapshot.Progress second) {
-        return new TownSnapshot.Progress(
-                first.done() + second.done(), first.total() + second.total(), first.damaged() || second.damaged());
     }
 }

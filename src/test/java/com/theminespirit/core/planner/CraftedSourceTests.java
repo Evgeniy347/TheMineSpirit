@@ -117,7 +117,9 @@ class CraftedSourceTests {
                 "torch",
                 "chest",
                 "glass",
-                "bookshelf")) {
+                "bookshelf",
+                "stone_bricks",
+                "stone_brick_stairs")) {
             ResourceKnowledge knowledge = new StubKnowledge(Set.of(item), Map.of(), Map.of());
 
             assertThrows(
@@ -130,12 +132,37 @@ class CraftedSourceTests {
 
     @Test
     void isCrafted_Families_True() {
-        for (String item : List.of(PLANKS, SAPLING, "oak_fence", "oak_stairs", "oak_door", "torch", "chest")) {
+        for (String item :
+                List.of(PLANKS, SAPLING, "oak_fence", "oak_stairs", "oak_door", "torch", "chest", "stone_bricks")) {
             assertTrue(
                     CraftedItems.isCrafted(item),
                     "Предмет '" + item + "' делается крафтом: добыча его размещённых копий — та же ошибка, "
                             + "что с досками и саженцами");
         }
+    }
+
+    @Test
+    void resolve_StoneBricksWithoutRecipe_RefusesFarWorldBlock() {
+        ResourceKnowledge knowledge =
+                new StubKnowledge(Set.of("stone_bricks", "stone_brick_stairs"), Map.of(), Map.of());
+
+        UnplannableGoalException bricks = assertThrows(
+                UnplannableGoalException.class,
+                () -> ResourceResolver.resolve("stone_bricks", 111, knowledge),
+                "Кирпичи — крафтовый предмет: без рецепта сбор обязан отказать, а не искать блок "
+                        + "(-329,63,-515) в 150 блоках от поселения (observe18 B5)");
+        UnplannableGoalException stairs = assertThrows(
+                UnplannableGoalException.class,
+                () -> ResourceResolver.resolve("stone_brick_stairs", 1, knowledge),
+                "Ступени кирпича — крафтовый предмет: без рецепта дух не идёт за блоком (-18,74,-421)");
+
+        assertTrue(
+                bricks.getMessage().contains("stone_bricks")
+                        && bricks.getMessage().contains("крафтом"),
+                "Отказ обязан называть кирпичи и крафт: " + bricks.getMessage());
+        assertTrue(
+                stairs.getMessage().contains("stone_brick_stairs"),
+                "Отказ обязан называть ступени: " + stairs.getMessage());
     }
 
     @Test

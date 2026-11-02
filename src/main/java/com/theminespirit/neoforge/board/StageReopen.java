@@ -5,7 +5,6 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.GroundsPlan;
-import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketPlans;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +38,10 @@ final class StageReopen {
         if (limit < 1) {
             throw new IllegalArgumentException("Предел открытых шагов " + limit + ": он считается от числа духов");
         }
-        if (SettlementStage.of(board.ledger()) > 1) {
+        if (board.ledger().stage() > 1) {
             return List.of();
         }
-        Set<String> unfinished = SettlementStage.missing(board.ledger()).keySet();
+        Set<String> unfinished = board.ledger().stageGate().missing().keySet();
         int open = DispatchRound.stageCasesOpen(board);
         List<BoardCase> found = new ArrayList<>();
         for (BoardCase step : order) {

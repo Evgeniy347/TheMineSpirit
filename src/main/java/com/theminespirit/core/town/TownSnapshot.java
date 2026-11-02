@@ -54,9 +54,18 @@ public record TownSnapshot(
 
     public static TownSnapshot of(
             TownPlan plan, StageSite site, Map<String, Progress> progress, List<List<BlockCoord>> paths) {
+        Objects.requireNonNull(site, "Место этапа не может быть null: ограда этапа — на карте");
+        return of(plan, site, site.stage(), progress, paths);
+    }
+
+    public static TownSnapshot of(
+            TownPlan plan, StageSite site, int stage, Map<String, Progress> progress, List<List<BlockCoord>> paths) {
         Objects.requireNonNull(plan, "План не может быть null: снимок карты берётся из него");
         Objects.requireNonNull(site, "Место этапа не может быть null: ограда этапа — на карте");
         Objects.requireNonNull(progress, "Готовность построек не может быть null: пусто — пустая карта");
+        if (stage < 1) {
+            throw new IllegalArgumentException("Этап " + stage + ": этапы считаются с первого");
+        }
         List<Street> streets = new ArrayList<>();
         streets(streets, "main", plan.streets().main());
         streets(streets, "side", plan.streets().side());
@@ -65,7 +74,7 @@ public record TownSnapshot(
                 .map(place -> lot(place, site, progress.getOrDefault(place.id(), Progress.NONE)))
                 .toList();
         return new TownSnapshot(
-                site.stage(),
+                stage,
                 plan.anchor(),
                 plan.area(),
                 plan.fence().posts(),

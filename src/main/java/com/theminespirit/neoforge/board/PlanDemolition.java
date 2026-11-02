@@ -209,6 +209,7 @@ final class PlanDemolition {
                         notes.add(at + " — " + finding.reason() + ": стоянка рядом есть — в уборку");
                     }
                     remove.addAll(finding.cells());
+                    DemolitionGuard.claimForCleanup(level, plan, finding);
                     if (finding.kind() == FloatingBlocks.Kind.TREE) {
                         placement = DemolitionTickets.treePlacement(treeStand, finding);
                         treeCells = List.copyOf(finding.cells());
