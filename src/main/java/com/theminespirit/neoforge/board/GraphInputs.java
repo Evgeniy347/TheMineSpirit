@@ -67,8 +67,11 @@ final class GraphInputs {
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
-                        .withChests(GraphFactInputs.chestFacts(StockReader.chests(level))));
+                .withFacts(GraphStoreInputs.of(
+                        GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around),
+                        StockReader.chests(level),
+                        level,
+                        graph));
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

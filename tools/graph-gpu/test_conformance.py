@@ -71,6 +71,41 @@ def test_fragments():
     print("OK: фрагменты графа сливаются, конфликт назван путём")
 
 
+def test_store_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    state = {
+        "stock": {},
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "buildings": {"crafting_table": "BUILT", "furnace": "BUILT", "chests": "BUILT", "mine": "BUILT"},
+        "materials": {},
+        "storageFreePercent": 60,
+        "events": [],
+        "world": ["tree:oak"],
+        "distances": {},
+        "stations": {"furnace": 1},
+        "orders": {},
+        "facts": {
+            "spirits": {},
+            "threats": [],
+            "chests": [],
+            "resources": [],
+            "stations": {
+                "furnace": {"id": "furnace", "type": "furnace", "position": None,
+                            "busy": False, "fuel": "coal", "input": None, "output": None}
+            },
+            "buildings": {},
+            "strays": [],
+            "terrain": {"pits": 0, "hanging": 0, "heightDrop": 0},
+            "stageReqs": {"minimum": {"cobblestone": 160}, "actual": {"cobblestone": 100}},
+        },
+    }
+    tasks = {task["id"] for task in plan(graph, State(state))["tasks"]}
+    assert "mine_cobble" in tasks, "Python: недобор минимума склада обязан дать добычу булыжника"
+    assert "store_smelt_load" in tasks, "Python: свободная печь — путь загрузки"
+    print("OK: узлы склада учитывают минимум и свободную печь")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -87,6 +122,7 @@ def test_conformance():
 if __name__ == "__main__":
     try:
         test_fragments()
+        test_store_nodes()
         test_conformance()
     except AssertionError as error:
         print(error)

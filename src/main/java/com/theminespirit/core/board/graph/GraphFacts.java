@@ -195,8 +195,4 @@ public record GraphFacts(
                 Terrain.empty(),
                 new StageReqs(Map.of(), Map.of()));
     }
-
-    public GraphFacts withChests(List<Chest> known) {
-        return new GraphFacts(spirits, threats, known, resources, stations, buildings, strays, terrain, stageReqs);
-    }
 }
