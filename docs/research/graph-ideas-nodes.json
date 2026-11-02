@@ -89,7 +89,13 @@
     "respawn_anchor": {"xmin": 0, "base": 20, "stage": 3},
     "poppy": {"xmin": 0, "base": 10, "stage": 3},
     "honeycomb": {"xmin": 2, "base": 20, "stage": 3},
-    "ender_eye": {"xmin": 1, "base": 30, "stage": 4}
+    "ender_eye": {"xmin": 1, "base": 30, "stage": 4},
+    "player_trust": {"xmin": 0, "base": 30, "stage": 1},
+    "security": {"xmin": 0, "base": 60, "stage": 1},
+    "shelter": {"xmin": 0, "base": 45, "stage": 1},
+    "drop_value": {"xmin": 0, "base": 30, "stage": 1},
+    "oak_sapling": {"xmin": 4, "base": 20, "stage": 1},
+    "oak_door": {"xmin": 2, "base": 25, "stage": 1}
   },
   "groups": {
     "#foods": ["food", "wheat", "egg", "milk_bucket", "suspicious_stew", "glow_berries"],
@@ -107,7 +113,9 @@
     "#flowers": ["poppy"],
     "#potions": ["potion_healing", "potion_fire_resistance", "potion_slow_falling", "potion_invisibility"],
     "#fuel": ["torch", "fuel_reserve"],
-    "#nether": ["obsidian", "nether_ready", "ender_eye"]
+    "#nether": ["obsidian", "nether_ready", "ender_eye"],
+    "#drops": ["drop_value", "wheat", "egg"],
+    "#doors": ["oak_door"]
   },
   "buildings": {
     "hut": {"case": "BUILD_HOUSE", "stage": 1, "base": 80, "materials": {"#planks": 8}, "requires": [], "optional": false},
@@ -205,7 +213,17 @@
     {"id": "compost", "case": "GATHER_MATERIALS", "makes": "bone_meal", "yield": 1, "weight": 1.0, "consumes": {"#crops": 4}, "ticks": 200, "implemented": false},
     {"id": "weather_shelter", "case": "ACTIVITY_REST", "makes": "rest", "yield": 1, "weight": 1.0, "consumes": {}, "building": "hut", "ticks": 200},
     {"id": "smelt_charcoal", "case": "SMELT_CHARCOAL", "makes": "fuel_reserve", "yield": 1, "weight": 1.0, "consumes": {"#logs": 4}, "building": "furnace", "ticks": 200},
-    {"id": "mine_coal", "case": "GATHER_MATERIALS", "makes": "fuel_reserve", "yield": 4, "weight": 1.0, "consumes": {}, "tool": "pickaxe", "tier": "wooden", "world": "coal_ore", "ticks": 120}
+    {"id": "mine_coal", "case": "GATHER_MATERIALS", "makes": "fuel_reserve", "yield": 4, "weight": 1.0, "consumes": {}, "tool": "pickaxe", "tier": "wooden", "world": "coal_ore", "ticks": 120},
+    {"id": "assist_player", "case": "ACTIVITY_SOCIAL", "makes": "player_trust", "yield": 1, "weight": 1.2, "consumes": {}, "ticks": 200, "implemented": false},
+    {"id": "avoid_player", "case": "ACTIVITY_MOVE", "makes": "safety", "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 100, "implemented": false},
+    {"id": "close_door", "case": "ACTIVITY_GUARD", "makes": "security", "yield": 1, "weight": 1.5, "consumes": {}, "building": "hut", "ticks": 40},
+    {"id": "repair_wall_gap", "case": "BUILD_FENCE", "makes": "security", "yield": 1, "weight": 1.5, "consumes": {"#planks": 4}, "building": "fence", "ticks": 300},
+    {"id": "light_perimeter", "case": "LIGHTING", "makes": "security", "yield": 1, "weight": 1.2, "consumes": {"torch": 4}, "building": "lighting", "ticks": 200},
+    {"id": "collect_expiring_drop", "case": "COLLECT_DROPS", "makes": "drop_value", "yield": 1, "weight": 1.5, "consumes": {}, "world": "drops", "ticks": 100},
+    {"id": "replant_tree", "case": "BUILD_ORCHARD", "makes": "oak_sapling", "yield": 1, "weight": 1.0, "consumes": {"dirt": 1}, "building": "orchard_oak", "ticks": 400},
+    {"id": "switch_source", "case": "GATHER_MATERIALS", "makes": "logistics", "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 600, "implemented": false},
+    {"id": "follow_strategic_goal", "case": "ACTIVITY_EXTERNAL", "makes": "logistics", "yield": 1, "weight": 1.2, "consumes": {}, "ticks": 600, "implemented": false},
+    {"id": "wait_for_station", "case": "ACTIVITY_SMELT", "makes": "logistics", "yield": 1, "weight": 1.0, "consumes": {}, "building": "furnace", "ticks": 100, "implemented": false}
   ],
   "edges": [
     {"lack": "food_reserve", "way": "restock_food", "weight": 10},
@@ -221,7 +239,13 @@
     {"lack": "beauty", "way": "restore_block", "weight": 5},
     {"lack": "space", "way": "dismantle_shelter", "weight": 5},
     {"lack": "scout_report", "way": "explore_chunk", "weight": 5},
-    {"lack": "herd_fed", "way": "feed_animals", "weight": 5}
+    {"lack": "herd_fed", "way": "feed_animals", "weight": 5},
+    {"lack": "player_trust", "way": "assist_player", "weight": 8},
+    {"lack": "security", "way": "repair_wall_gap", "weight": 15},
+    {"lack": "security", "way": "close_door", "weight": 10},
+    {"lack": "security", "way": "light_perimeter", "weight": 10},
+    {"lack": "drop_value", "way": "collect_expiring_drop", "weight": 10},
+    {"lack": "shelter", "way": "weather_shelter", "weight": 8}
   ],
   "events": {
     "night": {"tasks": [{"id": "sleep_night", "case": "ACTIVITY_REST", "base": 80, "consumes": {}, "building": "hut"}, {"id": "guard_post", "case": "ACTIVITY_GUARD", "base": 30, "consumes": {}, "building": "guard_post"}], "push": {"rest": 10, "building:lighting": 10}, "advice": ["sleep_or_guard", "player_sleeps_world_skips"]},
@@ -267,7 +291,26 @@
     "tool_worn": {"tasks": [{"id": "craft_stone_pickaxe", "case": "CRAFT_STONE_PICKAXE", "base": 50, "consumes": {"cobblestone": 3, "stick": 2}, "building": "crafting_table"}], "push": {"tool_reserve": 15}, "advice": ["repair_or_replace_tool"]},
     "rain": {"tasks": [], "push": {"food": 10, "water_reserve": 10}, "advice": ["fish_and_crops_better"]},
     "nether_expedition": {"tasks": [{"id": "nether_expedition", "case": "ACTIVITY_EXPEDITION", "base": 40, "consumes": {"#foods": 8, "potion_fire_resistance": 1}, "building": "portal_hall"}], "push": {"nether_ready": 15}, "advice": ["expedition_only_with_player"]},
-    "end_ready": {"tasks": [{"id": "end_expedition", "case": "ACTIVITY_EXPEDITION", "base": 30, "consumes": {"ender_eye": 12, "#foods": 8}}], "push": {"end_ready": 15}, "advice": ["end_expedition_after_nether"]}
+    "end_ready": {"tasks": [{"id": "end_expedition", "case": "ACTIVITY_EXPEDITION", "base": 30, "consumes": {"ender_eye": 12, "#foods": 8}}], "push": {"end_ready": 15}, "advice": ["end_expedition_after_nether"]},
+    "player_near": {"tasks": [{"id": "assist_player", "case": "ACTIVITY_SOCIAL", "base": 50, "consumes": {}}], "push": {"player_trust": 20, "safety": 5}, "advice": ["help_or_keep_distance"]},
+    "player_sleeping": {"tasks": [], "push": {"shelter": 15, "safety": 5}, "advice": ["quiet_near_sleeping_player"]},
+    "dark_cells": {"tasks": [{"id": "light_perimeter", "case": "LIGHTING", "base": 50, "consumes": {"torch": 4}}], "push": {"security": 15, "building:lighting": 10}, "advice": ["light_inside_perimeter"]},
+    "dusk_soon": {"tasks": [], "push": {"shelter": 20, "rest": 10, "safety": 10}, "advice": ["no_long_trip_before_night"]},
+    "dawn": {"tasks": [], "push": {"food": 5, "tool_reserve": 5}, "advice": ["start_day_work"]},
+    "task_failed": {"tasks": [], "push": {"safety": 5, "logistics": 5}, "advice": ["lower_weight_and_switch"]},
+    "station_queue": {"tasks": [], "push": {"building:furnace": 10, "logistics": 8}, "advice": ["choose_free_station"]},
+    "drop_expiring": {"tasks": [{"id": "collect_expiring_drop", "case": "COLLECT_DROPS", "base": 60, "consumes": {}}], "push": {"drop_value": 20}, "advice": ["collect_before_despawn"]},
+    "source_depleted": {"tasks": [{"id": "switch_source", "case": "GATHER_MATERIALS", "base": 40, "consumes": {}}], "push": {"logistics": 10}, "advice": ["retarget_source"]},
+    "forest_thinning": {"tasks": [{"id": "replant_tree", "case": "BUILD_ORCHARD", "base": 35, "consumes": {"dirt": 1}, "building": "orchard_oak"}], "push": {"oak_sapling": 10, "#saplings": 5}, "advice": ["replant_after_fell"]},
+    "wall_gap": {"tasks": [{"id": "repair_wall_gap", "case": "BUILD_FENCE", "base": 70, "consumes": {"#planks": 4}, "building": "fence"}], "push": {"security": 20, "building:fence": 10}, "advice": ["close_wall_gap"]},
+    "door_open_night": {"tasks": [{"id": "close_door", "case": "ACTIVITY_GUARD", "base": 60, "consumes": {}, "building": "hut"}], "push": {"security": 15, "shelter": 10}, "advice": ["close_doors_at_night"]},
+    "reservation_conflict": {"tasks": [], "push": {"logistics": 8}, "advice": ["respect_reservations"]},
+    "strategic_goal": {"tasks": [{"id": "follow_strategic_goal", "case": "ACTIVITY_EXTERNAL", "base": 40, "consumes": {}}], "push": {"logistics": 10}, "advice": ["strategist_goal_first"]},
+    "thunderstorm": {"tasks": [{"id": "weather_shelter", "case": "ACTIVITY_REST", "base": 60, "consumes": {}, "building": "hut"}], "push": {"shelter": 15, "building:lighting": 10}, "advice": ["seek_shelter"]},
+    "raid": {"tasks": [{"id": "defend", "case": "ACTIVITY_DEFEND", "base": 100, "consumes": {}, "building": "barracks"}], "push": {"security": 20, "safety": 20}, "advice": ["hide_or_fight"]},
+    "phantom": {"tasks": [{"id": "defend", "case": "ACTIVITY_DEFEND", "base": 80, "consumes": {}, "building": "barracks"}], "push": {"security": 15, "safety": 15}, "advice": ["sleep_or_guard"]},
+    "trader_near": {"tasks": [{"id": "trade_villager", "case": "ACTIVITY_SOCIAL", "base": 40, "consumes": {"emerald": 1}, "building": "market_stall"}], "push": {"trade_goods": 15}, "advice": ["trade_surplus"]},
+    "player_died": {"tasks": [], "push": {"drop_value": 15, "safety": 10}, "advice": ["collect_player_drops_and_guard"]}
   },
   "blockItems": {},
   "triggers": [
@@ -288,6 +331,9 @@
     "defaultTicks": 100,
     "caseTicks": {
       "ACTIVITY_REST": 600,
+      "ACTIVITY_EXTERNAL": 600,
+      "ACTIVITY_SMELT": 200,
+      "BUILD_ORCHARD": 900,
       "EAT_TO_FULL": 40,
       "ACTIVITY_ARM": 40,
       "CRAFT_SHEARS": 40,
