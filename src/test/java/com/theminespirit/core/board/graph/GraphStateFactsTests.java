@@ -78,6 +78,57 @@ class GraphStateFactsTests {
     }
 
     @Test
+    void threat_HealthAboveMax_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphFacts.Threat(
+                        "threat-1",
+                        "minecraft:zombie",
+                        25,
+                        20,
+                        new GraphFacts.Position(0, 64, 0),
+                        "target-1",
+                        GraphFacts.TargetKind.SPIRIT,
+                        true,
+                        true,
+                        null,
+                        3,
+                        null,
+                        0.2),
+                "Здоровье угрозы не может быть больше максимума");
+    }
+
+    @Test
+    void threat_NegativeDistance_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphFacts.Threat(
+                        "threat-1",
+                        "minecraft:zombie",
+                        20,
+                        20,
+                        new GraphFacts.Position(0, 64, 0),
+                        null,
+                        GraphFacts.TargetKind.NONE,
+                        false,
+                        false,
+                        null,
+                        -1,
+                        null,
+                        0),
+                "Расстояние до угрозы не отрицательно: неизвестное не задают минусом");
+    }
+
+    @Test
+    void threat_ShortForm_KeepsTargetKind() {
+        GraphFacts.Threat threat = new GraphFacts.Threat(
+                "threat-1", "minecraft:zombie", 20, new GraphFacts.Position(0, 64, 0), "target-1");
+
+        assertEquals(20, threat.maxHealth(), "Короткая форма считает максимум по текущему здоровью");
+        assertEquals(GraphFacts.TargetKind.OTHER, threat.targetKind(), "Цель без вида считается другой до уточнения");
+    }
+
+    @Test
     void stageReqs_MutableInput_AreCopied() {
         Map<String, Integer> minimum = new HashMap<>(Map.of("hut", 1));
         GraphFacts.StageReqs reqs = new GraphFacts.StageReqs(minimum, Map.of("hut", 0));

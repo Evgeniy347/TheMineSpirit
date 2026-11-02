@@ -155,7 +155,7 @@ public final class GraphPlanner {
             SupplyGraph.Building building = graph.buildings().get(id);
             Map<String, Integer> needs = materials(id);
             if (building != null
-                    && stocked(needs)
+                    && GraphLack.stocked(graph, state, needs)
                     && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
                 flow.local(node, graph.buildReadyBoost());
             }
@@ -357,7 +357,9 @@ public final class GraphPlanner {
         for (Map.Entry<String, Double> score : scores.entrySet()) {
             if (score.getValue() > 0 && task(score.getKey())) {
                 double value = score.getValue() * graph.costs().travelFactor(travel(score.getKey()));
-                GraphPlan.Task task = task(score.getKey(), GraphFlow.priority(value, graph.maxPriority()));
+                GraphPlan.Task task = task(
+                        score.getKey(),
+                        GraphEvent.priority(graph.events(), score.getKey(), value, graph.maxPriority()));
                 tasks.add(task);
                 station(score.getKey())
                         .filter(ignored -> task.feasible())
@@ -399,7 +401,7 @@ public final class GraphPlanner {
                 Optional.empty(),
                 GraphFlow.priority(value * graph.decay(), graph.maxPriority()),
                 materials,
-                stocked(materials),
+                GraphLack.stocked(graph, state, materials),
                 false,
                 graph.implemented(building),
                 graph.costs().ticks(STATION + building, known.boardCase())));
@@ -443,7 +445,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     event.consumes(),
-                    stocked(event.consumes())
+                    GraphLack.stocked(graph, state, event.consumes())
                             && (event.building() == null || state.built(event.building()) == Built.BUILT),
                     false,
                     true,
@@ -482,10 +484,10 @@ public final class GraphPlanner {
                 priority,
                 way.consumes(),
                 tooled
-                        && (way.building() == null || state.built(way.building()) == Built.BUILT)
+                        && GraphLack.housed(state, way)
                         && available(way)
-                        && stocked(way.consumes())
-                        && stocked(way.needs()),
+                        && GraphLack.stocked(graph, state, way.consumes())
+                        && GraphLack.stocked(graph, state, way.needs()),
                 chances.contains(key),
                 graph.implemented(wayId),
                 graph.costs().ticks(wayId, way.boardCase()) + travel(key));
@@ -536,9 +538,5 @@ public final class GraphPlanner {
             return graph.members(node).stream().anyMatch(this::sourcedShallow);
         }
         return graph.producers(node).stream().anyMatch(this::available);
-    }
-
-    private boolean stocked(Map<String, Integer> needs) {
-        return needs.entrySet().stream().allMatch(entry -> count(entry.getKey()) >= entry.getValue());
     }
 }

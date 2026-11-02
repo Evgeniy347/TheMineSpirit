@@ -90,4 +90,12 @@ public final class GraphFlow {
         }
         return (int) Math.min(max, Math.round(max * (1 - Math.exp(-score / max))));
     }
+
+    public static int bandPriority(double score, int max, int band) {
+        if (score <= 0) {
+            return 0;
+        }
+        int above = (int) Math.round(score - max);
+        return max + Math.max(1, Math.min(band, above));
+    }
 }

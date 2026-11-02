@@ -1,0 +1,78 @@
+package com.theminespirit.core.board.graph;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
+class LifeEventsTests {
+    private static final GraphFacts.Position AT = new GraphFacts.Position(1, 64, 2);
+
+    @Test
+    void events_NoDanger_KeepOnlySuppliedEvents() {
+        Set<String> events = LifeEvents.events(Set.of("night"), List.of(), List.of());
+
+        assertEquals(Set.of("night"), events, "Без угроз и бед события округи остаются как есть");
+    }
+
+    @Test
+    void events_ThreatToSpirit_AddsLifeThreatAndProtectSpirit() {
+        Set<String> events =
+                LifeEvents.events(Set.of(), List.of(threat(GraphFacts.TargetKind.SPIRIT, true)), List.of());
+
+        assertTrue(events.contains("life_threat"), "Угроза рядом — событие жизни: " + events);
+        assertTrue(events.contains("life_threat_spirit"), "Враг целится в духа — связь «защитить духа»: " + events);
+        assertFalse(events.contains("life_threat_player"), "Игрок не цель — защита игрока не поднимается: " + events);
+    }
+
+    @Test
+    void events_ThreatToPlayer_AddsProtectPlayer() {
+        Set<String> events =
+                LifeEvents.events(Set.of(), List.of(threat(GraphFacts.TargetKind.PLAYER, false)), List.of());
+
+        assertTrue(events.contains("life_threat_player"), "Враг целится в игрока — связь «защитить игрока»: " + events);
+        assertFalse(events.contains("life_threat_spirit"), "Дух не цель — защита духа не поднимается: " + events);
+    }
+
+    @Test
+    void events_Conditions_AddEachLifeEvent() {
+        LifeEvents.Condition all = new LifeEvents.Condition(true, true, true, true, true, true, true, true);
+
+        Set<String> events = LifeEvents.events(Set.of(), List.of(), List.of(all));
+
+        assertEquals(
+                Set.of("drowning", "suffocation", "fall_risk", "falling", "fire", "poisoned", "hungry", "life_injury"),
+                events,
+                "Каждое состояние духа подаётся своим событием графа: " + events);
+    }
+
+    @Test
+    void events_CalmCondition_NoLifeEvent() {
+        LifeEvents.Condition calm = new LifeEvents.Condition(false, false, false, false, false, false, false, false);
+
+        assertEquals(
+                Set.of("night"),
+                LifeEvents.events(Set.of("night"), List.of(), List.of(calm)),
+                "Спокойный дух не поднимает события жизни");
+    }
+
+    private static GraphFacts.Threat threat(GraphFacts.TargetKind kind, boolean targetingSelf) {
+        return new GraphFacts.Threat(
+                "threat-1",
+                "minecraft:zombie",
+                20,
+                20,
+                AT,
+                "target-1",
+                kind,
+                targetingSelf,
+                true,
+                "burning",
+                5,
+                null,
+                0.23);
+    }
+}
