@@ -6,6 +6,23 @@
 `GraphPlanner.plan` → `GraphTickets.of` → `GraphPost`. Полные таблицы — в
 [graph-inputs-tables.md](graph-inputs-tables.md).
 
+## 0. Что уже сделано (02.11, graphcore)
+
+- **Фрагменты графа.** `SupplyGraph.loadDefault`/`merge` и `Graph.load_merged` читают
+  `board/graph.json` + `board/graph-recipes.json` + все `board/graph.d/*.json`. Фрагмент добавляет только новые id,
+  конфликт id — ошибка с путём файла. Разные исполнители правят разные файлы.
+- **`GraphFacts`** — новые структуры входа `GraphState.facts()`: `spirits`, `threats`, `chests`, `resources`,
+  `stations`, `buildings`, `strays`, `terrain`, `stageReqs`. Старые поля `GraphState` сохранены для планировщика
+  (число духов `spirits()` считается по `kits`, счётчики станций — по `stations`).
+- **Заполнено сейчас:** духи (id, позиция, HP, еда, воздух, вода, застревание, занятость, инвентарь, броня,
+  инструменты), сундуки из `StockReader` (позиция, содержимое, свободные слоты), ресурсы (тег, координаты,
+  расстояние, `travelTicks`; достижимость — `UNKNOWN`), станции (тип, позиция, счётчик для планировщика),
+  постройки (id, уровень, процент 100/0, координаты участка, `unknown=false`), `stageReqs` (минимум из
+  `stages.json` + факт из журнала). `distances` теперь заполняются из `GraphSurroundings`, `stations` — из построек.
+- **Пока пусто:** `threats`, `strays`, `terrain`, топливо/вход/выход станций, точный процент аудита и повреждения
+  построек, «замурован» духа, достижимость ресурсов. Это узлы `life:*`, `repair`, `clear`, `station:*`, `store:*`;
+  сборщики оставлены пустыми до реализации.
+
 ## 1. Что граф получает сейчас
 
 `GraphState` (`core/board/graph/GraphState.java`) — 11 полей. В моде заполняются все, кроме `distances` и
