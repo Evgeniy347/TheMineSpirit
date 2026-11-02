@@ -54,6 +54,9 @@ public final class GraphPlanner {
     }
 
     private void roots() {
+        GraphMinimums.Result minimums = GraphMinimums.of(graph, state);
+        minimums.roots().forEach(root -> push(null, root.node(), root.amount()));
+        minimums.notices().forEach(notice -> notices.putIfAbsent(notice.building(), notice));
         for (SupplyGraph.Item item : graph.items().values()) {
             if (item.stage() > state.stage()) {
                 continue;
@@ -373,10 +376,7 @@ public final class GraphPlanner {
     }
 
     private Optional<String> station(String key) {
-        int at = key.indexOf(AT);
-        return graph.way(at < 0 ? key : key.substring(0, at))
-                .map(SupplyGraph.Way::building)
-                .filter(building -> graph.costs().stationCapacity().containsKey(building));
+        return GraphLookup.station(graph, key);
     }
 
     private Optional<GraphPlan.Task> stationTask(String building, double value, Map<String, Double> scores) {
@@ -407,11 +407,7 @@ public final class GraphPlanner {
     }
 
     private int travel(String key) {
-        int at = key.indexOf(AT);
-        return graph.way(at < 0 ? key : key.substring(0, at))
-                .map(SupplyGraph.Way::world)
-                .map(resource -> graph.costs().travel(state.distances().getOrDefault(resource, 0)))
-                .orElse(0);
+        return GraphLookup.travel(graph, state, key);
     }
 
     private GraphPlan.Task task(String key, int priority) {
@@ -447,7 +443,7 @@ public final class GraphPlanner {
                     stocked(event.consumes())
                             && (event.building() == null || state.built(event.building()) == Built.BUILT),
                     false,
-                    true,
+                    event.implemented(),
                     graph.costs().ticks(key, event.boardCase()));
         }
         if (key.startsWith(BUILDING)) {

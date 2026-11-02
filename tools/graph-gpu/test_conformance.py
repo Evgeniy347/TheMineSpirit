@@ -105,6 +105,96 @@ def test_world_inputs():
     print("OK: входы участка учитываются в выборе")
 
 
+def test_store_fragment():
+    graph = Graph.load_merged(
+        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        RECIPES,
+        FRAGMENTS)
+    for node in ("store_minimum", "store_transfer", "store_smelt_put", "store_smelt_take",
+                 "store_storage_space", "store_sort"):
+        assert node in graph.events, "Python-модель обязана читать складской узел '" + node + "'"
+        task = graph.events[node]["tasks"][0]
+        assert task.get("implemented") is False, "Складской узел пока заглушка: " + node
+    print("OK: складские узлы читаются из фрагмента")
+
+
+def test_gear_fragment():
+    graph = Graph.load_merged(
+        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        RECIPES,
+        FRAGMENTS)
+    for node in ("gear_equip_best", "gear_craft_armor", "gear_craft_pickaxe", "gear_craft_axe",
+                 "gear_craft_shovel", "gear_craft_sword", "gear_craft_hoe", "gear_kit_mining"):
+        assert node in graph.events, "Python-модель обязана читать узел снаряжения '" + node + "'"
+    assert graph.events["gear_craft_pickaxe"]["tasks"][0]["id"] == "craft_tool:pickaxe", \
+        "Задание кирки называет вид инструмента"
+    print("OK: узлы снаряжения читаются из фрагмента")
+
+
+def test_store_inputs():
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "stageReqs": {"minimum": {"cobblestone": 160}, "actual": {"cobblestone": 10}},
+            "chests": [{"position": {"x": 0, "y": 64, "z": 0},
+                        "contents": {"minecraft:cobblestone": 10}, "freeSlots": 4, "totalSlots": 27}],
+            "spirits": {"spirit-1": {"inventory": {"minecraft:oak_log": 12}}},
+            "stations": {"furnace": {"id": "furnace", "type": "furnace", "input": None,
+                                     "output": "output", "fuel": "fuel"}},
+        },
+    })
+    for node in ("store_minimum", "store_transfer", "store_smelt_take"):
+        assert node in state.events, "Складской вход обязан добавить узел '" + node + "'"
+    print("OK: складские входы учитываются в выборе")
+
+
+def test_gear_inputs():
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "spirits": {"spirit-1": {
+                "id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                "activity": "mining", "inventory": {},
+                "armor": [], "tools": []}},
+            "chests": [],
+        },
+    })
+    for node in ("gear_craft_pickaxe", "gear_craft_axe", "gear_kit_mining"):
+        assert node in state.events, "Снаряжение без кирки обязано добавить узел '" + node + "'"
+    worn = State({
+        "stage": 2,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "spirits": {"spirit-1": {
+                "id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                "inventory": {}, "armor": [],
+                "tools": [{"item": "minecraft:iron_pickaxe", "kind": "pickaxe", "tier": 2,
+                           "durability": 10, "maxDurability": 250}]}},
+            "chests": [],
+        },
+    })
+    assert "tool_worn" in worn.events, "Изношенная кирка обязана поднять tool_worn"
+    print("OK: входы снаряжения учитываются в выборе")
+
+
+def test_stage_minimum():
+    graph = Graph.load_merged(
+        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        RECIPES,
+        FRAGMENTS)
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {"pickaxe": 1}},
+        "stock": {"cobblestone": 100},
+        "facts": {"stageReqs": {"minimum": {"cobblestone": 160}, "actual": {"cobblestone": 100}}},
+    })
+    tasks = {task["id"] for task in plan(graph, state)["tasks"]}
+    assert "mine_cobble" in tasks, "Минимум склада выше обычного порога обязан поднять добычу камня"
+    print("OK: минимум склада учитывается в выборе")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -123,6 +213,11 @@ if __name__ == "__main__":
         test_fragments()
         test_world_fragment()
         test_world_inputs()
+        test_store_fragment()
+        test_gear_fragment()
+        test_store_inputs()
+        test_gear_inputs()
+        test_stage_minimum()
         test_conformance()
     except AssertionError as error:
         print(error)

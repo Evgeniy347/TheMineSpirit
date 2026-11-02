@@ -1,0 +1,211 @@
+{
+  "gearTiers": [
+    "wooden",
+    "stone",
+    "iron",
+    "diamond",
+    "netherite"
+  ],
+  "gearArmorTiers": [
+    "leather",
+    "chainmail",
+    "iron",
+    "diamond",
+    "netherite"
+  ],
+  "gearWorn": {
+    "percent": 20,
+    "armorStage": 2
+  },
+  "gearRequired": {
+    "1": {
+      "pickaxe": "stone",
+      "axe": "stone",
+      "shovel": "stone",
+      "sword": "stone",
+      "hoe": "wooden"
+    },
+    "2": {
+      "pickaxe": "iron",
+      "axe": "iron",
+      "shovel": "iron",
+      "sword": "iron"
+    },
+    "3": {
+      "pickaxe": "diamond"
+    }
+  },
+  "gearKits": {
+    "mining": {
+      "activity": "mining",
+      "tools": [
+        "pickaxe"
+      ]
+    },
+    "woodcutting": {
+      "activity": "woodcutting",
+      "tools": [
+        "axe"
+      ]
+    },
+    "farming": {
+      "activity": "farming",
+      "tools": [
+        "hoe"
+      ]
+    },
+    "building": {
+      "activity": "building",
+      "tools": []
+    }
+  },
+  "events": {
+    "gear_equip_best": {
+      "tasks": [
+        {
+          "id": "equip_best",
+          "case": "ACTIVITY_ARM",
+          "base": 55,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "wear_best_from_chest"
+      ]
+    },
+    "gear_craft_armor": {
+      "tasks": [
+        {
+          "id": "craft_armor",
+          "case": "ACTIVITY_CRAFT",
+          "base": 50,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "cover_all_armor_slots"
+      ]
+    },
+    "gear_craft_pickaxe": {
+      "tasks": [
+        {
+          "id": "craft_tool:pickaxe",
+          "case": "ACTIVITY_CRAFT",
+          "base": 50,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "push": {
+        "tool:pickaxe": 10
+      },
+      "advice": [
+        "pickaxe_level_for_ore"
+      ]
+    },
+    "gear_craft_axe": {
+      "tasks": [
+        {
+          "id": "craft_tool:axe",
+          "case": "ACTIVITY_CRAFT",
+          "base": 45,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "push": {
+        "tool:axe": 8
+      },
+      "advice": [
+        "axe_level_for_wood"
+      ]
+    },
+    "gear_craft_shovel": {
+      "tasks": [
+        {
+          "id": "craft_tool:shovel",
+          "case": "ACTIVITY_CRAFT",
+          "base": 40,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "push": {
+        "tool:shovel": 6
+      },
+      "advice": [
+        "shovel_level_for_dirt"
+      ]
+    },
+    "gear_craft_sword": {
+      "tasks": [
+        {
+          "id": "craft_tool:sword",
+          "case": "ACTIVITY_CRAFT",
+          "base": 45,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "push": {
+        "tool:sword": 8
+      },
+      "advice": [
+        "sword_level_for_defense"
+      ]
+    },
+    "gear_craft_hoe": {
+      "tasks": [
+        {
+          "id": "craft_tool:hoe",
+          "case": "ACTIVITY_CRAFT",
+          "base": 35,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "push": {
+        "tool:hoe": 5
+      },
+      "advice": [
+        "hoe_for_field"
+      ]
+    },
+    "gear_kit_mining": {
+      "push": {
+        "tool:pickaxe": 18,
+        "torch": 8
+      },
+      "advice": [
+        "miner_needs_pickaxe_and_torches"
+      ]
+    },
+    "gear_kit_woodcutting": {
+      "push": {
+        "tool:axe": 18
+      },
+      "advice": [
+        "lumberjack_needs_axe"
+      ]
+    },
+    "gear_kit_farming": {
+      "push": {
+        "tool:hoe": 14,
+        "wheat_seeds": 6
+      },
+      "advice": [
+        "farmer_needs_hoe_and_seeds"
+      ]
+    },
+    "gear_kit_building": {
+      "push": {
+        "cobblestone": 8
+      },
+      "advice": [
+        "builder_needs_material"
+      ]
+    }
+  }
+}

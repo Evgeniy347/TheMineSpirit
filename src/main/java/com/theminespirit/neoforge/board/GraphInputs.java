@@ -11,6 +11,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphState;
@@ -53,6 +54,7 @@ final class GraphInputs {
         int stage = service.board().ledger().stage();
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        List<GraphFacts.Chest> chests = GraphFactInputs.chestFacts(StockReader.chests(level));
         return new GraphState(
                         GraphNames.stock(
                                 stock.available(),
@@ -67,8 +69,15 @@ final class GraphInputs {
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
-                        .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
+                .withFacts(GraphFactInputs.of(
+                                service,
+                                spirits,
+                                graph,
+                                buildings,
+                                scan,
+                                around,
+                                new GraphFactInputs.Sources(level, chests, town))
+                        .withChests(chests)
                         .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)));
     }
 

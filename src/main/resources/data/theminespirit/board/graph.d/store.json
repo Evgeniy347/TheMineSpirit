@@ -1,0 +1,142 @@
+{
+  "storeMinimums": {
+    "#logs": {
+      "min": 64,
+      "reserve": 16
+    },
+    "cobblestone": {
+      "min": 128,
+      "reserve": 32
+    },
+    "food": {
+      "min": 16,
+      "reserve": 8
+    },
+    "iron_pickaxe": {
+      "min": 1,
+      "reserve": 0
+    },
+    "iron_axe": {
+      "min": 1,
+      "reserve": 0
+    },
+    "iron_shovel": {
+      "min": 1,
+      "reserve": 0
+    },
+    "iron_sword": {
+      "min": 1,
+      "reserve": 0
+    },
+    "torch": {
+      "min": 32,
+      "reserve": 8
+    },
+    "coal": {
+      "min": 16,
+      "reserve": 8
+    }
+  },
+  "storeSpace": {
+    "minFreePercent": 20
+  },
+  "storeTransfer": {
+    "carrySurplus": 8
+  },
+  "storeSort": {
+    "mixedItems": 6
+  },
+  "events": {
+    "store_minimum": {
+      "tasks": [
+        {
+          "id": "store:minimum",
+          "case": "SUPPLY_SITE",
+          "base": 65,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "top_up_minimum_from_chests"
+      ]
+    },
+    "store_transfer": {
+      "tasks": [
+        {
+          "id": "store:transfer",
+          "case": "TRANSFER_ITEM",
+          "base": 50,
+          "consumes": {},
+          "implemented": false
+        },
+        {
+          "id": "store:carry",
+          "case": "TRANSFER_ITEM",
+          "base": 50,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "carry_to_nearest_chest"
+      ]
+    },
+    "store_smelt_put": {
+      "tasks": [
+        {
+          "id": "station:smelt:put",
+          "case": "ACTIVITY_SMELT",
+          "base": 55,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "load_furnace_and_leave"
+      ]
+    },
+    "store_smelt_take": {
+      "tasks": [
+        {
+          "id": "station:smelt:take",
+          "case": "ACTIVITY_SMELT",
+          "base": 60,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "take_ready_output"
+      ]
+    },
+    "store_storage_space": {
+      "tasks": [
+        {
+          "id": "storage_space",
+          "case": "STOCK_CHESTS",
+          "base": 60,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "place_chest_pair_when_full"
+      ]
+    },
+    "store_sort": {
+      "tasks": [
+        {
+          "id": "sort",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 40,
+          "consumes": {},
+          "implemented": false
+        }
+      ],
+      "advice": [
+        "store_by_type"
+      ]
+    }
+  }
+}
