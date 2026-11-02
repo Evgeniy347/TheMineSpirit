@@ -61,16 +61,61 @@ public record GraphFacts(
         }
     }
 
+    public enum TargetKind {
+        NONE,
+        SPIRIT,
+        PLAYER,
+        ANIMAL,
+        OTHER
+    }
+
     public record Threat(
             String id,
             String type,
             float health,
+            float maxHealth,
             Position position,
-            @Nullable String target) {
+            @Nullable String target,
+            TargetKind targetKind,
+            boolean targetingSelf,
+            boolean visible,
+            @Nullable String state,
+            int distance,
+            @Nullable String lastHurtBy,
+            double speed) {
         public Threat {
             Objects.requireNonNull(id, "id угрозы не может быть null: по нему отличают врагов");
             Objects.requireNonNull(type, "тип угрозы не может быть null: без типа не выбрать защиту");
             Objects.requireNonNull(position, "позиция угрозы не может быть null: без неё не дойти до врага");
+            Objects.requireNonNull(targetKind, "вид цели угрозы не может быть null: без него не выбрать защиту");
+            if (health < 0 || maxHealth <= 0 || health > maxHealth) {
+                throw new IllegalArgumentException("Здоровье угрозы " + health + " из " + maxHealth
+                        + ": оно не отрицательно и не больше максимума, максимум положителен");
+            }
+            if (distance < 0) {
+                throw new IllegalArgumentException("Расстояние до угрозы " + distance
+                        + " отрицательно: неизвестное отмечают отдельно, а не минусом");
+            }
+            if (speed < 0) {
+                throw new IllegalArgumentException("Скорость угрозы " + speed + " отрицательна: стоящую задают нулём");
+            }
+        }
+
+        public Threat(String id, String type, float health, Position position, @Nullable String target) {
+            this(
+                    id,
+                    type,
+                    health,
+                    Math.max(health, 1f),
+                    position,
+                    target,
+                    target == null ? TargetKind.NONE : TargetKind.OTHER,
+                    false,
+                    true,
+                    null,
+                    0,
+                    null,
+                    0);
         }
     }
 
@@ -198,5 +243,9 @@ public record GraphFacts(
 
     public GraphFacts withChests(List<Chest> known) {
         return new GraphFacts(spirits, threats, known, resources, stations, buildings, strays, terrain, stageReqs);
+    }
+
+    public GraphFacts withThreats(List<Threat> known) {
+        return new GraphFacts(spirits, known, chests, resources, stations, buildings, strays, terrain, stageReqs);
     }
 }

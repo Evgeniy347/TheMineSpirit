@@ -1,0 +1,44 @@
+{
+  "events": {
+    "life_threat": {
+      "band": 20,
+      "tasks": [
+        {"id": "defend", "case": "ACTIVITY_DEFEND", "base": 120, "consumes": {}},
+        {"id": "retreat", "case": "ACTIVITY_RETREAT", "base": 115, "consumes": {}},
+        {"id": "arm", "case": "ACTIVITY_ARM", "base": 110, "consumes": {}},
+        {"id": "heal", "case": "ACTIVITY_REST", "base": 106, "consumes": {}},
+        {"id": "eat", "case": "EAT_TO_FULL", "base": 103, "consumes": {"food": 1}},
+        {"id": "sleep", "case": "ACTIVITY_REST", "base": 101, "consumes": {}}
+      ],
+      "push": {
+        "tool:sword": 60,
+        "leather_armor": 50,
+        "iron_armor": 55,
+        "diamond_armor": 60,
+        "food": 40
+      },
+      "advice": ["fight_or_retreat", "protect_spirit_or_player"]
+    },
+    "life_threat_spirit": {
+      "band": 20,
+      "tasks": [
+        {"id": "protect_spirit", "case": "ACTIVITY_DEFEND", "base": 125, "consumes": {}}
+      ],
+      "advice": ["protect_spirit"]
+    },
+    "life_threat_player": {
+      "band": 20,
+      "tasks": [
+        {"id": "protect_player", "case": "ACTIVITY_DEFEND", "base": 124, "consumes": {}}
+      ],
+      "advice": ["protect_player"]
+    },
+    "life_injury": {
+      "band": 20,
+      "tasks": [
+        {"id": "heal", "case": "ACTIVITY_REST", "base": 104, "consumes": {}}
+      ],
+      "advice": ["heal_or_rest"]
+    }
+  }
+}

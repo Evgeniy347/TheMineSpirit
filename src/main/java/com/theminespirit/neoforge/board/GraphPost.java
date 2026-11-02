@@ -86,6 +86,9 @@ final class GraphPost {
     }
 
     private boolean event(GraphTickets.Ticket ticket) {
+        if (life(ticket)) {
+            return true;
+        }
         if (EAT.equals(ticket.node())) {
             return hungry(ticket);
         }
@@ -94,6 +97,10 @@ final class GraphPost {
             return true;
         }
         return COLLECT.contains(ticket.node()) && collect(ticket);
+    }
+
+    private boolean life(GraphTickets.Ticket ticket) {
+        return ticket.id().startsWith(GraphTickets.PREFIX + "event:life_");
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {

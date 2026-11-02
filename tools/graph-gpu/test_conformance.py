@@ -71,6 +71,32 @@ def test_fragments():
     print("OK: фрагменты графа сливаются, конфликт назван путём")
 
 
+def test_life_band():
+    graph = Graph({
+        "maxPriority": 100,
+        "items": {},
+        "buildings": {},
+        "ways": [],
+        "events": {
+            "life_threat": {
+                "band": 20,
+                "tasks": [
+                    {"id": "defend", "case": "ACTIVITY_DEFEND", "base": 120, "consumes": {}},
+                    {"id": "sleep", "case": "ACTIVITY_REST", "base": 101, "consumes": {}},
+                ],
+            }
+        },
+    })
+    tasks = plan(graph, State({"stage": 1, "events": ["life_threat"], "kits": {"spirit-1": {}}}))["tasks"]
+    by_id = {task["id"]: task["priority"] for task in tasks}
+    defend = by_id.get("event:life_threat:defend")
+    sleep = by_id.get("event:life_threat:sleep")
+    assert defend is not None and sleep is not None, "Python-модель обязана видеть задания события жизни: " + str(tasks)
+    assert defend > 100 and sleep > 100, "Полоса жизни выше maxPriority и в Python: " + str(by_id)
+    assert defend >= sleep, "Защита важнее сна и в Python: " + str(by_id)
+    print("OK: полоса жизни выше maxPriority в Python")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -87,6 +113,7 @@ def test_conformance():
 if __name__ == "__main__":
     try:
         test_fragments()
+        test_life_band()
         test_conformance()
     except AssertionError as error:
         print(error)

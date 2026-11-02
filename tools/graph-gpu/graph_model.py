@@ -88,6 +88,13 @@ def priority(score, maximum):
     return int(min(maximum, math.floor(maximum * (1.0 - math.exp(-score / maximum)) + 0.5)))
 
 
+def band_priority(score, maximum, band):
+    if score <= 0:
+        return 0
+    above = int(round(score - maximum))
+    return maximum + max(1, min(band, above))
+
+
 class Costs:
     """GraphCosts: длительность заданий, дорога, износ, ёмкость станций."""
 
@@ -304,6 +311,7 @@ class Graph:
                 "tasks": [dict(t) for t in (event.get("tasks") or [])],
                 "push": dict(event.get("push") or {}),
                 "advice": list(event.get("advice") or []),
+                "band": int(event.get("band", 0)),
             }
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
         self.triggers = [dict(t) for t in (data.get("triggers") or [])]
@@ -909,6 +917,9 @@ class Planner:
         if key.startswith(EVENT):
             parts = key.split(":", 2)
             event = graph.events.get(parts[1], {"tasks": []})
+            band = int(event.get("band", 0))
+            if band > 0:
+                prio = band_priority(value, graph.max_priority, band)
             task = next((t for t in event["tasks"] if t.get("id") == parts[2]), None)
             if task is None:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")

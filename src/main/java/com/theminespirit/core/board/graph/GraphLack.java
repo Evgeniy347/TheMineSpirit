@@ -36,6 +36,14 @@ public final class GraphLack {
         return state.count(node);
     }
 
+    static boolean housed(GraphState state, SupplyGraph.Way way) {
+        return way.building() == null || state.built(way.building()) == GraphState.Built.BUILT;
+    }
+
+    static boolean stocked(SupplyGraph graph, GraphState state, Map<String, Integer> needs) {
+        return needs.entrySet().stream().allMatch(entry -> count(graph, state, entry.getKey()) >= entry.getValue());
+    }
+
     static double share(SupplyGraph graph, GraphState state, Map<String, Integer> needs) {
         int total = needs.values().stream().mapToInt(Integer::intValue).sum();
         if (total == 0) {

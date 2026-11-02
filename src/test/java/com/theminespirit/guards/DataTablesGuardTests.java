@@ -48,7 +48,10 @@ class DataTablesGuardTests {
         List<String> unregistered = new ArrayList<>();
 
         for (String path : jsonFiles) {
-            if (!registeredPaths.contains(path) && !EXCLUDED.containsKey(path) && !presetBodies.contains(path)) {
+            if (!registeredPaths.contains(path)
+                    && !EXCLUDED.containsKey(path)
+                    && !presetBodies.contains(path)
+                    && !path.startsWith("data/theminespirit/board/graph.d/")) {
                 unregistered.add(path);
             }
         }
@@ -60,7 +63,8 @@ class DataTablesGuardTests {
                         + "таблица без регистрации не перечитается на лету по /reload, изменение в датапаке мира игнорируется. "
                         + "Как исправить: зарегистрируйте таблицу в DataTables (TableRegistry.registerLazy) или добавьте в EXCLUDED "
                         + "внутри DataTablesGuardTests с явной причиной. Правило: каждый json в data/theminespirit "
-                        + "должен быть в DataTables или в исключениях. Незарегистрированные файлы");
+                        + "должен быть в DataTables или в исключениях, кроме фрагментов board/graph.d: "
+                        + "их сливает SupplyGraph, а не отдельная таблица /reload. Незарегистрированные файлы");
     }
 
     @Test
