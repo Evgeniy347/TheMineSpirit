@@ -22,10 +22,19 @@ import org.junit.jupiter.api.Test;
 class DataTablesGuardTests {
     private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
 
-    private static final Map<String, String> EXCLUDED = Map.of(
-            "data/theminespirit/schematics/buildings.json",
-            "каталог семей построек читается один раз при регистрации команд /spirit demo: подкоманды по /reload "
-                    + "не перерегистрируются, горячая таблица дала бы каталог, расходящийся с командами");
+    private static final Map<String, String> EXCLUDED = Map.ofEntries(
+            Map.entry(
+                    "data/theminespirit/schematics/buildings.json",
+                    "каталог семей построек читается один раз при регистрации команд /spirit demo: подкоманды по /reload "
+                            + "не перерегистрируются, горячая таблица дала бы каталог, расходящийся с командами"),
+            Map.entry(
+                    "data/theminespirit/board/graph.d/store.json",
+                    "фрагмент графа: его читает GraphFragments вместе с graph.json и graph-recipes.json, "
+                            + "а не отдельная таблица DataTables"),
+            Map.entry(
+                    "data/theminespirit/board/graph.d/farm.json",
+                    "фрагмент графа: его читает GraphFragments вместе с graph.json и graph-recipes.json, "
+                            + "а не отдельная таблица DataTables"));
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {

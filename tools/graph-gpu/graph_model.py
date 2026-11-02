@@ -185,19 +185,21 @@ def merge_fragment(merged, fragment, origin):
             if not isinstance(section, list):
                 section = []
                 merged[field] = section
-            ids = {node.get("id") for node in section if isinstance(node, dict)}
+            ids = {node.get("id") for node in section
+                   if isinstance(node, dict) and node.get("id") is not None}
             texts = {node for node in section if isinstance(node, str)}
             for node in value:
-                if isinstance(node, dict) and node.get("id") in ids:
+                node_id = node.get("id") if isinstance(node, dict) else None
+                if node_id is not None and node_id in ids:
                     raise ValueError(
                         "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
-                        % (origin, field, node.get("id")))
+                        % (origin, field, node_id))
                 if isinstance(node, str) and node in texts:
                     raise ValueError(
                         "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
                         % (origin, field, node))
-                if isinstance(node, dict):
-                    ids.add(node.get("id"))
+                if node_id is not None:
+                    ids.add(node_id)
                 if isinstance(node, str):
                     texts.add(node)
                 section.append(copy.deepcopy(node))

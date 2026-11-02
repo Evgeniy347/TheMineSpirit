@@ -1,0 +1,226 @@
+{
+  "_note_farm": "Область farm: еда и живность. Новые узлы только здесь; сборщик входа — FarmInputs.",
+  "items": {
+    "farmland": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 1
+    },
+    "herd_fed": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    }
+  },
+  "groups": {
+    "#crops": [
+      "wheat",
+      "carrot",
+      "potato",
+      "beetroot"
+    ],
+    "#seeds": [
+      "wheat_seeds",
+      "melon_seeds",
+      "pumpkin_seeds"
+    ]
+  },
+  "buildings": {
+    "wheat_field": {
+      "case": "BUILD_PLACED",
+      "stage": 1,
+      "base": 55,
+      "materials": {
+        "wheat_seeds": 8,
+        "dirt": 8
+      },
+      "optional": true,
+      "implemented": false
+    }
+  },
+  "ways": [
+    {
+      "id": "till_soil",
+      "case": "GATHER_MATERIALS",
+      "makes": "farmland",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "dirt": 1
+      },
+      "ticks": 120,
+      "implemented": false
+    },
+    {
+      "id": "plant_crop",
+      "case": "GATHER_MATERIALS",
+      "makes": "wheat",
+      "yield": 1,
+      "weight": 1.05,
+      "consumes": {
+        "farmland": 1,
+        "wheat_seeds": 1
+      },
+      "building": "wheat_field",
+      "ticks": 120,
+      "implemented": false
+    },
+    {
+      "id": "harvest_crop",
+      "case": "GATHER_MATERIALS",
+      "makes": "wheat",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {},
+      "building": "wheat_field",
+      "ticks": 120,
+      "implemented": false
+    },
+    {
+      "id": "feed_animals",
+      "case": "BREED_ANIMALS",
+      "makes": "herd_fed",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#crops": 8
+      },
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "lure_animal",
+      "case": "LURE_ANIMAL",
+      "makes": "herd_cow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2
+      },
+      "world": "animals",
+      "ticks": 600,
+      "implemented": false
+    },
+    {
+      "id": "milk_animal",
+      "case": "COLLECT_DROPS",
+      "makes": "milk_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      },
+      "building": "pen_cow",
+      "needs": {
+        "herd_cow": 1
+      },
+      "ticks": 200,
+      "implemented": false
+    }
+  ],
+  "edges": [],
+  "triggers": [
+    {
+      "have": "wheat_seeds",
+      "build": "wheat_field"
+    }
+  ],
+  "events": {
+    "crop_ready": {
+      "tasks": [
+        {
+          "id": "harvest_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 40,
+          "consumes": {},
+          "building": "wheat_field"
+        }
+      ],
+      "push": {
+        "food": 10,
+        "wheat": 10
+      },
+      "advice": [
+        "harvest_and_replant"
+      ]
+    },
+    "crop_dry": {
+      "tasks": [],
+      "push": {
+        "water_bucket": 10
+      },
+      "advice": [
+        "water_the_field"
+      ]
+    },
+    "animal_starving": {
+      "tasks": [
+        {
+          "id": "feed_animals",
+          "case": "BREED_ANIMALS",
+          "base": 40,
+          "consumes": {
+            "#crops": 8
+          }
+        }
+      ],
+      "push": {
+        "herd_fed": 15,
+        "#crops": 10
+      },
+      "advice": [
+        "feed_herd"
+      ]
+    },
+    "pen_full": {
+      "tasks": [],
+      "push": {
+        "herd_fed": 5
+      },
+      "advice": [
+        "cull_or_expand_pen"
+      ]
+    },
+    "orchard_empty": {
+      "tasks": [
+        {
+          "id": "replant_orchard",
+          "case": "BUILD_ORCHARD",
+          "base": 40,
+          "consumes": {
+            "oak_sapling": 1
+          },
+          "building": "orchard_oak"
+        }
+      ],
+      "push": {
+        "#saplings": 5
+      },
+      "advice": [
+        "replant_after_fell"
+      ]
+    },
+    "field_empty": {
+      "tasks": [
+        {
+          "id": "plant_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 35,
+          "consumes": {
+            "wheat_seeds": 1
+          },
+          "building": "wheat_field"
+        }
+      ],
+      "push": {
+        "farmland": 5,
+        "wheat_seeds": 5
+      },
+      "advice": [
+        "plant_free_cell_after_harvest"
+      ]
+    }
+  }
+}

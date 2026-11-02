@@ -1,0 +1,216 @@
+{
+  "_note_store": "Область store: склад и логистика. Новые узлы только здесь; сборщик входа — StoreInputs.",
+  "store": {
+    "reservePercent": 25,
+    "minimums": {
+      "#logs": 64,
+      "cobblestone": 128,
+      "bread": 16,
+      "coal": 16
+    },
+    "toolMinimums": {
+      "axe": "iron",
+      "pickaxe": "iron",
+      "shovel": "iron",
+      "sword": "iron"
+    },
+    "maxItemTypesPerChest": 6
+  },
+  "items": {
+    "food_reserve": {
+      "xmin": 0,
+      "k": 1,
+      "base": 50,
+      "stage": 1
+    },
+    "logistics": {
+      "xmin": 0,
+      "k": 1,
+      "base": 45,
+      "stage": 1
+    }
+  },
+  "groups": {
+    "#fuel": [
+      "coal",
+      "charcoal",
+      "oak_planks",
+      "oak_log"
+    ]
+  },
+  "buildings": {
+    "storage_space": {
+      "case": "STOCK_CHESTS",
+      "stage": 1,
+      "base": 58,
+      "materials": {
+        "#planks": 32
+      },
+      "requires": [
+        "chests"
+      ],
+      "optional": true,
+      "implemented": false
+    }
+  },
+  "ways": [
+    {
+      "id": "transfer_item",
+      "case": "TRANSFER_ITEM",
+      "makes": "logistics",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {},
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "sort_chest",
+      "case": "ACTIVITY_UNLOAD",
+      "makes": "logistics",
+      "yield": 1,
+      "weight": 0.9,
+      "consumes": {},
+      "building": "chests",
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "restock_food",
+      "case": "RESTOCK_FOOD",
+      "makes": "food_reserve",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "food": 8
+      },
+      "ticks": 200
+    }
+  ],
+  "edges": [
+    {
+      "lack": "logistics",
+      "way": "transfer_item",
+      "weight": 8
+    },
+    {
+      "lack": "logistics",
+      "way": "sort_chest",
+      "weight": 5
+    }
+  ],
+  "events": {
+    "store_minimum": {
+      "tasks": [
+        {
+          "id": "store_minimum",
+          "case": "SUPPLY_SITE",
+          "base": 45,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "#logs": 20,
+        "cobblestone": 20,
+        "food": 15,
+        "tool:pickaxe": 10,
+        "tool:axe": 10,
+        "tool:shovel": 10,
+        "tool:sword": 10
+      },
+      "advice": [
+        "refill_minimum_before_next_stage"
+      ]
+    },
+    "transfer_pending": {
+      "tasks": [
+        {
+          "id": "transfer_item",
+          "case": "TRANSFER_ITEM",
+          "base": 40,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "logistics": 8,
+        "food_reserve": 5
+      },
+      "advice": [
+        "carry_carried_items_to_chest"
+      ]
+    },
+    "storage_full": {
+      "tasks": [
+        {
+          "id": "add_chest_pair",
+          "case": "STOCK_CHESTS",
+          "base": 55,
+          "consumes": {
+            "#planks": 32
+          }
+        }
+      ],
+      "push": {
+        "building:storage_space": 15,
+        "logistics": 10
+      },
+      "advice": [
+        "add_chest_pair_or_warehouse"
+      ]
+    },
+    "storage_mixed": {
+      "tasks": [
+        {
+          "id": "sort_chest",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 30,
+          "consumes": {},
+          "building": "chests"
+        }
+      ],
+      "push": {
+        "logistics": 8
+      },
+      "advice": [
+        "store_by_item_type"
+      ]
+    },
+    "furnace_ready": {
+      "tasks": [
+        {
+          "id": "take_smelted",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 40,
+          "consumes": {},
+          "building": "furnace"
+        }
+      ],
+      "push": {
+        "food": 10
+      },
+      "advice": [
+        "take_smelted_output"
+      ]
+    },
+    "furnace_needs_fuel": {
+      "tasks": [
+        {
+          "id": "load_furnace",
+          "case": "ACTIVITY_SMELT",
+          "base": 35,
+          "consumes": {
+            "#fuel": 1
+          },
+          "building": "furnace"
+        }
+      ],
+      "push": {
+        "#fuel": 10,
+        "logistics": 5
+      },
+      "advice": [
+        "load_furnace_then_leave"
+      ]
+    }
+  }
+}
