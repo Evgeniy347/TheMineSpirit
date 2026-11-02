@@ -41,6 +41,7 @@
 | [pathfinding-range.md](pathfinding-range.md) | Дальность поиска пути: замеры 32–2048, лимиты узлов и чанков, граф троп | свой стенд на снимке мира |
 | [graph-inputs.md](graph-inputs.md) | Что граф получает сейчас, чего не хватает, обходы графа, переход на «дух → работа» | свой код `core/board/graph`, `neoforge/board` |
 | [graph-inputs-tables.md](graph-inputs-tables.md) | Полные таблицы к разбору входа и выхода графа | свой код |
+| [graph-inputs-migration.md](graph-inputs-migration.md) | Пофайловый переход «всё через граф» и критерий приёмки шага | свой код |
 
 ## Самое ценное по областям
 
