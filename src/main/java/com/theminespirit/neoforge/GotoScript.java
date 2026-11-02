@@ -37,7 +37,7 @@ public final class GotoScript implements ScriptInstance {
         this.target =
                 surface(spirit.level(), outsideHouse(spirit.level(), new BlockPos(params.x(), params.y(), params.z())));
         this.approach = new Approach(spirit);
-        if (mode == PathMode.NORMAL && !DigOutScript.open(spirit.level(), spirit.blockPosition())) {
+        if (mode == PathMode.NORMAL) {
             this.approach.beginWithRoutes(target, ARRIVAL_TOLERANCE);
         } else {
             this.approach.begin(target, ARRIVAL_TOLERANCE, mode);

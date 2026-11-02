@@ -58,7 +58,8 @@ public final class RouteDetour {
         }
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        RouteWorld world = new RouteLevelView(spirit);
+        RouteWorld base = new RouteLevelView(spirit);
+        RouteWorld world = base;
         LevelSafetyView safety = new LevelSafetyView(spirit.level());
         int blocks = RouteLevelView.blocks(spirit);
         RouteFailures.Key key = new RouteFailures.Key(spirit.getUUID(), from, target, radius, blocks);

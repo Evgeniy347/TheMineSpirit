@@ -287,10 +287,6 @@ public final class Approach {
         spirit.getNavigation().moveTo(target.x, target.y, target.z, 0, MOVE_SPEED);
     }
 
-    public int teleports() {
-        return rescue.teleports();
-    }
-
     private void finish() {
         rescue.cancel();
         spirit.getNavigation().stop();

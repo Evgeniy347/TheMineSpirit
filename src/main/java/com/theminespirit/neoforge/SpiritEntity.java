@@ -97,7 +97,6 @@ public final class SpiritEntity extends PathfinderMob {
     private Camp camp;
     private int pathBuilds;
     private @Nullable BuildStats buildStats;
-    private int teleports;
     private int entityQueries;
     private int snapshotBuilds;
     private long lastSayTick = Long.MIN_VALUE;
@@ -694,14 +693,6 @@ public final class SpiritEntity extends PathfinderMob {
 
     public void countPathBuild() {
         pathBuilds++;
-    }
-
-    public void countTeleport() {
-        teleports++;
-    }
-
-    public int teleports() {
-        return teleports;
     }
 
     public int claimMagnetPulls(AABB area, IdFilter items, long since) {

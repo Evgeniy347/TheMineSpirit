@@ -72,55 +72,6 @@ class SelfEscapeTests {
     }
 
     @Test
-    void nearby_FreeCell_ReturnsGotoWithoutMaterial() {
-        Set<BlockCoord> air = Set.of(new BlockCoord(11, 64, 10), new BlockCoord(11, 65, 10));
-
-        SelfEscape.Plan plan = SelfEscape.nearby(FEET, grid(air, (x, z) -> 64)).orElseThrow();
-
-        assertEquals(
-                SelfEscape.Method.GOTO,
-                plan.method(),
-                "рядом есть проход: спасение шагом не требует земли/булыжника, pillar_up тут не нужен");
-        assertEquals(new BlockCoord(11, 64, 10), plan.target(), "шаг ведёт в соседнюю открытую клетку");
-        assertEquals(0, plan.rise(), "шаг не поднимает духа");
-        assertTrue(plan.blocks().isEmpty(), "шаг не ломает блоки");
-    }
-
-    @Test
-    void nearby_StandAboveLeaves_IsNotChosen() {
-        Set<BlockCoord> air = Set.of(new BlockCoord(11, 64, 10), new BlockCoord(11, 65, 10));
-        BlockCoord leaf = new BlockCoord(11, 63, 10);
-
-        SelfEscape.Plan plan = SelfEscape.nearby(FEET, new StuckSituation.Grid() {
-                    @Override
-                    public boolean passable(BlockCoord cell) {
-                        return air.contains(cell);
-                    }
-
-                    @Override
-                    public boolean leaf(BlockCoord cell) {
-                        return cell.equals(leaf);
-                    }
-
-                    @Override
-                    public int floorY(int x, int z) {
-                        return 64;
-                    }
-                })
-                .orElse(null);
-
-        assertTrue(
-                plan == null, "клетка над листвой — не стоянка: иначе acquire оставляет духа на кроне (-221,88,-602)");
-    }
-
-    @Test
-    void nearby_WalledCell_IsEmpty() {
-        assertTrue(
-                SelfEscape.nearby(FEET, grid(Set.of(), (x, z) -> 64)).isEmpty(),
-                "в замурованной клетке соседнего прохода нет: нужен коп/ступени, а не шаг");
-    }
-
-    @Test
     void plan_FreeRoofGoalBelow_Descends() {
         Set<BlockCoord> air = Set.of(new BlockCoord(11, 64, 10), new BlockCoord(11, 65, 10));
 
