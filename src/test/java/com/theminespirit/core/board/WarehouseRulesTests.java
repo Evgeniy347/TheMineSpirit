@@ -82,6 +82,21 @@ class WarehouseRulesTests {
     }
 
     @Test
+    void stageOpen_StageOneBusy_BlocksOnlyUntilSecondStage() {
+        assertFalse(
+                WarehouseRules.stageOpen(1, true),
+                "Этап 1 ещё строится — склад не начинают: иначе стройка склада спорит с домом и двором");
+        assertTrue(
+                WarehouseRules.stageOpen(2, true),
+                "Этап 2 начат — ремонт этапа 1 не держит склад: иначе склад не выдаётся никогда");
+        assertTrue(WarehouseRules.stageOpen(1, false), "Этап 1 свободен — склад можно начинать сразу после дома");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> WarehouseRules.stageOpen(0, false),
+                "Нулевого этапа поселения нет: этап вне шкалы обязан отвергаться");
+    }
+
+    @Test
     void scheme_EachLevel_NamesItsOwnPreset() {
         assertEquals("storage_v1", WarehouseRules.scheme(1), "Уровень 1 — схема storage_v1");
         assertEquals("storage_v4", WarehouseRules.scheme(4), "Уровень 4 — схема storage_v4");

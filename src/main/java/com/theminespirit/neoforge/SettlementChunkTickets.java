@@ -5,11 +5,13 @@ import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
 import com.theminespirit.core.chunk.ChunkSquare;
 import com.theminespirit.core.chunk.SettlementChunks;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.resources.ResourceLocation;
@@ -36,8 +38,11 @@ public final class SettlementChunkTickets {
 
     static void tick(ServerLevel level) {
         TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
-        Set<ChunkCoord> settlement = SettlementChunks.forPlan(
-                plan, SettlementAnchorStore.get(level).anchors(), SettlementChunks.WORK_RADIUS_BLOCKS);
+        var anchors = SettlementAnchorStore.get(level).anchors();
+        Set<ChunkCoord> settlement =
+                new TreeSet<>(SettlementChunks.forPlan(plan, anchors, SettlementChunks.WORK_RADIUS_BLOCKS));
+        settlement.addAll(SettlementChunks.around(
+                anchors, DataTables.INSTANCE.town().current().ground().probeRadius()));
         Set<ChunkCoord> held = HELD.getOrDefault(level, Set.of());
         ChunkDiff diff = ChunkDiff.between(held, settlement);
         if (!diff.isEmpty()) {

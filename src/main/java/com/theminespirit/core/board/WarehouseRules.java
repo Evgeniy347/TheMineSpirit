@@ -25,6 +25,13 @@ public final class WarehouseRules {
         return 0;
     }
 
+    public static boolean stageOpen(int settlementStage, boolean stageOneBusy) {
+        if (settlementStage < 1) {
+            throw new IllegalArgumentException("Этап " + settlementStage + " вне поселения: этапы считаются с первого");
+        }
+        return !stageOneBusy || settlementStage >= 2;
+    }
+
     public static boolean canBuild(int level, Collection<Integer> standing) {
         Objects.requireNonNull(standing, "Список стоящих складов не может быть null: лимит считается по нему");
         if (level < 1 || level > MAX_LEVEL) {

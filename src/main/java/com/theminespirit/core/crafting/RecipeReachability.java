@@ -1,61 +1,29 @@
 package com.theminespirit.core.crafting;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class RecipeReachability {
-    private static final int MAX_DEPTH = 64;
+    private static final String MINECRAFT = "minecraft:";
 
-    private final RecipeIndex index;
-    private final Predicate<String> gatherable;
-    private final Map<String, Boolean> memo = new HashMap<>();
+    private final Obtainability obtainability;
 
     public RecipeReachability(RecipeIndex index, Predicate<String> gatherable) {
-        this.index = index;
-        this.gatherable = gatherable;
+        Objects.requireNonNull(index, "Индекс рецептов не может быть null: без него нечего искать");
+        Objects.requireNonNull(gatherable, "Проверка добычи не может быть null: без неё нет основания");
+        this.obtainability = new Obtainability(
+                item -> RecipeChooser.pick(index.craftsFor(normalize(item)), Map.of()),
+                item -> index.smeltingFor(normalize(item)),
+                item -> gatherable.test(normalize(item)));
     }
 
     public boolean canObtain(String item) {
-        return canObtain(item, new HashSet<>(), 0);
-    }
-
-    private boolean canObtain(String item, Set<String> path, int depth) {
-        String key = normalize(item);
-        Boolean cached = memo.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        if (depth > MAX_DEPTH || !path.add(key)) {
-            return false;
-        }
-        boolean result;
-        try {
-            if (gatherable.test(key)) {
-                result = true;
-            } else {
-                Optional<RecipeSpec> craft = RecipeChooser.pick(index.craftsFor(key), Map.of());
-                if (craft.isPresent()) {
-                    result = craft.get().ingredients().stream()
-                            .allMatch(slot ->
-                                    slot.alternatives().stream().anyMatch(alt -> canObtain(alt, path, depth + 1)));
-                } else {
-                    result = index.smeltingFor(key).stream()
-                            .anyMatch(recipe -> recipe.ingredients().get(0).alternatives().stream()
-                                    .anyMatch(alt -> canObtain(alt, path, depth + 1)));
-                }
-            }
-        } finally {
-            path.remove(key);
-        }
-        memo.put(key, result);
-        return result;
+        return obtainability.canObtain(normalize(item));
     }
 
     private static String normalize(String item) {
-        return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
+        Objects.requireNonNull(item, "Имя предмета не может быть null: по нему ищут путь");
+        return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
     }
 }

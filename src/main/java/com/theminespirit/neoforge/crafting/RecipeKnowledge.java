@@ -78,6 +78,10 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public boolean isGatherable(String item) {
+        return gatherable(item);
+    }
+
+    static boolean gatherable(String item) {
         String id = ItemIds.normalize(item);
         if (DropTable.shared()
                 .blocksFor(id)

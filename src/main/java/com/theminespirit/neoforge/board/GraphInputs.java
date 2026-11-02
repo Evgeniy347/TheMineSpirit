@@ -116,6 +116,7 @@ final class GraphInputs {
         }
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         buildings.putAll(planBuilt(level, service, scan, town));
+        planStates(town, ledger, graph, buildings);
         Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
         graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
         for (SupplyGraph.Building building : graph.buildings().values()) {
@@ -131,6 +132,21 @@ final class GraphInputs {
             }
         }
         return buildings;
+    }
+
+    private static void planStates(
+            Optional<TownPlan> town, BoardLedger ledger, SupplyGraph graph, Map<String, Built> buildings) {
+        town.ifPresent(plan -> plan.placements()
+                .forEach(place -> StageCatalog.graphId(place.id()).ifPresent(id -> {
+                    SupplyGraph.Building building = graph.buildings().get(id);
+                    if (building == null
+                            || buildings.containsKey(id)
+                            || !StageCatalog.watcherOwned(building.boardCase())) {
+                        return;
+                    }
+                    boolean built = ledger.has(building.boardCase(), 1);
+                    buildings.put(id, built ? Built.BUILT : Built.PLANNED);
+                })));
     }
 
     private static Map<String, Built> planBuilt(
