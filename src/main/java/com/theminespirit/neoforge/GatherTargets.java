@@ -49,10 +49,10 @@ final class GatherTargets implements HarvestTargets {
                 : null;
         this.settled = settled;
         this.center = center;
-        this.radius = radius;
         this.blocks = BlockSets.resolve(filter);
-        this.search = BlockLocator.search(level, center, radius, blocks);
         this.treeLogs = exactLog(filter) != null;
+        this.radius = treeLogs ? ChopTuning.gatherDistance(radius) : radius;
+        this.search = BlockLocator.search(level, center, this.radius, blocks);
         this.treeView = treeLogs ? new LevelTreeView(level, blocks) : null;
         this.refusal = exactRefusal(filter);
     }
@@ -105,7 +105,7 @@ final class GatherTargets implements HarvestTargets {
         if (!treeLogs) {
             return false;
         }
-        int next = Math.min(ChopTuning.MAX_SEARCH_RADIUS, Math.max(radius + 1, radius * 2));
+        int next = ChopTuning.gatherDistance(Math.max(radius + 1, radius * 2));
         if (next <= radius) {
             return false;
         }

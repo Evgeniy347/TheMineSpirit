@@ -14,6 +14,7 @@ public final class ChopTuning {
     public static final int COLLECT_RADIUS = 6;
     public static final int MAX_REJECTED_TREES = 8;
     public static final int MAX_SEARCH_RADIUS = 256;
+    public static final int GATHER_RADIUS_MAX = 32;
 
     private ChopTuning() {}
 
@@ -23,6 +24,14 @@ public final class ChopTuning {
                     + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
         }
         return Math.min(requestedRadius, MAX_SEARCH_RADIUS);
+    }
+
+    public static int gatherDistance(int requestedRadius) {
+        if (requestedRadius < 1) {
+            throw new IllegalArgumentException("radius=" + requestedRadius
+                    + ": радиус сбора меньше единицы, ближний источник не нашёлся бы никогда");
+        }
+        return Math.min(requestedRadius, GATHER_RADIUS_MAX);
     }
 
     public static int extendTo(int requestedRadius, int nearestFar) {
