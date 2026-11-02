@@ -14,14 +14,13 @@ import org.jspecify.annotations.Nullable;
 
 public final class BoardSnapshot {
     private static final int SHORT_UUID = 8;
-    private static final Comparator<Ranked> ORDER = Comparator.<Ranked, BoardTileGroup>comparing(
-                    entry -> entry.tile().group())
-            .thenComparing(entry -> entry.tile().unfinished())
-            .thenComparingLong(entry -> entry.tile().doneAt())
-            .thenComparing(Comparator.<Ranked>comparingInt(entry -> entry.tile().priority())
+    private static final Comparator<Row> ORDER = Comparator.<Row, BoardTileGroup>comparing(Row::group)
+            .thenComparing(BoardSnapshot::unfinished)
+            .thenComparingLong(Row::doneAt)
+            .thenComparing(Comparator.<Row>comparingInt(row -> row.task().effectivePriority())
                     .reversed())
-            .thenComparingLong(Ranked::createdAt)
-            .thenComparing(entry -> entry.tile().id());
+            .thenComparingLong(row -> row.task().createdAt())
+            .thenComparing(row -> row.task().id());
 
     private BoardSnapshot() {}
 
@@ -33,48 +32,67 @@ public final class BoardSnapshot {
             List<BoardTask> tasks,
             Function<String, @Nullable String> spiritNames,
             Map<String, List<String>> targetDetails) {
-        Objects.requireNonNull(tasks, "tasks не может быть null: пустая доска — пустой список");
         Objects.requireNonNull(spiritNames, "spiritNames не может быть null: без него плитка не назовёт духа");
         Objects.requireNonNull(
                 targetDetails, "targetDetails не может быть null: без целей задание задают пустой картой");
+        List<Row> rows = rows(tasks);
+        List<BoardTile> tiles = new ArrayList<>(rows.size());
+        for (Row row : rows) {
+            tiles.add(tile(row, spiritNames, targetDetails));
+        }
+        return List.copyOf(tiles);
+    }
+
+    public static List<Row> rows(List<BoardTask> tasks) {
+        Objects.requireNonNull(tasks, "tasks не может быть null: пустая доска — пустой список");
         Set<String> unfinished = new HashSet<>();
         for (BoardTask task : tasks) {
             if (!task.done()) {
                 unfinished.add(task.id());
             }
         }
-        List<Ranked> ranked = new ArrayList<>(tasks.size());
+        List<Row> rows = new ArrayList<>(tasks.size());
         for (BoardTask task : tasks) {
             BoardTileGroup group = groupOf(task, unfinished);
             long doneAt = 0L;
             if (group == BoardTileGroup.DONE && task.done()) {
                 doneAt = task.finishedAt() > 0 ? task.finishedAt() : task.createdAt();
             }
-            BoardTile tile = new BoardTile(
-                    task.id(),
-                    task.boardCase(),
-                    task.level(),
-                    task.effectivePriority(),
-                    nameOf(task.assignee(), spiritNames),
-                    task.status(),
-                    group,
-                    task.missing(),
-                    task.dependsOn(),
-                    doneAt,
-                    task.startedAt(),
-                    task.finishedAt(),
-                    task.durationTicks(),
-                    task.supplyItem(),
-                    task.supplyCount(),
-                    detailsOf(task.modifiers(), targetDetails.get(task.id())));
-            ranked.add(new Ranked(tile, task.createdAt()));
+            rows.add(new Row(task, group, doneAt));
         }
-        ranked.sort(ORDER);
-        List<BoardTile> tiles = new ArrayList<>(ranked.size());
-        for (Ranked entry : ranked) {
-            tiles.add(entry.tile());
-        }
-        return List.copyOf(tiles);
+        rows.sort(ORDER);
+        return List.copyOf(rows);
+    }
+
+    public static BoardTile tile(
+            Row row, Function<String, @Nullable String> spiritNames, Map<String, List<String>> targetDetails) {
+        Objects.requireNonNull(row, "Строка доски не может быть null: из неё строится плитка");
+        Objects.requireNonNull(spiritNames, "spiritNames не может быть null: без него плитка не назовёт духа");
+        Objects.requireNonNull(
+                targetDetails, "targetDetails не может быть null: без целей задание задают пустой картой");
+        BoardTask task = row.task();
+        return new BoardTile(
+                task.id(),
+                task.boardCase(),
+                task.level(),
+                task.effectivePriority(),
+                nameOf(task.assignee(), spiritNames),
+                task.status(),
+                row.group(),
+                task.missing(),
+                task.dependsOn(),
+                row.doneAt(),
+                task.startedAt(),
+                task.finishedAt(),
+                task.durationTicks(),
+                task.supplyItem(),
+                task.supplyCount(),
+                detailsOf(task.modifiers(), targetDetails.get(task.id())));
+    }
+
+    private static boolean unfinished(Row row) {
+        return row.group() == BoardTileGroup.DONE
+                && !BoardStatus.DONE.name().equals(row.task().status());
     }
 
     public static BoardTileGroup groupOf(BoardTask task, Set<String> unfinishedIds) {
@@ -120,7 +138,7 @@ public final class BoardSnapshot {
         return equals < 0 ? detail : detail.substring(0, equals);
     }
 
-    private static @Nullable String nameOf(@Nullable String assignee, Function<String, @Nullable String> names) {
+    static @Nullable String nameOf(@Nullable String assignee, Function<String, @Nullable String> names) {
         if (assignee == null) {
             return null;
         }
@@ -131,5 +149,14 @@ public final class BoardSnapshot {
         return assignee.length() > SHORT_UUID ? assignee.substring(0, SHORT_UUID) : assignee;
     }
 
-    private record Ranked(BoardTile tile, long createdAt) {}
+    public record Row(BoardTask task, BoardTileGroup group, long doneAt) {
+        public Row {
+            Objects.requireNonNull(task, "Задание строки не может быть null: строку строят по заданию доски");
+            Objects.requireNonNull(group, "Группа строки не может быть null: по ней строка встаёт в колонку");
+            if (doneAt < 0) {
+                throw new IllegalArgumentException(
+                        "Тик завершения " + doneAt + " отрицателен: завершение не бывает до начала отсчёта");
+            }
+        }
+    }
 }

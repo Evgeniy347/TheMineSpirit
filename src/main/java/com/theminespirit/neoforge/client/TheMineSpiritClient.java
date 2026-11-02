@@ -42,11 +42,6 @@ public final class TheMineSpiritClient {
             }
         });
         NeoForge.EVENT_BUS.addListener(TheMineSpiritClient::onClientTick);
-        BoardViewChannel.onClientStage(stage -> {
-            if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
-                screen.showStage(stage);
-            }
-        });
         TownMapChannel.onClientReply(reply -> {
             if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
                 screen.show(reply);
@@ -67,9 +62,9 @@ public final class TheMineSpiritClient {
                 screen.showMarkers(reply.markers());
             }
         });
-        BoardViewChannel.onClientReply(tiles -> {
+        BoardViewChannel.onClientReply(reply -> {
             if (Minecraft.getInstance().screen instanceof BoardScreen screen) {
-                screen.show(tiles);
+                screen.show(reply);
             }
         });
     }

@@ -61,7 +61,8 @@ class TaskBoardConsistencyTests {
                 board.find(ORCHARD).isPresent(),
                 "Живая доска observe11 держит сад тикетом — без него проверка согласованности слепа");
 
-        RestResponse listing = send(board, new BoardJournal(LIVE_JOURNAL), "GET", "/v1/board");
+        RestResponse listing =
+                send(board, new BoardJournal(LIVE_JOURNAL), "GET", "/v1/board", Map.of("status", "FAILED"));
         JsonNode tasks = MAPPER.readTree(listing.body()).get("tasks");
         boolean listed = StreamSupport.stream(tasks.spliterator(), false)
                 .anyMatch(task -> ORCHARD.equals(task.get("id").asText()));
@@ -115,6 +116,11 @@ class TaskBoardConsistencyTests {
     }
 
     private static RestResponse send(Board board, BoardJournal journal, String method, String path) {
+        return send(board, journal, method, path, Map.of());
+    }
+
+    private static RestResponse send(
+            Board board, BoardJournal journal, String method, String path, Map<String, String> query) {
         PlanningService planning = new PlanningService(CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         BoardGateway gateway = new JournalBoardGateway(board, journal);
         TaskRoutes taskRoutes = new TaskRoutes(
@@ -127,7 +133,7 @@ class TaskBoardConsistencyTests {
         BoardRoutes boardRoutes = new BoardRoutes(gateway, new IdempotencyCache());
         List<Route> routes = new ArrayList<>(taskRoutes.routes());
         routes.addAll(boardRoutes.routes());
-        return Router.of(routes).handle(new RestRequest(method, path, Map.of(), Map.of(), new byte[0]));
+        return Router.of(routes).handle(new RestRequest(method, path, query, Map.of(), new byte[0]));
     }
 
     private static Board liveBoard() throws IOException {

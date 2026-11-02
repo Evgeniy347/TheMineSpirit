@@ -2,8 +2,10 @@ package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.ui.BoardColumns;
+import com.theminespirit.core.ui.BoardFeed;
 import com.theminespirit.core.ui.BoardFilter;
 import com.theminespirit.core.ui.BoardLayout;
+import com.theminespirit.core.ui.BoardPageQuery;
 import com.theminespirit.core.ui.BoardStage;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
@@ -32,17 +34,15 @@ public final class BoardScreen extends Screen {
     private static final int TITLE_COLOR = 0xFF404040;
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int MUTED_COLOR = 0xFFA0A0A0;
-    private static final int HEADER_BG_COLOR = 0xE0101010;
+    private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
 
     private BoardLayout layout = BoardLayout.of(0, 0);
-    private @Nullable List<BoardTile> tiles;
+    private final BoardFeed feed = new BoardFeed();
     private @Nullable BoardStage stage;
-    private List<BoardTile> shown = List.of();
     private List<BoardColumns.BoardColumn> columns = List.of();
     private Map<String, BoardTile> tilesById = Map.of();
     private Map<String, List<BoardWaitReasons.Wait>> waitReasons = Map.of();
-    private final double[] scroll = new double[BoardTileGroup.values().length];
-    private BoardFilter filter = BoardFilter.ALL;
+    private final double[] scroll = new double[GROUPS.size()];
     private @Nullable Button statusButton;
     private @Nullable Button spiritButton;
     private boolean offline;
@@ -52,39 +52,30 @@ public final class BoardScreen extends Screen {
         super(Component.translatable(KEY + "title"));
     }
 
-    public void showStage(BoardStage settlementStage) {
-        stage = settlementStage;
-    }
-
-    public void show(List<BoardTile> snapshot) {
-        tiles = List.copyOf(snapshot);
-        refilter();
+    public void show(BoardViewChannel.Reply reply) {
+        stage = reply.stage();
+        feed.apply(reply.page());
+        rebuild();
     }
 
     @Override
     protected void init() {
         layout = BoardLayout.of(width, height);
         BoardLayout.Rect status = layout.statusButton();
-        statusButton = addRenderableWidget(Button.builder(statusLabel(), button -> {
-                    filter = filter.nextGroup();
-                    refilter();
-                })
+        statusButton = addRenderableWidget(Button.builder(
+                        statusLabel(), button -> applyFilter(feed.filter().nextGroup()))
                 .bounds(status.x(), status.y(), status.width(), status.height())
                 .build());
         BoardLayout.Rect spirit = layout.spiritButton();
-        spiritButton = addRenderableWidget(Button.builder(spiritLabel(), button -> {
-                    filter = filter.nextSpirit(tiles == null ? List.of() : tiles);
-                    refilter();
-                })
+        spiritButton = addRenderableWidget(Button.builder(
+                        spiritLabel(), button -> applyFilter(feed.filter().nextSpiritNames(feed.spirits())))
                 .bounds(spirit.x(), spirit.y(), spirit.width(), spirit.height())
                 .build());
         ScreenTabButtons.add(this::addRenderableWidget, width, ScreenTabs.Tab.BOARD);
-        if (tiles == null) {
-            requestSnapshot();
+        if (!feed.seen()) {
+            requestAll();
         }
-        for (int i = 0; i < scroll.length; i++) {
-            scroll[i] = Mth.clamp(scroll[i], 0, maxScroll(i));
-        }
+        clampScroll();
     }
 
     @Override
@@ -102,13 +93,19 @@ public final class BoardScreen extends Screen {
         BoardPanel.blitPanel(graphics, window);
         BoardPanel.drawBackground(graphics, inner);
         BoardTileView.Hover hovered = null;
-        if (tiles == null || shown.isEmpty()) {
-            Component message = Component.translatable(
-                    KEY + (offline ? "offline" : tiles == null ? "loading" : tiles.isEmpty() ? "empty" : "filtered"));
+        if (!feed.seen() || totalAll() == 0) {
+            Component message =
+                    Component.translatable(KEY + (offline ? "offline" : !feed.seen() ? "loading" : "empty"));
             graphics.drawCenteredString(
                     font, message, inner.x() + inner.width() / 2, inner.y() + inner.height() / 2 - 4, MUTED_COLOR);
         } else {
-            hovered = renderColumns(graphics, mouseX, mouseY);
+            hovered = BoardColumnView.render(
+                    graphics,
+                    font,
+                    new BoardColumnView.Context(layout, feed, columns, waitReasons, tilesById),
+                    scroll,
+                    mouseX,
+                    mouseY);
         }
         graphics.drawString(font, title, inner.x(), window.y() + 6, TITLE_COLOR, false);
         BoardPanel.drawVersion(graphics, font, inner, window, "v" + BuildFingerprint.version());
@@ -120,60 +117,6 @@ public final class BoardScreen extends Screen {
         }
     }
 
-    private BoardTileView.@Nullable Hover renderColumns(GuiGraphics graphics, int mouseX, int mouseY) {
-        BoardTileView.Hover hovered = null;
-        BoardLayout.Rect list = layout.list();
-        List<BoardLayout.Rect> columnRects = layout.columns();
-        List<BoardLayout.Rect> headers = layout.headers();
-        for (int i = 0; i < columns.size(); i++) {
-            BoardColumns.BoardColumn column = columns.get(i);
-            BoardLayout.Rect header = headers.get(i);
-            BoardLayout.Rect area = columnRects.get(i);
-            Component headerText = Component.translatable(
-                            KEY + "group." + column.group().name().toLowerCase(Locale.ROOT))
-                    .append(" " + column.tiles().size());
-            graphics.fill(header.x(), header.y(), header.right(), header.bottom(), HEADER_BG_COLOR);
-            String headerLine =
-                    font.plainSubstrByWidth(headerText.getString(), header.width() - 2 * BoardLayout.CONTENT_PAD);
-            graphics.drawString(
-                    font,
-                    headerLine,
-                    header.x() + BoardLayout.CONTENT_PAD,
-                    header.y() + BoardLayout.CONTENT_PAD,
-                    BoardTileView.groupColor(column.group()),
-                    true);
-            graphics.enableScissor(area.x(), list.y(), area.right(), list.bottom());
-            for (int j = 0; j < column.tiles().size(); j++) {
-                BoardLayout.Rect rect = layout.tile(i, j);
-                int y = rect.y() - (int) scroll[i];
-                if (y + rect.height() < list.y() || y > list.bottom()) {
-                    continue;
-                }
-                boolean over = mouseX >= rect.x()
-                        && mouseX < rect.right()
-                        && mouseY >= Math.max(y, list.y())
-                        && mouseY < Math.min(y + rect.height(), list.bottom());
-                BoardTile tile = column.tiles().get(j);
-                BoardLayout.Rect row = new BoardLayout.Rect(rect.x(), y, rect.width(), rect.height());
-                BoardTileView.Hover hover = BoardTileView.render(
-                        graphics,
-                        font,
-                        tile,
-                        row,
-                        over,
-                        new BoardTileView.Cursor(mouseX, mouseY),
-                        new BoardTileView.Context(waitReasons, tilesById));
-                if (hover != null) {
-                    hovered = hover;
-                } else if (over) {
-                    hovered = new BoardTileView.Hover(tile, null);
-                }
-            }
-            graphics.disableScissor();
-        }
-        return hovered;
-    }
-
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         int column = layout.columnAt(mouseX, mouseY);
@@ -181,6 +124,9 @@ public final class BoardScreen extends Screen {
             return false;
         }
         scroll[column] = Mth.clamp(scroll[column] - scrollY * SCROLL_STEP, 0, maxScroll(column));
+        if (atBottom(GROUPS.get(column))) {
+            ask(GROUPS.get(column), true);
+        }
         return true;
     }
 
@@ -192,51 +138,101 @@ public final class BoardScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        if (tiles == null || offline) {
+        if (!feed.seen() || offline) {
             return;
         }
         if (++refreshTicks >= REFRESH_TICKS) {
             refreshTicks = 0;
-            requestSnapshot();
+            for (BoardTileGroup group : GROUPS) {
+                ask(group, false);
+            }
+        }
+        for (BoardTileGroup group : GROUPS) {
+            if (atBottom(group)) {
+                ask(group, true);
+            }
         }
     }
 
-    private void requestSnapshot() {
+    private void applyFilter(BoardFilter next) {
+        for (int index = 0; index < scroll.length; index++) {
+            scroll[index] = 0;
+        }
+        feed.filter(next);
+        rebuild();
+        requestAll();
+    }
+
+    private void requestAll() {
+        for (BoardTileGroup group : GROUPS) {
+            ask(group, false);
+        }
+    }
+
+    private void ask(BoardTileGroup group, boolean grow) {
+        if (feed.pending(group)) {
+            return;
+        }
+        BoardPageQuery query = feed.query(group, grow);
+        if (query == null) {
+            return;
+        }
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
         if (connection == null || !connection.hasChannel(BoardViewChannel.REQUEST)) {
             offline = true;
             return;
         }
-        PacketDistributor.sendToServer(new BoardViewChannel.Request());
+        offline = false;
+        feed.markPending(group);
+        PacketDistributor.sendToServer(new BoardViewChannel.Request(query));
     }
 
-    private void refilter() {
-        shown = tiles == null ? List.of() : filter.apply(tiles);
-        columns = BoardColumns.split(shown);
+    private boolean atBottom(BoardTileGroup group) {
+        int column = GROUPS.indexOf(group);
+        if (feed.complete(group)) {
+            return false;
+        }
+        return scroll[column] >= maxScroll(column) - 2;
+    }
+
+    private void rebuild() {
+        columns = feed.columns();
         Map<String, BoardTile> byId = new HashMap<>();
-        if (tiles != null) {
-            for (BoardTile tile : tiles) {
+        for (BoardColumns.BoardColumn column : columns) {
+            for (BoardTile tile : column.tiles()) {
                 byId.put(tile.id(), tile);
             }
         }
         tilesById = Map.copyOf(byId);
         Map<String, List<BoardWaitReasons.Wait>> reasons = new HashMap<>();
-        for (BoardTile tile : shown) {
+        for (BoardTile tile : byId.values()) {
             List<BoardWaitReasons.Wait> waits = BoardWaitReasons.of(tile, tilesById);
             if (!waits.isEmpty()) {
                 reasons.put(tile.id(), waits);
             }
         }
         waitReasons = Map.copyOf(reasons);
-        for (int i = 0; i < scroll.length; i++) {
-            scroll[i] = Mth.clamp(scroll[i], 0, maxScroll(i));
-        }
+        clampScroll();
         if (statusButton != null) {
             statusButton.setMessage(statusLabel());
         }
         if (spiritButton != null) {
             spiritButton.setMessage(spiritLabel());
         }
+    }
+
+    private void clampScroll() {
+        for (int index = 0; index < scroll.length; index++) {
+            scroll[index] = Mth.clamp(scroll[index], 0, maxScroll(index));
+        }
+    }
+
+    private int totalAll() {
+        int total = 0;
+        for (BoardTileGroup group : GROUPS) {
+            total += feed.total(group);
+        }
+        return total;
     }
 
     private int maxScroll(int column) {
@@ -249,7 +245,7 @@ public final class BoardScreen extends Screen {
     }
 
     private Component statusLabel() {
-        BoardTileGroup group = filter.group();
+        BoardTileGroup group = feed.filter().group();
         Component value = group == null
                 ? Component.translatable(KEY + "filter.all")
                 : Component.translatable(KEY + "group." + group.name().toLowerCase(Locale.ROOT));
@@ -257,10 +253,10 @@ public final class BoardScreen extends Screen {
     }
 
     private Component spiritLabel() {
-        Component value = switch (filter.spirit()) {
+        Component value = switch (feed.filter().spirit()) {
             case ANY -> Component.translatable(KEY + "filter.all");
             case NOBODY -> Component.literal("…");
-            case NAMED -> Component.literal(String.valueOf(filter.spiritName()));
+            case NAMED -> Component.literal(String.valueOf(feed.filter().spiritName()));
         };
         return Component.translatable(KEY + "filter.spirit", value);
     }

@@ -2,6 +2,7 @@ package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
+import com.theminespirit.core.ui.BoardTileGroup;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,15 +23,31 @@ public final class BoardJson {
         return RestJson.write(toMap(task));
     }
 
-    public static String listJson(List<BoardTask> tasks, BoardCounts counts) {
-        List<Object> items = new ArrayList<>(tasks.size());
-        for (BoardTask task : tasks) {
+    public static String listJson(BoardListing listing, BoardCounts counts) {
+        List<Object> items = new ArrayList<>(listing.tasks().size());
+        for (BoardTask task : listing.tasks()) {
             items.add(toMap(task));
         }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("tasks", items);
+        body.put("total", listing.total());
+        body.put("offset", listing.offset());
+        body.put("limit", listing.limit());
+        body.put("groups", groupNames(listing.groups()));
+        body.put("version", listing.version());
+        if (listing.nextCursor() != null) {
+            body.put("nextCursor", listing.nextCursor());
+        }
         body.put("counts", Map.of("done", counts.done(), "reopened", counts.reopened()));
         return RestJson.write(body);
+    }
+
+    private static Map<String, Integer> groupNames(Map<BoardTileGroup, Integer> groups) {
+        Map<String, Integer> named = new LinkedHashMap<>();
+        for (BoardTileGroup group : BoardTileGroup.values()) {
+            named.put(group.name(), groups.getOrDefault(group, 0));
+        }
+        return named;
     }
 
     public static Map<String, Object> toMap(BoardTask task) {
