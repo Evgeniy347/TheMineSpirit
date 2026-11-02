@@ -132,8 +132,17 @@ class CraftedSourceTests {
 
     @Test
     void isCrafted_Families_True() {
-        for (String item :
-                List.of(PLANKS, SAPLING, "oak_fence", "oak_stairs", "oak_door", "torch", "chest", "stone_bricks")) {
+        for (String item : List.of(
+                PLANKS,
+                SAPLING,
+                "oak_fence",
+                "oak_stairs",
+                "oak_door",
+                "torch",
+                "chest",
+                "stone_bricks",
+                "wooden_axe",
+                "stone_pickaxe")) {
             assertTrue(
                     CraftedItems.isCrafted(item),
                     "Предмет '" + item + "' делается крафтом: добыча его размещённых копий — та же ошибка, "
