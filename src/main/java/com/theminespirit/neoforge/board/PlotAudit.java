@@ -17,6 +17,7 @@ import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class PlotAudit {
@@ -41,6 +43,20 @@ final class PlotAudit {
     private static final Set<BoardCase> EXCLUSIVE = EnumSet.of(BoardCase.REPAIR_BUILDING, BoardCase.CLEAR_GROUNDS);
     private static final Set<BoardStatus> OPEN =
             EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
+    private static final int AUDIT_CACHE_TICKS = 600;
+    private static final int HOLE_DEPTH_MAX = 64;
+
+    record Audit(List<BlockCoord> holes, Map<BlockCoord, Integer> depths, List<BlockCoord> extras) {
+        Audit {
+            holes = List.copyOf(holes);
+            depths = Map.copyOf(depths);
+            extras = List.copyOf(extras);
+        }
+    }
+
+    private static @Nullable Audit cachedAudit;
+    private static @Nullable StageSite cachedSite;
+    private static long cachedAt = Long.MIN_VALUE;
 
     private PlotAudit() {}
 
@@ -52,23 +68,7 @@ final class PlotAudit {
                 || open(service, WORKS)) {
             return;
         }
-        BlockCoord anchor = site.anchor();
-        List<BlockCoord> extras = new ArrayList<>();
-        for (ColumnMask.Cell column : site.level().cells()) {
-            int x = column.x();
-            int z = column.z();
-            if (site.ringPost(x, z)) {
-                continue;
-            }
-            boolean mine = site.mineColumn(x, z);
-            boolean planned = site.houseColumn(x, z);
-            for (int dy = -1; dy < PlotCells.FREE_HEIGHT; dy++) {
-                BlockCoord cell = new BlockCoord(x, anchor.y() + dy, z);
-                PlotCells.defect(new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))))
-                        .filter(PlotCells.Defect.EXTRA::equals)
-                        .ifPresent(defect -> extras.add(cell));
-            }
-        }
+        List<BlockCoord> extras = audit(level, site, now).extras();
         if (extras.isEmpty()) {
             return;
         }
@@ -111,6 +111,55 @@ final class PlotAudit {
                         List.of("extras=" + extras.size()),
                         null,
                         ConfigStamp.current()));
+    }
+
+    static Audit audit(ServerLevel level, StageSite site, long now) {
+        Audit cached = cachedAudit;
+        if (cached != null && site.equals(cachedSite) && now >= cachedAt && now - cachedAt < AUDIT_CACHE_TICKS) {
+            return cached;
+        }
+        BlockCoord anchor = site.anchor();
+        List<BlockCoord> holes = new ArrayList<>();
+        List<BlockCoord> extras = new ArrayList<>();
+        Map<BlockCoord, Integer> depths = new LinkedHashMap<>();
+        for (ColumnMask.Cell column : site.level().cells()) {
+            int x = column.x();
+            int z = column.z();
+            if (site.ringPost(x, z)) {
+                continue;
+            }
+            boolean mine = site.mineColumn(x, z);
+            boolean planned = site.houseColumn(x, z);
+            for (int dy = -1; dy < PlotCells.FREE_HEIGHT; dy++) {
+                BlockCoord cell = new BlockCoord(x, anchor.y() + dy, z);
+                PlotCells.defect(new PlotCells.Cell(dy, mine, planned), found(level.getBlockState(pos(cell))))
+                        .ifPresent(defect -> {
+                            if (defect == PlotCells.Defect.EXTRA) {
+                                extras.add(cell);
+                            } else {
+                                holes.add(cell);
+                                depths.put(cell, holeDepth(level, cell));
+                            }
+                        });
+            }
+        }
+        Audit audit = new Audit(holes, depths, extras);
+        cachedAudit = audit;
+        cachedSite = site;
+        cachedAt = now;
+        return audit;
+    }
+
+    private static int holeDepth(ServerLevel level, BlockCoord cell) {
+        int depth = 0;
+        for (int y = cell.y() - 1; y > level.getMinBuildHeight() && depth < HOLE_DEPTH_MAX; y--) {
+            BlockPos pos = new BlockPos(cell.x(), y, cell.z());
+            if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                break;
+            }
+            depth++;
+        }
+        return depth;
     }
 
     private static boolean recent(BoardService service, long now) {

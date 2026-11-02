@@ -1,0 +1,40 @@
+package com.theminespirit.core.board.graph;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+public final class GraphWorldEvents {
+    public static final String DEMOLISH_STRAY = "demolish_stray";
+    public static final String BACKFILL = "backfill";
+    public static final String CLEAR_FLOATING = "clear_floating";
+    public static final String LEVEL_LOT = "level_lot";
+    public static final String RESTORE_TRACE = "restore_trace";
+    public static final String REPAIR = "repair_";
+
+    private GraphWorldEvents() {}
+
+    public static Set<String> of(GraphFacts facts) {
+        Set<String> events = new LinkedHashSet<>();
+        if (!facts.strays().isEmpty()) {
+            events.add(DEMOLISH_STRAY);
+        }
+        GraphFacts.Terrain terrain = facts.terrain();
+        if (terrain.pits() > 0) {
+            events.add(BACKFILL);
+        }
+        if (terrain.hanging() > 0) {
+            events.add(CLEAR_FLOATING);
+        }
+        if (terrain.heightDrop() > 0) {
+            events.add(LEVEL_LOT);
+        }
+        if (terrain.traces() > 0) {
+            events.add(RESTORE_TRACE);
+        }
+        facts.buildings().values().stream()
+                .filter(building -> !building.unknown() && building.damage() > 0)
+                .map(building -> REPAIR + building.id())
+                .forEach(events::add);
+        return Set.copyOf(events);
+    }
+}
