@@ -114,10 +114,11 @@ public final class GraphPlanner {
                     "на складе свободно " + state.storageFreePercent() + "% (< "
                             + graph.storage().minFreePercent() + "%)");
         }
-        GraphOperations.run(graph, state, this);
+        GraphStore.roots(graph, state, this::push);
+        DigOperations.roots(graph, state, this::push);
     }
 
-    void push(@Nullable String from, String node, double amount) {
+    private void push(@Nullable String from, String node, double amount) {
         if (amount == 0) return;
         if (from == null) {
             flow.root(node, amount);
@@ -128,9 +129,7 @@ public final class GraphPlanner {
     }
 
     private void expand(String node) {
-        if (!expanded.add(node)) {
-            return;
-        }
+        if (!expanded.add(node)) return;
         double decay = graph.decay();
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
@@ -481,7 +480,11 @@ public final class GraphPlanner {
                 spirit,
                 priority,
                 way.consumes(),
-                tooled && housed(way) && available(way) && stocked(way.consumes()) && stocked(way.needs()),
+                tooled
+                        && (way.building() == null || state.built(way.building()) == Built.BUILT)
+                        && available(way)
+                        && stocked(way.consumes())
+                        && stocked(way.needs()),
                 chances.contains(key),
                 graph.implemented(wayId),
                 graph.costs().ticks(wayId, way.boardCase()) + travel(key));
@@ -532,10 +535,6 @@ public final class GraphPlanner {
             return graph.members(node).stream().anyMatch(this::sourcedShallow);
         }
         return graph.producers(node).stream().anyMatch(this::available);
-    }
-
-    private boolean housed(SupplyGraph.Way way) {
-        return way.building() == null || state.built(way.building()) == Built.BUILT;
     }
 
     private boolean stocked(Map<String, Integer> needs) {

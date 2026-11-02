@@ -182,7 +182,7 @@ final class GraphFactInputs {
         return stations;
     }
 
-    private static Map<String, GraphFacts.Building> buildingFacts(
+    static Map<String, GraphFacts.Building> buildingFacts(
             Map<String, Built> buildings, Optional<TownPlan> town, FirstStepsRunner.StageScan scan) {
         Map<String, GraphFacts.Building> facts = new LinkedHashMap<>();
         buildings.forEach((id, state) -> {

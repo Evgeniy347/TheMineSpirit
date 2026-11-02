@@ -21,6 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class RepairAuditWatch {
@@ -40,18 +41,10 @@ final class RepairAuditWatch {
         if (!service.board().ledger().has(BoardCase.BUILD_HOUSE, 1)) {
             return;
         }
-        Optional<String> scheme = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_HOUSE, 1);
-        if (scheme.isEmpty()) {
+        RepairAudit.Report report = houseReport(level, site, now);
+        if (report == null) {
             return;
         }
-        RepairAudit.Report report = RepairAudit.audit(
-                SchematicResources.load(scheme.orElseThrow()),
-                site.houseOrigin(),
-                BuildRotation.NONE,
-                new LevelWorld(level),
-                rules,
-                FIRST_SEEN,
-                now);
         if (report.unknown() > 0) {
             LOGGER.info(
                     "[repair] обход дома: {} клеток в незагруженных чанках — вывод о повреждении отложен",
@@ -67,6 +60,21 @@ final class RepairAuditWatch {
             LOGGER.info(
                     "[repair] обход дома: повреждено больше {}% — нужна перестройка уровня", rules.rebuildPercent());
         }
+    }
+
+    static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, long now) {
+        Optional<String> scheme = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_HOUSE, 1);
+        if (scheme.isEmpty()) {
+            return null;
+        }
+        return RepairAudit.audit(
+                SchematicResources.load(scheme.orElseThrow()),
+                site.houseOrigin(),
+                BuildRotation.NONE,
+                new LevelWorld(level),
+                RepairData.loadDefault(),
+                FIRST_SEEN,
+                now);
     }
 
     private static void requestRepair(

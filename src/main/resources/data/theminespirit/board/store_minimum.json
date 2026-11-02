@@ -1,0 +1,11 @@
+{
+  "items": {
+    "#logs": {"minimum": 64, "reserve": 16},
+    "cobblestone": {"minimum": 128, "reserve": 32},
+    "bread": {"minimum": 16, "reserve": 4},
+    "iron_axe": {"minimum": 1, "reserve": 0},
+    "iron_pickaxe": {"minimum": 1, "reserve": 0},
+    "iron_shovel": {"minimum": 1, "reserve": 0},
+    "iron_sword": {"minimum": 1, "reserve": 0}
+  }
+}

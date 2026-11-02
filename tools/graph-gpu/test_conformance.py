@@ -57,9 +57,17 @@ def test_fragments():
         with open(recipes, "w", encoding="utf-8") as handle:
             json.dump({"items": {}, "ways": []}, handle)
         with open(os.path.join(fragments, "rope.json"), "w", encoding="utf-8") as handle:
-            json.dump({"items": {"rope": {"xmin": 0, "base": 1}}}, handle)
+            json.dump({
+                "items": {"rope": {"xmin": 0, "base": 1}},
+                "edges": [
+                    {"lack": "a", "way": "b", "weight": 1},
+                    {"lack": "a", "way": "c", "weight": 1},
+                ],
+                "triggers": [{"have": "a", "build": "b"}, {"have": "a", "build": "c"}],
+            }, handle)
         graph = Graph.load_merged(manual, recipes, fragments)
         assert "rope" in graph.items, "Python-модель обязана читать фрагменты графа"
+        assert len(graph.edges) == 2 and len(graph.triggers) == 2,             "Списки без id (edges, triggers) добавляются целиком, как в Java"
         with open(os.path.join(fragments, "conflict.json"), "w", encoding="utf-8") as handle:
             json.dump({"items": {"stick": {"xmin": 0, "base": 1}}}, handle)
         try:
@@ -71,7 +79,7 @@ def test_fragments():
     print("OK: фрагменты графа сливаются, конфликт назван путём")
 
 
-def operational_ids(graph, facts):
+def dig_inputs(graph, facts):
     state = State({
         "stock": {},
         "stage": 1,
@@ -84,19 +92,93 @@ def operational_ids(graph, facts):
     return [task["id"] for task in plan(graph, state)["tasks"]]
 
 
-def test_operational_inputs():
+def test_dig_inputs():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    store = operational_ids(graph, {"stageReqs": {"minimum": {"oak_log": 64}, "actual": {"oak_log": 0}}})
-    assert "store:minimum" in store, "недобор минимума склада обязан дать узел store:minimum"
-    dig = operational_ids(graph, {"spirits": {"spirit-1": {"trapped": True, "trap": "sealed"}}})
-    assert "dig_out" in dig and "restore_trace" in dig, "дух без пути обязан дать dig_out и restore_trace"
-    smelt = operational_ids(graph, {"stations": {"furnace": {
-        "id": "furnace", "type": "furnace", "busy": False, "fuel": "coal", "input": "iron_ore", "output": None}}})
-    assert "station:smelt:load" in smelt, "загруженная печь обязана дать путь загрузки"
-    space = operational_ids(graph, {"chests": [{
-        "position": {"x": 1, "y": 2, "z": 3}, "contents": {}, "freeSlots": 1, "totalSlots": 27}]})
-    assert "storage_space" in space, "мало места обязано дать узел новой пары сундуков"
-    print("OK: новые входы склада и копания дают узлы графа")
+    tasks = dig_inputs(graph, {"spirits": {"spirit-1": {"trapped": True, "trap": "sealed"}}})
+    assert "dig_out" in tasks and "restore_trace" in tasks,         "дух без пути обязан дать dig_out и restore_trace"
+    print("OK: вход копания даёт узлы dig_out и restore_trace")
+
+
+def test_area_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for way in ("transfer_item", "sort_chest", "restock_food", "till_soil", "plant_crop",
+                "harvest_crop", "feed_animals", "lure_animal", "milk_animal"):
+        assert graph.way(way) is not None, "Python-модель не видит новый путь области: " + way
+    for building in ("storage_space", "wheat_field"):
+        assert building in graph.buildings, "Python-модель не видит новую постройку: " + building
+    for event in ("store_minimum", "storage_full", "furnace_ready", "crop_ready",
+                  "animal_starving", "orchard_empty"):
+        assert event in graph.events, "Python-модель не видит новое событие входа: " + event
+    print("OK: узлы и события областей store/farm читаются из фрагментов")
+
+
+def test_store_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    state = {
+        "stock": {},
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "buildings": {"crafting_table": "BUILT", "furnace": "BUILT", "chests": "BUILT", "mine": "BUILT"},
+        "materials": {},
+        "storageFreePercent": 60,
+        "events": [],
+        "world": ["tree:oak"],
+        "distances": {},
+        "stations": {"furnace": 1},
+        "orders": {},
+        "facts": {
+            "spirits": {},
+            "threats": [],
+            "chests": [],
+            "resources": [],
+            "stations": {
+                "furnace": {"id": "furnace", "type": "furnace", "position": None,
+                            "busy": False, "fuel": "coal", "input": None, "output": None}
+            },
+            "buildings": {},
+            "strays": [],
+            "terrain": {"pits": 0, "hanging": 0, "heightDrop": 0},
+            "stageReqs": {"minimum": {"cobblestone": 160}, "actual": {"cobblestone": 100}},
+        },
+    }
+    tasks = {task["id"] for task in plan(graph, State(state))["tasks"]}
+    assert "mine_cobble" in tasks, "Python: недобор минимума склада обязан дать добычу булыжника"
+    assert "store_smelt_load" in tasks, "Python: свободная печь — путь загрузки"
+    print("OK: узлы склада учитывают минимум и свободную печь")
+
+
+def test_world_fragment():
+    graph = Graph.load_merged(
+        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        RECIPES,
+        FRAGMENTS)
+    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace"):
+        assert node in graph.events, "Python-модель обязана читать узел мира '" + node + "' из фрагмента"
+        task = graph.events[node]["tasks"][0]
+        assert task["id"] == node, "Задание узла мира называет узел: " + node
+        assert 40 <= int(task["base"]) <= 100, "Стартовый вес узла мира разумен: " + node
+    assert "repair_hut" in graph.events, "Python-модель обязана читать узел ремонта из фрагмента"
+    assert graph.events["repair_hut"]["tasks"][0]["id"] == "repair:hut", "Ремонт называет постройку"
+    assert "#building_blocks" in graph.groups, "Группа возврата материалов объявлена фрагментом"
+    print("OK: узлы мира читаются из фрагмента")
+
+
+def test_world_inputs():
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "strays": [{"id": "s", "type": "wall", "position": {"x": 1, "y": 64, "z": 1}}],
+            "terrain": {"pits": 1, "hanging": 1, "heightDrop": 2, "deepestPit": 3, "traces": 1},
+            "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": False}},
+        },
+    })
+    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace", "repair_hut"):
+        assert node in state.events, "Вход участка добавляет узел '" + node + "' в выбор"
+    unknown = State({"stage": 1, "kits": {"spirit-1": {}}, "facts": {
+        "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": True}}}})
+    assert "repair_hut" not in unknown.events, "Неизвестный аудит не ставит ремонт"
+    print("OK: входы участка учитываются в выборе")
 
 
 def test_conformance():
@@ -115,7 +197,11 @@ def test_conformance():
 if __name__ == "__main__":
     try:
         test_fragments()
-        test_operational_inputs()
+        test_dig_inputs()
+        test_area_nodes()
+        test_store_nodes()
+        test_world_fragment()
+        test_world_inputs()
         test_conformance()
     except AssertionError as error:
         print(error)

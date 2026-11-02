@@ -2,63 +2,115 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphNames;
-import com.theminespirit.core.board.graph.StoreFacts;
+import com.theminespirit.core.board.graph.GraphState;
+import com.theminespirit.core.board.graph.StoreRules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jspecify.annotations.Nullable;
 
 final class StoreInputs {
-    private static final int SLOT_INPUT = 0;
-    private static final int SLOT_FUEL = 1;
-    private static final int SLOT_RESULT = 2;
-
     private StoreInputs() {}
 
-    static GraphFacts apply(ServerLevel level, int stage, SupplyGraph graph, GraphFacts facts) {
-        GraphFacts.StageReqs reqs =
-                StoreFacts.stageReqs(graph, StoreFacts.loadDefault(), stage, facts.chests(), facts.spirits());
-        return facts.withStageReqs(reqs).withStations(stations(level, facts.stations()));
+    static GraphState apply(GraphState state, ServerLevel level, SupplyGraph graph) {
+        StoreRules.Config config = StoreRules.config();
+        GraphFacts facts = state.facts();
+        Map<String, Integer> actual = StoreRules.actual(facts.chests(), facts.spirits());
+        Map<String, Integer> grouped =
+                StoreRules.groupCounts(graph, actual, config.minimums().keySet());
+        Map<String, Integer> shortfall = StoreRules.shortfalls(config.minimums(), grouped, config.reservePercent());
+        Map<String, Integer> stock = new LinkedHashMap<>(state.stock());
+        actual.forEach((item, count) -> stock.merge(item, count, Math::max));
+
+        Map<String, Integer> minimum = new LinkedHashMap<>(facts.stageReqs().minimum());
+        Map<String, Integer> real = new LinkedHashMap<>(facts.stageReqs().actual());
+        config.minimums().forEach((node, amount) -> {
+            minimum.putIfAbsent(node, StoreRules.withReserve(amount, config.reservePercent()));
+            real.putIfAbsent(node, grouped.getOrDefault(node, 0));
+        });
+        config.toolMinimums().forEach((kind, tier) -> {
+            String node = tier + "_" + kind;
+            int have = state.bestTier(kind) >= graph.rank(tier) ? 1 : 0;
+            minimum.putIfAbsent(node, 1);
+            real.putIfAbsent(node, have);
+            if (have == 0) {
+                shortfall.put(node, 1);
+            }
+        });
+
+        Map<String, GraphFacts.Station> stations = stationContents(level, facts.stations());
+        GraphFacts known = new GraphFacts(
+                facts.spirits(),
+                facts.threats(),
+                facts.chests(),
+                facts.resources(),
+                stations,
+                facts.buildings(),
+                facts.strays(),
+                facts.terrain(),
+                new GraphFacts.StageReqs(minimum, real));
+        boolean storageFull = state.storageFreePercent() < graph.storage().minFreePercent();
+        int mixed = StoreRules.mixedChests(facts.chests(), config.maxItemTypesPerChest());
+        boolean carried = facts.spirits().values().stream()
+                .anyMatch(spirit -> !spirit.inventory().isEmpty());
+        int freeSlots =
+                facts.chests().stream().mapToInt(GraphFacts.Chest::freeSlots).sum();
+        boolean furnaceReady = stations.values().stream().anyMatch(station -> station.output() != null);
+        boolean furnaceNeedsFuel = stations.values().stream()
+                .anyMatch(station ->
+                        "furnace".equals(station.type()) && station.input() != null && station.fuel() == null);
+        Set<String> events = StoreRules.events(
+                state.events(),
+                new StoreRules.Signals(
+                        !shortfall.isEmpty(),
+                        storageFull,
+                        mixed > 0,
+                        carried && freeSlots > 0,
+                        furnaceReady,
+                        furnaceNeedsFuel));
+        return new GraphState(
+                stock,
+                state.stage(),
+                state.kits(),
+                state.buildings(),
+                state.materials(),
+                state.storageFreePercent(),
+                events,
+                state.world(),
+                state.distances(),
+                state.stations(),
+                state.orders(),
+                known);
     }
 
-    private static Map<String, GraphFacts.Station> stations(ServerLevel level, Map<String, GraphFacts.Station> known) {
+    private static Map<String, GraphFacts.Station> stationContents(
+            ServerLevel level, Map<String, GraphFacts.Station> known) {
         Map<String, GraphFacts.Station> stations = new LinkedHashMap<>();
-        known.forEach((id, station) -> stations.put(id, furnace(level, station)));
+        known.forEach((id, station) -> stations.put(id, content(level, station)));
         return stations;
     }
 
-    private static GraphFacts.Station furnace(ServerLevel level, GraphFacts.Station station) {
-        if (!"furnace".equals(station.type()) && !"smoker".equals(station.type())) {
+    private static GraphFacts.Station content(ServerLevel level, GraphFacts.Station station) {
+        GraphFacts.Position position = station.position();
+        if (position == null) {
             return station;
         }
-        GraphFacts.Position at = station.position();
-        if (at == null) {
+        BlockPos pos = new BlockPos(position.x(), position.y(), position.z());
+        if (!level.isLoaded(pos) || !(level.getBlockEntity(pos) instanceof AbstractFurnaceBlockEntity furnace)) {
             return station;
         }
-        BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-        if (!level.isLoaded(pos)) {
-            return station;
-        }
-        BlockEntity entity = level.getBlockEntity(pos);
-        if (!(entity instanceof AbstractFurnaceBlockEntity furnace)) {
-            return station;
-        }
-        boolean busy = level.getBlockState(pos).getValue(AbstractFurnaceBlock.LIT);
-        return new GraphFacts.Station(
-                station.id(),
-                station.type(),
-                at,
-                busy,
-                item(furnace.getItem(SLOT_FUEL)),
-                item(furnace.getItem(SLOT_INPUT)),
-                item(furnace.getItem(SLOT_RESULT)));
+        String input = item(furnace.getItem(0));
+        String fuel = item(furnace.getItem(1));
+        String output = item(furnace.getItem(2));
+        boolean busy = furnace.getBlockState().getValue(AbstractFurnaceBlock.LIT) || input != null;
+        return new GraphFacts.Station(station.id(), station.type(), position, busy, fuel, input, output);
     }
 
     private static @Nullable String item(ItemStack stack) {
