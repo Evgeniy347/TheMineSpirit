@@ -68,8 +68,9 @@ final class GraphInputs {
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
                 .withFacts(GraphStoreInputs.of(
-                        GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around),
-                        StockReader.chests(level),
+                        GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
+                                .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
+                                .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)),
                         level,
                         graph));
     }

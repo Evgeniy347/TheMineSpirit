@@ -106,6 +106,40 @@ def test_store_nodes():
     print("OK: узлы склада учитывают минимум и свободную печь")
 
 
+def test_world_fragment():
+    graph = Graph.load_merged(
+        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        RECIPES,
+        FRAGMENTS)
+    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace"):
+        assert node in graph.events, "Python-модель обязана читать узел мира '" + node + "' из фрагмента"
+        task = graph.events[node]["tasks"][0]
+        assert task["id"] == node, "Задание узла мира называет узел: " + node
+        assert 40 <= int(task["base"]) <= 100, "Стартовый вес узла мира разумен: " + node
+    assert "repair_hut" in graph.events, "Python-модель обязана читать узел ремонта из фрагмента"
+    assert graph.events["repair_hut"]["tasks"][0]["id"] == "repair:hut", "Ремонт называет постройку"
+    assert "#building_blocks" in graph.groups, "Группа возврата материалов объявлена фрагментом"
+    print("OK: узлы мира читаются из фрагмента")
+
+
+def test_world_inputs():
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "strays": [{"id": "s", "type": "wall", "position": {"x": 1, "y": 64, "z": 1}}],
+            "terrain": {"pits": 1, "hanging": 1, "heightDrop": 2, "deepestPit": 3, "traces": 1},
+            "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": False}},
+        },
+    })
+    for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace", "repair_hut"):
+        assert node in state.events, "Вход участка добавляет узел '" + node + "' в выбор"
+    unknown = State({"stage": 1, "kits": {"spirit-1": {}}, "facts": {
+        "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": True}}}})
+    assert "repair_hut" not in unknown.events, "Неизвестный аудит не ставит ремонт"
+    print("OK: входы участка учитываются в выборе")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -123,6 +157,8 @@ if __name__ == "__main__":
     try:
         test_fragments()
         test_store_nodes()
+        test_world_fragment()
+        test_world_inputs()
         test_conformance()
     except AssertionError as error:
         print(error)

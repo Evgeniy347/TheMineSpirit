@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/api/java/baritone/api/pathing/goals/GoalYLevel.java), лицензия
-// LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, api/pathing/goals/GoalYLevel.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 public final class NavGoalYLevel implements NavGoal {
@@ -21,7 +20,7 @@ public final class NavGoalYLevel implements NavGoal {
 
     public static double calculate(int goalY, int currentY) {
         if (currentY > goalY) {
-            return NavActionCosts.FALL_N_BLOCKS_COST[2] / 2 * (currentY - goalY);
+            return NavActionCosts.fallNBlocksCost(2) / 2 * (currentY - goalY);
         }
         if (currentY < goalY) {
             return (goalY - currentY) * NavActionCosts.JUMP_ONE_BLOCK_COST;

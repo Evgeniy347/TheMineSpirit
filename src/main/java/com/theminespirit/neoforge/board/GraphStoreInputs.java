@@ -4,9 +4,7 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.StoreInputs;
 import com.theminespirit.core.board.graph.StoreMinimums;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.inventory.ContainerSnapshot;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -26,15 +24,15 @@ final class GraphStoreInputs {
 
     private GraphStoreInputs() {}
 
-    static GraphFacts of(GraphFacts base, List<ContainerSnapshot> chests, ServerLevel level, SupplyGraph graph) {
-        List<GraphFacts.Chest> known = StoreInputs.chestFacts(chests);
-        GraphFacts.StageReqs reqs = StoreInputs.stageReqs(base.stageReqs(), StoreMinimums.loadDefault(), graph, known);
+    static GraphFacts of(GraphFacts base, ServerLevel level, SupplyGraph graph) {
+        GraphFacts.StageReqs reqs =
+                StoreInputs.stageReqs(base.stageReqs(), StoreMinimums.loadDefault(), graph, base.chests());
         Map<String, GraphFacts.Station> stations = new LinkedHashMap<>(base.stations());
         stations.replaceAll((id, station) -> readFurnace(level, station));
         return new GraphFacts(
                 base.spirits(),
                 base.threats(),
-                known,
+                base.chests(),
                 base.resources(),
                 stations,
                 base.buildings(),

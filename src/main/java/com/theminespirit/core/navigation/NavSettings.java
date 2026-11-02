@@ -1,4 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/api/java/baritone/api/Settings.java), лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, api/Settings.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 public record NavSettings(

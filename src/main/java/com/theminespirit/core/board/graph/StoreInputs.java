@@ -1,9 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.inventory.ContainerSnapshot;
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.observation.BlockCoord;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,25 +24,6 @@ public final class StoreInputs {
             actual.put(item, count(graph, stored, item));
         });
         return new GraphFacts.StageReqs(minimum, actual);
-    }
-
-    public static List<GraphFacts.Chest> chestFacts(List<ContainerSnapshot> chests) {
-        List<GraphFacts.Chest> facts = new ArrayList<>();
-        for (ContainerSnapshot snapshot : chests) {
-            Map<String, Integer> contents = new LinkedHashMap<>();
-            for (Stack stack : snapshot.slots()) {
-                if (stack != null) {
-                    contents.merge(stack.item(), stack.count(), Integer::sum);
-                }
-            }
-            BlockCoord pos = snapshot.pos();
-            facts.add(new GraphFacts.Chest(
-                    new GraphFacts.Position(pos.x(), pos.y(), pos.z()),
-                    contents,
-                    snapshot.freeSlots(),
-                    snapshot.slotCount()));
-        }
-        return facts;
     }
 
     public static GraphFacts.Station furnaceStation(GraphFacts.Station station, FurnaceSlots slots, boolean lit) {

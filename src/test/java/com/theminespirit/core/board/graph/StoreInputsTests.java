@@ -6,10 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.inventory.ContainerSnapshot;
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.observation.BlockCoord;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -58,19 +54,6 @@ class StoreInputsTests {
 
         assertEquals(20, reqs.minimum().get("bread"), "Минимум хлеба = 16 + 4");
         assertEquals(0, reqs.actual().get("bread"), "Нет хлеба в сундуках — факт 0, а не пропуск");
-    }
-
-    @Test
-    void chestFacts_NamespacedContents_PositionAndFreeSlots() {
-        ContainerSnapshot snapshot = new ContainerSnapshot(
-                new BlockCoord(4, 64, 5), Arrays.asList(new Stack("minecraft:oak_log", 0, 7, 64), null, null));
-
-        List<GraphFacts.Chest> chests = StoreInputs.chestFacts(List.of(snapshot));
-
-        assertEquals(1, chests.size(), "Один контейнер — один факт сундука");
-        assertEquals(new GraphFacts.Position(4, 64, 5), chests.get(0).position(), "Позиция сундука");
-        assertEquals(Map.of("minecraft:oak_log", 7), chests.get(0).contents(), "Содержимое сундука");
-        assertEquals(2, chests.get(0).freeSlots(), "Свободные слоты");
     }
 
     @Test
