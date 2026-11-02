@@ -7,6 +7,7 @@ import java.util.BitSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
@@ -53,10 +54,28 @@ public final class GroundProbe {
                 int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
                 BlockState surface = level.getBlockState(new BlockPos(x, top, z));
                 water.set(index, surface.getFluidState().is(FluidTags.WATER));
-                feet[index] = feet(level, x, z, TerrainGrid.NO_GROUND);
+                feet[index] = surveyFeet(level, x, z, TerrainGrid.NO_GROUND);
             }
         }
         return TerrainGrid.around(anchor, radius, feet, water);
+    }
+
+    private static int surveyFeet(ServerLevel level, int x, int z, int fallback) {
+        BlockPos.MutableBlockPos pos =
+                new BlockPos.MutableBlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+        for (int step = 0; step < SCAN_DEPTH; step++) {
+            pos.move(0, -1, 0);
+            if (!level.isLoaded(pos)) {
+                return fallback;
+            }
+            BlockState state = level.getBlockState(pos);
+            if ((PlotGround.natural(state) && !state.is(Blocks.COBBLESTONE))
+                    || (!state.getFluidState().isEmpty()
+                            && !state.getFluidState().is(FluidTags.WATER))) {
+                return pos.getY() + 1;
+            }
+        }
+        return fallback;
     }
 
     private static boolean isGround(BlockState state) {

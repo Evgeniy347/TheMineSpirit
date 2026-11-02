@@ -54,6 +54,15 @@ public final class TerrainGrid {
         return depth;
     }
 
+    public boolean loaded() {
+        for (int value : feet) {
+            if (value == NO_GROUND) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean inside(int x, int z) {
         int dx = x - minX;
         int dz = z - minZ;

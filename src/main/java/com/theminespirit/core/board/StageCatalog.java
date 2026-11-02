@@ -48,6 +48,16 @@ public final class StageCatalog {
                 .orElse(false);
     }
 
+    public static boolean watcherOwned(BoardCase boardCase) {
+        Objects.requireNonNull(boardCase, "кейс постройки не может быть null: по нему видно, чей это сторож");
+        return boardCase == BoardCase.BUILD_WAREHOUSE || boardCase == BoardCase.BUILD_PEN;
+    }
+
+    public static Optional<String> graphId(String planId) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут постройку графа");
+        return graphBuilding(planId).map(SupplyGraph.Building::id);
+    }
+
     public static Optional<String> planId(String ticketId) {
         Objects.requireNonNull(ticketId, "id задания не может быть null: по нему ищут постройку плана");
         if (!ticketId.startsWith(GRAPH_BUILDING) || ticketId.length() == GRAPH_BUILDING.length()) {

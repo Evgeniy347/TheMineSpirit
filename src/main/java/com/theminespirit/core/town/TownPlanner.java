@@ -54,6 +54,13 @@ public final class TownPlanner {
         return new TownPlan(anchor, region, open, placed, fence, unplaced);
     }
 
+    public static boolean laidWith(TownPlan plan, TownRules rules) {
+        Objects.requireNonNull(plan, "План не может быть null: сверяется разметка");
+        Objects.requireNonNull(rules, "Правила плана не могут быть null: обмер задаёт размер сетки");
+        int side = 2 * rules.ground().probeRadius() + 1;
+        return plan.region().width() == side && plan.region().depth() == side;
+    }
+
     public static TownPlan plant(
             TerrainGrid grid,
             TownPlan plan,

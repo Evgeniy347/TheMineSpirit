@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,7 +22,6 @@ public final class GraphPlanner {
     private static final String ORDER = "order:";
     private static final int EXPLORE_TICKS = 2400;
     private static final char AT = '@';
-
     private final SupplyGraph graph;
     private final GraphState state;
     private final GraphFlow flow = new GraphFlow();
@@ -71,7 +71,7 @@ public final class GraphPlanner {
                     double base = state.bestTier(kind) >= target
                             ? graph.kit().secondaryBase()
                             : graph.kit().base();
-                    push(null, toolKey(kind, spirit), base + (tier < 0 ? graph.urgentBoost() : 0));
+                    push(null, TOOL + kind + AT + spirit, base + (tier < 0 ? graph.urgentBoost() : 0));
                 }
             }
         }
@@ -233,7 +233,7 @@ public final class GraphPlanner {
 
     private void pushTool(@Nullable String from, String kind, double amount) {
         for (String spirit : state.kits().keySet()) {
-            push(from, toolKey(kind, spirit), amount / Math.max(1, state.spirits()));
+            push(from, TOOL + kind + AT + spirit, amount / Math.max(1, state.spirits()));
         }
     }
 
@@ -250,6 +250,7 @@ public final class GraphPlanner {
                                             : "")));
             return;
         }
+        if (StageCatalog.watcherOwned(building.boardCase())) return;
         push(from, BUILDING + id, amount);
     }
 
@@ -303,7 +304,7 @@ public final class GraphPlanner {
             int target = graph.rank(graph.kit().tier(kind, state.stage()));
             for (String spirit : state.kits().keySet()) {
                 if (state.tier(spirit, kind) < target) {
-                    push(null, toolKey(kind, spirit), weight);
+                    push(null, TOOL + kind + AT + spirit, weight);
                 }
             }
         } else if (node.startsWith(BUILDING)) {
@@ -540,9 +541,5 @@ public final class GraphPlanner {
 
     private boolean stocked(Map<String, Integer> needs) {
         return needs.entrySet().stream().allMatch(entry -> count(entry.getKey()) >= entry.getValue());
-    }
-
-    private static String toolKey(String kind, String spirit) {
-        return TOOL + kind + AT + spirit;
     }
 }

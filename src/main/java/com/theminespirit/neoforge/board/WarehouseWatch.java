@@ -41,7 +41,9 @@ public final class WarehouseWatch {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return;
         }
-        if (!houseBuilt(service) || FirstStepsRunner.stageOneBuilding(service)) {
+        if (!houseBuilt(service)
+                || !WarehouseRules.stageOpen(
+                        SettlementStage.of(service.board().ledger()), FirstStepsRunner.stageOneBuilding(service))) {
             return;
         }
         Spot spot = spot(level, spirits);
@@ -107,6 +109,9 @@ public final class WarehouseWatch {
     }
 
     private static boolean houseBuilt(BoardService service) {
+        if (service.board().ledger().has(BoardCase.BUILD_HOUSE, 1)) {
+            return true;
+        }
         for (BoardTicket ticket : service.board().all()) {
             if (ticket.boardCase() == BoardCase.BUILD_HOUSE
                     && service.board().statusOf(ticket.id()).orElse(null) == BoardStatus.DONE) {
