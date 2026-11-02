@@ -17,11 +17,15 @@ public final class BoardTransitions {
             BoardLog.Event event, BoardTicket ticket, int attempts, @Nullable String holder) {
         Objects.requireNonNull(event, "Событие перехода не может быть null: строку пишут по переходу");
         Objects.requireNonNull(ticket, "Задание перехода не может быть null: строка называет его id и кейс");
-        if (!LOGGED.contains(event)) {
+        if (!LOGGED.contains(event) || activityCancelled(event, ticket)) {
             return Optional.empty();
         }
         return Optional.of(StatusNote.line(
                 event, ticket.id(), ticket.boardCase(), attempts, null, holder, details(event, ticket)));
+    }
+
+    private static boolean activityCancelled(BoardLog.Event event, BoardTicket ticket) {
+        return event == BoardLog.Event.CANCELLED && BoardActivities.isActivity(ticket.boardCase());
     }
 
     private static String details(BoardLog.Event event, BoardTicket ticket) {
