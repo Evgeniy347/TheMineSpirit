@@ -473,7 +473,7 @@ public final class Board {
             if (status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED) {
                 continue;
             }
-            if (BoardTicket.ALWAYS_CAUSE.equals(ticket.cause()) || liveCauses.contains(ticket.cause())) {
+            if (SupplyGate.retains(ticket, liveCauses)) {
                 continue;
             }
             detached.add(ticket.id());

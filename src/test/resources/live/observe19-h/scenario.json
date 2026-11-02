@@ -1,0 +1,12 @@
+{
+  "source": "observe19-2026-11-02-0109.md, раздел H",
+  "home": [-170.5, 71.0, -488.5],
+  "vein": [-170.5, 61.0, -488.5],
+  "settlementRadius": 32,
+  "mineRefusals": 12,
+  "pickaxeItem": "pickaxe_luck",
+  "pickaxeSupplyTask": "supply_gather:pickaxe_luck",
+  "pickaxeError": "Для предмета 'pickaxe_luck' не найден способ добычи",
+  "ordinaryItem": "dirt",
+  "ordinaryCount": 2
+}

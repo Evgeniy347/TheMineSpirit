@@ -159,14 +159,17 @@ public final class TacticalIntellect {
                 allowed.add(demand);
                 continue;
             }
+            Point target = settlementTarget(demand.id());
+            if (target == null && home == null) {
+                continue;
+            }
             int party = 0;
             for (SpiritSnapshot spirit : workers.spirits()) {
                 if (activity.eligible(spirit, workers)) {
                     party++;
                 }
             }
-            OutsideGate.Decision decision =
-                    outsideGate.admitExternal(party, playerEscort, evening, settlementTarget(demand.id()), home);
+            OutsideGate.Decision decision = outsideGate.admitExternal(party, playerEscort, evening, target, home);
             if (decision instanceof OutsideGate.Refused refused) {
                 refusals.add(demand.id() + ": " + refused.reason());
             } else {
