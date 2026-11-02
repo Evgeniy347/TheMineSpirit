@@ -39,6 +39,8 @@
 | [millenaire-modern.md](millenaire-modern.md) | То же на NeoForge 1.21.1 и в rewrite | Leviaria/Millenaire, WangMioG/Millenaire-rewrite |
 | [test-performance.md](test-performance.md) | Производительность JUnit и GameTest: замеры и рекомендации | инструменты сборки |
 | [pathfinding-range.md](pathfinding-range.md) | Дальность поиска пути: замеры 32–2048, лимиты узлов и чанков, граф троп | свой стенд на снимке мира |
+| [graph-inputs.md](graph-inputs.md) | Что граф получает сейчас, чего не хватает, обходы графа, переход на «дух → работа» | свой код `core/board/graph`, `neoforge/board` |
+| [graph-inputs-tables.md](graph-inputs-tables.md) | Полные таблицы к разбору входа и выхода графа | свой код |
 
 ## Самое ценное по областям
 
