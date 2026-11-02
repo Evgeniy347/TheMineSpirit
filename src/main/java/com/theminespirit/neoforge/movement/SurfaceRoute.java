@@ -32,7 +32,7 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути к небу из {} нет — копаю ступенями", spirit.displayName(), start);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "к небу"));
+        return Optional.of(route(spirit, level, found.orElseThrow(), "к небу", 0));
     }
 
     public static Optional<RouteWalk> planDescent(SpiritEntity spirit, BlockCoord target) {
@@ -51,7 +51,7 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути вниз из {} к {} нет", spirit.displayName(), start, target);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "вниз"));
+        return Optional.of(route(spirit, level, found.orElseThrow(), "вниз", 0));
     }
 
     public static Optional<RouteWalk> planReturn(SpiritEntity spirit, BlockCoord target) {
@@ -59,6 +59,7 @@ public final class SurfaceRoute {
         BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         Level level = spirit.level();
         RouteLevelView view = new RouteLevelView(spirit);
+        long started = System.nanoTime();
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 view,
@@ -71,23 +72,27 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути домой из {} к {} нет", spirit.displayName(), start, target);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "домой"));
+        return Optional.of(route(spirit, level, found.orElseThrow(), "домой", started));
     }
 
-    private static RouteWalk route(SpiritEntity spirit, Level level, List<BlockCoord> cells, String what) {
+    private static RouteWalk route(
+            SpiritEntity spirit, Level level, List<BlockCoord> cells, String what, long started) {
         List<RouteStep> steps = new ArrayList<>(cells.size());
         for (BlockCoord cell : cells) {
             boolean water = level.getFluidState(new BlockPos(cell.x(), cell.y(), cell.z()))
-                    .is(FluidTags.WATER);
+                            .is(FluidTags.WATER)
+                    || level.getFluidState(new BlockPos(cell.x(), cell.y() - 1, cell.z()))
+                            .is(FluidTags.WATER);
             steps.add(new RouteStep(water ? RouteStep.Action.SWIM : RouteStep.Action.WALK, cell));
         }
         BlockCoord end = cells.get(cells.size() - 1);
         LOGGER.info(
-                "[dig_out] дух {}: найден путь {} — клеток {}, конец {}",
+                "[dig_out] дух {}: найден путь {} — клеток {}, конец {}, поиск {} мс",
                 spirit.displayName(),
                 what,
                 cells.size(),
-                end);
+                end,
+                Math.max(0, (System.nanoTime() - started) / 1_000_000));
         Route route = new Route(Route.Status.FOUND, steps, cells.size() * 10.0, end, cells.size(), 0, 0, List.of());
         return new RouteWalk(spirit, route, end);
     }
