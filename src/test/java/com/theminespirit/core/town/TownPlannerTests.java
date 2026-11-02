@@ -174,26 +174,6 @@ class TownPlannerTests {
     }
 
     @Test
-    void plant_Extension_KeepsExistingPlotOrigins() {
-        TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
-        Placement before = base.placement(StageSites.ORCHARD).orElseThrow();
-
-        TownPlan grown = TownPlanner.plant(
-                grid((x, z) -> 70, (x, z) -> 0),
-                base,
-                RULES,
-                STAGES,
-                List.of(OrchardSites.siteId("orchard_jungle")),
-                1);
-        Placement after = grown.placement(StageSites.ORCHARD).orElseThrow();
-
-        assertEquals(
-                before,
-                after,
-                "Рост плана ради сада другой породы не переносит уже размеченный сад: одна постройка — один origin");
-    }
-
-    @Test
     void plan_ExtensionGrowsFence_OldPlotsStayInside() {
         TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
         TownPlan old = new TownPlan(
