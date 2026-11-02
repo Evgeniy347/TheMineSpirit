@@ -37,6 +37,7 @@
 | [millenaire-classic/README.md](millenaire-classic/README.md) | Деревни, экономика, торговля, квесты, культуры, стройка (классика) | Kinniken/Millenaire |
 | [millenaire-modern.md](millenaire-modern.md) | То же на NeoForge 1.21.1 и в rewrite | Leviaria/Millenaire, WangMioG/Millenaire-rewrite |
 | [test-performance.md](test-performance.md) | Производительность JUnit и GameTest: замеры и рекомендации | инструменты сборки |
+| [pathfinding-range.md](pathfinding-range.md) | Дальность поиска пути: замеры 32–2048, лимиты узлов и чанков, граф троп | свой стенд на снимке мира |
 
 ## Самое ценное по областям
 
