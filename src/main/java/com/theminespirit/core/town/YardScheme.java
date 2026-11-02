@@ -21,6 +21,7 @@ public final class YardScheme {
     public static final List<String> FURNACE = List.of("furnace");
     public static final List<String> TORCH = List.of("torch");
     private static final String LEFT = "left";
+    private static final int MAX_OVERFLOW_PAIRS = 8;
 
     private YardScheme() {}
 
@@ -62,11 +63,19 @@ public final class YardScheme {
         }
         PresetLibrary presets = DataTables.INSTANCE.presets().current();
         List<List<BlockCoord>> slots = slots(presets, site);
-        if (slot > slots.size()) {
-            throw new IllegalArgumentException("Места " + slot + " под сундуки во дворе нет: резерв схемы " + YARD
-                    + " — " + (slots.size() - 1) + " пар; дальше — склад следующего этапа");
+        BlockCoord left;
+        if (slot <= slots.size()) {
+            left = slots.get(slot - 1).get(0);
+        } else {
+            int overflow = slot - slots.size() - 1;
+            List<List<BlockCoord>> extra = overflowSlots(site);
+            if (overflow < 0 || overflow >= extra.size()) {
+                throw new IllegalArgumentException("Места " + slot + " под сундуки во дворе нет: резерв схемы " + YARD
+                        + " — " + (slots.size() - 1) + " пар и " + extra.size()
+                        + " мест переполнения; дальше — склад следующего этапа");
+            }
+            left = extra.get(overflow).get(0);
         }
-        BlockCoord left = slots.get(slot - 1).get(0);
         Schematic.Entry own = scheme(presets, CHESTS).blocks().stream()
                 .filter(entry -> LEFT.equals(entry.state().get("type")))
                 .findFirst()
@@ -76,6 +85,35 @@ public final class YardScheme {
                 CHESTS,
                 new BlockCoord(left.x() - own.dx(), left.y() - own.dy(), left.z() - own.dz()),
                 BuildRotation.NONE));
+    }
+
+    public static List<List<BlockCoord>> overflowSlots(StageSite site) {
+        Objects.requireNonNull(site, "Место этапа не может быть null: пара сундуков ставится во двор этапа");
+        Placement yard = site.yard();
+        int y = site.anchor().y();
+        List<Integer> rows = new ArrayList<>();
+        for (int depth : new int[] {2, 0, 4, 1, 3}) {
+            if (depth < yard.depth() && !rows.contains(depth)) {
+                rows.add(depth);
+            }
+        }
+        for (int depth = 0; depth < yard.depth(); depth++) {
+            if (!rows.contains(depth)) {
+                rows.add(depth);
+            }
+        }
+        List<List<BlockCoord>> slots = new ArrayList<>();
+        for (int depth : rows) {
+            int z = yard.z() + depth;
+            for (int shift = 0; shift + 1 < yard.width(); shift++) {
+                int x = yard.x() + shift;
+                slots.add(List.of(new BlockCoord(x, y, z), new BlockCoord(x + 1, y, z)));
+                if (slots.size() >= MAX_OVERFLOW_PAIRS) {
+                    return List.copyOf(slots);
+                }
+            }
+        }
+        return List.copyOf(slots);
     }
 
     public static SchemeBuild furnace(StageSite site) {
