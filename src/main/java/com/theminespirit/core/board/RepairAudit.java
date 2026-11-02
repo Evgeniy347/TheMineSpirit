@@ -36,17 +36,21 @@ public final class RepairAudit {
         }
     }
 
-    public record Report(int total, int missing, boolean rebuild, List<Fix> fixes) {
+    public record Report(int total, int missing, boolean rebuild, List<Fix> fixes, int unknown) {
         public Report {
             if (total < 0 || missing < 0 || missing > total) {
                 throw new IllegalArgumentException("Аудит ремонта: нет " + missing + " из " + total
                         + " — недостача не может быть отрицательной или больше схемы");
             }
+            if (unknown < 0) {
+                throw new IllegalArgumentException(
+                        "Аудит ремонта: неизвестных клеток " + unknown + " — в незагруженном чанке их не меньше нуля");
+            }
             fixes = List.copyOf(Objects.requireNonNull(fixes, "Правки ремонта не могут быть null: пустые — список"));
         }
 
         public boolean damaged() {
-            return !fixes.isEmpty();
+            return unknown == 0 && !fixes.isEmpty();
         }
     }
 
@@ -54,6 +58,10 @@ public final class RepairAudit {
         String blockAt(BlockCoord cell);
 
         boolean playerPlaced(BlockCoord cell);
+
+        default boolean loaded(BlockCoord cell) {
+            return true;
+        }
     }
 
     public static Report audit(
@@ -74,9 +82,14 @@ public final class RepairAudit {
         Set<String> soft = soft(rules);
         List<Fix> fixes = new ArrayList<>();
         int missing = 0;
+        int unknown = 0;
         for (Map.Entry<BlockCoord, String> entry : expected.entrySet()) {
             BlockCoord cell = entry.getKey();
             String wanted = entry.getValue();
+            if (!world.loaded(cell)) {
+                unknown++;
+                continue;
+            }
             String found = id(world.blockAt(cell));
             if (same(wanted, found) || soft.contains(wanted)) {
                 continue;
@@ -85,7 +98,7 @@ public final class RepairAudit {
             fixes.add(fix(cell, wanted, found, world, rules, firstSeen, now));
         }
         if (rebuild(missing, expected.size(), rules.rebuildPercent())) {
-            return new Report(expected.size(), missing, true, List.of());
+            return new Report(expected.size(), missing, unknown == 0, List.of(), unknown);
         }
         Set<BlockCoord> occupiedByScheme = new HashSet<>(expected.keySet());
         for (BlockCoord cell : schematic.airCells(origin, rotation)) {
@@ -98,7 +111,7 @@ public final class RepairAudit {
         fixes.sort(Comparator.comparingInt((Fix fix) -> fix.cell().y())
                 .thenComparingInt(fix -> fix.cell().x())
                 .thenComparingInt(fix -> fix.cell().z()));
-        return new Report(expected.size(), missing, false, fixes);
+        return new Report(expected.size(), missing, false, fixes, unknown);
     }
 
     public static Map<String, Integer> need(Report report) {

@@ -61,6 +61,11 @@ public final class TownPlanner {
         return plan.region().width() == side && plan.region().depth() == side;
     }
 
+    public static boolean keepStored(TownPlan plan) {
+        Objects.requireNonNull(plan, "План не может быть null: старый обмер сохраняет свои места");
+        return StageSites.complete(plan);
+    }
+
     public static TownPlan plant(
             TerrainGrid grid,
             TownPlan plan,

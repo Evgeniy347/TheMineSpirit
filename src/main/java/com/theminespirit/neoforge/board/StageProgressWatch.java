@@ -169,7 +169,7 @@ final class StageProgressWatch {
                 BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
                 return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
             });
-            return Optional.of(new FirstStepsRunner.Placed(progress.done(), progress.total()));
+            return Optional.of(new FirstStepsRunner.Placed(progress.done(), progress.total(), 0));
         }
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         FirstStepsRunner.Placed placed = FirstStepsRunner.placedBlocks(

@@ -163,30 +163,33 @@ final class GraphInputs {
             if (entry.isEmpty() || entry.orElseThrow().boardCase() != BoardCase.BUILD_PLACED) {
                 continue;
             }
-            boolean built = ledger.hasPlan(id, 1)
-                    || (town.isPresent() && worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow()));
-            if (built) {
+            Optional<Boolean> world = town.isPresent()
+                    ? worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow())
+                    : Optional.empty();
+            boolean built = ledger.hasPlan(id, 1) || world.orElse(false);
+            if (world.orElse(false)) {
                 ledger.notePlan(id, 1);
-                states.put(id, Built.BUILT);
-            } else {
-                states.put(id, Built.PLANNED);
             }
+            states.put(id, built ? Built.BUILT : Built.PLANNED);
         }
         return states;
     }
 
-    private static boolean worldBuilt(
+    private static Optional<Boolean> worldBuilt(
             ServerLevel level, FirstStepsRunner.StageScan scan, TownPlan town, StageCatalog.Entry entry) {
         Optional<BlockCoord> origin =
                 StageCatalog.origin(entry.id(), town, scan.stage().anchor().y());
         if (origin.isEmpty()) {
-            return false;
+            return Optional.of(false);
         }
         TicketTarget target =
                 TicketTarget.at(origin.orElseThrow()).withScheme(entry.scheme()).withBuilding(entry.id());
         FirstStepsRunner.Placed placed =
                 FirstStepsRunner.placedBlocks(level, TicketPlans.plan(BoardCase.BUILD_PLACED, 1, target), scan.wood());
-        return placed.total() > 0 && placed.done() == placed.total();
+        if (!placed.confident()) {
+            return Optional.empty();
+        }
+        return Optional.of(placed.total() > 0 && placed.done() == placed.total());
     }
 
     private static boolean orchardDone(BoardService service, SupplyGraph.Building building) {

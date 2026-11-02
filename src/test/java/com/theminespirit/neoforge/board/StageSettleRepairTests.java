@@ -36,7 +36,8 @@ class StageSettleRepairTests {
                 Map.of("oak_fence", 1),
                 Map.of("oak_fence", 1),
                 Map.of(MISSING, "minecraft:oak_fence"),
-                List.of(MISSING + " ожидается oak_fence, стоит air"));
+                List.of(MISSING + " ожидается oak_fence, стоит air"),
+                0);
 
         TicketTarget repair = StageSettle.repairTarget(BoardCase.BUILD_FENCE, target, gap);
 

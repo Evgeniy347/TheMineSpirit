@@ -9,7 +9,6 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.OrchardSites;
-import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TerrainGrid;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanner;
@@ -24,7 +23,7 @@ import org.slf4j.Logger;
 final class TownSurvey {
     static final String JOURNAL_ID = "town";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final long WAIT_WARN_EVERY = 600;
+    private static BlockCoord warnedAnchor;
 
     private TownSurvey() {}
 
@@ -33,21 +32,18 @@ final class TownSurvey {
         TownRules rules = DataTables.INSTANCE.town().current();
         List<List<String>> stages = DataTables.INSTANCE.stages().current().plans();
         Optional<TownPlan> stored =
-                store.town().filter(plan -> near(plan.anchor(), center) && StageSites.complete(plan));
-        if (stored.isPresent() && TownPlanner.laidWith(stored.orElseThrow(), rules)) {
+                store.town().filter(plan -> near(plan.anchor(), center) && TownPlanner.keepStored(plan));
+        if (stored.isPresent()) {
+            TownPlan kept = stored.orElseThrow();
+            if (!TownPlanner.laidWith(kept, rules) && !kept.anchor().equals(warnedAnchor)) {
+                warnedAnchor = kept.anchor();
+                LOGGER.warn("[plot] план размечен прежним обмером: места построек сохраняются, новый обмер не переносит"
+                        + " origin; расширение — только новыми участками");
+            }
             return extend(level, store, stored.orElseThrow(), rules, stages, service);
         }
         Optional<SettlementPlot> old = store.plot();
         TerrainGrid grid = GroundProbe.terrain(level, center, rules.ground().probeRadius());
-        if (stored.isPresent() && !grid.loaded()) {
-            if (now % WAIT_WARN_EVERY == 0) {
-                LOGGER.info(
-                        "[plot] план размечен старым обмером, ждём загрузки рельефа вокруг {} до {} колонок",
-                        center,
-                        grid.width() * grid.depth());
-            }
-            return stored.orElseThrow();
-        }
         TownPlan plan = TownPlanner.plan(grid, center, rules, stages);
         store.fixTown(plan);
         plan = extend(level, store, plan, rules, stages, service);

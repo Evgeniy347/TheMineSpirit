@@ -45,6 +45,38 @@ class RepairAuditTests {
     }
 
     @Test
+    void audit_UnloadedChunk_UnknownNotDamage() {
+        Map<BlockCoord, String> world = new HashMap<>();
+        world.put(ORIGIN, AIR);
+        world.put(new BlockCoord(11, 64, 10), AIR);
+        world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
+        Set<BlockCoord> unloaded = Set.of(ORIGIN, new BlockCoord(11, 64, 10));
+        RepairAudit.WorldView view = new RepairAudit.WorldView() {
+            @Override
+            public String blockAt(BlockCoord cell) {
+                return world.getOrDefault(cell, AIR);
+            }
+
+            @Override
+            public boolean playerPlaced(BlockCoord cell) {
+                return false;
+            }
+
+            @Override
+            public boolean loaded(BlockCoord cell) {
+                return !unloaded.contains(cell);
+            }
+        };
+
+        RepairAudit.Report report =
+                RepairAudit.audit(scheme(), ORIGIN, BuildRotation.NONE, view, RepairData.defaults(), Map.of(), 100);
+
+        assertEquals(2, report.unknown(), "Две клетки в незагруженном чанке — unknown, а не повреждение");
+        assertFalse(report.damaged(), "По незагруженным чанкам ремонт не начинается: иначе снесёт готовое");
+        assertTrue(report.fixes().isEmpty(), "Правок по неизвестным клеткам нет: их не с чем сверять");
+    }
+
+    @Test
     void audit_PlayerBlock_WarnsForWarnTicksThenRemoves() {
         Map<BlockCoord, String> world = new HashMap<>();
         world.put(ORIGIN, "minecraft:dirt");
