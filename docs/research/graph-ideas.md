@@ -149,7 +149,33 @@
 - **Не путать журнал с миром**: готовность, ремонт и уборка подтверждаются аудитом, а не записью в журнале.
 - **Не ослаблять сторожа и не обходить хук**: документ и черновик не меняют логику; проверки — обычные.
 
-## 9. Источники
+## 9. Второй проход (02.11)
+
+Сверка с main: `board/graph.d/farm.json` (урожай, стадо, склад, печь) и `world.json` (ремонт, лишнее,
+ямы, висящее, следы) уже закрыты; `GraphFacts` несёт духов, угрозы, сундуки, ресурсы, станции, постройки,
+лишнее, рельеф и требования этапа. Пробел — состояние, которого там нет. Полный разбор — таблица E.
+
+- **Игрок** — нет `PlayerFact` (позиция, измерение, что держит, чем занят, расстояние, сон, запрос):
+  помогать или не мешать, не ставить блок под игроком. Вход + событие `player_near`.
+- **Свет** — `darkCells` считается только в `DemandRules`; нужны тёмные и spawnable-клетки периметра,
+  узлы `light_perimeter`, событие `dark_cells`.
+- **Время и погода** — есть только `night`; нужны тики до заката/рассвета, дождь, гроза и молния, чтобы
+  не начинать дальний поход и укрыться. Вход `TimeFact`, события `dusk_soon`, `thunderstorm`.
+- **История неудач** — нет попыток, причины и места; `FailureFact`, планировщик снижает вес задачи и места.
+- **Очереди станций** — `Station` знает busy/fuel, но не очередь; добавить `waiting`, `eta`, `station_queue`.
+- **Дропы** — у `drops_nearby` нет возраста; добавить `age`/`despawnAt` и событие `drop_expiring`.
+- **Ресурсы** — нет роста саженцев и остатка руды; `Resource.regrowAt/remaining/depleted`, события
+  `source_depleted`, `forest_thinning`, узлы `replant_tree`, `switch_source`.
+- **Защищённость** — нет проломов и открытых дверей ночью; `SecurityFact`, `wall_gap`, `door_open_night`.
+- **Брони и резервы** — нет «кто что забронировал»; `ReservationFact`, не дублировать предмет, цель, станцию.
+- **Цели стратега** — `StrategicQueue` пуста; `GoalFact` (id, kind, target, priority, deadline),
+  событие `strategic_goal`, узел `follow_strategic_goal`.
+
+Свои находки: смерть игрока и его дропы, торговец/рейд/фантом, запасные инструменты, карта и разведка.
+Топ-10 по пользе: PlayerFact, FailureFact, dark cells, TimeFact, Station.waiting, Drop.despawnAt,
+Resource.remaining, SecurityFact, ReservationFact, GoalFact. Черновик JSON дополнен.
+
+## 10. Источники
 
 Код: `core/board/graph/*`, `neoforge/board/*` (33 сторожа, `GraphInputs`, `GraphSurroundings`, `GraphSource`),
 `core/script/*` (100 спецификаций), `core/tactics/*`, `core/husbandry/*`, `core/sleep/*`, `core/town/*`,

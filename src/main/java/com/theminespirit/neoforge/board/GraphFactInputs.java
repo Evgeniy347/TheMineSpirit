@@ -1,38 +1,28 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.StageCatalog;
+import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphState.Built;
-import com.theminespirit.core.board.graph.StoreInputs;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 final class GraphFactInputs {
-    record Sources(ServerLevel level, List<GraphFacts.Chest> chests, Optional<TownPlan> town) {
-        Sources {
-            Objects.requireNonNull(level, "Уровень не может быть null: по нему читают печи и содержимое");
-            chests = List.copyOf(Objects.requireNonNull(chests, "Сундуки не могут быть null: пустой — список"));
-            Objects.requireNonNull(town, "План поселения не может быть null: без плана — Optional.empty()");
-        }
-    }
-
     private GraphFactInputs() {}
 
     static GraphFacts of(
@@ -41,18 +31,18 @@ final class GraphFactInputs {
             SupplyGraph graph,
             Map<String, Built> buildings,
             FirstStepsRunner.StageScan scan,
-            GraphSurroundings.Around around,
-            Sources sources) {
+            Optional<TownPlan> town,
+            GraphSurroundings.Around around) {
         return new GraphFacts(
                 spiritFacts(service, spirits, graph),
                 List.of(),
                 List.of(),
                 resourceFacts(around, graph),
-                stationFacts(sources.level(), graph, buildings, sources.town(), scan),
-                buildingFacts(buildings, sources.town(), scan),
+                stationFacts(graph, buildings, town, scan),
+                buildingFacts(buildings, town, scan),
                 List.of(),
                 GraphFacts.Terrain.empty(),
-                stageReqs(graph, sources.chests()));
+                stageReqs(service, service.board().ledger().stage()));
     }
 
     private static Map<String, GraphFacts.Spirit> spiritFacts(
@@ -75,7 +65,8 @@ final class GraphFactInputs {
                             spirit.currentActivity().orElse(null),
                             inventory(spirit),
                             armor(spirit),
-                            tools(spirit, graph)));
+                            tools(spirit, graph),
+                            null));
         }
         return facts;
     }
@@ -181,15 +172,11 @@ final class GraphFactInputs {
     }
 
     private static Map<String, GraphFacts.Station> stationFacts(
-            ServerLevel level,
-            SupplyGraph graph,
-            Map<String, Built> buildings,
-            Optional<TownPlan> town,
-            FirstStepsRunner.StageScan scan) {
+            SupplyGraph graph, Map<String, Built> buildings, Optional<TownPlan> town, FirstStepsRunner.StageScan scan) {
         Map<String, GraphFacts.Station> stations = new LinkedHashMap<>();
         graph.costs().stationCapacity().keySet().stream().sorted().forEach(id -> {
             if (buildings.get(id) == Built.BUILT) {
-                stations.put(id, StationInputs.station(id, position(id, town, scan), level));
+                stations.put(id, new GraphFacts.Station(id, id, position(id, town, scan), false, null, null, null));
             }
         });
         return stations;
@@ -223,8 +210,14 @@ final class GraphFactInputs {
         return counts;
     }
 
-    private static GraphFacts.StageReqs stageReqs(SupplyGraph graph, List<GraphFacts.Chest> chests) {
-        return StoreInputs.stageReqs(
-                graph, chests, StockCatalog.defaultTable().nutrition().keySet(), StoreInputs.settings());
+    private static GraphFacts.StageReqs stageReqs(BoardService service, int stage) {
+        StageRules rules = DataTables.INSTANCE.stages().current();
+        if (stage > rules.stages().size()) {
+            return new GraphFacts.StageReqs(Map.of(), Map.of());
+        }
+        Map<String, Integer> minimum = rules.stages().get(stage - 1).requires();
+        Map<String, Integer> actual = new LinkedHashMap<>();
+        minimum.forEach((id, level) -> actual.put(id, service.board().ledger().hasPlan(id, level) ? level : 0));
+        return new GraphFacts.StageReqs(minimum, actual);
     }
 }

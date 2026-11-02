@@ -6,6 +6,7 @@
 """
 
 import copy
+import fnmatch
 import json
 import math
 import os
@@ -27,8 +28,46 @@ ABSENT = "ABSENT"
 
 HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
-MINIMUM_BOOST = 35
 WATCHER_OWNED = {"BUILD_WAREHOUSE", "BUILD_PEN"}
+
+
+STORE_MINIMUM = "store:minimum"
+STORE_TRANSFER = "store:transfer"
+STORE_SMELT = "store:smelt"
+STORE_SPACE = "store:space"
+STORE_SORT = "store:sort"
+STORE_DELIVER = "store:carry:deliver"
+STORE_MOVE = "store:carry:transfer"
+STORE_SMELT_LOAD = "store:smelt:load"
+STORE_SMELT_TAKE = "store:smelt:take"
+STORE_CHESTS = "store:chests"
+STORE_SORTED = "store:sorted"
+STORE_DEFAULT_BASE = 50
+STORE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+WAREHOUSE_CATEGORIES = os.path.join(STORE_ROOT, "src", "main", "resources", "data",
+                                    "theminespirit", "inventory", "warehouse_categories.json")
+_CATEGORIES = None
+
+
+def warehouse_categories():
+    global _CATEGORIES
+    if _CATEGORIES is None:
+        if not os.path.isfile(WAREHOUSE_CATEGORIES):
+            _CATEGORIES = []
+        else:
+            with open(WAREHOUSE_CATEGORIES, "r", encoding="utf-8") as handle:
+                _CATEGORIES = list(json.load(handle).get("categories") or [])
+    return _CATEGORIES
+
+
+def category_of(item):
+    qualified = item if ":" in item else "minecraft:" + item
+    for category in warehouse_categories():
+        for pattern in category.get("match") or []:
+            full = pattern if "*" == pattern or ":" in pattern else "minecraft:" + pattern
+            if fnmatch.fnmatchcase(qualified, full):
+                return category.get("name", "")
+    return ""
 
 NAMESPACE = "minecraft:"
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -51,18 +90,6 @@ def _fragment(name):
             return json.load(handle)
     except (OSError, ValueError):
         return {}
-
-
-def _store_settings():
-    data = _fragment("store.json")
-    space = data.get("storeSpace") or {}
-    transfer = data.get("storeTransfer") or {}
-    sort = data.get("storeSort") or {}
-    return {
-        "minFreePercent": int(space.get("minFreePercent", 20)),
-        "carrySurplus": int(transfer.get("carrySurplus", 8)),
-        "mixedItems": int(sort.get("mixedItems", 6)),
-    }
 
 
 def _gear_settings():
@@ -165,50 +192,6 @@ def _better_in_chests(spirit, chests, gear):
     return False
 
 
-def _store_events(state):
-    settings = _store_settings()
-    events = []
-    minimum = (state.stage_reqs.get("minimum") or {})
-    actual = (state.stage_reqs.get("actual") or {})
-    if any(int(actual.get(node, 0)) < int(need) for node, need in minimum.items()):
-        events.append("store_minimum")
-    room = any(int(chest.get("freeSlots", 0)) > 0 for chest in state.chest_facts)
-    if room and any(
-            int(count) >= settings["carrySurplus"]
-            for spirit in state.spirit_facts.values()
-            for count in (spirit.get("inventory") or {}).values()):
-        events.append("store_transfer")
-    smelting = [
-        station for station in state.station_facts.values()
-        if "furnace" in str(station.get("id", "")).lower()
-        or "furnace" in str(station.get("type", "")).lower()
-    ]
-    if smelting:
-        put = any(not station.get("input") for station in smelting)
-        take = any(station.get("output") for station in smelting)
-        if put and any(
-                _fuel(item)
-                for chest in state.chest_facts
-                for item in (chest.get("contents") or {})):
-            events.append("store_smelt_put")
-        if take:
-            events.append("store_smelt_take")
-    free = sum(int(chest.get("freeSlots", 0)) for chest in state.chest_facts)
-    slots = sum(int(chest.get("totalSlots", 0)) for chest in state.chest_facts)
-    if slots > 0 and free * 100 // slots < settings["minFreePercent"]:
-        events.append("store_storage_space")
-    if len(state.chest_facts) > 1 and any(
-            len(chest.get("contents") or {}) > settings["mixedItems"]
-            for chest in state.chest_facts):
-        events.append("store_sort")
-    return events
-
-
-def _fuel(item):
-    name = _short_id(item)
-    return name in ("coal", "charcoal") or name.endswith("_log") or name.endswith("_planks")
-
-
 def _gear_events(state):
     gear = _gear_settings()
     required = _required_at(gear, state.stage)
@@ -243,6 +226,7 @@ def _gear_events(state):
         if lacks:
             events.append("gear_kit_" + role)
     return events
+
 
 
 class Flow:
@@ -301,6 +285,13 @@ def priority(score, maximum):
     if score <= 0:
         return 0
     return int(min(maximum, math.floor(maximum * (1.0 - math.exp(-score / maximum)) + 0.5)))
+
+
+def band_priority(score, maximum, band):
+    if score <= 0:
+        return 0
+    above = int(round(score - maximum))
+    return maximum + max(1, min(band, above))
 
 
 class Costs:
@@ -400,19 +391,21 @@ def merge_fragment(merged, fragment, origin):
             if not isinstance(section, list):
                 section = []
                 merged[field] = section
-            ids = {node.get("id") for node in section if isinstance(node, dict)}
+            ids = {node.get("id") for node in section
+                   if isinstance(node, dict) and node.get("id") is not None}
             texts = {node for node in section if isinstance(node, str)}
             for node in value:
-                if isinstance(node, dict) and node.get("id") in ids:
+                node_id = node.get("id") if isinstance(node, dict) else None
+                if node_id is not None and node_id in ids:
                     raise ValueError(
                         "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
-                        % (origin, field, node.get("id")))
+                        % (origin, field, node_id))
                 if isinstance(node, str) and node in texts:
                     raise ValueError(
                         "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
                         % (origin, field, node))
-                if isinstance(node, dict):
-                    ids.add(node.get("id"))
+                if node_id is not None:
+                    ids.add(node_id)
                 if isinstance(node, str):
                     texts.add(node)
                 section.append(copy.deepcopy(node))
@@ -519,6 +512,7 @@ class Graph:
                 "tasks": [dict(t) for t in (event.get("tasks") or [])],
                 "push": dict(event.get("push") or {}),
                 "advice": list(event.get("advice") or []),
+                "band": int(event.get("band", 0)),
             }
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
         self.triggers = [dict(t) for t in (data.get("triggers") or [])]
@@ -667,7 +661,6 @@ class State:
         for building_id, building in self.building_facts.items():
             if int(building.get("damage", 0)) > 0 and not building.get("unknown", False):
                 derived.append("repair_" + building_id)
-        derived.extend(_store_events(self))
         derived.extend(_gear_events(self))
         for name in derived:
             if name not in self.events:
@@ -855,6 +848,112 @@ class Planner:
         known = self.graph.buildings.get(building)
         return known is not None and self.share(known.materials) >= self.graph.build_start_share
 
+    def node_weight(self, node):
+        item = self.graph.items.get(node)
+        if item is not None:
+            return max(1, item.base)
+        if self.graph.is_group(node):
+            return max((self.graph.items[member].base for member in self.graph.members(node)
+                        if member in self.graph.items), default=40)
+        return 40
+
+    def dig_out(self):
+        for spirit in self.state.spirit_facts.values():
+            if not spirit.get("trapped", False):
+                continue
+            cause = spirit.get("trap")
+            node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
+            self.push(None, node, self.node_weight(node))
+
+    def store_roots(self):
+        graph = self.graph
+        state = self.state
+        if STORE_MINIMUM not in graph.items:
+            return
+        for item, have in self.store_shortages().items():
+            extra = graph.urgent_boost if have == 0 else 0
+            self.push(None, item, self.store_base(item) + extra)
+        deliver, move = self.store_transfer()
+        if deliver and STORE_TRANSFER in graph.items:
+            self.push(None, STORE_DELIVER, self.store_base(STORE_DELIVER))
+        if move and STORE_TRANSFER in graph.items:
+            self.push(None, STORE_MOVE, self.store_base(STORE_MOVE))
+        load, take = self.store_smelt()
+        if load and STORE_SMELT in graph.items:
+            self.push(None, STORE_SMELT_LOAD, self.store_base(STORE_SMELT_LOAD))
+        if take and STORE_SMELT in graph.items:
+            self.push(None, STORE_SMELT_TAKE, self.store_base(STORE_SMELT_TAKE))
+        if state.storage_free_percent < graph.storage_min_free and STORE_SPACE in graph.items:
+            if state.built("chests") == BUILT:
+                self.push(None, STORE_CHESTS, self.store_base(STORE_CHESTS))
+            else:
+                self.push(None, BUILDING + "chests", self.store_base(STORE_CHESTS))
+        if self.store_mixed_chest() and STORE_SORT in graph.items:
+            self.push(None, STORE_SORTED, self.store_base(STORE_SORTED))
+
+    def store_shortages(self):
+        reqs = self.state.stage_reqs
+        minimum = reqs.get("minimum") or {}
+        actual = reqs.get("actual") or {}
+        shortages = {}
+        for item, target in minimum.items():
+            if not self.store_known(item):
+                continue
+            have = int(actual.get(item, 0))
+            if have < int(target):
+                shortages[item] = have
+        return shortages
+
+    def store_known(self, node):
+        graph = self.graph
+        return (node in graph.items or graph.is_group(node) or graph.is_tool(node)
+                or bool(graph.producers(node)))
+
+    def store_base(self, node):
+        item = self.graph.items.get(node)
+        if item is not None:
+            return item.base
+        if self.graph.is_group(node):
+            members = self.graph.members(node)
+            return self.store_base(members[0]) if members else STORE_DEFAULT_BASE
+        return STORE_DEFAULT_BASE
+
+    def store_transfer(self):
+        facts = self.state
+        carried = any((spirit.get("inventory") or {}) for spirit in facts.spirit_facts.values())
+        chests = facts.chest_facts
+        free = any(int(chest.get("freeSlots", 0)) > 0 for chest in chests)
+        move = False
+        for index, source in enumerate(chests):
+            if not (source.get("contents") or {}) or int(source.get("freeSlots", 0)) > 0:
+                continue
+            for other, target in enumerate(chests):
+                if other != index and int(target.get("freeSlots", 0)) > 0:
+                    move = True
+                    break
+        return carried and free, move
+
+    def store_smelt(self):
+        load = False
+        take = False
+        for station in self.state.station_facts.values():
+            if station.get("type") != "furnace":
+                continue
+            if station.get("output") is not None:
+                take = True
+            elif not station.get("busy"):
+                load = True
+        return load, take
+
+    def store_mixed_chest(self):
+        for chest in self.state.chest_facts:
+            found = set()
+            for item in (chest.get("contents") or {}):
+                found.add(category_of(item))
+                if len(found) > 1:
+                    return True
+        return False
+
     def push(self, source, node, amount):
         if amount == 0:
             return
@@ -881,40 +980,9 @@ class Planner:
             return
         self.push(source, BUILDING + building_id, amount)
 
-    def minimums(self):
-        minimum = self.state.stage_reqs.get("minimum") or {}
-        actual = self.state.stage_reqs.get("actual") or {}
-        for node, need in minimum.items():
-            if int(actual.get(node, 0)) >= int(need):
-                continue
-            if self.graph.is_group(node):
-                self.push(None, node, MINIMUM_BOOST)
-            elif self.graph.is_tool(node):
-                split = node.rfind("_")
-                tier = node[:split]
-                kind = node[split + 1:]
-                rank = self.graph.rank(tier)
-                if rank < 0:
-                    self.notices.setdefault(node, {
-                        "building": node,
-                        "reason": "минимум просит неизвестный уровень инструмента " + node,
-                    })
-                    continue
-                for spirit in self.state.kits:
-                    if self.state.tier(spirit, kind) < rank:
-                        self.push(None, TOOL + kind + AT + spirit, MINIMUM_BOOST)
-            elif node in self.graph.items:
-                self.push(None, node, self.graph.items[node].base)
-            else:
-                self.notices.setdefault(node, {
-                    "building": node,
-                    "reason": "минимум просит узел " + node + ", которого нет в графе",
-                })
-
     def roots(self):
         graph = self.graph
         state = self.state
-        self.minimums()
         for item in graph.items.values():
             if item.stage > state.stage:
                 continue
@@ -954,6 +1022,8 @@ class Planner:
                     graph.storage_base,
                     "на складе свободно " + str(state.storage_free_percent) + "% (< " + str(graph.storage_min_free) + "%)",
                 )
+        self.store_roots()
+        self.dig_out()
 
     def expand(self, node):
         if node in self.expanded:
@@ -1178,6 +1248,9 @@ class Planner:
         if key.startswith(EVENT):
             parts = key.split(":", 2)
             event = graph.events.get(parts[1], {"tasks": []})
+            band = int(event.get("band", 0))
+            if band > 0:
+                prio = band_priority(value, graph.max_priority, band)
             task = next((t for t in event["tasks"] if t.get("id") == parts[2]), None)
             if task is None:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")

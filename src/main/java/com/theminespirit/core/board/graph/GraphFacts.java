@@ -35,7 +35,8 @@ public record GraphFacts(
             @Nullable String activity,
             Map<String, Integer> inventory,
             List<Armor> armor,
-            List<Tool> tools) {
+            List<Tool> tools,
+            @Nullable String trap) {
         public Spirit {
             Objects.requireNonNull(id, "id духа не может быть null: факт принадлежит конкретному духу");
             Objects.requireNonNull(position, "позиция духа не может быть null: без неё не выбрать работу");
@@ -45,6 +46,27 @@ public record GraphFacts(
                     Objects.requireNonNull(armor, "броня духа не может быть null: без брони — пустой список"));
             tools = List.copyOf(
                     Objects.requireNonNull(tools, "инструменты духа не могут быть null: без них — пустой список"));
+        }
+
+        public Spirit(
+                String id,
+                Position position,
+                float health,
+                int food,
+                int air,
+                boolean inWater,
+                boolean trapped,
+                boolean stuck,
+                @Nullable String activity,
+                Map<String, Integer> inventory,
+                List<Armor> armor,
+                List<Tool> tools) {
+            this(id, position, health, food, air, inWater, trapped, stuck, activity, inventory, armor, tools, null);
+        }
+
+        public Spirit withTrap(String cause) {
+            return new Spirit(
+                    id, position, health, food, air, inWater, true, stuck, activity, inventory, armor, tools, cause);
         }
     }
 
@@ -61,16 +83,61 @@ public record GraphFacts(
         }
     }
 
+    public enum TargetKind {
+        NONE,
+        SPIRIT,
+        PLAYER,
+        ANIMAL,
+        OTHER
+    }
+
     public record Threat(
             String id,
             String type,
             float health,
+            float maxHealth,
             Position position,
-            @Nullable String target) {
+            @Nullable String target,
+            TargetKind targetKind,
+            boolean targetingSelf,
+            boolean visible,
+            @Nullable String state,
+            int distance,
+            @Nullable String lastHurtBy,
+            double speed) {
         public Threat {
             Objects.requireNonNull(id, "id угрозы не может быть null: по нему отличают врагов");
             Objects.requireNonNull(type, "тип угрозы не может быть null: без типа не выбрать защиту");
             Objects.requireNonNull(position, "позиция угрозы не может быть null: без неё не дойти до врага");
+            Objects.requireNonNull(targetKind, "вид цели угрозы не может быть null: без него не выбрать защиту");
+            if (health < 0 || maxHealth <= 0 || health > maxHealth) {
+                throw new IllegalArgumentException("Здоровье угрозы " + health + " из " + maxHealth
+                        + ": оно не отрицательно и не больше максимума, максимум положителен");
+            }
+            if (distance < 0) {
+                throw new IllegalArgumentException("Расстояние до угрозы " + distance
+                        + " отрицательно: неизвестное отмечают отдельно, а не минусом");
+            }
+            if (speed < 0) {
+                throw new IllegalArgumentException("Скорость угрозы " + speed + " отрицательна: стоящую задают нулём");
+            }
+        }
+
+        public Threat(String id, String type, float health, Position position, @Nullable String target) {
+            this(
+                    id,
+                    type,
+                    health,
+                    Math.max(health, 1f),
+                    position,
+                    target,
+                    target == null ? TargetKind.NONE : TargetKind.OTHER,
+                    false,
+                    true,
+                    null,
+                    0,
+                    null,
+                    0);
         }
     }
 
@@ -191,16 +258,6 @@ public record GraphFacts(
         Objects.requireNonNull(stageReqs, "Требования этапа не могут быть null: без требований — пустая карта");
     }
 
-    public record World(List<Stray> strays, Terrain terrain, Map<String, Building> buildings) {
-        public World {
-            strays = List.copyOf(
-                    Objects.requireNonNull(strays, "Лишние постройки не могут быть null: без них — пустой список"));
-            Objects.requireNonNull(terrain, "Рельеф не может быть null: ровный задают Terrain.empty()");
-            buildings = Map.copyOf(
-                    Objects.requireNonNull(buildings, "Постройки не могут быть null: без них — пустая карта"));
-        }
-    }
-
     public static GraphFacts empty() {
         return new GraphFacts(
                 Map.of(),
@@ -218,7 +275,15 @@ public record GraphFacts(
         return new GraphFacts(spirits, threats, known, resources, stations, buildings, strays, terrain, stageReqs);
     }
 
-    public GraphFacts withWorld(World world) {
+    public GraphFacts withThreats(List<Threat> known) {
+        return new GraphFacts(spirits, known, chests, resources, stations, buildings, strays, terrain, stageReqs);
+    }
+
+    public GraphFacts withSpirits(Map<String, Spirit> known) {
+        return new GraphFacts(known, threats, chests, resources, stations, buildings, strays, terrain, stageReqs);
+    }
+
+    public GraphFacts withWorld(GraphWorldFacts world) {
         Objects.requireNonNull(world, "Факты участка не могут быть null: пустые задают пустым World");
         return new GraphFacts(
                 spirits,

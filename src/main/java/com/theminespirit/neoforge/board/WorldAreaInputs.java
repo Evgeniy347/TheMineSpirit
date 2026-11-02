@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState.Built;
+import com.theminespirit.core.board.graph.GraphWorldFacts;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.town.FloatingBlocks;
@@ -39,7 +40,7 @@ final class WorldAreaInputs {
 
     private WorldAreaInputs() {}
 
-    static GraphFacts.World of(
+    static GraphWorldFacts of(
             ServerLevel level,
             BoardService service,
             FirstStepsRunner.StageScan scan,
@@ -59,7 +60,7 @@ final class WorldAreaInputs {
         RepairAudit.Report house =
                 service.board().ledger().has(BoardCase.BUILD_HOUSE, 1) ? houseReport(level, site, now) : null;
         Map<String, GraphFacts.Building> base = GraphFactInputs.buildingFacts(states, town, scan);
-        return new GraphFacts.World(strays, terrain, buildings(base, house));
+        return new GraphWorldFacts(strays, terrain, buildings(base, house));
     }
 
     static List<GraphFacts.Stray> strays(

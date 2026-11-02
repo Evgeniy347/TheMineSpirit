@@ -43,7 +43,8 @@ class GraphStateFactsTests {
                 null,
                 inventory,
                 List.of(),
-                List.of());
+                List.of(),
+                null);
         inventory.put("minecraft:coal", 9);
 
         assertEquals(
@@ -75,6 +76,57 @@ class GraphStateFactsTests {
                 () -> new GraphFacts.Resource(
                         "tree:oak", new GraphFacts.Position(0, 0, 0), -1, GraphFacts.Reach.UNKNOWN, 0),
                 "Отрицательное расстояние не имеет смысла: неизвестное задают UNKNOWN");
+    }
+
+    @Test
+    void threat_HealthAboveMax_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphFacts.Threat(
+                        "threat-1",
+                        "minecraft:zombie",
+                        25,
+                        20,
+                        new GraphFacts.Position(0, 64, 0),
+                        "target-1",
+                        GraphFacts.TargetKind.SPIRIT,
+                        true,
+                        true,
+                        null,
+                        3,
+                        null,
+                        0.2),
+                "Здоровье угрозы не может быть больше максимума");
+    }
+
+    @Test
+    void threat_NegativeDistance_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphFacts.Threat(
+                        "threat-1",
+                        "minecraft:zombie",
+                        20,
+                        20,
+                        new GraphFacts.Position(0, 64, 0),
+                        null,
+                        GraphFacts.TargetKind.NONE,
+                        false,
+                        false,
+                        null,
+                        -1,
+                        null,
+                        0),
+                "Расстояние до угрозы не отрицательно: неизвестное не задают минусом");
+    }
+
+    @Test
+    void threat_ShortForm_KeepsTargetKind() {
+        GraphFacts.Threat threat = new GraphFacts.Threat(
+                "threat-1", "minecraft:zombie", 20, new GraphFacts.Position(0, 64, 0), "target-1");
+
+        assertEquals(20, threat.maxHealth(), "Короткая форма считает максимум по текущему здоровью");
+        assertEquals(GraphFacts.TargetKind.OTHER, threat.targetKind(), "Цель без вида считается другой до уточнения");
     }
 
     @Test
@@ -120,7 +172,8 @@ class GraphStateFactsTests {
                                 null,
                                 Map.of("minecraft:stick", 1),
                                 List.of(),
-                                List.of())),
+                                List.of(),
+                                null)),
                 List.of(),
                 List.of(),
                 List.of(),

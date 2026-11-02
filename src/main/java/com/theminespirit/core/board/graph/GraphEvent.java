@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice) {
+public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, int band) {
     public record Task(
             String id,
             BoardCase boardCase,
@@ -25,6 +25,14 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
         tasks = List.copyOf(tasks);
         push = Map.copyOf(push);
         advice = List.copyOf(advice);
+        if (band < 0) {
+            throw new IllegalArgumentException(
+                    "Полоса события " + band + " отрицательна: события вне полосы задают нулём, а не минусом");
+        }
+    }
+
+    public GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice) {
+        this(name, tasks, push, advice, 0);
     }
 
     static Map<String, GraphEvent> parse(JsonNode root) {
@@ -45,9 +53,26 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
             events.put(
                     entry.getKey(),
                     new GraphEvent(
-                            entry.getKey(), tasks, counts(entry.getValue().path("push")), advice));
+                            entry.getKey(),
+                            tasks,
+                            counts(entry.getValue().path("push")),
+                            advice,
+                            entry.getValue().path("band").asInt(0)));
         });
         return events;
+    }
+
+    static int priority(Map<String, GraphEvent> events, String key, double value, int max) {
+        if (key.startsWith("event:")) {
+            int start = "event:".length();
+            int end = key.indexOf(':', start);
+            String name = end < 0 ? key.substring(start) : key.substring(start, end);
+            GraphEvent event = events.get(name);
+            if (event != null && event.band() > 0) {
+                return GraphFlow.bandPriority(value, max, event.band());
+            }
+        }
+        return GraphFlow.priority(value, max);
     }
 
     static Map<String, Integer> counts(JsonNode node) {

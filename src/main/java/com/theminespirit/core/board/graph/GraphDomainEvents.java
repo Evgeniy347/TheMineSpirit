@@ -8,7 +8,6 @@ public final class GraphDomainEvents {
 
     public static Set<String> of(GraphFacts facts, int stage) {
         Set<String> events = new LinkedHashSet<>(GraphWorldEvents.of(facts));
-        events.addAll(StoreInputs.events(facts));
         events.addAll(GearInputs.events(facts, stage));
         return Set.copyOf(events);
     }

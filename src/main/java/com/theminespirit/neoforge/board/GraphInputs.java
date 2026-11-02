@@ -54,8 +54,15 @@ final class GraphInputs {
         int stage = service.board().ledger().stage();
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        List<GraphFacts.Chest> chests = GraphFactInputs.chestFacts(StockReader.chests(level));
-        return new GraphState(
+        LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
+        GraphFacts facts = DigInputs.apply(
+                level,
+                spirits,
+                GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
+                        .withThreats(life.threats())
+                        .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
+                        .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)));
+        GraphState state = new GraphState(
                         GraphNames.stock(
                                 stock.available(),
                                 StockCatalog.defaultTable().nutrition().keySet()),
@@ -64,21 +71,13 @@ final class GraphInputs {
                         buildings,
                         materials(level, service, stock, scan, graph, buildings, stage),
                         ChestSpaceWatch.space(level).freePercent(),
-                        around.events(),
+                        life.events(),
                         around.world(),
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(GraphFactInputs.of(
-                                service,
-                                spirits,
-                                graph,
-                                buildings,
-                                scan,
-                                around,
-                                new GraphFactInputs.Sources(level, chests, town))
-                        .withChests(chests)
-                        .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)));
+                .withFacts(GraphStoreInputs.of(facts, level, graph));
+        return FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

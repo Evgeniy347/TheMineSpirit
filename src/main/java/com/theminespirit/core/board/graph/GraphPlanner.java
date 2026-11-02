@@ -22,11 +22,11 @@ public final class GraphPlanner {
     private static final String ORDER = "order:";
     private static final int EXPLORE_TICKS = 2400;
     private static final char AT = '@';
+    final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final SupplyGraph graph;
     private final GraphState state;
     private final GraphFlow flow = new GraphFlow();
     private final Set<String> expanded = new HashSet<>();
-    private final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
 
@@ -54,9 +54,6 @@ public final class GraphPlanner {
     }
 
     private void roots() {
-        GraphMinimums.Result minimums = GraphMinimums.of(graph, state);
-        minimums.roots().forEach(root -> push(null, root.node(), root.amount()));
-        minimums.notices().forEach(notice -> notices.putIfAbsent(notice.building(), notice));
         for (SupplyGraph.Item item : graph.items().values()) {
             if (item.stage() > state.stage()) {
                 continue;
@@ -117,12 +114,12 @@ public final class GraphPlanner {
                     "на складе свободно " + state.storageFreePercent() + "% (< "
                             + graph.storage().minFreePercent() + "%)");
         }
+        GraphStore.roots(graph, state, this::push);
+        DigOperations.roots(graph, state, this::push);
     }
 
     private void push(@Nullable String from, String node, double amount) {
-        if (amount == 0) {
-            return;
-        }
+        if (amount == 0) return;
         if (from == null) {
             flow.root(node, amount);
         } else {
@@ -132,9 +129,7 @@ public final class GraphPlanner {
     }
 
     private void expand(String node) {
-        if (!expanded.add(node)) {
-            return;
-        }
+        if (!expanded.add(node)) return;
         double decay = graph.decay();
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
@@ -159,7 +154,7 @@ public final class GraphPlanner {
             SupplyGraph.Building building = graph.buildings().get(id);
             Map<String, Integer> needs = materials(id);
             if (building != null
-                    && stocked(needs)
+                    && GraphLack.stocked(graph, state, needs)
                     && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
                 flow.local(node, graph.buildReadyBoost());
             }
@@ -361,7 +356,9 @@ public final class GraphPlanner {
         for (Map.Entry<String, Double> score : scores.entrySet()) {
             if (score.getValue() > 0 && task(score.getKey())) {
                 double value = score.getValue() * graph.costs().travelFactor(travel(score.getKey()));
-                GraphPlan.Task task = task(score.getKey(), GraphFlow.priority(value, graph.maxPriority()));
+                GraphPlan.Task task = task(
+                        score.getKey(),
+                        GraphEvent.priority(graph.events(), score.getKey(), value, graph.maxPriority()));
                 tasks.add(task);
                 station(score.getKey())
                         .filter(ignored -> task.feasible())
@@ -376,7 +373,10 @@ public final class GraphPlanner {
     }
 
     private Optional<String> station(String key) {
-        return GraphLookup.station(graph, key);
+        int at = key.indexOf(AT);
+        return graph.way(at < 0 ? key : key.substring(0, at))
+                .map(SupplyGraph.Way::building)
+                .filter(building -> graph.costs().stationCapacity().containsKey(building));
     }
 
     private Optional<GraphPlan.Task> stationTask(String building, double value, Map<String, Double> scores) {
@@ -400,14 +400,18 @@ public final class GraphPlanner {
                 Optional.empty(),
                 GraphFlow.priority(value * graph.decay(), graph.maxPriority()),
                 materials,
-                stocked(materials),
+                GraphLack.stocked(graph, state, materials),
                 false,
                 graph.implemented(building),
                 graph.costs().ticks(STATION + building, known.boardCase())));
     }
 
     private int travel(String key) {
-        return GraphLookup.travel(graph, state, key);
+        int at = key.indexOf(AT);
+        return graph.way(at < 0 ? key : key.substring(0, at))
+                .map(SupplyGraph.Way::world)
+                .map(resource -> graph.costs().travel(state.distances().getOrDefault(resource, 0)))
+                .orElse(0);
     }
 
     private GraphPlan.Task task(String key, int priority) {
@@ -440,7 +444,7 @@ public final class GraphPlanner {
                     Optional.empty(),
                     priority,
                     event.consumes(),
-                    stocked(event.consumes())
+                    GraphLack.stocked(graph, state, event.consumes())
                             && (event.building() == null || state.built(event.building()) == Built.BUILT),
                     false,
                     event.implemented(),
@@ -478,7 +482,11 @@ public final class GraphPlanner {
                 spirit,
                 priority,
                 way.consumes(),
-                tooled && housed(way) && available(way) && stocked(way.consumes()) && stocked(way.needs()),
+                tooled
+                        && GraphLack.housed(state, way)
+                        && available(way)
+                        && GraphLack.stocked(graph, state, way.consumes())
+                        && GraphLack.stocked(graph, state, way.needs()),
                 chances.contains(key),
                 graph.implemented(wayId),
                 graph.costs().ticks(wayId, way.boardCase()) + travel(key));
@@ -529,13 +537,5 @@ public final class GraphPlanner {
             return graph.members(node).stream().anyMatch(this::sourcedShallow);
         }
         return graph.producers(node).stream().anyMatch(this::available);
-    }
-
-    private boolean housed(SupplyGraph.Way way) {
-        return way.building() == null || state.built(way.building()) == Built.BUILT;
-    }
-
-    private boolean stocked(Map<String, Integer> needs) {
-        return needs.entrySet().stream().allMatch(entry -> count(entry.getKey()) >= entry.getValue());
     }
 }

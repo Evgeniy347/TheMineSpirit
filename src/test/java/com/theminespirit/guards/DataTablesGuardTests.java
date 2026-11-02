@@ -25,7 +25,9 @@ class DataTablesGuardTests {
     private static final Map<String, String> EXCLUDED = Map.of(
             "data/theminespirit/schematics/buildings.json",
             "каталог семей построек читается один раз при регистрации команд /spirit demo: подкоманды по /reload "
-                    + "не перерегистрируются, горячая таблица дала бы каталог, расходящийся с командами");
+                    + "не перерегистрируются, горячая таблица дала бы каталог, расходящийся с командами",
+            "data/theminespirit/board/store_minimum.json",
+            "настройки склада читаются на каждом входе графа, а не из датапака мира: /reload им не нужен");
     private static final String GRAPH_FRAGMENTS = "data/theminespirit/board/graph.d/";
 
     @Test
