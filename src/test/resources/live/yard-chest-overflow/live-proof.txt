@@ -1,0 +1,2 @@
+[02нояб.2026 09:21:22.994] [Server thread/INFO] [com.theminespirit.neoforge.board.ChestSpaceWatch/]: [chests] chests:4: свободно 12 из 162 слотов (< 20%) — двойной сундук в место 4 двора
+[02нояб.2026 09:26:33.498] [Server thread/INFO] [com.theminespirit.neoforge.inventory.DepositScript/]: [deposit] spirit-2: контейнер -180, 69, -518 — свободно 53 из 54 слотов, перенесено 64, решение: предметы приняты

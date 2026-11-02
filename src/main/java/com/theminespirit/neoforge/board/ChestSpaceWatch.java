@@ -13,11 +13,17 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.inventory.WarehouseSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.ChestSpace;
+import com.theminespirit.core.town.SettlementReach;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.YardScheme;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
+import com.theminespirit.neoforge.terminal.CraftTerminalService;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,11 +32,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import org.slf4j.Logger;
 
 final class ChestSpaceWatch {
     static final String PREFIX = "chests:";
-    private static final int FULL_PERCENT = 100;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final StateChangeLog CHANGES = new StateChangeLog();
     private static final Set<BoardStatus> OPEN =
@@ -115,37 +122,59 @@ final class ChestSpaceWatch {
 
     record Space(int free, int slots) {
         int freePercent() {
-            return slots == 0 ? FULL_PERCENT : free * FULL_PERCENT / slots;
+            return slots == 0 ? 100 : free * 100 / slots;
         }
     }
 
     static Space space(ServerLevel level) {
-        int free = 0;
-        int slots = 0;
+        List<ChestSpace.Spot> spots = new ArrayList<>();
+        Set<Container> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         for (BlockCoord chest : SettlementChestStore.get(level).chests().all()) {
-            if (ContainerAccess.open(level, new BlockPos(chest.x(), chest.y(), chest.z()))
-                    instanceof ContainerAccess.Opened opened) {
+            BlockPos at = new BlockPos(chest.x(), chest.y(), chest.z());
+            var state = level.getBlockState(at);
+            if (state.is(Blocks.CHEST) && state.getValue(ChestBlock.TYPE) == ChestType.RIGHT) {
+                continue;
+            }
+            if (ContainerAccess.open(level, at) instanceof ContainerAccess.Opened opened) {
                 Container container = opened.container();
-                slots += container.getContainerSize();
+                if (!seen.add(container)) {
+                    continue;
+                }
+                int free = 0;
                 for (int slot = 0; slot < container.getContainerSize(); slot++) {
                     free += container.getItem(slot).isEmpty() ? 1 : 0;
                 }
+                spots.add(new ChestSpace.Spot(chest, free, container.getContainerSize()));
             }
         }
-        return new Space(free, slots);
+        SettlementReach reach = CraftTerminalService.reach(level).orElse(null);
+        ChestSpace space = ChestSpace.of(spots, reach);
+        return new Space(space.free(), space.slots());
     }
 
     private static Optional<Integer> nextSlot(ServerLevel level, StageSite site) {
         List<List<BlockCoord>> slots = YardScheme.slots(site);
         for (int index = 0; index < slots.size(); index++) {
-            boolean taken = slots.get(index).stream()
-                    .anyMatch(cell -> level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
-                            .is(Blocks.CHEST));
-            if (!taken) {
+            if (!occupied(level, slots.get(index))) {
                 return Optional.of(index + 1);
             }
         }
+        List<List<BlockCoord>> overflow = YardScheme.overflowSlots(site);
+        for (int index = 0; index < overflow.size(); index++) {
+            List<BlockCoord> pair = overflow.get(index);
+            if (pair.stream()
+                    .allMatch(cell -> level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
+                            .isAir())) {
+                return Optional.of(slots.size() + index + 1);
+            }
+        }
         return Optional.empty();
+    }
+
+    private static boolean occupied(ServerLevel level, List<BlockCoord> pair) {
+        return pair.stream()
+                .anyMatch(cell -> level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
+                        .is(Blocks.CHEST));
     }
 
     private static boolean open(BoardService service) {
