@@ -6,6 +6,7 @@
 """
 
 import copy
+import fnmatch
 import json
 import math
 import os
@@ -28,6 +29,44 @@ ABSENT = "ABSENT"
 HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
 WATCHER_OWNED = {"BUILD_WAREHOUSE", "BUILD_PEN"}
+
+STORE_MINIMUM = "store:minimum"
+STORE_TRANSFER = "store:transfer"
+STORE_SMELT = "store:smelt"
+STORE_SPACE = "store:space"
+STORE_SORT = "store:sort"
+STORE_DELIVER = "store:carry:deliver"
+STORE_MOVE = "store:carry:transfer"
+STORE_SMELT_LOAD = "store:smelt:load"
+STORE_SMELT_TAKE = "store:smelt:take"
+STORE_CHESTS = "store:chests"
+STORE_SORTED = "store:sorted"
+STORE_DEFAULT_BASE = 50
+STORE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+WAREHOUSE_CATEGORIES = os.path.join(STORE_ROOT, "src", "main", "resources", "data",
+                                    "theminespirit", "inventory", "warehouse_categories.json")
+_CATEGORIES = None
+
+
+def warehouse_categories():
+    global _CATEGORIES
+    if _CATEGORIES is None:
+        if not os.path.isfile(WAREHOUSE_CATEGORIES):
+            _CATEGORIES = []
+        else:
+            with open(WAREHOUSE_CATEGORIES, "r", encoding="utf-8") as handle:
+                _CATEGORIES = list(json.load(handle).get("categories") or [])
+    return _CATEGORIES
+
+
+def category_of(item):
+    qualified = item if ":" in item else "minecraft:" + item
+    for category in warehouse_categories():
+        for pattern in category.get("match") or []:
+            full = pattern if "*" == pattern or ":" in pattern else "minecraft:" + pattern
+            if fnmatch.fnmatchcase(qualified, full):
+                return category.get("name", "")
+    return ""
 
 
 class Flow:
@@ -708,6 +747,96 @@ class Planner:
                     graph.storage_base,
                     "на складе свободно " + str(state.storage_free_percent) + "% (< " + str(graph.storage_min_free) + "%)",
                 )
+        self.store_roots()
+
+    def store_roots(self):
+        graph = self.graph
+        state = self.state
+        if STORE_MINIMUM not in graph.items:
+            return
+        for item, have in self.store_shortages().items():
+            extra = graph.urgent_boost if have == 0 else 0
+            self.push(None, item, self.store_base(item) + extra)
+        deliver, move = self.store_transfer()
+        if deliver and STORE_TRANSFER in graph.items:
+            self.push(None, STORE_DELIVER, self.store_base(STORE_DELIVER))
+        if move and STORE_TRANSFER in graph.items:
+            self.push(None, STORE_MOVE, self.store_base(STORE_MOVE))
+        load, take = self.store_smelt()
+        if load and STORE_SMELT in graph.items:
+            self.push(None, STORE_SMELT_LOAD, self.store_base(STORE_SMELT_LOAD))
+        if take and STORE_SMELT in graph.items:
+            self.push(None, STORE_SMELT_TAKE, self.store_base(STORE_SMELT_TAKE))
+        if state.storage_free_percent < graph.storage_min_free and STORE_SPACE in graph.items:
+            if state.built("chests") == BUILT:
+                self.push(None, STORE_CHESTS, self.store_base(STORE_CHESTS))
+            else:
+                self.push(None, BUILDING + "chests", self.store_base(STORE_CHESTS))
+        if self.store_mixed_chest() and STORE_SORT in graph.items:
+            self.push(None, STORE_SORTED, self.store_base(STORE_SORTED))
+
+    def store_shortages(self):
+        reqs = self.state.stage_reqs
+        minimum = reqs.get("minimum") or {}
+        actual = reqs.get("actual") or {}
+        shortages = {}
+        for item, target in minimum.items():
+            if not self.store_known(item):
+                continue
+            have = int(actual.get(item, 0))
+            if have < int(target):
+                shortages[item] = have
+        return shortages
+
+    def store_known(self, node):
+        graph = self.graph
+        return (node in graph.items or graph.is_group(node) or graph.is_tool(node)
+                or bool(graph.producers(node)))
+
+    def store_base(self, node):
+        item = self.graph.items.get(node)
+        if item is not None:
+            return item.base
+        if self.graph.is_group(node):
+            members = self.graph.members(node)
+            return self.store_base(members[0]) if members else STORE_DEFAULT_BASE
+        return STORE_DEFAULT_BASE
+
+    def store_transfer(self):
+        facts = self.state
+        carried = any((spirit.get("inventory") or {}) for spirit in facts.spirit_facts.values())
+        chests = facts.chest_facts
+        free = any(int(chest.get("freeSlots", 0)) > 0 for chest in chests)
+        move = False
+        for index, source in enumerate(chests):
+            if not (source.get("contents") or {}) or int(source.get("freeSlots", 0)) > 0:
+                continue
+            for other, target in enumerate(chests):
+                if other != index and int(target.get("freeSlots", 0)) > 0:
+                    move = True
+                    break
+        return carried and free, move
+
+    def store_smelt(self):
+        load = False
+        take = False
+        for station in self.state.station_facts.values():
+            if station.get("type") != "furnace":
+                continue
+            if station.get("output") is not None:
+                take = True
+            elif not station.get("busy"):
+                load = True
+        return load, take
+
+    def store_mixed_chest(self):
+        for chest in self.state.chest_facts:
+            found = set()
+            for item in (chest.get("contents") or {}):
+                found.add(category_of(item))
+                if len(found) > 1:
+                    return True
+        return False
 
     def expand(self, node):
         if node in self.expanded:
