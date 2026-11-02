@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class StageAudit {
     private static final int PERCENT = 100;
@@ -56,6 +57,13 @@ public final class StageAudit {
             return Decision.OPEN;
         }
         return Decision.AUDIT;
+    }
+
+    public static boolean repairRetry(@Nullable BoardStatus status, boolean recentlyFailed) {
+        if (status == null) {
+            return false;
+        }
+        return (status == BoardStatus.FAILED || status == BoardStatus.BLOCKED) && !recentlyFailed;
     }
 
     public static boolean repairBlockedByUpgrade(BoardCase step, boolean upgrading) {

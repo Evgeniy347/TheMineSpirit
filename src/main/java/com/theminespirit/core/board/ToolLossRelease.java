@@ -35,8 +35,7 @@ public final class ToolLossRelease {
         Objects.requireNonNull(supplyOf, "Поставка задания не может быть null: без неё не видно, нужен ли топор");
         List<Released> released = new ArrayList<>();
         for (BoardTicket ticket : board.assignedTo(holder)) {
-            if (ToolGate.keep(ticket.boardCase(), items, walledIn, supplyOf.apply(ticket))
-                            instanceof ToolGate.Release release
+            if (ToolGate.keep(ticket, items, walledIn, supplyOf.apply(ticket)) instanceof ToolGate.Release release
                     && board.release(ticket.id())) {
                 released.add(new Released(ticket.id(), ticket.boardCase(), release.reason()));
             }

@@ -70,7 +70,7 @@ public final class StageBuilds {
 
     static FencePart fencePart(ServerLevel level, StageSite site, int part) {
         FenceLine ring = site.ring();
-        List<WallPiece> pieces = fenceLayout(site).closed(ring.posts(), ring.gates());
+        List<WallPiece> pieces = fenceLayout(site).closedOrEmpty(ring.posts(), ring.gates());
         int size = pieces.size();
         int parts = TicketPlans.FENCE_PARTS;
         int from = part >= 1 && part <= parts ? (part - 1) * size / parts : 0;

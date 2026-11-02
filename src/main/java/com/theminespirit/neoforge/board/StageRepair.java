@@ -43,7 +43,11 @@ final class StageRepair {
         BoardTicket ticket = RepairPlan.ticket(step, gap.need(), now);
         String id = ticket.id();
         int percent = total == 0 ? 0 : missing * PERCENT / total;
-        if (service.board().statusOf(id).orElse(null) == BoardStatus.DONE) {
+        BoardStatus current = service.board().statusOf(id).orElse(null);
+        if (StageAudit.repairRetry(current, service.board().recentlyFailed(id, now))) {
+            service.board().cancel(id);
+        }
+        if (current == BoardStatus.DONE) {
             Map<String, Integer> before =
                     service.board().find(id).map(BoardTicket::requiredItems).orElse(Map.of());
             if (!RepairReopen.shouldReopen(before, gap.need())) {

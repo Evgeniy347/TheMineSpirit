@@ -20,6 +20,9 @@ public final class RepairPlan {
     public static BoardTicket ticket(BoardCase step, Map<String, Integer> need, long now) {
         Objects.requireNonNull(step, "Шаг ремонта не может быть null: по нему выбирается схема восстановления");
         Objects.requireNonNull(need, "Нехватка ремонта не может быть null: пустую задают пустой картой");
+        List<String> modifiers = step == BoardCase.BUILD_MINE
+                ? List.of(ToolGate.TOOL_MODIFIER + ToolGate.PICKAXE, ToolGate.CARRY_MODIFIER + "cobblestone")
+                : List.of();
         return new BoardTicket(
                 PREFIX + step.name().toLowerCase(Locale.ROOT),
                 BoardCase.REPAIR_BUILDING,
@@ -29,7 +32,8 @@ public final class RepairPlan {
                 1,
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
-                Map.copyOf(need));
+                Map.copyOf(need),
+                modifiers);
     }
 
     public static Optional<TicketTarget> target(TaskNode plan) {

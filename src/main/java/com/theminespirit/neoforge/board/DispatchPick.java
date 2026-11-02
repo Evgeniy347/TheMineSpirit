@@ -89,10 +89,8 @@ final class DispatchPick {
     String why(BoardTicket ticket, @Nullable TicketTarget target) {
         String supply = target == null ? null : target.supplyItem();
         List<DispatchRound.Candidate> all = new ArrayList<>(candidates.values());
-        boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket.boardCase(), spirit.items(), supply));
-        if (!all.isEmpty()
-                && !tooled
-                && ToolGate.required(ticket.boardCase(), supply).isPresent()) {
+        boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket, spirit.items()));
+        if (!all.isEmpty() && !tooled && ToolGate.required(ticket).isPresent()) {
             return "нет духа с инструментом: ждёт инструмент (граф ставит его крафт духу без инструмента)";
         }
         return round.why(ticket, all, supply);

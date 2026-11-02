@@ -60,6 +60,14 @@ public final class WallLayout {
         return checked(best, line);
     }
 
+    public List<WallPiece> closedOrEmpty(List<ColumnMask.Cell> line, Collection<Integer> gates) {
+        try {
+            return closed(line, gates);
+        } catch (IllegalStateException unfolded) {
+            return List.of();
+        }
+    }
+
     public List<WallPiece> open(List<ColumnMask.Cell> line, Collection<Integer> gates) {
         return checked(lay(line, Set.copyOf(gates), 0, line.size()), line);
     }
