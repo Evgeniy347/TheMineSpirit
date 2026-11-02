@@ -139,11 +139,6 @@ public final class FirstStepsRunner {
                 .site()
                 .orElseThrow(() -> new IllegalStateException(
                         "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
-        PlotAudit.tick(level, service, stage, now);
-        OldChests.tick(level, service, stage, now);
-        ChestSpaceWatch.tick(level, service, stage, now);
-        OrchardHarvest.tick(level, service, stage, now);
-        SettlementPlotStore.get(level).town().ifPresent(town -> PlanDemolition.tick(level, service, stage, town, now));
         BlockCoord home = new BlockCoord(
                 stage.anchor().x(), homeY(spirits), stage.anchor().z());
         String wood = woodOf(level, home, stock);

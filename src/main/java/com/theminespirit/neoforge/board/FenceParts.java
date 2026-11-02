@@ -12,11 +12,12 @@ final class FenceParts {
     private FenceParts() {}
 
     static List<StageBuilds.FencePart> of(ServerLevel level, StageSite site, int count) {
-        List<StageBuilds.FencePart> parts = new ArrayList<>(count);
-        for (int part = 1; part <= count; part++) {
-            parts.add(StageBuilds.fencePart(level, site, part));
+        List<StageBuilds.FencePart> parts = StageBuilds.fenceParts(level, site);
+        if (parts.size() != count) {
+            throw new IllegalStateException("Частей ограды " + parts.size() + ", а ожидалось " + count
+                    + ": план ограды и список частей разошлись");
         }
-        return List.copyOf(parts);
+        return parts;
     }
 
     static List<Integer> open(List<StageBuilds.FencePart> parts) {

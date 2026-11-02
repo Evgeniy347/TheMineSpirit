@@ -116,6 +116,53 @@ class WallLayoutTests {
                 "РєР°Р»РёС‚РєР° РЅР° СѓРіР»Сѓ РЅРµ Р»РѕР¶РёС‚СЃСЏ РІРѕ С„СЂР°РіРјРµРЅС‚ СЃ РєР°Р»РёС‚РєРѕР№: С‚РёС…Рѕ РїРѕС‚РµСЂСЏС‚СЊ РїСЂРѕС…РѕРґ РЅРµР»СЊР·СЏ");
     }
 
+    @Test
+    void parts_RingWithGates_SplitsSamePiecesWithoutLossOrRepeats() {
+        List<ColumnMask.Cell> ring = run(new ArrayList<>(), 0, 0, 1, 0, 12);
+        run(ring, 11, 1, 0, 1, 11);
+        run(ring, 10, 11, -1, 0, 11);
+        run(ring, 0, 10, 0, -1, 10);
+        List<Integer> gates = List.of(5, 27);
+
+        List<WallPiece> whole = FENCE.closed(ring, gates);
+        List<List<WallPiece>> parts = FENCE.parts(ring, gates, 5);
+        List<WallPiece> flat = new ArrayList<>();
+        parts.forEach(flat::addAll);
+
+        assertEquals(5, parts.size(), "Ограда делится ровно на запрошенное число частей");
+        assertEquals(
+                whole,
+                flat,
+                "Части ограды вместе дают ту же раскладку, что и целый обход: иначе часть забора пропадает или "
+                        + "строится дважды");
+    }
+
+    @Test
+    void parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces() {
+        List<ColumnMask.Cell> line = run(new ArrayList<>(), 0, 0, 1, 0, 9);
+        List<WallPiece> whole = FENCE.open(line, List.of());
+        List<List<WallPiece>> parts = FENCE.parts(line, List.of(), 5);
+        List<WallPiece> flat = new ArrayList<>();
+        parts.forEach(flat::addAll);
+
+        assertEquals(5, parts.size(), "Пустые части остаются в списке: номер части — это id задания доски");
+        assertEquals(whole, flat, "Делёж не теряет и не повторяет куски, даже если частей больше, чем кусков");
+        assertEquals(
+                2,
+                parts.stream().filter(part -> !part.isEmpty()).count(),
+                "Пустых частей три, а куски попадают ровно в две части");
+    }
+
+    @Test
+    void parts_CountBelowOne_Throws() {
+        List<ColumnMask.Cell> line = run(new ArrayList<>(), 0, 0, 1, 0, 9);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> FENCE.parts(line, List.of(), 0),
+                "Ноль частей — ошибка вызова: иначе ограда молча не строится");
+    }
+
     private static List<ColumnMask.Cell> run(List<ColumnMask.Cell> line, int x, int z, int dx, int dz, int count) {
         for (int step = 0; step < count; step++) {
             line.add(new ColumnMask.Cell(x + dx * step, z + dz * step));

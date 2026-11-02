@@ -24,8 +24,16 @@ public final class BoardLifecycle {
         }
         for (ServerLevel level : event.getServer().getAllLevels()) {
             long watch = TickWatch.start();
+            long tick = level.getGameTime();
             try {
-                BoardRegistry.get(level).tick(level, level.getGameTime());
+                BoardService service = BoardRegistry.get(level);
+                service.tick(level, tick);
+                if (tick % 100 == 0) {
+                    SettlementPlotStore store = SettlementPlotStore.get(level);
+                    store.site()
+                            .ifPresent(site -> store.town()
+                                    .ifPresent(town -> PlanDemolition.tick(level, service, site, town, tick)));
+                }
             } finally {
                 TickWatch.done("BoardService", watch);
             }

@@ -17,8 +17,10 @@ import com.theminespirit.core.town.WallLayout;
 import com.theminespirit.core.town.WallPiece;
 import com.theminespirit.core.town.YardScheme;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.IntBinaryOperator;
 import net.minecraft.core.BlockPos;
@@ -28,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class StageBuilds {
     public static final String SUPPORT = "minecraft:dirt";
+    private static final Map<String, List<List<WallPiece>>> FENCE_PARTS = new HashMap<>();
     private static final String AIR = "minecraft:air";
     private static final int OLD_POST_RANGE = 3;
 
@@ -58,6 +61,23 @@ public final class StageBuilds {
         return new StageWork(site, List.of(), builds);
     }
 
+    private static List<List<WallPiece>> fencePartLists(StageSite site, int count) {
+        FenceLine ring = site.ring();
+        String key = site.stage() + "|" + count + "|"
+                + System.identityHashCode(DataTables.INSTANCE.presets().current()) + "|"
+                + System.identityHashCode(ring);
+        List<List<WallPiece>> cached = FENCE_PARTS.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        List<List<WallPiece>> parts = fenceLayout(site).parts(ring.posts(), ring.gates(), count);
+        if (FENCE_PARTS.size() >= 32) {
+            FENCE_PARTS.clear();
+        }
+        FENCE_PARTS.put(key, parts);
+        return parts;
+    }
+
     private static WallLayout fenceLayout(StageSite site) {
         return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.fence(site.stage()));
     }
@@ -69,12 +89,14 @@ public final class StageBuilds {
     }
 
     static FencePart fencePart(ServerLevel level, StageSite site, int part) {
+        List<FencePart> parts = fenceParts(level, site);
+        return part >= 1 && part <= parts.size() ? parts.get(part - 1) : empty(site);
+    }
+
+    static List<FencePart> fenceParts(ServerLevel level, StageSite site) {
         FenceLine ring = site.ring();
-        List<WallPiece> pieces = fenceLayout(site).closedOrEmpty(ring.posts(), ring.gates());
-        int size = pieces.size();
-        int parts = TicketPlans.FENCE_PARTS;
-        int from = part >= 1 && part <= parts ? (part - 1) * size / parts : 0;
-        int to = part >= 1 && part <= parts ? part * size / parts : size;
+        int count = TicketPlans.FENCE_PARTS;
+        List<List<WallPiece>> partLists = fencePartLists(site, count);
         int levelY = SiteLevels.level(site);
         int fenceY = SiteLevels.fenceY(site);
         IntBinaryOperator tops = (x, z) -> GroundProbe.top(level, x, z, fenceY);
@@ -84,23 +106,33 @@ public final class StageBuilds {
                 ready.add(post);
             }
         }
-        List<PlannedBlock> blocks = new ArrayList<>();
-        List<SchemeBuild> builds = new ArrayList<>();
-        for (WallPiece piece : pieces.subList(from, to)) {
-            List<ColumnMask.Cell> posts = posts(ring, piece);
-            if (!ready.containsAll(posts)) {
-                continue;
-            }
-            for (ColumnMask.Cell post : posts) {
-                if (SiteLevels.needsSupport(site, post, tops)) {
-                    blocks.add(new PlannedBlock(new BlockCoord(post.x(), levelY, post.z()), SUPPORT));
+        List<FencePart> parts = new ArrayList<>(count);
+        for (int part = 1; part <= count; part++) {
+            List<WallPiece> pieces = partLists.get(part - 1);
+            List<PlannedBlock> blocks = new ArrayList<>();
+            List<SchemeBuild> builds = new ArrayList<>();
+            for (WallPiece piece : pieces) {
+                List<ColumnMask.Cell> posts = posts(ring, piece);
+                if (!ready.containsAll(posts)) {
+                    continue;
                 }
-                oldFence(level, post, fenceY)
-                        .forEach(at -> blocks.add(new PlannedBlock(at, at.y() == levelY ? SUPPORT : AIR)));
+                for (ColumnMask.Cell post : posts) {
+                    if (SiteLevels.needsSupport(site, post, tops)) {
+                        blocks.add(new PlannedBlock(new BlockCoord(post.x(), levelY, post.z()), SUPPORT));
+                    }
+                    oldFence(level, post, fenceY)
+                            .forEach(at -> blocks.add(new PlannedBlock(at, at.y() == levelY ? SUPPORT : AIR)));
+                }
+                builds.add(new SchemeBuild(
+                        piece.scheme(), new BlockCoord(piece.x(), fenceY, piece.z()), piece.rotation()));
             }
-            builds.add(new SchemeBuild(piece.scheme(), new BlockCoord(piece.x(), fenceY, piece.z()), piece.rotation()));
+            parts.add(new FencePart(new StageWork(site, blocks, builds), !pieces.isEmpty()));
         }
-        return new FencePart(new StageWork(site, blocks, builds), to > from);
+        return List.copyOf(parts);
+    }
+
+    private static FencePart empty(StageSite site) {
+        return new FencePart(new StageWork(site, List.of(), List.of()), false);
     }
 
     private static List<ColumnMask.Cell> posts(FenceLine ring, WallPiece piece) {
