@@ -29,13 +29,13 @@ public final class RouteWalk {
     private static final double LIFT = 0.2;
     private static final double EDGE_PUSH = 0.25;
     private static final double SPEED = 1.0;
-
     private final SpiritEntity spirit;
     private final List<RouteStep> steps;
     private final BlockCoord target;
     private final double cost;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
+    private final SwimStep swimmer;
     private int next;
     private int stepTicks;
     private boolean breaking;
@@ -52,20 +52,19 @@ public final class RouteWalk {
         this.cost = route.cost();
         this.breaker = new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit);
+        this.swimmer = new SwimStep(spirit);
     }
 
     public State tick() {
-        if (failure != null) {
-            return State.FAILED;
-        }
-        if (next >= steps.size()) {
-            return State.DONE;
-        }
+        if (failure != null) return State.FAILED;
+        if (next >= steps.size()) return State.DONE;
         RouteStep step = steps.get(next);
-        if (recorded != next) {
-            RouteHistory.record(spirit, step);
-            recorded = next;
+        if ((step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM)
+                && SwimStep.far(spirit, step.cell())) {
+            return fail("дух сошёл с маршрута: шаг " + step.cell() + " дальше соседней клетки");
         }
+        if (recorded != next) RouteHistory.record(spirit, step);
+        recorded = next;
         if (!breaking && ++stepTicks > STEP_TICKS) {
             String details = step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM
                     ? WalkReport.describe(spirit, step.cell())
@@ -77,7 +76,8 @@ public final class RouteWalk {
             case BREAK -> breakCell(pos(step.cell()));
             case PLACE -> placeCell(pos(step.cell()));
             case PILLAR -> pillar(step.cell());
-            case WALK, SWIM -> walk(step.cell());
+            case SWIM -> swimmer.tick(step.cell()) ? advance() : Optional.<String>empty();
+            case WALK -> walk(step.cell());
         };
         if (refusal.isPresent()) {
             return fail(step.action() + " в " + step.cell() + ": " + refusal.get());
@@ -172,6 +172,7 @@ public final class RouteWalk {
     }
 
     private Optional<String> walk(BlockCoord cell) {
+        if (spirit.isInWater()) return swimmer.exit(cell) ? advance() : Optional.<String>empty();
         WalkAscent.Command command = WalkAscent.next(cell, pose(), body(cell));
         if (command.step() == WalkAscent.Step.ARRIVED) {
             advance();
@@ -281,9 +282,10 @@ public final class RouteWalk {
         };
     }
 
-    private void advance() {
+    private Optional<String> advance() {
         next++;
         stepTicks = 0;
+        return Optional.<String>empty();
     }
 
     private State fail(String reason) {
