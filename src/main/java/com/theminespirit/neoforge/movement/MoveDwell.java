@@ -18,7 +18,7 @@ public final class MoveDwell {
         ticks = 0;
     }
 
-    public void observe(SpiritEntity spirit, BlockCoord routeTarget, @Nullable BlockCoord teleportTarget) {
+    public void observe(SpiritEntity spirit, BlockCoord routeTarget) {
         BlockPos feet = spirit.blockPosition();
         BlockCoord here = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         if (!here.equals(cell)) {
@@ -31,11 +31,10 @@ public final class MoveDwell {
             return;
         }
         LOGGER.info(
-                "[move] дух {} не покидал клетку {} {} тиков: route-цель {}, teleport-цель {}",
+                "[move] дух {} не покидал клетку {} {} тиков: route-цель {}",
                 spirit.getName().getString(),
                 here,
                 ticks,
-                routeTarget,
-                teleportTarget == null ? "нет" : teleportTarget);
+                routeTarget);
     }
 }

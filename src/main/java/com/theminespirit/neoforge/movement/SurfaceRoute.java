@@ -54,6 +54,26 @@ public final class SurfaceRoute {
         return Optional.of(route(spirit, level, found.orElseThrow(), "вниз"));
     }
 
+    public static Optional<RouteWalk> planReturn(SpiritEntity spirit, BlockCoord target) {
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        Level level = spirit.level();
+        RouteLevelView view = new RouteLevelView(spirit);
+        Optional<List<BlockCoord>> found = SurfaceEscape.path(
+                start,
+                view,
+                cell -> Math.abs(cell.x() - target.x()) <= 2
+                        && Math.abs(cell.z() - target.z()) <= 2
+                        && cell.y() >= target.y() - 2
+                        && cell.y() <= target.y() + 2,
+                target);
+        if (found.isEmpty()) {
+            LOGGER.info("[dig_out] дух {}: пути домой из {} к {} нет", spirit.displayName(), start, target);
+            return Optional.empty();
+        }
+        return Optional.of(route(spirit, level, found.orElseThrow(), "домой"));
+    }
+
     private static RouteWalk route(SpiritEntity spirit, Level level, List<BlockCoord> cells, String what) {
         List<RouteStep> steps = new ArrayList<>(cells.size());
         for (BlockCoord cell : cells) {

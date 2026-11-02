@@ -57,7 +57,6 @@ public final class ForceloadGuard {
             }
             WATCH.check(spirit.getUUID(), spirit.displayName(), position, taskId, goal, isForced)
                     .ifPresent(text -> LOGGER.warn("[board] {}", text));
-            ForceloadRescue.tick(level, spirit, position, isForced);
             stalled(level, spirit, feet, position);
         }
     }

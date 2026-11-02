@@ -30,8 +30,11 @@ public final class RescuePlans {
         SelfEscape.Plan rescue = target.rescue();
         BlockCoord goal = target.to();
         if (rescue != null) {
+            BlockCoord point = goal == null ? rescue.target() : goal;
+            if (rescue.method() == SelfEscape.Method.GOTO) {
+                return Optional.of(gotoPoint(point));
+            }
             if (rescue.method() == SelfEscape.Method.DESCEND) {
-                BlockCoord point = goal == null ? rescue.target() : goal;
                 return Optional.of(new SequenceNode(List.of(digOut(point), gotoPoint(point))));
             }
             return Optional.of(withGoal(selfPlan(rescue), goal));

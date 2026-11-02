@@ -73,49 +73,6 @@ public final class Passage {
         return Optional.ofNullable(best);
     }
 
-    public static boolean blockedBetween(BlockCoord from, BlockCoord to, Collection<Cell> passages) {
-        Objects.requireNonNull(from, "������ �������� �� ����� ���� null: ��� ���� ���������� �������");
-        Objects.requireNonNull(to, "����� �������� �� ����� ���� null: ��� ���� ���������� �������");
-        Objects.requireNonNull(passages, "������� �� ����� ���� null: ������ ������ ������� List.of()");
-        for (Cell passage : passages) {
-            if (!passage.open() && intersects(from, to, passage.coord())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean intersects(BlockCoord from, BlockCoord to, BlockCoord cell) {
-        double[] start = {from.x() + 0.5, from.y() + 0.5, from.z() + 0.5};
-        double[] end = {to.x() + 0.5, to.y() + 0.5, to.z() + 0.5};
-        double[] low = {cell.x(), cell.y(), cell.z()};
-        double[] high = {cell.x() + 1.0, cell.y() + 1.0, cell.z() + 1.0};
-        double enter = 0.0;
-        double exit = 1.0;
-        for (int axis = 0; axis < 3; axis++) {
-            double direction = end[axis] - start[axis];
-            if (Math.abs(direction) < 1e-9) {
-                if (start[axis] < low[axis] || start[axis] > high[axis]) {
-                    return false;
-                }
-                continue;
-            }
-            double first = (low[axis] - start[axis]) / direction;
-            double second = (high[axis] - start[axis]) / direction;
-            if (first > second) {
-                double swap = first;
-                first = second;
-                second = swap;
-            }
-            enter = Math.max(enter, first);
-            exit = Math.min(exit, second);
-            if (enter > exit) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private static long distanceSquared(BlockCoord a, BlockCoord b) {
         long dx = (long) a.x() - b.x();
         long dy = (long) a.y() - b.y();

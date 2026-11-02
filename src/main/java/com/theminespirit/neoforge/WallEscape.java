@@ -1,12 +1,14 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.movement.DropProfile;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
@@ -26,7 +28,8 @@ final class WallEscape {
             return;
         }
         BlockPos cell = free.get();
-        spirit.teleportTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5);
+        spirit.getNavigation().stop();
+        spirit.getNavigation().moveTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
         LOGGER.info(
                 "[wall] {} в стене у {}: шаг в свободную клетку {}",
                 spirit.getName().getString(),
@@ -49,13 +52,10 @@ final class WallEscape {
     }
 
     private static boolean standable(Level level, BlockPos cell) {
-        BlockPos floor = cell.below();
         return level.isLoaded(cell)
-                && level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()
-                && level.getBlockState(cell.above())
-                        .getCollisionShape(level, cell.above())
-                        .isEmpty()
-                && level.getFluidState(cell).isEmpty()
-                && level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP);
+                && MiningSafety.canStandOnGround(
+                        new BlockCoord(cell.getX(), cell.getY(), cell.getZ()),
+                        new LevelSafetyView(level),
+                        DropProfile.MAX_SAFE_DROP);
     }
 }

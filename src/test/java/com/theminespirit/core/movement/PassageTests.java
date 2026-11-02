@@ -76,23 +76,4 @@ class PassageTests {
                 "Калитка в ограде — ближайший законный проход к цели: выбирается она, а не перенос сквозь забор; "
                         + "дверь позади и уже открытая калитка не годятся");
     }
-
-    @Test
-    void blockedBetween_ClosedPassageOnTeleportLine_StopsTheTransfer() {
-        BlockCoord to = new BlockCoord(3, 0, 0);
-        Passage.Cell closedGate = new Passage.Cell(new BlockCoord(1, 0, 0), Passage.Kind.FENCE_GATE, false);
-        Passage.Cell openGate = new Passage.Cell(new BlockCoord(1, 0, 0), Passage.Kind.FENCE_GATE, true);
-        Passage.Cell aside = new Passage.Cell(new BlockCoord(1, 0, 2), Passage.Kind.DOOR, false);
-
-        assertTrue(
-                Passage.blockedBetween(FEET, to, List.of(closedGate)),
-                "Закрытая калитка на отрезке переноса запрещает перенос: дух обязан подойти и открыть её, иначе "
-                        + "проходит сквозь ограду");
-        assertFalse(
-                Passage.blockedBetween(FEET, to, List.of(openGate)),
-                "Открытая калитка на отрезке переноса не запрещает перенос: створка не мешает");
-        assertFalse(
-                Passage.blockedBetween(FEET, to, List.of(aside)),
-                "Закрытая дверь в стороне от отрезка переноса не мешает: запрет только на путь сквозь створку");
-    }
 }

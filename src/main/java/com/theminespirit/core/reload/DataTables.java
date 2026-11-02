@@ -34,7 +34,6 @@ import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.movement.PersonalSpace;
-import com.theminespirit.core.movement.Unstuck;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.pickup.MagnetRules;
 import com.theminespirit.core.policy.BlockProtection;
@@ -82,7 +81,6 @@ public final class DataTables {
     private final TableHolder<BuildData> building;
     private final TableHolder<MagnetRules> magnet;
     private final TableHolder<FishingWait> fishingWait;
-    private final TableHolder<Unstuck> unstuck;
     private final TableHolder<RouteRules> route;
     private final TableHolder<StageRules> stages;
     private final TableHolder<DemandRules> demand;
@@ -152,7 +150,6 @@ public final class DataTables {
         this.building = single("building", BuildData.RESOURCE, BuildData::parse, BuildData::load);
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);
-        this.unstuck = single("unstuck", Unstuck.RESOURCE, Unstuck::parse, Unstuck::load);
         this.route = single("route", RouteRules.RESOURCE, RouteRules::parse, RouteRules::load);
         this.stages = single("stages", StageRules.RESOURCE, StageRules::parse, StageRules::load);
         this.demand = single("settlement_demand", DemandRules.RESOURCE, DemandRules::parse, DemandRules::load);
@@ -288,10 +285,6 @@ public final class DataTables {
 
     public TableHolder<FishingWait> fishingWait() {
         return fishingWait;
-    }
-
-    public TableHolder<Unstuck> unstuck() {
-        return unstuck;
     }
 
     public TableHolder<RouteRules> route() {

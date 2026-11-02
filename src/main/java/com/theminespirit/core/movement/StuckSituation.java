@@ -39,10 +39,6 @@ public final class StuckSituation {
             return false;
         }
 
-        default boolean leaf(BlockCoord cell) {
-            return false;
-        }
-
         int floorY(int x, int z);
     }
 

@@ -187,6 +187,11 @@ public final class RouteWalk {
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
         if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
             pushOff(command);
+            if (command.step() == WalkAscent.Step.DIVE) {
+                Vec3 motion = spirit.getDeltaMovement();
+                spirit.setDeltaMovement(motion.x, Math.min(motion.y, -0.1), motion.z);
+                spirit.getJumpControl().jump();
+            }
             return Optional.empty();
         }
         spirit.getMoveControl().setWantedPosition(command.x(), command.y(), command.z(), SPEED);
@@ -201,13 +206,20 @@ public final class RouteWalk {
             spirit.getJumpControl().jump();
         } else if (command.step() == WalkAscent.Step.DIVE) {
             Vec3 motion = spirit.getDeltaMovement();
-            spirit.setDeltaMovement(motion.x, Math.min(motion.y, 0.0), motion.z);
+            Vec3 toward = new Vec3(command.x() - spirit.getX(), 0.0, command.z() - spirit.getZ());
+            if (toward.lengthSqr() > 0.04) {
+                Vec3 push = toward.normalize().scale(EDGE_PUSH);
+                motion = new Vec3(motion.x + push.x, Math.min(motion.y, -0.1), motion.z + push.z);
+            } else {
+                motion = new Vec3(motion.x, Math.min(motion.y, -0.1), motion.z);
+            }
+            spirit.setDeltaMovement(motion);
         }
         return Optional.empty();
     }
 
     private void pushOff(WalkAscent.Command command) {
-        spirit.getMoveControl().setWantedPosition(command.x(), spirit.getY(), command.z(), SPEED);
+        spirit.getMoveControl().setWantedPosition(command.x(), command.y(), command.z(), SPEED);
         Vec3 toward = new Vec3(command.x() - spirit.getX(), 0.0, command.z() - spirit.getZ());
         if (toward.lengthSqr() > 1e-6) {
             Vec3 push = toward.normalize().scale(EDGE_PUSH);
@@ -251,7 +263,8 @@ public final class RouteWalk {
 
     private WalkAscent.Body body(BlockCoord cell) {
         BlockPos target = pos(cell);
-        boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER);
+        boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER)
+                || spirit.level().getFluidState(target.below()).is(FluidTags.WATER);
         return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water);
     }
 
