@@ -35,6 +35,7 @@ public final class ToolGate {
     private static Map<BoardCase, Hands> build() {
         Map<BoardCase, Hands> table = new EnumMap<>(BoardCase.class);
         table.put(BoardCase.CLEAR_GROUNDS, Hands.PICKAXE);
+        table.put(BoardCase.DISMANTLE_SHELTER, Hands.PICKAXE);
         table.put(BoardCase.BUILD_MINE, Hands.PICKAXE);
         table.put(BoardCase.MINE_LEFT_ORE, Hands.PICKAXE);
         table.put(BoardCase.GATHER_MATERIALS, Hands.BARE);

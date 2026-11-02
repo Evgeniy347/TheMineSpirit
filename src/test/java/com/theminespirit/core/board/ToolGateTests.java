@@ -20,6 +20,14 @@ class ToolGateTests {
     }
 
     @Test
+    void allows_DismantleWithoutPickaxe_NotGiven() {
+        assertFalse(
+                ToolGate.allows(BoardCase.DISMANTLE_SHELTER, List.of("minecraft:wooden_axe")),
+                "Уборка висящего ломает камень/бревно: духу без кирки она не выдаётся, иначе падает «нужна кирка» "
+                        + "(observe19 F: demolish FAILED без кирки)");
+    }
+
+    @Test
     void allows_ClearWithStonePickaxe_Given() {
         assertTrue(
                 ToolGate.allows(BoardCase.CLEAR_GROUNDS, List.of("minecraft:stone_pickaxe")),
@@ -30,7 +38,11 @@ class ToolGateTests {
     @Test
     void table_PickaxeCasesExplicit_ClearMineAndOre() {
         assertEquals(
-                Set.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE, BoardCase.MINE_LEFT_ORE),
+                Set.of(
+                        BoardCase.CLEAR_GROUNDS,
+                        BoardCase.BUILD_MINE,
+                        BoardCase.MINE_LEFT_ORE,
+                        BoardCase.DISMANTLE_SHELTER),
                 ToolGate.table().entrySet().stream()
                         .filter(entry -> entry.getValue() == ToolGate.Hands.PICKAXE)
                         .map(Map.Entry::getKey)

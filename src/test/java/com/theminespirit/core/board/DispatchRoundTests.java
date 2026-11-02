@@ -114,8 +114,8 @@ class DispatchRoundTests {
                 round.refusal(cleanup, wet).isPresent(),
                 "Дух в воде не дойдёт до стоянки уборки (observe17: s1 в затопленной шахте, «не дошёл до»): "
                         + "уборку надо отдать сухому духу, а не ближайшему по координате");
-        DispatchRound.Candidate dry =
-                new DispatchRound.Candidate(id, "spirit-dry", null, List.of(), FED, SpiritView.free(), false);
+        DispatchRound.Candidate dry = new DispatchRound.Candidate(
+                id, "spirit-dry", null, List.of("minecraft:stone_pickaxe"), FED, SpiritView.free(), false);
         assertTrue(round.refusal(cleanup, dry).isEmpty(), "Сухой дух уборку берёт: иначе висящее останется навсегда");
     }
 
