@@ -48,6 +48,9 @@ class TownSnapshotTests {
         assertTrue(
                 snapshot.lots().stream().anyMatch(lot -> lot.stage() == 2),
                 "Снимок действительного этапа перечисляет его постройки: иначе показывать этап 2 нечем");
+        assertTrue(
+                PLAN.placements().stream().anyMatch(place -> place.stage() == 2),
+                "В плане есть постройки этапа 2: снимок берёт их из плана, а не из места этапа");
     }
 
     @Test
