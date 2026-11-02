@@ -1,9 +1,8 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/utils/BlockStateInterface.java), лицензия
-// LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, utils/BlockStateInterface.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 public interface NavWorld {
-    boolean loaded(int x, int z);
+    boolean available(int x, int z);
 
     boolean passable(int x, int y, int z);
 

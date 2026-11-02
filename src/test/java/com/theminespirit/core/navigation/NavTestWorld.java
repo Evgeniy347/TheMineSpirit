@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/test/java/baritone/pathing/calc/openset/OpenSetsTest.java),
-// лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/calc/openset/OpenSetsTest.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import java.util.HashMap;
@@ -72,7 +71,7 @@ final class NavTestWorld implements NavWorld {
     }
 
     @Override
-    public boolean loaded(int x, int z) {
+    public boolean available(int x, int z) {
         return (x >> 4) < unloadFrom && !unloaded.contains(NavNode.key(x >> 4, 0, z >> 4));
     }
 

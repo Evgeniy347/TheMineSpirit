@@ -192,19 +192,21 @@ def merge_fragment(merged, fragment, origin):
             if not isinstance(section, list):
                 section = []
                 merged[field] = section
-            ids = {node.get("id") for node in section if isinstance(node, dict)}
+            ids = {node.get("id") for node in section
+                   if isinstance(node, dict) and node.get("id") is not None}
             texts = {node for node in section if isinstance(node, str)}
             for node in value:
-                if isinstance(node, dict) and node.get("id") in ids:
+                node_id = node.get("id") if isinstance(node, dict) else None
+                if node_id is not None and node_id in ids:
                     raise ValueError(
                         "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
-                        % (origin, field, node.get("id")))
+                        % (origin, field, node_id))
                 if isinstance(node, str) and node in texts:
                     raise ValueError(
                         "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
                         % (origin, field, node))
-                if isinstance(node, dict):
-                    ids.add(node.get("id"))
+                if node_id is not None:
+                    ids.add(node_id)
                 if isinstance(node, str):
                     texts.add(node)
                 section.append(copy.deepcopy(node))
@@ -442,6 +444,27 @@ class State:
         self.strays = list(self.facts.get("strays") or [])
         self.terrain = dict(self.facts.get("terrain") or {})
         self.stage_reqs = dict(self.facts.get("stageReqs") or {})
+        self._derive_world_events()
+
+    def _derive_world_events(self):
+        """GraphWorldEvents: входы участка добавляют узлы уборки и ремонта."""
+        derived = []
+        if self.strays:
+            derived.append("demolish_stray")
+        if int(self.terrain.get("pits", 0)) > 0:
+            derived.append("backfill")
+        if int(self.terrain.get("hanging", 0)) > 0:
+            derived.append("clear_floating")
+        if int(self.terrain.get("heightDrop", 0)) > 0:
+            derived.append("level_lot")
+        if int(self.terrain.get("traces", 0)) > 0:
+            derived.append("restore_trace")
+        for building_id, building in self.building_facts.items():
+            if int(building.get("damage", 0)) > 0 and not building.get("unknown", False):
+                derived.append("repair_" + building_id)
+        for name in derived:
+            if name not in self.events:
+                self.events.append(name)
 
     def copy(self):
         return State({

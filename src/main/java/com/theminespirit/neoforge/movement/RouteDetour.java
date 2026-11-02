@@ -1,51 +1,75 @@
 package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.movement.ApproachRoute;
+import com.theminespirit.core.navigation.NavCacheWorld;
+import com.theminespirit.core.navigation.NavCachedChunk;
+import com.theminespirit.core.navigation.NavCachedWorld;
+import com.theminespirit.core.navigation.NavContext;
+import com.theminespirit.core.navigation.NavGoalNear;
+import com.theminespirit.core.navigation.NavRouteSteps;
+import com.theminespirit.core.navigation.NavSegmentedRoute;
+import com.theminespirit.core.navigation.NavSegmentedSession;
+import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.route.Route;
-import com.theminespirit.core.route.RouteBreakAudit;
-import com.theminespirit.core.route.RouteBudget;
 import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RouteFailures;
-import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.core.route.RouteThrottle;
-import com.theminespirit.core.route.RouteWorld;
-import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.TickWatch;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class RouteDetour {
+    public static final long SLICE_MILLIS = 10;
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final long NANOS_PER_MICRO = 1_000L;
-    private static final int MAX_VETO_REPLANS = 3;
     private static final RouteThrottle THROTTLE = new RouteThrottle();
     private static final RouteFailures FAILURES = new RouteFailures();
-    private static final long PLAN_BUDGET_MILLIS = 450;
-    private static final long PLAN_BUDGET_NANOS = PLAN_BUDGET_MILLIS * 1_000_000L;
+    private static final long PLAN_TOTAL_MILLIS = 15000;
     private static final long FAIL_TTL_TICKS = 1200;
+    private static final int MAX_SEGMENTS = 32;
+    private static final int MIN_CUTOFF = 6;
+    private static final double CUTOFF_FACTOR = 0.5;
 
-    private record PlanRequest(
-            RouteWorld world,
-            BlockCoord from,
+    private record Plan(
+            SpiritEntity spirit,
             BlockCoord target,
-            int radius,
-            int blocks,
-            LevelSafetyView safety,
-            RouteBudget budget) {}
+            String why,
+            boolean rescue,
+            BlockCoord from,
+            RouteFailures.Key key,
+            long now,
+            long started) {}
+
+    public static final class Pending {
+        private final Plan plan;
+        private final NavSegmentedSession session;
+        private boolean done;
+        private @Nullable RouteWalk walk;
+        private String refusal = "";
+
+        private Pending(Plan plan, NavSegmentedSession session) {
+            this.plan = plan;
+            this.session = session;
+        }
+
+        public boolean done() {
+            return done;
+        }
+
+        public @Nullable RouteWalk walk() {
+            return walk;
+        }
+
+        public String refusal() {
+            return refusal;
+        }
+    }
 
     private RouteDetour() {}
 
-    public static Optional<RouteWalk> plan(SpiritEntity spirit, BlockCoord target, int radius, String why) {
+    public static @Nullable Pending begin(SpiritEntity spirit, BlockCoord target, int radius, String why) {
         long now = spirit.level().getGameTime();
         boolean rescue = "dig_out".equals(why);
         if (!rescue && !THROTTLE.allow(spirit.getUUID(), now)) {
@@ -54,13 +78,10 @@ public final class RouteDetour {
                     spirit.displayName(),
                     why,
                     RouteThrottle.MIN_TICKS);
-            return Optional.empty();
+            return null;
         }
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        RouteWorld base = new RouteLevelView(spirit);
-        RouteWorld world = base;
-        LevelSafetyView safety = new LevelSafetyView(spirit.level());
         int blocks = RouteLevelView.blocks(spirit);
         RouteFailures.Key key = new RouteFailures.Key(spirit.getUUID(), from, target, radius, blocks);
         if (!rescue && FAILURES.recentlyFailed(key, now, FAIL_TTL_TICKS)) {
@@ -71,52 +92,103 @@ public final class RouteDetour {
                     why,
                     target,
                     FAIL_TTL_TICKS);
-            return Optional.empty();
+            return null;
         }
-        long started = System.nanoTime();
-        long deadline = started + PLAN_BUDGET_NANOS;
-        RouteBudget budget = () -> System.nanoTime() >= deadline;
-        boolean trapped;
-        Route route;
-        try {
-            PlanRequest request = new PlanRequest(world, from, target, radius, blocks, safety, budget);
-            route = withoutVetoed(spirit, request, plan(request));
-            long micros = (System.nanoTime() - started) / NANOS_PER_MICRO;
-            LOGGER.info(
-                    "[route] дух {} ({}): из {} к {} — {}, цена {} тиков, сломать {}, поставить {}, шагов {}, конец {},"
-                            + " вода {}, узлов {}, чтений {}, {} мкс, BreakVeto отказов {}, первые {}",
-                    spirit.displayName(),
-                    why,
-                    from,
-                    target,
-                    route.status(),
-                    String.format(Locale.ROOT, "%.1f", route.cost()),
-                    route.count(RouteStep.Action.BREAK),
-                    route.places(),
-                    route.steps().size(),
-                    route.end(),
-                    water(world, route),
-                    route.nodes(),
-                    route.reads(),
-                    micros,
-                    route.vetoCount(),
-                    route.vetoes());
-            trapped = waterTrap(spirit, world, route, target);
-        } finally {
-            TickWatch.done("RouteDetour", started);
-        }
-        boolean usable = route.usable() && !trapped;
-        if (!rescue) {
-            if (usable) {
-                FAILURES.forget(spirit.getUUID());
-            } else {
-                FAILURES.remember(key, now);
-            }
-        }
-        return usable ? Optional.of(new RouteWalk(spirit, route, target)) : Optional.empty();
+        NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, false, false);
+        LevelNavWorld live = new LevelNavWorld(spirit.level());
+        NavCachedWorld cache = new NavCachedWorld();
+        packLocal(live, cache, from);
+        NavContext context = new NavContext(new NavCacheWorld(live, cache), settings, blocks);
+        NavSegmentedSession session = new NavSegmentedSession(
+                context,
+                from,
+                new NavGoalNear(target.x(), target.y(), target.z(), Math.max(1, radius)),
+                MAX_SEGMENTS,
+                MIN_CUTOFF,
+                CUTOFF_FACTOR);
+        return new Pending(new Plan(spirit, target, why, rescue, from, key, now, System.nanoTime()), session);
     }
 
-    private static boolean waterTrap(SpiritEntity spirit, RouteWorld world, Route route, BlockCoord target) {
+    private static void packLocal(LevelNavWorld live, NavCachedWorld cache, BlockCoord from) {
+        int minY = Math.max(live.minY(), from.y() - 24);
+        int height = Math.min(live.maxY() - minY, 48);
+        if (height > 0) {
+            cache.put(NavCachedChunk.pack(from.x() >> 4, from.z() >> 4, minY, height, live.source()));
+        }
+    }
+
+    public static void advance(SpiritEntity spirit, Pending pending, long budgetMillis) {
+        if (pending.done) {
+            return;
+        }
+        long watch = TickWatch.start();
+        try {
+            if ((System.nanoTime() - pending.plan.started()) / 1_000_000L > PLAN_TOTAL_MILLIS) {
+                finish(pending, null, "поиск не уложился в " + PLAN_TOTAL_MILLIS + " мс");
+                return;
+            }
+            NavSegmentedRoute segmented = pending.session.step(budgetMillis * 1_000_000L);
+            if (segmented == null) {
+                return;
+            }
+            Route route = NavRouteSteps.toRoute(segmented, new LevelNavWorld(spirit.level()), pending.plan.target());
+            LOGGER.info(
+                    "[route] дух {} ({}): из {} к {} — {}, сегментов {}, шагов {}, узлов {}, конец {}, {} мс",
+                    spirit.displayName(),
+                    pending.plan.why(),
+                    pending.plan.from(),
+                    pending.plan.target(),
+                    route.status(),
+                    segmented.segments(),
+                    route.steps().size(),
+                    route.nodes(),
+                    route.end(),
+                    segmented.millis());
+            String refusal = refusal(spirit, pending, route);
+            if (refusal.isEmpty()) {
+                finish(pending, new RouteWalk(spirit, route, pending.plan.target()), "");
+            } else {
+                finish(pending, null, refusal);
+            }
+        } finally {
+            TickWatch.done("RouteDetour", watch);
+        }
+    }
+
+    private static String refusal(SpiritEntity spirit, Pending pending, Route route) {
+        if (!route.usable()) {
+            return "маршрут не найден: цель " + pending.plan.target();
+        }
+        if (waterTrap(spirit, new RouteLevelView(spirit), route, pending.plan.target())) {
+            return "из воды нет выхода к поверхности (no_escape)";
+        }
+        return "";
+    }
+
+    private static void finish(Pending pending, @Nullable RouteWalk walk, String refusal) {
+        pending.done = true;
+        pending.walk = walk;
+        pending.refusal = refusal;
+        if (pending.plan.rescue()) {
+            return;
+        }
+        if (walk != null) {
+            FAILURES.forget(pending.plan.spirit().getUUID());
+        } else {
+            FAILURES.remember(pending.plan.key(), pending.plan.now());
+        }
+    }
+
+    public static @Nullable RouteWalk step(SpiritEntity spirit, Pending pending) {
+        advance(spirit, pending, SLICE_MILLIS);
+        return pending.done ? pending.walk : null;
+    }
+
+    public static int pendingBudget() {
+        return (int) PLAN_TOTAL_MILLIS;
+    }
+
+    private static boolean waterTrap(SpiritEntity spirit, RouteLevelView world, Route route, BlockCoord target) {
         if (!spirit.isInWater() || route.status() != Route.Status.PARTIAL) {
             return false;
         }
@@ -132,66 +204,6 @@ public final class RouteDetour {
                 target,
                 end);
         return true;
-    }
-
-    private static String water(RouteWorld world, Route route) {
-        int count = 0;
-        List<BlockCoord> first = new ArrayList<>();
-        for (RouteStep step : route.steps()) {
-            BlockCoord cell = step.cell();
-            if ((step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM)
-                    && RouteCell.kind(world.cell(cell.x(), cell.y(), cell.z())) == RouteCell.WATER) {
-                count++;
-                if (first.size() < 5) {
-                    first.add(cell);
-                }
-            }
-        }
-        return count == 0 ? "нет" : count + " " + first;
-    }
-
-    private static Route plan(PlanRequest request) {
-        return ApproachRoute.plan(new ApproachRoute.Request(
-                request.world(),
-                request.from(),
-                request.target(),
-                Math.max(0, request.radius()),
-                DataTables.INSTANCE.route().current(),
-                request.blocks(),
-                request.safety(),
-                request.budget()));
-    }
-
-    private static Route withoutVetoed(SpiritEntity spirit, PlanRequest request, Route route) {
-        Set<BlockCoord> excluded = new HashSet<>();
-        Route current = route;
-        for (int attempt = 0; attempt < MAX_VETO_REPLANS; attempt++) {
-            if (request.budget().exhausted()) {
-                return current;
-            }
-            Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(request.world(), request.from(), current);
-            if (veto.isEmpty()) {
-                return current;
-            }
-            Route.Veto found = veto.get();
-            excluded.add(found.cell());
-            LOGGER.warn(
-                    "[route] дух {}: BreakVeto отказал BREAK в {}: {} — пересчёт без шага",
-                    spirit.displayName(),
-                    found.cell(),
-                    found.reason());
-            current = plan(new PlanRequest(
-                    (x, y, z) -> excluded.contains(new BlockCoord(x, y, z))
-                            ? RouteCell.BLOCKED
-                            : request.world().cell(x, y, z),
-                    request.from(),
-                    request.target(),
-                    request.radius(),
-                    request.blocks(),
-                    request.safety(),
-                    request.budget()));
-        }
-        return current;
     }
 
     public static void removed(SpiritEntity spirit, RouteWalk walk) {

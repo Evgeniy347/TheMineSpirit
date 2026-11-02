@@ -150,7 +150,7 @@ class GraphStateFactsTests {
                 strays,
                 GraphFacts.Terrain.empty(),
                 new GraphFacts.StageReqs(Map.of(), Map.of()));
-        strays.add(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0)));
+        strays.add(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
 
         assertEquals(List.of(), facts.strays(), "Список лишних построек копируется");
     }

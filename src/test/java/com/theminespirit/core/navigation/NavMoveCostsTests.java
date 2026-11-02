@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/pathing/movement/movements/*), лицензия
-// LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/movement/movements/*), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,7 +68,7 @@ class NavMoveCostsTests {
     void descend_OneBlockDrop_UsesWalkOffAndFall() {
         NavMoveResult move = descend(NavTestWorld.flat(0), 64, 0, 2, 0, 1, 0);
         double expected = NavActionCosts.WALK_OFF_BLOCK_COST
-                + NavActionCosts.FALL_N_BLOCKS_COST[1]
+                + NavActionCosts.fallNBlocksCost(1)
                 + NavActionCosts.CENTER_AFTER_FALL_COST;
         assertEquals(expected, move.cost, EPS, "спуск на блок — шаг с края и падение");
         assertEquals(1, move.y, "спуск заканчивается на блок ниже");
@@ -92,9 +91,7 @@ class NavMoveCostsTests {
         NavMoveResult move = downward(world, 64, 0, 1, 0);
         assertEquals(0, move.y, "копание вниз опускает на блок");
         assertEquals(
-                NavActionCosts.FALL_N_BLOCKS_COST[1]
-                        + 10
-                        + NavSettings.defaults().breakPenalty(),
+                NavActionCosts.fallNBlocksCost(1) + 10 + NavSettings.defaults().breakPenalty(),
                 move.cost,
                 EPS,
                 "копание вниз — падение и ломка");
@@ -113,6 +110,34 @@ class NavMoveCostsTests {
                 NavTestWorld.flat(0).wet(1, 1, 0).wet(1, 2, 0).wet(1, 3, 0).wet(1, 4, 0);
         NavMoveResult intoWater = fall(water, 64, 0, 5, 0, 1, 0);
         assertTrue(intoWater.cost < NavActionCosts.COST_INF, "в воду падать можно глубже");
+    }
+
+    @Test
+    void jump_TwoBlockGap_CrossesWithoutPlacing() {
+        NavTestWorld world = NavTestWorld.flat(0).air(1, 0, 0);
+        NavMoveResult move = jump(world, 0, 1, 0, 1, 0);
+        assertEquals(2, move.x, "прыжок переносит через щель на две клетки");
+        assertEquals(
+                2 * NavActionCosts.WALK_ONE_BLOCK_COST + NavActionCosts.JUMP_ONE_BLOCK_COST,
+                move.cost,
+                EPS,
+                "прыжок стоит два шага и прыжок, блоки не ставятся");
+    }
+
+    @Test
+    void jump_FiveBlockGap_IsImpossible() {
+        NavTestWorld world =
+                NavTestWorld.flat(0).air(1, 0, 0).air(2, 0, 0).air(3, 0, 0).air(4, 0, 0);
+        assertTrue(
+                jump(world, 0, 1, 0, 1, 0).cost >= NavActionCosts.COST_INF, "щель шире четырёх блоков не перепрыгнуть");
+    }
+
+    @Test
+    void pillar_InWater_SwimsUp() {
+        NavTestWorld world = NavTestWorld.flat(0).wet(0, 1, 0).wet(0, 2, 0);
+        NavMoveResult move = pillar(world, 0, 0, 1, 0);
+        assertEquals(2, move.y, "в воде столб заменяется подъёмом вплавь");
+        assertEquals(NavActionCosts.WALK_ONE_IN_WATER_COST, move.cost, EPS, "подъём в воде стоит плавание");
     }
 
     private static NavMoveResult traverse(NavTestWorld world, int blocks, int x, int y, int z, int dx, int dz) {
@@ -161,6 +186,13 @@ class NavMoveCostsTests {
         NavMoveResult out = new NavMoveResult();
         out.reset(x, y, z);
         NavMoveCosts.fall(new NavContext(world, NavSettings.defaults(), blocks), x, y, z, dx, dz, out);
+        return out;
+    }
+
+    private static NavMoveResult jump(NavTestWorld world, int x, int y, int z, int dx, int dz) {
+        NavMoveResult out = new NavMoveResult();
+        out.reset(x, y, z);
+        NavMoveCosts.jump(new NavContext(world, NavSettings.defaults(), 0), x, y, z, dx, dz, out);
         return out;
     }
 }

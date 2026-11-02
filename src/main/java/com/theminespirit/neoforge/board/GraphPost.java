@@ -96,6 +96,9 @@ final class GraphPost {
             CraftOrders.refresh(level);
             return true;
         }
+        if (WorldPost.handles(ticket.node())) {
+            return WorldPost.post();
+        }
         return COLLECT.contains(ticket.node()) && collect(ticket);
     }
 
