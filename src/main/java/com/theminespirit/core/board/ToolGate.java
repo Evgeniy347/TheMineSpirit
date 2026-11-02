@@ -11,6 +11,8 @@ import org.jspecify.annotations.Nullable;
 public final class ToolGate {
     public static final String PICKAXE = "_pickaxe";
     public static final String AXE = "_axe";
+    public static final String TOOL_MODIFIER = "tool=";
+    public static final String CARRY_MODIFIER = "carry=";
     private static final String MINECRAFT = "minecraft:";
 
     public enum Hands {
@@ -64,6 +66,40 @@ public final class ToolGate {
         return required(boardCase);
     }
 
+    public static Optional<String> required(BoardTicket ticket) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: инструмент берётся из его модификаторов");
+        for (String modifier : ticket.modifiers()) {
+            if (modifier.startsWith(TOOL_MODIFIER)) {
+                return Optional.of(modifier.substring(TOOL_MODIFIER.length()));
+            }
+        }
+        return required(ticket.boardCase());
+    }
+
+    public static Optional<String> carry(BoardTicket ticket) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: запас берётся из его модификаторов");
+        for (String modifier : ticket.modifiers()) {
+            if (modifier.startsWith(CARRY_MODIFIER)) {
+                return Optional.of(modifier.substring(CARRY_MODIFIER.length()));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static boolean carries(BoardTicket ticket, Collection<String> items) {
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
+        return carry(ticket)
+                .map(item -> items.stream().anyMatch(held -> held.endsWith(item)))
+                .orElse(true);
+    }
+
+    public static boolean allows(BoardTicket ticket, Collection<String> items) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: инструмент берётся из его модификаторов");
+        return required(ticket)
+                .map(suffix -> items.stream().anyMatch(item -> item.endsWith(suffix)))
+                .orElse(true);
+    }
+
     public static boolean allows(BoardCase boardCase, Collection<String> items) {
         return allows(boardCase, items, null);
     }
@@ -85,6 +121,29 @@ public final class ToolGate {
 
     public static Verdict keep(BoardCase boardCase, Collection<String> items, boolean walledIn) {
         return keep(boardCase, items, walledIn, null);
+    }
+
+    public static Verdict keep(BoardTicket ticket, Collection<String> items, boolean walledIn) {
+        return keep(ticket, items, walledIn, null);
+    }
+
+    public static Verdict keep(
+            BoardTicket ticket, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
+        Optional<String> declared = required(ticket);
+        Optional<String> tool = declared.isPresent() ? declared : required(ticket.boardCase(), supplyItem);
+        if (tool.isEmpty()) {
+            return new Keep();
+        }
+        String missing = tool.orElseThrow();
+        if (items.stream().anyMatch(item -> item.endsWith(missing))) {
+            return new Keep();
+        }
+        if (walledIn) {
+            return new Release("дух замурован и " + missing + " нет: задание " + ticket.boardCase()
+                    + " возвращено доске, дух выбирается руками, инструмент — первым делом после выхода");
+        }
+        return new Release(missing + " нет: задание " + ticket.boardCase()
+                + " возвращено доске и ждёт инструмент, руками не работаем — сначала добыть, сделать или починить");
     }
 
     public static Verdict keep(

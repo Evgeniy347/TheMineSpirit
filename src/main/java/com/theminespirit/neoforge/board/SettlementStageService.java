@@ -26,6 +26,7 @@ import com.theminespirit.core.rest.SettlementChange;
 import com.theminespirit.core.rest.SettlementStageChange;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.core.town.TownSnapshot;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -174,6 +175,12 @@ public final class SettlementStageService {
         Optional<StageSite> site = SettlementPlotStore.get(level).site();
         if (site.isEmpty()) {
             return StageRollback.Readiness.UNKNOWN;
+        }
+        if (boardCase == BoardCase.STOCK_CHESTS) {
+            TownSnapshot.Progress yard = YardFloorWatch.progress(level, site.orElseThrow());
+            if (yard.total() > 0 && yard.damaged()) {
+                return StageRollback.Readiness.NOT_READY;
+            }
         }
         String wood = wood();
         FirstStepsRunner.Placed placed = FirstStepsRunner.audit(level, boardCase, site.orElseThrow(), wood);

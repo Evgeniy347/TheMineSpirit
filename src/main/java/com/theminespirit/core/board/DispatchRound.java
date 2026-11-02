@@ -134,9 +134,12 @@ public final class DispatchRound {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }
-        if (!ToolGate.allows(ticket.boardCase(), spirit.items(), supplyItem)) {
-            return Optional.of("нет инструмента "
-                    + ToolGate.required(ticket.boardCase(), supplyItem).orElse("?"));
+        if (!ToolGate.allows(ticket, spirit.items())) {
+            return Optional.of("нет инструмента " + ToolGate.required(ticket).orElse("?"));
+        }
+        if (!ToolGate.carries(ticket, spirit.items())) {
+            return Optional.of("нет запаса " + ToolGate.carry(ticket).orElse("?")
+                    + " в инвентаре: сначала взять со склада или скрафтить");
         }
         if (!EvergreenRules.issuedTo(ticket, spirit.id(), spirit.eat(), spirit.view())) {
             return Optional.of("кейс " + ticket.boardCase() + " ему сейчас не к месту");
