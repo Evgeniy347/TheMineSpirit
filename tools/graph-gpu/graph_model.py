@@ -192,6 +192,19 @@ def _better_in_chests(spirit, chests, gear):
     return False
 
 
+def _life_events(state):
+    """LifeEvents.events: угрозы и их цель поднимают полосу жизни."""
+    threats = state.threats
+    events = []
+    if threats:
+        events.append("life_threat")
+    if any(threat.get("targetKind") == "SPIRIT" for threat in threats):
+        events.append("life_threat_spirit")
+    if any(threat.get("targetKind") == "PLAYER" for threat in threats):
+        events.append("life_threat_player")
+    return events
+
+
 def _gear_events(state):
     gear = _gear_settings()
     required = _required_at(gear, state.stage)
@@ -583,6 +596,18 @@ class Graph:
             factor = (weights.get("ways") or {}).get(way.get("id", ""))
             if factor is not None:
                 way["weight"] = float(way.get("weight", 1.0)) * factor
+        maximum = int(data.get("maxPriority", 100))
+        for event_name, factor in (weights.get("events") or {}).items():
+            event = data.get("events", {}).get(event_name)
+            if event is None:
+                continue
+            band = int(event.get("band", 0))
+            for task in event.get("tasks") or []:
+                base = float(task.get("base", 0))
+                if band > 0 and base > maximum:
+                    task["base"] = maximum + int(math.floor((base - maximum) * factor + 0.5))
+                else:
+                    task["base"] = int(math.floor(base * factor + 0.5))
         return Graph(data)
 
     def members(self, node):
@@ -661,6 +686,7 @@ class State:
         for building_id, building in self.building_facts.items():
             if int(building.get("damage", 0)) > 0 and not building.get("unknown", False):
                 derived.append("repair_" + building_id)
+        derived.extend(_life_events(self))
         derived.extend(_gear_events(self))
         for name in derived:
             if name not in self.events:

@@ -12,6 +12,7 @@
 """
 
 import argparse
+import copy
 import heapq
 import math
 import os
@@ -33,7 +34,7 @@ MAX_INT = 2 ** 31 - 1
 class World:
     def __init__(self, graph, stock=None, kits=None, buildings=None, stage=1,
                  storage_free=60, events=None, world=None, materials=None,
-                 stations=None, distances=None):
+                 stations=None, distances=None, facts=None):
         self.graph = graph
         self.stock = dict(stock or {})
         self.kits = {k: dict(v) for k, v in (kits or {}).items()}
@@ -45,6 +46,7 @@ class World:
         self.materials = {k: dict(v) for k, v in (materials or {}).items()}
         self.stations = dict(stations or {})
         self.distances = dict(distances or {})
+        self.facts = copy.deepcopy(facts or {})
 
     @classmethod
     def empty(cls, graph):
@@ -89,7 +91,11 @@ class World:
     def copy(self):
         return World(self.graph, self.stock, self.kits, self.buildings, self.stage,
                      self.storage_free, self.events, self.world, self.materials,
-                     self.stations, self.distances)
+                     self.stations, self.distances, self.facts)
+
+    def with_facts(self, facts):
+        self.facts = copy.deepcopy(facts)
+        return self
 
     def state(self):
         return State({
@@ -103,10 +109,113 @@ class World:
             "world": sorted(self.world),
             "distances": self.distances,
             "stations": self.stations,
+            "facts": self.facts,
         })
 
     def plan(self):
         return Planner(self.graph, self.state()).plan()
+
+    def after(self, task):
+        """Обновляет вход после задания: причина события не повторяется бесконечно."""
+        task_id = task.get("id", "")
+        makes = task.get("makes")
+        if task_id.startswith("event:"):
+            self._after_event(task_id.split(":", 2)[1])
+        if makes is not None:
+            self._after_way(task_id, makes)
+
+    def _after_event(self, name):
+        facts = self.facts
+        if name.startswith("repair_"):
+            building = (facts.get("buildings") or {}).get(name[len("repair_"):])
+            if building is not None:
+                building["damage"] = 0
+        elif name.startswith("life_threat"):
+            threats = facts.get("threats") or []
+            if threats:
+                threats.pop(0)
+        elif name in ("tool_worn", "armor_worn"):
+            for spirit in (facts.get("spirits") or {}).values():
+                for tool in spirit.get("tools") or []:
+                    tool["durability"] = tool.get("maxDurability", 0)
+                for armor in spirit.get("armor") or []:
+                    armor["durability"] = armor.get("maxDurability", 0)
+        elif name == "gear_equip_best":
+            for chest in facts.get("chests") or []:
+                chest["contents"] = {}
+        elif name.startswith("gear_craft_"):
+            self._gear_crafted(name[len("gear_craft_"):])
+        elif name.startswith("gear_kit_"):
+            for spirit in (facts.get("spirits") or {}).values():
+                spirit["activity"] = None
+        elif name == "demolish_stray":
+            strays = facts.get("strays") or []
+            if strays:
+                strays.pop(0)
+        elif name == "backfill":
+            self._terrain("pits", -1)
+        elif name == "clear_floating":
+            self._terrain("hanging", -1)
+        elif name == "level_lot":
+            self._terrain("heightDrop", 0, absolute=True)
+        elif name == "restore_trace":
+            self._terrain("traces", -1)
+
+    def _gear_crafted(self, kind):
+        spirits = (self.facts.get("spirits") or {}).values()
+        for spirit in spirits:
+            if kind == "armor":
+                spirit["armor"] = [{"slot": slot, "item": "minecraft:netherite_" + suffix,
+                                    "durability": 100, "maxDurability": 100}
+                                   for slot, suffix in (("HEAD", "helmet"), ("CHEST", "chestplate"),
+                                                        ("LEGS", "leggings"), ("FEET", "boots"))]
+            else:
+                spirit.setdefault("tools", []).append({
+                    "item": "minecraft:netherite_" + kind, "kind": kind, "tier": 4,
+                    "durability": 100, "maxDurability": 100})
+
+    def _terrain(self, key, delta, absolute=False):
+        terrain = self.facts.get("terrain")
+        if terrain is None:
+            return
+        terrain[key] = max(0, int(terrain.get(key, 0)) + delta) if not absolute else delta
+
+    def _after_way(self, task_id, makes):
+        facts = self.facts
+        if makes == "store:carry:deliver":
+            for spirit in (facts.get("spirits") or {}).values():
+                spirit["inventory"] = {}
+        elif makes == "store:carry:transfer":
+            for chest in facts.get("chests") or []:
+                chest["contents"] = {}
+                chest["freeSlots"] = int(chest.get("totalSlots", chest.get("freeSlots", 0)))
+        elif makes == "store:smelt:load":
+            station = (facts.get("stations") or {}).get("furnace")
+            if station is not None:
+                station["busy"] = True
+        elif makes == "store:smelt:take":
+            station = (facts.get("stations") or {}).get("furnace")
+            if station is not None:
+                station["busy"] = False
+                station["output"] = None
+        elif makes == "store:chests":
+            self.storage_free = min(100, self.storage_free + 10)
+        elif makes == "store:sorted":
+            for chest in facts.get("chests") or []:
+                chest["contents"] = {}
+        elif makes in ("dig_open", "bridge_open", "pillar_open"):
+            for spirit in (facts.get("spirits") or {}).values():
+                if spirit.get("trapped"):
+                    spirit["trapped"] = False
+                    spirit["trap"] = None
+                    break
+        elif makes == "trail_clean":
+            self._terrain("traces", -1)
+        at = task_id.find("@")
+        way = self.graph.way(task_id if at < 0 else task_id[:at])
+        actual = ((facts.get("stageReqs") or {}).get("actual"))
+        if way is not None and actual is not None and makes in actual:
+            actual[makes] = int(actual.get(makes, 0)) + way.yield_
 
 
 def baselines(graph):
@@ -121,6 +230,188 @@ def baselines(graph):
     for index in range(2, 11):
         ten.tools("spirit-" + str(index), -1)
     return [empty, settled, crowded, second, ten]
+
+
+MORE_SIGNALS = (
+    "more:player_near", "more:player_building", "more:dark_spots", "more:dusk_soon",
+    "more:bad_trip_conditions", "more:failures_repeat", "more:station_queue",
+    "more:drops_expiring", "more:forest_depleted", "more:ore_depleted", "more:fence_gap",
+    "more:door_open_night", "more:hopper_uncovered", "more:reserve_unused",
+    "more:work_duplicate", "more:strategic_goal",
+)
+
+MORE2_EVENTS = (
+    "more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
+    "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
+    "more2_animal_outside", "more2_wild_herd", "more2_villager_near", "more2_villager_trade",
+    "more2_stage_prep", "more2_bed_needed", "more2_path_needed",
+)
+
+MORE3_EVENTS = (
+    "danger_spot", "spirit_death_drop", "work_yield_low", "trash_found",
+    "chest_purpose_missing", "work_conflict", "station_idle", "player_sleep",
+    "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay", "stage_slow",
+)
+
+AREA_STOCK = {
+    "oak_log": 200, "oak_planks": 200, "stick": 100, "cobblestone": 300, "coal": 100,
+    "charcoal": 50, "iron_ingot": 50, "diamond": 20, "obsidian": 10, "book": 5,
+    "dirt": 200, "sand": 50, "gravel": 50, "torch": 100, "wheat": 50, "melon_seeds": 50, "pumpkin_seeds": 50,
+    "white_wool": 20, "food": 50, "bucket": 5, "leather": 50, "flint": 20, "feather": 20,
+    "bone": 10, "string": 10, "rotten_flesh": 10, "bricks": 50, "bed": 4,
+    "melon_slice": 2, "pumpkin": 2, "cocoa_beans": 8, "blaze_rod": 2, "flint_and_steel": 1,
+}
+
+
+def ready_world(graph, stage=3, spirits=16):
+    """Мир у конца этапа: всё построено, кроме одной постройки — есть чем закончить."""
+    world = World.settled(graph)
+    world.world.clear()
+    world.stage = stage
+    last = None
+    for building in graph.buildings.values():
+        if building.optional:
+            world.buildings[building.id] = BUILT
+        elif building.stage > stage:
+            world.buildings[building.id] = ABSENT
+        elif building.stage < stage:
+            world.buildings[building.id] = BUILT
+        else:
+            world.buildings[building.id] = BUILT
+            if last is None or building.id == "kennel":
+                last = building.id
+    if last is not None:
+        world.buildings[last] = PLANNED
+    for index in range(1, spirits + 1):
+        world.tools("spirit-" + str(index), 3)
+    world.stock.update(AREA_STOCK)
+    for item_id in graph.items:
+        if item_id.startswith("herd_"):
+            world.stock[item_id] = 0
+        else:
+            world.stock[item_id] = max(world.stock.get(item_id, 0), 100000)
+    return world
+
+
+def _life_world(graph):
+    world = ready_world(graph)
+    threats = []
+    for index in range(8):
+        threats.append({
+            "id": "threat-" + str(index), "type": "minecraft:zombie",
+            "health": 10, "maxHealth": 20,
+            "position": {"x": index, "y": 64, "z": 0},
+            "targetKind": "SPIRIT" if index % 2 else "PLAYER", "distance": 3,
+        })
+    return world.with_facts({"threats": threats})
+
+
+def _store_world(graph):
+    world = ready_world(graph)
+    world.storage_free = 10
+    world.events.update(("store_minimum", "storage_full", "furnace_ready", "transfer_pending"))
+    world.with_facts({
+        "spirits": {"spirit-1": {"id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                                 "inventory": {"oak_log": 4}}},
+        "chests": [
+            {"position": {"x": 1, "y": 64, "z": 0}, "contents": {"oak_log": 10, "cobblestone": 5},
+             "freeSlots": 0, "totalSlots": 27},
+            {"position": {"x": 2, "y": 64, "z": 0}, "contents": {}, "freeSlots": 27,
+             "totalSlots": 27},
+        ],
+        "stations": {"furnace": {"id": "furnace", "type": "furnace", "position": None,
+                                 "busy": True, "fuel": "coal", "input": "iron_ore",
+                                 "output": "iron_ingot"}},
+        "stageReqs": {"minimum": {"cobblestone": 42}, "actual": {"cobblestone": 40}},
+    })
+    return world
+
+
+def _area_world(graph):
+    world = ready_world(graph)
+    world.with_facts({
+        "strays": [{"id": "stray-1", "type": "wall", "position": {"x": 5, "y": 64, "z": 5}}],
+        "terrain": {"pits": 2, "hanging": 1, "heightDrop": 4, "deepestPit": 3, "traces": 2},
+        "buildings": {
+            "hut": {"id": "hut", "damage": 5, "unknown": False},
+            "chests": {"id": "chests", "damage": 3, "unknown": False},
+        },
+    })
+    return world
+
+
+def _gear_world(graph):
+    world = ready_world(graph)
+    world.with_facts({
+        "spirits": {"spirit-1": {
+            "id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0}, "health": 20,
+            "food": 20, "air": 300, "inWater": False, "trapped": False, "stuck": False,
+            "activity": "mining", "inventory": {},
+            "armor": [{"slot": "HEAD", "item": "minecraft:leather_helmet",
+                       "durability": 5, "maxDurability": 55}],
+            "tools": [{"item": "minecraft:stone_pickaxe", "kind": "pickaxe", "tier": 1,
+                       "durability": 5, "maxDurability": 131}],
+        }},
+        "chests": [{"position": {"x": 1, "y": 64, "z": 0},
+                    "contents": {"minecraft:iron_pickaxe": 1, "minecraft:iron_chestplate": 1},
+                    "freeSlots": 10, "totalSlots": 27}],
+    })
+    return world
+
+
+def _more_world(graph):
+    world = ready_world(graph)
+    world.world.update(MORE_SIGNALS)
+    for item in graph.items.values():
+        if item.id.startswith("more:"):
+            threshold = int(math.ceil(item.xmin * len(world.kits) * world.stage * item.k))
+            world.stock[item.id] = max(0, threshold - 1)
+    return world
+
+
+def _more2_world(graph):
+    world = ready_world(graph)
+    world.events.update(MORE2_EVENTS)
+    return world
+
+
+def _more3_world(graph):
+    world = ready_world(graph)
+    world.events.update(MORE3_EVENTS)
+    return world
+
+
+def _dig_world(graph):
+    world = ready_world(graph)
+    world.stock["trail_clean"] = 0
+    world.with_facts({"spirits": {
+        "spirit-1": {"id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                     "trapped": True, "trap": "sealed"},
+        "spirit-2": {"id": "spirit-2", "position": {"x": 1, "y": 64, "z": 0},
+                     "trapped": True, "trap": "pit"},
+        "spirit-3": {"id": "spirit-3", "position": {"x": 2, "y": 64, "z": 0},
+                     "trapped": True, "trap": "water"},
+    }})
+    return world
+
+
+def input_builders():
+    """Сборщики миров областей: (имя, graph -> World)."""
+    return [
+        ("life", _life_world),
+        ("store", _store_world),
+        ("world", _area_world),
+        ("gear", _gear_world),
+        ("more", _more_world),
+        ("more2", _more2_world),
+        ("more3", _more3_world),
+        ("dig", _dig_world),
+    ]
+
+
+def input_worlds(graph):
+    """Стартовые миры областей: каждое новое событие и вход участвуют в подборе весов."""
+    return [(name, builder(graph)) for name, builder in input_builders()]
 
 
 def unbuilt(world):
@@ -179,6 +470,7 @@ def finish(world, work, wear):
     """GraphSimulation.finish: результат задания в момент его завершения."""
     task = work["task"]
     task_id = task["id"]
+    world.after(task)
     if task_id.startswith("explore:"):
         world.world.add(task["makes"])
         return
@@ -347,7 +639,7 @@ def _solve_direct(flows, device):
     result = []
     for row, flow in enumerate(flows):
         row_values = solved[row]
-        if row_values is None:
+        if row_values is None or any(value < -EPSILON for value in row_values):
             result.append(flow.solve())
             continue
         result.append({key: row_values[idx] + flow.locals.get(key, 0.0)

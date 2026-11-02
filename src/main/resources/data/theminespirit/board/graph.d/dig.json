@@ -2,25 +2,25 @@
   "items": {
     "dig_open": {
       "xmin": 0,
-      "base": 95,
+      "base": 57,
       "stage": 1,
       "implemented": false
     },
     "bridge_open": {
       "xmin": 0,
-      "base": 90,
+      "base": 54,
       "stage": 1,
       "implemented": false
     },
     "pillar_open": {
       "xmin": 0,
-      "base": 90,
+      "base": 54,
       "stage": 1,
       "implemented": false
     },
     "trail_clean": {
       "xmin": 0,
-      "base": 70,
+      "base": 42,
       "stage": 1,
       "implemented": false
     }
