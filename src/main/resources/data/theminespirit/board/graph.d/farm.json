@@ -1,0 +1,429 @@
+{
+  "_note_farm": "Область farm: еда и живность. Новые узлы только здесь; сборщик входа — FarmInputs.",
+  "items": {
+    "farmland": {
+      "xmin": 0,
+      "k": 1,
+      "base": 20,
+      "stage": 1
+    },
+    "herd_fed": {
+      "xmin": 0,
+      "k": 1,
+      "base": 30,
+      "stage": 2
+    },
+    "food_reserve": {
+      "xmin": 0,
+      "k": 1,
+      "base": 50,
+      "stage": 1
+    },
+    "logistics": {
+      "xmin": 0,
+      "k": 1,
+      "base": 45,
+      "stage": 1
+    }
+  },
+  "groups": {
+    "#crops": [
+      "wheat",
+      "carrot",
+      "potato",
+      "beetroot"
+    ],
+    "#seeds": [
+      "wheat_seeds",
+      "melon_seeds",
+      "pumpkin_seeds"
+    ],
+    "#fuel": [
+      "coal",
+      "charcoal",
+      "oak_planks",
+      "oak_log"
+    ]
+  },
+  "buildings": {
+    "wheat_field": {
+      "case": "BUILD_PLACED",
+      "stage": 1,
+      "base": 55,
+      "materials": {
+        "wheat_seeds": 8,
+        "dirt": 8
+      },
+      "optional": true,
+      "implemented": false
+    },
+    "storage_space": {
+      "case": "STOCK_CHESTS",
+      "stage": 1,
+      "base": 58,
+      "materials": {
+        "#planks": 32
+      },
+      "requires": [
+        "chests"
+      ],
+      "optional": true,
+      "implemented": false
+    }
+  },
+  "ways": [
+    {
+      "id": "till_soil",
+      "case": "GATHER_MATERIALS",
+      "makes": "farmland",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "dirt": 1
+      },
+      "ticks": 120,
+      "implemented": false
+    },
+    {
+      "id": "plant_crop",
+      "case": "GATHER_MATERIALS",
+      "makes": "wheat",
+      "yield": 1,
+      "weight": 1.05,
+      "consumes": {
+        "farmland": 1,
+        "wheat_seeds": 1
+      },
+      "building": "wheat_field",
+      "ticks": 120,
+      "implemented": false
+    },
+    {
+      "id": "harvest_crop",
+      "case": "GATHER_MATERIALS",
+      "makes": "wheat",
+      "yield": 4,
+      "weight": 1.0,
+      "consumes": {},
+      "building": "wheat_field",
+      "ticks": 120,
+      "implemented": false
+    },
+    {
+      "id": "feed_animals",
+      "case": "BREED_ANIMALS",
+      "makes": "herd_fed",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#crops": 8
+      },
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "lure_animal",
+      "case": "LURE_ANIMAL",
+      "makes": "herd_cow",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "wheat": 2
+      },
+      "world": "animals",
+      "ticks": 600,
+      "implemented": false
+    },
+    {
+      "id": "milk_animal",
+      "case": "COLLECT_DROPS",
+      "makes": "milk_bucket",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "bucket": 1
+      },
+      "building": "pen_cow",
+      "needs": {
+        "herd_cow": 1
+      },
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "transfer_item",
+      "case": "TRANSFER_ITEM",
+      "makes": "logistics",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {},
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "sort_chest",
+      "case": "ACTIVITY_UNLOAD",
+      "makes": "logistics",
+      "yield": 1,
+      "weight": 0.9,
+      "consumes": {},
+      "building": "chests",
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "restock_food",
+      "case": "RESTOCK_FOOD",
+      "makes": "food_reserve",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "food": 8
+      },
+      "ticks": 200
+    }
+  ],
+  "edges": [
+    {
+      "lack": "logistics",
+      "way": "transfer_item",
+      "weight": 8
+    },
+    {
+      "lack": "logistics",
+      "way": "sort_chest",
+      "weight": 5
+    }
+  ],
+  "triggers": [
+    {
+      "have": "wheat_seeds",
+      "build": "wheat_field"
+    }
+  ],
+  "events": {
+    "crop_ready": {
+      "tasks": [
+        {
+          "id": "harvest_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 40,
+          "consumes": {},
+          "building": "wheat_field"
+        }
+      ],
+      "push": {
+        "food": 10,
+        "wheat": 10
+      },
+      "advice": [
+        "harvest_and_replant"
+      ]
+    },
+    "crop_dry": {
+      "tasks": [],
+      "push": {
+        "water_bucket": 10
+      },
+      "advice": [
+        "water_the_field"
+      ]
+    },
+    "animal_starving": {
+      "tasks": [
+        {
+          "id": "feed_animals",
+          "case": "BREED_ANIMALS",
+          "base": 40,
+          "consumes": {
+            "#crops": 8
+          }
+        }
+      ],
+      "push": {
+        "herd_fed": 15,
+        "#crops": 10
+      },
+      "advice": [
+        "feed_herd"
+      ]
+    },
+    "pen_full": {
+      "tasks": [],
+      "push": {
+        "herd_fed": 5
+      },
+      "advice": [
+        "cull_or_expand_pen"
+      ]
+    },
+    "orchard_empty": {
+      "tasks": [
+        {
+          "id": "replant_orchard",
+          "case": "BUILD_ORCHARD",
+          "base": 40,
+          "consumes": {
+            "oak_sapling": 1
+          },
+          "building": "orchard_oak"
+        }
+      ],
+      "push": {
+        "#saplings": 5
+      },
+      "advice": [
+        "replant_after_fell"
+      ]
+    },
+    "field_empty": {
+      "tasks": [
+        {
+          "id": "plant_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 35,
+          "consumes": {
+            "wheat_seeds": 1
+          },
+          "building": "wheat_field"
+        }
+      ],
+      "push": {
+        "farmland": 5,
+        "wheat_seeds": 5
+      },
+      "advice": [
+        "plant_free_cell_after_harvest"
+      ]
+    },
+    "store_minimum": {
+      "tasks": [
+        {
+          "id": "store_minimum",
+          "case": "SUPPLY_SITE",
+          "base": 45,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "#logs": 20,
+        "cobblestone": 20,
+        "food": 15,
+        "tool:pickaxe": 10,
+        "tool:axe": 10,
+        "tool:shovel": 10,
+        "tool:sword": 10
+      },
+      "advice": [
+        "refill_minimum_before_next_stage"
+      ]
+    },
+    "transfer_pending": {
+      "tasks": [
+        {
+          "id": "transfer_item",
+          "case": "TRANSFER_ITEM",
+          "base": 40,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "logistics": 8,
+        "food_reserve": 5
+      },
+      "advice": [
+        "carry_carried_items_to_chest"
+      ]
+    },
+    "storage_full": {
+      "tasks": [
+        {
+          "id": "add_chest_pair",
+          "case": "STOCK_CHESTS",
+          "base": 55,
+          "consumes": {
+            "#planks": 32
+          }
+        }
+      ],
+      "push": {
+        "building:storage_space": 15,
+        "logistics": 10
+      },
+      "advice": [
+        "add_chest_pair_or_warehouse"
+      ]
+    },
+    "storage_mixed": {
+      "tasks": [
+        {
+          "id": "sort_chest",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 30,
+          "consumes": {},
+          "building": "chests"
+        }
+      ],
+      "push": {
+        "logistics": 8
+      },
+      "advice": [
+        "store_by_item_type"
+      ]
+    },
+    "furnace_ready": {
+      "tasks": [
+        {
+          "id": "take_smelted",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 40,
+          "consumes": {},
+          "building": "furnace"
+        }
+      ],
+      "push": {
+        "food": 10
+      },
+      "advice": [
+        "take_smelted_output"
+      ]
+    },
+    "furnace_needs_fuel": {
+      "tasks": [
+        {
+          "id": "load_furnace",
+          "case": "ACTIVITY_SMELT",
+          "base": 35,
+          "consumes": {
+            "#fuel": 1
+          },
+          "building": "furnace"
+        }
+      ],
+      "push": {
+        "#fuel": 10,
+        "logistics": 5
+      },
+      "advice": [
+        "load_furnace_then_leave"
+      ]
+    }
+  },
+  "_note_store_area": "Склад/логистика перенесены сюда: board/graph.d/store.json принадлежит исполнителю graphstore.",
+  "farmStore": {
+    "reservePercent": 25,
+    "minimums": {
+      "#logs": 64,
+      "cobblestone": 128,
+      "bread": 16,
+      "coal": 16
+    },
+    "toolMinimums": {
+      "axe": "iron",
+      "pickaxe": "iron",
+      "shovel": "iron",
+      "sword": "iron"
+    },
+    "maxItemTypesPerChest": 6
+  }
+}

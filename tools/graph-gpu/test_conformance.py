@@ -57,9 +57,17 @@ def test_fragments():
         with open(recipes, "w", encoding="utf-8") as handle:
             json.dump({"items": {}, "ways": []}, handle)
         with open(os.path.join(fragments, "rope.json"), "w", encoding="utf-8") as handle:
-            json.dump({"items": {"rope": {"xmin": 0, "base": 1}}}, handle)
+            json.dump({
+                "items": {"rope": {"xmin": 0, "base": 1}},
+                "edges": [
+                    {"lack": "a", "way": "b", "weight": 1},
+                    {"lack": "a", "way": "c", "weight": 1},
+                ],
+                "triggers": [{"have": "a", "build": "b"}, {"have": "a", "build": "c"}],
+            }, handle)
         graph = Graph.load_merged(manual, recipes, fragments)
         assert "rope" in graph.items, "Python-модель обязана читать фрагменты графа"
+        assert len(graph.edges) == 2 and len(graph.triggers) == 2,             "Списки без id (edges, triggers) добавляются целиком, как в Java"
         with open(os.path.join(fragments, "conflict.json"), "w", encoding="utf-8") as handle:
             json.dump({"items": {"stick": {"xmin": 0, "base": 1}}}, handle)
         try:
@@ -69,6 +77,19 @@ def test_fragments():
         else:
             raise AssertionError("Повтор id во фрагменте обязан отклоняться")
     print("OK: фрагменты графа сливаются, конфликт назван путём")
+
+
+def test_area_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for way in ("transfer_item", "sort_chest", "restock_food", "till_soil", "plant_crop",
+                "harvest_crop", "feed_animals", "lure_animal", "milk_animal"):
+        assert graph.way(way) is not None, "Python-модель не видит новый путь области: " + way
+    for building in ("storage_space", "wheat_field"):
+        assert building in graph.buildings, "Python-модель не видит новую постройку: " + building
+    for event in ("store_minimum", "storage_full", "furnace_ready", "crop_ready",
+                  "animal_starving", "orchard_empty"):
+        assert event in graph.events, "Python-модель не видит новое событие входа: " + event
+    print("OK: узлы и события областей store/farm читаются из фрагментов")
 
 
 def test_world_fragment():
@@ -121,6 +142,7 @@ def test_conformance():
 if __name__ == "__main__":
     try:
         test_fragments()
+        test_area_nodes()
         test_world_fragment()
         test_world_inputs()
         test_conformance()

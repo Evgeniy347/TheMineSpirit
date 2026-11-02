@@ -53,7 +53,7 @@ final class GraphInputs {
         int stage = service.board().ledger().stage();
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        return new GraphState(
+        GraphState state = new GraphState(
                         GraphNames.stock(
                                 stock.available(),
                                 StockCatalog.defaultTable().nutrition().keySet()),
@@ -70,6 +70,7 @@ final class GraphInputs {
                 .withFacts(GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
                         .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
                         .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)));
+        return FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
