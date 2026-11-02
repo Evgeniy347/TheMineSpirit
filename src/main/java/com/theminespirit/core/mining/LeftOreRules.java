@@ -11,6 +11,11 @@ public final class LeftOreRules {
 
     private LeftOreRules() {}
 
+    public static boolean isToolTier(String item) {
+        Objects.requireNonNull(item, "Ключ инструмента не может быть null: маркер кирки проверяется по имени");
+        return LUCK_PICKAXE.equals(item) || WOOD_TIER.equals(item) || STONE_TIER.equals(item) || IRON_TIER.equals(item);
+    }
+
     public static String requiredTool(String blockId) {
         Objects.requireNonNull(blockId, "Id руды не может быть null: по нему выбирается кирка");
         if (MineOres.kindOf(blockId) == MineOres.Kind.LUCK) {

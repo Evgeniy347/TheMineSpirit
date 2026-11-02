@@ -1,6 +1,8 @@
 package com.theminespirit.core.mining;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +21,24 @@ class LeftOreRulesTests {
                 LeftOreRules.STONE_TIER,
                 LeftOreRules.requiredTool("minecraft:iron_ore"),
                 "железо, оставленное деревянной киркой, ждёт каменную кирку или лучше");
+    }
+
+    @Test
+    void isToolTier_MarkerKey_True() {
+        assertTrue(
+                LeftOreRules.isToolTier(LeftOreRules.LUCK_PICKAXE),
+                "pickaxe_luck — маркер требования кирки, а не предмет склада: добывать его нельзя");
+        assertTrue(
+                LeftOreRules.isToolTier(LeftOreRules.STONE_TIER),
+                "pickaxe_stone_tier — тоже маркер требования, он не должен попадать в цели добычи");
+    }
+
+    @Test
+    void isToolTier_RealItem_False() {
+        assertFalse(
+                LeftOreRules.isToolTier("minecraft:stone_pickaxe"),
+                "Настоящая кирка — предмет: её можно взять со склада или скрафтить");
+        assertFalse(LeftOreRules.isToolTier("dirt"), "Обычный материал не является маркером инструмента");
     }
 
     @Test

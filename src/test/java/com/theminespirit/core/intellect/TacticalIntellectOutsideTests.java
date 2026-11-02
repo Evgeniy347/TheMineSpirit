@@ -42,7 +42,7 @@ class TacticalIntellectOutsideTests {
     }
 
     @Test
-    void decide_OneWorkerOutsideNeed_MineNotAssigned() {
+    void decide_OneWorkerNoHome_MineNotDemanded() {
         TacticalIntellect mind = intellect();
 
         TacticalDecision decision = mind.decide(
@@ -50,10 +50,10 @@ class TacticalIntellectOutsideTests {
 
         assertFalse(
                 has(decision, ActivityId.MINE),
-                "Один дух внешней работы не получает: за границу поселения в одиночку не выходят");
+                "Без дома поселения шахты нет: внешнюю добычу MINE не порождают и не отказывают в ней");
         assertTrue(
-                decision.refusals().stream().anyMatch(reason -> reason.contains("MINE") && reason.contains("одиночку")),
-                "Отказ обязан попасть в журнал решений с причиной, фактически: " + decision.refusals());
+                decision.refusals().isEmpty(),
+                "Отказ без дома — шум в журнале: решения по границе нет, фактически: " + decision.refusals());
     }
 
     @Test
@@ -100,20 +100,6 @@ class TacticalIntellectOutsideTests {
     }
 
     @Test
-    void decide_OneWorkerNoHome_RefusalNamesBoundary() {
-        TacticalDecision decision = intellect()
-                .decide(needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
-
-        assertTrue(
-                decision.refusals().stream()
-                        .anyMatch(reason -> reason.contains("MINE")
-                                && reason.contains("радиус")
-                                && reason.contains("цель неизвестна")),
-                "Без дома границу проверить нечем: отказ обязан назвать границу и причину, фактически: "
-                        + decision.refusals());
-    }
-
-    @Test
     void decide_OneWorkerKnownVeinEvening_MineAssignedInsideSettlement() {
         TacticalIntellect mind = intellect();
         mind.trackHome(new Point(-181, 73, -520));
@@ -131,25 +117,23 @@ class TacticalIntellectOutsideTests {
     }
 
     @Test
-    void decide_TwoWorkersOutsideNeed_MineAssigned() {
-        TacticalDecision decision = intellect()
-                .decide(
-                        needy(List.of(FIRST, SECOND)),
-                        new ActivityLedger(),
-                        new WorkReservations(),
-                        new StrategicQueue(),
-                        100);
+    void decide_TwoWorkersHomeKnown_MineAssignedAtOwnShaft() {
+        TacticalIntellect mind = intellect();
+        mind.trackHome(new Point(-181, 73, -520));
+
+        TacticalDecision decision = mind.decide(
+                needy(List.of(FIRST, SECOND)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
 
         assertTrue(
                 has(decision, ActivityId.MINE),
-                "Двое духов внешнюю работу получают: группа от порога — уже организация");
+                "Двое духов у ствола поселения получают добычу: шахта своя, группа не нужна");
         assertTrue(
                 decision.refusals().isEmpty(),
-                "При организованном выходе отказов нет, фактически: " + decision.refusals());
+                "Внутри поселения отказов по границе нет, фактически: " + decision.refusals());
     }
 
     @Test
-    void decide_EveningTwoWorkersOutsideNeed_MineNotAssigned() {
+    void decide_EveningTwoWorkersNoHome_MineNotDemanded() {
         TacticalDecision decision = intellect()
                 .decide(
                         needyAt(List.of(FIRST, SECOND), 0.5),
@@ -160,23 +144,25 @@ class TacticalIntellectOutsideTests {
 
         assertFalse(
                 has(decision, ActivityId.MINE),
-                "Вечером внешняя работа не назначается даже группе: ночью наружу ходят только за игроком");
+                "Без дома шахты поселения нет: вечернюю внешнюю добычу MINE не порождают");
         assertTrue(
-                decision.refusals().stream().anyMatch(reason -> reason.contains("MINE") && reason.contains("ночь")),
-                "Отказ обязан попасть в журнал решений с причиной «ночь», фактически: " + decision.refusals());
+                decision.refusals().isEmpty(),
+                "Без цели и дома отказ по границе — шум, фактически: " + decision.refusals());
     }
 
     @Test
-    void decide_OneWorkerWithPlayerOutsideNeed_MineAssigned() {
+    void decide_OneWorkerNoHomeWithPlayer_MineNotDemanded() {
         TacticalIntellect mind = intellect();
         mind.trackPlayerEscort(true);
 
         TacticalDecision decision = mind.decide(
                 needy(List.of(FIRST)), new ActivityLedger(), new WorkReservations(), new StrategicQueue(), 100);
 
+        assertFalse(
+                has(decision, ActivityId.MINE), "Игрок рядом не создаёт шахту поселения: без дома MINE не порождают");
         assertTrue(
-                has(decision, ActivityId.MINE),
-                "С реальным игроком рядом один дух внешнюю работу получает: игрок ведёт за собой");
+                decision.refusals().isEmpty(),
+                "Без дома отказ по границе не пишется, фактически: " + decision.refusals());
     }
 
     private static boolean has(TacticalDecision decision, ActivityId id) {
