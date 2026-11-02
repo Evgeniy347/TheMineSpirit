@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongSupplier;
 import org.junit.jupiter.api.Test;
@@ -120,11 +121,74 @@ class NavAStarTests {
         assertEquals(0, result.path().cost(), 0, "идти некуда — цена нулевая");
     }
 
+    @Test
+    void gap_OneBlockHole_JumpsAcross() {
+        NavTestWorld world = NavTestWorld.flat(0).air(1, 0, 0);
+        NavResult result = plan(world, 0, walkOnly(), new NavGoalBlock(2, 1, 0));
+
+        assertEquals(NavSearchStatus.FOUND, result.status(), "щель в один блок перепрыгивается");
+        assertEquals(2, result.end().x(), "прыжок приводит на другой край");
+    }
+
+    @Test
+    void well_NoStairs_NoPath() {
+        NavTestWorld world = NavTestWorld.flat(0)
+                .air(0, -2, 0)
+                .air(0, -1, 0)
+                .air(0, 0, 0)
+                .air(0, 1, 0)
+                .air(0, 2, 0);
+        NavResult result = planAt(world, new BlockCoord(0, -2, 0), walkOnly(), new NavGoalBlock(0, 1, 0));
+
+        assertFalse(result.found(), "из колодца без ступеней пути нет: навигация не копает и не ставит блоки");
+    }
+
+    @Test
+    void stairs_ThreeSteps_ClimbsOut() {
+        NavTestWorld world = NavTestWorld.flat(0)
+                .air(0, -2, 0)
+                .air(0, -1, 0)
+                .air(0, 0, 0)
+                .air(0, 1, 0)
+                .solid(1, -2, 0)
+                .air(1, -1, 0)
+                .air(1, 0, 0)
+                .air(1, 1, 0)
+                .solid(2, -1, 0)
+                .air(2, 0, 0)
+                .air(2, 1, 0)
+                .solid(3, 0, 0)
+                .air(3, 1, 0)
+                .air(3, 2, 0);
+        NavResult result = planAt(world, new BlockCoord(0, -2, 0), walkOnly(), new NavGoalBlock(3, 1, 0));
+
+        assertEquals(NavSearchStatus.FOUND, result.status(), "по трём ступеням дух выходит из ямы");
+        assertEquals(1, result.end().y(), "конец на уровне земли");
+    }
+
+    @Test
+    void water_ShallowRiver_IsSwumAcross() {
+        NavTestWorld world =
+                NavTestWorld.flat(0).wet(1, 1, 0).wet(1, 2, 0).wet(2, 1, 0).wet(2, 2, 0);
+        NavResult result = plan(world, 0, walkOnly(), new NavGoalBlock(3, 1, 0));
+
+        assertEquals(NavSearchStatus.FOUND, result.status(), "неглубокая река переплывается");
+        assertEquals(3, result.end().x(), "дух выходит на другом берегу");
+    }
+
     private static NavResult plan(NavTestWorld world, int blocks, NavSettings settings, NavGoal goal) {
         return NavAStarSearch.plan(new NavContext(world, settings, blocks), 0, 1, 0, goal);
     }
 
     private static NavSettings settings(int maxNodes, long timeoutMs, boolean canBreak) {
         return new NavSettings(timeoutMs, timeoutMs, maxNodes, 50, 3, 12, 2, 20, 2, canBreak, true);
+    }
+
+    private static NavSettings walkOnly() {
+        return new NavSettings(10_000, 10_000, 200_000, 50, 3, 12, 2, 20, 2, false, false);
+    }
+
+    private static NavResult planAt(NavTestWorld world, BlockCoord start, NavSettings settings, NavGoal goal) {
+        return NavAStarSearch.plan(new NavContext(world, settings, 0), start.x(), start.y(), start.z(), goal);
     }
 }

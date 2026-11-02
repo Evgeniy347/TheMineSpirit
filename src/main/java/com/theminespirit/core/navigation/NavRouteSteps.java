@@ -20,7 +20,17 @@ public final class NavRouteSteps {
         List<BlockCoord> positions = segmented.positions();
         List<RouteStep> steps = new ArrayList<>();
         for (int i = 1; i < positions.size(); i++) {
-            append(world, steps, positions.get(i - 1), positions.get(i));
+            if (!append(world, steps, positions.get(i))) {
+                return new Route(
+                        Route.Status.NONE,
+                        List.of(),
+                        0,
+                        positions.get(positions.size() - 1),
+                        segmented.nodes(),
+                        0,
+                        0,
+                        List.of());
+            }
         }
         Route.Status status = switch (segmented.status()) {
             case FOUND -> Route.Status.FOUND;
@@ -38,26 +48,12 @@ public final class NavRouteSteps {
                 List.of());
     }
 
-    private static void append(NavWorld world, List<RouteStep> steps, BlockCoord current, BlockCoord next) {
-        if (next.y() == current.y() + 1 && next.x() == current.x() && next.z() == current.z()) {
-            steps.add(new RouteStep(RouteStep.Action.PILLAR, current));
-            return;
-        }
-        if (!world.passable(next.x(), next.y(), next.z()) && !world.water(next.x(), next.y(), next.z())) {
-            steps.add(new RouteStep(RouteStep.Action.BREAK, next));
-            BlockCoord head = new BlockCoord(next.x(), next.y() + 1, next.z());
-            if (!world.passable(head.x(), head.y(), head.z()) && !world.water(head.x(), head.y(), head.z())) {
-                steps.add(new RouteStep(RouteStep.Action.BREAK, head));
-            }
-        }
-        BlockCoord below = new BlockCoord(next.x(), next.y() - 1, next.z());
-        if (next.y() == current.y()
-                && !world.walkable(below.x(), below.y(), below.z())
-                && !world.water(next.x(), next.y(), next.z())
-                && !world.water(below.x(), below.y(), below.z())) {
-            steps.add(new RouteStep(RouteStep.Action.PLACE, below));
-        }
+    private static boolean append(NavWorld world, List<RouteStep> steps, BlockCoord next) {
         boolean water = world.water(next.x(), next.y(), next.z()) || world.water(next.x(), next.y() + 1, next.z());
+        if (!water && !world.passable(next.x(), next.y(), next.z())) {
+            return false;
+        }
         steps.add(new RouteStep(water ? RouteStep.Action.SWIM : RouteStep.Action.WALK, next));
+        return true;
     }
 }

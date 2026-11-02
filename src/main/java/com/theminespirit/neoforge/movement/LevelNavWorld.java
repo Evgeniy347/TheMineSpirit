@@ -11,9 +11,12 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.CactusBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.MagmaBlock;
 import net.minecraft.world.level.block.PowderSnowBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WebBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -37,7 +40,16 @@ public final class LevelNavWorld implements NavWorld {
 
     @Override
     public boolean passable(int x, int y, int z) {
+        if (!available(x, z)) {
+            return false;
+        }
         BlockState state = state(x, y, z);
+        if (state.getBlock() instanceof DoorBlock door && door.type().canOpenByHand()) {
+            return true;
+        }
+        if (state.getBlock() instanceof FenceGateBlock || state.getBlock() instanceof TrapDoorBlock) {
+            return true;
+        }
         return shape(x, y, z).isEmpty()
                 && !state.is(BlockTags.LEAVES)
                 && !state.getFluidState().is(FluidTags.LAVA)
@@ -46,6 +58,9 @@ public final class LevelNavWorld implements NavWorld {
 
     @Override
     public boolean walkable(int x, int y, int z) {
+        if (!available(x, z)) {
+            return false;
+        }
         VoxelShape shape = shape(x, y, z);
         return !state(x, y, z).is(BlockTags.LEAVES)
                 && !shape.isEmpty()
@@ -56,16 +71,19 @@ public final class LevelNavWorld implements NavWorld {
 
     @Override
     public boolean water(int x, int y, int z) {
-        return fluid(x, y, z).is(FluidTags.WATER);
+        return available(x, z) && fluid(x, y, z).is(FluidTags.WATER);
     }
 
     @Override
     public boolean climbable(int x, int y, int z) {
-        return state(x, y, z).is(BlockTags.CLIMBABLE);
+        return available(x, z) && state(x, y, z).is(BlockTags.CLIMBABLE);
     }
 
     @Override
     public double breakTicks(int x, int y, int z) {
+        if (!available(x, z)) {
+            return NavActionCosts.COST_INF;
+        }
         BlockState state = state(x, y, z);
         double hardness = state.getDestroySpeed(level, cursor.set(x, y, z));
         if (hardness < 0) {

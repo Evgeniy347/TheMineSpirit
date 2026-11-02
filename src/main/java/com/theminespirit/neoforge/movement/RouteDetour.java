@@ -12,13 +12,11 @@ import com.theminespirit.core.navigation.NavSegmentedSession;
 import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.Route;
-import com.theminespirit.core.route.RouteBreakAudit;
 import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RouteFailures;
 import com.theminespirit.core.route.RouteThrottle;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.TickWatch;
-import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -96,7 +94,7 @@ public final class RouteDetour {
                     FAIL_TTL_TICKS);
             return null;
         }
-        NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, true, true);
+        NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, false, false);
         LevelNavWorld live = new LevelNavWorld(spirit.level());
         NavCachedWorld cache = new NavCachedWorld();
         packLocal(live, cache, from);
@@ -163,16 +161,6 @@ public final class RouteDetour {
         }
         if (waterTrap(spirit, new RouteLevelView(spirit), route, pending.plan.target())) {
             return "из воды нет выхода к поверхности (no_escape)";
-        }
-        Optional<Route.Veto> veto = RouteBreakAudit.firstVeto(new RouteLevelView(spirit), pending.plan.from(), route);
-        if (veto.isPresent()) {
-            Route.Veto found = veto.get();
-            LOGGER.warn(
-                    "[route] дух {}: BreakVeto отказал BREAK в {}: {}",
-                    spirit.displayName(),
-                    found.cell(),
-                    found.reason());
-            return "ломка запрещена: " + found.reason();
         }
         return "";
     }

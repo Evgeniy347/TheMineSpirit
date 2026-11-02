@@ -158,7 +158,10 @@ final class DeadCodeExemptions {
                     "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/navigation/NavSegmentedPlanner.java|method|NavSegmentedPlanner#follow",
-                    "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"));
+                    "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/route/RouteBreakAudit.java|method|RouteBreakAudit#firstVeto",
+                    "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"));
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(

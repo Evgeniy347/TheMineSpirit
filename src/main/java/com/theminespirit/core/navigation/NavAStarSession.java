@@ -121,6 +121,9 @@ public final class NavAStarSession {
             move.reset(current.x, current.y, current.z);
             NavMoveCosts.fall(context, current.x, current.y, current.z, direction[0], direction[1], move);
             relax(current, move);
+            move.reset(current.x, current.y, current.z);
+            NavMoveCosts.jump(context, current.x, current.y, current.z, direction[0], direction[1], move);
+            relax(current, move);
         }
     }
 
