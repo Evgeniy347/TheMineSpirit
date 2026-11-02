@@ -68,7 +68,7 @@ class NavMoveCostsTests {
     void descend_OneBlockDrop_UsesWalkOffAndFall() {
         NavMoveResult move = descend(NavTestWorld.flat(0), 64, 0, 2, 0, 1, 0);
         double expected = NavActionCosts.WALK_OFF_BLOCK_COST
-                + NavActionCosts.FALL_N_BLOCKS_COST[1]
+                + NavActionCosts.fallNBlocksCost(1)
                 + NavActionCosts.CENTER_AFTER_FALL_COST;
         assertEquals(expected, move.cost, EPS, "спуск на блок — шаг с края и падение");
         assertEquals(1, move.y, "спуск заканчивается на блок ниже");
@@ -91,9 +91,7 @@ class NavMoveCostsTests {
         NavMoveResult move = downward(world, 64, 0, 1, 0);
         assertEquals(0, move.y, "копание вниз опускает на блок");
         assertEquals(
-                NavActionCosts.FALL_N_BLOCKS_COST[1]
-                        + 10
-                        + NavSettings.defaults().breakPenalty(),
+                NavActionCosts.fallNBlocksCost(1) + 10 + NavSettings.defaults().breakPenalty(),
                 move.cost,
                 EPS,
                 "копание вниз — падение и ломка");

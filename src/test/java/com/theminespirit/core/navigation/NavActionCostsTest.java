@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test;
 class NavActionCostsTest {
     @Test
     void fallCosts_TableRoundTrip_ReturnsOriginalBlocks() {
-        assertEquals(4097, NavActionCosts.FALL_N_BLOCKS_COST.length, "таблица падений покрывает 0…4096 блоков");
+        assertEquals(4097, NavFallTable.size(), "таблица падений покрывает 0…4096 блоков");
         for (int blocks = 0; blocks < 4097; blocks++) {
             assertEquals(
                     blocks,
-                    ticksToBlocks(NavActionCosts.FALL_N_BLOCKS_COST[blocks]),
+                    ticksToBlocks(NavActionCosts.fallNBlocksCost(blocks)),
                     0.00000000001,
                     "падение на " + blocks + " блоков переводится в тики и обратно");
         }

@@ -3,7 +3,6 @@ package com.theminespirit.core.navigation;
 
 import static com.theminespirit.core.navigation.NavActionCosts.CENTER_AFTER_FALL_COST;
 import static com.theminespirit.core.navigation.NavActionCosts.COST_INF;
-import static com.theminespirit.core.navigation.NavActionCosts.FALL_N_BLOCKS_COST;
 import static com.theminespirit.core.navigation.NavActionCosts.JUMP_ONE_BLOCK_COST;
 import static com.theminespirit.core.navigation.NavActionCosts.LADDER_DOWN_ONE_COST;
 import static com.theminespirit.core.navigation.NavActionCosts.LADDER_UP_ONE_COST;
@@ -66,7 +65,7 @@ final class NavMoveCosts {
                 out.x = nx;
                 out.y = feet;
                 out.z = nz;
-                out.cost = WALK_OFF_BLOCK_COST + FALL_N_BLOCKS_COST[depth] + CENTER_AFTER_FALL_COST;
+                out.cost = WALK_OFF_BLOCK_COST + NavActionCosts.fallNBlocksCost(depth) + CENTER_AFTER_FALL_COST;
                 return;
             }
             if (depth > max) {
@@ -121,7 +120,12 @@ final class NavMoveCosts {
         if (clear >= COST_INF || !context.world().walkable(nx, y - 2, nz)) {
             return;
         }
-        set(out, nx, y - 1, nz, WALK_OFF_BLOCK_COST + FALL_N_BLOCKS_COST[1] + CENTER_AFTER_FALL_COST + clear);
+        set(
+                out,
+                nx,
+                y - 1,
+                nz,
+                WALK_OFF_BLOCK_COST + NavActionCosts.fallNBlocksCost(1) + CENTER_AFTER_FALL_COST + clear);
     }
 
     static void diagonal(NavContext context, int x, int y, int z, int dx, int dz, NavMoveResult out) {
@@ -184,7 +188,9 @@ final class NavMoveCosts {
                 x,
                 y - 1,
                 z,
-                FALL_N_BLOCKS_COST[1] + breakTicks + context.settings().breakPenalty());
+                NavActionCosts.fallNBlocksCost(1)
+                        + breakTicks
+                        + context.settings().breakPenalty());
     }
 
     private static double clear(NavContext context, int x, int y, int z) {

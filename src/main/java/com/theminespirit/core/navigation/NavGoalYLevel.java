@@ -20,7 +20,7 @@ public final class NavGoalYLevel implements NavGoal {
 
     public static double calculate(int goalY, int currentY) {
         if (currentY > goalY) {
-            return NavActionCosts.FALL_N_BLOCKS_COST[2] / 2 * (currentY - goalY);
+            return NavActionCosts.fallNBlocksCost(2) / 2 * (currentY - goalY);
         }
         if (currentY < goalY) {
             return (goalY - currentY) * NavActionCosts.JUMP_ONE_BLOCK_COST;

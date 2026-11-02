@@ -11,8 +11,6 @@ public interface NavActionCosts {
     double COST_INF = 1000000;
     double DEFAULT_HEURISTIC_WEIGHT = 3.563;
 
-    double[] FALL_N_BLOCKS_COST = generateFallNBlocksCost();
-
     double FALL_1_25_BLOCKS_COST = distanceToTicks(1.25);
     double FALL_0_25_BLOCKS_COST = distanceToTicks(0.25);
     double JUMP_ONE_BLOCK_COST = FALL_1_25_BLOCKS_COST - FALL_0_25_BLOCKS_COST;
@@ -23,6 +21,10 @@ public interface NavActionCosts {
             costs[i] = distanceToTicks(i);
         }
         return costs;
+    }
+
+    static double fallNBlocksCost(int blocks) {
+        return NavFallTable.COSTS[blocks];
     }
 
     static double velocity(int ticks) {
