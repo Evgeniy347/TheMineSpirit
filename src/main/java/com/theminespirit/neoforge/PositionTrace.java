@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.ChangeSummary;
+import com.theminespirit.core.observation.DebouncedState;
 import com.theminespirit.core.observation.StateSignature;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
@@ -13,7 +14,7 @@ public final class PositionTrace {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
-    private String state = "";
+    private final DebouncedState stable = new DebouncedState(CHECK_TICKS * 2L);
     private long lastCheck = Long.MIN_VALUE;
 
     public void tick(SpiritEntity spirit) {
@@ -25,13 +26,12 @@ public final class PositionTrace {
         boolean water = spirit.isInWater();
         boolean ground = spirit.onGround();
         String next = StateSignature.spirit(air, water);
-        boolean changed = !next.equals(state);
+        boolean changed = stable.update(next, now).isPresent();
         if (!changed && lastCheck != Long.MIN_VALUE && now - lastCheck < CHECK_TICKS) {
             return;
         }
         lastCheck = now;
-        state = next;
-        log.note("pos", next, air, now).ifPresent(summary -> {
+        log.note("pos", stable.current(), air, now).ifPresent(summary -> {
             if (summary.changed()) {
                 LOGGER.info(
                         "[pos] дух {} в ({}, {}, {}), script={}, воздух={}, в воде={}, на земле={}",
