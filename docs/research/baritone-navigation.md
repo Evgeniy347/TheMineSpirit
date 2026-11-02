@@ -8,6 +8,7 @@
 
 - `LICENSE` — **GNU LGPL-3.0**; шапки каждого `.java`: «either version 3 of the License, or (at your option) any
   later version».
+- В Baritone лежит только LGPL; `LICENSE-GPL-3.0` добавлен с gnu.org, потому что LGPL-3.0 ссылается на GPL-3.0.
 - `LICENSE-Part-2.jpg` — картинка «No anime» (шутливое дополнительное условие, не текст лицензии).
 - Наш мод: All Rights Reserved (`gradle.properties` → `mod_license`). Это **несовместимо** с копированием файлов
   Baritone без смены лицензии проекта.
@@ -103,3 +104,78 @@
    только по решению владельца.
 
 Порядок по цене/пользе: 1 (сразу убирает 1.2 с) → 2 → 3 → 6 → 4 → 5 → 7.
+
+## План переноса
+
+Владелец разрешил копировать файлы Baritone (публичный репозиторий, LGPL-3.0 устраивает). Каждый скопированный
+или производный файл начинается одной строкой `// lib: Из Baritone (github.com/cabaletta/baritone, <путь>),
+лицензия LGPL-3.0.`; тексты — `LICENSE-LGPL-3.0`, `LICENSE-GPL-3.0`; зависимость на Baritone не подключается.
+
+### Классы Baritone → наши (пакет `com.theminespirit.core.navigation`)
+
+| Baritone | Наше | Что изменено |
+|---|---|---|
+| `AStarPathFinder`, `AbstractNodeCostSearch` | `NavAStarSearch` | один класс; без `Helper`/рендера/настроек Baritone, бюджет из `NavSettings` |
+| `PathNode` | `NavNode` | без `BetterBlockPos`/`SettingsUtil`, ключ позиции свой |
+| `IOpenSet`, `BinaryHeapOpenSet` | `NavOpenSet`, `NavBinaryHeapOpenSet` | без комментариев и отладочных полей |
+| `ActionCosts` | `NavActionCosts` | числа и таблица падений как есть |
+| `Goal*` (`Block`, `XZ`, `YLevel`, `GetToBlock`, `Near`, `Composite`) | `NavGoal*` | без `BlockPos`/рендера, вес эвристики в конструкторе |
+| `CalculationContext`, `BlockStateInterface` | `NavContext`, `NavWorld` | абстракция мира без Minecraft: `passable/walkable/water/climbable/breakTicks/loaded` |
+| `Moves`, `Movement*.cost` | `NavMoves`, `NavMoveCosts` | только цены базовых ходов: шаг, подъём, спуск, падение, диагональ, столб, вниз |
+| `Path` | `NavPath`, `NavResult` | позиции `BlockCoord`, статусы `FOUND/SEGMENT/FAILURE` |
+| `Settings` (часть) | `NavSettings`, `NavContext` | только сроки, падение, цены, флаги ломки/установки |
+| `CachedWorld`, `CachedChunk`, `ChunkPacker` | — | следующий блок (мир-кэш) |
+| `PathExecutor`, `PathingBehavior`, `SplicedPath` | — | блок исполнителя и plan-ahead |
+
+### Тесты Baritone → наши
+
+| Baritone | Наше | Режим |
+|---|---|---|
+| `ActionCostsTest` | `NavActionCostsTest` | быстрый unit |
+| `OpenSetsTest` (1…10 000) | `NavOpenSetTests` (1…1024) + `NavOpenSetSlowTests` (5 000/10 000) | быстрый + `@Tag("slow")` |
+| `GoalGetToBlockTest` | `NavGoalGetToBlockTest` | быстрый unit |
+| `BetterBlockPosTest` | — | не нужен: у нас `BlockCoord` |
+| `PathingBlockTypeTest`, `CachedRegionTest` | — | вместе с кэшем мира (блок 2) |
+
+Полный медленный прогон: `./gradlew slowTest --tests 'com.theminespirit.core.navigation.NavOpenSetSlowTests'`.
+Он не входит в `scripts/test.sh unit` и pre-commit.
+
+### Порядок блоков
+
+1. **Сделано:** A* и куча, `ActionCosts`, базовые цены ходов, цели, бюджет 500/2000 мс, сегмент до границы
+   загруженного. Пакет `core.navigation`, без встраивания в духов.
+2. **Кэш мира и precompute:** `NavBlockType` (2 бита), `NavChunk`, `NavRegion` 512×512, чтение незагруженного,
+   `PrecomputedData`-аналог (canWalkOn/canWalkThrough в байтах). Тесты `NavCachedRegionTest`.
+3. **Дальний путь:** `NavCutoffPath`, статический отрезок, plan-ahead, `Favoring` прошлого пути, склейка сегментов.
+4. **Исполнитель:** `Movement*`-аналоги (состояние, ломка, постановка, вода, лестница), таймаут хода,
+   проверка изменения мира; сюда же столб и копание вниз.
+5. **Асинхронность:** снимок загруженных чанков, поиск вне серверного потока, отмена по смене старта/мира.
+6. **Встраивание:** `Approach` — ваниль 32 → тропа → `NavAStarSearch` с бюджетом; удаление телепортов.
+7. **Тропы и физическая тропа:** `TrailTrack` + `BreadcrumbTrail`; физическая тропа — только по решению владельца.
+
+### Духам не нужно
+
+Клиентское и игроковое: `LocalPlayer`, `Minecraft`, `InputOverrideHandler`, `LookBehavior`, рендер пути и оверлеи,
+GUI/чат/команды, `ElytraBehavior`, `WaypointBehavior`, инвентарь хотбара и `ToolSet` в клиентском виде,
+`Process`-задачи (Mine/Farm/Build/Explore), `Favoring` мобов, nether-pathfinder. Из Baritone берём только расчёт
+пути, цены, кэш и исполнитель, переписанные под серверные сущности и `core`.
+
+### Блок 1: замер на снимке мира
+
+Своя копия (`world-2026-11-02_08-30-01`), JBR 21, Xmx4G, старт у двора `(-178, 69, -518)`; один прогон на точку,
+`NavWorld` поверх реальных блоков, `NavSettings` 500/2000 мс и 10 000 мс/40 000 узлов. Сравнение: ванильный
+`PathFinder` 512/32 и `RoutePlanner` (40 000 узлов, без срока).
+
+| D | Nav 500/2000 | Nav 10 с/40k | ваниль 512/32 | RoutePlanner 40k |
+|---|---|---|---|---|
+| 32 | 96 мс, 2 391 узл., найден | 23 мс (JIT), найден | 5 мс, 28 узл., не дошёл | 64 мс, 409 узл., найден |
+| 64 | 187 мс, 16 924 узл., найден | 170 мс, найден | 4 мс, 28 узл., не дошёл | 1 553 мс, 40 000, частичный |
+| 128 | 500 мс, 46 336, сегмент 63 бл. | 432 мс, 40 000, сегмент 63 бл. | 0 мс, 1 узл., не дошёл | 1 313 мс, 40 000, 127 бл. |
+| 256 | 501 мс, 49 216, сегмент 63 бл. | 399 мс, 40 000, сегмент 63 бл. | 4 мс, 28, не дошёл | 1 335 мс, 40 000, 127 бл. |
+| 2000 | 500 мс, 46 080, сегмент 63 бл. | 437 мс, 40 000, сегмент 63 бл. | 5 мс, 28, не дошёл | 1 332 мс, 40 000, 127 бл. |
+
+Вывод: бюджет 500 мс держится точно (500–501 мс) и не даёт поиску занять тик; на 32/64 Nav находит путь за
+23–187 мс, тогда как `RoutePlanner` на 64 уже упирается в 40 000 узлов за 1.5 с. Ваниль остаётся лучшей для
+локальных 32 блоков. На 128+ Nav отдаёт сегмент 63 блока и упирается в локальный минимум/рельеф — это лечится
+следующими блоками (кэш мира, plan-ahead/`Favoring`, исполнитель). Пропускная способность ниже Baritone из-за
+`HashMap` вместо primitive-map; замена — в блоке 2.
