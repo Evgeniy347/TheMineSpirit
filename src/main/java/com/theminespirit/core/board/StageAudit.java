@@ -58,6 +58,11 @@ public final class StageAudit {
         return Decision.AUDIT;
     }
 
+    public static boolean repairRetry(BoardStatus status, boolean recentlyFailed) {
+        Objects.requireNonNull(status, "Статус ремонта не может быть null: по нему решают, повторять ли");
+        return (status == BoardStatus.FAILED || status == BoardStatus.BLOCKED) && !recentlyFailed;
+    }
+
     public static boolean repairBlockedByUpgrade(BoardCase step, boolean upgrading) {
         Objects.requireNonNull(step, "Кейс ремонта не может быть null: от него зависит, ждать ли апгрейд");
         return upgrading && step != BoardCase.BUILD_MINE;
