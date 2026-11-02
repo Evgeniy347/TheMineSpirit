@@ -4,6 +4,7 @@ work="TestResults/opencode-check"
 rm -rf "$work"
 mkdir -p "$work"
 export OPENCODE_BIN="$PWD/scripts/testing/fake-opencode.sh"
+export CODEGRAPH_BIN="$PWD/scripts/testing/fake-codegraph.sh"
 export OPENCODE_LOG_ROOT="$PWD/$work/logs"
 export OPENCODE_ALLOW_DIRTY=1
 export OPENCODE_DIRTY_SHORT_ANSWER=0
@@ -110,3 +111,90 @@ check sweep_runs_at_start_and_finish 0 1 OPENCODE_NO_SWEEP= OPENCODE_ORPHAN_SWEE
 sweeps=$(wc -c < "$sweep_count" 2>/dev/null || echo 0)
 [ "$sweeps" = 2 ] && v=OK || v=FAIL
 echo "$v sweep_runs_at_start_and_finish: вызовов уборки=$sweeps (ожидал 2 — начало и завершение)"
+fake_codegraph="$PWD/scripts/testing/fake-codegraph.sh"
+cg_seed_repo="$PWD/$work/cg-seed-repo"
+git init -q "$cg_seed_repo"
+printf 'class A {}\n' >"$cg_seed_repo/A.java"
+cg_seed_dir="$PWD/$work/cg-seed"
+mkdir -p "$cg_seed_dir"
+printf 'SEED' >"$cg_seed_dir/codegraph.db"
+cg_state="$PWD/$work/cg-seed.state"
+rm -f "$cg_state"*
+check codegraph_seed_copies_and_full_scans 0 1 OPENCODE_REPO_DIR="$cg_seed_repo" CODEGRAPH_BIN="$fake_codegraph" FAKE_CODEGRAPH_STATE="$cg_state" OPENCODE_CODEGRAPH_SEED="$cg_seed_dir"
+cg_db="$(cat "$cg_seed_repo/.codegraph/codegraph.db" 2>/dev/null || echo missing)"
+if [ "$cg_db" = SEED ] && grep -q '^ARGS: sync ' "$cg_state" && ! grep -q '^ARGS: init ' "$cg_state" && grep -q '^GIT_DIR: .\+' "$cg_state"; then
+    echo "OK codegraph_seed_copies_and_full_scans: база скопирована, sync без init и без git fast path"
+else
+    echo "FAIL codegraph_seed_copies_and_full_scans: db=$cg_db, вызовы: $(tr '\n' ' ' <"$cg_state" 2>/dev/null)"
+fi
+cg_init_repo="$PWD/$work/cg-init-repo"
+git init -q "$cg_init_repo"
+printf 'class B {}\n' >"$cg_init_repo/B.java"
+cg_state="$PWD/$work/cg-init.state"
+rm -f "$cg_state"*
+check codegraph_no_seed_inits 0 1 OPENCODE_REPO_DIR="$cg_init_repo" CODEGRAPH_BIN="$fake_codegraph" FAKE_CODEGRAPH_STATE="$cg_state" OPENCODE_CODEGRAPH_SEED=
+cg_db="$(cat "$cg_init_repo/.codegraph/codegraph.db" 2>/dev/null || echo missing)"
+if [ "$cg_db" = INIT ] && grep -q '^ARGS: init -i ' "$cg_state" && ! grep -q '^ARGS: sync ' "$cg_state"; then
+    echo "OK codegraph_no_seed_inits: без готовой базы построен полный индекс"
+else
+    echo "FAIL codegraph_no_seed_inits: db=$cg_db, вызовы: $(tr '\n' ' ' <"$cg_state" 2>/dev/null)"
+fi
+cg_fail_repo="$PWD/$work/cg-fail-repo"
+git init -q "$cg_fail_repo"
+printf 'class C {}\n' >"$cg_fail_repo/C.java"
+cg_state="$PWD/$work/cg-fail.state"
+rm -f "$cg_state"*
+check codegraph_sync_failure_falls_back_to_init 0 1 OPENCODE_REPO_DIR="$cg_fail_repo" CODEGRAPH_BIN="$fake_codegraph" FAKE_CODEGRAPH_STATE="$cg_state" OPENCODE_CODEGRAPH_SEED="$cg_seed_dir" FAKE_CODEGRAPH_SYNC_FAIL=1
+cg_db="$(cat "$cg_fail_repo/.codegraph/codegraph.db" 2>/dev/null || echo missing)"
+if [ "$cg_db" = INIT ] && grep -q '^ARGS: sync ' "$cg_state" && grep -q '^ARGS: init -i ' "$cg_state"; then
+    echo "OK codegraph_sync_failure_falls_back_to_init: сбой sync заменён полным индексом"
+else
+    echo "FAIL codegraph_sync_failure_falls_back_to_init: db=$cg_db, вызовы: $(tr '\n' ' ' <"$cg_state" 2>/dev/null)"
+fi
+cg_existing_repo="$PWD/$work/cg-existing-repo"
+git init -q "$cg_existing_repo"
+printf 'class D {}\n' >"$cg_existing_repo/D.java"
+mkdir -p "$cg_existing_repo/.codegraph"
+printf 'OLD' >"$cg_existing_repo/.codegraph/codegraph.db"
+cg_state="$PWD/$work/cg-existing.state"
+rm -f "$cg_state"*
+check codegraph_existing_index_is_synced 0 1 OPENCODE_REPO_DIR="$cg_existing_repo" CODEGRAPH_BIN="$fake_codegraph" FAKE_CODEGRAPH_STATE="$cg_state" OPENCODE_CODEGRAPH_SEED=
+if grep -q '^ARGS: sync ' "$cg_state" && ! grep -q '^ARGS: init ' "$cg_state" && grep -q '^GIT_DIR: .\+' "$cg_state"; then
+    echo "OK codegraph_existing_index_is_synced: существующий индекс обновлён полным сканом"
+else
+    echo "FAIL codegraph_existing_index_is_synced: вызовы: $(tr '\n' ' ' <"$cg_state" 2>/dev/null)"
+fi
+cg_none_repo="$PWD/$work/cg-none-repo"
+git init -q "$cg_none_repo"
+printf 'class E {}\n' >"$cg_none_repo/E.java"
+cg_state="$PWD/$work/cg-none.state"
+rm -f "$cg_state"*
+check codegraph_missing_binary_is_skipped 0 1 OPENCODE_REPO_DIR="$cg_none_repo" CODEGRAPH_BIN="$PWD/$work/no-codegraph" FAKE_CODEGRAPH_STATE="$cg_state"
+if [ ! -e "$cg_state" ] && [ ! -d "$cg_none_repo/.codegraph" ]; then
+    echo "OK codegraph_missing_binary_is_skipped: без codegraph старт не падает и индекс не создаётся"
+else
+    echo "FAIL codegraph_missing_binary_is_skipped: созданы $(ls "$cg_none_repo/.codegraph" 2>/dev/null | tr '\n' ' ')"
+fi
+cg_base="$PWD/$work/cg-base"
+git init -q "$cg_base"
+printf 'class Base {}\n' >"$cg_base/Base.java"
+git -C "$cg_base" add Base.java
+git -C "$cg_base" -c user.email=t@t -c user.name=t commit -qm init --no-verify
+cg_head="$(git -C "$cg_base" rev-parse HEAD)"
+git -C "$cg_base" worktree add -q --detach "$PWD/$work/cg-match" HEAD
+git -C "$cg_base" worktree add -q --detach "$PWD/$work/cg-newer" HEAD
+git -C "$cg_base" worktree add -q --detach "$PWD/$work/cg-target" HEAD
+mkdir -p "$PWD/$work/cg-match/.codegraph" "$PWD/$work/cg-newer/.codegraph"
+printf 'MATCH' >"$PWD/$work/cg-match/.codegraph/codegraph.db"
+printf '%s' "$cg_head" >"$PWD/$work/cg-match/.codegraph/indexed-commit"
+sleep 1
+printf 'NEWER' >"$PWD/$work/cg-newer/.codegraph/codegraph.db"
+cg_state="$PWD/$work/cg-prefer.state"
+rm -f "$cg_state"*
+check codegraph_prefers_same_commit_seed 0 1 OPENCODE_REPO_DIR="$PWD/$work/cg-target" CODEGRAPH_BIN="$fake_codegraph" FAKE_CODEGRAPH_STATE="$cg_state" OPENCODE_CODEGRAPH_SEED=
+cg_db="$(cat "$PWD/$work/cg-target/.codegraph/codegraph.db" 2>/dev/null || echo missing)"
+if [ "$cg_db" = MATCH ]; then
+    echo "OK codegraph_prefers_same_commit_seed: выбрана база с меткой текущего коммита, а не более свежая чужая"
+else
+    echo "FAIL codegraph_prefers_same_commit_seed: db=$cg_db, ожидал MATCH"
+fi

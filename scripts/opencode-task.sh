@@ -316,11 +316,96 @@ unfinished=0
 loops=0
 message="$prompt"
 CODEGRAPH_BIN="${CODEGRAPH_BIN:-$(command -v codegraph || echo "$HOME/.npm-global/bin/codegraph")}"
-if [ -x "$CODEGRAPH_BIN" ] || command -v "$CODEGRAPH_BIN" >/dev/null 2>&1; then
-    if [ ! -d "$REPO_DIR/.codegraph" ]; then
-        nice -n 19 "$CODEGRAPH_BIN" init -i "$REPO_DIR" >"$log_dir/codegraph-init.log" 2>&1             || echo "opencode: индекс codegraph не построен, лог $log_dir/codegraph-init.log" >&2
+codeseed_db_path() {
+    case "$1" in
+        */codegraph.db) printf '%s' "$1" ;;
+        *) printf '%s/codegraph.db' "$1" ;;
+    esac
+}
+find_codegraph_seed() {
+    local repo="$1" root candidate head best="" best_mtime=0 match="" match_mtime=0 m
+    if [ -n "${OPENCODE_CODEGRAPH_SEED:-}" ]; then
+        candidate="$(codeseed_db_path "$OPENCODE_CODEGRAPH_SEED")"
+        if [ -f "$candidate" ]; then
+            printf '%s' "$candidate"
+            return 0
+        fi
     fi
-fi
+    head="$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)"
+    while IFS= read -r root; do
+        [ -n "$root" ] || continue
+        case "$root" in
+            */wt-owner|*/wt-owner/*|*/owner|*/owner/*) continue ;;
+        esac
+        candidate="$root/.codegraph/codegraph.db"
+        [ -f "$candidate" ] || continue
+        m=$(stat -c %Y "$candidate" 2>/dev/null) || continue
+        if [ -n "$head" ] && [ -f "$root/.codegraph/indexed-commit" ] \
+            && [ "$(cat "$root/.codegraph/indexed-commit" 2>/dev/null)" = "$head" ]; then
+            if [ "$m" -gt "$match_mtime" ]; then
+                match="$candidate"
+                match_mtime="$m"
+            fi
+        fi
+        if [ "$m" -gt "$best_mtime" ]; then
+            best="$candidate"
+            best_mtime="$m"
+        fi
+    done < <(git -C "$repo" worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p')
+    if [ -n "$match" ]; then
+        printf '%s' "$match"
+    else
+        printf '%s' "$best"
+    fi
+}
+mark_codegraph_index() {
+    local head
+    head="$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null)" || return 0
+    [ -n "$head" ] || return 0
+    printf '%s\n' "$head" >"$REPO_DIR/.codegraph/indexed-commit" 2>/dev/null || true
+}
+prepare_codegraph_index() {
+    [ -z "${OPENCODE_NO_CODEGRAPH:-}" ] || return 0
+    if ! [ -x "$CODEGRAPH_BIN" ] && ! command -v "$CODEGRAPH_BIN" >/dev/null 2>&1; then
+        return 0
+    fi
+    local db="$REPO_DIR/.codegraph/codegraph.db" seed="" log="$log_dir/codegraph-init.log"
+    if [ ! -f "$db" ]; then
+        seed="$(find_codegraph_seed "$REPO_DIR")"
+        if [ -n "$seed" ]; then
+            mkdir -p "$REPO_DIR/.codegraph"
+            if ! cp -f "$seed" "$db" 2>/dev/null; then
+                rm -rf "$REPO_DIR/.codegraph"
+                seed=""
+            fi
+        fi
+    fi
+    if [ ! -f "$db" ]; then
+        if "$CODEGRAPH_BIN" init -i "$REPO_DIR" >"$log" 2>&1; then
+            mark_codegraph_index
+        else
+            echo "opencode: индекс codegraph не построен, лог $log" >&2
+        fi
+        return 0
+    fi
+    if GIT_DIR="$REPO_DIR/.codegraph/.no-git" "$CODEGRAPH_BIN" sync "$REPO_DIR" >>"$log" 2>&1; then
+        mark_codegraph_index
+        return 0
+    fi
+    if [ -n "$seed" ]; then
+        rm -rf "$REPO_DIR/.codegraph"
+        if "$CODEGRAPH_BIN" init -i "$REPO_DIR" >>"$log" 2>&1; then
+            mark_codegraph_index
+        else
+            echo "opencode: индекс codegraph не построен, лог $log" >&2
+        fi
+    elif "$CODEGRAPH_BIN" index "$REPO_DIR" >>"$log" 2>&1; then
+        mark_codegraph_index
+    else
+        echo "opencode: codegraph sync не прошёл, оставляю прежний индекс, лог $log" >&2
+    fi
+}
+prepare_codegraph_index
 if [ "$prompt" != "$CONTINUE_PROMPT" ]; then
     mkdir -p "$(dirname "$TASK_FILE")"
     if [ -n "$session" ] && [ -s "$TASK_FILE" ]; then
