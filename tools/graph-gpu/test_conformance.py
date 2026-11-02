@@ -207,6 +207,47 @@ def test_world_inputs():
     print("OK: входы участка учитываются в выборе")
 
 
+def test_gear_fragment():
+    graph = Graph.load_merged(
+        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        RECIPES,
+        FRAGMENTS)
+    for node in ("gear_equip_best", "gear_craft_armor", "gear_craft_pickaxe", "gear_craft_axe",
+                 "gear_craft_shovel", "gear_craft_sword", "gear_craft_hoe", "gear_kit_mining"):
+        assert node in graph.events, "Python-модель обязана читать узел снаряжения '" + node + "'"
+    assert graph.events["gear_craft_pickaxe"]["tasks"][0]["id"] == "craft_tool:pickaxe", \
+        "Задание кирки называет вид инструмента"
+    print("OK: узлы снаряжения читаются из фрагмента")
+
+
+def test_gear_inputs():
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "spirits": {"spirit-1": {
+                "id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                "activity": "mining", "inventory": {},
+                "armor": [], "tools": []}},
+            "chests": [],
+        },
+    })
+    for node in ("gear_craft_pickaxe", "gear_craft_axe", "gear_kit_mining"):
+        assert node in state.events, "Снаряжение без кирки обязано добавить узел '" + node + "'"
+    worn = State({
+        "stage": 2,
+        "kits": {"spirit-1": {}},
+        "facts": {
+            "spirits": {"spirit-1": {
+                "id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                "inventory": {}, "armor": [],
+                "tools": [{"item": "minecraft:iron_pickaxe", "kind": "pickaxe", "tier": 2,
+                           "durability": 10, "maxDurability": 250}]}},
+            "chests": [],
+        },
+    })
+    assert "tool_worn" in worn.events, "Изношенная кирка обязана поднять tool_worn"
+    print("OK: входы снаряжения учитываются в выборе")
 MORE = {
     "more:player_near": "more_help_player",
     "more:player_building": "more_keep_clear",
@@ -289,6 +330,8 @@ if __name__ == "__main__":
         test_store_nodes()
         test_world_fragment()
         test_world_inputs()
+        test_gear_fragment()
+        test_gear_inputs()
         test_more_nodes()
         test_more_inputs()
         test_conformance()

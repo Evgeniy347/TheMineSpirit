@@ -30,6 +30,7 @@ HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
 WATCHER_OWNED = {"BUILD_WAREHOUSE", "BUILD_PEN"}
 
+
 STORE_MINIMUM = "store:minimum"
 STORE_TRANSFER = "store:transfer"
 STORE_SMELT = "store:smelt"
@@ -67,6 +68,165 @@ def category_of(item):
             if fnmatch.fnmatchcase(qualified, full):
                 return category.get("name", "")
     return ""
+
+NAMESPACE = "minecraft:"
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+FRAGMENT_DIR = os.path.join(
+    ROOT_DIR, "src", "main", "resources", "data", "theminespirit", "board", "graph.d")
+ARMOR_SLOTS = ("HEAD", "CHEST", "LEGS", "FEET")
+ARMOR_SUFFIXES = {
+    "_helmet": "HEAD",
+    "_chestplate": "CHEST",
+    "_leggings": "LEGS",
+    "_boots": "FEET",
+}
+TOOL_KINDS = {"pickaxe", "axe", "shovel", "sword", "hoe"}
+
+
+def _fragment(name):
+    path = os.path.join(FRAGMENT_DIR, name)
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def _gear_settings():
+    data = _fragment("gear.json")
+    kits = {}
+    for role, value in (data.get("gearKits") or {}).items():
+        kits[role] = {
+            "activity": value.get("activity", role),
+            "tools": list(value.get("tools") or []),
+        }
+    required = {int(key): dict(value) for key, value in (data.get("gearRequired") or {}).items()}
+    worn = data.get("gearWorn") or {}
+    return {
+        "tiers": list(data.get("gearTiers") or []),
+        "armorTiers": list(data.get("gearArmorTiers") or []),
+        "wornPercent": int(worn.get("percent", 20)),
+        "armorStage": int(worn.get("armorStage", 2)),
+        "required": required,
+        "kits": kits,
+    }
+
+
+def _required_at(gear, stage):
+    result = {}
+    for step in range(1, stage + 1):
+        result.update(gear["required"].get(step, {}))
+    return result
+
+
+def _short_id(item):
+    return item[len(NAMESPACE):] if item.startswith(NAMESPACE) else item
+
+
+def _worn(durability, maximum, percent):
+    return maximum > 0 and int(durability) * 100 // int(maximum) <= percent
+
+
+def _best_tools(spirit):
+    best = {}
+    for tool in spirit.get("tools") or []:
+        kind = tool.get("kind")
+        if kind is not None:
+            best[kind] = max(best.get(kind, -1), int(tool.get("tier", -1)))
+    return best
+
+
+def _tool_kind(name):
+    split = name.rfind("_")
+    if split <= 0:
+        return None
+    kind = name[split + 1:]
+    return kind if kind in TOOL_KINDS else None
+
+
+def _tool_tier(name):
+    split = name.rfind("_")
+    return "" if split <= 0 else name[:split].lower()
+
+
+def _armor_slot(name):
+    for suffix, slot in ARMOR_SUFFIXES.items():
+        if name.endswith(suffix):
+            return slot
+    return None
+
+
+def _armor_tier(name):
+    split = name.find("_")
+    return name if split <= 0 else name[:split].lower()
+
+
+def _armor_ranks(spirit, gear):
+    ranks = {}
+    for armor in spirit.get("armor") or []:
+        slot = armor.get("slot")
+        rank = gear["armorTiers"].index(_armor_tier(_short_id(armor.get("item", "")))) \
+            if _armor_tier(_short_id(armor.get("item", ""))) in gear["armorTiers"] else -1
+        ranks[slot] = max(ranks.get(slot, -1), rank)
+    return ranks
+
+
+def _better_in_chests(spirit, chests, gear):
+    tools = _best_tools(spirit)
+    armor = _armor_ranks(spirit, gear)
+    for chest in chests:
+        for item in (chest.get("contents") or {}):
+            name = _short_id(item)
+            kind = _tool_kind(name)
+            if kind is not None:
+                tier = _tool_tier(name)
+                rank = gear["tiers"].index(tier) if tier in gear["tiers"] else -1
+                if rank > tools.get(kind, -1):
+                    return True
+            slot = _armor_slot(name)
+            if slot is not None:
+                tier = _armor_tier(name)
+                rank = gear["armorTiers"].index(tier) if tier in gear["armorTiers"] else -1
+                if rank > armor.get(slot, -1):
+                    return True
+    return False
+
+
+def _gear_events(state):
+    gear = _gear_settings()
+    required = _required_at(gear, state.stage)
+    events = []
+    for spirit in state.spirit_facts.values():
+        if any(_worn(tool.get("durability", 0), tool.get("maxDurability", 0), gear["wornPercent"])
+               for tool in spirit.get("tools") or []):
+            events.append("tool_worn")
+        if any(_worn(armor.get("durability", 0), armor.get("maxDurability", 0), gear["wornPercent"])
+               for armor in spirit.get("armor") or []):
+            events.append("armor_worn")
+        if _better_in_chests(spirit, state.chest_facts, gear):
+            events.append("gear_equip_best")
+        best = _best_tools(spirit)
+        for kind, tier in required.items():
+            rank = gear["tiers"].index(tier) if tier in gear["tiers"] else -1
+            if rank >= 0 and best.get(kind, -1) < rank:
+                events.append("gear_craft_" + kind)
+        if state.stage >= gear["armorStage"] and len({armor.get("slot") for armor in spirit.get("armor") or []}) < len(ARMOR_SLOTS):
+            events.append("gear_craft_armor")
+    for role, kit in gear["kits"].items():
+        active = any(kit["activity"] == spirit.get("activity") for spirit in state.spirit_facts.values())
+        if not active:
+            continue
+        lacks = not kit["tools"] or any(
+            required.get(kind) is not None
+            and _best_tools(spirit).get(kind, -1)
+            < (gear["tiers"].index(required[kind]) if required[kind] in gear["tiers"] else -1)
+            for spirit in state.spirit_facts.values()
+            if kit["activity"] == spirit.get("activity")
+            for kind in kit["tools"])
+        if lacks:
+            events.append("gear_kit_" + role)
+    return events
+
 
 
 class Flow:
@@ -501,6 +661,7 @@ class State:
         for building_id, building in self.building_facts.items():
             if int(building.get("damage", 0)) > 0 and not building.get("unknown", False):
                 derived.append("repair_" + building_id)
+        derived.extend(_gear_events(self))
         for name in derived:
             if name not in self.events:
                 self.events.append(name)
@@ -1097,7 +1258,8 @@ class Planner:
             building = task.get("building")
             feasible = self.stocked(consumes) and (building is None or state.built(building) == BUILT)
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,
-                    "consumes": consumes, "feasible": feasible, "chance": False, "implemented": True,
+                    "consumes": consumes, "feasible": feasible, "chance": False,
+                    "implemented": bool(task.get("implemented", True)),
                     "ticks": graph.costs.ticks(key, task.get("case"))}
         if key.startswith(BUILDING):
             building_id = key[len(BUILDING):]

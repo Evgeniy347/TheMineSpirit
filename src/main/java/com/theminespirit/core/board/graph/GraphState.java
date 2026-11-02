@@ -142,7 +142,7 @@ public record GraphState(
     public GraphState withFacts(GraphFacts known) {
         Objects.requireNonNull(known, "Факты графа не могут быть null: пустые задают GraphFacts.empty()");
         Set<String> derived = new LinkedHashSet<>(events);
-        derived.addAll(GraphWorldEvents.of(known));
+        derived.addAll(GraphDomainEvents.of(known, stage));
         return new GraphState(
                 stock,
                 stage,

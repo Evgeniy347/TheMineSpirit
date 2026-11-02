@@ -14,7 +14,8 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
             BoardCase boardCase,
             int base,
             Map<String, Integer> consumes,
-            @Nullable String building) {
+            @Nullable String building,
+            boolean implemented) {
         public Task {
             consumes = Map.copyOf(consumes);
         }
@@ -44,7 +45,8 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         BoardCase.valueOf(task.path("case").asText()),
                         task.path("base").asInt(),
                         counts(task.path("consumes")),
-                        task.hasNonNull("building") ? task.path("building").asText() : null));
+                        task.hasNonNull("building") ? task.path("building").asText() : null,
+                        task.path("implemented").asBoolean(true)));
             }
             List<String> advice = new ArrayList<>();
             entry.getValue().path("advice").forEach(rule -> advice.add(rule.asText()));

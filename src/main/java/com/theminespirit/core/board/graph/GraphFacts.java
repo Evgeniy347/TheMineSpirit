@@ -258,16 +258,6 @@ public record GraphFacts(
         Objects.requireNonNull(stageReqs, "Требования этапа не могут быть null: без требований — пустая карта");
     }
 
-    public record World(List<Stray> strays, Terrain terrain, Map<String, Building> buildings) {
-        public World {
-            strays = List.copyOf(
-                    Objects.requireNonNull(strays, "Лишние постройки не могут быть null: без них — пустой список"));
-            Objects.requireNonNull(terrain, "Рельеф не может быть null: ровный задают Terrain.empty()");
-            buildings = Map.copyOf(
-                    Objects.requireNonNull(buildings, "Постройки не могут быть null: без них — пустая карта"));
-        }
-    }
-
     public static GraphFacts empty() {
         return new GraphFacts(
                 Map.of(),
@@ -293,7 +283,7 @@ public record GraphFacts(
         return new GraphFacts(known, threats, chests, resources, stations, buildings, strays, terrain, stageReqs);
     }
 
-    public GraphFacts withWorld(World world) {
+    public GraphFacts withWorld(GraphWorldFacts world) {
         Objects.requireNonNull(world, "Факты участка не могут быть null: пустые задают пустым World");
         return new GraphFacts(
                 spirits,
