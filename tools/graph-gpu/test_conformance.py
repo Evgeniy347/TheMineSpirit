@@ -248,6 +248,64 @@ def test_gear_inputs():
     })
     assert "tool_worn" in worn.events, "Изношенная кирка обязана поднять tool_worn"
     print("OK: входы снаряжения учитываются в выборе")
+MORE = {
+    "more:player_near": "more_help_player",
+    "more:player_building": "more_keep_clear",
+    "more:dark_spots": "more_light_dark_spot",
+    "more:dusk_soon": "more_return_before_night",
+    "more:bad_trip_conditions": "more_avoid_far_trip",
+    "more:failures_repeat": "more_failure_backoff",
+    "more:station_queue": "more_station_queue",
+    "more:drops_expiring": "more_pickup_drops",
+    "more:forest_depleted": "more_replant",
+    "more:ore_depleted": "more_sustain_mine",
+    "more:fence_gap": "more_secure_fence",
+    "more:door_open_night": "more_secure_door",
+    "more:hopper_uncovered": "more_secure_hopper",
+    "more:reserve_unused": "more_share_reserve",
+    "more:work_duplicate": "more_avoid_duplicate",
+    "more:strategic_goal": "more_strategic_goal",
+}
+
+
+def test_more_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for signal, way in MORE.items():
+        path = graph.way(way)
+        assert path is not None, "Python-модель не видит путь области more: " + way
+        assert path.makes in graph.items, "Python-модель не видит узел области more: " + path.makes
+        assert graph.items[path.makes].base > 0, "Стартовый вес узла more положителен: " + path.makes
+        assert way in graph.unimplemented, "Действие области more пока заглушено: " + way
+        assert path.world == signal, "Вход области more — метка мира " + signal
+    print("OK: узлы и заглушки области more читаются из фрагментов")
+
+
+def more_state(events):
+    return {
+        "stock": {},
+        "stage": 2,
+        "kits": {"spirit-1": {}},
+        "buildings": {},
+        "materials": {},
+        "storageFreePercent": 60,
+        "events": [],
+        "world": events,
+        "distances": {},
+        "stations": {},
+        "orders": {},
+        "facts": {},
+    }
+
+
+def test_more_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    tasks = {task["id"] for task in plan(graph, State(more_state(list(MORE))))["tasks"]}
+    for way in MORE.values():
+        assert way in tasks, "Python: вход области more обязан выбрать путь " + way
+    quiet = {task["id"] for task in plan(graph, State(more_state([])))["tasks"]}
+    for way in MORE.values():
+        assert way not in quiet, "Python: без входа области more задачи нет: " + way
+    print("OK: входы области more учитываются в выборе")
 
 
 def test_conformance():
@@ -274,6 +332,8 @@ if __name__ == "__main__":
         test_world_inputs()
         test_gear_fragment()
         test_gear_inputs()
+        test_more_nodes()
+        test_more_inputs()
         test_conformance()
     except AssertionError as error:
         print(error)
