@@ -420,7 +420,7 @@ public final class SpiritEntity extends PathfinderMob {
         compound.putBoolean(
                 "SpiritMainHandBorrowed",
                 mainHandBorrowed && !super.getItemBySlot(EquipmentSlot.MAINHAND).isEmpty());
-        SpiritTaskStore.write(compound, taskJsonForSave());
+        SpiritTaskStore.write(compound, taskJsonForSave(), getUUID());
         SpiritMemoryStore.write(compound, memory.all().isEmpty() ? null : MemoryCodec.encode(memory));
         SpiritWorkZoneStore.write(compound, policies.workZone().orElse(null));
         SpiritTacticsStore.write(compound, tactics.hasState() ? TacticsStateCodec.encode(tactics.snapshot()) : null);

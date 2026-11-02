@@ -31,7 +31,13 @@ public final class PlanParser {
     public static TaskNode parseStructure(String json) {
         Objects.requireNonNull(json, "json не может быть null: план приходит текстом");
         JsonNode root = readTree(json);
-        return parseNode(root, 1, new Counter());
+        return parseNode(root, 1, new Counter(PlanLimits.MAX_NODES));
+    }
+
+    public static TaskNode parseSnapshotStructure(String json) {
+        Objects.requireNonNull(json, "Снимок плана не может быть null: разбирать нечего");
+        JsonNode root = readTree(json);
+        return parseNode(root, 1, new Counter(PlanLimits.MAX_SNAPSHOT_NODES));
     }
 
     private static JsonNode readTree(String json) {
@@ -50,8 +56,8 @@ public final class PlanParser {
                     + ": проверьте вложенность sequence/repeat/fallback/parallel/condition, планировщик зациклился");
         }
         counter.increment();
-        if (counter.value() > PlanLimits.MAX_NODES) {
-            throw new PlanValidationException("В плане больше " + PlanLimits.MAX_NODES
+        if (counter.value() > counter.limit()) {
+            throw new PlanValidationException("В плане больше " + counter.limit()
                     + " узлов: проверьте план, ИИ-планировщик вернул неограниченно большое дерево");
         }
         if (node == null || !node.isObject()) {
@@ -194,7 +200,12 @@ public final class PlanParser {
     }
 
     private static final class Counter {
+        private final int limit;
         private int nodes;
+
+        Counter(int limit) {
+            this.limit = limit;
+        }
 
         void increment() {
             nodes++;
@@ -202,6 +213,10 @@ public final class PlanParser {
 
         int value() {
             return nodes;
+        }
+
+        int limit() {
+            return limit;
         }
     }
 }

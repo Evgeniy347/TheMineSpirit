@@ -133,7 +133,7 @@ public final class TaskSnapshotCodec {
             throw new SnapshotFormatException("RUNNING-снимок без плана plan: движку нечего продолжать");
         }
         try {
-            return PlanParser.parseStructure(node.toString());
+            return PlanParser.parseSnapshotStructure(node.toString());
         } catch (PlanValidationException e) {
             throw new SnapshotFormatException("План снимка не разобран: " + e.getMessage(), e);
         }
