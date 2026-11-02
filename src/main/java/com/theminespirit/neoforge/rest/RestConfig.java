@@ -8,11 +8,19 @@ public final class RestConfig {
     public static final int MIN_PORT = 1024;
     public static final int MAX_PORT = 65535;
     public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
+    public static final String DEFAULT_HEARTBEAT_FILE = "/opt/minecraft/logs/tick.heartbeat";
+    public static final String DEFAULT_DEBUG_LEASE_FILE = "/opt/minecraft/debug.lease";
+    public static final int DEFAULT_HANG_AFTER_SECONDS = 180;
+    public static final int MIN_HANG_AFTER_SECONDS = 30;
+    public static final int MAX_HANG_AFTER_SECONDS = 3600;
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.BooleanValue ENABLED;
     private static final ModConfigSpec.IntValue PORT;
     private static final ModConfigSpec.ConfigValue<String> BIND_ADDRESS;
+    private static final ModConfigSpec.ConfigValue<String> HEARTBEAT_FILE;
+    private static final ModConfigSpec.ConfigValue<String> DEBUG_LEASE_FILE;
+    private static final ModConfigSpec.IntValue HANG_AFTER_SECONDS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -24,6 +32,16 @@ public final class RestConfig {
         BIND_ADDRESS = builder.comment(
                         "Адрес привязки. 0.0.0.0 — вся локальная сеть, 127.0.0.1 — только этот компьютер.")
                 .define("bindAddress", DEFAULT_BIND_ADDRESS);
+        HEARTBEAT_FILE = builder.comment(
+                        "Файл-сердцебиение серверного тика: сторож зависания читает его, когда REST не отвечает.")
+                .define("heartbeatFile", DEFAULT_HEARTBEAT_FILE);
+        DEBUG_LEASE_FILE = builder.comment(
+                        "Замок живой отладки: пока он держится, зависание считается паузой на брейкпоинте.")
+                .define("debugLeaseFile", DEFAULT_DEBUG_LEASE_FILE);
+        HANG_AFTER_SECONDS = builder.comment(
+                        "Сколько секунд без тика считать зависанием; сторож перезапускает сервер после порога.")
+                .defineInRange(
+                        "hangAfterSeconds", DEFAULT_HANG_AFTER_SECONDS, MIN_HANG_AFTER_SECONDS, MAX_HANG_AFTER_SECONDS);
         builder.pop();
         SPEC = builder.build();
     }
@@ -44,5 +62,17 @@ public final class RestConfig {
 
     public static String bindAddress() {
         return BIND_ADDRESS.get();
+    }
+
+    public static String heartbeatFile() {
+        return HEARTBEAT_FILE.get();
+    }
+
+    public static String debugLeaseFile() {
+        return DEBUG_LEASE_FILE.get();
+    }
+
+    public static int hangAfterSeconds() {
+        return HANG_AFTER_SECONDS.get();
     }
 }

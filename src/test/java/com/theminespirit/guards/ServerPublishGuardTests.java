@@ -21,6 +21,7 @@ class ServerPublishGuardTests {
     private static final List<String> SERVER_SCRIPTS = List.of(
             "scripts/common.sh",
             "scripts/console.sh",
+            "scripts/hang-watch.sh",
             "scripts/install-neoforge.sh",
             "scripts/start.sh",
             "scripts/stop.sh",
@@ -85,6 +86,10 @@ class ServerPublishGuardTests {
         assertTrue(
                 script.contains("$SERVER_DIR/config"),
                 "publish.sh не копирует server/config в $SERVER_DIR/config: конфиги сервера останутся старыми");
+        assertTrue(
+                script.contains("hang-watch.sh") && script.contains("crontab"),
+                "publish.sh не ставит cron сторожа зависания: server/scripts/hang-watch.sh доедет до сервера, "
+                        + "но не запустится по расписанию, и зависший сервер снова никто не заметит");
     }
 
     @Test
