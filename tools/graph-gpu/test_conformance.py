@@ -71,6 +71,34 @@ def test_fragments():
     print("OK: фрагменты графа сливаются, конфликт назван путём")
 
 
+def operational_ids(graph, facts):
+    state = State({
+        "stock": {},
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "buildings": {"crafting_table": "BUILT", "chests": "BUILT", "furnace": "BUILT"},
+        "storageFreePercent": 60,
+        "world": [],
+        "facts": facts,
+    })
+    return [task["id"] for task in plan(graph, state)["tasks"]]
+
+
+def test_operational_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    store = operational_ids(graph, {"stageReqs": {"minimum": {"oak_log": 64}, "actual": {"oak_log": 0}}})
+    assert "store:minimum" in store, "недобор минимума склада обязан дать узел store:minimum"
+    dig = operational_ids(graph, {"spirits": {"spirit-1": {"trapped": True, "trap": "sealed"}}})
+    assert "dig_out" in dig and "restore_trace" in dig, "дух без пути обязан дать dig_out и restore_trace"
+    smelt = operational_ids(graph, {"stations": {"furnace": {
+        "id": "furnace", "type": "furnace", "busy": False, "fuel": "coal", "input": "iron_ore", "output": None}}})
+    assert "station:smelt:load" in smelt, "загруженная печь обязана дать путь загрузки"
+    space = operational_ids(graph, {"chests": [{
+        "position": {"x": 1, "y": 2, "z": 3}, "contents": {}, "freeSlots": 1, "totalSlots": 27}]})
+    assert "storage_space" in space, "мало места обязано дать узел новой пары сундуков"
+    print("OK: новые входы склада и копания дают узлы графа")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -87,6 +115,7 @@ def test_conformance():
 if __name__ == "__main__":
     try:
         test_fragments()
+        test_operational_inputs()
         test_conformance()
     except AssertionError as error:
         print(error)

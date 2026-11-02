@@ -1,0 +1,118 @@
+{
+  "store": {
+    "reservePercent": 25,
+    "minimum": {
+      "1": {
+        "#logs": 64,
+        "cobblestone": 128,
+        "bread": 16,
+        "iron_axe": 1,
+        "iron_pickaxe": 1,
+        "iron_shovel": 1,
+        "iron_sword": 1
+      }
+    }
+  },
+  "items": {
+    "store_minimum_need": {
+      "xmin": 0,
+      "base": 80,
+      "stage": 1,
+      "implemented": false
+    },
+    "carry_need": {
+      "xmin": 0,
+      "base": 55,
+      "stage": 1,
+      "implemented": false
+    },
+    "smelt_load_need": {
+      "xmin": 0,
+      "base": 60,
+      "stage": 1,
+      "implemented": false
+    },
+    "smelt_take_need": {
+      "xmin": 0,
+      "base": 60,
+      "stage": 1,
+      "implemented": false
+    },
+    "space_need": {
+      "xmin": 0,
+      "base": 50,
+      "stage": 1,
+      "implemented": false
+    },
+    "sort_need": {
+      "xmin": 0,
+      "base": 40,
+      "stage": 1,
+      "implemented": false
+    }
+  },
+  "ways": [
+    {
+      "id": "store:minimum",
+      "case": "SUPPLY_SITE",
+      "makes": "store_minimum_need",
+      "yield": 1,
+      "weight": 1.0,
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "transfer/carry",
+      "case": "TRANSFER_ITEM",
+      "makes": "carry_need",
+      "yield": 1,
+      "weight": 1.0,
+      "building": "chests",
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "station:smelt:load",
+      "case": "ACTIVITY_SMELT",
+      "makes": "smelt_load_need",
+      "yield": 1,
+      "weight": 1.0,
+      "building": "furnace",
+      "ticks": 100,
+      "implemented": false
+    },
+    {
+      "id": "station:smelt:take",
+      "case": "ACTIVITY_SMELT",
+      "makes": "smelt_take_need",
+      "yield": 1,
+      "weight": 1.0,
+      "building": "furnace",
+      "ticks": 40,
+      "implemented": false
+    },
+    {
+      "id": "storage_space",
+      "case": "STOCK_CHESTS",
+      "makes": "space_need",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 16
+      },
+      "building": "chests",
+      "ticks": 200,
+      "implemented": false
+    },
+    {
+      "id": "sort",
+      "case": "ACTIVITY_UNLOAD",
+      "makes": "sort_need",
+      "yield": 1,
+      "weight": 1.0,
+      "building": "chests",
+      "ticks": 200,
+      "implemented": false
+    }
+  ]
+}

@@ -43,7 +43,8 @@ class GraphStateFactsTests {
                 null,
                 inventory,
                 List.of(),
-                List.of());
+                List.of(),
+                null);
         inventory.put("minecraft:coal", 9);
 
         assertEquals(
@@ -120,7 +121,8 @@ class GraphStateFactsTests {
                                 null,
                                 Map.of("minecraft:stick", 1),
                                 List.of(),
-                                List.of())),
+                                List.of(),
+                                null)),
                 List.of(),
                 List.of(),
                 List.of(),

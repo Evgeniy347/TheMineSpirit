@@ -617,6 +617,93 @@ class Planner:
         known = self.graph.buildings.get(building)
         return known is not None and self.share(known.materials) >= self.graph.build_start_share
 
+    def node_weight(self, node):
+        item = self.graph.items.get(node)
+        if item is not None:
+            return max(1, item.base)
+        if self.graph.is_group(node):
+            return max((self.graph.items[member].base for member in self.graph.members(node)
+                        if member in self.graph.items), default=40)
+        return 40
+
+    def operational(self):
+        self.store_minimums()
+        self.transfer_carry()
+        self.smelt()
+        self.storage_space()
+        self.sort_chests()
+        self.dig_out()
+
+    def store_minimums(self):
+        reqs = self.state.stage_reqs or {}
+        minimum = reqs.get("minimum") or {}
+        actual = reqs.get("actual") or {}
+        shortage = False
+        for node, need in minimum.items():
+            if actual.get(node, 0) >= need:
+                continue
+            shortage = True
+            if node in self.graph.items or self.graph.is_group(node) or self.graph.is_tool(node):
+                self.push(None, node, self.node_weight(node))
+            else:
+                self.notices.setdefault(node, {
+                    "building": node,
+                    "reason": "минимум склада требует «" + node + "», а граф не знает, как это добыть",
+                })
+        if shortage:
+            self.push(None, "store_minimum_need", self.node_weight("store_minimum_need"))
+
+    def transfer_carry(self):
+        chests = self.state.chest_facts
+        if not chests:
+            return
+        free = sum(int(chest.get("freeSlots", 0)) for chest in chests)
+        if free <= 0:
+            return
+        surplus = any(sum(int(value) for value in (spirit.get("inventory") or {}).values()) >= 8
+                      for spirit in self.state.spirit_facts.values())
+        relocate = len(chests) >= 2 \
+            and any(chest.get("contents") for chest in chests) \
+            and any(int(chest.get("freeSlots", 0)) > 0 for chest in chests)
+        if surplus or relocate:
+            self.push(None, "carry_need", self.node_weight("carry_need"))
+
+    def smelt(self):
+        for station in self.state.station_facts.values():
+            if station.get("type") not in ("furnace", "smoker"):
+                continue
+            busy = bool(station.get("busy", False))
+            output = station.get("output")
+            input_ = station.get("input")
+            fuel = station.get("fuel")
+            if output is not None:
+                self.push(None, "smelt_take_need", self.node_weight("smelt_take_need"))
+            if not busy and output is None and (input_ is not None or fuel is not None):
+                self.push(None, "smelt_load_need", self.node_weight("smelt_load_need"))
+
+    def storage_space(self):
+        chests = self.state.chest_facts
+        if not chests:
+            return
+        total = sum(int(chest.get("totalSlots", 0)) for chest in chests)
+        if total <= 0:
+            return
+        free = sum(int(chest.get("freeSlots", 0)) for chest in chests)
+        if free * 100 < self.graph.storage_min_free * total:
+            self.push(None, "space_need", self.node_weight("space_need"))
+
+    def sort_chests(self):
+        if any(len(chest.get("contents") or {}) > 8 for chest in self.state.chest_facts):
+            self.push(None, "sort_need", self.node_weight("sort_need"))
+
+    def dig_out(self):
+        for spirit in self.state.spirit_facts.values():
+            if not spirit.get("trapped", False):
+                continue
+            cause = spirit.get("trap")
+            node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
+            self.push(None, node, self.node_weight(node))
+
     def push(self, source, node, amount):
         if amount == 0:
             return
@@ -685,6 +772,7 @@ class Planner:
                     graph.storage_base,
                     "на складе свободно " + str(state.storage_free_percent) + "% (< " + str(graph.storage_min_free) + "%)",
                 )
+        self.operational()
 
     def expand(self, node):
         if node in self.expanded:

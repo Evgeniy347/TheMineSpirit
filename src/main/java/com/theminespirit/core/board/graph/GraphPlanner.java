@@ -22,11 +22,11 @@ public final class GraphPlanner {
     private static final String ORDER = "order:";
     private static final int EXPLORE_TICKS = 2400;
     private static final char AT = '@';
+    final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final SupplyGraph graph;
     private final GraphState state;
     private final GraphFlow flow = new GraphFlow();
     private final Set<String> expanded = new HashSet<>();
-    private final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
 
@@ -114,12 +114,11 @@ public final class GraphPlanner {
                     "на складе свободно " + state.storageFreePercent() + "% (< "
                             + graph.storage().minFreePercent() + "%)");
         }
+        GraphOperations.run(graph, state, this);
     }
 
-    private void push(@Nullable String from, String node, double amount) {
-        if (amount == 0) {
-            return;
-        }
+    void push(@Nullable String from, String node, double amount) {
+        if (amount == 0) return;
         if (from == null) {
             flow.root(node, amount);
         } else {

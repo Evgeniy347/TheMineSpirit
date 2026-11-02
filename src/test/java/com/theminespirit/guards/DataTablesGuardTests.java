@@ -25,7 +25,11 @@ class DataTablesGuardTests {
     private static final Map<String, String> EXCLUDED = Map.of(
             "data/theminespirit/schematics/buildings.json",
             "каталог семей построек читается один раз при регистрации команд /spirit demo: подкоманды по /reload "
-                    + "не перерегистрируются, горячая таблица дала бы каталог, расходящийся с командами");
+                    + "не перерегистрируются, горячая таблица дала бы каталог, расходящийся с командами",
+            "data/theminespirit/board/graph.d/dig.json",
+            "фрагмент графа сливается в SupplyGraph при загрузке, а не читается как отдельная таблица DataTables",
+            "data/theminespirit/board/graph.d/store.json",
+            "фрагмент графа сливается в SupplyGraph при загрузке, а не читается как отдельная таблица DataTables");
 
     @Test
     void dataTables_EveryJsonFile_RegisteredOrExcluded() throws IOException {

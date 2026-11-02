@@ -1,0 +1,86 @@
+{
+  "items": {
+    "dig_open": {
+      "xmin": 0,
+      "base": 95,
+      "stage": 1,
+      "implemented": false
+    },
+    "bridge_open": {
+      "xmin": 0,
+      "base": 90,
+      "stage": 1,
+      "implemented": false
+    },
+    "pillar_open": {
+      "xmin": 0,
+      "base": 90,
+      "stage": 1,
+      "implemented": false
+    },
+    "trail_clean": {
+      "xmin": 0,
+      "base": 70,
+      "stage": 1,
+      "implemented": false
+    }
+  },
+  "ways": [
+    {
+      "id": "dig_out",
+      "case": "ACTIVITY_MOVE",
+      "makes": "dig_open",
+      "yield": 1,
+      "weight": 1.0,
+      "tool": "pickaxe",
+      "tier": "wooden",
+      "needs": {
+        "trail_clean": 1
+      },
+      "ticks": 300,
+      "implemented": false
+    },
+    {
+      "id": "bridge",
+      "case": "ACTIVITY_MOVE",
+      "makes": "bridge_open",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 8
+      },
+      "needs": {
+        "trail_clean": 1
+      },
+      "ticks": 600,
+      "implemented": false
+    },
+    {
+      "id": "pillar",
+      "case": "ACTIVITY_MOVE",
+      "makes": "pillar_open",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#planks": 4
+      },
+      "needs": {
+        "trail_clean": 1
+      },
+      "ticks": 400,
+      "implemented": false
+    },
+    {
+      "id": "restore_trace",
+      "case": "FILL_CRATER",
+      "makes": "trail_clean",
+      "yield": 1,
+      "weight": 1.0,
+      "consumes": {
+        "#stone_crafting": 1
+      },
+      "ticks": 200,
+      "implemented": false
+    }
+  ]
+}

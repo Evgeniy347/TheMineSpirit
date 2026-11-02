@@ -35,7 +35,8 @@ public record GraphFacts(
             @Nullable String activity,
             Map<String, Integer> inventory,
             List<Armor> armor,
-            List<Tool> tools) {
+            List<Tool> tools,
+            @Nullable String trap) {
         public Spirit {
             Objects.requireNonNull(id, "id духа не может быть null: факт принадлежит конкретному духу");
             Objects.requireNonNull(position, "позиция духа не может быть null: без неё не выбрать работу");
@@ -45,6 +46,11 @@ public record GraphFacts(
                     Objects.requireNonNull(armor, "броня духа не может быть null: без брони — пустой список"));
             tools = List.copyOf(
                     Objects.requireNonNull(tools, "инструменты духа не могут быть null: без них — пустой список"));
+        }
+
+        public Spirit withTrap(String cause) {
+            return new Spirit(
+                    id, position, health, food, air, inWater, true, stuck, activity, inventory, armor, tools, cause);
         }
     }
 
@@ -198,5 +204,17 @@ public record GraphFacts(
 
     public GraphFacts withChests(List<Chest> known) {
         return new GraphFacts(spirits, threats, known, resources, stations, buildings, strays, terrain, stageReqs);
+    }
+
+    public GraphFacts withSpirits(Map<String, Spirit> known) {
+        return new GraphFacts(known, threats, chests, resources, stations, buildings, strays, terrain, stageReqs);
+    }
+
+    public GraphFacts withStations(Map<String, Station> known) {
+        return new GraphFacts(spirits, threats, chests, resources, known, buildings, strays, terrain, stageReqs);
+    }
+
+    public GraphFacts withStageReqs(StageReqs reqs) {
+        return new GraphFacts(spirits, threats, chests, resources, stations, buildings, strays, terrain, reqs);
     }
 }
