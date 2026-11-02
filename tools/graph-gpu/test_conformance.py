@@ -105,6 +105,26 @@ def test_life_band():
     print("OK: полоса жизни выше maxPriority в Python")
 
 
+def dig_inputs(graph, facts):
+    state = State({
+        "stock": {},
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "buildings": {"crafting_table": "BUILT", "chests": "BUILT", "furnace": "BUILT"},
+        "storageFreePercent": 60,
+        "world": [],
+        "facts": facts,
+    })
+    return [task["id"] for task in plan(graph, state)["tasks"]]
+
+
+def test_dig_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    tasks = dig_inputs(graph, {"spirits": {"spirit-1": {"trapped": True, "trap": "sealed"}}})
+    assert "dig_out" in tasks and "restore_trace" in tasks,         "дух без пути обязан дать dig_out и restore_trace"
+    print("OK: вход копания даёт узлы dig_out и restore_trace")
+
+
 def test_area_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for way in ("transfer_item", "sort_chest", "restock_food", "till_soil", "plant_crop",
@@ -204,6 +224,7 @@ if __name__ == "__main__":
     try:
         test_fragments()
         test_life_band()
+        test_dig_inputs()
         test_area_nodes()
         test_store_nodes()
         test_world_fragment()

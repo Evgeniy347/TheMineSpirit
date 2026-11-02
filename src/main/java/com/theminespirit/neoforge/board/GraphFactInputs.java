@@ -65,7 +65,8 @@ final class GraphFactInputs {
                             spirit.currentActivity().orElse(null),
                             inventory(spirit),
                             armor(spirit),
-                            tools(spirit, graph)));
+                            tools(spirit, graph),
+                            null));
         }
         return facts;
     }

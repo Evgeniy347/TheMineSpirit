@@ -687,75 +687,22 @@ class Planner:
         known = self.graph.buildings.get(building)
         return known is not None and self.share(known.materials) >= self.graph.build_start_share
 
-    def push(self, source, node, amount):
-        if amount == 0:
-            return
-        if source is None:
-            self.flow.root(node, amount)
-        else:
-            self.flow.link(source, node, amount)
-        self.expand(node)
+    def node_weight(self, node):
+        item = self.graph.items.get(node)
+        if item is not None:
+            return max(1, item.base)
+        if self.graph.is_group(node):
+            return max((self.graph.items[member].base for member in self.graph.members(node)
+                        if member in self.graph.items), default=40)
+        return 40
 
-    def push_tool(self, source, kind, amount):
-        spirits = self.state.spirits()
-        for spirit in self.state.kits:
-            self.push(source, TOOL + kind + AT + spirit, amount / max(1, spirits))
-
-    def require_building(self, source, building_id, amount, why):
-        building = self.graph.buildings.get(building_id)
-        if building is None or self.state.built(building_id) == ABSENT or building.stage > self.state.stage:
-            self.notices.setdefault(building_id, {
-                "building": building_id,
-                "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
-            })
-            return
-        if building.board_case in WATCHER_OWNED:
-            return
-        self.push(source, BUILDING + building_id, amount)
-
-    def roots(self):
-        graph = self.graph
-        state = self.state
-        for item in graph.items.values():
-            if item.stage > state.stage:
+    def dig_out(self):
+        for spirit in self.state.spirit_facts.values():
+            if not spirit.get("trapped", False):
                 continue
-            have = self.count(item.id)
-            if have < self.threshold(item, state) and self.sourced(item.id):
-                self.push(None, item.id, item.base + (graph.urgent_boost if have < item.xmin else 0))
-        for spirit in list(state.kits.keys()):
-            for kind in graph.kind_names():
-                target = graph.rank(graph.kit_tier(kind, state.stage))
-                tier = state.tier(spirit, kind)
-                if tier < target:
-                    base = graph.kit_secondary_base if state.best_tier(kind) >= target else graph.kit_base
-                    self.push(None, TOOL + kind + AT + spirit, base + (graph.urgent_boost if tier < 0 else 0))
-        for building in graph.buildings.values():
-            if not building.optional and building.stage <= state.stage and state.built(building.id) != BUILT:
-                self.require_building(None, building.id, building.base, "постройка этапа " + str(building.stage))
-        for herd, cap in graph.herd_caps.items():
-            if self.count(herd) > cap.limit(state.spirits()):
-                for way in graph.ways:
-                    if herd in way.consumes and self.available(way):
-                        self.flow.local(way.id, HERD_CULL_BOOST)
-                        self.expand_way(way.id, way)
-        for trigger in graph.triggers:
-            wanted = graph.buildings.get(trigger.get("build"))
-            if wanted is not None and self.count(trigger.get("have")) > 0 and state.built(trigger["build"]) != BUILT:
-                self.require_building(None, trigger["build"], wanted.base, "есть " + str(trigger.get("have")))
-        if state.storage_free_percent < graph.storage_min_free:
-            if state.built(graph.storage_building) == BUILT:
-                self.notices.setdefault(graph.storage_building, {
-                    "building": graph.storage_building,
-                    "reason": "склад построен, но свободно " + str(state.storage_free_percent) + "%",
-                })
-            else:
-                self.require_building(
-                    None,
-                    graph.storage_building,
-                    graph.storage_base,
-                    "на складе свободно " + str(state.storage_free_percent) + "% (< " + str(graph.storage_min_free) + "%)",
-                )
-        self.store_roots()
+            cause = spirit.get("trap")
+            node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
+            self.push(None, node, self.node_weight(node))
 
     def store_roots(self):
         graph = self.graph
@@ -845,6 +792,77 @@ class Planner:
                 if len(found) > 1:
                     return True
         return False
+
+    def push(self, source, node, amount):
+        if amount == 0:
+            return
+        if source is None:
+            self.flow.root(node, amount)
+        else:
+            self.flow.link(source, node, amount)
+        self.expand(node)
+
+    def push_tool(self, source, kind, amount):
+        spirits = self.state.spirits()
+        for spirit in self.state.kits:
+            self.push(source, TOOL + kind + AT + spirit, amount / max(1, spirits))
+
+    def require_building(self, source, building_id, amount, why):
+        building = self.graph.buildings.get(building_id)
+        if building is None or self.state.built(building_id) == ABSENT or building.stage > self.state.stage:
+            self.notices.setdefault(building_id, {
+                "building": building_id,
+                "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
+            })
+            return
+        if building.board_case in WATCHER_OWNED:
+            return
+        self.push(source, BUILDING + building_id, amount)
+
+    def roots(self):
+        graph = self.graph
+        state = self.state
+        for item in graph.items.values():
+            if item.stage > state.stage:
+                continue
+            have = self.count(item.id)
+            if have < self.threshold(item, state) and self.sourced(item.id):
+                self.push(None, item.id, item.base + (graph.urgent_boost if have < item.xmin else 0))
+        for spirit in list(state.kits.keys()):
+            for kind in graph.kind_names():
+                target = graph.rank(graph.kit_tier(kind, state.stage))
+                tier = state.tier(spirit, kind)
+                if tier < target:
+                    base = graph.kit_secondary_base if state.best_tier(kind) >= target else graph.kit_base
+                    self.push(None, TOOL + kind + AT + spirit, base + (graph.urgent_boost if tier < 0 else 0))
+        for building in graph.buildings.values():
+            if not building.optional and building.stage <= state.stage and state.built(building.id) != BUILT:
+                self.require_building(None, building.id, building.base, "постройка этапа " + str(building.stage))
+        for herd, cap in graph.herd_caps.items():
+            if self.count(herd) > cap.limit(state.spirits()):
+                for way in graph.ways:
+                    if herd in way.consumes and self.available(way):
+                        self.flow.local(way.id, HERD_CULL_BOOST)
+                        self.expand_way(way.id, way)
+        for trigger in graph.triggers:
+            wanted = graph.buildings.get(trigger.get("build"))
+            if wanted is not None and self.count(trigger.get("have")) > 0 and state.built(trigger["build"]) != BUILT:
+                self.require_building(None, trigger["build"], wanted.base, "есть " + str(trigger.get("have")))
+        if state.storage_free_percent < graph.storage_min_free:
+            if state.built(graph.storage_building) == BUILT:
+                self.notices.setdefault(graph.storage_building, {
+                    "building": graph.storage_building,
+                    "reason": "склад построен, но свободно " + str(state.storage_free_percent) + "%",
+                })
+            else:
+                self.require_building(
+                    None,
+                    graph.storage_building,
+                    graph.storage_base,
+                    "на складе свободно " + str(state.storage_free_percent) + "% (< " + str(graph.storage_min_free) + "%)",
+                )
+        self.store_roots()
+        self.dig_out()
 
     def expand(self, node):
         if node in self.expanded:

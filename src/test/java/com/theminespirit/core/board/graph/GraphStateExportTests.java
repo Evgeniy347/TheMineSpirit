@@ -26,7 +26,8 @@ class GraphStateExportTests {
                                 "supply_gather",
                                 Map.of("minecraft:oak_log", 2),
                                 List.of(new GraphFacts.Armor("HEAD", "minecraft:iron_helmet", 100, 165)),
-                                List.of(new GraphFacts.Tool("minecraft:iron_pickaxe", "pickaxe", 2, 200, 250)))),
+                                List.of(new GraphFacts.Tool("minecraft:iron_pickaxe", "pickaxe", 2, 200, 250)),
+                                null)),
                 List.of(),
                 List.of(new GraphFacts.Chest(new GraphFacts.Position(3, 64, 4), Map.of("minecraft:coal", 8), 5, 27)),
                 List.of(new GraphFacts.Resource(

@@ -24,6 +24,7 @@ final class GraphWorld {
     final Map<String, Integer> distances = new HashMap<>();
     final Set<String> world = new HashSet<>(
             Set.of("tree:oak", "tree:jungle", "sand", "clay", "animals", "flower:poppy", "flower:dandelion"));
+    GraphFacts facts = GraphFacts.empty();
 
     static GraphWorld empty() {
         GraphWorld world = new GraphWorld();
@@ -68,6 +69,11 @@ final class GraphWorld {
         return this;
     }
 
+    GraphWorld facts(GraphFacts value) {
+        facts = value;
+        return this;
+    }
+
     GraphWorld built(String building, Built state) {
         buildings.put(building, state);
         return this;
@@ -87,12 +93,24 @@ final class GraphWorld {
         world.distances.putAll(distances);
         world.world.clear();
         world.world.addAll(this.world);
+        world.facts = facts;
         return world;
     }
 
     GraphState state() {
         return new GraphState(
-                stock, stage, kits, buildings, materials, storageFree, events, world, distances, stations);
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFree,
+                events,
+                world,
+                distances,
+                stations,
+                Map.of(),
+                facts);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {
