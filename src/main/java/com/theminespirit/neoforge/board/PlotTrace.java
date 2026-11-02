@@ -15,13 +15,13 @@ import org.slf4j.Logger;
 final class PlotTrace {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    record Trace(Map<String, Integer> required, Map<String, Integer> placed, List<String> missing) {}
+    record Trace(Map<String, Integer> required, Map<String, Integer> placed, List<String> missing, int unknown) {}
 
     private PlotTrace() {}
 
     static Trace trace(ServerLevel level, TaskNode plan, String wood) {
         BuildGap.Gap gap = BuildGap.trace(plan, wood, FirstStepsRunner.probe(level), FirstStepsRunner.SCHEMES);
-        return new Trace(gap.required(), gap.placed(), gap.missing());
+        return new Trace(gap.required(), gap.placed(), gap.missing(), gap.unknown());
     }
 
     static void reportGap(
@@ -33,6 +33,13 @@ final class PlotTrace {
             int total,
             boolean rebuild) {
         Trace trace = trace(level, TicketPlans.plan(boardCase, 1, target), wood);
+        if (trace.unknown() > 0) {
+            LOGGER.info(
+                    "[layout] {}: {} клеток в незагруженных чанках — вывод о постройке отложен до загрузки",
+                    boardCase,
+                    trace.unknown());
+            return;
+        }
         if (!GapLog.changed(boardCase, trace.missing())) {
             return;
         }

@@ -27,7 +27,7 @@ final class StageWorldGate {
     static void apply(ServerLevel level, BoardService service, StageSite site, String wood) {
         BoardLedger ledger = service.board().ledger();
         int journal = SettlementStage.of(ledger);
-        StageWorld world = new StageOneWorld(progress(level, service, site, wood));
+        StageWorld world = new StageOneWorld(progress(level, site, wood));
         StageGate gate = SettlementStage.gate(ledger, world);
         service.board().ledger().gate(gate);
         if (gate.stage() < journal) {
@@ -36,34 +36,33 @@ final class StageWorldGate {
         StageHold.release(level, service);
     }
 
-    private static Map<String, TownSnapshot.Progress> progress(
-            ServerLevel level, BoardService service, StageSite site, String wood) {
-        Map<String, TownSnapshot.Progress> progress = new LinkedHashMap<>();
-        progress.put(
-                BoardCase.BUILD_MINE.name(),
-                FirstStepsRunner.progress(level, service, BoardCase.BUILD_MINE, site, wood));
+    private static Map<String, FirstStepsRunner.Placed> progress(ServerLevel level, StageSite site, String wood) {
+        Map<String, FirstStepsRunner.Placed> progress = new LinkedHashMap<>();
+        progress.put(BoardCase.BUILD_MINE.name(), FirstStepsRunner.audit(level, BoardCase.BUILD_MINE, site, wood));
         progress.put(
                 BoardCase.STOCK_CHESTS.name(),
                 sum(
                         sum(
-                                FirstStepsRunner.progress(level, service, BoardCase.STOCK_CHESTS, site, wood),
-                                FirstStepsRunner.progress(level, service, BoardCase.CRAFT_FURNACE, site, wood)),
-                        YardFloorWatch.progress(level, site)));
+                                FirstStepsRunner.audit(level, BoardCase.STOCK_CHESTS, site, wood),
+                                FirstStepsRunner.audit(level, BoardCase.CRAFT_FURNACE, site, wood)),
+                        floor(YardFloorWatch.progress(level, site))));
+        progress.put(BoardCase.BUILD_HOUSE.name(), FirstStepsRunner.audit(level, BoardCase.BUILD_HOUSE, site, wood));
         progress.put(
-                BoardCase.BUILD_HOUSE.name(),
-                FirstStepsRunner.progress(level, service, BoardCase.BUILD_HOUSE, site, wood));
+                BoardCase.BUILD_ORCHARD.name(), FirstStepsRunner.audit(level, BoardCase.BUILD_ORCHARD, site, wood));
+        progress.put(BoardCase.BUILD_FENCE.name(), FirstStepsRunner.audit(level, BoardCase.BUILD_FENCE, site, wood));
+        progress.put(BoardCase.LIGHTING.name(), FirstStepsRunner.audit(level, BoardCase.LIGHTING, site, wood));
         progress.put(
-                BoardCase.BUILD_ORCHARD.name(),
-                FirstStepsRunner.progress(level, service, BoardCase.BUILD_ORCHARD, site, wood));
-        progress.put(
-                BoardCase.BUILD_FENCE.name(),
-                FirstStepsRunner.progress(level, service, BoardCase.BUILD_FENCE, site, wood));
-        progress.put(
-                BoardCase.LIGHTING.name(), FirstStepsRunner.progress(level, service, BoardCase.LIGHTING, site, wood));
-        progress.put(
-                BoardCase.BUILD_STREETS.name(),
-                FirstStepsRunner.progress(level, service, BoardCase.BUILD_STREETS, site, wood));
+                BoardCase.BUILD_STREETS.name(), FirstStepsRunner.audit(level, BoardCase.BUILD_STREETS, site, wood));
         return progress;
+    }
+
+    private static FirstStepsRunner.Placed floor(TownSnapshot.Progress progress) {
+        return new FirstStepsRunner.Placed(progress.done(), progress.total(), 0);
+    }
+
+    private static FirstStepsRunner.Placed sum(FirstStepsRunner.Placed first, FirstStepsRunner.Placed second) {
+        return new FirstStepsRunner.Placed(
+                first.done() + second.done(), first.total() + second.total(), first.unknown() + second.unknown());
     }
 
     private static void reopenBroken(BoardService service, StageGate gate) {
@@ -84,19 +83,14 @@ final class StageWorldGate {
         }
     }
 
-    private static TownSnapshot.Progress sum(TownSnapshot.Progress first, TownSnapshot.Progress second) {
-        return new TownSnapshot.Progress(
-                first.done() + second.done(), first.total() + second.total(), first.damaged() || second.damaged());
-    }
-
-    private record StageOneWorld(Map<String, TownSnapshot.Progress> progress) implements StageWorld {
+    private record StageOneWorld(Map<String, FirstStepsRunner.Placed> progress) implements StageWorld {
         @Override
         public boolean built(BoardCase boardCase, int level) {
             if (level != 1 || !WORLD_STEPS.contains(boardCase)) {
                 return true;
             }
-            TownSnapshot.Progress found = progress.get(boardCase.name());
-            return found == null || (found.total() > 0 && found.done() >= found.total());
+            FirstStepsRunner.Placed found = progress.get(boardCase.name());
+            return found == null || !found.confident() || (found.total() > 0 && found.done() >= found.total());
         }
 
         @Override

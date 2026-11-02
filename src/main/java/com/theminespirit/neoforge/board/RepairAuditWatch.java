@@ -52,6 +52,12 @@ final class RepairAuditWatch {
                 rules,
                 FIRST_SEEN,
                 now);
+        if (report.unknown() > 0) {
+            LOGGER.info(
+                    "[repair] обход дома: {} клеток в незагруженных чанках — вывод о повреждении отложен",
+                    report.unknown());
+            return;
+        }
         if (report.damaged()) {
             repairWarnings(level, report, now);
             requestRepair(level, service, site, report, now);
@@ -121,6 +127,11 @@ final class RepairAuditWatch {
         @Override
         public boolean playerPlaced(BlockCoord cell) {
             return PlacedBlocksData.get(level).isMarked(new BlockPos(cell.x(), cell.y(), cell.z()));
+        }
+
+        @Override
+        public boolean loaded(BlockCoord cell) {
+            return level.isLoaded(new BlockPos(cell.x(), cell.y(), cell.z()));
         }
     }
 }

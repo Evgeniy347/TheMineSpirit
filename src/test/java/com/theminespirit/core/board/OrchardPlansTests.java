@@ -55,6 +55,27 @@ class OrchardPlansTests {
     }
 
     @Test
+    void plan_MainOrchard_KeepsOriginFromPlanNotTicketPoint() {
+        StageSite site = TownFixtures.flatSite();
+        BlockCoord planOrigin = site.orchardOrigin();
+        BlockCoord elsewhere = site.workYard();
+        TicketTarget target = TicketTarget.at(elsewhere).withWork(new StageWork(site, List.of()));
+
+        ScriptCall build = calls(TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target)).stream()
+                .filter(call -> "build_schematic".equals(call.script()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("В задании сада нет постройки по схеме"));
+
+        assertEquals(
+                planOrigin,
+                new BlockCoord(
+                        (Integer) build.params().get("x"),
+                        (Integer) build.params().get("y"),
+                        (Integer) build.params().get("z")),
+                "Сад строится и чинится на одном origin из плана: точка задания (двор) не переносит постройку");
+    }
+
+    @Test
     void plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies() {
         StageSite site = TownFixtures.site(TownFixtures.planWithOrchard("orchard_jungle"));
         OrchardPlot plot = site.extraOrchard("orchard_jungle").orElseThrow();

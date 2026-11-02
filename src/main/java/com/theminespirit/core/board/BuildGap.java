@@ -30,6 +30,10 @@ public final class BuildGap {
         String block(BlockCoord at);
 
         boolean passable(BlockCoord at);
+
+        default boolean loaded(BlockCoord at) {
+            return true;
+        }
     }
 
     public interface Schemes {
@@ -43,7 +47,19 @@ public final class BuildGap {
             Map<String, Integer> placed,
             Map<String, Integer> missingItems,
             Map<BlockCoord, String> missingCells,
-            List<String> missing) {
+            List<String> missing,
+            int unknown) {
+        public Gap {
+            if (unknown < 0) {
+                throw new IllegalArgumentException(
+                        "Неизвестных клеток " + unknown + ": в незагруженном чанке их не меньше нуля");
+            }
+        }
+
+        public boolean confident() {
+            return unknown == 0;
+        }
+
         public int done() {
             return placed.values().stream().mapToInt(Integer::intValue).sum();
         }
@@ -112,6 +128,7 @@ public final class BuildGap {
         private final Map<String, Integer> missingItems = new LinkedHashMap<>();
         private final Map<BlockCoord, String> missingCells = new LinkedHashMap<>();
         private final List<String> missing = new ArrayList<>();
+        private int unknown;
 
         private Accumulator(String wood, Probe probe, Schemes schemes) {
             this.wood = wood;
@@ -150,6 +167,10 @@ public final class BuildGap {
         }
 
         private void expect(BlockCoord at, String block) {
+            if (!probe.loaded(at)) {
+                unknown++;
+                return;
+            }
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
             String standing = probe.block(at);
             count(
@@ -163,6 +184,10 @@ public final class BuildGap {
         private void mine(MineLayout layout) {
             String floor = bare(SchematicBlocks.itemOf(SchematicBlocks.placementBlock(SchematicBlocks.FLOOR)));
             for (BlockCoord cell : layout.floors()) {
+                if (!probe.loaded(cell)) {
+                    unknown++;
+                    continue;
+                }
                 String standing = probe.block(cell);
                 count(
                         cell,
@@ -172,6 +197,10 @@ public final class BuildGap {
                         " ожидается " + floor + ", стоит " + standing);
             }
             for (BlockCoord cell : layout.air()) {
+                if (!probe.loaded(cell)) {
+                    unknown++;
+                    continue;
+                }
                 String standing = probe.block(cell);
                 count(cell, DIG, "minecraft:air", () -> probe.passable(cell), " копать: " + standing);
             }
@@ -194,7 +223,8 @@ public final class BuildGap {
                     Map.copyOf(placed),
                     Map.copyOf(missingItems),
                     Map.copyOf(missingCells),
-                    List.copyOf(missing));
+                    List.copyOf(missing),
+                    unknown);
         }
     }
 

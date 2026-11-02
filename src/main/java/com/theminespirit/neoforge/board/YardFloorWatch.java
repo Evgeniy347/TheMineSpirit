@@ -72,6 +72,9 @@ final class YardFloorWatch {
     }
 
     static TownSnapshot.Progress progress(ServerLevel level, StageSite site) {
+        if (!loaded(level, site)) {
+            return TownSnapshot.Progress.NONE;
+        }
         YardFloor.Audit found = audit(level, site);
         return new TownSnapshot.Progress(found.supported(), found.stations().size(), found.damaged());
     }
@@ -83,6 +86,21 @@ final class YardFloorWatch {
                         || status == BoardStatus.WAITING_RESOURCES
                         || status == BoardStatus.ASSIGNED)
                 .isPresent();
+    }
+
+    private static boolean loaded(ServerLevel level, StageSite site) {
+        var yard = site.yard();
+        int y = site.anchor().y();
+        for (int x = yard.x(); x < yard.x() + yard.width(); x++) {
+            for (int z = yard.z(); z < yard.z() + yard.depth(); z++) {
+                for (int dy = -3; dy <= 1; dy++) {
+                    if (!level.isLoaded(new BlockPos(x, y + dy, z))) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private static YardFloor.Audit audit(ServerLevel level, StageSite site) {

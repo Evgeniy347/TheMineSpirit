@@ -586,7 +586,7 @@ public final class BoardService {
         }
         FirstStepsRunner.Placed placed =
                 FirstStepsRunner.audit(level, BoardCase.valueOf(work.repairs()), work.site(), wood);
-        return placed.total() > 0 && placed.done() >= placed.total();
+        return placed.confident() && placed.total() > 0 && placed.done() >= placed.total();
     }
 
     boolean idleOrActivity(SpiritEntity spirit) {

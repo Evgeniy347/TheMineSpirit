@@ -305,6 +305,13 @@ public final class FirstStepsRunner {
         StageWork work = Objects.requireNonNull(
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
         BuildGap.Gap gap = gap(level, caseValue, work.site(), step.wood());
+        if (!gap.confident()) {
+            LOGGER.info(
+                    "[layout] {}: {} клеток в незагруженных чанках — вывод о постройке отложен до загрузки",
+                    caseValue,
+                    gap.unknown());
+            return true;
+        }
         int missing = gap.shortage();
         BoardStatus base = service.board().statusOf(partId(caseValue, 1)).orElse(null);
         boolean partsReady = caseValue != BoardCase.BUILD_FENCE || partsDone(service, caseValue, level, work.site());
@@ -605,7 +612,7 @@ public final class FirstStepsRunner {
             return done.contains(step);
         }
         Placed placed = audit(level, step, site.stage(), site.wood());
-        if (placed.total() == 0) {
+        if (!placed.confident() || placed.total() == 0) {
             return done.contains(step);
         }
         if (EXACT_STEPS.contains(step)) {
@@ -618,7 +625,8 @@ public final class FirstStepsRunner {
             ServerLevel level, BoardService service, BoardCase step, StageSite stage, String wood) {
         Placed placed = audit(level, step, stage, wood);
         boolean done = journalSteps(service, false, level, stage).contains(step);
-        return new TownSnapshot.Progress(placed.done(), placed.total(), done && placed.done() < placed.total());
+        return new TownSnapshot.Progress(
+                placed.done(), placed.total(), placed.confident() && done && placed.done() < placed.total());
     }
 
     static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
@@ -631,29 +639,19 @@ public final class FirstStepsRunner {
                 TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood, probe(level), SCHEMES);
     }
 
-    record Placed(int done, int total) {}
+    record Placed(int done, int total, int unknown) {
+        boolean confident() {
+            return unknown == 0;
+        }
+    }
 
     static Placed placedBlocks(ServerLevel level, TaskNode plan, String wood) {
         BuildGap.Gap gap = BuildGap.trace(plan, wood, probe(level), SCHEMES);
-        return new Placed(gap.done(), gap.total());
+        return new Placed(gap.done(), gap.total(), gap.unknown());
     }
 
     static BuildGap.Probe probe(ServerLevel level) {
-        return new BuildGap.Probe() {
-            @Override
-            public String block(BlockCoord at) {
-                return BuiltInRegistries.BLOCK
-                        .getKey(level.getBlockState(new BlockPos(at.x(), at.y(), at.z()))
-                                .getBlock())
-                        .toString();
-            }
-
-            @Override
-            public boolean passable(BlockCoord at) {
-                BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-                return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
-            }
-        };
+        return WorldProbe.of(level);
     }
 
     static boolean placed(BlockState state, String block) {
