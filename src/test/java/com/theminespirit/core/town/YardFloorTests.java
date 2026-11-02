@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -42,5 +43,15 @@ class YardFloorTests {
 
         assertEquals(List.of(), audit.holes(), "Под сундуком твёрдый пол — дыр нет: " + audit);
         assertEquals(1, audit.supported(), "Станок стоит на опоре: " + audit);
+    }
+
+    @Test
+    void due_SixtySecondsElapsed_TrueRegardlessOfTickMultiple() {
+        assertTrue(
+                YardFloor.due(750, 150, 600),
+                "Проверка двора идёт по прошедшему времени, а не по кратности тика: 750 не делится на 600, "
+                        + "но 600 тиков прошло");
+        assertFalse(YardFloor.due(749, 150, 600), "Меньше периода — не проверяем");
+        assertTrue(YardFloor.due(10, 700, 600), "Тик пошёл назад (перезапуск) — проверяем сразу");
     }
 }

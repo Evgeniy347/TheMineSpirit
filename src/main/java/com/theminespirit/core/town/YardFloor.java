@@ -21,6 +21,13 @@ public final class YardFloor {
 
     private YardFloor() {}
 
+    public static boolean due(long now, long last, int every) {
+        if (every < 1) {
+            throw new IllegalArgumentException("Период проверки " + every + " не положителен: двор не проверить");
+        }
+        return now < last || now - last >= every;
+    }
+
     public static Audit of(List<BlockCoord> stations, int maxDepth, Predicate<BlockCoord> solid) {
         Objects.requireNonNull(stations, "Станки двора не могут быть null: пустой список — пустой двор");
         Objects.requireNonNull(solid, "Проверка опоры не может быть null: без неё не видно дыру");

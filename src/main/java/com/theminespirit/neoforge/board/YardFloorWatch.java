@@ -27,14 +27,16 @@ final class YardFloorWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int MAX_DEPTH = 12;
     private static final int EVERY = 600;
+    private static long lastCheck = Long.MIN_VALUE;
     private static final String REPAIR = RepairPlan.PREFIX + "stock_chests";
 
     private YardFloorWatch() {}
 
     static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
-        if (now % EVERY != 0) {
+        if (!YardFloor.due(now, lastCheck, EVERY)) {
             return;
         }
+        lastCheck = now;
         if (active(service) || audit(level, site).holes().isEmpty()) {
             return;
         }
