@@ -143,7 +143,13 @@ final class DeadCodeExemptions {
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"));
+                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/movement/network/TrailTrack.java|class|<top>#TrailTrack",
+                    "Прототип графа внешних троп для разведки дальности пути: docs/research/pathfinding-range.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/movement/network/BreadcrumbTrail.java|method|BreadcrumbTrail#backtrack",
+                    "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"));
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(
