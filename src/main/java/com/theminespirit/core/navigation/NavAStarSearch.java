@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/pathing/calc/AStarPathFinder.java и
-// AbstractNodeCostSearch.java), лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/calc/AStarPathFinder.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -21,6 +20,7 @@ public final class NavAStarSearch {
 
     private final NavContext context;
     private final NavGoal goal;
+    private final NavFavoring favoring;
     private final int startX;
     private final int startY;
     private final int startZ;
@@ -32,9 +32,17 @@ public final class NavAStarSearch {
     private boolean failing = true;
     private int emptyChunks;
 
-    private NavAStarSearch(NavContext context, int startX, int startY, int startZ, NavGoal goal, LongSupplier clock) {
+    private NavAStarSearch(
+            NavContext context,
+            int startX,
+            int startY,
+            int startZ,
+            NavGoal goal,
+            NavFavoring favoring,
+            LongSupplier clock) {
         this.context = context;
         this.goal = goal;
+        this.favoring = favoring;
         this.startX = startX;
         this.startY = startY;
         this.startZ = startZ;
@@ -42,11 +50,27 @@ public final class NavAStarSearch {
     }
 
     public static NavResult plan(NavContext context, int startX, int startY, int startZ, NavGoal goal) {
-        return plan(context, startX, startY, startZ, goal, System::nanoTime);
+        return plan(context, startX, startY, startZ, goal, NavFavoring.EMPTY, System::nanoTime);
+    }
+
+    public static NavResult plan(
+            NavContext context, int startX, int startY, int startZ, NavGoal goal, NavFavoring favoring) {
+        return plan(context, startX, startY, startZ, goal, favoring, System::nanoTime);
     }
 
     static NavResult plan(NavContext context, int startX, int startY, int startZ, NavGoal goal, LongSupplier clock) {
-        return new NavAStarSearch(context, startX, startY, startZ, goal, clock).search();
+        return plan(context, startX, startY, startZ, goal, NavFavoring.EMPTY, clock);
+    }
+
+    static NavResult plan(
+            NavContext context,
+            int startX,
+            int startY,
+            int startZ,
+            NavGoal goal,
+            NavFavoring favoring,
+            LongSupplier clock) {
+        return new NavAStarSearch(context, startX, startY, startZ, goal, favoring, clock).search();
     }
 
     private NavResult search() {
@@ -119,7 +143,7 @@ public final class NavAStarSearch {
             return;
         }
         NavNode neighbor = nodeAt(move.x, move.y, move.z);
-        double tentative = current.cost + move.cost;
+        double tentative = current.cost + move.cost * favoring.factor(move.x, move.y, move.z);
         if (neighbor.cost - tentative <= MIN_IMPROVEMENT) {
             return;
         }

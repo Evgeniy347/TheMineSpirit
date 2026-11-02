@@ -152,7 +152,13 @@ final class DeadCodeExemptions {
                     "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
-                    "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"));
+                    "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavPathSplicer.java|method|NavPathSplicer#splice",
+                    "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavSegmentedPlanner.java|method|NavSegmentedPlanner#follow",
+                    "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"));
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(

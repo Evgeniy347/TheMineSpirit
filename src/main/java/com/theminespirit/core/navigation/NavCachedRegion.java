@@ -1,4 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/cache/CachedRegion.java), лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, cache/CachedRegion.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import org.jspecify.annotations.Nullable;

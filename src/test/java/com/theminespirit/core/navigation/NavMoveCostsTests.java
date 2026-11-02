@@ -1,5 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/pathing/movement/movements/*), лицензия
-// LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/movement/movements/*), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
