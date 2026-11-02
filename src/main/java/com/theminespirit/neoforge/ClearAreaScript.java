@@ -7,8 +7,10 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
+import com.theminespirit.core.mining.ClimbReach;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.script.ClearAreaParams;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,8 @@ final class ClearAreaScript implements ScriptInstance {
     private @Nullable TaskRunner restock;
     private boolean restockChecked;
     private int restockAttempts;
+    private @Nullable TaskRunner climb;
+    private boolean climbChecked;
 
     ClearAreaScript(SpiritEntity spirit, ClearAreaParams params) {
         this.spirit = spirit;
@@ -60,6 +64,30 @@ final class ClearAreaScript implements ScriptInstance {
             }
             restock = null;
         }
+        if (climb == null && !climbChecked && spirit != null && session.picking()) {
+            climbChecked = true;
+            int rise = ClimbReach.rise(spirit.getBlockY(), session.box.minY());
+            if (ClimbReach.needed(rise)) {
+                climb = climbRunner(rise);
+                if (climb == null) {
+                    return ScriptStatus.FAILED;
+                }
+            }
+        }
+        if (climb != null) {
+            if (climb.isSuspended()) {
+                climb.resume();
+            }
+            if (climb.tick() == RunStatus.RUNNING) {
+                return ScriptStatus.RUNNING;
+            }
+            if (climb.status() != RunStatus.SUCCEEDED) {
+                session.fail("высокая клетка: столб не построен — "
+                        + climb.failureReason().orElse("причина неизвестна"));
+                return ScriptStatus.FAILED;
+            }
+            climb = null;
+        }
         return switch (session.tick()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case SUCCEEDED -> ScriptStatus.SUCCEEDED;
@@ -77,6 +105,18 @@ final class ClearAreaScript implements ScriptInstance {
         return session.outcome() == ClearAreaSession.Outcome.SUCCEEDED
                 ? Optional.of(new ScriptResult.Data(session.resultData()))
                 : Optional.empty();
+    }
+
+    private @Nullable TaskRunner climbRunner(int rise) {
+        if (spirit == null) {
+            return null;
+        }
+        return TaskRunner.start(
+                new SequenceNode(List.of(
+                        new ScriptCall("acquire", Map.of("item", "minecraft:dirt", "count", rise)),
+                        new ScriptCall("pillar_up", Map.of("height", rise, "block", "minecraft:dirt", "down", false)))),
+                SpiritScripts.registryFor(spirit),
+                ConditionRegistry.of(Map.of()));
     }
 
     private @Nullable TaskRunner shovelRestock() {
