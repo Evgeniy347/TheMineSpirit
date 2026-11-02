@@ -181,9 +181,6 @@ final class PlanSteps {
                 ownCraft(item)
                         ? craft(item, Math.min(count, CatalogLimits.COUNT_MAX))
                         : acquire(item, Math.min(count, CatalogLimits.COUNT_MAX))));
-        if (!blocks.isEmpty()) {
-            steps.add(gotoPoint(blocks.get(0).at()));
-        }
         for (PlannedBlock block : blocks) {
             steps.add(place(block, target));
         }

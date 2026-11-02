@@ -31,10 +31,10 @@ class YardRepairPlanTests {
         collect(plan, gotos);
 
         assertEquals(
-                List.of(HOLE),
+                List.of(),
                 gotos,
-                "Ремонт пола двора идёт к самой дыре, а не к workYard, который может быть недостижим: "
-                        + "иначе дух стоит «застрял по пути к -178,69,-518»");
+                "Ремонт пола двора не идёт ни к workYard, ни в саму дыру: place_block сам подбирает стоянку "
+                        + "рядом, иначе дух «застревает» на краю ямы");
     }
 
     private static void collect(TaskNode node, List<BlockCoord> gotos) {
