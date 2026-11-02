@@ -850,12 +850,6 @@ public final class BoardService {
             }
         }
         WorkReserveHub.releaseAll(spirit);
-        LOGGER.info(
-                "Дух {} {} задание {}: статус закрыт доской; причина: {}",
-                spirit.displayName(),
-                success ? "завершил" : "провалил",
-                ticket.id(),
-                success ? "выполнено" : why);
     }
 
     private void flushBlockNotes() {

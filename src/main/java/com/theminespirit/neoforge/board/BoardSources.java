@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.SourceFailureLog;
 import com.theminespirit.core.board.SourceGuard;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -25,7 +26,9 @@ public final class BoardSources {
     private long lastHerdScan = -1;
     private long lastEnchantCheck = -1;
     private int herdScans;
-    private final SourceGuard guard = new SourceGuard(BoardSources::report);
+    private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
+    private final SourceGuard guard = new SourceGuard(this::report);
+    private long roundNow;
 
     private BoardSources() {}
 
@@ -37,18 +40,22 @@ public final class BoardSources {
         return guard.failedRound();
     }
 
-    private static void report(String source, RuntimeException error, boolean repeated) {
-        if (repeated) {
+    private void report(String source, RuntimeException error, boolean repeated) {
+        failures.observe(source, String.valueOf(error.getMessage()), roundNow).ifPresent(summary -> {
+            if (summary.changed()) {
+                LOGGER.error(
+                        "[incident] источник доски {} {} упал, пропущен до следующей пересборки; тик сервера идёт",
+                        source,
+                        repeated ? "снова" : "",
+                        error);
+                return;
+            }
             LOGGER.warn(
-                    "[incident] источник доски {} снова упал: {}; пропущен до следующей пересборки",
+                    "[incident] сводка: источник доски {} падал {} раз за окно с той же ошибкой: {}",
                     source,
+                    summary.count(),
                     error.getMessage());
-        } else {
-            LOGGER.error(
-                    "[incident] источник доски {} упал, пропущен до следующей пересборки; тик сервера идёт",
-                    source,
-                    error);
-        }
+        });
     }
 
     public int herdScans() {
@@ -61,6 +68,7 @@ public final class BoardSources {
             return Set.of();
         }
         Set<String> live = new HashSet<>();
+        roundNow = now;
         guard.startRound();
         Set<String> craters = guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of());
         Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level, service), Set.of());
