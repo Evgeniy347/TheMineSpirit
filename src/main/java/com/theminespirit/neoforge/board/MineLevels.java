@@ -42,7 +42,7 @@ final class MineLevels {
         }
         int levelValue = next.getAsInt();
         if (!SettlementStage.allows(
-                BoardCase.BUILD_MINE, levelValue, service.board().ledger())) {
+                BoardCase.BUILD_MINE, levelValue, service.board().ledger().stage())) {
             return;
         }
         boolean stageOneBusy = FirstStepsRunner.stageOneBuilding(service);

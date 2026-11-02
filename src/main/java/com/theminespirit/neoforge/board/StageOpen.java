@@ -3,7 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.DispatchRound;
-import com.theminespirit.core.board.SettlementStage;
 import java.util.Objects;
 
 final class StageOpen {
@@ -11,7 +10,7 @@ final class StageOpen {
 
     static boolean full(Board board, int spirits) {
         Objects.requireNonNull(board, "Доска не может быть null: предел открытых шагов считается по ней");
-        if (SettlementStage.of(board.ledger()) > 1) {
+        if (board.ledger().stage() > 1) {
             return false;
         }
         return DispatchRound.stageCasesOpen(board) >= BoardTuning.stageCaseLimit(spirits);

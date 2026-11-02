@@ -10,7 +10,6 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.RelocatePlan;
-import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.rest.ApiException;
@@ -159,8 +158,10 @@ public final class SpiritBoardGateway implements BoardGateway {
             throw new ApiException(
                     ErrorCode.CONFLICT,
                     "Задание '" + id + "' не принято доской: уровень " + request.level() + " постройки "
-                            + request.boardCase() + " выше этапа поселения " + SettlementStage.of(board.ledger())
-                            + " — сначала достройте этап: " + SettlementStage.missing(board.ledger()),
+                            + request.boardCase() + " выше этапа поселения "
+                            + board.ledger().stage()
+                            + " — сначала достройте этап: "
+                            + board.ledger().stageGate().missing(),
                     Map.of("request_id", request.requestId().toString(), "outcome", outcome.name()));
         }
         BoardTicket stored = board.find(id)

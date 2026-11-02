@@ -53,7 +53,9 @@ public final class WarehouseWatch {
         if (next == 0
                 || !WarehouseRules.canBuild(next, standing)
                 || !SettlementStage.allows(
-                        BoardCase.BUILD_WAREHOUSE, next, service.board().ledger())) {
+                        BoardCase.BUILD_WAREHOUSE,
+                        next,
+                        service.board().ledger().stage())) {
             return;
         }
         String id = WarehouseRules.buildTicketId(next);

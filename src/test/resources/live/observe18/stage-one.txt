@@ -1,0 +1,9 @@
+# observe18, 2026-11-01 15:57 UTC, сервер 0.1.2753: журнал доски уже на этапе 2,
+# а мир этапа 1 не закрыт целиком. Значение — поставлено/всего, как в spirit plan.
+BUILD_HOUSE=100/100
+STOCK_CHESTS=91/100
+BUILD_MINE=1468/1524
+BUILD_ORCHARD=24/24
+BUILD_FENCE=100/100
+LIGHTING=100/100
+BUILD_STREETS=100/100

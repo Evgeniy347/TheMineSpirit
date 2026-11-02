@@ -6,7 +6,6 @@ import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.DemandChange;
 import com.theminespirit.core.board.DemandRules;
-import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -32,7 +31,7 @@ final class DemandWatch {
                 space.freePercent(),
                 highest(ledger, BoardCase.BUILD_HOUSE),
                 highest(ledger, BoardCase.BUILD_WAREHOUSE),
-                SettlementStage.missing(ledger),
+                service.board().ledger().stageGate().missing(),
                 ledger.has(BoardCase.LIGHTING, 1) ? 0 : 1);
         Optional<DemandRules.Need> need = rules.next(facts);
         report(level.dimension().location().toString(), need, now);
