@@ -1,0 +1,183 @@
+{
+  "_note_more2": "Область graphmore2: прогноз еды, место в руках, дальний склад, огонь/лава, потоки, стадо, жители, запас этапа, кровати, тропы. Новые узлы только здесь; сборщик входа — More2Inputs.",
+  "items": {
+    "more2:food_plan": {"xmin": 0, "k": 1, "base": 52, "stage": 1},
+    "more2:carry_room": {"xmin": 0, "k": 1, "base": 50, "stage": 1},
+    "more2:carry_batch": {"xmin": 0, "k": 1, "base": 44, "stage": 1},
+    "more2:safe": {"xmin": 0, "k": 1, "base": 60, "stage": 1},
+    "more2:flow_blocked": {"xmin": 0, "k": 1, "base": 58, "stage": 1},
+    "more2:animal_penned": {"xmin": 0, "k": 1, "base": 48, "stage": 1},
+    "more2:village_safe": {"xmin": 0, "k": 1, "base": 55, "stage": 1},
+    "more2:stage_ready": {"xmin": 0, "k": 1, "base": 42, "stage": 2},
+    "more2:bed_ready": {"xmin": 0, "k": 1, "base": 50, "stage": 1},
+    "more2:trail": {"xmin": 0, "k": 1, "base": 38, "stage": 1}
+  },
+  "buildings": {
+    "more2_field_chest": {
+      "case": "STOCK_CHESTS",
+      "stage": 1,
+      "base": 47,
+      "materials": {"#planks": 8},
+      "optional": true,
+      "implemented": false,
+      "todo": "more2:carry_batch"
+    },
+    "more2_trail": {
+      "case": "BUILD_STREETS",
+      "stage": 1,
+      "base": 44,
+      "materials": {"#building_blocks": 8},
+      "optional": true,
+      "implemented": false,
+      "todo": "more2:trail"
+    }
+  },
+  "ways": [
+    {"id": "more2_sow_food", "case": "GATHER_MATERIALS", "makes": "more2:food_plan",
+     "yield": 1, "weight": 1.0, "consumes": {"#seeds": 1}, "ticks": 160,
+     "implemented": false, "todo": "more2:food_low"},
+    {"id": "more2_breed_food", "case": "BREED_ANIMALS", "makes": "more2:food_plan",
+     "yield": 1, "weight": 1.0, "consumes": {"#crops": 4}, "ticks": 220,
+     "implemented": false, "todo": "more2:food_low"},
+    {"id": "more2_unload_carry", "case": "TRANSFER_ITEM", "makes": "more2:carry_room",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 160,
+     "implemented": false, "todo": "more2:inventory_full"},
+    {"id": "more2_load_carry", "case": "TRANSFER_ITEM", "makes": "more2:carry_room",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 160,
+     "implemented": false, "todo": "more2:inventory_space"},
+    {"id": "more2_batch_carry", "case": "TRANSFER_ITEM", "makes": "more2:carry_batch",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 240,
+     "implemented": false, "todo": "more2:long_carry"},
+    {"id": "more2_put_out_fire", "case": "CLEAR_GROUNDS", "makes": "more2:safe",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 100,
+     "implemented": false, "todo": "more2:fire_near_building"},
+    {"id": "more2_remove_lava", "case": "CLEAR_GROUNDS", "makes": "more2:safe",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 140,
+     "implemented": false, "todo": "more2:lava_near_building"},
+    {"id": "more2_block_flow", "case": "FILL_CRATER", "makes": "more2:flow_blocked",
+     "yield": 1, "weight": 1.0, "consumes": {"#building_blocks": 1}, "ticks": 120,
+     "implemented": false, "todo": "more2:hazard_flow"},
+    {"id": "more2_pen_animal", "case": "LURE_ANIMAL", "makes": "more2:animal_penned",
+     "yield": 1, "weight": 1.0, "consumes": {"wheat": 2}, "ticks": 400,
+     "implemented": false, "todo": "more2:animal_outside"},
+    {"id": "more2_lure_wild", "case": "CAPTURE_ANIMAL", "makes": "more2:animal_penned",
+     "yield": 1, "weight": 1.0, "consumes": {"wheat": 2}, "ticks": 600,
+     "implemented": false, "todo": "more2:wild_herd"},
+    {"id": "more2_guard_villager", "case": "ACTIVITY_GUARD", "makes": "more2:village_safe",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 200,
+     "implemented": false, "todo": "more2:villager_near"},
+    {"id": "more2_trade_villager", "case": "ACTIVITY_SOCIAL", "makes": "more2:village_safe",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 200,
+     "implemented": false, "todo": "more2:villager_trade"},
+    {"id": "more2_prepare_stage", "case": "GATHER_MATERIALS", "makes": "more2:stage_ready",
+     "yield": 1, "weight": 1.0, "consumes": {}, "ticks": 200,
+     "implemented": false, "todo": "more2:stage_prep"},
+    {"id": "more2_make_bed", "case": "CRAFT_BED", "makes": "more2:bed_ready",
+     "yield": 1, "weight": 1.0, "consumes": {"white_wool": 3}, "ticks": 160,
+     "implemented": false, "todo": "more2:bed_needed"},
+    {"id": "more2_build_trail", "case": "BUILD_STREETS", "makes": "more2:trail",
+     "yield": 1, "weight": 1.0, "consumes": {"#building_blocks": 1}, "ticks": 240,
+     "implemented": false, "todo": "more2:path_needed"}
+  ],
+  "events": {
+    "more2_food_low": {
+      "tasks": [
+        {"id": "more2_sow_food", "case": "GATHER_MATERIALS", "base": 55, "consumes": {"#seeds": 1}, "implemented": false},
+        {"id": "more2_breed_food", "case": "BREED_ANIMALS", "base": 50, "consumes": {"#crops": 4}, "implemented": false}
+      ],
+      "push": {"food": 8, "#seeds": 5, "#crops": 4},
+      "advice": ["sow_and_breed_before_food_runs_out"]
+    },
+    "more2_inventory_full": {
+      "tasks": [
+        {"id": "more2_unload_carry", "case": "TRANSFER_ITEM", "base": 46, "consumes": {}, "implemented": false}
+      ],
+      "push": {"store:transfer": 5},
+      "advice": ["carry_to_chest_before_next_job"]
+    },
+    "more2_inventory_space": {
+      "tasks": [
+        {"id": "more2_load_carry", "case": "TRANSFER_ITEM", "base": 40, "consumes": {}, "implemented": false}
+      ],
+      "push": {"store:transfer": 4},
+      "advice": ["take_more_from_chest"]
+    },
+    "more2_long_carry": {
+      "tasks": [
+        {"id": "more2_batch_carry", "case": "TRANSFER_ITEM", "base": 44, "consumes": {}, "implemented": false}
+      ],
+      "push": {"logistics": 6, "more2:carry_batch": 4},
+      "advice": ["carry_in_batches_or_place_field_chest"]
+    },
+    "more2_fire_near_building": {
+      "tasks": [
+        {"id": "more2_put_out_fire", "case": "CLEAR_GROUNDS", "base": 90, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more2:safe": 6, "#building_blocks": 3},
+      "advice": ["put_out_fire_at_wooden_building"]
+    },
+    "more2_lava_near_building": {
+      "tasks": [
+        {"id": "more2_remove_lava", "case": "CLEAR_GROUNDS", "base": 88, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more2:safe": 6},
+      "advice": ["remove_lava_from_building"]
+    },
+    "more2_hazard_flow": {
+      "tasks": [
+        {"id": "more2_block_flow", "case": "FILL_CRATER", "base": 86, "consumes": {"#building_blocks": 1}, "implemented": false}
+      ],
+      "push": {"more2:flow_blocked": 6, "#building_blocks": 4},
+      "advice": ["block_water_or_lava_running_into_mine"]
+    },
+    "more2_animal_outside": {
+      "tasks": [
+        {"id": "more2_pen_animal", "case": "LURE_ANIMAL", "base": 48, "consumes": {"wheat": 2}, "implemented": false}
+      ],
+      "push": {"more2:animal_penned": 5, "herd_fed": 3},
+      "advice": ["drive_animals_back_to_pen"]
+    },
+    "more2_wild_herd": {
+      "tasks": [
+        {"id": "more2_lure_wild", "case": "CAPTURE_ANIMAL", "base": 44, "consumes": {"wheat": 2}, "implemented": false}
+      ],
+      "push": {"more2:animal_penned": 4, "herd_fed": 3},
+      "advice": ["lead_wild_animals_to_breed"]
+    },
+    "more2_villager_near": {
+      "tasks": [
+        {"id": "more2_guard_villager", "case": "ACTIVITY_GUARD", "base": 58, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more2:village_safe": 6},
+      "advice": ["guard_village_nearby"]
+    },
+    "more2_villager_trade": {
+      "tasks": [
+        {"id": "more2_trade_villager", "case": "ACTIVITY_SOCIAL", "base": 36, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more2:village_safe": 3},
+      "advice": ["trade_with_villager"]
+    },
+    "more2_stage_prep": {
+      "tasks": [
+        {"id": "more2_prepare_stage", "case": "GATHER_MATERIALS", "base": 42, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more2:stage_ready": 5, "#logs": 4, "cobblestone": 4},
+      "advice": ["gather_next_stage_materials_while_idle"]
+    },
+    "more2_bed_needed": {
+      "tasks": [
+        {"id": "more2_make_bed", "case": "CRAFT_BED", "base": 44, "consumes": {"white_wool": 3}, "implemented": false}
+      ],
+      "push": {"bed": 6, "more2:bed_ready": 4},
+      "advice": ["build_beds_and_sleep_safely"]
+    },
+    "more2_path_needed": {
+      "tasks": [
+        {"id": "more2_build_trail", "case": "BUILD_STREETS", "base": 40, "consumes": {"#building_blocks": 1}, "implemented": false}
+      ],
+      "push": {"more2:trail": 5, "#building_blocks": 3},
+      "advice": ["lay_trail_where_spirits_walk_often"]
+    }
+  }
+}
