@@ -8,6 +8,7 @@ untouchable() {
     local pid="$1" args="$2" cwd="$3"
     case "$(ps -o comm= -p "$pid" 2>/dev/null)" in tmux*|"") return 0 ;; esac
     case "$args $cwd" in *"/opt/minecraft/server"*|*mem-guard*|*nice-guard*) return 0 ;; esac
+    case "$args" in *codegraph*) return 0 ;; esac
     return 1
 }
 
