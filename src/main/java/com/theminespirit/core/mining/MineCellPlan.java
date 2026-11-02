@@ -41,7 +41,7 @@ public final class MineCellPlan {
             return new Plan(Kind.READY, List.of(), "");
         }
         List<BlockCoord> stands = MineCellStands.of(
-                cell, feet, view, stand -> !MineCellStands.occupies(stand, cell) && allowedStands.test(stand));
+                cell, feet, view, stand -> !MineCellStands.occupies(stand, cell) && allowedStands.test(stand), true);
         if (stands.isEmpty()) {
             return new Plan(
                     Kind.REFUSE, List.of(), "к клетке " + cell + " нет стоянки с прямой видимостью: подойти некуда");
