@@ -41,7 +41,13 @@ final class RescueWatch {
     private final Map<UUID, String> causes = new HashMap<>();
     private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
 
-    private record Sighting(String id, String cause, SpiritEntity spirit, BlockPos feet, BlockCoord settlement) {}
+    private record Sighting(
+            String id,
+            String cause,
+            SpiritEntity spirit,
+            BlockPos feet,
+            BlockCoord settlement,
+            boolean physicallyStuck) {}
 
     private record Rescue(
             SpiritEntity spirit,
@@ -93,7 +99,7 @@ final class RescueWatch {
             causes.put(spirit.getUUID(), cause);
             live.remove(id);
             live.add(cause);
-            submit(level, service, new Sighting(id, cause, spirit, feet, settlement), now);
+            submit(level, service, new Sighting(id, cause, spirit, feet, settlement, verdict.stuck()), now);
         }
         log.retain(presentIds);
         return live;
@@ -105,13 +111,33 @@ final class RescueWatch {
         boolean tool = hasPickaxe(spirit);
         int steps = spirit.getInventory().countItem(Items.DIRT)
                 + spirit.getInventory().countItem(Items.COBBLESTONE);
+        BlockCoord here = coord(feet);
         BlockCoord goal = spirit.home().orElse(sighting.settlement());
-        SelfEscape.Plan self = SelfEscape.plan(coord(feet), goal, new RescueGrid(level, feet), tool, steps)
-                .orElseGet(() -> new SelfEscape.Plan(SelfEscape.Method.GOTO, goal, 0, List.of()));
+        if (goal.equals(here)) {
+            if (!sighting.physicallyStuck()) {
+                service.board().stuck().release(spirit.getUUID());
+                LOGGER.info(
+                        "[rescue] метка духа {} снята: он у дома в {}, спасение с целью «его же ноги» не создаётся",
+                        spirit.displayName(),
+                        here);
+                return;
+            }
+            goal = sighting.settlement();
+            if (goal.equals(here)) {
+                LOGGER.info(
+                        "[rescue] дух {} застрял в {}, но цели для спасения нет: задание не создаётся",
+                        spirit.displayName(),
+                        here);
+                return;
+            }
+        }
+        BlockCoord destination = goal;
+        SelfEscape.Plan self = SelfEscape.plan(here, destination, new RescueGrid(level, feet), tool, steps)
+                .orElseGet(() -> new SelfEscape.Plan(SelfEscape.Method.GOTO, destination, 0, List.of()));
         Optional<UUID> assignee = Optional.of(spirit.getUUID());
         note(level, new Rescue(spirit, feet, sighting.id(), self.method().name(), assignee, tool, steps), now);
         TicketTarget target =
-                TicketTarget.at(coord(feet)).withRelocate(coord(feet), goal).withRescue(self);
+                TicketTarget.at(here).withRelocate(here, destination).withRescue(self);
         service.submit(
                 new BoardTicket(
                         sighting.id(),

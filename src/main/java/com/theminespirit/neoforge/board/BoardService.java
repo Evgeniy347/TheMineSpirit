@@ -603,7 +603,7 @@ public final class BoardService {
     }
 
     private Optional<BoardOccupant.Occupation> occupationOf(SpiritEntity spirit) {
-        return cards.occupation(spirit, !board.assignedTo(spirit.getUUID()).isEmpty(), board.now());
+        return cards.occupation(spirit, !board.assignedTo(spirit.getUUID()).isEmpty());
     }
 
     public void completeCapture(String captureId) {
