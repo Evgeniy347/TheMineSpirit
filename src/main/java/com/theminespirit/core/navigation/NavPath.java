@@ -1,4 +1,4 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, src/main/java/baritone/pathing/calc/Path.java), лицензия LGPL-3.0.
+// lib: Из Baritone (github.com/cabaletta/baritone, pathing/calc/Path.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import com.theminespirit.core.observation.BlockCoord;

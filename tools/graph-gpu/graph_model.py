@@ -8,6 +8,7 @@
 import copy
 import json
 import math
+import os
 
 MAX_ITERATIONS = 200
 EPSILON = 1e-6
@@ -26,6 +27,7 @@ ABSENT = "ABSENT"
 
 HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
+WATCHER_OWNED = {"BUILD_WAREHOUSE", "BUILD_PEN"}
 
 
 class Flow:
@@ -164,6 +166,50 @@ def merge(manual, generated):
     return merged
 
 
+def merge_fragment(merged, fragment, origin):
+    """GraphFragments: фрагмент добавляет только новые id, конфликт — ошибка с путём файла."""
+    for field, value in fragment.items():
+        if isinstance(value, dict):
+            section = merged.get(field)
+            if not isinstance(section, dict):
+                section = {}
+                merged[field] = section
+            for key, node in value.items():
+                if key in section:
+                    raise ValueError(
+                        "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
+                        % (origin, field, key))
+                section[key] = copy.deepcopy(node)
+        elif isinstance(value, list):
+            section = merged.get(field)
+            if not isinstance(section, list):
+                section = []
+                merged[field] = section
+            ids = {node.get("id") for node in section if isinstance(node, dict)}
+            texts = {node for node in section if isinstance(node, str)}
+            for node in value:
+                if isinstance(node, dict) and node.get("id") in ids:
+                    raise ValueError(
+                        "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
+                        % (origin, field, node.get("id")))
+                if isinstance(node, str) and node in texts:
+                    raise ValueError(
+                        "Файл '%s': id '%s.%s' уже есть в графе — фрагменты добавляют только новые узлы"
+                        % (origin, field, node))
+                if isinstance(node, dict):
+                    ids.add(node.get("id"))
+                if isinstance(node, str):
+                    texts.add(node)
+                section.append(copy.deepcopy(node))
+        else:
+            if field in merged and merged[field] != value:
+                raise ValueError(
+                    "Файл '%s': id '%s' уже есть в графе — фрагменты добавляют только новые узлы"
+                    % (origin, field))
+            merged[field] = copy.deepcopy(value)
+    return merged
+
+
 class HerdCap:
     """HerdCap: предел стада числом (fixed) или долей на духа (perSpirit)."""
 
@@ -284,13 +330,21 @@ class Graph:
             return cls(json.load(handle))
 
     @classmethod
-    def load_merged(cls, manual_path, recipes_path):
-        """SupplyGraph.loadDefault: ручной graph.json + сгенерированный graph-recipes.json."""
+    def load_merged(cls, manual_path, recipes_path, fragments_dir=None):
+        """SupplyGraph.loadDefault: graph.json + graph-recipes.json + все graph.d/*.json."""
         with open(manual_path, "r", encoding="utf-8") as handle:
             manual = json.load(handle)
         with open(recipes_path, "r", encoding="utf-8") as handle:
             generated = json.load(handle)
-        return cls(merge(manual, generated))
+        merged = merge(manual, generated)
+        if fragments_dir and os.path.isdir(fragments_dir):
+            for name in sorted(os.listdir(fragments_dir)):
+                if not name.endswith(".json"):
+                    continue
+                path = os.path.join(fragments_dir, name)
+                with open(path, "r", encoding="utf-8") as handle:
+                    merge_fragment(merged, json.load(handle), path)
+        return cls(merged)
 
     def scaled(self, weights):
         """Копия графа с множителями весов в пределах, заданных поиском.
@@ -370,6 +424,16 @@ class State:
         self.distances = dict(data.get("distances") or {})
         self.stations = dict(data.get("stations") or {})
         self.orders = dict(data.get("orders") or {})
+        self.facts = dict(data.get("facts") or {})
+        self.spirit_facts = {k: dict(v) for k, v in (self.facts.get("spirits") or {}).items()}
+        self.threats = list(self.facts.get("threats") or [])
+        self.chest_facts = list(self.facts.get("chests") or [])
+        self.resource_facts = list(self.facts.get("resources") or [])
+        self.station_facts = dict(self.facts.get("stations") or {})
+        self.building_facts = dict(self.facts.get("buildings") or {})
+        self.strays = list(self.facts.get("strays") or [])
+        self.terrain = dict(self.facts.get("terrain") or {})
+        self.stage_reqs = dict(self.facts.get("stageReqs") or {})
 
     def copy(self):
         return State({
@@ -384,6 +448,7 @@ class State:
             "distances": self.distances,
             "stations": self.stations,
             "orders": self.orders,
+            "facts": self.facts,
         })
 
     def spirits(self):
@@ -574,7 +639,7 @@ class Planner:
                 "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
             })
             return
-        if building.board_case in ("BUILD_WAREHOUSE", "BUILD_PEN"):
+        if building.board_case in WATCHER_OWNED:
             return
         self.push(source, BUILDING + building_id, amount)
 

@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
@@ -108,6 +109,17 @@ public final class StockReader {
                         + ", контейнеров " + containers);
             }
         }
+    }
+
+    static List<ContainerSnapshot> chests(ServerLevel level) {
+        List<ContainerSnapshot> found = new ArrayList<>();
+        for (BlockCoord pos : SettlementChestStore.get(level).chests().all()) {
+            BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
+            if (level.isLoaded(at) && ContainerAccess.open(level, at) instanceof ContainerAccess.Opened container) {
+                found.add(new ContainerSnapshot(pos, new StackMapper().map(container.container())));
+            }
+        }
+        return found;
     }
 
     private static StockScan.Blocks blocks(ServerLevel level) {

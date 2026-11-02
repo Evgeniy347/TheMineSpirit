@@ -1,8 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
@@ -118,25 +116,28 @@ public record SupplyGraph(
     }
 
     public static SupplyGraph loadDefault() {
-        return merge(JsonResource.readClasspath(RESOURCE), RESOURCE, JsonResource.readClasspath(RECIPES), RECIPES);
+        return GraphFragments.load();
     }
 
     public static SupplyGraph merge(
             String manualJson, String manualOrigin, String generatedJson, String generatedOrigin) {
-        ObjectNode merged = ((ObjectNode) JsonResource.parse(manualJson, manualOrigin)).deepCopy();
-        JsonNode generated = JsonResource.parse(generatedJson, generatedOrigin);
-        mergeObjects(merged, generated, "items");
-        mergeObjects(merged, generated, "buildings");
-        mergeObjects(merged, generated, "groups");
-        mergeWays(merged, generated);
-        return parse(merged, manualOrigin + " + " + generatedOrigin);
+        return GraphFragments.load(manualJson, manualOrigin, generatedJson, generatedOrigin, List.of());
+    }
+
+    public static SupplyGraph merge(
+            String manualJson,
+            String manualOrigin,
+            String generatedJson,
+            String generatedOrigin,
+            List<GraphFragments.Fragment> fragments) {
+        return GraphFragments.load(manualJson, manualOrigin, generatedJson, generatedOrigin, fragments);
     }
 
     public static SupplyGraph parse(String json, String origin) {
         return parse(JsonResource.parse(json, origin), origin);
     }
 
-    private static SupplyGraph parse(JsonNode root, String origin) {
+    static SupplyGraph parse(JsonNode root, String origin) {
         Map<String, Item> items = new LinkedHashMap<>();
         root.path("items")
                 .properties()
@@ -196,38 +197,6 @@ public record SupplyGraph(
                 GraphCosts.parse(root));
         graph.validate(origin);
         return graph;
-    }
-
-    private static void mergeObjects(ObjectNode target, JsonNode generated, String field) {
-        JsonNode source = generated.path(field);
-        if (!source.isObject()) {
-            return;
-        }
-        JsonNode existing = target.get(field);
-        ObjectNode section = existing != null && existing.isObject() ? (ObjectNode) existing : target.putObject(field);
-        source.properties().forEach(entry -> {
-            if (!section.has(entry.getKey())) {
-                section.set(entry.getKey(), entry.getValue().deepCopy());
-            }
-        });
-    }
-
-    private static void mergeWays(ObjectNode target, JsonNode generated) {
-        JsonNode source = generated.path(WAYS);
-        if (!source.isArray() || source.isEmpty()) {
-            return;
-        }
-        Set<String> manualMakes = new HashSet<>();
-        for (JsonNode way : target.path(WAYS)) {
-            manualMakes.add(way.path("makes").asText());
-        }
-        JsonNode existing = target.get(WAYS);
-        ArrayNode ways = existing != null && existing.isArray() ? (ArrayNode) existing : target.putArray(WAYS);
-        for (JsonNode way : source) {
-            if (!manualMakes.contains(way.path("makes").asText())) {
-                ways.add(way.deepCopy());
-            }
-        }
     }
 
     private static Map<String, Building> buildings(JsonNode root) {

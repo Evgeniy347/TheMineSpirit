@@ -52,6 +52,7 @@ final class GraphInputs {
             GraphSurroundings.Around around) {
         int stage = service.board().ledger().stage();
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
+        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         return new GraphState(
                         GraphNames.stock(
                                 stock.available(),
@@ -62,8 +63,12 @@ final class GraphInputs {
                         materials(level, service, stock, scan, graph, buildings, stage),
                         ChestSpaceWatch.space(level).freePercent(),
                         around.events(),
-                        around.world())
-                .withOrders(GraphNames.need(CraftOrders.shortage(level)));
+                        around.world(),
+                        around.distances(),
+                        GraphFactInputs.stationCounts(graph, buildings))
+                .withOrders(GraphNames.need(CraftOrders.shortage(level)))
+                .withFacts(GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
+                        .withChests(GraphFactInputs.chestFacts(StockReader.chests(level))));
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

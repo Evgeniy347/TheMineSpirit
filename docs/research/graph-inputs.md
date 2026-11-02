@@ -6,6 +6,23 @@
 `GraphPlanner.plan` → `GraphTickets.of` → `GraphPost`. Полные таблицы — в
 [graph-inputs-tables.md](graph-inputs-tables.md).
 
+## 0. Что уже сделано (02.11, graphcore)
+
+- **Фрагменты графа.** `SupplyGraph.loadDefault`/`merge` и `Graph.load_merged` читают
+  `board/graph.json` + `board/graph-recipes.json` + все `board/graph.d/*.json`. Фрагмент добавляет только новые id,
+  конфликт id — ошибка с путём файла. Разные исполнители правят разные файлы.
+- **`GraphFacts`** — новые структуры входа `GraphState.facts()`: `spirits`, `threats`, `chests`, `resources`,
+  `stations`, `buildings`, `strays`, `terrain`, `stageReqs`. Старые поля `GraphState` сохранены для планировщика
+  (число духов `spirits()` считается по `kits`, счётчики станций — по `stations`).
+- **Заполнено сейчас:** духи (id, позиция, HP, еда, воздух, вода, застревание, занятость, инвентарь, броня,
+  инструменты), сундуки из `StockReader` (позиция, содержимое, свободные слоты), ресурсы (тег, координаты,
+  расстояние, `travelTicks`; достижимость — `UNKNOWN`), станции (тип, позиция, счётчик для планировщика),
+  постройки (id, уровень, процент 100/0, координаты участка, `unknown=false`), `stageReqs` (минимум из
+  `stages.json` + факт из журнала). `distances` теперь заполняются из `GraphSurroundings`, `stations` — из построек.
+- **Пока пусто:** `threats`, `strays`, `terrain`, топливо/вход/выход станций, точный процент аудита и повреждения
+  построек, «замурован» духа, достижимость ресурсов. Это узлы `life:*`, `repair`, `clear`, `station:*`, `store:*`;
+  сборщики оставлены пустыми до реализации.
+
 ## 1. Что граф получает сейчас
 
 `GraphState` (`core/board/graph/GraphState.java`) — 11 полей. В моде заполняются все, кроме `distances` и
@@ -50,6 +67,21 @@
   `player_request`, `bound_to_player`, `rain`, `player_died*`, `nether_expedition` объявлены в графе, но никем не
   подаются. `tool_worn`, `armor_worn`, `drowning`, `suffocation`, `fall_risk`, `ore_found_diamond` — тоже мёртвые
   ветки. `building_damaged` подаётся по открытому ремонтному тикету, а не по аудиту мира — это круг.
+
+### 2a. Угрозы — обязательный вход (решение владельца 02.11)
+
+`ThreatFact` на каждого врага: `type`/`id`, абсолютное `health` и доля, `state` (горит, заряжен/усилен крипер,
+невидим, детёныш, приручён, плывёт/летит, эффекты, предмет в руке, паника/еда), `pos` + измерение, `aggro`
+(UUID цели и вид: дух/игрок/животное/другое), `targetingSelf`, `lastHurtBy`, скорость, видимость/LOS, расстояние
+до поселения и каждого духа. Источник: `level.getEntitiesOfClass(Monster/LivingEntity, AABB объединения духов ±16)`,
+`Mob.getTarget()`/`getLastHurtByMob()`, `getHealth/getMaxHealth`, состояние блока/эффекты, `LineOfSight`. Заготовка —
+`core/tactics/EnemyFact.java`: уже есть `type`, `id`, `pos`, `hpFraction`, `armor`, `visible`, `targetingSelf`,
+`count`; не хватает цели и её вида, состояния, абсолютного HP и LOS. Цена: один AABB-запрос `O(E)`, `getTarget`
+`O(1)`, LOS `O(расстояние)` на пару враг/дух; бюджет как в `WorldFactCollector` (`entityQueries`).
+
+Решения, зависящие от угроз: есть ли угроза; вес узла жизни; кто защищает, бежит или продолжает работу; кого бить
+первым; эвакуация; защита игрока/животного; риск дороги и стройки; зов помощи. Сейчас `hostile_nearby` — только
+флаг, который толкает `tool:sword`, броню, свет и забор; ни цели, ни вида агрессии, ни состояния врага граф не знает.
 
 ## 3. Где задания ставятся мимо графа
 
@@ -103,11 +135,15 @@
 `UNKNOWN` (незагруженный чанк) — не назначать, а послать `explore`/`scan`. Замурован — `trapped=true` у духа и
 узел `life:dig_out`/`life:rescue` с максимальным весом; другой дух получает `help` по тому же состоянию.
 
-**Защита жизни.** Сейчас бой — отдельный `core/tactics` + `tactics/weights.json` (FIGHT/RETREAT/IGNORE), граф лишь
-толкает `tool:sword`, `lighting`, броню по `hostile_nearby`. Нужно: `ThreatFact` (кто, где, HP, оружие, броня,
-союзники, путь отхода) на входе; событие `life_threat` с задачей `defend`/`retreat` весом выше `maxPriority`
-(или отдельный потолок); выбор «кто идёт» — граф, а `tactics` остаётся исполнителем боя и параметров
-`FIGHT/RETREAT`. Смерть/утрата инструмента — такое же событие, а не отдельный сторож.
+**Защита жизни.** Сейчас бой — отдельный слой: `TacticsService` собирает `Situation` (`WorldFactCollector`,
+`SettlementScanner`), `TacticsEngine.step` по `tactics/weights.json` (FIGHT/RETREAT/IGNORE, scales, stickiness,
+holdTicks) выбирает, `IntentActionExecutor` ставит target/attack/retreat, `wantsControl` отбирает духа у доски;
+`SettlementIntellect`/`DefenseService` через `DefensePlanner`/`DefenseAllocator` раздаёт посты и вызывает
+`board.launch(ACTIVITY_COMBAT/ARM)`. Граф видит только `hostile_nearby` и push на sword/armor/lighting/fence.
+Свести: `ThreatFact` на входе; `event:life_threat` с задачами `defend`/`retreat`/`arm` весом в отдельной полосе
+выше `maxPriority` (иначе ничья с обычным потолком 100); граф выбирает духа, цель и пост; `tactics` остаётся
+микро-исполнителем (FIGHT/RETREAT, дистанция, щит) и хранит `enemies.json`; `SettlementIntellect` больше не
+ставит `ACTIVITY_*` сам. Смерть/утрата инструмента — такое же событие, а не отдельный сторож.
 
 ## 5. Действия: зависимости и помощники
 
@@ -146,6 +182,13 @@ HerdScript`, `BuildShelterScript → BuildSchematicScript`) полезны, об
 | B6. Этап и ремонт | `FirstStepsRunner`/`StageSchedule`/`StageRepair` → факты мира и узлы; журнал только подтверждает | GameTest этапа 1, аудит, переоткрытие | веса этапов, 200/200 | 7–10 дней |
 | B7. Жизнь и бой | `ThreatFact`, `life_threat`, `defend/retreat`; `tactics/weights.json` — параметры исполнителя | unit угроз, GameTest боя/спасения | веса жизни выше потолка, 200/200 | 4–6 дней |
 | B8. Чистка | REST/`ChainExecutor`/`PetWatch` через граф; сторожа `BoardPost`, `ActionDependency`, покрытие событий | полный unit + GameTest | финальный пересчёт и 200/200 | 3–5 дней |
+
+Пофайловый план — [graph-inputs-migration.md](graph-inputs-migration.md): для каждого источника вход, узел/путь,
+что удаляется и сколько строк (из ≈10.8 тыс. строк 50 файлов уйдёт ≈6–7 тыс.). Критерий приёмки шага: новый тест
+до правки красный, после — зелёный; `./gradlew graphExport` + `tools/graph-gpu/test_conformance.py` — 200/200
+(набор, `feasible`, `chance`, `priority` ±1), пары «дух → работа» — отдельный `pairs.json` 200/200;
+`sim_gpu.py` повторяет `GraphSimulationTests` по шагам, тикам и порядку на 5 базовых мирах; `search.py` пересчитал
+веса, они внесены в `board/graph.json`, сверка 200/200 повторена; есть живая проверка на dev-копии сцены шага.
 
 Итого ~35–55 дней одного исполнителя; критический путь — B1→B2→B3→B4. Начинать с B0: без измерения
 `distances`/`stations` и покрытия событий остальные блоки будут чинить вслепую.

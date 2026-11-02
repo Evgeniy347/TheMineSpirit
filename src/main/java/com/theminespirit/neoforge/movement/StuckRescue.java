@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.movement;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.PathMode;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.Optional;
+import com.theminespirit.neoforge.movement.RouteDetour.Pending;
 import org.jspecify.annotations.Nullable;
 
 public final class StuckRescue {
@@ -14,6 +14,7 @@ public final class StuckRescue {
     private int routeAttempts;
     private @Nullable String refusal;
     private @Nullable RouteWalk walk;
+    private @Nullable Pending pending;
 
     public StuckRescue(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -28,23 +29,36 @@ public final class StuckRescue {
     }
 
     public boolean free(PathMode mode, BlockCoord target, int radius, boolean movingTarget) {
-        if (!routes || movingTarget || routeAttempts >= ROUTE_ATTEMPTS) {
+        if (!routes || movingTarget || (pending == null && routeAttempts >= ROUTE_ATTEMPTS)) {
             refusal = "маршрут не найден: цель " + target;
             return false;
         }
-        routeAttempts++;
-        walk = (mode == PathMode.NORMAL ? SurfaceRoute.planReturn(spirit, target) : Optional.<RouteWalk>empty())
-                .orElseGet(() ->
-                        RouteDetour.plan(spirit, target, radius, "возврат").orElse(null));
-        if (walk == null) {
-            refusal = "маршрут не найден: цель " + target;
-            return false;
+        if (pending == null) {
+            routeAttempts++;
+            pending = RouteDetour.begin(spirit, target, radius, "возврат");
+            if (pending == null) {
+                refusal = "маршрут не найден: цель " + target;
+                return false;
+            }
         }
         spirit.getNavigation().stop();
         return true;
     }
 
     public boolean walking() {
+        if (pending != null) {
+            RouteDetour.advance(spirit, pending, RouteDetour.SLICE_MILLIS);
+            if (!pending.done()) {
+                return true;
+            }
+            RouteWalk ready = pending.walk();
+            refusal = pending.refusal();
+            pending = null;
+            walk = ready;
+            if (walk == null) {
+                return false;
+            }
+        }
         RouteWalk current = walk;
         if (current == null) {
             return false;
@@ -63,12 +77,15 @@ public final class StuckRescue {
     }
 
     public int ticksBudget() {
+        if (pending != null) {
+            return RouteDetour.pendingBudget();
+        }
         RouteWalk current = walk;
         return current == null ? 0 : current.ticksBudget();
     }
 
     public boolean routing() {
-        return walk != null;
+        return pending != null || walk != null;
     }
 
     public @Nullable String refusal() {
@@ -76,6 +93,7 @@ public final class StuckRescue {
     }
 
     public void cancel() {
+        pending = null;
         if (walk != null) {
             walk.cancel();
             walk = null;

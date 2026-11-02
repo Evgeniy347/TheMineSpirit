@@ -42,11 +42,12 @@ final class GraphSurroundings {
             Set<String> events,
             Map<String, BlockCoord> drops,
             Optional<BlockCoord> decay,
-            Map<String, BlockCoord> nearest) {
+            Map<String, BlockCoord> nearest,
+            Map<String, Integer> distances) {
         Around with(Set<String> more) {
             Set<String> all = new HashSet<>(events);
             all.addAll(more);
-            return new Around(world, Set.copyOf(all), drops, decay, nearest);
+            return new Around(world, Set.copyOf(all), drops, decay, nearest, distances);
         }
 
         Around withRoutes(Set<String> moreEvents, Set<String> moreWorld) {
@@ -54,7 +55,7 @@ final class GraphSurroundings {
             allEvents.addAll(moreEvents);
             Set<String> allWorld = new HashSet<>(world);
             allWorld.addAll(moreWorld);
-            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drops, decay, nearest);
+            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drops, decay, nearest, distances);
         }
 
         Optional<BlockCoord> resource(String world) {
@@ -70,7 +71,11 @@ final class GraphSurroundings {
         }
     }
 
-    private record Scan(Set<String> blocks, Optional<BlockCoord> decay, Map<String, BlockCoord> nearest) {}
+    private record Scan(
+            Set<String> blocks,
+            Optional<BlockCoord> decay,
+            Map<String, BlockCoord> nearest,
+            Map<String, Integer> distances) {}
 
     static Around of(ServerLevel level, BoardService service, BlockCoord home) {
         Scan scan = blocks(level, home);
@@ -100,7 +105,8 @@ final class GraphSurroundings {
                 Set.copyOf(events),
                 drops,
                 scan.decay(),
-                Map.copyOf(nearest));
+                Map.copyOf(nearest),
+                scan.distances());
     }
 
     private static <T extends Entity> void marked(
@@ -155,7 +161,7 @@ final class GraphSurroundings {
         Set<String> blocks = new HashSet<>();
         BlockCoord decay = null;
         Map<String, BlockCoord> nearest = new HashMap<>();
-        Map<String, Integer> distances = new HashMap<>();
+        Map<String, Integer> squared = new HashMap<>();
         Map<String, Set<String>> tagCache = new HashMap<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx += STEP) {
             for (int dz = -RADIUS; dz <= RADIUS; dz += STEP) {
@@ -171,8 +177,8 @@ final class GraphSurroundings {
                     if (!tags.isEmpty()) {
                         int distance = dx * dx + dy * dy + dz * dz;
                         for (String tag : tags) {
-                            if (distance < distances.getOrDefault(tag, Integer.MAX_VALUE)) {
-                                distances.put(tag, distance);
+                            if (distance < squared.getOrDefault(tag, Integer.MAX_VALUE)) {
+                                squared.put(tag, distance);
                                 nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
                             }
                         }
@@ -183,7 +189,9 @@ final class GraphSurroundings {
                 }
             }
         }
-        return new Scan(Set.copyOf(blocks), Optional.ofNullable(decay), Map.copyOf(nearest));
+        Map<String, Integer> distances = new HashMap<>();
+        squared.forEach((tag, value) -> distances.put(tag, (int) Math.round(Math.sqrt(value))));
+        return new Scan(Set.copyOf(blocks), Optional.ofNullable(decay), Map.copyOf(nearest), Map.copyOf(distances));
     }
 
     private static boolean decaying(BlockState state) {

@@ -9,6 +9,7 @@
 import json
 import os
 import sys
+import tempfile
 
 from graph_model import Graph, State, plan
 
@@ -17,6 +18,8 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 EXPORT = os.path.join(ROOT, "TestResults", "graph-export")
 RECIPES = os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board",
                        "graph-recipes.json")
+FRAGMENTS = os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board",
+                         "graph.d")
 
 
 def compare_case(graph, case, index):
@@ -43,8 +46,33 @@ def compare_case(graph, case, index):
     return None
 
 
+def test_fragments():
+    with tempfile.TemporaryDirectory() as directory:
+        manual = os.path.join(directory, "graph.json")
+        recipes = os.path.join(directory, "recipes.json")
+        fragments = os.path.join(directory, "graph.d")
+        os.makedirs(fragments)
+        with open(manual, "w", encoding="utf-8") as handle:
+            json.dump({"items": {"stick": {"xmin": 0, "base": 1}}, "ways": []}, handle)
+        with open(recipes, "w", encoding="utf-8") as handle:
+            json.dump({"items": {}, "ways": []}, handle)
+        with open(os.path.join(fragments, "rope.json"), "w", encoding="utf-8") as handle:
+            json.dump({"items": {"rope": {"xmin": 0, "base": 1}}}, handle)
+        graph = Graph.load_merged(manual, recipes, fragments)
+        assert "rope" in graph.items, "Python-модель обязана читать фрагменты графа"
+        with open(os.path.join(fragments, "conflict.json"), "w", encoding="utf-8") as handle:
+            json.dump({"items": {"stick": {"xmin": 0, "base": 1}}}, handle)
+        try:
+            Graph.load_merged(manual, recipes, fragments)
+        except ValueError as error:
+            assert "conflict.json" in str(error), "Ошибка конфликта обязана назвать файл: " + str(error)
+        else:
+            raise AssertionError("Повтор id во фрагменте обязан отклоняться")
+    print("OK: фрагменты графа сливаются, конфликт назван путём")
+
+
 def test_conformance():
-    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES)
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
         cases = json.load(handle)
     failures = []
@@ -58,6 +86,7 @@ def test_conformance():
 
 if __name__ == "__main__":
     try:
+        test_fragments()
         test_conformance()
     except AssertionError as error:
         print(error)

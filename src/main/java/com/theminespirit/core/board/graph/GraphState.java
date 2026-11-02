@@ -15,7 +15,8 @@ public record GraphState(
         Set<String> world,
         Map<String, Integer> distances,
         Map<String, Integer> stations,
-        Map<String, Integer> orders) {
+        Map<String, Integer> orders,
+        GraphFacts facts) {
     public enum Built {
         BUILT,
         PLANNED,
@@ -38,6 +39,7 @@ public record GraphState(
                 stations, "Число станций не может быть null: по одной на постройку — пустая карта"));
         orders = Map.copyOf(Objects.requireNonNull(
                 orders, "Недостача заказов игрока не может быть null: без заказов — пустая карта"));
+        Objects.requireNonNull(facts, "Факты графа не могут быть null: пустые задают GraphFacts.empty()");
         if (stage < 1) {
             throw new IllegalArgumentException("Этап " + stage + " меньше 1: поселение начинается с этапа 1");
         }
@@ -52,7 +54,19 @@ public record GraphState(
             int storageFreePercent,
             Set<String> events,
             Set<String> world) {
-        this(stock, stage, kits, buildings, materials, storageFreePercent, events, world, Map.of(), Map.of());
+        this(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                Map.of(),
+                Map.of(),
+                Map.of(),
+                GraphFacts.empty());
     }
 
     public GraphState(
@@ -77,7 +91,35 @@ public record GraphState(
                 world,
                 distances,
                 stations,
-                Map.of());
+                Map.of(),
+                GraphFacts.empty());
+    }
+
+    public GraphState(
+            Map<String, Integer> stock,
+            int stage,
+            Map<String, Map<String, Integer>> kits,
+            Map<String, Built> buildings,
+            Map<String, Map<String, Integer>> materials,
+            int storageFreePercent,
+            Set<String> events,
+            Set<String> world,
+            Map<String, Integer> distances,
+            Map<String, Integer> stations,
+            Map<String, Integer> orders) {
+        this(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                distances,
+                stations,
+                orders,
+                GraphFacts.empty());
     }
 
     public GraphState withOrders(Map<String, Integer> shortage) {
@@ -92,7 +134,24 @@ public record GraphState(
                 world,
                 distances,
                 stations,
-                shortage);
+                shortage,
+                facts);
+    }
+
+    public GraphState withFacts(GraphFacts known) {
+        return new GraphState(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                distances,
+                stations,
+                orders,
+                known);
     }
 
     public int stations(String building) {

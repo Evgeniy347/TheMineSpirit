@@ -57,7 +57,7 @@ class GraphExportTests {
         assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
     }
 
-    private static Map<String, Object> state(GraphState state) {
+    static Map<String, Object> state(GraphState state) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("stock", state.stock());
         out.put("stage", state.stage());
@@ -67,6 +67,10 @@ class GraphExportTests {
         out.put("storageFreePercent", state.storageFreePercent());
         out.put("events", state.events().stream().sorted().toList());
         out.put("world", state.world().stream().sorted().toList());
+        out.put("distances", state.distances());
+        out.put("stations", state.stations());
+        out.put("orders", state.orders());
+        out.put("facts", state.facts());
         return out;
     }
 }
