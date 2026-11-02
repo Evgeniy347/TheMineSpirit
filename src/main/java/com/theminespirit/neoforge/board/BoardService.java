@@ -771,13 +771,7 @@ public final class BoardService {
                 feet.toShortString(),
                 spirit.tactics().wantsControl(),
                 spirit.taskSuspendReason().orElse(null));
-        incidents.stalled(
-                spirit,
-                ticket,
-                targets.get(ticket.id()),
-                reason,
-                board.statusOf(ticket.id()).orElse(null),
-                board.now());
+        incidents.stalled(spirit, ticket, targets.get(ticket.id()), reason, board.now());
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
@@ -829,13 +823,7 @@ public final class BoardService {
                     ticket.id(),
                     stock,
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null));
-            incidents.failed(
-                    spirit,
-                    ticket,
-                    targets.get(ticket.id()),
-                    why,
-                    board.statusOf(ticket.id()).orElse(null),
-                    board.now());
+            incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);
             }
