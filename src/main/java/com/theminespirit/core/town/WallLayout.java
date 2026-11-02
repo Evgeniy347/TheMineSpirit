@@ -68,6 +68,21 @@ public final class WallLayout {
         }
     }
 
+    public List<List<WallPiece>> parts(List<ColumnMask.Cell> line, Collection<Integer> gates, int count) {
+        if (count < 1) {
+            throw new IllegalArgumentException("Частей " + count + ": ограда делится хотя бы на одну часть");
+        }
+        List<WallPiece> pieces = closedOrEmpty(line, gates);
+        int size = pieces.size();
+        List<List<WallPiece>> parts = new ArrayList<>(count);
+        for (int part = 1; part <= count; part++) {
+            int from = (part - 1) * size / count;
+            int to = part * size / count;
+            parts.add(pieces.subList(from, to));
+        }
+        return List.copyOf(parts);
+    }
+
     public List<WallPiece> open(List<ColumnMask.Cell> line, Collection<Integer> gates) {
         return checked(lay(line, Set.copyOf(gates), 0, line.size()), line);
     }
