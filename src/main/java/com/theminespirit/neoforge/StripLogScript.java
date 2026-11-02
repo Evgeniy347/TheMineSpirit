@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -64,9 +65,9 @@ public final class StripLogScript implements ScriptInstance {
         this.level = spirit.level();
         this.species = params.species();
         this.count = params.count();
-        this.radius = params.radius();
+        this.radius = ChopTuning.gatherDistance(params.radius());
         this.logs = TreeBlocks.logs(List.of(params.species()));
-        this.search = BlockLocator.search(level, spirit.blockPosition(), params.radius(), Set.copyOf(logs));
+        this.search = BlockLocator.search(level, spirit.blockPosition(), radius, Set.copyOf(logs));
     }
 
     @Override

@@ -38,8 +38,8 @@ final class ChopSearch {
         this.spirit = spirit;
         this.logBlocks = logBlocks;
         this.anchor = anchorFor(spirit);
-        this.radius = params.radius();
-        this.maxDistance = ChopTuning.maxDistance(radius);
+        this.radius = ChopTuning.gatherDistance(params.radius());
+        this.maxDistance = radius;
         this.center = coords(spirit.blockPosition());
         this.search = newSearch(center);
     }
@@ -78,7 +78,7 @@ final class ChopSearch {
     }
 
     boolean extend() {
-        int target = ChopTuning.extendTo(maxDistance, nearestFar);
+        int target = ChopTuning.gatherDistance(ChopTuning.extendTo(maxDistance, nearestFar));
         if (target <= maxDistance) {
             return false;
         }
