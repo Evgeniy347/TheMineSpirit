@@ -6,6 +6,7 @@ import com.theminespirit.core.rest.PlanningService;
 import com.theminespirit.core.rest.PolicyRoutes;
 import com.theminespirit.core.rest.Route;
 import com.theminespirit.core.rest.Router;
+import com.theminespirit.core.rest.SettlementRoutes;
 import com.theminespirit.core.rest.SseSlots;
 import com.theminespirit.core.rest.TaskRoutes;
 import com.theminespirit.core.rest.V1Routes;
@@ -32,6 +33,9 @@ public final class RestRouter {
         routes.addAll(boardRoutes.routes());
         PolicyRoutes policyRoutes = new PolicyRoutes(new SpiritPolicyGateway(gateway.server()), new IdempotencyCache());
         routes.addAll(policyRoutes.routes());
+        SettlementRoutes settlementRoutes = new SettlementRoutes(
+                new SpiritSettlementGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
+        routes.addAll(settlementRoutes.routes());
         return Router.of(routes);
     }
 }
