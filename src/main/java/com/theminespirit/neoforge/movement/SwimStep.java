@@ -22,9 +22,11 @@ final class SwimStep {
     }
 
     static boolean far(SpiritEntity spirit, BlockCoord cell) {
-        double dx = Math.abs(spirit.getX() - (cell.x() + 0.5));
-        double dz = Math.abs(spirit.getZ() - (cell.z() + 0.5));
-        return dx > 1.6 || dz > 1.6;
+        return far(Math.abs(spirit.getX() - (cell.x() + 0.5)), Math.abs(spirit.getZ() - (cell.z() + 0.5)));
+    }
+
+    static boolean far(double dx, double dz) {
+        return dx > 2.6 || dz > 2.6;
     }
 
     boolean tick(BlockCoord cell) {
