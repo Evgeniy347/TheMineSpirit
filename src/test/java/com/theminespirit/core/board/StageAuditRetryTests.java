@@ -17,5 +17,8 @@ class StageAuditRetryTests {
                 "Во время паузы после провала ремонт не перевыдаётся каждую пересборку");
         assertTrue(StageAudit.repairRetry(BoardStatus.BLOCKED, false), "Снятая блокировка возвращает ремонт");
         assertFalse(StageAudit.repairRetry(BoardStatus.PENDING, false), "Обычное ожидание не трогаем");
+        assertFalse(
+                StageAudit.repairRetry(null, false),
+                "Нового ремонта ещё нет на доске — повтор не падает и не перевыдаёт");
     }
 }
