@@ -11,9 +11,11 @@ import com.theminespirit.core.incident.InventoryText;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 public final class SpiritBrain {
@@ -193,6 +195,9 @@ public final class SpiritBrain {
             reported.forget("failure");
         }
         if (lastStatus == RunStatus.FAILED) {
+            if (boardOwnsFailure()) {
+                return;
+            }
             String inventory = InventoryText.of(IncidentSnapshots.inventoryOf(spirit));
             if (!reported.changed("failure", lastReason + "|" + inventory + "|" + lastCause)) {
                 return;
@@ -204,5 +209,14 @@ public final class SpiritBrain {
                     inventory,
                     lastCause);
         }
+    }
+
+    private boolean boardOwnsFailure() {
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        return BoardRegistry.peek(level)
+                .map(service -> !service.board().assignedTo(spirit.getUUID()).isEmpty())
+                .orElse(false);
     }
 }

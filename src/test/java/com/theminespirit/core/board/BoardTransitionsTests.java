@@ -8,6 +8,19 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class BoardTransitionsTests {
+    private static BoardTicket activity(String id) {
+        return new BoardTicket(
+                id,
+                BoardCase.ACTIVITY_SMELT,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.ACTIVITY_SMELT),
+                0,
+                1,
+                "activity",
+                List.of(),
+                Map.of());
+    }
+
     private static BoardTicket ticket(String id) {
         return new BoardTicket(
                 id,
@@ -45,6 +58,23 @@ class BoardTransitionsTests {
                         .isEmpty(),
                 "FAILED уже пишет [incident] с причиной, снимком и инвентарём: вторая строка на тот же провал "
                         + "делит лог на три части и прячет причину (observe18 B10)");
+    }
+
+    @Test
+    void line_CancelledActivity_IsNotDuplicatedByFailureLine() {
+        assertTrue(
+                BoardTransitions.line(BoardLog.Event.CANCELLED, activity("activity:spirit-1"), 5, "spirit-1")
+                        .isEmpty(),
+                "Занятие снимается после провала: [incident] уже назвал причину, CANCELLED на activity:* — вторая "
+                        + "строка одной неудачи (observe20 п.11)");
+    }
+
+    @Test
+    void line_CancelledBoardTask_IsLogged() {
+        assertTrue(
+                BoardTransitions.line(BoardLog.Event.CANCELLED, ticket("supply_gather:oak_planks"), 0, null)
+                        .isPresent(),
+                "Настоящая отмена задания доски остаётся в логе: иначе пропадёт ответ, почему задача исчезла");
     }
 
     @Test

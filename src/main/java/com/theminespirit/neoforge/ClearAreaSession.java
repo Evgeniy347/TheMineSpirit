@@ -45,7 +45,6 @@ public class ClearAreaSession {
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
-    private static final int PROGRESS_EVERY = 16;
     private static final int PROTECTED_LOGGED = 10;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int COLLECT_RADIUS = 4;
@@ -443,9 +442,6 @@ public class ClearAreaSession {
                 blocked.reached(currentTarget);
                 brokenKinds.merge(brokenKind, 1, Integer::sum);
                 tally.removed();
-                if (removed % PROGRESS_EVERY == 1) {
-                    ClearReport.progress(LOGGER, spirit, box, removed, remaining.size(), currentStand);
-                }
                 collector = new DropCollector(
                         spirit,
                         IdFilter.matchAll(),
