@@ -1,7 +1,11 @@
 ### GET /v1/board
 
-Очередь заданий доски поселения — наблюдение для стратегического интеллекта и игрока (пагинации нет: записей не больше
-`MAX_PENDING`). Только чтение, на серверный поток ходит одним переходом.
+Очередь заданий доски поселения — наблюдение для стратегического интеллекта и игрока. Отдаётся порциями: по
+умолчанию `limit=50`, максимум `200`; сервер не собирает и не сериализует всю доску на каждый запрос.
+
+```
+GET /v1/board?limit=30&offset=60&status=ASSIGNED&group=ACTIVE&assignee=<uuid>&case=BUILD_FENCE&since=1200
+```
 
 ```json
 {"tasks":[
@@ -10,9 +14,21 @@
    "requiredItems":{"oak_log":16},"missing":{"oak_log":10},"dependsOn":["board-root"],
    "createdAt":1234,"level":1,"cause":"always","effectivePriority":55,
    "modifiers":["lure_bait_ready"],"done":false,"waitReason":"не хватает материалов: {oak_log=16}"}
-],"counts":{"done":1231,"reopened":1}}
+],"total":138,"offset":0,"limit":50,
+ "groups":{"DONE":80,"ACTIVE":5,"WAITING":3,"AVAILABLE":50},
+ "version":1234567890123456789,"nextCursor":"bzoxNTA",
+ "counts":{"done":1231,"reopened":1}}
 ```
 
+- `limit` (1..200, по умолчанию 50), `offset` (≥ 0) — нарезка стабильного порядка `createdAt`, затем `id`.
+- `cursor` — вместо `offset`: значение `nextCursor` из прошлого ответа; `cursor` и `offset` вместе — 400.
+- `status` — имя `BoardStatus` (`PENDING`/`WAITING_RESOURCES`/`ASSIGNED`/`BLOCKED`/`DONE`/`FAILED`/`CANCELLED`);
+  `group` — колонка `BoardTileGroup` (`DONE`/`ACTIVE`/`WAITING`/`AVAILABLE`); регистр не важен.
+- `assignee` — UUID духа-держателя; `case` — имя `BoardCase`; `since`/`updated_after` — нижняя граница тика
+  постановки (`updated_after` — синоним, при двух значениях побеждает поздний).
+- `total` — сколько заданий подходит под фильтры (не размер порции); `groups` — счётчики колонок после фильтров
+  статуса/духа/кейса/времени; `nextCursor` есть, пока за порцией остался хвост; `version` меняется при изменении
+  состава и состояния доски.
 - `counts` — итоги журнала: `done` (переходы DONE, только растёт) и `reopened` (REOPENED, отдельно); текущий
   статус задачи в `tasks` от этого не зависит.
 - `id` — id задания; `case` — кейс `BoardCase`; `priority` — вес (больше — раньше);

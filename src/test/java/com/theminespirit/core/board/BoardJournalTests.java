@@ -168,6 +168,26 @@ class BoardJournalTests {
     }
 
     @Test
+    void last_ManyLinesAcrossChunks_ReturnsNewestPortion() {
+        BoardJournal journal = new BoardJournal(log());
+        for (int index = 0; index < 1_000; index++) {
+            journal.enqueue(entry(BoardLog.Event.DONE, "id-" + index, BoardCase.BUILD_PEN, 1));
+        }
+        journal.flushAll();
+
+        List<BoardLogEntry> entries = journal.last(900);
+
+        assertEquals(
+                900,
+                entries.size(),
+                "Хвост журнала обязан собираться из нескольких блоков чтения без потери строк: " + entries.size());
+        assertEquals(
+                "id-999",
+                entries.get(0).ticketId(),
+                "Хвост всё равно обязан начинаться с самой свежей записи, а не с начала файла");
+    }
+
+    @Test
     void last_Utf8Lines_StayReadable() {
         BoardJournal journal = new BoardJournal(log());
         journal.enqueue(entry(BoardLog.Event.DONE, "загон:корова", BoardCase.BUILD_PEN, 1));

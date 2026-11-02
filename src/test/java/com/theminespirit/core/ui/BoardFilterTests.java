@@ -41,14 +41,15 @@ class BoardFilterTests {
 
     @Test
     void nextSpirit_Cycle_AnyNobodyNamesAlphabeticallyAny() {
+        List<String> names = List.of("Агафья", "Яков");
         BoardFilter filter = BoardFilter.ALL;
-        filter = filter.nextSpirit(TILES);
+        filter = filter.nextSpiritNames(names);
         assertEquals(BoardFilter.Spirit.NOBODY, filter.spirit(), "После «все» идёт «…»");
-        filter = filter.nextSpirit(TILES);
+        filter = filter.nextSpiritNames(names);
         assertEquals("Агафья", filter.spiritName(), "После «…» идёт первый дух по алфавиту");
-        filter = filter.nextSpirit(TILES);
+        filter = filter.nextSpiritNames(names);
         assertEquals("Яков", filter.spiritName(), "Духи перебираются по алфавиту");
-        filter = filter.nextSpirit(TILES);
+        filter = filter.nextSpiritNames(names);
         assertEquals(BoardFilter.ALL, filter, "После последнего духа фильтр возвращается к «все»");
     }
 

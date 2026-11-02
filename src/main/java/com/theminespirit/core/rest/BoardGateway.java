@@ -8,6 +8,10 @@ public interface BoardGateway {
 
     List<BoardTask> tasks();
 
+    default BoardListing list(BoardListQuery query) {
+        return BoardListings.select(tasks(), query);
+    }
+
     default BoardCounts counts() {
         return new BoardCounts(0, 0);
     }

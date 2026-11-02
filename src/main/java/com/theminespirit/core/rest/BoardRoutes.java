@@ -24,8 +24,9 @@ public final class BoardRoutes {
                 new Route("DELETE", "/v1/board/tasks/{id}", this::cancel));
     }
 
-    private RestResponse list(RestRequest ignoredRequest, PathParams ignoredParams) {
-        return RestResponse.ok(BoardJson.listJson(gateway.tasks(), gateway.counts()));
+    private RestResponse list(RestRequest request, PathParams ignoredParams) {
+        BoardListQuery query = BoardListQuery.parse(request.query());
+        return RestResponse.ok(BoardJson.listJson(gateway.list(query), gateway.counts()));
     }
 
     private RestResponse log(RestRequest request, PathParams ignoredParams) {

@@ -2,9 +2,7 @@ package com.theminespirit.core.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableSet;
 import java.util.Objects;
-import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
 public record BoardFilter(
@@ -31,13 +29,18 @@ public record BoardFilter(
 
     public boolean accepts(BoardTile tile) {
         Objects.requireNonNull(tile, "tile не может быть null: фильтруют плитки доски");
-        if (group != null && tile.group() != group) {
+        return accepts(tile.group(), tile.spirit());
+    }
+
+    public boolean accepts(BoardTileGroup tileGroup, @Nullable String tileSpirit) {
+        Objects.requireNonNull(tileGroup, "Группа плитки не может быть null: фильтр по статусу сравнивает её");
+        if (group != null && tileGroup != group) {
             return false;
         }
         return switch (spirit) {
             case ANY -> true;
-            case NOBODY -> tile.spirit() == null;
-            case NAMED -> Objects.equals(tile.spirit(), spiritName);
+            case NOBODY -> tileSpirit == null;
+            case NAMED -> Objects.equals(tileSpirit, spiritName);
         };
     }
 
@@ -59,8 +62,12 @@ public record BoardFilter(
         return new BoardFilter(next, spirit, spiritName);
     }
 
-    public BoardFilter nextSpirit(List<BoardTile> tiles) {
-        List<String> names = spiritNames(tiles);
+    public BoardFilter nextSpiritNames(List<String> names) {
+        Objects.requireNonNull(names, "names не может быть null: цикл фильтра идёт по именам духов доски");
+        return nextSpiritFromNames(names);
+    }
+
+    private BoardFilter nextSpiritFromNames(List<String> names) {
         int index = switch (spirit) {
             case ANY -> -1;
             case NOBODY -> 0;
@@ -73,17 +80,5 @@ public record BoardFilter(
             return new BoardFilter(group, Spirit.ANY, null);
         }
         return new BoardFilter(group, Spirit.NAMED, names.get(index));
-    }
-
-    public static List<String> spiritNames(List<BoardTile> tiles) {
-        Objects.requireNonNull(tiles, "tiles не может быть null: пустая доска — пустой список");
-        NavigableSet<String> names = new TreeSet<>();
-        for (BoardTile tile : tiles) {
-            String name = tile.spirit();
-            if (name != null) {
-                names.add(name);
-            }
-        }
-        return List.copyOf(names);
     }
 }

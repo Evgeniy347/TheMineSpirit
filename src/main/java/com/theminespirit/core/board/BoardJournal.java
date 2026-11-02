@@ -16,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class BoardJournal {
     public static final int FIND_LINES = 65_536;
+    private static final int TAIL_CHUNK = 64 * 1024;
 
     private final Path path;
     private final Deque<String> pending = new ArrayDeque<>();
@@ -148,35 +149,58 @@ public final class BoardJournal {
     }
 
     private List<String> tailLines(int wanted) {
+        if (wanted < 1) {
+            throw new IllegalArgumentException("Хвост журнала " + wanted + " меньше 1 строки: нечего читать");
+        }
         try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
             long length = file.length();
             if (length == 0) {
                 return List.of();
             }
-            long position = length - 1;
-            long start = 0;
+            long position = length;
             int newlines = 0;
-            while (position >= 0) {
+            List<byte[]> chunks = new ArrayList<>();
+            while (position > 0 && newlines <= wanted) {
+                int read = (int) Math.min(TAIL_CHUNK, position);
+                position -= read;
+                byte[] chunk = new byte[read];
                 file.seek(position);
-                if (file.read() == '\n') {
-                    newlines++;
-                    if (newlines > wanted) {
-                        start = position + 1;
-                        break;
+                file.readFully(chunk);
+                chunks.add(chunk);
+                for (byte value : chunk) {
+                    if (value == '\n') {
+                        newlines++;
                     }
                 }
-                position--;
             }
-            file.seek(start);
+            String text = new String(joinReverse(chunks), StandardCharsets.UTF_8);
             List<String> lines = new ArrayList<>();
-            String raw;
-            while ((raw = file.readLine()) != null) {
-                lines.add(new String(raw.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
+            for (String raw : text.split("\n", -1)) {
+                String line = raw.endsWith("\r") ? raw.substring(0, raw.length() - 1) : raw;
+                if (!line.isEmpty()) {
+                    lines.add(line);
+                }
             }
-            return lines;
+            int from = Math.max(0, lines.size() - wanted);
+            return List.copyOf(lines.subList(from, lines.size()));
         } catch (IOException error) {
             throw new IllegalStateException("Хвост журнала '" + path + "' не прочитан: " + error.getMessage(), error);
         }
+    }
+
+    private static byte[] joinReverse(List<byte[]> chunks) {
+        int size = 0;
+        for (byte[] chunk : chunks) {
+            size += chunk.length;
+        }
+        byte[] joined = new byte[size];
+        int offset = 0;
+        for (int index = chunks.size() - 1; index >= 0; index--) {
+            byte[] chunk = chunks.get(index);
+            System.arraycopy(chunk, 0, joined, offset, chunk.length);
+            offset += chunk.length;
+        }
+        return joined;
     }
 
     private void truncateAfter(int brokenIndex) {
