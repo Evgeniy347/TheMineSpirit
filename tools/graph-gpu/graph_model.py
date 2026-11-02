@@ -574,6 +574,8 @@ class Planner:
                 "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
             })
             return
+        if building.board_case in ("BUILD_WAREHOUSE", "BUILD_PEN"):
+            return
         self.push(source, BUILDING + building_id, amount)
 
     def roots(self):
