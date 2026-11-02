@@ -41,6 +41,9 @@
 | [pathfinding-range.md](pathfinding-range.md) | Дальность поиска пути: замеры 32–2048, лимиты узлов и чанков, граф троп | свой стенд на снимке мира |
 | [graph-inputs.md](graph-inputs.md) | Что граф получает сейчас, чего не хватает, обходы графа, переход на «дух → работа» | свой код `core/board/graph`, `neoforge/board` |
 | [graph-inputs-tables.md](graph-inputs-tables.md) | Полные таблицы к разбору входа и выхода графа | свой код |
+| [graph-ideas.md](graph-ideas.md) | Идеи расширения графа: входы, узлы, потребности поселения, приоритеты | свой код, данные, механики Minecraft |
+| [graph-ideas-tables.md](graph-ideas-tables.md) | Полные таблицы идей к расширению графа | свой код, данные |
+| [graph-ideas-nodes.json](graph-ideas-nodes.json) | Черновик узлов-кандидатов в формате graph.json, не подключён к моду | свой код |
 
 ## Самое ценное по областям
 
