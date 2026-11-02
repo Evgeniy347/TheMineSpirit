@@ -169,6 +169,24 @@ final class PlanSteps {
         return new SequenceNode(steps);
     }
 
+    static TaskNode placeCells(TicketTarget target, List<PlannedBlock> blocks) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (PlannedBlock block : blocks) {
+            if (!AIR.equals(block.block())) {
+                counts.merge(item(block, target), 1, Integer::sum);
+            }
+        }
+        List<TaskNode> steps = new ArrayList<>();
+        counts.forEach((item, count) -> steps.add(
+                ownCraft(item)
+                        ? craft(item, Math.min(count, CatalogLimits.COUNT_MAX))
+                        : acquire(item, Math.min(count, CatalogLimits.COUNT_MAX))));
+        for (PlannedBlock block : blocks) {
+            steps.add(place(block, target));
+        }
+        return new SequenceNode(steps);
+    }
+
     static TaskNode buildsOnly(TicketTarget target, List<SchemeBuild> builds) {
         List<TaskNode> steps = new ArrayList<>();
         addBuilds(steps, builds, null, target.wood(), 1);
