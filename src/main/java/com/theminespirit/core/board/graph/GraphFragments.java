@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
-final class GraphFragments {
+public final class GraphFragments {
     static final String DIRECTORY = "data/theminespirit/board/graph.d";
     private static final String WAYS = "ways";
 
@@ -57,6 +57,11 @@ final class GraphFragments {
         return SupplyGraph.parse(merged, String.join(" + ", origins));
     }
 
+    public static SupplyGraph mergeWithClasspath(
+            String manualJson, String manualOrigin, String generatedJson, String generatedOrigin) {
+        return load(manualJson, manualOrigin, generatedJson, generatedOrigin, classpath());
+    }
+
     static List<Fragment> classpath() {
         List<Fragment> fragments = new ArrayList<>();
         ClassLoader loader = GraphFragments.class.getClassLoader();
@@ -65,10 +70,10 @@ final class GraphFragments {
             loader.getResources(DIRECTORY).asIterator().forEachRemaining(roots::add);
             roots.sort(Comparator.comparing(URL::toString));
             for (URL root : roots) {
-                if ("file".equals(root.getProtocol())) {
-                    fragments.addAll(fromDirectory(Path.of(root.toURI())));
-                } else if ("jar".equals(root.getProtocol())) {
+                if ("jar".equals(root.getProtocol())) {
                     fragments.addAll(fromJar((JarURLConnection) root.openConnection()));
+                } else {
+                    fragments.addAll(fromDirectory(Path.of(root.toURI())));
                 }
             }
         } catch (IOException error) {

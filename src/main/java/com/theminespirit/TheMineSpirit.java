@@ -15,6 +15,7 @@ import com.theminespirit.neoforge.SpiritDropEvents;
 import com.theminespirit.neoforge.board.BoardLifecycle;
 import com.theminespirit.neoforge.board.CraterWatch;
 import com.theminespirit.neoforge.board.FenceWatch;
+import com.theminespirit.neoforge.board.More3Events;
 import com.theminespirit.neoforge.coordinator.CoordinatorLifecycle;
 import com.theminespirit.neoforge.crater.CraterEvents;
 import com.theminespirit.neoforge.demo.DemoLifecycle;
@@ -74,6 +75,7 @@ public final class TheMineSpirit {
         CraterEvents.register(NeoForge.EVENT_BUS);
         new SpiritExperienceEvents(NeoForge.EVENT_BUS);
         new SpiritDropEvents(NeoForge.EVENT_BUS);
+        More3Events.register(NeoForge.EVENT_BUS);
         SpiritRespawnService.register(NeoForge.EVENT_BUS);
         LOGGER.info("The Mine Spirit {} загружен", modContainer.getModInfo().getVersion());
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) ->

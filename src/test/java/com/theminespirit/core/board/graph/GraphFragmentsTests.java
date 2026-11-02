@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.inventory.JsonResource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -115,6 +116,18 @@ class GraphFragmentsTests {
                                 Path.of(fragment.origin()).getFileName().toString())
                         .toList(),
                 "Фрагменты читаются по имени: порядок слияния не зависит от файловой системы");
+    }
+
+    @Test
+    void mergeWithFragments_ProductionResources_LoadsFragmentNodes() {
+        SupplyGraph graph = GraphFragments.mergeWithClasspath(
+                JsonResource.readClasspath(SupplyGraph.RESOURCE),
+                SupplyGraph.RESOURCE,
+                JsonResource.readClasspath(SupplyGraph.RECIPES),
+                SupplyGraph.RECIPES);
+
+        assertTrue(graph.events().containsKey("danger_spot"), "Загрузка таблицы графа читает фрагменты областей");
+        assertTrue(graph.events().containsKey("crop_ready"), "Фрагменты других областей тоже не теряются");
     }
 
     @Test
