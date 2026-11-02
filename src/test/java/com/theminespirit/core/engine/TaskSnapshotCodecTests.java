@@ -89,6 +89,23 @@ class TaskSnapshotCodecTests {
     }
 
     @Test
+    void decode_PlanOverPlannerLimit_RestoresRunningPlan() {
+        List<TaskNode> steps = new ArrayList<>();
+        for (int i = 0; i < 500; i++) {
+            steps.add(new ScriptCall("wait", Map.of("ticks", 1)));
+        }
+        TaskSnapshot snapshot = running(new SequenceNode(List.copyOf(steps)), new SequenceAt(0, null));
+
+        TaskSnapshot restored = TaskSnapshotCodec.decode(TaskSnapshotCodec.encode(snapshot));
+
+        assertEquals(
+                snapshot,
+                restored,
+                "Снимок внутреннего плана длиннее лимита ИИ-планировщика обязан восстанавливаться: иначе ремонт "
+                        + "поселения на 1422 блока теряется после рестарта, хотя задача исправно сохранена");
+    }
+
+    @Test
     void encode_RepeatSnapshot_RoundTrips() {
         TaskSnapshot snapshot = running(
                 new RepeatNode(5, new ScriptCall("wait", Map.of("ticks", 1))), new RepeatAt(2, new ScriptAt(Map.of())));
