@@ -30,6 +30,7 @@
 | Файл | Область | Репозитории |
 |---|---|---|
 | [navigation-movement.md](navigation-movement.md) | Навигация, движение, добыча | baritone, altoclef |
+| [baritone-navigation.md](baritone-navigation.md) | Устройство навигации Baritone: A*, движения, кэш, сегменты, лицензия | baritone |
 | [colony-economy/README.md](colony-economy/README.md) | Работы, склад, снабжение, экономика | minecolonies |
 | [npc-ai-commands.md](npc-ai-commands.md) | Цели NPC, черты, команды, патруль | citizens |
 | [llm-agents-skills/README.md](llm-agents-skills/README.md) | Наблюдение, промпты, память, навыки, куррикулум, верификация | mindcraft, mc_aiplayer, mc-ai-agent-mod, voyager |
