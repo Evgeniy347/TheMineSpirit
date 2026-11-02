@@ -3,7 +3,7 @@
 Мод для Minecraft **1.21.1** на **NeoForge 21.1.257** (Java 21, Gradle + ModDevGradle).
 
 Это единственный README проекта и карта всех инструкций и скриптов (карту и ссылки держит `DocsMapGuardTests`).
-
+Файлы с первой строкой `// lib: Из Baritone ...` — LGPL-3.0: тексты `LICENSE-LGPL-3.0` и `LICENSE-GPL-3.0`.
 ## Команды
 
 Выполнять из корня репозитория.
