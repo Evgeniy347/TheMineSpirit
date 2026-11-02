@@ -24,6 +24,8 @@ public final class StuckSpirits {
 
     private final Map<UUID, BlockCoord> seen = new LinkedHashMap<>();
     private final Map<UUID, Stuck> stuck = new LinkedHashMap<>();
+    private boolean rebasePending;
+    private long restoredAt;
 
     public void see(UUID spirit, BlockCoord at) {
         Objects.requireNonNull(spirit, "Дух не может быть null: позиция наблюдается у конкретного духа");
@@ -62,6 +64,7 @@ public final class StuckSpirits {
         if (now < 0) {
             throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание читается только вперёд");
         }
+        rebase(now);
         Stuck known = stuck.get(spirit);
         if (known == null) {
             return Optional.empty();
@@ -91,10 +94,23 @@ public final class StuckSpirits {
         seen.clear();
         stuck.clear();
         for (BoardState.Stuck state : states) {
-            stuck.put(state.spirit(), new Stuck(state.at(), Math.max(now, state.since())));
+            stuck.put(state.spirit(), new Stuck(state.at(), state.since()));
             if (state.at() != null) {
                 seen.put(state.spirit(), state.at());
             }
+        }
+        rebasePending = !states.isEmpty();
+        restoredAt = now;
+    }
+
+    private void rebase(long now) {
+        if (!rebasePending || now <= restoredAt) {
+            return;
+        }
+        rebasePending = false;
+        for (Map.Entry<UUID, Stuck> entry : new LinkedHashMap<>(stuck).entrySet()) {
+            Stuck state = entry.getValue();
+            stuck.put(entry.getKey(), new Stuck(state.at(), now));
         }
     }
 

@@ -31,9 +31,9 @@ class TransferStuckLiveTests {
         board.stuck().mark(spirit, old);
         BoardState snapshot = board.snapshot();
 
-        clock[0] = restart;
         Board restored = new Board(() -> clock[0]);
         restored.restore(snapshot);
+        clock[0] = restart;
 
         long since = restored.stuck().of(spirit, restart).orElseThrow().since();
         assertEquals(

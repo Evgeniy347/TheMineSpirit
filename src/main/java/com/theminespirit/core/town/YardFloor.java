@@ -25,7 +25,7 @@ public final class YardFloor {
         if (every < 1) {
             throw new IllegalArgumentException("Период проверки " + every + " не положителен: двор не проверить");
         }
-        return now < last || now - last >= every;
+        return last == Long.MIN_VALUE || now < last || now - last >= every;
     }
 
     public static Audit of(List<BlockCoord> stations, int maxDepth, Predicate<BlockCoord> solid) {

@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
@@ -29,8 +28,8 @@ final class ActivityCards {
         return own != null && own.generation() == generation;
     }
 
-    Optional<BoardOccupant.Occupation> occupation(SpiritEntity spirit, boolean assigned, long now) {
-        Launched own = refresh(spirit, now);
+    Optional<BoardOccupant.Occupation> occupation(SpiritEntity spirit, boolean assigned) {
+        Launched own = refresh(spirit);
         return BoardOccupant.of(
                 spirit,
                 own != null,
@@ -40,7 +39,7 @@ final class ActivityCards {
                 assigned);
     }
 
-    private @Nullable Launched refresh(SpiritEntity spirit, long now) {
+    private @Nullable Launched refresh(SpiritEntity spirit) {
         UUID id = spirit.getUUID();
         Launched own = launched.get(id);
         if (own == null) {
@@ -59,20 +58,8 @@ final class ActivityCards {
             launched.put(id, active);
             return active;
         }
-        if (status != RunStatus.FAILED) {
-            launched.remove(id);
-            return null;
-        }
-        if (own.idleSince() == 0) {
-            Launched paused = new Launched(own.activity(), own.generation(), own.script(), own.target(), now);
-            launched.put(id, paused);
-            return paused;
-        }
-        if (now - own.idleSince() > BoardTuning.caseFailPauseCapTicks()) {
-            launched.remove(id);
-            return null;
-        }
-        return own;
+        launched.remove(id);
+        return null;
     }
 
     private record Launched(
