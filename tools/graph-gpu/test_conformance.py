@@ -187,6 +187,29 @@ def test_world_inputs():
     print("OK: входы участка учитываются в выборе")
 
 
+
+
+def test_more3_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    events = ("danger_spot", "spirit_death_drop", "work_yield_low", "trash_found",
+              "chest_purpose_missing", "work_conflict", "station_idle", "player_sleep",
+              "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay",
+              "stage_slow")
+    ways = ("secure_danger", "recover_death_drop", "retune_work_cost", "clear_trash",
+            "assign_chest_purpose", "spread_work", "use_idle_station", "home_night_work",
+            "repair_world_decay", "raise_bottleneck_weight")
+    for event in events:
+        assert event in graph.events, "Python-модель не видит событие области more3: " + event
+    for way in ways:
+        assert graph.way(way) is not None, "Python-модель не видит путь области more3: " + way
+    assert "#trash" in graph.groups, "Python-модель не видит группу мусора"
+    tasks = {task["id"] for task in plan(graph, State({
+        "stage": 1, "kits": {"spirit-1": {}}, "events": list(events)}))["tasks"]}
+    for event in events:
+        assert any(task.startswith("event:" + event + ":") for task in tasks),             "Python: событие области more3 не даёт задания: " + event
+    print("OK: узлы и события области more3 учитываются в выборе")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -208,6 +231,7 @@ if __name__ == "__main__":
         test_store_nodes()
         test_world_fragment()
         test_world_inputs()
+        test_more3_nodes()
         test_conformance()
     except AssertionError as error:
         print(error)

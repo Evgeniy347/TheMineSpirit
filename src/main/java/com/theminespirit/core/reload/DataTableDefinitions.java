@@ -1,5 +1,6 @@
 package com.theminespirit.core.reload;
 
+import com.theminespirit.core.board.graph.GraphFragments;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -19,7 +20,7 @@ final class DataTableDefinitions {
                 TableDefinition.composite(
                         "graph",
                         List.of(SupplyGraph.RESOURCE, SupplyGraph.RECIPES),
-                        contents -> SupplyGraph.merge(
+                        contents -> GraphFragments.mergeWithClasspath(
                                 contents.get(0).json(),
                                 contents.get(0).origin(),
                                 contents.get(1).json(),

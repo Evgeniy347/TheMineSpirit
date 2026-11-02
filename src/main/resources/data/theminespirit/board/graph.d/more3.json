@@ -1,0 +1,147 @@
+{
+  "_note_more3": "Область more3: опасные места, дропы после смерти, отдача работы, мусор, назначение сундуков, конфликты работ, простой станций, сон игрока, порча мира, длительность этапа. Сборщик входа — More3Inputs.",
+  "groups": {
+    "#trash": [
+      "rotten_flesh",
+      "poisonous_potato",
+      "spider_eye",
+      "bone",
+      "string",
+      "flint",
+      "gravel"
+    ]
+  },
+  "items": {
+    "danger_known": {"xmin": 0, "k": 1, "base": 55, "stage": 1},
+    "drop_recovered": {"xmin": 0, "k": 1, "base": 58, "stage": 1},
+    "work_retuned": {"xmin": 0, "k": 1, "base": 45, "stage": 1},
+    "trash_cleared": {"xmin": 0, "k": 1, "base": 28, "stage": 1},
+    "chest_labeled": {"xmin": 0, "k": 1, "base": 32, "stage": 1},
+    "conflict_resolved": {"xmin": 0, "k": 1, "base": 40, "stage": 1},
+    "station_loaded": {"xmin": 0, "k": 1, "base": 48, "stage": 1},
+    "night_home": {"xmin": 0, "k": 1, "base": 42, "stage": 1},
+    "world_repaired": {"xmin": 0, "k": 1, "base": 46, "stage": 1},
+    "stage_boosted": {"xmin": 0, "k": 1, "base": 50, "stage": 1}
+  },
+  "ways": [
+    {"id": "secure_danger", "case": "ACTIVITY_ESCAPE", "makes": "danger_known",
+     "yield": 1, "weight": 1.05, "ticks": 100, "implemented": false, "todo": "danger_spot"},
+    {"id": "recover_death_drop", "case": "COLLECT_DROPS", "makes": "drop_recovered",
+     "yield": 1, "weight": 1.08, "ticks": 200, "implemented": false, "todo": "spirit_death_drop"},
+    {"id": "retune_work_cost", "case": "ACTIVITY_SENSE", "makes": "work_retuned",
+     "yield": 1, "weight": 0.95, "ticks": 100, "implemented": false, "todo": "work_yield_low"},
+    {"id": "clear_trash", "case": "ACTIVITY_UNLOAD", "makes": "trash_cleared",
+     "yield": 1, "weight": 0.90, "ticks": 120, "implemented": false, "todo": "trash_found"},
+    {"id": "assign_chest_purpose", "case": "ACTIVITY_UNLOAD", "makes": "chest_labeled",
+     "yield": 1, "weight": 0.95, "ticks": 100, "building": "chests", "implemented": false, "todo": "chest_purpose_missing"},
+    {"id": "spread_work", "case": "ACTIVITY_MOVE", "makes": "conflict_resolved",
+     "yield": 1, "weight": 0.98, "ticks": 120, "implemented": false, "todo": "work_conflict"},
+    {"id": "use_idle_station", "case": "CRAFTING_STATION", "makes": "station_loaded",
+     "yield": 1, "weight": 1.02, "ticks": 200, "implemented": false, "todo": "station_idle"},
+    {"id": "home_night_work", "case": "ACTIVITY_BUILD", "makes": "night_home",
+     "yield": 1, "weight": 0.92, "ticks": 200, "implemented": false, "todo": "player_sleep"},
+    {"id": "repair_world_decay", "case": "FILL_CRATER", "makes": "world_repaired",
+     "yield": 1, "weight": 0.94, "ticks": 120, "consumes": {"#building_blocks": 1}, "implemented": false, "todo": "world_decay"},
+    {"id": "raise_bottleneck_weight", "case": "ACTIVITY_SENSE", "makes": "stage_boosted",
+     "yield": 1, "weight": 1.0, "ticks": 100, "implemented": false, "todo": "stage_slow"}
+  ],
+  "events": {
+    "danger_spot": {
+      "tasks": [
+        {"id": "avoid_danger", "case": "ACTIVITY_ESCAPE", "base": 92, "consumes": {}},
+        {"id": "fence_danger", "case": "BUILD_FENCE", "base": 84, "consumes": {"#logs": 4}}
+      ],
+      "push": {"danger_known": 10},
+      "advice": ["avoid_or_fence_dangerous_place"]
+    },
+    "spirit_death_drop": {
+      "tasks": [
+        {"id": "recover_spirit_drop", "case": "COLLECT_DROPS", "base": 90, "consumes": {}}
+      ],
+      "push": {"drop_recovered": 15},
+      "advice": ["pick_up_spirit_drops_before_despawn"]
+    },
+    "work_yield_low": {
+      "tasks": [
+        {"id": "retune_work_cost", "case": "ACTIVITY_SENSE", "base": 70, "consumes": {}},
+        {"id": "redo_slow_work", "case": "GATHER_MATERIALS", "base": 60, "consumes": {}}
+      ],
+      "push": {"work_retuned": 8},
+      "advice": ["compare_actual_work_yield_with_expectation"]
+    },
+    "trash_found": {
+      "tasks": [
+        {"id": "dump_trash", "case": "ACTIVITY_UNLOAD", "base": 35, "consumes": {}},
+        {"id": "burn_trash", "case": "ACTIVITY_SMELT", "base": 30, "consumes": {"#fuel": 1}},
+        {"id": "compost_trash", "case": "GATHER_MATERIALS", "base": 30, "consumes": {}}
+      ],
+      "push": {"trash_cleared": 6},
+      "advice": ["dump_burn_or_compost_trash"]
+    },
+    "chest_purpose_missing": {
+      "tasks": [
+        {"id": "label_chest", "case": "ACTIVITY_UNLOAD", "base": 32, "consumes": {}}
+      ],
+      "push": {"chest_labeled": 8},
+      "advice": ["assign_chest_purpose"]
+    },
+    "work_conflict": {
+      "tasks": [
+        {"id": "reschedule_work", "case": "ACTIVITY_SENSE", "base": 65, "consumes": {}},
+        {"id": "move_work", "case": "ACTIVITY_MOVE", "base": 60, "consumes": {}}
+      ],
+      "push": {"conflict_resolved": 6},
+      "advice": ["spread_works_by_time_or_place"]
+    },
+    "station_idle": {
+      "tasks": [
+        {"id": "load_station", "case": "CRAFTING_STATION", "base": 50, "consumes": {}}
+      ],
+      "push": {"station_loaded": 8},
+      "advice": ["load_idle_station_or_building"]
+    },
+    "player_sleep": {
+      "tasks": [
+        {"id": "night_work_home", "case": "ACTIVITY_BUILD", "base": 55, "consumes": {}},
+        {"id": "stay_near_home", "case": "ACTIVITY_MOVE", "base": 50, "consumes": {}}
+      ],
+      "push": {"night_home": 5},
+      "advice": ["work_near_home_while_player_sleeps"]
+    },
+    "sand_collapse": {
+      "tasks": [
+        {"id": "fix_sand_collapse", "case": "FILL_CRATER", "base": 45, "consumes": {"sand": 1}}
+      ],
+      "push": {"world_repaired": 6},
+      "advice": ["support_falling_sand"]
+    },
+    "gravel_collapse": {
+      "tasks": [
+        {"id": "fix_gravel_collapse", "case": "FILL_CRATER", "base": 45, "consumes": {"gravel": 1}}
+      ],
+      "push": {"world_repaired": 6},
+      "advice": ["support_falling_gravel"]
+    },
+    "farmland_trampled": {
+      "tasks": [
+        {"id": "restore_farmland", "case": "GATHER_MATERIALS", "base": 40, "consumes": {"dirt": 1}}
+      ],
+      "push": {"world_repaired": 6},
+      "advice": ["restore_trampled_farmland"]
+    },
+    "world_decay": {
+      "tasks": [
+        {"id": "repair_leaf_litter", "case": "CLEAR_GROUNDS", "base": 35, "consumes": {}}
+      ],
+      "push": {"world_repaired": 5},
+      "advice": ["sweep_decayed_leaves"]
+    },
+    "stage_slow": {
+      "tasks": [
+        {"id": "boost_stage_bottleneck", "case": "ACTIVITY_SENSE", "base": 72, "consumes": {}}
+      ],
+      "push": {"stage_boosted": 10},
+      "advice": ["raise_weight_of_lagging_stage_work"]
+    }
+  }
+}
