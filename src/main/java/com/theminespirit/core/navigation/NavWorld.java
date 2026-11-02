@@ -3,7 +3,7 @@
 package com.theminespirit.core.navigation;
 
 public interface NavWorld {
-    boolean loaded(int x, int z);
+    boolean available(int x, int z);
 
     boolean passable(int x, int y, int z);
 

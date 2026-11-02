@@ -72,7 +72,7 @@ final class NavTestWorld implements NavWorld {
     }
 
     @Override
-    public boolean loaded(int x, int z) {
+    public boolean available(int x, int z) {
         return (x >> 4) < unloadFrom && !unloaded.contains(NavNode.key(x >> 4, 0, z >> 4));
     }
 

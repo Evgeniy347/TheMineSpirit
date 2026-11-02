@@ -114,7 +114,7 @@ public final class NavAStarSearch {
             return;
         }
         if (crossesChunk(current.x, current.z, move.x, move.z)
-                && !context.world().loaded(move.x, move.z)) {
+                && !context.world().available(move.x, move.z)) {
             emptyChunks++;
             return;
         }
