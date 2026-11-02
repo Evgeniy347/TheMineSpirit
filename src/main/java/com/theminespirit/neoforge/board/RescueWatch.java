@@ -35,10 +35,13 @@ import org.slf4j.Logger;
 final class RescueWatch {
     static final String PREFIX = "rescue:";
     private static final String DIG_OUT = "dig_out";
+    private static final double GOTO_MIN = 2.5;
+    private static final long MAGNET_RETRY_TICKS = 200;
     private static final Logger LOGGER = LogUtils.getLogger();
     private final ScriptProgressWatch progress = new ScriptProgressWatch();
     private final StillWatch still = new StillWatch();
     private final Map<UUID, String> causes = new HashMap<>();
+    private final Map<UUID, Long> magnetNext = new HashMap<>();
     private final ChangeSummary log = new ChangeSummary(BoardTuning.logSummaryTicks());
 
     private record Sighting(String id, String cause, SpiritEntity spirit, BlockPos feet, BlockCoord settlement) {}
@@ -110,10 +113,17 @@ final class RescueWatch {
         boolean relocate = true;
         if (self.isEmpty()) {
             Optional<SelfEscape.Plan> near = SelfEscape.nearby(coord(feet), new RescueGrid(level, feet));
-            if (near.isPresent()) {
+            if (near.isPresent() && distance(feet, near.orElseThrow().target()) > GOTO_MIN) {
                 goal = near.orElseThrow().target();
                 relocate = false;
                 self = near;
+            } else {
+                long next = magnetNext.getOrDefault(spirit.getUUID(), 0L);
+                if (now >= next) {
+                    magnetNext.put(spirit.getUUID(), now + MAGNET_RETRY_TICKS);
+                    RescueMagnet.home(level, spirit, goal);
+                }
+                return;
             }
         }
         Optional<UUID> assignee = self.isPresent() ? Optional.of(spirit.getUUID()) : Optional.empty();
@@ -194,6 +204,13 @@ final class RescueWatch {
             }
         }
         return false;
+    }
+
+    private static double distance(BlockPos feet, BlockCoord target) {
+        double dx = feet.getX() + 0.5 - target.x() - 0.5;
+        double dy = feet.getY() - target.y();
+        double dz = feet.getZ() + 0.5 - target.z() - 0.5;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     private static BlockCoord coord(BlockPos pos) {
