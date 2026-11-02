@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.route.RouteMarker;
@@ -17,8 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
 
 public final class TownSnapshots {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private TownSnapshots() {}
 
     public static Optional<TownSnapshot> current(ServerLevel level) {
@@ -26,7 +30,7 @@ public final class TownSnapshots {
         Optional<TownPlan> town = store.town();
         BoardService service = BoardRegistry.get(level);
         int stageValue = service.board().ledger().stage();
-        Optional<StageSite> site = store.site(stageValue).or(store::site);
+        Optional<StageSite> site = displaySite(store, stageValue);
         Optional<SettlementPlot> plot = store.plot();
         if (town.isEmpty() || site.isEmpty() || plot.isEmpty()) {
             return Optional.empty();
@@ -48,6 +52,18 @@ public final class TownSnapshots {
         progress.put(TownPlanner.TORCHES, step(level, service, BoardCase.LIGHTING, stage, wood));
         List<List<BlockCoord>> paths = PathNetworkService.segments(level);
         return Optional.of(TownSnapshot.of(town.orElseThrow(), stage, stageValue, progress, paths));
+    }
+
+    private static Optional<StageSite> displaySite(SettlementPlotStore store, int stage) {
+        try {
+            return store.site(stage);
+        } catch (RuntimeException broken) {
+            LOGGER.warn(
+                    "[plot] место этапа {} не разложилось ({}): карта показывает место этапа 1",
+                    stage,
+                    broken.getMessage());
+            return store.site();
+        }
     }
 
     public static Optional<TownMapView.Bounds> markerBounds(ServerLevel level) {

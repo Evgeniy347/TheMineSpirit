@@ -45,6 +45,9 @@ class TownSnapshotTests {
                 snapshot.stage(),
                 "Снимок показывает действительный этап поселения, а не этап места постройки: spirit plan "
                         + "не печатает «этап 1» вечно");
+        assertTrue(
+                snapshot.lots().stream().anyMatch(lot -> lot.stage() == 2),
+                "Снимок действительного этапа перечисляет его постройки: иначе показывать этап 2 нечем");
     }
 
     @Test
