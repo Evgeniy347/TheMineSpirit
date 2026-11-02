@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 final class TownSurvey {
     static final String JOURNAL_ID = "town";
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static BlockCoord warnedAnchor;
 
     private TownSurvey() {}
 
@@ -33,7 +34,9 @@ final class TownSurvey {
         Optional<TownPlan> stored =
                 store.town().filter(plan -> near(plan.anchor(), center) && TownPlanner.keepStored(plan));
         if (stored.isPresent()) {
-            if (!TownPlanner.laidWith(stored.orElseThrow(), rules)) {
+            TownPlan kept = stored.orElseThrow();
+            if (!TownPlanner.laidWith(kept, rules) && !kept.anchor().equals(warnedAnchor)) {
+                warnedAnchor = kept.anchor();
                 LOGGER.warn("[plot] план размечен прежним обмером: места построек сохраняются, новый обмер не переносит"
                         + " origin; расширение — только новыми участками");
             }
