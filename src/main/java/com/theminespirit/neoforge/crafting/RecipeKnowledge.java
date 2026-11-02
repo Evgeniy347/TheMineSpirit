@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.crafting;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.crafting.IngredientSpec;
+import com.theminespirit.core.crafting.Obtainability;
 import com.theminespirit.core.crafting.RecipeChooser;
 import com.theminespirit.core.crafting.RecipeCurator;
 import com.theminespirit.core.crafting.RecipeIndex;
@@ -13,13 +14,11 @@ import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.planner.ResourceKnowledge;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
@@ -41,6 +40,8 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     private final RecipeIndex index;
     private final Map<String, Integer> available;
     private final String species;
+    private final Obtainability obtainability =
+            new Obtainability(item -> craftRecipe(item, Map.of()), this::smeltRecipes, RecipeKnowledge::gatherable);
 
     private RecipeKnowledge(RecipeIndex index, Map<String, Integer> available, String species) {
         this.index = index;
@@ -77,6 +78,10 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public boolean isGatherable(String item) {
+        return gatherable(item);
+    }
+
+    static boolean gatherable(String item) {
         String id = ItemIds.normalize(item);
         if (DropTable.shared()
                 .blocksFor(id)
@@ -216,7 +221,7 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     private String representative(IngredientSpec slot) {
         Optional<String> preferred = WoodSpecies.prefer(slot.alternatives(), available, species)
-                .filter(alternative -> held(alternative) || canObtain(alternative, new HashSet<>()));
+                .filter(alternative -> held(alternative) || canObtain(alternative));
         if (preferred.isPresent()) {
             return preferred.get();
         }
@@ -239,30 +244,11 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     }
 
     private Optional<String> pickObtainable(Stream<String> candidates) {
-        return candidates
-                .filter(alternative -> canObtain(alternative, new HashSet<>()))
-                .findFirst();
+        return candidates.filter(alternative -> canObtain(alternative)).findFirst();
     }
 
-    private boolean canObtain(String item, Set<String> path) {
-        if (!path.add(item)) {
-            return false;
-        }
-        try {
-            if (isGatherable(item)) {
-                return true;
-            }
-            Optional<RecipeSpec> craft = craftRecipe(item, Map.of());
-            if (craft.isPresent()) {
-                return craft.get().ingredients().stream()
-                        .allMatch(slot -> slot.alternatives().stream().anyMatch(alt -> canObtain(alt, path)));
-            }
-            return smeltRecipes(item).stream()
-                    .anyMatch(recipe ->
-                            recipe.ingredients().get(0).alternatives().stream().anyMatch(alt -> canObtain(alt, path)));
-        } finally {
-            path.remove(item);
-        }
+    private boolean canObtain(String item) {
+        return obtainability.canObtain(item);
     }
 
     private static RecipeIndex buildIndex(RecipeManager manager, HolderLookup.Provider registries) {
