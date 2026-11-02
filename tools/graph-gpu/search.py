@@ -33,6 +33,11 @@ LOW, HIGH = 0.5, 1.5
 PENALTY = 500
 
 SCALARS = ("decay", "urgentBoost", "buildReadyBoost")
+DIG_WAYS = {"dig_out", "bridge", "pillar", "restore_trace"}
+STORE_EVENTS = {"store_minimum", "transfer_pending", "storage_full", "furnace_ready"}
+FARM_EVENTS = {"crop_ready", "animal_starving", "orchard_empty"}
+MORE3_EVENTS = set(sim_gpu.MORE3_EVENTS)
+GEAR_EVENTS = {"tool_worn", "armor_worn"}
 
 
 def item_category(item):
@@ -44,7 +49,26 @@ def building_category(building):
 
 
 def way_category(way):
+    if way.id in DIG_WAYS:
+        return "way:dig"
     return "way:" + str(way.board_case or "other")
+
+
+def event_category(name):
+    """Полосы новых областей: жизнь, склад, ферма, снаряжение, more2/more3."""
+    if name.startswith("life_"):
+        return "event:life"
+    if name in STORE_EVENTS:
+        return "event:store"
+    if name in FARM_EVENTS:
+        return "event:farm"
+    if name.startswith("more2_"):
+        return "event:more2"
+    if name in MORE3_EVENTS:
+        return "event:more3"
+    if name.startswith("gear_") or name in GEAR_EVENTS:
+        return "event:gear"
+    return None
 
 
 def parameters(graph):
@@ -53,6 +77,8 @@ def parameters(graph):
     categories.update(item_category(item) for item in graph.items.values())
     categories.update(building_category(building) for building in graph.buildings.values())
     categories.update(way_category(way) for way in graph.ways)
+    categories.update(category for category in (event_category(name) for name in graph.events)
+                      if category is not None)
     scalars = [name for name in SCALARS if name in categories]
     rest = sorted(categories.difference(SCALARS))
     return scalars + rest
@@ -61,7 +87,7 @@ def parameters(graph):
 def vector_to_weights(graph, vector, params):
     """Вектор множителей категорий -> множители конкретных весов для Graph.scaled."""
     factors = {name: float(value) for name, value in zip(params, vector)}
-    weights = {"items": {}, "buildings": {}, "ways": {}}
+    weights = {"items": {}, "buildings": {}, "ways": {}, "events": {}}
     for name in SCALARS:
         weights[name] = factors.get(name, 1.0)
     for item_id, item in graph.items.items():
@@ -70,6 +96,10 @@ def vector_to_weights(graph, vector, params):
         weights["buildings"][building_id] = factors.get(building_category(building), 1.0)
     for way in graph.ways:
         weights["ways"][way.id] = factors.get(way_category(way), 1.0)
+    for name in graph.events:
+        category = event_category(name)
+        if category is not None:
+            weights["events"][name] = factors.get(category, 1.0)
     return weights
 
 
@@ -88,6 +118,7 @@ def absolute(graph, weights):
         "items": {},
         "buildings": {},
         "ways": {},
+        "events": {},
     }
     for item_id, factor in (weights.get("items") or {}).items():
         item = graph.items.get(item_id)
@@ -101,6 +132,20 @@ def absolute(graph, weights):
         way = graph.way(way_id)
         if way is not None:
             out["ways"][way_id] = round(way.weight * factor, 9)
+    for event_name, factor in (weights.get("events") or {}).items():
+        event = graph.events.get(event_name)
+        if event is None:
+            continue
+        band = int(event.get("band", 0))
+        tasks = {}
+        for task in event["tasks"]:
+            base = float(task.get("base", 0))
+            if band > 0 and base > graph.max_priority:
+                value = graph.max_priority + int(math.floor((base - graph.max_priority) * factor + 0.5))
+            else:
+                value = int(math.floor(base * factor + 0.5))
+            tasks[task.get("id", "")] = value
+        out["events"][event_name] = tasks
     return out
 
 
@@ -135,11 +180,11 @@ def java_second(graph):
 def start_builders():
     """Стартовые миры поиска и проверки: (имя, функция graph -> World)."""
     return [
-        ("stage2-full", java_second),
-        ("late3-half", lambda graph: make_world(graph, 3, built_every_other=True)),
         ("late3", lambda graph: make_world(graph, 3)),
+        ("late3-half", lambda graph: make_world(graph, 3, built_every_other=True)),
+        ("stage2-full", java_second),
         ("stage2-all", lambda graph: make_world(graph, 2)),
-    ]
+    ] + sim_gpu.input_builders()
 
 
 def evaluate_population(base_graph, vectors, builders, params, limit=4000, device="cuda"):

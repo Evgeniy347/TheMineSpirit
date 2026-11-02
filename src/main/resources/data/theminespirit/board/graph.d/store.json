@@ -1,29 +1,29 @@
 {
   "items": {
-    "store:minimum": {"xmin": 0, "base": 60, "stage": 1},
-    "store:transfer": {"xmin": 0, "base": 46, "stage": 1},
-    "store:smelt": {"xmin": 0, "base": 44, "stage": 1},
-    "store:space": {"xmin": 0, "base": 48, "stage": 1},
-    "store:sort": {"xmin": 0, "base": 30, "stage": 1},
-    "store:carry:deliver": {"xmin": 0, "base": 45, "stage": 1},
-    "store:carry:transfer": {"xmin": 0, "base": 42, "stage": 1},
-    "store:smelt:load": {"xmin": 0, "base": 44, "stage": 1},
-    "store:smelt:take": {"xmin": 0, "base": 50, "stage": 1},
-    "store:chests": {"xmin": 0, "base": 46, "stage": 1},
-    "store:sorted": {"xmin": 0, "base": 28, "stage": 1}
+    "store:minimum": {"xmin": 0, "base": 36, "stage": 1},
+    "store:transfer": {"xmin": 0, "base": 27, "stage": 1},
+    "store:smelt": {"xmin": 0, "base": 26, "stage": 1},
+    "store:space": {"xmin": 0, "base": 29, "stage": 1},
+    "store:sort": {"xmin": 0, "base": 18, "stage": 1},
+    "store:carry:deliver": {"xmin": 0, "base": 27, "stage": 1},
+    "store:carry:transfer": {"xmin": 0, "base": 25, "stage": 1},
+    "store:smelt:load": {"xmin": 0, "base": 26, "stage": 1},
+    "store:smelt:take": {"xmin": 0, "base": 30, "stage": 1},
+    "store:chests": {"xmin": 0, "base": 27, "stage": 1},
+    "store:sorted": {"xmin": 0, "base": 17, "stage": 1}
   },
   "ways": [
     {"id": "store_carry_deliver", "case": "TRANSFER_ITEM", "makes": "store:carry:deliver",
-     "yield": 1, "weight": 1.0, "ticks": 200, "implemented": false, "todo": "store:transfer"},
+     "yield": 1, "weight": 0.815698, "ticks": 200, "implemented": false, "todo": "store:transfer"},
     {"id": "store_carry_transfer", "case": "TRANSFER_ITEM", "makes": "store:carry:transfer",
-     "yield": 1, "weight": 1.0, "ticks": 200, "implemented": false, "todo": "store:transfer"},
+     "yield": 1, "weight": 0.815698, "ticks": 200, "implemented": false, "todo": "store:transfer"},
     {"id": "store_smelt_load", "case": "SMELT_CHARCOAL", "makes": "store:smelt:load",
-     "yield": 1, "weight": 1.0, "ticks": 200, "building": "furnace", "implemented": false, "todo": "store:smelt"},
+     "yield": 1, "weight": 0.709459, "ticks": 200, "building": "furnace", "implemented": false, "todo": "store:smelt"},
     {"id": "store_smelt_take", "case": "ACTIVITY_UNLOAD", "makes": "store:smelt:take",
-     "yield": 1, "weight": 1.0, "ticks": 40, "building": "furnace", "implemented": false, "todo": "store:smelt"},
+     "yield": 1, "weight": 1.316414, "ticks": 40, "building": "furnace", "implemented": false, "todo": "store:smelt"},
     {"id": "store_space", "case": "STOCK_CHESTS", "makes": "store:chests",
-     "yield": 1, "weight": 1.0, "ticks": 200, "implemented": false, "todo": "store:space"},
+     "yield": 1, "weight": 1.360953, "ticks": 200, "implemented": false, "todo": "store:space"},
     {"id": "store_sort", "case": "ACTIVITY_UNLOAD", "makes": "store:sorted",
-     "yield": 1, "weight": 1.0, "ticks": 120, "building": "chests", "implemented": false, "todo": "store:sort"}
+     "yield": 1, "weight": 1.316414, "ticks": 120, "building": "chests", "implemented": false, "todo": "store:sort"}
   ]
 }

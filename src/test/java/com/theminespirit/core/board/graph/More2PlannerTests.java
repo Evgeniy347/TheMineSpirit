@@ -16,7 +16,7 @@ class More2PlannerTests {
         GraphPlan plan = GraphPlanner.plan(GRAPH, state);
 
         GraphPlan.Task task = plan.tasks().stream()
-                .filter(candidate -> candidate.id().equals(FIRE))
+                .filter(candidate -> FIRE.equals(candidate.id()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Событие огня обязано дать задание в плане: " + FIRE));
         assertFalse(task.implemented(), "Заглушка «тушить огонь» ещё не реализована");
@@ -24,10 +24,10 @@ class More2PlannerTests {
 
         GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(
-                tickets.post().stream().noneMatch(ticket -> ticket.id().equals(GraphTickets.PREFIX + FIRE)),
+                tickets.post().stream().noneMatch(ticket -> (GraphTickets.PREFIX + FIRE).equals(ticket.id())),
                 "Реализация-заглушка не ставится на доску: дух не должен брать несуществующее действие");
         assertTrue(
-                tickets.unimplemented().stream().anyMatch(known -> known.id().equals(FIRE)),
+                tickets.unimplemented().stream().anyMatch(known -> FIRE.equals(known.id())),
                 "Заглушка попадает в список нереализованных, а не теряется молча");
     }
 

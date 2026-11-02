@@ -11,6 +11,7 @@ import os
 import sys
 import tempfile
 
+import sim_gpu
 from graph_model import Graph, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -368,6 +369,88 @@ def test_more3_nodes():
     print("OK: узлы и события области more3 учитываются в выборе")
 
 
+def test_baseline_trail():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
+    assert outcome["steps"] == 78 and outcome["ticks"] == 55700, \
+        "Пустой мир обязан повторить Java (78 шагов, 55 700 тиков), а не решение линейной системы: " \
+        + str((outcome["steps"], outcome["ticks"]))
+    print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
+
+
+def test_event_scaling():
+    graph = Graph({
+        "maxPriority": 100,
+        "items": {},
+        "buildings": {},
+        "ways": [],
+        "events": {
+            "life_threat": {
+                "band": 20,
+                "tasks": [
+                    {"id": "defend", "case": "ACTIVITY_DEFEND", "base": 120, "consumes": {}},
+                    {"id": "sleep", "case": "ACTIVITY_REST", "base": 101, "consumes": {}},
+                ],
+            }
+        },
+    })
+    scaled = graph.scaled({"events": {"life_threat": 0.5}})
+    assert scaled.events["life_threat"]["tasks"][0]["base"] == 110, \
+        "Полоса жизни масштабируется выше maxPriority: 100 + (120 - 100) / 2"
+    assert scaled.events["life_threat"]["tasks"][1]["base"] == 101, \
+        "Полоса жизни не опускается до maxPriority: сон остаётся выше 100"
+    assert graph.events["life_threat"]["tasks"][0]["base"] == 120, \
+        "Масштабирование не меняет исходный граф"
+    print("OK: множители событий меняют стартовые веса полос")
+
+
+def test_input_worlds():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    worlds = dict(sim_gpu.input_worlds(graph))
+    expected = {
+        "life": "event:life_threat",
+        "store": "store_smelt_take",
+        "world": "event:backfill",
+        "gear": "event:gear_craft_pickaxe",
+        "more": "more_help_player",
+        "more2": "event:more2_fire_near_building",
+        "more3": "event:danger_spot",
+    }
+    for name, prefix in expected.items():
+        assert name in worlds, "Стартовый мир области не собран: " + name
+        tasks = [task["id"] for task in worlds[name].plan()["tasks"] if task["feasible"]]
+        assert any(task.startswith(prefix) or prefix in task for task in tasks), \
+            "Мир '" + name + "' не даёт ожидаемого задания " + prefix + ": " + str(tasks)
+    outcome = sim_gpu.run(worlds["dig"], limit=200)
+    dig = [step[1] for step in outcome["trail"]]
+    assert any(task in ("dig_out", "bridge", "pillar") for task in dig), \
+        "Мир 'dig' не даёт дорогого пути выхода: " + str(dig)
+    assert "restore_trace" in dig, "Выход из ямы обязан требовать возврата следа: " + str(dig)
+    print("OK: стартовые миры областей дают задания новых узлов")
+
+
+def test_input_effects():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    worlds = dict(sim_gpu.input_worlds(graph))
+    world = worlds["world"]
+    world.after({"id": "event:backfill:backfill", "makes": "backfill"})
+    assert world.facts["terrain"]["pits"] == 1, "Засыпанная яма уменьшает их число на входе"
+    world.after({"id": "event:repair_hut:repair:hut", "makes": "repair:hut"})
+    assert world.facts["buildings"]["hut"]["damage"] == 0, "Ремонт снимает повреждение постройки"
+    dig = worlds["dig"]
+    before = sum(1 for spirit in dig.facts["spirits"].values() if spirit.get("trapped"))
+    dig.after({"id": "dig_out", "makes": "dig_open"})
+    after = sum(1 for spirit in dig.facts["spirits"].values() if spirit.get("trapped"))
+    assert after == before - 1, "Выход из ловушки освобождает одного духа"
+    store = worlds["store"]
+    store.after({"id": "store_carry_deliver", "makes": "store:carry:deliver"})
+    assert all(not spirit.get("inventory") for spirit in store.facts["spirits"].values()), \
+        "Доставка опустошает руки духов"
+    store.after({"id": "store_smelt_take", "makes": "store:smelt:take"})
+    assert store.facts["stations"]["furnace"]["output"] is None, "Выгрузка очищает выход печи"
+    print("OK: завершение новых заданий обновляет вход, а не повторяет причину")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -397,6 +480,10 @@ if __name__ == "__main__":
         test_more2_nodes()
         test_more2_inputs()
         test_more3_nodes()
+        test_baseline_trail()
+        test_event_scaling()
+        test_input_worlds()
+        test_input_effects()
         test_conformance()
     except AssertionError as error:
         print(error)
