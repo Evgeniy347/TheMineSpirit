@@ -1068,7 +1068,8 @@ class Planner:
             building = task.get("building")
             feasible = self.stocked(consumes) and (building is None or state.built(building) == BUILT)
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,
-                    "consumes": consumes, "feasible": feasible, "chance": False, "implemented": True,
+                    "consumes": consumes, "feasible": feasible, "chance": False,
+                    "implemented": bool(task.get("implemented", True)),
                     "ticks": graph.costs.ticks(key, task.get("case"))}
         if key.startswith(BUILDING):
             building_id = key[len(BUILDING):]

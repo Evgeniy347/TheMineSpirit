@@ -446,7 +446,7 @@ public final class GraphPlanner {
                     stocked(event.consumes())
                             && (event.building() == null || state.built(event.building()) == Built.BUILT),
                     false,
-                    true,
+                    event.implemented(),
                     graph.costs().ticks(key, event.boardCase()));
         }
         if (key.startsWith(BUILDING)) {

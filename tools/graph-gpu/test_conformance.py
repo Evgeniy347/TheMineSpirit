@@ -161,6 +161,43 @@ def test_world_inputs():
     print("OK: входы участка учитываются в выборе")
 
 
+def test_more2_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_load_carry",
+                "more2_batch_carry", "more2_put_out_fire", "more2_remove_lava", "more2_block_flow",
+                "more2_pen_animal", "more2_lure_wild", "more2_guard_villager", "more2_trade_villager",
+                "more2_prepare_stage", "more2_make_bed", "more2_build_trail"):
+        assert graph.way(way) is not None, "Python-модель не видит новый путь области graphmore2: " + way
+        assert not graph.implemented(way), "Действие области graphmore2 пока заглушено: " + way
+    for item in ("more2:food_plan", "more2:carry_room", "more2:carry_batch", "more2:safe",
+                 "more2:flow_blocked", "more2:animal_penned", "more2:village_safe",
+                 "more2:stage_ready", "more2:bed_ready", "more2:trail"):
+        assert item in graph.items, "Python-модель не видит новый узел области graphmore2: " + item
+    for building in ("more2_field_chest", "more2_trail"):
+        assert building in graph.buildings, "Python-модель не видит новую постройку области: " + building
+    for event in ("more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
+                  "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
+                  "more2_animal_outside", "more2_wild_herd", "more2_villager_near",
+                  "more2_villager_trade", "more2_stage_prep", "more2_bed_needed", "more2_path_needed"):
+        assert event in graph.events, "Python-модель не видит новое событие области: " + event
+    print("OK: узлы и события области graphmore2 читаются из фрагмента")
+
+
+def test_more2_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "events": ["more2_fire_near_building", "more2_hazard_flow"],
+    })
+    tasks = {task["id"]: task for task in plan(graph, state)["tasks"]}
+    fire = tasks.get("event:more2_fire_near_building:more2_put_out_fire")
+    flow = tasks.get("event:more2_hazard_flow:more2_block_flow")
+    assert fire is not None and flow is not None, "Вход области graphmore2 обязан дать задания в выборе"
+    assert not fire["implemented"] and not flow["implemented"], "Заглушки области не выдаются как готовые действия"
+    print("OK: входы области graphmore2 учитываются в выборе")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -181,6 +218,8 @@ if __name__ == "__main__":
         test_store_nodes()
         test_world_fragment()
         test_world_inputs()
+        test_more2_nodes()
+        test_more2_inputs()
         test_conformance()
     except AssertionError as error:
         print(error)
