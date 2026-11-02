@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -139,6 +140,9 @@ public record GraphState(
     }
 
     public GraphState withFacts(GraphFacts known) {
+        Objects.requireNonNull(known, "Факты графа не могут быть null: пустые задают GraphFacts.empty()");
+        Set<String> derived = new LinkedHashSet<>(events);
+        derived.addAll(GraphWorldEvents.of(known));
         return new GraphState(
                 stock,
                 stage,
@@ -146,7 +150,7 @@ public record GraphState(
                 buildings,
                 materials,
                 storageFreePercent,
-                events,
+                derived,
                 world,
                 distances,
                 stations,

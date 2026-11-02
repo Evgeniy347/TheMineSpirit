@@ -1,0 +1,256 @@
+{
+  "groups": {
+    "#building_blocks": [
+      "dirt",
+      "cobblestone",
+      "gravel",
+      "sand"
+    ]
+  },
+  "events": {
+    "repair_crafting_table": {
+      "tasks": [
+        {
+          "id": "repair:crafting_table",
+          "case": "REPAIR_BUILDING",
+          "base": 60,
+          "consumes": {
+            "#planks": 4
+          },
+          "building": "crafting_table"
+        }
+      ]
+    },
+    "repair_clearing": {
+      "tasks": [
+        {
+          "id": "repair:clearing",
+          "case": "REPAIR_BUILDING",
+          "base": 55,
+          "consumes": {
+            "dirt": 8
+          },
+          "building": "clearing"
+        }
+      ]
+    },
+    "repair_chests": {
+      "tasks": [
+        {
+          "id": "repair:chests",
+          "case": "REPAIR_BUILDING",
+          "base": 60,
+          "consumes": {
+            "#planks": 8
+          },
+          "building": "chests"
+        }
+      ]
+    },
+    "repair_mine": {
+      "tasks": [
+        {
+          "id": "repair:mine",
+          "case": "REPAIR_BUILDING",
+          "base": 65,
+          "consumes": {
+            "cobblestone": 8
+          },
+          "building": "mine"
+        }
+      ]
+    },
+    "repair_furnace": {
+      "tasks": [
+        {
+          "id": "repair:furnace",
+          "case": "REPAIR_BUILDING",
+          "base": 65,
+          "consumes": {
+            "cobblestone": 8
+          },
+          "building": "furnace"
+        }
+      ]
+    },
+    "repair_brewing_stand": {
+      "tasks": [
+        {
+          "id": "repair:brewing_stand",
+          "case": "REPAIR_BUILDING",
+          "base": 55,
+          "consumes": {
+            "cobblestone": 4
+          },
+          "building": "brewing_stand"
+        }
+      ]
+    },
+    "repair_lighting": {
+      "tasks": [
+        {
+          "id": "repair:lighting",
+          "case": "REPAIR_BUILDING",
+          "base": 50,
+          "consumes": {
+            "torch": 4
+          },
+          "building": "lighting"
+        }
+      ]
+    },
+    "repair_fence": {
+      "tasks": [
+        {
+          "id": "repair:fence",
+          "case": "REPAIR_BUILDING",
+          "base": 60,
+          "consumes": {
+            "#logs": 4
+          },
+          "building": "fence"
+        }
+      ]
+    },
+    "repair_hut": {
+      "tasks": [
+        {
+          "id": "repair:hut",
+          "case": "REPAIR_BUILDING",
+          "base": 85,
+          "consumes": {
+            "#planks": 8,
+            "cobblestone": 8
+          },
+          "building": "hut"
+        }
+      ]
+    },
+    "repair_orchard_oak": {
+      "tasks": [
+        {
+          "id": "repair:orchard_oak",
+          "case": "REPAIR_BUILDING",
+          "base": 55,
+          "consumes": {
+            "#logs": 4
+          },
+          "building": "orchard_oak"
+        }
+      ]
+    },
+    "repair_streets": {
+      "tasks": [
+        {
+          "id": "repair:streets",
+          "case": "REPAIR_BUILDING",
+          "base": 50,
+          "consumes": {
+            "cobblestone": 8
+          },
+          "building": "streets"
+        }
+      ]
+    },
+    "repair_smithing_table": {
+      "tasks": [
+        {
+          "id": "repair:smithing_table",
+          "case": "REPAIR_BUILDING",
+          "base": 60,
+          "consumes": {
+            "#planks": 4
+          },
+          "building": "smithing_table"
+        }
+      ]
+    },
+    "repair_anvil": {
+      "tasks": [
+        {
+          "id": "repair:anvil",
+          "case": "REPAIR_BUILDING",
+          "base": 65,
+          "consumes": {
+            "iron_ingot": 3
+          },
+          "building": "anvil"
+        }
+      ]
+    },
+    "demolish_stray": {
+      "tasks": [
+        {
+          "id": "demolish_stray",
+          "case": "DISMANTLE_SHELTER",
+          "base": 60,
+          "consumes": {}
+        }
+      ],
+      "push": {
+        "#building_blocks": 5
+      },
+      "advice": [
+        "return_stray_materials"
+      ]
+    },
+    "backfill": {
+      "tasks": [
+        {
+          "id": "backfill",
+          "case": "FILL_CRATER",
+          "base": 55,
+          "consumes": {
+            "dirt": 4
+          }
+        }
+      ],
+      "advice": [
+        "fill_dug_hole"
+      ]
+    },
+    "clear_floating": {
+      "tasks": [
+        {
+          "id": "clear_floating",
+          "case": "CLEAR_GROUNDS",
+          "base": 50,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "remove_floating_tree_and_crown"
+      ]
+    },
+    "level_lot": {
+      "tasks": [
+        {
+          "id": "level_lot",
+          "case": "CLEAR_GROUNDS",
+          "base": 45,
+          "consumes": {
+            "dirt": 8
+          }
+        }
+      ],
+      "advice": [
+        "cut_above_fill_below"
+      ]
+    },
+    "restore_trace": {
+      "tasks": [
+        {
+          "id": "restore_trace",
+          "case": "FILL_CRATER",
+          "base": 45,
+          "consumes": {
+            "#building_blocks": 1
+          }
+        }
+      ],
+      "advice": [
+        "restore_world_as_it_was"
+      ]
+    }
+  }
+}
