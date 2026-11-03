@@ -34,6 +34,7 @@ public final class GraphSource {
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
     private final GraphNotes notes = new GraphNotes();
+    private final PetWork pets = new PetWork();
     private String lastBuildings = "";
     private long lastCycle = -1;
     private long lastDeep = -1;
@@ -106,7 +107,7 @@ public final class GraphSource {
                 half.service(),
                 half.spirits(),
                 half.stock(),
-                new GraphPost.Site(half.scan(), half.around()),
+                new GraphPost.Site(half.scan(), half.around(), pets),
                 half.graph(),
                 half.now());
         List<String> unconnected = new ArrayList<>();

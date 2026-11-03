@@ -43,8 +43,9 @@ final class GraphPost {
     final long now;
     final List<SpiritEntity> spirits;
     final SupplyGraph graph;
-    private final BoardService service;
-    private final MaterialSource source;
+    final BoardService service;
+    final MaterialSource source;
+    final PetWork pets;
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -56,6 +57,7 @@ final class GraphPost {
             SupplyGraph graph,
             long now) {
         this.level = level;
+        this.pets = site.pets();
         this.service = service;
         this.spirits = spirits;
         this.stock = stock;
@@ -66,13 +68,14 @@ final class GraphPost {
         this.now = now;
     }
 
-    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around) {}
+    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets) {}
 
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
             case BUILDING ->
-                PortalPost.building(this, ticket)
+                FarmPost.building(this, ticket)
+                        || PortalPost.building(this, ticket)
                         || (ExtraOrchardPost.handles(ticket.node())
                                 ? ExtraOrchardPost.post(this, ticket, task)
                                 : StagePlacePost.handles(ticket.node())
@@ -87,6 +90,9 @@ final class GraphPost {
 
     private boolean event(GraphTickets.Ticket ticket) {
         if (life(ticket)) {
+            return true;
+        }
+        if (FarmPost.event(this, ticket)) {
             return true;
         }
         if (EAT.equals(ticket.node())) {
@@ -109,6 +115,7 @@ final class GraphPost {
     private boolean hungry(GraphTickets.Ticket ticket) {
         GraphFood.post(
                 level, service, spirits, stock, ticket.id(), ticket.task().priority(), now);
+        FarmPost.eat(this, ticket);
         return true;
     }
 
@@ -143,12 +150,13 @@ final class GraphPost {
             return false;
         }
         return switch (boardCase) {
-            case GATHER_MATERIALS -> PortalPost.way(this, ticket, task) || gather(ticket, task);
+            case GATHER_MATERIALS ->
+                FarmPost.pet(this, ticket) || PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
-            default -> false;
+            default -> FarmPost.way(this, ticket, task);
         };
     }
 

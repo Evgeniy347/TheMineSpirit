@@ -61,9 +61,6 @@ final class DeadCodeExemptions {
                     "src/main/java/com/theminespirit/core/board/BreedingRules.java|method|BreedingRules#stockFor",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/board/HerdCap.java|method|HerdCap#canCapture",
-                    "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exemption(
                     "src/main/java/com/theminespirit/core/board/HiveRules.java|method|HiveRules#placementReady",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(
