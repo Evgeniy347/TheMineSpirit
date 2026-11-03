@@ -161,6 +161,18 @@
       "implemented": false
     },
     {
+      "id": "weave_wool",
+      "case": "WEAVE_WOOL",
+      "makes": "white_wool",
+      "yield": 1,
+      "weight": 1.173088275,
+      "consumes": {
+        "string": 4
+      },
+      "building": "crafting_table",
+      "ticks": 120
+    },
+    {
       "id": "sort_chest",
       "case": "ACTIVITY_UNLOAD",
       "makes": "logistics",

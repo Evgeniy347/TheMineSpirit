@@ -14,8 +14,6 @@ public final class BoardTuning {
     public static final int CRATER_TERRITORY_RADIUS = 64;
     public static final int CHOP_RADIUS = 100;
 
-    public static final long HERD_SCAN_INTERVAL_TICKS = 200;
-
     public static final int CRATER_BLOCKS_ESTIMATE_RADIUS = 3;
 
     public static final int MAX_PRIORITY = 100;
@@ -75,10 +73,6 @@ public final class BoardTuning {
 
     public static long boardIntervalTicks() {
         return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
-    }
-
-    public static long herdScanIntervalTicks() {
-        return interval("herdScanIntervalTicks", HERD_SCAN_INTERVAL_TICKS);
     }
 
     public static int chopRadius() {

@@ -18,7 +18,6 @@ import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
-import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteMarker;
@@ -28,12 +27,10 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;
-import com.theminespirit.core.town.OrchardSites;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,20 +155,7 @@ final class GraphInputs {
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         buildings.putAll(planBuilt(level, service, scan, town));
         planStates(town, ledger, graph, buildings);
-        Map<BoardCase, Integer> sharing = new EnumMap<>(BoardCase.class);
-        graph.buildings().values().forEach(building -> sharing.merge(building.boardCase(), 1, Integer::sum));
-        for (SupplyGraph.Building building : graph.buildings().values()) {
-            if (buildings.containsKey(building.id())) {
-                continue;
-            }
-            boolean ownCase = sharing.get(building.boardCase()) == 1;
-            if (ownCase && ledger.has(building.boardCase(), 1)) {
-                buildings.put(building.id(), Built.BUILT);
-            } else if (town.flatMap(plan -> OrchardSites.placement(plan, building.id()))
-                    .isPresent()) {
-                buildings.put(building.id(), orchardDone(service, building) ? Built.BUILT : Built.PLANNED);
-            }
-        }
+        FarmBuilt.apply(service, level, scan, ledger, graph, town, buildings);
         return buildings;
     }
 
@@ -229,14 +213,6 @@ final class GraphInputs {
             return Optional.empty();
         }
         return Optional.of(placed.total() > 0 && placed.done() == placed.total());
-    }
-
-    private static boolean orchardDone(BoardService service, SupplyGraph.Building building) {
-        return building.boardCase() == BoardCase.BUILD_ORCHARD
-                && service.board()
-                        .statusOf(GraphTickets.PREFIX + "building:" + building.id())
-                        .filter(BoardStatus.DONE::equals)
-                        .isPresent();
     }
 
     private static Map<String, Map<String, Integer>> materials(

@@ -60,15 +60,6 @@ class BoardTuningTests {
     }
 
     @Test
-    void herdScanInterval_Is_RareEnough() {
-        assertEquals(
-                200,
-                BoardTuning.HERD_SCAN_INTERVAL_TICKS,
-                "Опрос животных идёт раз в 200 тиков, а не каждый тик: scan_entities — "
-                        + "дорогой запрос, каждый тик он грузил бы тик сервера");
-    }
-
-    @Test
     void fenceWatchRadius_Is_LocalToSettlement() {
         assertEquals(
                 32,
@@ -219,7 +210,6 @@ class BoardTuningTests {
                 (long) BoardTuning.MAX_ACTIVE_PER_SPIRIT,
                 (long) BoardTuning.MAX_PENDING,
                 (long) BoardTuning.CRATER_TERRITORY_RADIUS,
-                BoardTuning.HERD_SCAN_INTERVAL_TICKS,
                 (long) BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS,
                 (long) BoardTuning.MAX_PRIORITY,
                 (long) BoardTuning.STOCK_READ_BUDGET,

@@ -187,10 +187,6 @@ public final class BoardService {
         return retains;
     }
 
-    public int herdScans() {
-        return sources.herdScans();
-    }
-
     public long stockBlockReads() {
         return stockBlockReads;
     }
@@ -290,16 +286,6 @@ public final class BoardService {
 
     public void captureFailed(String captureId) {
         captures.remove(captureId);
-    }
-
-    public int capturedCount(Species species) {
-        int count = 0;
-        for (Capture capture : captures.values()) {
-            if (capture.species() == species) {
-                count++;
-            }
-        }
-        return count;
     }
 
     private Set<String> liveDropCauses(ServerLevel level) {

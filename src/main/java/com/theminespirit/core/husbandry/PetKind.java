@@ -1,33 +1,22 @@
 package com.theminespirit.core.husbandry;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 public enum PetKind {
-    WOLF("wolf", false),
-    CAT("cat", false),
-    OCELOT("ocelot", true);
+    WOLF("wolf"),
+    CAT("cat"),
+    OCELOT("ocelot");
 
     private final String id;
-    private final boolean trust;
 
-    PetKind(String id, boolean trust) {
+    PetKind(String id) {
         this.id = id;
-        this.trust = trust;
     }
 
     public String id() {
         return id;
-    }
-
-    public boolean trust() {
-        return trust;
-    }
-
-    public static List<PetKind> all() {
-        return List.of(values());
     }
 
     public static PetKind parse(String id) {

@@ -1,16 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardRules;
-import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.HiveRules;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.SpiritConfig;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -23,77 +15,48 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-public final class HiveWatch {
-    public static final String CAUSE = "hive:settlement";
-
-    private static final String HARVEST_ID = "hive_harvest";
-    private static final String PLACE_ID = "hive_beehive";
+final class HiveSite {
     private static final int HIVE_VERTICAL_RADIUS = 8;
     private static final int FLOWER_VERTICAL_RADIUS = 4;
 
-    private long lastScan = -1;
-    private boolean gate;
+    private HiveSite() {}
 
-    public boolean live() {
-        return gate;
+    static Optional<BlockCoord> harvest(ServerLevel level, BlockCoord home) {
+        return nearestFullHive(level, home).map(HiveSite::coord);
     }
 
-    public void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, StockView stock, long now) {
-        gate = SpiritConfig.boardEnabled() && !spirits.isEmpty();
-        if (!gate) {
-            return;
-        }
-        if (now - lastScan < BoardTuning.herdScanIntervalTicks()) {
-            return;
-        }
-        lastScan = now;
-        BlockCoord home = homeOf(spirits);
-        ensureHarvest(level, service, stock, home, now);
-        ensurePlace(level, service, stock, home, now);
+    static boolean harvestable(StockView stock) {
+        return HiveRules.chooseTool(
+                        stock.available().getOrDefault(HiveRules.SHEARS, 0) > 0,
+                        stock.available().getOrDefault(HiveRules.GLASS_BOTTLE, 0))
+                != HiveRules.Tool.NONE;
     }
 
-    private static void ensureHarvest(
-            ServerLevel level, BoardService service, StockView stock, BlockCoord home, long now) {
-        if (active(service, HARVEST_ID)) {
-            return;
-        }
-        Optional<BlockPos> hive = nearestFullHive(level, home);
-        if (hive.isEmpty()) {
-            return;
-        }
+    static Map<String, Integer> harvestNeed(StockView stock) {
         HiveRules.Tool tool = HiveRules.chooseTool(
                 stock.available().getOrDefault(HiveRules.SHEARS, 0) > 0,
                 stock.available().getOrDefault(HiveRules.GLASS_BOTTLE, 0));
-        if (tool == HiveRules.Tool.NONE) {
-            return;
-        }
-        Map<String, Integer> required =
-                tool == HiveRules.Tool.SHEARS ? Map.of(HiveRules.SHEARS, 1) : Map.of(HiveRules.GLASS_BOTTLE, 1);
-        submit(service, HARVEST_ID, BoardCase.HARVEST_HIVE, now, coord(hive.orElseThrow()), required);
+        return tool == HiveRules.Tool.SHEARS ? Map.of(HiveRules.SHEARS, 1) : Map.of(HiveRules.GLASS_BOTTLE, 1);
     }
 
-    private static void ensurePlace(
-            ServerLevel level, BoardService service, StockView stock, BlockCoord home, long now) {
-        if (active(service, PLACE_ID)) {
-            return;
-        }
+    static boolean hiveNear(ServerLevel level, BlockCoord home) {
+        return hiveNear(level, home, HiveRules.siteRadius());
+    }
+
+    static Optional<BlockCoord> place(ServerLevel level, BlockCoord home) {
+        return flowerSite(level, home).map(HiveSite::coord);
+    }
+
+    static Optional<Map<String, Integer>> placeNeed(StockView stock) {
         if (!HiveRules.honeycombEnough(stock.available().getOrDefault(HiveRules.HONEYCOMB, 0))) {
-            return;
+            return Optional.empty();
         }
         Optional<String> planks = planksType(stock);
         if (planks.isEmpty()) {
-            return;
+            return Optional.empty();
         }
-        if (hiveNear(level, home, HiveRules.siteRadius())) {
-            return;
-        }
-        Optional<BlockPos> site = flowerSite(level, home);
-        if (site.isEmpty()) {
-            return;
-        }
-        Map<String, Integer> required =
-                Map.of(HiveRules.HONEYCOMB, HiveRules.hiveHoneycomb(), planks.orElseThrow(), HiveRules.hivePlanks());
-        submit(service, PLACE_ID, BoardCase.PLACE_BEEHIVE, now, coord(site.orElseThrow()), required);
+        return Optional.of(
+                Map.of(HiveRules.HONEYCOMB, HiveRules.hiveHoneycomb(), planks.orElseThrow(), HiveRules.hivePlanks()));
     }
 
     private static Optional<BlockPos> nearestFullHive(ServerLevel level, BlockCoord home) {
@@ -207,48 +170,7 @@ public final class HiveWatch {
         return types.stream().findFirst();
     }
 
-    private static void submit(
-            BoardService service,
-            String id,
-            BoardCase boardCase,
-            long now,
-            BlockCoord target,
-            Map<String, Integer> required) {
-        String cause = boardCase == BoardCase.HARVEST_HIVE ? CAUSE + ":harvest" : CAUSE + ":place";
-        service.submit(
-                new BoardTicket(
-                        id,
-                        boardCase,
-                        Optional.empty(),
-                        BoardRules.priorityOf(boardCase),
-                        now,
-                        1,
-                        cause,
-                        List.of(),
-                        required),
-                TicketTarget.at(target));
-    }
-
-    private static boolean active(BoardService service, String id) {
-        return service.board()
-                .statusOf(id)
-                .map(status -> status == BoardStatus.PENDING
-                        || status == BoardStatus.WAITING_RESOURCES
-                        || status == BoardStatus.ASSIGNED)
-                .orElse(false);
-    }
-
     private static BlockCoord coord(BlockPos pos) {
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BlockCoord> home = spirit.home();
-            if (home.isPresent()) {
-                return home.orElseThrow();
-            }
-        }
-        return new BlockCoord(0, 64, 0);
     }
 }
