@@ -15,6 +15,7 @@ final class DigOperations {
             if (spirit.trapped()) {
                 String node = DigFacts.node(spirit.trap());
                 push.push(null, node, base(graph, node));
+                push.push(null, DigFacts.TRAIL_CLEAN, base(graph, DigFacts.TRAIL_CLEAN));
             }
         }
     }

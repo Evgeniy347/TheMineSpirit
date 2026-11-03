@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 final class DemolitionTickets {
     record Placement(BlockCoord stand, BlockCoord top, BlockCoord lowest) {}
 
+    record Batch(List<BlockCoord> stray, List<PlannedBlock> blocks, Placement placement) {}
+
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final StateChangeLog CHANGES = new StateChangeLog();
 
@@ -48,26 +50,22 @@ final class DemolitionTickets {
         return PlanDemolition.PREFIX + Long.toUnsignedString(hash, 36);
     }
 
-    static boolean submit(
-            BoardService service, StageSite site, List<PlannedBlock> blocks, long now, String id, Placement placement) {
-        BoardOutcome outcome = service.submit(
-                new BoardTicket(
+    static boolean submit(GraphPost post, StageSite site, List<PlannedBlock> blocks, String id, Placement placement) {
+        BoardOutcome outcome = post.submit(
+                post.ticket(
                         id,
                         BoardCase.DISMANTLE_SHELTER,
                         Optional.empty(),
                         BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
-                        now,
-                        1,
                         BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
                         Map.of()),
                 target(site, blocks, placement));
         return outcome == BoardOutcome.ACCEPTED;
     }
 
     static void restore(
-            BoardService service, BoardTicket ticket, StageSite site, List<PlannedBlock> blocks, Placement placement) {
-        service.submit(ticket, target(site, blocks, placement));
+            GraphPost post, BoardTicket ticket, StageSite site, List<PlannedBlock> blocks, Placement placement) {
+        post.submit(ticket, target(site, blocks, placement));
     }
 
     static Placement treePlacement(BlockCoord stand, FloatingBlocks.Finding finding) {

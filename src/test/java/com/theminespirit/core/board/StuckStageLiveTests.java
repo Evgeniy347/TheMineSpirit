@@ -58,7 +58,7 @@ class StuckStageLiveTests {
                 immediate.isEmpty(),
                 "Сразу после провала дух ещё застрял: новое задание ему не выдаётся, иначе он снова упадёт");
 
-        clock[0] += BoardTuning.idleReleaseTicks();
+        clock[0] += BoardTuning.caseFailPauseTicks();
         board.stuck().see(spirit, at);
         Optional<DispatchRound.Candidate> afterIdle = new DispatchRound(board, clock[0]).choose(mine, candidates);
 

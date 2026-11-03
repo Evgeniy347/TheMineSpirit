@@ -61,9 +61,6 @@ final class DeadCodeExemptions {
                     "src/main/java/com/theminespirit/core/board/BreedingRules.java|method|BreedingRules#stockFor",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/board/HerdCap.java|method|HerdCap#canCapture",
-                    "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exemption(
                     "src/main/java/com/theminespirit/core/board/HiveRules.java|method|HiveRules#placementReady",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(
@@ -161,7 +158,11 @@ final class DeadCodeExemptions {
                     "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/route/RouteBreakAudit.java|method|RouteBreakAudit#firstVeto",
-                    "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"));
+                    "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/board/TicketTarget.java|method|TicketTarget#withRescue",
+                    "Заготовка под узел графа спасения: RESCUE_SPIRIT ставит граф, а не RescueWatch; "
+                            + "TestResults/task.md B8"));
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(

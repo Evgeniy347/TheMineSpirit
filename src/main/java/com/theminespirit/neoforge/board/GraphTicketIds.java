@@ -20,9 +20,6 @@ final class GraphTicketIds {
         }
         SupplyGraph.Building building = graph.buildings().get(task.makes());
         if (building != null && task.id().startsWith("building:")) {
-            if (building.boardCase() == BoardCase.BUILD_PEN) {
-                return List.of(PenBuild.ticketId(task.makes()));
-            }
             if (building.boardCase() == BoardCase.BUILD_MINE && task.makes().startsWith("mine_level_")) {
                 return List.of(task.makes());
             }

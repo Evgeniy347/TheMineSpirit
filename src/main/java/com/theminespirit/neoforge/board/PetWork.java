@@ -1,10 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.husbandry.PetKind;
-import com.theminespirit.core.husbandry.PetPlanner;
 import com.theminespirit.core.husbandry.PetRules;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdActions;
 import java.util.ArrayList;
@@ -25,7 +23,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
-public final class PetWatch {
+final class PetWork {
     private static final int RADIUS = 32;
     private static final double REACH_SQR = 9.0;
     private static final int FEEDS_TO_TRUST = 3;
@@ -35,74 +33,76 @@ public final class PetWatch {
     private final Map<UUID, Integer> feeds = new HashMap<>();
     private final Map<PetKind, Long> nextBreed = new EnumMap<>(PetKind.class);
 
-    public void tick(ServerLevel level, List<SpiritEntity> spirits, long now) {
-        if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
-            return;
-        }
-        List<Animal> animals = animals(level, homeOf(spirits));
-        for (PetKind kind : PetKind.all()) {
-            List<Animal> own = animals.stream()
-                    .filter(animal -> kindOf(animal).filter(kind::equals).isPresent())
-                    .filter(animal -> owned(kind, animal))
-                    .toList();
-            List<Animal> wild = animals.stream()
-                    .filter(animal -> kindOf(animal).filter(kind::equals).isPresent())
-                    .filter(animal -> !owned(kind, animal) && !animal.isBaby())
-                    .toList();
-            PetPlanner.Action action = PetPlanner.action(kind, own.size(), wild.size(), spirits.size());
-            switch (action) {
-                case TAME, TRUST -> tameStep(level, kind, wild, spirits);
-                case BREED -> breedStep(level, kind, own, spirits, now);
-                case NONE -> {}
-            }
-        }
+    boolean tame(ServerLevel level, List<SpiritEntity> spirits, PetKind kind) {
+        return tameStep(level, kind, wild(level, spirits, kind), spirits);
     }
 
-    private void tameStep(ServerLevel level, PetKind kind, List<Animal> wild, List<SpiritEntity> spirits) {
+    boolean breed(ServerLevel level, List<SpiritEntity> spirits, PetKind kind, long now) {
+        return breedStep(level, kind, own(level, spirits, kind), spirits, now);
+    }
+
+    private static List<Animal> wild(ServerLevel level, List<SpiritEntity> spirits, PetKind kind) {
+        return animals(level, homeOf(spirits)).stream()
+                .filter(animal -> kindOf(animal).filter(kind::equals).isPresent())
+                .filter(animal -> !owned(kind, animal) && !animal.isBaby())
+                .toList();
+    }
+
+    private static List<Animal> own(ServerLevel level, List<SpiritEntity> spirits, PetKind kind) {
+        return animals(level, homeOf(spirits)).stream()
+                .filter(animal -> kindOf(animal).filter(kind::equals).isPresent())
+                .filter(animal -> owned(kind, animal))
+                .toList();
+    }
+
+    private boolean tameStep(ServerLevel level, PetKind kind, List<Animal> wild, List<SpiritEntity> spirits) {
         if (wild.isEmpty()) {
-            return;
+            return false;
         }
         List<String> foods = PetRules.tameFoods(kind);
         Animal target = wild.get(0);
         SpiritEntity worker = workerWith(spirits, foods);
         if (worker == null) {
-            return;
+            return false;
         }
         if (worker.distanceToSqr(target) > REACH_SQR) {
             worker.getNavigation().moveTo(target, APPROACH_SPEED);
-            return;
+            return true;
         }
         if (!consume(worker, foods)) {
-            return;
+            return false;
         }
         int done = feeds.merge(target.getUUID(), 1, Integer::sum);
         if (done < FEEDS_TO_TRUST) {
             heart(level, target);
-            return;
+            return true;
         }
         feeds.remove(target.getUUID());
         trust(kind, target, worker);
         heart(level, target);
+        return true;
     }
 
-    private void breedStep(ServerLevel level, PetKind kind, List<Animal> own, List<SpiritEntity> spirits, long now) {
+    private boolean breedStep(ServerLevel level, PetKind kind, List<Animal> own, List<SpiritEntity> spirits, long now) {
         List<Animal> parents = own.stream().filter(animal -> !animal.isBaby()).toList();
-        if (parents.size() < 2 || now < nextBreed.getOrDefault(kind, 0L)) {
-            return;
+        if (parents.size() < 2
+                || parents.size() >= PetRules.cap(kind, spirits.size())
+                || now < nextBreed.getOrDefault(kind, 0L)) {
+            return false;
         }
         List<String> foods = PetRules.breedFoods(kind);
         Animal first = parents.get(0);
         Animal second = parents.get(1);
         SpiritEntity worker = workerWith(spirits, foods);
         if (worker == null) {
-            return;
+            return false;
         }
         if (worker.distanceToSqr(first) > REACH_SQR) {
             worker.getNavigation().moveTo(first, APPROACH_SPEED);
-            return;
+            return true;
         }
         if (count(worker, foods) < 2) {
-            return;
+            return false;
         }
         consume(worker, foods);
         consume(worker, foods);
@@ -112,6 +112,7 @@ public final class PetWatch {
         nextBreed.put(kind, now + BREED_COOLDOWN);
         heart(level, first);
         heart(level, second);
+        return true;
     }
 
     private static void trust(PetKind kind, Animal target, SpiritEntity worker) {

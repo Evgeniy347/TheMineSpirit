@@ -53,7 +53,7 @@ final class PlanDemolition {
 
     private PlanDemolition() {}
 
-    static void tick(ServerLevel level, BoardService service, StageSite site, TownPlan town, long now) {
+    static void tick(ServerLevel level, BoardService service, StageSite site, TownPlan town, long now, GraphPost post) {
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
             return;
         }
@@ -78,7 +78,9 @@ final class PlanDemolition {
                 .toList();
         DemolitionTickets.Placement placement =
                 new DemolitionTickets.Placement(collected.stand(), collected.top(), collected.lowest());
-        if (lost && DemolitionRestore.restoreLost(level, service, site, open, stray, blocks, placement)) {
+        if (lost
+                && DemolitionRestore.restoreLost(
+                        level, service, post, site, open, new DemolitionTickets.Batch(stray, blocks, placement))) {
             return;
         }
         if (stray.isEmpty()) {
@@ -100,7 +102,7 @@ final class PlanDemolition {
             }
             return;
         }
-        if (!DemolitionTickets.submit(service, site, blocks, now, id, placement)) {
+        if (!DemolitionTickets.submit(post, site, blocks, id, placement)) {
             return;
         }
         RETRIES.submitted(id, now, COOLDOWN);

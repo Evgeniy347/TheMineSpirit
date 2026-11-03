@@ -85,7 +85,6 @@ public final class BoardService {
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
     private final ActivityCards cards = new ActivityCards();
-    private final DigOutWatch digOut;
     private final TaskStall stall = new TaskStall();
     private long lastActivity;
     private final Map<String, Long> issuedGenerations = new HashMap<>();
@@ -129,7 +128,7 @@ public final class BoardService {
         this.store = store;
         if (store != null) {
             store.restoreInto(board);
-            RescueWatch.cancelRestored(board);
+            cancelRestoredRescues(board);
             String build = BuildFingerprint.current();
             if (!build.equals(store.build())) {
                 List<String> reset = resetForNewRules();
@@ -147,7 +146,12 @@ public final class BoardService {
             }
         }
         journal.restore(board.ledger());
-        this.digOut = new DigOutWatch(this);
+    }
+
+    private static void cancelRestoredRescues(Board board) {
+        board.all().stream()
+                .filter(ticket -> ticket.boardCase() == BoardCase.RESCUE_SPIRIT)
+                .forEach(ticket -> board.cancel(ticket.id()));
     }
 
     public static BoardService create(ServerLevel level) {
@@ -181,10 +185,6 @@ public final class BoardService {
 
     public int retains() {
         return retains;
-    }
-
-    public int herdScans() {
-        return sources.herdScans();
     }
 
     public long stockBlockReads() {
@@ -245,7 +245,6 @@ public final class BoardService {
             board.retain(liveCauses, now);
             retains++;
         }
-        digOut.tick(level, spirits, now);
         ForceloadGuard.tick(level, spirits, board, targets);
         issue(level, spirits, now);
         notices.watchPending(board, stock, now);
@@ -287,16 +286,6 @@ public final class BoardService {
 
     public void captureFailed(String captureId) {
         captures.remove(captureId);
-    }
-
-    public int capturedCount(Species species) {
-        int count = 0;
-        for (Capture capture : captures.values()) {
-            if (capture.species() == species) {
-                count++;
-            }
-        }
-        return count;
     }
 
     private Set<String> liveDropCauses(ServerLevel level) {
@@ -594,11 +583,8 @@ public final class BoardService {
                 spirit.getUUID(), spirit.taskGeneration(), spirit.taskStatus().orElse(null));
     }
 
-    void releaseAssigned(SpiritEntity spirit) {
+    void detachForAction(SpiritEntity spirit) {
         board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
-    }
-
-    void forgetLaunch(SpiritEntity spirit) {
         cards.forget(spirit.getUUID());
     }
 

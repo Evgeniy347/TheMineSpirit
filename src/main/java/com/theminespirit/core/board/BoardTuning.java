@@ -14,8 +14,6 @@ public final class BoardTuning {
     public static final int CRATER_TERRITORY_RADIUS = 64;
     public static final int CHOP_RADIUS = 100;
 
-    public static final long HERD_SCAN_INTERVAL_TICKS = 200;
-
     public static final int CRATER_BLOCKS_ESTIMATE_RADIUS = 3;
 
     public static final int MAX_PRIORITY = 100;
@@ -32,8 +30,6 @@ public final class BoardTuning {
     public static final long CASE_FAIL_MULTIPLIER = 2;
 
     public static final long CASE_FAIL_PAUSE_CAP_TICKS = 9600;
-
-    public static final long IDLE_RELEASE_TICKS = 1200;
 
     public static final long LOG_SUMMARY_TICKS = 6000;
 
@@ -74,10 +70,6 @@ public final class BoardTuning {
 
     public static long boardIntervalTicks() {
         return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
-    }
-
-    public static long herdScanIntervalTicks() {
-        return interval("herdScanIntervalTicks", HERD_SCAN_INTERVAL_TICKS);
     }
 
     public static int chopRadius() {
@@ -132,10 +124,6 @@ public final class BoardTuning {
 
     public static int caseFailLimit() {
         return (int) interval("caseFailLimit", CASE_FAIL_LIMIT);
-    }
-
-    public static long idleReleaseTicks() {
-        return Math.min(IDLE_RELEASE_TICKS, caseFailPauseTicks());
     }
 
     public static long logSummaryTicks() {
