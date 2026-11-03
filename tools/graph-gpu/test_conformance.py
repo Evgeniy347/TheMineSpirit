@@ -13,7 +13,7 @@ import tempfile
 
 import search
 import sim_gpu
-from graph_model import Graph, State, plan
+from graph_model import Graph, Planner, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -573,6 +573,35 @@ def test_baseline_trail():
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
 
+def test_audit_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    state = State({
+        "stage": 2,
+        "kits": {"spirit-1": {}},
+        "buildings": {"hut": "BUILT"},
+        "events": ["repair_hut"],
+        "facts": {
+            "buildings": {"hut": {"id": "hut", "damage": 5, "auditPercent": 50,
+                                  "missing": {"minecraft:dirt": 3}, "extra": {}, "wrong": 0,
+                                  "unknown": False}},
+            "stageReqs": {"minimum": {"hut": 1}, "actual": {}},
+        },
+    })
+    planner = Planner(graph, state)
+    assert planner.materials("hut") == {"dirt": 3},         "Недостача аудита превращается в материалы ремонта: " + str(planner.materials("hut"))
+    task = graph.events["repair_hut"]["tasks"][0]
+    assert planner.event_weight(task) > int(task["base"]),         "Ремонт повреждённой постройки важнее базового веса события"
+    unknown = State({
+        "stage": 2,
+        "kits": {"spirit-1": {}},
+        "buildings": {"hut": "BUILT"},
+        "facts": {"buildings": {"hut": {"id": "hut", "damage": 5, "auditPercent": 50,
+                                        "missing": {"minecraft:dirt": 3}, "unknown": True}}},
+    })
+    assert Planner(graph, unknown).materials("hut") == graph.buildings["hut"].materials,         "Неизвестный аудит не подменяет материалы схемы"
+    print("OK: аудит построек даёт материалы и усиливает ремонт")
+
+
 def test_event_scaling():
     graph = Graph({
         "maxPriority": 100,
@@ -659,6 +688,9 @@ def test_dead_inputs():
     farm = [step[1] for step in sim_gpu.run(worlds["farm"], limit=1600)["trail"]]
     for way in ("restock_food", "till_soil", "milk_animal"):
         assert way in farm, "Мир фермы обязан вызвать путь '" + way + "': " + str(farm)
+    more5 = [step[1] for step in sim_gpu.run(worlds["more5"], limit=1600)["trail"]]
+    for way in ("more5_defend_player", "more5_pickup_wood_drop", "more5_light_mine"):
+        assert any(way in task for task in more5),             "Мир more5 обязан вызвать путь '" + way + "': " + str(more5)
     area = [step[1] for step in sim_gpu.run(worlds["world"], limit=1600)["trail"]]
     repairs = {name for name in graph.events if name.startswith("repair_")}
     for name in repairs:
@@ -721,6 +753,7 @@ if __name__ == "__main__":
         test_more7_nodes()
         test_more7_inputs()
         test_baseline_trail()
+        test_audit_inputs()
         test_event_scaling()
         test_input_worlds()
         test_input_effects()
