@@ -18,7 +18,7 @@ import math
 import os
 import sys
 
-from graph_model import Graph, Planner, State, BUILT, PLANNED, ABSENT, EPSILON, MAX_ITERATIONS
+from graph_model import Graph, Planner, State, BUILT, PLANNED, ABSENT, EPSILON, MAX_ITERATIONS, WATCHER_OWNED
 
 try:
     import torch
@@ -269,9 +269,10 @@ def ready_world(graph, stage=3, spirits=16):
     world.world.clear()
     world.stage = stage
     last = None
+    triggered = {trigger.get("build") for trigger in graph.triggers}
     for building in graph.buildings.values():
         if building.optional:
-            world.buildings[building.id] = BUILT
+            world.buildings[building.id] = BUILT if building.id in triggered else ABSENT
         elif building.stage > stage:
             world.buildings[building.id] = ABSENT
         elif building.stage < stage:
@@ -303,6 +304,7 @@ def _life_world(graph):
             "position": {"x": index, "y": 64, "z": 0},
             "targetKind": "SPIRIT" if index % 2 else "PLAYER", "distance": 3,
         })
+    world.events.add("life_injury")
     return world.with_facts({"threats": threats})
 
 
@@ -329,29 +331,31 @@ def _store_world(graph):
 
 def _area_world(graph):
     world = ready_world(graph)
+    damaged = {name[len("repair_"):] for name in graph.events if name.startswith("repair_")}
     world.with_facts({
         "strays": [{"id": "stray-1", "type": "wall", "position": {"x": 5, "y": 64, "z": 5}}],
         "terrain": {"pits": 2, "hanging": 1, "heightDrop": 4, "deepestPit": 3, "traces": 2},
-        "buildings": {
-            "hut": {"id": "hut", "damage": 5, "unknown": False},
-            "chests": {"id": "chests", "damage": 3, "unknown": False},
-        },
+        "buildings": {building: {"id": building, "damage": 5, "unknown": False}
+                      for building in damaged if building in graph.buildings},
     })
     return world
 
 
 def _gear_world(graph):
     world = ready_world(graph)
+    spirits = {}
+    for index, activity in enumerate(("mining", "woodcutting", "farming", "building"), start=1):
+        spirits["spirit-" + str(index)] = {
+            "id": "spirit-" + str(index), "position": {"x": index, "y": 64, "z": 0},
+            "health": 20, "food": 20, "air": 300, "inWater": False, "trapped": False,
+            "stuck": False, "activity": activity, "inventory": {}, "armor": [], "tools": [],
+        }
+    spirits["spirit-1"]["armor"] = [{"slot": "HEAD", "item": "minecraft:leather_helmet",
+                                     "durability": 5, "maxDurability": 55}]
+    spirits["spirit-1"]["tools"] = [{"item": "minecraft:stone_pickaxe", "kind": "pickaxe",
+                                     "tier": 1, "durability": 5, "maxDurability": 131}]
     world.with_facts({
-        "spirits": {"spirit-1": {
-            "id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0}, "health": 20,
-            "food": 20, "air": 300, "inWater": False, "trapped": False, "stuck": False,
-            "activity": "mining", "inventory": {},
-            "armor": [{"slot": "HEAD", "item": "minecraft:leather_helmet",
-                       "durability": 5, "maxDurability": 55}],
-            "tools": [{"item": "minecraft:stone_pickaxe", "kind": "pickaxe", "tier": 1,
-                       "durability": 5, "maxDurability": 131}],
-        }},
+        "spirits": spirits,
         "chests": [{"position": {"x": 1, "y": 64, "z": 0},
                     "contents": {"minecraft:iron_pickaxe": 1, "minecraft:iron_chestplate": 1},
                     "freeSlots": 10, "totalSlots": 27}],
@@ -366,6 +370,22 @@ def _more_world(graph):
         if item.id.startswith("more:"):
             threshold = int(math.ceil(item.xmin * len(world.kits) * world.stage * item.k))
             world.stock[item.id] = max(0, threshold - 1)
+    return world
+
+
+FARM_EVENTS = (
+    "crop_ready", "crop_dry", "animal_starving", "pen_full", "orchard_empty",
+    "field_empty", "storage_mixed", "furnace_needs_fuel",
+)
+
+
+def _farm_world(graph):
+    world = ready_world(graph)
+    world.events.update(FARM_EVENTS)
+    world.stock["herd_cow"] = 1
+    world.stock["farmland"] = 0
+    world.stock["food_reserve"] = 0
+    world.stock["milk_bucket"] = 0
     return world
 
 
@@ -400,6 +420,7 @@ def input_builders():
     return [
         ("life", _life_world),
         ("store", _store_world),
+        ("farm", _farm_world),
         ("world", _area_world),
         ("gear", _gear_world),
         ("more", _more_world),
@@ -416,7 +437,9 @@ def input_worlds(graph):
 
 def unbuilt(world):
     return [b.id for b in world.graph.buildings.values()
-            if b.stage <= world.stage and not b.optional and world.buildings.get(b.id) != BUILT]
+            if b.stage <= world.stage and not b.optional
+            and b.board_case not in WATCHER_OWNED
+            and world.buildings.get(b.id) != BUILT]
 
 
 def promote(world):

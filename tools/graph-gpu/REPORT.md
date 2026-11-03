@@ -132,6 +132,63 @@
 Проверка блока: `graphExport` → **200/200**; `sim_gpu` = `GraphSimulationTests`; `unit --fast-analyzers`
 (8066 тестов), `pmdMain pmdTest` — зелёные. `graph-recipes.json` после выгрузки возвращён к main.
 
+## 03.11-2 — тупик этапа 2 и мёртвые узлы
+
+**Тупик этапа 2.** Причина не в материале и не в цикле: `warehouse`, `chicken_coop`, `pen_cow`,
+`pen_sheep`, `pen_pig` — постройки, которыми владеет сторож (`StageCatalog.watcherOwned`).
+`GraphPlanner.requireBuilding` намеренно не ставит их заданием графа (это держит
+`WarehouseGraphNoticeTests`), а симуляция не изображала сторожей — поэтому этап 2 не закрывался.
+Исправление в симуляции (Java `GraphSimulation` и Python `sim_gpu`): `unbuilt`/`promote` не считают
+постройки сторожа препятствием этапу. Производственный граф и его правила не менялись: данные
+`graph.json` не могут обойти `watcherOwned`, не сломав тест про лот склада.
+
+Заодно исправлено схлопывание полосы построек в `GraphBuildOrder`: если нестроевое задание имело
+приоритет `maxPriority − 1`, все постройки получали один и тот же `maxPriority` и теряли порядок.
+Теперь начало полосы ограничено так, чтобы на `order.size()` значений осталось место; это вернуло
+правило `plan_PlayerHouse_OutranksFamilyHouses` (и одинаково в Java и Python).
+
+**Мёртвые узлы.** Добавлены входы, которые их вызывают:
+
+- `farm`: события `crop_ready`, `crop_dry`, `animal_starving`, `pen_full`, `orchard_empty`,
+  `field_empty`, `storage_mixed`, `furnace_needs_fuel`; `farmland` и `food_reserve` получили
+  `xmin = 1`, поэтому заработали `till_soil`, `plant_crop`, `restock_food`; в мире есть `herd_cow`
+  и пустой `milk_bucket` — работают `milk_cow` и `milk_animal`;
+- `world`: повреждены все постройки, у которых есть `repair_*`, — сработали 13 ремонтов;
+- `life`: добавлено событие `life_injury`;
+- `gear`: четыре духа с разными занятиями и без инструментов — события `gear_kit_*` подаются
+  (они только push, заданий не ставят, поэтому раньше считались мёртвыми по журналу заданий).
+
+Осталось мёртвыми по id (но не по смыслу): 9 путей — `assign_chest_purpose`, `clear_trash`,
+`home_night_work`, `raise_bottleneck_weight`, `recover_death_drop`, `repair_world_decay`,
+`secure_danger`, `spread_work`, `use_idle_station`: это дубли путей, чьи события ставят задание
+с другим id (`label_chest`, `dump_trash`, `night_work_home`, `boost_stage_bottleneck`,
+`recover_spirit_drop`, `repair_leaf_litter`, `avoid_danger`, `reschedule_work`/`move_work`,
+`load_station`). 2 постройки `more2_field_chest`, `more2_trail` — необязательные заглушки без
+входа. 6 событий `crop_dry`, `pen_full`, `gear_kit_*` — только push, заданий не имеют и потому не
+попадают в журнал; в мирах они подаются.
+
+**Пересчёт.** Ограниченный прогон `--fixed "decay,way:CRAFT_*_AXE,event:*,way:dig"`:
+9 поколений × 8 × 2 сида, доля **0.4682**, сумма 5498 → 4806 до исключений ради правил.
+Метрики стартов (до 03.11-2 → после):
+
+| Старт | До | После |
+|---|---|---|
+| `late3` | 656 | 331, этап 3 |
+| `late3-half` | 193 | 113, этап 3 |
+| `stage2-full` | 730, этап 2 (тупик) | 1483, этап 3 |
+| `stage2-all` | 439, этап 2 (тупик) | 1171, этап 3 |
+| `farm` | — | 55, этап 3 |
+| `world` | 10 | 21, этап 3 |
+| остальные области | 10–18 | 10–19, этап 3 |
+
+Базовые миры Java: 84 / 1323 / 2612 / 1483 / 5868 шагов; Python совпадает. Этап 3 у
+`stage2-full`/`stage2-all` пока не закрывается (другой тупик — нехватка материалов на постройки
+этапа 3), но этап 2→3 пройден.
+
+Исключения ради зелёных правил: `decay` 0.55, топоры 1.0, `cobblestone`/`stick` 36,
+`coal` 28, `event:*` и `way:dig` 1.0. Проверка: `graphExport` → **200/200**; `sim_gpu` = Java;
+`unit --fast-analyzers` 8068; `pmdMain pmdTest`; `gametest --full` 15/15.
+
 ## Найдено в данных Java (не правил)
 
 - В слиянии графа два разных пути имеют один `id = craft_bread`: ручной делает `food` (weight 0.7),

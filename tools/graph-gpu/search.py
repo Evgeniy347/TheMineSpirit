@@ -261,12 +261,20 @@ def load_vector(path, params):
     return np.clip(vector, LOW, HIGH)
 
 
+def pin(vector, params, fixed):
+    for index, name in enumerate(params):
+        if name in fixed:
+            vector[index] = 1.0
+    return vector
+
+
 def evolution(base_graph, builders, params, generations, population, seeds, limit, device,
-              output, initial=None, sigma0=0.15):
+              output, initial=None, sigma0=0.15, fixed=()):
     """Поколения по кругу берут разные старты; отбор — по шагам на этом старте."""
     dimension = len(params)
     mu = max(2, population // 3)
     base = np.ones(dimension) if initial is None else np.clip(initial, LOW, HIGH)
+    pin(base, params, fixed)
     base_detail = evaluate_population(base_graph, [base], builders, params, limit, device)[1][0]
     base_by_name = {item["start"]: (item["steps"] if item["finished"] else limit + PENALTY)
                     for item in base_detail}
@@ -278,12 +286,12 @@ def evolution(base_graph, builders, params, generations, population, seeds, limi
         for generation in range(generations):
             rotating = builders[1 + (seed + generation) % (len(builders) - 1)]
             builder = [builders[0], rotating]
-            vectors = [mean.copy()]
+            vectors = [pin(mean.copy(), params, fixed)]
             for _ in range(population - 1):
-                vectors.append(np.clip(mean + sigma * rng.randn(dimension), LOW, HIGH))
+                vectors.append(pin(np.clip(mean + sigma * rng.randn(dimension), LOW, HIGH), params, fixed))
             scores, detail = evaluate_population(base_graph, vectors, builder, params, limit, device)
             order = np.argsort(scores)
-            mean = np.mean([vectors[index] for index in order[:mu]], axis=0)
+            mean = pin(np.mean([vectors[index] for index in order[:mu]], axis=0), params, fixed)
             baseline = base_by_name[builder[0][0]] + base_by_name[builder[1][0]]
             normalized = scores[order[0]] / max(1, baseline)
             previous = best["normalized"] if best is not None else float("inf")
@@ -335,6 +343,7 @@ def main(argv=None):
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--output", default=os.path.join(HERE, "best-weights.json"))
     parser.add_argument("--init", default="", help="best-weights.json для дообучения")
+    parser.add_argument("--fixed", default="", help="категории, которые не трогать (через запятую)")
     args = parser.parse_args(argv)
     base_graph = sim_gpu.load_graph(os.path.abspath(args.export))
     builders = start_builders()
@@ -343,9 +352,10 @@ def main(argv=None):
         sensitivity(base_graph, builders, params, args.limit, args.device)
         return 0
     initial = load_vector(args.init, params) if args.init else None
+    fixed = {name.strip() for name in args.fixed.split(",") if name.strip()}
     best = evolution(base_graph, builders, params, args.generations, args.population,
                      list(range(1, args.seeds + 1)), args.limit, args.device, args.output,
-                     initial=initial, sigma0=0.08 if initial is not None else 0.15)
+                     initial=initial, sigma0=0.08 if initial is not None else 0.15, fixed=fixed)
     report(base_graph, builders, params, best, args.limit, args.device, args.output)
     return 0
 

@@ -11,6 +11,7 @@ import os
 import sys
 import tempfile
 
+import search
 import sim_gpu
 from graph_model import Graph, State, plan
 
@@ -372,8 +373,8 @@ def test_more3_nodes():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 78 and outcome["ticks"] == 55700, \
-        "Пустой мир обязан повторить Java (78 шагов, 55 700 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 84 and outcome["ticks"] == 59220, \
+        "Пустой мир обязан повторить Java (84 шага, 59 220 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -451,6 +452,36 @@ def test_input_effects():
     print("OK: завершение новых заданий обновляет вход, а не повторяет причину")
 
 
+def test_dead_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    worlds = dict(sim_gpu.input_worlds(graph))
+    farm = [step[1] for step in sim_gpu.run(worlds["farm"], limit=1600)["trail"]]
+    for way in ("restock_food", "till_soil", "milk_animal"):
+        assert way in farm, "Мир фермы обязан вызвать путь '" + way + "': " + str(farm)
+    area = [step[1] for step in sim_gpu.run(worlds["world"], limit=1600)["trail"]]
+    repairs = {name for name in graph.events if name.startswith("repair_")}
+    for name in repairs:
+        assert any(task.startswith("event:" + name + ":") for task in area),             "Мир участка обязан вызвать ремонт '" + name + "'"
+    for name, expected in (("gear", {"gear_kit_mining", "gear_kit_woodcutting",
+                                     "gear_kit_farming", "gear_kit_building"}),
+                           ("farm", {"crop_dry", "pen_full"}),
+                           ("life", {"life_injury"})):
+        events = set(worlds[name].state().events)
+        missing = expected - events
+        assert not missing, "Вход мира '" + name + "' не подаёт события: " + str(sorted(missing))
+    print("OK: мёртвые входы областей вызываются мирами (ферма, ремонт, снаряжение, жизнь)")
+
+
+def test_stage_two_worlds():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    worlds = [("stage2-full", sim_gpu.baselines(graph)[3]),
+              ("stage2-all", search.make_world(graph, 2))]
+    for name, world in worlds:
+        outcome = sim_gpu.run(world, limit=4000)
+        assert outcome["stage"] >= 3,             "Мир " + name + " обязан пройти этап 2 без сторожей: " + outcome["stuck"]
+    print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -484,6 +515,8 @@ if __name__ == "__main__":
         test_event_scaling()
         test_input_worlds()
         test_input_effects()
+        test_dead_inputs()
+        test_stage_two_worlds()
         test_conformance()
     except AssertionError as error:
         print(error)
