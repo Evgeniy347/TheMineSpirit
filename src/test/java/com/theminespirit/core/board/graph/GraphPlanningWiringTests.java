@@ -183,6 +183,55 @@ class GraphPlanningWiringTests {
                         + result.post());
     }
 
+    @Test
+    void events_FenceAndCrater_ProduceNodeTickets() {
+        GraphWorld world =
+                GraphWorld.settled().with("dirt", 20).event("fence_broken").event("creeper_crater");
+
+        GraphTickets.Result result = GraphTickets.of(GraphWorld.GRAPH, world.state(), world.plan());
+
+        assertTrue(
+                result.post().stream()
+                        .anyMatch(ticket -> ticket.task().boardCase() == BoardCase.REPAIR_FENCE
+                                && "repair_fence".equals(ticket.task().makes())),
+                "Сломанный забор — узел event:fence_broken: без его билета починка остаётся сторожем мимо графа: "
+                        + result.post());
+        assertTrue(
+                result.post().stream()
+                        .anyMatch(ticket -> ticket.task().boardCase() == BoardCase.FILL_CRATER
+                                && "fill_crater".equals(ticket.task().makes())),
+                "Воронка крипера — узел event:creeper_crater: граф сам решает засыпку: " + result.post());
+    }
+
+    @Test
+    void plan_OrchardAndLeftOre_UseTheirOwnNodes() {
+        GraphWorld world = GraphWorld.settled().with("oak_log", 0).built("orchard_oak", Built.BUILT);
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("harvest_orchard_oak")
+                        .filter(task -> task.boardCase() == BoardCase.HARVEST_ORCHARD)
+                        .filter(GraphPlan.Task::feasible)
+                        .isPresent(),
+                "Зрелый сад — путь harvest_orchard_*: рубку выбирает нехватка брёвен, а не сторож: " + plan.tasks());
+    }
+
+    @Test
+    void plan_LeftOreShortage_SelectsMineLeftOreNode() {
+        GraphWorld world = GraphWorld.settled().with("lapis_lazuli", 0).built("mine_level_2", Built.BUILT);
+        world.stage = 3;
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("mine_lapis")
+                        .filter(task -> task.boardCase() == BoardCase.MINE_LEFT_ORE)
+                        .filter(GraphPlan.Task::feasible)
+                        .isPresent(),
+                "Лазурит из оставленной руды — путь mine_lapis с кейсом MINE_LEFT_ORE: " + plan.tasks());
+    }
+
     private static boolean laterStage(GraphWorld world, GraphPlan.Task task) {
         SupplyGraph.Item item = GraphWorld.GRAPH.items().get(task.makes());
         return !task.id().contains(":")
