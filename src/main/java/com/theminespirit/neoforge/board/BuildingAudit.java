@@ -19,6 +19,7 @@ import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -37,16 +38,23 @@ final class BuildingAudit {
     private BuildingAudit() {}
 
     static BuildingAuditInputs.Audit first(ServerLevel level, FirstStepsRunner.StageScan scan, BoardCase step) {
-        FirstStepsRunner.Placed found = FirstStepsRunner.audit(level, step, scan.stage(), scan.wood());
-        return new BuildingAuditInputs.Audit(found.total(), found.done(), 0, found.unknown());
+        BuildGap.Gap gap = FirstStepsRunner.gap(level, step, scan.stage(), scan.wood());
+        return new BuildingAuditInputs.Audit(gap.total(), gap.done(), blocks(gap), Map.of(), 0, gap.unknown());
     }
 
     static BuildingAuditInputs.Audit floor(ServerLevel level, FirstStepsRunner.StageScan scan) {
         if (!YardFloorWatch.loaded(level, scan.stage())) {
-            return new BuildingAuditInputs.Audit(0, 0, 0, 1);
+            return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
         }
         TownSnapshot.Progress progress = YardFloorWatch.progress(level, scan.stage());
-        return new BuildingAuditInputs.Audit(progress.total(), progress.done(), 0, 0);
+        int holes = progress.total() - progress.done();
+        return new BuildingAuditInputs.Audit(
+                progress.total(),
+                progress.done(),
+                holes == 0 ? Map.of() : Map.of("minecraft:cobblestone", holes),
+                Map.of(),
+                0,
+                0);
     }
 
     static BuildingAuditInputs.Audit streets(ServerLevel level, FirstStepsRunner.StageScan scan) {
@@ -62,7 +70,8 @@ final class BuildingAudit {
                 1,
                 FirstStepsRunner.targetFor(level, BoardCase.BUILD_STREETS, scan.stage(), wood));
         BuildGap.Gap gap = BuildGap.trace(plan, wood, streetProbe(level), FirstStepsRunner.SCHEMES);
-        BuildingAuditInputs.Audit audit = new BuildingAuditInputs.Audit(gap.total(), gap.done(), 0, gap.unknown());
+        BuildingAuditInputs.Audit audit =
+                new BuildingAuditInputs.Audit(gap.total(), gap.done(), blocks(gap), Map.of(), 0, gap.unknown());
         GAPS.put(key, audit);
         return audit;
     }
@@ -71,25 +80,29 @@ final class BuildingAudit {
         StageSite site = scan.stage();
         for (ColumnMask.Cell column : site.level().cells()) {
             if (!level.isLoaded(new BlockPos(column.x(), site.anchor().y(), column.z()))) {
-                return new BuildingAuditInputs.Audit(0, 0, 0, 1);
+                return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
             }
         }
         PlotAudit.Audit found = PlotAudit.audit(level, site, now);
-        int extras = 0;
+        Map<String, Integer> extra = new LinkedHashMap<>();
         for (BlockCoord at : found.extras()) {
-            if (!vegetation(level.getBlockState(new BlockPos(at.x(), at.y(), at.z())))) {
-                extras++;
+            BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
+            if (!vegetation(state)) {
+                extra.merge(id(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()), 1, Integer::sum);
             }
         }
         int total = site.level().count();
+        Map<String, Integer> missing = found.holes().isEmpty()
+                ? Map.of()
+                : Map.of("minecraft:dirt", found.holes().size());
         return new BuildingAuditInputs.Audit(
-                total, Math.max(0, total - found.holes().size()), extras, 0);
+                total, Math.max(0, total - found.holes().size()), missing, extra, 0, 0);
     }
 
     static BuildingAuditInputs.Audit stageOrchard(ServerLevel level, GraphFacts.Position at, String wood, long now) {
         Optional<String> scheme = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_ORCHARD, 1);
         if (scheme.isEmpty()) {
-            return new BuildingAuditInputs.Audit(0, 0, 0, 0);
+            return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 0);
         }
         return scheme(level, scheme.orElseThrow(), at, wood, now);
     }
@@ -115,9 +128,41 @@ final class BuildingAudit {
     }
 
     static BuildingAuditInputs.Audit report(RepairAudit.Report report) {
-        int extra = report.rebuild() ? 0 : Math.max(0, report.fixes().size() - report.missing());
+        Map<String, Integer> missing = new LinkedHashMap<>();
+        Map<String, Integer> extra = new LinkedHashMap<>();
+        int wrong = 0;
+        if (!report.rebuild()) {
+            for (RepairAudit.Fix fix : report.fixes()) {
+                if (fix.action() == RepairAudit.Action.PLACE) {
+                    missing.merge(id(fix.wanted()), 1, Integer::sum);
+                    if (!air(fix.found())) {
+                        wrong++;
+                    }
+                } else if (fix.action() != RepairAudit.Action.WARN) {
+                    extra.merge(id(fix.found()), 1, Integer::sum);
+                }
+            }
+        }
         return new BuildingAuditInputs.Audit(
-                report.total(), report.total() - report.missing(), extra, report.unknown());
+                report.total(), report.total() - report.missing(), missing, extra, wrong, report.unknown());
+    }
+
+    private static Map<String, Integer> blocks(BuildGap.Gap gap) {
+        Map<String, Integer> missing = new LinkedHashMap<>();
+        for (String block : gap.missingCells().values()) {
+            if (!air(block)) {
+                missing.merge(id(block), 1, Integer::sum);
+            }
+        }
+        return missing;
+    }
+
+    private static boolean air(String block) {
+        return "air".equals(SchematicBlocks.path(block));
+    }
+
+    private static String id(String block) {
+        return block.contains(":") ? block : "minecraft:" + block;
     }
 
     private static void bucket(ServerLevel level) {

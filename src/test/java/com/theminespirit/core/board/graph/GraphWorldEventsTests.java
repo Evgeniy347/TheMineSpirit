@@ -22,7 +22,10 @@ class GraphWorldEventsTests {
         GraphFacts facts = facts(
                 List.of(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), "spirit-1")),
                 new GraphFacts.Terrain(2, 3, 4, 5, 6),
-                Map.of("hut", new GraphFacts.Building("hut", 1, 75, 5, 5, 0, null, false)));
+                Map.of(
+                        "hut",
+                        new GraphFacts.Building(
+                                "hut", 1, 75, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false)));
 
         Set<String> events = GraphWorldEvents.of(facts);
 
@@ -40,13 +43,51 @@ class GraphWorldEventsTests {
                 List.of(),
                 GraphFacts.Terrain.empty(),
                 Map.of(
-                        "hut", new GraphFacts.Building("hut", 1, 0, 5, 5, 0, null, true),
-                        "mine", new GraphFacts.Building("mine", 1, 100, 0, 0, 0, null, false)));
+                        "hut",
+                                new GraphFacts.Building(
+                                        "hut", 1, 0, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, true),
+                        "mine", new GraphFacts.Building("mine", 1, 100, 0, Map.of(), Map.of(), 0, null, false)));
 
         Set<String> events = GraphWorldEvents.of(facts);
 
         assertFalse(events.contains("repair_hut"), "Неизвестный аудит не ставит ремонт");
         assertFalse(events.contains("repair_mine"), "Целая постройка не ставит ремонт");
+    }
+
+    @Test
+    void facts_PlayerStray_GivesNoDemolition() {
+        GraphFacts facts = facts(
+                List.of(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), null)),
+                GraphFacts.Terrain.empty(),
+                Map.of());
+
+        assertFalse(
+                GraphWorldEvents.of(facts).contains(GraphWorldEvents.DEMOLISH_STRAY),
+                "постройку игрока не сносим: она не ставит задачу уборки");
+    }
+
+    @Test
+    void facts_LotAndFloatingComposition_GiveNodes() {
+        GraphFacts facts = facts(
+                List.of(),
+                new GraphFacts.Terrain(
+                        0, 0, 0, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of("minecraft:oak_log", 4)),
+                Map.of());
+
+        Set<String> events = GraphWorldEvents.of(facts);
+
+        assertTrue(events.contains(GraphWorldEvents.LEVEL_LOT), "бугор из блоков требует срезки");
+        assertTrue(events.contains(GraphWorldEvents.CLEAR_FLOATING), "состав висящего требует уборки");
+    }
+
+    @Test
+    void facts_FillComposition_GivesBackfill() {
+        GraphFacts facts = facts(
+                List.of(),
+                new GraphFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of()),
+                Map.of());
+
+        assertTrue(GraphWorldEvents.of(facts).contains(GraphWorldEvents.BACKFILL), "яма из блоков требует подсыпки");
     }
 
     @Test

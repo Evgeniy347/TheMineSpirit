@@ -260,8 +260,9 @@ public final class GraphPlanner {
             }
             for (GraphEvent.Task task : event.tasks()) {
                 String key = EVENT + name + ":" + task.id();
-                flow.root(key, task.base());
-                for (Map.Entry<String, Integer> input : task.consumes().entrySet()) {
+                flow.root(key, GraphEventFacts.weight(state, task));
+                for (Map.Entry<String, Integer> input :
+                        GraphEventFacts.consumes(state, task).entrySet()) {
                     if (count(input.getKey()) < input.getValue()) {
                         push(key, input.getKey(), graph.decay());
                     }
@@ -443,9 +444,8 @@ public final class GraphPlanner {
                     event.id(),
                     Optional.empty(),
                     priority,
-                    event.consumes(),
-                    GraphLack.stocked(graph, state, event.consumes())
-                            && (event.building() == null || state.built(event.building()) == Built.BUILT),
+                    GraphEventFacts.consumes(state, event),
+                    GraphEventFacts.feasible(graph, state, event),
                     false,
                     event.implemented(),
                     graph.costs().ticks(key, event.boardCase()));

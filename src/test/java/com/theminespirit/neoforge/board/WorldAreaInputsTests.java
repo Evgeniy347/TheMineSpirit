@@ -30,6 +30,10 @@ class WorldAreaInputsTests {
         assertEquals(
                 new GraphFacts.Position(1, 64, 1), strays.get(0).position(), "Координата следа переносится в факт");
         assertEquals("stone", strays.get(1).type(), "Второй лишний след сохраняется");
+        assertEquals(
+                Map.of("oak_planks", 1),
+                strays.get(0).blocks(),
+                "у лишней постройки есть состав блоков: по нему считается возврат материалов");
     }
 
     @Test
@@ -82,9 +86,15 @@ class WorldAreaInputsTests {
     @Test
     void buildings_HouseAudit_GivesPercentAndDamage() {
         Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
-        base.put("hut", new GraphFacts.Building("hut", 1, 100, 0, 0, 0, new GraphFacts.Position(0, 64, 0), false));
-        base.put("mine", new GraphFacts.Building("mine", 1, 100, 0, 0, 0, new GraphFacts.Position(8, 64, 0), false));
-        base.put("fence", new GraphFacts.Building("fence", 0, 0, 0, 0, 0, null, false));
+        base.put(
+                "hut",
+                new GraphFacts.Building(
+                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false));
+        base.put(
+                "mine",
+                new GraphFacts.Building(
+                        "mine", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(8, 64, 0), false));
+        base.put("fence", new GraphFacts.Building("fence", 0, 0, 0, Map.of(), Map.of(), 0, null, false));
 
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 0));
@@ -100,7 +110,10 @@ class WorldAreaInputsTests {
     @Test
     void buildings_UnknownAudit_IsNotReady() {
         Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
-        base.put("hut", new GraphFacts.Building("hut", 1, 100, 0, 0, 0, new GraphFacts.Position(0, 64, 0), false));
+        base.put(
+                "hut",
+                new GraphFacts.Building(
+                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false));
 
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 2));

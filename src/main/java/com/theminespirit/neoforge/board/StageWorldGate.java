@@ -5,9 +5,14 @@ import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StageGate;
 import com.theminespirit.core.board.StageWorld;
+import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphStageGate;
+import com.theminespirit.core.board.graph.GraphWorldFacts;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownSnapshot;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
@@ -24,10 +29,10 @@ final class StageWorldGate {
 
     private StageWorldGate() {}
 
-    static void apply(ServerLevel level, BoardService service, StageSite site, String wood) {
+    static void apply(ServerLevel level, BoardService service, StageSite site, String wood, GraphWorldFacts area) {
         BoardLedger ledger = service.board().ledger();
         int journal = SettlementStage.of(ledger);
-        StageWorld world = new StageOneWorld(progress(level, site, wood));
+        StageWorld world = new StageOneWorld(progress(level, site, wood), facts(area));
         StageGate gate = SettlementStage.gate(ledger, world);
         service.board().ledger().gate(gate);
         if (gate.stage() < journal) {
@@ -83,19 +88,70 @@ final class StageWorldGate {
         }
     }
 
-    private record StageOneWorld(Map<String, FirstStepsRunner.Placed> progress) implements StageWorld {
+    private record StageOneWorld(Map<String, FirstStepsRunner.Placed> progress, GraphFacts facts)
+            implements StageWorld {
         @Override
         public boolean built(BoardCase boardCase, int level) {
             if (level != 1 || !WORLD_STEPS.contains(boardCase)) {
                 return true;
             }
+            if (facts == null) {
+                return fallback(boardCase);
+            }
+            if (!clean()) {
+                return false;
+            }
+            String id = graphId(boardCase);
+            if (facts.buildings().containsKey(id)) {
+                return GraphStageGate.buildingReady(facts, id);
+            }
+            return fallback(boardCase);
+        }
+
+        private boolean fallback(BoardCase boardCase) {
             FirstStepsRunner.Placed found = progress.get(boardCase.name());
             return found == null || !found.confident() || (found.total() > 0 && found.done() >= found.total());
         }
 
         @Override
         public boolean builtPlan(String id, int level) {
-            return true;
+            return facts == null
+                    || !facts.buildings().containsKey(id)
+                    || (clean() && GraphStageGate.buildingReady(facts, id));
         }
+
+        private boolean clean() {
+            return facts == null || (GraphStageGate.lotsReady(facts) && GraphStageGate.straysReady(facts));
+        }
+    }
+
+    private static GraphFacts facts(GraphWorldFacts area) {
+        return area == null
+                ? null
+                : new GraphFacts(
+                        Map.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        Map.of(),
+                        area.buildings(),
+                        area.strays(),
+                        area.terrain(),
+                        new GraphFacts.StageReqs(Map.of(), Map.of()));
+    }
+
+    private static String graphId(BoardCase boardCase) {
+        return switch (boardCase) {
+            case BUILD_MINE -> "mine";
+            case STOCK_CHESTS -> "chests";
+            case CRAFT_FURNACE -> "furnace";
+            case BUILD_HOUSE -> "hut";
+            case BUILD_ORCHARD -> "orchard_oak";
+            case BUILD_FENCE -> "fence";
+            case LIGHTING -> "lighting";
+            case BUILD_STREETS -> "streets";
+            case CLEAR_GROUNDS -> "clearing";
+            default -> boardCase.name().toLowerCase(Locale.ROOT);
+        };
     }
 }

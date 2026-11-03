@@ -19,9 +19,8 @@
   расстояние, `travelTicks`; достижимость — `UNKNOWN`), станции (тип, позиция, счётчик для планировщика),
   постройки (id, уровень, процент 100/0, координаты участка, `unknown=false`), `stageReqs` (минимум из
   `stages.json` + факт из журнала). `distances` теперь заполняются из `GraphSurroundings`, `stations` — из построек.
-- **Пока пусто:** `threats`, `strays`, `terrain`, топливо/вход/выход станций, точный процент аудита и повреждения
-  построек, «замурован» духа, достижимость ресурсов. Это узлы `life:*`, `repair`, `clear`, `station:*`, `store:*`;
-  сборщики оставлены пустыми до реализации.
+- **Количества (03.11):** `Building.missing/extra/wrong`, `Stray.blocks`, `Terrain.cut/fill/floating`; материалы
+  ремонта и гейт этапа — [graph-inputs-damage.md](graph-inputs-damage.md).
 
 ## 1. Что граф получает сейчас
 
