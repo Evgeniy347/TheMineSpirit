@@ -17,6 +17,7 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.CraftedItems;
+import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ final class GraphPost {
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
     private static final String EAT = "eat";
     private static final String ORDER = "craft_player_order";
+    private static final Set<String> DEMOLITION = Set.of("demolish_stray", "clear_floating");
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
 
     final ServerLevel level;
@@ -96,6 +98,9 @@ final class GraphPost {
             CraftOrders.refresh(level);
             return true;
         }
+        if (DEMOLITION.contains(ticket.node())) {
+            return demolition();
+        }
         if (WorldPost.handles(ticket.node())) {
             return WorldPost.post();
         }
@@ -104,6 +109,15 @@ final class GraphPost {
 
     private boolean life(GraphTickets.Ticket ticket) {
         return ticket.id().startsWith(GraphTickets.PREFIX + "event:life_");
+    }
+
+    private boolean demolition() {
+        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        if (town.isEmpty()) {
+            return false;
+        }
+        PlanDemolition.tick(level, service, scan.stage(), town.orElseThrow(), now, this);
+        return true;
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {
@@ -148,6 +162,7 @@ final class GraphPost {
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
+            case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
             default -> false;
         };
     }
@@ -244,11 +259,12 @@ final class GraphPost {
         return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required);
     }
 
-    void submit(BoardTicket ticket, TicketTarget target) {
+    BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = service.submit(ticket, target);
         if (outcome == BoardOutcome.DUPLICATE) {
             service.board().reprioritize(ticket.id(), ticket.priority());
         }
+        return outcome;
     }
 
     boolean done(String id) {

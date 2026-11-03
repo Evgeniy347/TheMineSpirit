@@ -33,8 +33,6 @@ public final class BoardTuning {
 
     public static final long CASE_FAIL_PAUSE_CAP_TICKS = 9600;
 
-    public static final long IDLE_RELEASE_TICKS = 1200;
-
     public static final long LOG_SUMMARY_TICKS = 6000;
 
     public static final int CASE_FAIL_LIMIT = 3;
@@ -135,10 +133,6 @@ public final class BoardTuning {
 
     public static int caseFailLimit() {
         return (int) interval("caseFailLimit", CASE_FAIL_LIMIT);
-    }
-
-    public static long idleReleaseTicks() {
-        return Math.min(IDLE_RELEASE_TICKS, caseFailPauseTicks());
     }
 
     public static long logSummaryTicks() {

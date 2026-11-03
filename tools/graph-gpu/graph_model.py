@@ -922,6 +922,7 @@ class Planner:
             cause = spirit.get("trap")
             node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
             self.push(None, node, self.node_weight(node))
+            self.push(None, "trail_clean", self.node_weight("trail_clean"))
 
     def store_roots(self):
         graph = self.graph
