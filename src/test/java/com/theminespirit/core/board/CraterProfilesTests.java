@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +67,26 @@ class CraterProfilesTests {
                 Set.of("crater:2:64:2", "crater:3:64:3"),
                 profiles.causes(),
                 "Кольцо ограничено: старейшая воронка вытесняется, память не растёт от числа взрывов");
+    }
+
+    @Test
+    void center_CraterCause_ParsesCoordinates() {
+        assertEquals(
+                Optional.of(at(1, -64, 3)),
+                CraterProfiles.center("crater:1:-64:3"),
+                "Центр воронки берётся из причины: без него граф не поставит FILL_CRATER по факту взрыва");
+    }
+
+    @Test
+    void center_ForeignOrBrokenCause_StaysEmpty() {
+        assertEquals(
+                Optional.empty(),
+                CraterProfiles.center("fence:1:64:3"),
+                "Чужая причина не выдаёт центр воронки: засыпка ставится только по взрыву крипера");
+        assertEquals(
+                Optional.empty(),
+                CraterProfiles.center("crater:1:x:3"),
+                "Испорченная причина не выдаёт центр: молчаливая подстановка нуля послала бы духа в пустоту");
     }
 
     @Test

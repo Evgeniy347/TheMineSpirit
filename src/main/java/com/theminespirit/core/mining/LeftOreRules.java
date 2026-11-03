@@ -16,6 +16,30 @@ public final class LeftOreRules {
         return LUCK_PICKAXE.equals(item) || WOOD_TIER.equals(item) || STONE_TIER.equals(item) || IRON_TIER.equals(item);
     }
 
+    public static String itemOf(String blockId) {
+        Objects.requireNonNull(blockId, "Id руды не может быть null: по нему выбирается предмет добычи");
+        Optional<OreKind> kind = OreKind.ofBlock(blockId);
+        if (kind.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Блок '" + blockId + "' не руда: оставленной в шахте бывает только руда");
+        }
+        return switch (kind.get()) {
+            case COAL -> "coal";
+            case IRON -> "raw_iron";
+            case COPPER -> "raw_copper";
+            case GOLD -> "gold_ingot";
+            case REDSTONE -> "redstone";
+            case LAPIS -> "lapis_lazuli";
+            case DIAMOND -> "diamond";
+            case EMERALD -> "emerald";
+            case QUARTZ -> "quartz";
+            case NETHERITE -> "netherite_scrap";
+            case ANY ->
+                throw new IllegalArgumentException(
+                        "Вид руды ANY не даёт предмета: оставленная руда всегда конкретного вида");
+        };
+    }
+
     public static String requiredTool(String blockId) {
         Objects.requireNonNull(blockId, "Id руды не может быть null: по нему выбирается кирка");
         if (MineOres.kindOf(blockId) == MineOres.Kind.LUCK) {

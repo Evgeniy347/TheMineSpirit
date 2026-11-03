@@ -1,55 +1,30 @@
 package com.theminespirit.neoforge.board;
 
-import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardRules;
-import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.OrchardPlans;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoodRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.policy.OrchardTrees;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import org.slf4j.Logger;
 
 final class OrchardHarvest {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final int BASE_BELOW = 1;
     private static final int BASE_ABOVE = 2;
-    private static final Set<BoardStatus> OPEN =
-            EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED, BoardStatus.BLOCKED);
 
     private OrchardHarvest() {}
 
-    static void tick(ServerLevel level, BoardService service, StageSite stage, long now) {
+    static Optional<BlockCoord> matureBase(ServerLevel level, StageSite stage, BlockCoord spot) {
+        Optional<BlockCoord> base = base(level, stage, spot);
+        if (base.isEmpty()) {
+            return Optional.empty();
+        }
         WoodRules rules = DataTables.INSTANCE.wood().current();
-        if (now % rules.orchardCheckTicks() != 0) {
-            return;
-        }
-        for (BlockCoord spot : stage.allOrchardSaplings()) {
-            String id = OrchardPlans.id(spot);
-            if (OPEN.contains(service.board().statusOf(id).orElse(BoardStatus.DONE))) {
-                continue;
-            }
-            Optional<BlockCoord> base = base(level, stage, spot);
-            if (base.isEmpty()) {
-                continue;
-            }
-            int logs = trunk(level, base.orElseThrow());
-            if (OrchardPlans.mature(logs, rules)) {
-                submit(service, id, base.orElseThrow(), logs, now);
-            }
-        }
+        int logs = trunk(level, base.orElseThrow());
+        return OrchardPlans.mature(logs, rules) ? base : Optional.empty();
     }
 
     private static Optional<BlockCoord> base(ServerLevel level, StageSite stage, BlockCoord spot) {
@@ -72,21 +47,5 @@ final class OrchardHarvest {
             pos = pos.above();
         }
         return logs;
-    }
-
-    private static void submit(BoardService service, String id, BlockCoord base, int logs, long now) {
-        LOGGER.info("[orchard] дерево сада у {} зрелое ({} брёвен ствола): рубка и посадка на то же место", base, logs);
-        service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.HARVEST_ORCHARD,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.HARVEST_ORCHARD),
-                        now,
-                        1,
-                        id,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(base));
     }
 }
