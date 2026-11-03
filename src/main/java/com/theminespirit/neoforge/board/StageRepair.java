@@ -30,7 +30,7 @@ final class StageRepair {
 
     record Gap(int missing, int total, Map<String, Integer> need) {}
 
-    static BoardOutcome submit(BoardService service, BoardCase step, TicketTarget target, Gap gap, long now) {
+    static BoardOutcome post(BoardService service, BoardCase step, TicketTarget target, Gap gap, long now) {
         int missing = gap.missing();
         int total = gap.total();
         StageWork work = target.work();

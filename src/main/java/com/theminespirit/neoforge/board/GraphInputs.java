@@ -164,7 +164,9 @@ final class GraphInputs {
                 continue;
             }
             boolean ownCase = sharing.get(building.boardCase()) == 1;
-            if (ownCase && ledger.has(building.boardCase(), 1)) {
+            if (building.boardCase() == BoardCase.BUILD_PEN) {
+                buildings.put(building.id(), PenBuild.built(service, building.id()) ? Built.BUILT : Built.PLANNED);
+            } else if (ownCase && ledger.has(building.boardCase(), 1)) {
                 buildings.put(building.id(), Built.BUILT);
             } else if (town.flatMap(plan -> OrchardSites.placement(plan, building.id()))
                     .isPresent()) {

@@ -145,8 +145,7 @@ public final class FirstStepsRunner {
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
         dropOtherWood(level, service, BuildingWoodChoice.allowed(level, wood));
-        StageScan stageScan = new StageScan(stage, wood, home, scan.facts(), scan.furnaceBlock());
-        return Optional.of(StageSchedule.reopen(level, service, stock, stageScan, spirits.size(), now));
+        return Optional.of(new StageScan(stage, wood, home, scan.facts(), scan.furnaceBlock()));
     }
 
     private static void dropOwnWood(Map<String, Integer> need, StockView stock, String wood) {
@@ -197,7 +196,7 @@ public final class FirstStepsRunner {
         }
         Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
         if (StageSettle.AUDIT_STEPS.contains(caseValue)
-                && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), partsOf(caseValue), now)) {
+                && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), partsOf(caseValue))) {
             return Map.of();
         }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
@@ -295,7 +294,7 @@ public final class FirstStepsRunner {
         }
     }
 
-    static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts, long now) {
+    static boolean reopenDone(ServerLevel level, BoardService service, OpenStep step, int parts) {
         BoardCase caseValue = step.caseValue();
         StageWork work = Objects.requireNonNull(
                 step.target().work(), "Шаг первых шагов без места этапа: план поселения не передан в задание");
@@ -325,20 +324,6 @@ public final class FirstStepsRunner {
             return false;
         }
         PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, gap.total(), false);
-        if (base != BoardStatus.DONE) {
-            StageClose.drop(service, caseValue, parts);
-        }
-        TicketTarget repairTarget = StageSettle.repairTarget(caseValue, step.target(), gap);
-        BoardOutcome repair = StageRepair.submit(
-                service,
-                caseValue,
-                repairTarget,
-                new StageRepair.Gap(missing, gap.total(), StageSettle.repairNeed(level, step, repairTarget)),
-                now);
-        if (StageAudit.keeps(repair)) {
-            return true;
-        }
-        StageClose.reopen(service, caseValue, parts);
         return false;
     }
 

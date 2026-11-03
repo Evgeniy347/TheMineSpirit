@@ -24,7 +24,6 @@ public final class BoardSources {
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
     private long lastHerdScan = -1;
-    private long lastEnchantCheck = -1;
     private int herdScans;
     private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
     private final SourceGuard guard = new SourceGuard(this::report);
@@ -87,21 +86,8 @@ public final class BoardSources {
         guard.run("evergreen", () -> EvergreenWatch.tick(level, service, spirits, now));
         guard.run("idle", () -> idle.tick(service, spirits, now));
         guard.run("fishing", () -> fishing.tick(level, service, spirits, stock, now));
-        guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
-        guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));
         guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
         guard.run("demand", () -> demand.tick(level, service, spirits, now));
-        guard.run(
-                "repair_audit",
-                () -> SettlementPlotStore.get(level)
-                        .site()
-                        .ifPresent(site -> RepairAuditWatch.tick(level, service, site, now)));
-        guard.run("house_levels", () -> HouseLevels.tick(level, service, spirits, now));
-        guard.run("mine_levels", () -> MineLevels.tick(level, service, spirits, now));
-        if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {
-            lastEnchantCheck = now;
-            guard.run("enchant_room", () -> EnchantRoomWatch.tick(level, service, spirits, stock, now));
-        }
         if (now - lastHerdScan >= BoardTuning.herdScanIntervalTicks()) {
             lastHerdScan = now;
             herdScans++;

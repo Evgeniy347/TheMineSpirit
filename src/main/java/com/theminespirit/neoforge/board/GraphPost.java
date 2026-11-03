@@ -21,6 +21,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,7 +44,7 @@ final class GraphPost {
     final long now;
     final List<SpiritEntity> spirits;
     final SupplyGraph graph;
-    private final BoardService service;
+    final BoardService service;
     private final MaterialSource source;
     private @Nullable BlockCoord craft;
 
@@ -92,12 +93,15 @@ final class GraphPost {
         if (EAT.equals(ticket.node())) {
             return hungry(ticket);
         }
+        if (BoardCase.REPAIR_TOOL.name().toLowerCase(Locale.ROOT).equals(ticket.node())) {
+            return RepairWatch.post(level, service, spirits, ticket.task().priority(), now);
+        }
         if (ORDER.equals(ticket.node())) {
             CraftOrders.refresh(level);
             return true;
         }
         if (WorldPost.handles(ticket.node())) {
-            return WorldPost.post();
+            return WorldPost.post(this, ticket);
         }
         return COLLECT.contains(ticket.node()) && collect(ticket);
     }
@@ -143,6 +147,7 @@ final class GraphPost {
             return false;
         }
         return switch (boardCase) {
+            case REPAIR_TOOL -> RepairWatch.post(level, service, spirits, task.priority(), now);
             case GATHER_MATERIALS -> PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
@@ -155,12 +160,14 @@ final class GraphPost {
     private boolean building(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
-        if (FirstStepsRunner.ticketIds(boardCase).stream().anyMatch(this::open)) {
-            StageSettle.refresh(level, service, stock, scan, boardCase, now);
-            return true;
+        if (boardCase == BoardCase.BUILD_PEN) {
+            return PenBuild.post(level, service, spirits, ticket, task.priority(), need(task), now);
         }
-        if (StageSettle.settle(level, service, stock, scan, boardCase, now)) {
-            return true;
+        if (boardCase == BoardCase.BUILD_MINE && ticket.node().startsWith("mine_level_")) {
+            return MineLevels.post(level, service, spirits, ticket.node(), task.priority(), need(task), now);
+        }
+        if (boardCase == BoardCase.ENCHANT_ROOM) {
+            return EnchantRoomWatch.post(level, service, spirits, ticket.node(), task.priority(), need(task), now);
         }
         if (StageOpen.full(service.board(), spirits.size())) {
             return true;
@@ -225,6 +232,18 @@ final class GraphPost {
                 ticket(ticket.id(), task.boardCase(), Optional.of(spirit), task.priority(), ticket.id(), items(task)),
                 TicketTarget.at(craftPoint()).withToolCount(1));
         return true;
+    }
+
+    Map<String, Integer> need(GraphPlan.Task task) {
+        Map<String, Integer> need = new HashMap<>();
+        task.consumes().forEach((item, count) -> {
+            String named = GraphNames.item(graph, item, scan.wood());
+            need.merge(
+                    named.startsWith("minecraft:") ? named.substring("minecraft:".length()) : named,
+                    count,
+                    Integer::sum);
+        });
+        return Map.copyOf(need);
     }
 
     Map<String, Integer> items(GraphPlan.Task task) {

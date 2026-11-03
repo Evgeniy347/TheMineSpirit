@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;
@@ -65,6 +66,14 @@ class StageCatalogTests {
                 "Каждый id плана этапа 2 обязан разрешаться в кейс доски, схему и непустой план задания на своём "
                         + "участке; иначе доска молча отбрасывает постройку и этап не собрать: " + problems
                         + "; не поместилось: " + town.unplaced());
+    }
+
+    @Test
+    void watcherOwned_Pen_IsBuiltByGraph() {
+        assertFalse(
+                StageCatalog.watcherOwned(BoardCase.BUILD_PEN),
+                "Курятник и загоны строит граф узлами building:chicken_coop/pen_*, а сторож больше не ставит "
+                        + "им задание: иначе этап 2 проходит мимо графа");
     }
 
     @Test
