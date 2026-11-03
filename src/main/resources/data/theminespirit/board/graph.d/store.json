@@ -22,7 +22,7 @@
     {"id": "store_smelt_take", "case": "ACTIVITY_UNLOAD", "makes": "store:smelt:take",
      "yield": 1, "weight": 0.773013769, "ticks": 40, "building": "furnace", "implemented": false, "todo": "store:smelt"},
     {"id": "store_space", "case": "STOCK_CHESTS", "makes": "store:chests",
-     "yield": 1, "weight": 1.386630849, "ticks": 200, "implemented": false, "todo": "store:space"},
+     "yield": 1, "weight": 1.386630849, "ticks": 200},
     {"id": "store_sort", "case": "ACTIVITY_UNLOAD", "makes": "store:sorted",
      "yield": 1, "weight": 0.773013769, "ticks": 120, "building": "chests", "implemented": false, "todo": "store:sort"}
   ]

@@ -70,7 +70,7 @@ public final class BoardSources {
         roundNow = now;
         guard.startRound();
         Set<String> craters = guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of());
-        Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level, service), Set.of());
+        Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level), Set.of());
         live.addAll(craters);
         live.addAll(fences);
         live.addAll(guard.call(
@@ -86,7 +86,6 @@ public final class BoardSources {
         guard.run("evergreen", () -> EvergreenWatch.tick(level, service, spirits, now));
         guard.run("idle", () -> idle.tick(service, spirits, now));
         guard.run("fishing", () -> fishing.tick(level, service, spirits, stock, now));
-        guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
         guard.run("demand", () -> demand.tick(level, service, spirits, now));
         if (now - lastHerdScan >= BoardTuning.herdScanIntervalTicks()) {
             lastHerdScan = now;
@@ -104,7 +103,7 @@ public final class BoardSources {
         if (hive.live()) {
             live.add(HiveWatch.CAUSE);
         }
-        live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level, service, spirits, now), Set.of()));
+        live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level), Set.of()));
         live.addAll(guard.call("rescue", () -> rescue.tick(level, service, spirits, now), Set.of()));
         return live;
     }

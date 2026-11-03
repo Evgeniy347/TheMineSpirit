@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import java.util.LinkedHashMap;
@@ -56,19 +57,19 @@ final class WorldPost {
                 new StageRepair.Gap(
                         gap.shortage(),
                         gap.total(),
-                        need(post.graph, ticket.task().consumes())),
+                        need(post.graph, ticket.task().consumes(), post.scan.wood())),
                 post.now);
         return StageAudit.keeps(outcome);
     }
 
-    private static Map<String, Integer> need(SupplyGraph graph, Map<String, Integer> consumes) {
+    static Map<String, Integer> need(SupplyGraph graph, Map<String, Integer> consumes, String wood) {
         Map<String, Integer> need = new LinkedHashMap<>();
         consumes.forEach((item, count) -> {
-            if (graph.isGroup(item)) {
-                graph.members(item).forEach(member -> need.merge(member, count, Integer::sum));
-            } else {
-                need.merge(item, count, Integer::sum);
-            }
+            String named = GraphNames.item(graph, item, wood);
+            need.merge(
+                    named.startsWith("minecraft:") ? named.substring("minecraft:".length()) : named,
+                    count,
+                    Integer::sum);
         });
         return Map.copyOf(need);
     }

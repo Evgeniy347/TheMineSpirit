@@ -100,6 +100,15 @@ final class GraphPost {
             CraftOrders.refresh(level);
             return true;
         }
+        if (YardFloorWatch.handles(ticket.node())) {
+            return YardFloorWatch.post(level, service, scan.stage(), now);
+        }
+        if ("fill_crater".equals(ticket.node())) {
+            return new GraphHarvestPost(this).craters(ticket);
+        }
+        if (ticket.task().boardCase() == BoardCase.REPAIR_FENCE) {
+            return new GraphHarvestPost(this).fences(ticket);
+        }
         if (WorldPost.handles(ticket.node())) {
             return WorldPost.post(this, ticket);
         }
@@ -150,7 +159,10 @@ final class GraphPost {
             case REPAIR_TOOL -> RepairWatch.post(level, service, spirits, task.priority(), now);
             case GATHER_MATERIALS -> PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
+            case HARVEST_ORCHARD -> new GraphHarvestPost(this).orchard(ticket, task);
+            case MINE_LEFT_ORE -> new GraphHarvestPost(this).leftOre(ticket, task);
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
+            case STOCK_CHESTS -> ChestSpaceWatch.post(level, service, scan.stage(), now);
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             default -> false;
@@ -158,17 +170,14 @@ final class GraphPost {
     }
 
     private boolean building(GraphTickets.Ticket ticket) {
+        if (WarehouseWatch.handles(ticket.node())) {
+            return WarehouseWatch.post(this, ticket);
+        }
         GraphPlan.Task task = ticket.task();
+        if (GraphNodeBuilds.post(this, ticket, task)) {
+            return true;
+        }
         BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
-        if (boardCase == BoardCase.BUILD_PEN) {
-            return PenBuild.post(level, service, spirits, ticket, task.priority(), need(task), now);
-        }
-        if (boardCase == BoardCase.BUILD_MINE && ticket.node().startsWith("mine_level_")) {
-            return MineLevels.post(level, service, spirits, ticket.node(), task.priority(), need(task), now);
-        }
-        if (boardCase == BoardCase.ENCHANT_ROOM) {
-            return EnchantRoomWatch.post(level, service, spirits, ticket.node(), task.priority(), need(task), now);
-        }
         if (StageOpen.full(service.board(), spirits.size())) {
             return true;
         }
@@ -232,18 +241,6 @@ final class GraphPost {
                 ticket(ticket.id(), task.boardCase(), Optional.of(spirit), task.priority(), ticket.id(), items(task)),
                 TicketTarget.at(craftPoint()).withToolCount(1));
         return true;
-    }
-
-    Map<String, Integer> need(GraphPlan.Task task) {
-        Map<String, Integer> need = new HashMap<>();
-        task.consumes().forEach((item, count) -> {
-            String named = GraphNames.item(graph, item, scan.wood());
-            need.merge(
-                    named.startsWith("minecraft:") ? named.substring("minecraft:".length()) : named,
-                    count,
-                    Integer::sum);
-        });
-        return Map.copyOf(need);
     }
 
     Map<String, Integer> items(GraphPlan.Task task) {

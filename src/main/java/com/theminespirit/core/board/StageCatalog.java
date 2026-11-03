@@ -50,7 +50,7 @@ public final class StageCatalog {
 
     public static boolean watcherOwned(BoardCase boardCase) {
         Objects.requireNonNull(boardCase, "кейс постройки не может быть null: по нему видно, чей это сторож");
-        return boardCase == BoardCase.BUILD_WAREHOUSE;
+        return false;
     }
 
     public static Optional<String> graphId(String planId) {

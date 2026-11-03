@@ -52,7 +52,6 @@ public final class GraphSource {
             boolean deep) {}
 
     private Half pending;
-    private boolean surroundingsDone;
 
     public Set<String> tick(
             ServerLevel level,
@@ -67,17 +66,10 @@ public final class GraphSource {
         if (lastCycle >= 0 && now >= lastCycle && now - lastCycle < GRAPH_INTERVAL_TICKS) {
             return live();
         }
-        if (!surroundingsDone) {
-            lastCycle = now;
-            StageSurroundings.tick(level, service, now);
-            surroundingsDone = true;
-            return live();
-        }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
         Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
         if (scan.isEmpty()) {
             lastLive = Set.of();
-            surroundingsDone = false;
             return lastLive;
         }
         FirstStepsRunner.StageScan stageScan = scan.orElseThrow();
@@ -94,7 +86,6 @@ public final class GraphSource {
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
         pending = new Half(level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep);
-        surroundingsDone = false;
         return live();
     }
 

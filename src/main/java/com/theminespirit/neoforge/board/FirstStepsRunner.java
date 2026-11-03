@@ -13,7 +13,6 @@ import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PlotLeveling;
-import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
@@ -96,8 +95,6 @@ public final class FirstStepsRunner {
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
     private static final String FIRST_PREFIX = "first:";
     private static final String MINECRAFT = "minecraft:";
-    private static final String CLEAR_PART_PREFIX = "clear:";
-    private static final String FENCE_PART_PREFIX = "fence:";
     private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
     private static final int LEVELING_SHOWN = 6;
@@ -338,15 +335,6 @@ public final class FirstStepsRunner {
                 LOGGER.info("[wood] снята добыча {}: породы построек {}", ticket.id(), woods);
             }
         }
-    }
-
-    public static boolean stageOneBuilding(BoardService service) {
-        return service.board().all().stream()
-                .anyMatch(ticket -> (ticket.id().startsWith(FIRST_PREFIX)
-                                || ticket.id().startsWith(FENCE_PART_PREFIX)
-                                || ticket.id().startsWith(RepairPlan.PREFIX)
-                                || ticket.id().startsWith(CLEAR_PART_PREFIX))
-                        && active(service, ticket.id()));
     }
 
     static int partsOf(BoardCase caseValue) {
