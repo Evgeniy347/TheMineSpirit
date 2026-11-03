@@ -50,6 +50,7 @@ final class BuildingAudit {
     }
 
     static BuildingAuditInputs.Audit streets(ServerLevel level, FirstStepsRunner.StageScan scan) {
+        bucket(level);
         String key = level.dimension().location() + "|streets|" + scan.stage().anchor() + "|" + scan.wood();
         BuildingAuditInputs.Audit cached = GAPS.get(key);
         if (cached != null) {
