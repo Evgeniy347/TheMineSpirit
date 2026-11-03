@@ -33,7 +33,7 @@ class GraphStateExportTests {
                 List.of(new GraphFacts.Resource(
                         "tree:oak", new GraphFacts.Position(5, 64, 6), 7, GraphFacts.Reach.UNKNOWN, 14)),
                 Map.of("furnace", new GraphFacts.Station("furnace", "furnace", null, false, null, null, null)),
-                Map.of("hut", new GraphFacts.Building("hut", 1, 100, 0, null, false)),
+                Map.of("hut", new GraphFacts.Building("hut", 1, 100, 0, 0, 0, null, false)),
                 List.of(),
                 GraphFacts.Terrain.empty(),
                 new GraphFacts.StageReqs(Map.of("hut", 1), Map.of("hut", 1)));

@@ -82,9 +82,9 @@ class WorldAreaInputsTests {
     @Test
     void buildings_HouseAudit_GivesPercentAndDamage() {
         Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
-        base.put("hut", new GraphFacts.Building("hut", 1, 100, 0, new GraphFacts.Position(0, 64, 0), false));
-        base.put("mine", new GraphFacts.Building("mine", 1, 100, 0, new GraphFacts.Position(8, 64, 0), false));
-        base.put("fence", new GraphFacts.Building("fence", 0, 0, 0, null, false));
+        base.put("hut", new GraphFacts.Building("hut", 1, 100, 0, 0, 0, new GraphFacts.Position(0, 64, 0), false));
+        base.put("mine", new GraphFacts.Building("mine", 1, 100, 0, 0, 0, new GraphFacts.Position(8, 64, 0), false));
+        base.put("fence", new GraphFacts.Building("fence", 0, 0, 0, 0, 0, null, false));
 
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 0));
@@ -100,7 +100,7 @@ class WorldAreaInputsTests {
     @Test
     void buildings_UnknownAudit_IsNotReady() {
         Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
-        base.put("hut", new GraphFacts.Building("hut", 1, 100, 0, new GraphFacts.Position(0, 64, 0), false));
+        base.put("hut", new GraphFacts.Building("hut", 1, 100, 0, 0, 0, new GraphFacts.Position(0, 64, 0), false));
 
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 2));

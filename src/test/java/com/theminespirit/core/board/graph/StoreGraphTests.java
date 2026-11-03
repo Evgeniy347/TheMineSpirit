@@ -209,7 +209,7 @@ class StoreGraphTests {
                     chests,
                     List.of(),
                     stations,
-                    Map.of("furnace", new GraphFacts.Building("furnace", 1, 100, 0, null, false)),
+                    Map.of("furnace", new GraphFacts.Building("furnace", 1, 100, 0, 0, 0, null, false)),
                     List.of(),
                     GraphFacts.Terrain.empty(),
                     stageReqs);

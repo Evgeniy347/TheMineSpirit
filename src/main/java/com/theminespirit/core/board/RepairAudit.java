@@ -1,8 +1,8 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import java.util.ArrayList;
@@ -172,7 +172,7 @@ public final class RepairAudit {
     }
 
     private static boolean same(String wanted, String found) {
-        return wanted.equals(found) || WoodSpecies.sameRole(found, wanted);
+        return wanted.equals(found) || BlockMatch.matches(found, wanted);
     }
 
     private static String id(String block) {

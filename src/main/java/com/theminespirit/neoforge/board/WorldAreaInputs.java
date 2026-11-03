@@ -1,10 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.graph.GraphFacts;
-import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.GraphWorldFacts;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
@@ -44,8 +42,8 @@ final class WorldAreaInputs {
             ServerLevel level,
             BoardService service,
             FirstStepsRunner.StageScan scan,
-            Map<String, Built> states,
-            Optional<TownPlan> town) {
+            Optional<TownPlan> town,
+            Map<String, GraphFacts.Building> buildings) {
         long now = service.board().now();
         StageSite site = scan.stage();
         List<GraphFacts.Stray> strays = strays(
@@ -57,10 +55,7 @@ final class WorldAreaInputs {
                 .orElse(List.of());
         GraphFacts.Terrain terrain =
                 terrain(audit.holes(), audit.depths(), audit.extras(), floating.size(), strays.size());
-        RepairAudit.Report house =
-                service.board().ledger().has(BoardCase.BUILD_HOUSE, 1) ? houseReport(level, site, now) : null;
-        Map<String, GraphFacts.Building> base = GraphFactInputs.buildingFacts(states, town, scan);
-        return new GraphWorldFacts(strays, terrain, buildings(base, house));
+        return new GraphWorldFacts(strays, terrain, buildings);
     }
 
     static List<GraphFacts.Stray> strays(
@@ -112,12 +107,15 @@ final class WorldAreaInputs {
             boolean unknown = audited ? house.unknown() > 0 : building.level() > 0 && building.auditPercent() == 100;
             int damage = audited && !unknown ? house.missing() : 0;
             int percent = audited && !unknown ? percent(house) : unknown ? 0 : building.auditPercent();
-            facts.put(id, new GraphFacts.Building(id, building.level(), percent, damage, building.position(), unknown));
+            facts.put(
+                    id,
+                    new GraphFacts.Building(
+                            id, building.level(), percent, damage, damage, 0, building.position(), unknown));
         });
         return facts;
     }
 
-    private static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, long now) {
+    static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, long now) {
         long interval = RepairData.loadDefault().auditIntervalTicks();
         RepairAudit.Report cached = cachedHouse;
         if (cached != null && site.equals(cachedHouseSite) && now >= cachedHouseAt && now - cachedHouseAt < interval) {

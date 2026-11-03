@@ -88,7 +88,7 @@ final class YardFloorWatch {
                 .isPresent();
     }
 
-    private static boolean loaded(ServerLevel level, StageSite site) {
+    static boolean loaded(ServerLevel level, StageSite site) {
         var yard = site.yard();
         int y = site.anchor().y();
         for (int x = yard.x(); x < yard.x() + yard.width(); x++) {

@@ -22,7 +22,7 @@ class GraphWorldEventsTests {
         GraphFacts facts = facts(
                 List.of(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), "spirit-1")),
                 new GraphFacts.Terrain(2, 3, 4, 5, 6),
-                Map.of("hut", new GraphFacts.Building("hut", 1, 75, 5, null, false)));
+                Map.of("hut", new GraphFacts.Building("hut", 1, 75, 5, 5, 0, null, false)));
 
         Set<String> events = GraphWorldEvents.of(facts);
 
@@ -40,8 +40,8 @@ class GraphWorldEventsTests {
                 List.of(),
                 GraphFacts.Terrain.empty(),
                 Map.of(
-                        "hut", new GraphFacts.Building("hut", 1, 0, 5, null, true),
-                        "mine", new GraphFacts.Building("mine", 1, 100, 0, null, false)));
+                        "hut", new GraphFacts.Building("hut", 1, 0, 5, 5, 0, null, true),
+                        "mine", new GraphFacts.Building("mine", 1, 100, 0, 0, 0, null, false)));
 
         Set<String> events = GraphWorldEvents.of(facts);
 
