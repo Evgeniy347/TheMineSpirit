@@ -253,6 +253,11 @@ MORE3_EVENTS = (
     "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay", "stage_slow",
 )
 
+MORE7_EVENTS = (
+    "more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
+    "more7_evening_return", "more7_pen_full", "more7_field_full", "more7_order_ready",
+)
+
 AREA_STOCK = {
     "oak_log": 200, "oak_planks": 200, "stick": 100, "cobblestone": 300, "coal": 100,
     "charcoal": 50, "iron_ingot": 50, "diamond": 20, "obsidian": 10, "book": 5,
@@ -401,6 +406,12 @@ def _more3_world(graph):
     return world
 
 
+def _more7_world(graph):
+    world = ready_world(graph)
+    world.events.update(MORE7_EVENTS)
+    return world
+
+
 def _dig_world(graph):
     world = ready_world(graph)
     world.stock["trail_clean"] = 0
@@ -426,6 +437,7 @@ def input_builders():
         ("more", _more_world),
         ("more2", _more2_world),
         ("more3", _more3_world),
+        ("more7", _more7_world),
         ("dig", _dig_world),
     ]
 
