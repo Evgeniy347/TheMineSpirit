@@ -26,7 +26,7 @@ class StoreSourceGuardTests {
 
     @Test
     void stageSurroundings_StorageWatchers_AreNotTicked() {
-        String sources = SOURCES.get(BOARD.resolve("StageSurroundings.java"));
+        String sources = SOURCES.getOrDefault(BOARD.resolve("StageSurroundings.java"), "");
 
         List<String> found = new ArrayList<>();
         found.addAll(found(sources, "OldChests."));

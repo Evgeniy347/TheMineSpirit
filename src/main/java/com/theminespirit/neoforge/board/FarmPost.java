@@ -74,6 +74,17 @@ final class FarmPost {
     static boolean building(GraphPost post, GraphTickets.Ticket ticket) {
         String node = ticket.node();
         BlockCoord home = post.scan.home();
+        if ("chicken_coop".equals(node)) {
+            TicketTarget target = TicketTarget.at(home).withSpecies(Species.CHICKEN);
+            submit(
+                    post,
+                    ticket.id(),
+                    BoardCase.BUILD_PEN,
+                    ticket.task().priority(),
+                    target,
+                    need(post, BoardCase.BUILD_PEN, target));
+            return true;
+        }
         if ("pen_cow".equals(node) || "pen_sheep".equals(node) || "pen_pig".equals(node)) {
             Species species = FarmWays.species(node.substring("pen_".length()));
             if (species == null) {

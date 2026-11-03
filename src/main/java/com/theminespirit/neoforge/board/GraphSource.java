@@ -1,8 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.core.board.graph.GraphPlan;
@@ -55,7 +53,6 @@ public final class GraphSource {
             boolean deep) {}
 
     private Half pending;
-    private boolean surroundingsDone;
 
     public Set<String> tick(
             ServerLevel level,
@@ -70,17 +67,10 @@ public final class GraphSource {
         if (lastCycle >= 0 && now >= lastCycle && now - lastCycle < GRAPH_INTERVAL_TICKS) {
             return live();
         }
-        if (!surroundingsDone) {
-            lastCycle = now;
-            StageSurroundings.tick(level, service, now);
-            surroundingsDone = true;
-            return live();
-        }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
         Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
         if (scan.isEmpty()) {
             lastLive = Set.of();
-            surroundingsDone = false;
             return lastLive;
         }
         FirstStepsRunner.StageScan stageScan = scan.orElseThrow();
@@ -97,7 +87,6 @@ public final class GraphSource {
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
         pending = new Half(level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep);
-        surroundingsDone = false;
         return live();
     }
 
@@ -178,14 +167,6 @@ public final class GraphSource {
         if (!fences.isEmpty()) {
             events.add("fence_broken");
         }
-        if (service.board().all().stream()
-                .anyMatch(ticket -> ticket.boardCase() == BoardCase.REPAIR_BUILDING
-                        && service.board()
-                                .statusOf(ticket.id())
-                                .filter(GraphSource::open)
-                                .isPresent())) {
-            events.add("building_damaged");
-        }
         if (level.isNight()) {
             events.add("night");
         }
@@ -228,12 +209,6 @@ public final class GraphSource {
         int percent = progress.total() == 0 ? 0 : progress.done() * 100 / progress.total();
         return task.makes() + "=" + percent + "%(" + progress.done() + "/" + progress.total() + ")"
                 + (task.feasible() ? "" : "?");
-    }
-
-    private static boolean open(BoardStatus status) {
-        return status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED;
     }
 
     private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {

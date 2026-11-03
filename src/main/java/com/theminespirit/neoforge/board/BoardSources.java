@@ -18,7 +18,6 @@ public final class BoardSources {
     private final TransferDriftWatch transferDrift = new TransferDriftWatch();
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
-    private long lastEnchantCheck = -1;
     private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
     private final SourceGuard guard = new SourceGuard(this::report);
     private long roundNow;
@@ -37,14 +36,14 @@ public final class BoardSources {
         failures.observe(source, String.valueOf(error.getMessage()), roundNow).ifPresent(summary -> {
             if (summary.changed()) {
                 LOGGER.error(
-                        "[incident] источник доски {} {} упал, пропущен до следующей пересборки; тик сервера идёт",
+                        "[incident] РёСЃС‚РѕС‡РЅРёРє РґРѕСЃРєРё {} {} СѓРїР°Р», РїСЂРѕРїСѓС‰РµРЅ РґРѕ СЃР»РµРґСѓСЋС‰РµР№ РїРµСЂРµСЃР±РѕСЂРєРё; С‚РёРє СЃРµСЂРІРµСЂР° РёРґС‘С‚",
                         source,
-                        repeated ? "снова" : "",
+                        repeated ? "СЃРЅРѕРІР°" : "",
                         error);
                 return;
             }
             LOGGER.warn(
-                    "[incident] сводка: источник доски {} падал {} раз за окно с той же ошибкой: {}",
+                    "[incident] СЃРІРѕРґРєР°: РёСЃС‚РѕС‡РЅРёРє РґРѕСЃРєРё {} РїР°РґР°Р» {} СЂР°Р· Р·Р° РѕРєРЅРѕ СЃ С‚РѕР№ Р¶Рµ РѕС€РёР±РєРѕР№: {}",
                     source,
                     summary.count(),
                     error.getMessage());
@@ -73,19 +72,7 @@ public final class BoardSources {
                         GraphSource.events(level, service, spirits, craters, fences),
                         now),
                 Set.of()));
-        guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
         guard.run("demand", () -> demand.tick(level, service, spirits, now));
-        guard.run(
-                "repair_audit",
-                () -> SettlementPlotStore.get(level)
-                        .site()
-                        .ifPresent(site -> RepairAuditWatch.tick(level, service, site, now)));
-        guard.run("house_levels", () -> HouseLevels.tick(level, service, spirits, now));
-        guard.run("mine_levels", () -> MineLevels.tick(level, service, spirits, now));
-        if (now - lastEnchantCheck >= BoardTuning.enchantCheckInterval()) {
-            lastEnchantCheck = now;
-            guard.run("enchant_room", () -> EnchantRoomWatch.tick(level, service, spirits, stock, now));
-        }
         live.addAll(guard.call("transfer", () -> TransferWatch.liveCauses(service), Set.of()));
         guard.run("transfer_drift", () -> transferDrift.tick(level, service, spirits));
         live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level), Set.of()));

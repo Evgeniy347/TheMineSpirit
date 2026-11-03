@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 class WorldPostTests {
     @Test
-    void handles_WorldCleanupNodes_AreRecognized() {
+    void handles_WorldCleanupAndRepairNodes_AreRecognized() {
         assertFalse(
                 WorldPost.handles("demolish_stray"),
                 "Снос лишнего уже исполняет PlanDemolition по узлу графа, а не заглушка мира");
@@ -17,15 +17,9 @@ class WorldPostTests {
                 "Уборку висящего исполняет PlanDemolition по узлу графа, а не заглушка мира");
         assertTrue(WorldPost.handles("level_lot"), "Выравнивание — узел мира");
         assertTrue(WorldPost.handles("restore_trace"), "Возврат следа — узел мира");
-        assertTrue(WorldPost.handles("repair:hut"), "Ремонт постройки — узел мира");
+        assertTrue(WorldPost.handles("repair:hut"), "Ремонт хижины — узел мира");
+        assertTrue(WorldPost.handles("repair:clearing"), "Ремонт расчистки — узел мира");
+        assertTrue(WorldPost.handles("repair:mine"), "Ремонт шахты — узел мира");
         assertFalse(WorldPost.handles("collect_drops"), "Чужой узел не перехватывается");
-    }
-
-    @Test
-    void post_WorldNodes_StayStubbed() {
-        assertFalse(
-                WorldPost.post(),
-                "TODO(backfill, level_lot, restore_trace, repair:<постройка>): "
-                        + "действия ещё не реализованы, узел не ставит задание на доску");
     }
 }

@@ -39,8 +39,6 @@ public final class BoardTuning {
 
     public static final int FENCE_WATCH_RADIUS = 32;
 
-    public static final long ENCHANT_CHECK_INTERVAL = 500;
-
     public static final int TRANSFER_RADIUS_BLOCKS = 32;
 
     public static final int TRANSFER_MAX_COUNT = 64;
@@ -63,7 +61,6 @@ public final class BoardTuning {
             "caseFailPauseCapTicks",
             "caseFailLimit",
             "ticketFailLimit",
-            "enchantCheckInterval",
             "transferRadiusBlocks",
             "transferMaxCount",
             "rebuildPercent",
@@ -135,10 +132,6 @@ public final class BoardTuning {
 
     public static int ticketFailLimit() {
         return (int) interval("ticketFailLimit", TICKET_FAIL_LIMIT);
-    }
-
-    public static long enchantCheckInterval() {
-        return interval("enchantCheckInterval", ENCHANT_CHECK_INTERVAL);
     }
 
     public static int transferRadiusBlocks() {

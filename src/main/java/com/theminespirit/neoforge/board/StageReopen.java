@@ -1,16 +1,11 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.TicketPlans;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
 
 final class StageReopen {
     static final List<BoardCase> STEPS = List.of(
@@ -31,31 +26,6 @@ final class StageReopen {
     private static final String FENCE_PART_PREFIX = "fence:";
 
     private StageReopen() {}
-
-    static List<BoardCase> missing(Board board, List<BoardCase> order, int limit) {
-        Objects.requireNonNull(board, "Доска не может быть null: шаги этапа переоткрываются по ней");
-        Objects.requireNonNull(order, "Порядок шагов этапа не может быть null: без него не решить, что открыть первым");
-        if (limit < 1) {
-            throw new IllegalArgumentException("Предел открытых шагов " + limit + ": он считается от числа духов");
-        }
-        if (board.ledger().stage() > 1) {
-            return List.of();
-        }
-        Set<String> unfinished = board.ledger().stageGate().missing().keySet();
-        int open = DispatchRound.stageCasesOpen(board);
-        List<BoardCase> found = new ArrayList<>();
-        for (BoardCase step : order) {
-            if (!unfinished.contains(step.name()) || onBoard(board, step)) {
-                continue;
-            }
-            if (open >= limit) {
-                break;
-            }
-            found.add(step);
-            open++;
-        }
-        return List.copyOf(found);
-    }
 
     static List<String> ids(BoardCase caseValue) {
         List<String> ids = new ArrayList<>();
@@ -78,15 +48,5 @@ final class StageReopen {
             case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
             default -> 1;
         };
-    }
-
-    private static boolean onBoard(Board board, BoardCase step) {
-        for (String id : ids(step)) {
-            BoardStatus status = board.statusOf(id).orElse(null);
-            if (status != null && status != BoardStatus.FAILED) {
-                return true;
-            }
-        }
-        return false;
     }
 }

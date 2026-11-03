@@ -111,7 +111,6 @@
     "caseFailPauseCapTicks": 9600,
     "caseFailLimit": 3,
     "ticketFailLimit": 5,
-    "enchantCheckInterval": 500,
     "transferRadiusBlocks": 32,
     "transferMaxCount": 64,
     "rebuildPercent": 50,

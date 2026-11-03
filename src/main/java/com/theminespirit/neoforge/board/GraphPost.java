@@ -22,6 +22,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -77,6 +78,7 @@ final class GraphPost {
         return switch (ticket.kind()) {
             case BUILDING ->
                 FarmPost.building(this, ticket)
+                        || GraphNodeBuilds.post(this, ticket, task)
                         || PortalPost.building(this, ticket)
                         || (ExtraOrchardPost.handles(ticket.node())
                                 ? ExtraOrchardPost.post(this, ticket, task)
@@ -100,6 +102,9 @@ final class GraphPost {
         if (EAT.equals(ticket.node())) {
             return hungry(ticket);
         }
+        if (BoardCase.REPAIR_TOOL.name().toLowerCase(Locale.ROOT).equals(ticket.node())) {
+            return RepairWatch.post(level, service, spirits, ticket.task().priority(), now);
+        }
         if (ORDER.equals(ticket.node())) {
             CraftOrders.refresh(level);
             return true;
@@ -119,7 +124,7 @@ final class GraphPost {
             return new GraphHarvestPost(this).fences(ticket);
         }
         if (WorldPost.handles(ticket.node())) {
-            return WorldPost.post();
+            return WorldPost.post(this, ticket);
         }
         return COLLECT.contains(ticket.node()) && collect(ticket);
     }
@@ -166,6 +171,7 @@ final class GraphPost {
             return false;
         }
         return switch (boardCase) {
+            case REPAIR_TOOL -> RepairWatch.post(level, service, spirits, task.priority(), now);
             case GATHER_MATERIALS ->
                 FarmPost.pet(this, ticket) || PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
@@ -181,18 +187,8 @@ final class GraphPost {
     }
 
     private boolean building(GraphTickets.Ticket ticket) {
-        if (WarehouseWatch.handles(ticket.node())) {
-            return WarehouseWatch.post(this, ticket);
-        }
         GraphPlan.Task task = ticket.task();
         BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
-        if (FirstStepsRunner.ticketIds(boardCase).stream().anyMatch(this::open)) {
-            StageSettle.refresh(level, service, stock, scan, boardCase, now);
-            return true;
-        }
-        if (StageSettle.settle(level, service, stock, scan, boardCase, now)) {
-            return true;
-        }
         if (StageOpen.full(service.board(), spirits.size())) {
             return true;
         }

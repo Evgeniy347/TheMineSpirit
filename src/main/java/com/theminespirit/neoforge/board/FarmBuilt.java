@@ -31,9 +31,7 @@ final class FarmBuilt {
                 continue;
             }
             boolean ownCase = sharing.get(building.boardCase()) == 1;
-            if (done(service, building.id())
-                    || (ownCase && ledger.has(building.boardCase(), 1))
-                    || (building.boardCase() == BoardCase.BUILD_PEN && ledger.has(BoardCase.BUILD_PEN, 1))) {
+            if (done(service, building.id()) || (ownCase && ledger.has(building.boardCase(), 1))) {
                 buildings.put(building.id(), Built.BUILT);
             } else if (town.flatMap(plan -> OrchardSites.placement(plan, building.id()))
                     .isPresent()) {

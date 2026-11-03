@@ -2,8 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
@@ -38,9 +36,9 @@ final class RepairWatch {
 
     private RepairWatch() {}
 
-    static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+    static boolean post(ServerLevel level, BoardService service, List<SpiritEntity> spirits, int priority, long now) {
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
-            return;
+            return false;
         }
         Map<BlockCoord, Boolean> anvils = new HashMap<>();
         for (SpiritEntity spirit : spirits) {
@@ -50,29 +48,28 @@ final class RepairWatch {
                     ? Optional.empty()
                     : repairableTool(spirit, () -> anvils.computeIfAbsent(home.get(), at -> anvilNear(level, at)));
             if (item.isPresent()) {
-                BoardOutcome outcome = service.submit(
+                service.submit(
                         new BoardTicket(
                                 id,
                                 BoardCase.REPAIR_TOOL,
                                 Optional.of(spirit.getUUID()),
-                                BoardRules.priorityOf(BoardCase.REPAIR_TOOL),
+                                priority,
                                 now,
                                 1,
                                 BoardTicket.ALWAYS_CAUSE,
                                 List.of(),
                                 Map.of()),
                         TicketTarget.at(home.orElseThrow()).withCraft(item.orElseThrow(), 0));
-                if (outcome == BoardOutcome.ACCEPTED) {
-                    LOGGER.info(
-                            "[repair] дух {}: инструмент {} изношен, задание {}",
-                            spirit.displayName(),
-                            item.orElseThrow(),
-                            id);
-                }
-                continue;
+                LOGGER.info(
+                        "[repair] дух {}: инструмент {} изношен, задание {}",
+                        spirit.displayName(),
+                        item.orElseThrow(),
+                        id);
+                return true;
             }
             cancelWaiting(service, id);
         }
+        return false;
     }
 
     private static Optional<String> repairableTool(SpiritEntity spirit, BooleanSupplier anvilNear) {

@@ -53,7 +53,7 @@ final class YardFloorWatch {
         BuildGap.Gap gap = BuildGap.trace(plan, "oak", FirstStepsRunner.probe(level), FirstStepsRunner.SCHEMES);
         Map<String, Integer> need =
                 StageAudit.shortage(BuildGap.need(plan, gap, FirstStepsRunner.materialSource(level)));
-        StageRepair.submit(
+        StageRepair.post(
                 service,
                 BoardCase.STOCK_CHESTS,
                 target,
@@ -63,13 +63,13 @@ final class YardFloorWatch {
                         need),
                 now);
         LOGGER.info(
-                "[layout] двор: под станками {} дыр ({} из {} стоят на опоре), заделка {} — узел repair:stock_chests",
+                "[layout] РґРІРѕСЂ: РїРѕРґ СЃС‚Р°РЅРєР°РјРё {} РґС‹СЂ ({} РёР· {} СЃС‚РѕСЏС‚ РЅР° РѕРїРѕСЂРµ), Р·Р°РґРµР»РєР° {} вЂ” СѓР·РµР» repair:stock_chests",
                 holes.size(),
                 found.supported(),
                 found.stations().size(),
                 holes.stream()
                         .limit(5)
-                        .map(cell -> cell + " ожидался пол, стоит " + block(level, cell))
+                        .map(cell -> cell + " РѕР¶РёРґР°Р»СЃСЏ РїРѕР», СЃС‚РѕРёС‚ " + block(level, cell))
                         .toList());
         return true;
     }

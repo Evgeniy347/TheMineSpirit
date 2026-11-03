@@ -3,13 +3,9 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
-import com.theminespirit.core.board.BoardPriorities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.MineDescentBottom;
-import com.theminespirit.core.board.PriorityContext;
-import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
@@ -19,39 +15,38 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 final class MineLevels {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<Integer, Map<String, Integer>> LEVEL_MATERIALS = Map.of(
-            3, Map.of("cobblestone", 49),
-            4, Map.of("iron_ingot", 16));
+    private static final String PREFIX = "mine_level_";
 
     private MineLevels() {}
 
-    static void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
-        if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
-            return;
+    static boolean post(
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            String node,
+            int priority,
+            Map<String, Integer> need,
+            long now) {
+        if (!SpiritConfig.boardEnabled() || spirits.isEmpty() || !node.startsWith(PREFIX)) {
+            return false;
         }
-        OptionalInt next =
-                BuildingLevels.nextLevel(BoardCase.BUILD_MINE, service.board().ledger());
-        if (next.isEmpty() || next.getAsInt() < 2) {
-            return;
+        int levelValue;
+        try {
+            levelValue = Integer.parseInt(node.substring(PREFIX.length()));
+        } catch (NumberFormatException notLevel) {
+            return false;
         }
-        int levelValue = next.getAsInt();
-        if (!SettlementStage.allows(
-                BoardCase.BUILD_MINE, levelValue, service.board().ledger().stage())) {
-            return;
-        }
-        boolean stageOneBusy = FirstStepsRunner.stageOneBuilding(service);
-        if (stageOneBusy) {
-            return;
-        }
-        String id = "mine_level_" + levelValue;
-        if (active(service, id)) {
-            return;
+        BoardStatus status = service.board().statusOf(node).orElse(null);
+        if (status == BoardStatus.DONE
+                || status == BoardStatus.PENDING
+                || status == BoardStatus.WAITING_RESOURCES
+                || status == BoardStatus.ASSIGNED) {
+            return true;
         }
         Optional<StageSite> stage = SettlementPlotStore.get(level).site();
         BlockCoord home = stage.map(StageSite::mineEntrance)
@@ -68,25 +63,26 @@ final class MineLevels {
                     levelValue,
                     home,
                     unbuildable.getMessage());
-            return;
+            return false;
         }
         if (site == null) {
             LOGGER.warn(
                     "Уровень шахты {} не поставлен: нет схемы спуска {}", levelValue, TicketPlans.MINE_DESCENT_SCHEME);
-            return;
+            return false;
         }
         service.submit(
                 new BoardTicket(
-                        id,
+                        node,
                         BoardCase.BUILD_MINE,
                         Optional.empty(),
-                        BoardPriorities.effective(BoardCase.BUILD_MINE, PriorityContext.none()),
+                        priority,
                         now,
                         levelValue,
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1)),
-                        LEVEL_MATERIALS.getOrDefault(levelValue, Map.of())),
+                        Map.copyOf(need)),
                 TicketTarget.at(site));
+        return true;
     }
 
     private static BlockCoord homeOf(List<SpiritEntity> spirits) {
@@ -94,12 +90,5 @@ final class MineLevels {
                 .flatMap(spirit -> spirit.home().stream())
                 .findFirst()
                 .orElse(new BlockCoord(0, 64, 0));
-    }
-
-    private static boolean active(BoardService service, String id) {
-        BoardStatus status = service.board().statusOf(id).orElse(null);
-        return status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED;
     }
 }

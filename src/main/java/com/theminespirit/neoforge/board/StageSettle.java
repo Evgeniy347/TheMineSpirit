@@ -3,12 +3,9 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.MaterialSource;
-import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.building.WoodSpecies;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.SchemeBuild;
 import com.theminespirit.core.town.StageSite;
@@ -34,41 +31,6 @@ final class StageSettle {
 
     private StageSettle() {}
 
-    public static void refresh(
-            ServerLevel level,
-            BoardService service,
-            StockView stock,
-            FirstStepsRunner.StageScan scan,
-            BoardCase caseValue,
-            long now) {
-        StageSite stage = scan.stage();
-        String wood = BuildingWoodChoice.stored(level, caseValue, stage, scan.wood());
-        TicketTarget target = FirstStepsRunner.targetFor(level, caseValue, stage, wood);
-        Map<String, Integer> need = FirstStepsRunner.need(
-                level, stock, new FirstStepsRunner.OpenStep(caseValue, target, Map.of(), wood), false);
-        int parts = FirstStepsRunner.partsOf(caseValue);
-        if (AUDIT_STEPS.contains(caseValue)
-                && FirstStepsRunner.reopenDone(
-                        level, service, new FirstStepsRunner.OpenStep(caseValue, target, need, wood), parts, now)) {
-            return;
-        }
-        MaterialSource source = FirstStepsRunner.materialSource(level);
-        StageWork work = target.work();
-        List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
-                ? FenceParts.of(level, work.site(), parts)
-                : List.of();
-        for (int part = 1; part <= parts; part++) {
-            TicketTarget partTarget = parts == 1 ? target : target.withCount(part);
-            Map<String, Integer> reserve = part == 1 ? need : Map.of();
-            if (caseValue == BoardCase.BUILD_FENCE && work != null) {
-                partTarget = partTarget.withWork(fenceParts.get(part - 1).work());
-                reserve = new HashMap<>(partNeed(source, partTarget, wood));
-                reserve.keySet().retainAll(need.keySet());
-            }
-            service.board().require(FirstStepsRunner.partId(caseValue, part), reserve);
-        }
-    }
-
     public static boolean settle(
             ServerLevel level,
             BoardService service,
@@ -88,23 +50,7 @@ final class StageSettle {
                 level,
                 service,
                 new FirstStepsRunner.OpenStep(caseValue, target, need, wood),
-                FirstStepsRunner.partsOf(caseValue),
-                now);
-    }
-
-    static Map<String, Integer> repairNeed(ServerLevel level, FirstStepsRunner.OpenStep step, TicketTarget target) {
-        if (step.caseValue() == BoardCase.BUILD_MINE) {
-            return StageAudit.shortage(new HashMap<>(step.need()));
-        }
-        if (step.caseValue() == BoardCase.BUILD_FENCE) {
-            TaskNode plan = TicketPlans.plan(BoardCase.BUILD_FENCE, 1, target);
-            BuildGap.Gap gap =
-                    BuildGap.trace(plan, step.wood(), FirstStepsRunner.probe(level), FirstStepsRunner.SCHEMES);
-            return StageAudit.shortage(BuildGap.need(plan, gap, FirstStepsRunner.materialSource(level)));
-        }
-        Map<String, Integer> need = new HashMap<>(step.need());
-        FirstStepsRunner.minusPlaced(level, TicketPlans.plan(step.caseValue(), 1, step.target()), step.wood(), need);
-        return StageAudit.shortage(need);
+                FirstStepsRunner.partsOf(caseValue));
     }
 
     static TicketTarget repairTarget(BoardCase caseValue, TicketTarget target, BuildGap.Gap gap) {
