@@ -413,6 +413,58 @@ def test_more6_inputs():
     print("OK: входы области more6 учитываются в выборе")
 
 
+MORE5_EVENTS = ("more5_player_weak", "more5_crops_dark", "more5_saplings_dark",
+                "more5_crops_dry", "more5_growth_unfed", "more5_fuel_low",
+                "more5_build_shortage", "more5_mob_broken", "more5_route_blocked",
+                "more5_chest_far", "more5_mine_dark", "more5_wood_drops")
+MORE5_WAYS = ("more5_defend_player", "more5_feed_player", "more5_heal_player",
+              "more5_light_crops", "more5_light_saplings", "more5_water_crops",
+              "more5_fertilize_growth", "more5_gather_fuel", "more5_make_charcoal",
+              "more5_gather_build_material", "more5_craft_build_material",
+              "more5_restore_block", "more5_bridge_route", "more5_detour_route",
+              "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
+              "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling")
+
+
+def test_more5_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for event in MORE5_EVENTS:
+        assert event in graph.events, "Python-модель не видит событие области graphmore5: " + event
+    for way in MORE5_WAYS:
+        assert graph.way(way) is not None, "Python-модель не видит путь области graphmore5: " + way
+        assert not graph.implemented(way), "Действие области graphmore5 пока заглушено: " + way
+    for item in ("more5:player_guard", "more5:growth_lit", "more5:fuel_ready",
+                 "more5:build_supply", "more5:block_restored", "more5:route_opened",
+                 "more5:site_chest", "more5:mine_lit", "more5:wood_drop"):
+        assert item in graph.items and graph.items[item].base > 0, \
+            "Python-модель не видит узел области graphmore5: " + item
+    assert "#more5_fuel" in graph.groups, "Python-модель не видит группу топлива области more5"
+    print("OK: узлы и заглушки области graphmore5 читаются из фрагмента")
+
+
+def test_more5_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "events": list(MORE5_EVENTS),
+        "facts": {},
+    })
+    tasks = {task["id"]: task for task in plan(graph, state)["tasks"]}
+    for event in MORE5_EVENTS:
+        prefix = "event:" + event + ":"
+        assert any(task.startswith(prefix) for task in tasks), \
+            "Python: событие области graphmore5 не даёт задания: " + event
+    for task_id in ("event:more5_player_weak:more5_defend_player",
+                    "event:more5_crops_dark:more5_light_crops",
+                    "event:more5_wood_drops:more5_pickup_wood_drop"):
+        assert task_id in tasks, "Python: нет ожидаемого задания области graphmore5: " + task_id
+        assert not tasks[task_id]["implemented"], "Заглушка области не выдаётся готовой: " + task_id
+    assert tasks["event:more5_player_weak:more5_defend_player"]["priority"] > 100, \
+        "Python: защита игрока в бою выше обычного потолка"
+    print("OK: входы области graphmore5 учитываются в выборе")
+
+
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
@@ -557,6 +609,8 @@ if __name__ == "__main__":
         test_more3_nodes()
         test_more6_nodes()
         test_more6_inputs()
+        test_more5_nodes()
+        test_more5_inputs()
         test_baseline_trail()
         test_event_scaling()
         test_input_worlds()

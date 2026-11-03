@@ -1,0 +1,179 @@
+{
+  "_note_more5": "Область graphmore5: игрок в бою, рост посевов и деревьев, запас топлива, стройматериалы плана, блоки после мобов, перерезанные пути, далёкий сундук, свет шахты, дропы рубки. Сборщик входа — More5Inputs.",
+  "groups": {
+    "#more5_fuel": [
+      "coal",
+      "charcoal",
+      "oak_planks",
+      "birch_planks",
+      "spruce_planks",
+      "jungle_planks",
+      "acacia_planks",
+      "dark_oak_planks",
+      "mangrove_planks",
+      "cherry_planks",
+      "bamboo_planks",
+      "oak_log",
+      "birch_log",
+      "spruce_log",
+      "jungle_log",
+      "acacia_log",
+      "dark_oak_log",
+      "mangrove_log",
+      "cherry_log"
+    ]
+  },
+  "items": {
+    "more5:player_guard": {"xmin": 0, "k": 1, "base": 22, "stage": 1},
+    "more5:player_fed": {"xmin": 0, "k": 1, "base": 18, "stage": 1},
+    "more5:growth_lit": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
+    "more5:growth_watered": {"xmin": 0, "k": 1, "base": 13, "stage": 1},
+    "more5:growth_fed": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
+    "more5:fuel_ready": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
+    "more5:charcoal_ready": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
+    "more5:build_supply": {"xmin": 0, "k": 1, "base": 20, "stage": 1},
+    "more5:block_restored": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
+    "more5:route_opened": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
+    "more5:site_chest": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
+    "more5:mine_lit": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
+    "more5:wood_drop": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
+    "more5:sapling_planted": {"xmin": 0, "k": 1, "base": 13, "stage": 1}
+  },
+  "ways": [
+    {"id": "more5_defend_player", "case": "ACTIVITY_DEFEND", "makes": "more5:player_guard",
+     "yield": 1, "weight": 2.95, "ticks": 100, "implemented": false, "todo": "more5_defend_player"},
+    {"id": "more5_feed_player", "case": "EAT_TO_FULL", "makes": "more5:player_fed",
+     "yield": 1, "weight": 2.35, "ticks": 80, "consumes": {"food": 1}, "implemented": false, "todo": "more5_feed_player"},
+    {"id": "more5_heal_player", "case": "ACTIVITY_REST", "makes": "more5:player_fed",
+     "yield": 1, "weight": 2.0, "ticks": 100, "consumes": {}, "implemented": false, "todo": "more5_heal_player"},
+    {"id": "more5_light_crops", "case": "LIGHTING", "makes": "more5:growth_lit",
+     "yield": 1, "weight": 1.15, "ticks": 100, "consumes": {"torch": 1}, "implemented": false, "todo": "more5_light_crops"},
+    {"id": "more5_light_saplings", "case": "LIGHTING", "makes": "more5:growth_lit",
+     "yield": 1, "weight": 1.05, "ticks": 100, "consumes": {"torch": 1}, "implemented": false, "todo": "more5_light_saplings"},
+    {"id": "more5_water_crops", "case": "ACTIVITY_FARM", "makes": "more5:growth_watered",
+     "yield": 1, "weight": 1.05, "ticks": 120, "consumes": {}, "implemented": false, "todo": "more5_water_crops"},
+    {"id": "more5_fertilize_growth", "case": "ACTIVITY_FARM", "makes": "more5:growth_fed",
+     "yield": 1, "weight": 1.1, "ticks": 80, "consumes": {"bone_meal": 1}, "implemented": false, "todo": "more5_fertilize_growth"},
+    {"id": "more5_gather_fuel", "case": "GATHER_MATERIALS", "makes": "more5:fuel_ready",
+     "yield": 1, "weight": 1.3, "ticks": 200, "consumes": {}, "implemented": false, "todo": "more5_gather_fuel"},
+    {"id": "more5_make_charcoal", "case": "SMELT_CHARCOAL", "makes": "more5:charcoal_ready",
+     "yield": 1, "weight": 1.1, "ticks": 240, "consumes": {"#logs": 2}, "implemented": false, "todo": "more5_make_charcoal"},
+    {"id": "more5_gather_build_material", "case": "GATHER_MATERIALS", "makes": "more5:build_supply",
+     "yield": 1, "weight": 1.45, "ticks": 200, "consumes": {}, "implemented": false, "todo": "more5_gather_build_material"},
+    {"id": "more5_craft_build_material", "case": "ACTIVITY_CRAFT", "makes": "more5:build_supply",
+     "yield": 1, "weight": 1.2, "ticks": 160, "consumes": {}, "implemented": false, "todo": "more5_craft_build_material"},
+    {"id": "more5_restore_block", "case": "ACTIVITY_BUILD", "makes": "more5:block_restored",
+     "yield": 1, "weight": 1.05, "ticks": 120, "consumes": {}, "implemented": false, "todo": "more5_restore_block"},
+    {"id": "more5_bridge_route", "case": "ACTIVITY_BUILD", "makes": "more5:route_opened",
+     "yield": 1, "weight": 1.2, "ticks": 200, "consumes": {"#planks": 4}, "implemented": false, "todo": "more5_bridge_route"},
+    {"id": "more5_detour_route", "case": "ACTIVITY_MOVE", "makes": "more5:route_opened",
+     "yield": 1, "weight": 1.0, "ticks": 160, "consumes": {}, "implemented": false, "todo": "more5_detour_route"},
+    {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "makes": "more5:site_chest",
+     "yield": 1, "weight": 1.15, "ticks": 120, "consumes": {"#planks": 8}, "implemented": false, "todo": "more5_place_site_chest"},
+    {"id": "more5_carry_to_site", "case": "TRANSFER_ITEM", "makes": "more5:site_chest",
+     "yield": 1, "weight": 0.95, "ticks": 160, "consumes": {}, "implemented": false, "todo": "more5_carry_to_site"},
+    {"id": "more5_light_mine", "case": "LIGHTING", "makes": "more5:mine_lit",
+     "yield": 1, "weight": 1.2, "ticks": 100, "consumes": {"torch": 1}, "implemented": false, "todo": "more5_light_mine"},
+    {"id": "more5_craft_mine_torch", "case": "CRAFT_TORCHES", "makes": "more5:mine_lit",
+     "yield": 1, "weight": 0.9, "ticks": 100, "consumes": {"coal": 1, "stick": 1}, "implemented": false, "todo": "more5_craft_mine_torch"},
+    {"id": "more5_pickup_wood_drop", "case": "COLLECT_DROPS", "makes": "more5:wood_drop",
+     "yield": 1, "weight": 0.95, "ticks": 80, "consumes": {}, "implemented": false, "todo": "more5_pickup_wood_drop"},
+    {"id": "more5_plant_sapling", "case": "BUILD_ORCHARD", "makes": "more5:sapling_planted",
+     "yield": 1, "weight": 1.0, "ticks": 100, "consumes": {"#saplings": 1}, "implemented": false, "todo": "more5_plant_sapling"}
+  ],
+  "events": {
+    "more5_player_weak": {
+      "band": 20,
+      "tasks": [
+        {"id": "more5_defend_player", "case": "ACTIVITY_DEFEND", "base": 126, "consumes": {}, "implemented": false},
+        {"id": "more5_feed_player", "case": "EAT_TO_FULL", "base": 117, "consumes": {"food": 1}, "implemented": false},
+        {"id": "more5_heal_player", "case": "ACTIVITY_REST", "base": 113, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more5:player_guard": 20, "more5:player_fed": 12, "food": 10},
+      "advice": ["protect_and_feed_player_first"]
+    },
+    "more5_crops_dark": {
+      "tasks": [
+        {"id": "more5_light_crops", "case": "LIGHTING", "base": 58, "consumes": {"torch": 1}, "implemented": false}
+      ],
+      "push": {"more5:growth_lit": 10, "torch": 8},
+      "advice": ["light_crops_so_they_grow"]
+    },
+    "more5_saplings_dark": {
+      "tasks": [
+        {"id": "more5_light_saplings", "case": "LIGHTING", "base": 54, "consumes": {"torch": 1}, "implemented": false}
+      ],
+      "push": {"more5:growth_lit": 8, "torch": 6},
+      "advice": ["light_saplings_so_they_grow"]
+    },
+    "more5_crops_dry": {
+      "tasks": [
+        {"id": "more5_water_crops", "case": "ACTIVITY_FARM", "base": 56, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more5:growth_watered": 10, "water_bucket": 6},
+      "advice": ["water_the_field_before_it_stalls"]
+    },
+    "more5_growth_unfed": {
+      "tasks": [
+        {"id": "more5_fertilize_growth", "case": "ACTIVITY_FARM", "base": 52, "consumes": {"bone_meal": 1}, "implemented": false}
+      ],
+      "push": {"more5:growth_fed": 10, "bone_meal": 8},
+      "advice": ["bone_meal_crops_or_saplings"]
+    },
+    "more5_fuel_low": {
+      "tasks": [
+        {"id": "more5_gather_fuel", "case": "GATHER_MATERIALS", "base": 56, "consumes": {}, "implemented": false},
+        {"id": "more5_make_charcoal", "case": "SMELT_CHARCOAL", "base": 54, "consumes": {"#logs": 2}, "implemented": false}
+      ],
+      "push": {"more5:fuel_ready": 12, "more5:charcoal_ready": 8, "#more5_fuel": 12},
+      "advice": ["stock_fuel_for_furnaces_ahead"]
+    },
+    "more5_build_shortage": {
+      "tasks": [
+        {"id": "more5_gather_build_material", "case": "GATHER_MATERIALS", "base": 62, "consumes": {}, "implemented": false},
+        {"id": "more5_craft_build_material", "case": "ACTIVITY_CRAFT", "base": 54, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more5:build_supply": 12, "#planks": 8, "cobblestone": 8},
+      "advice": ["gather_only_materials_for_next_buildings"]
+    },
+    "more5_mob_broken": {
+      "tasks": [
+        {"id": "more5_restore_block", "case": "ACTIVITY_BUILD", "base": 58, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more5:block_restored": 12, "#planks": 6},
+      "advice": ["put_back_blocks_broken_by_mobs"]
+    },
+    "more5_route_blocked": {
+      "tasks": [
+        {"id": "more5_bridge_route", "case": "ACTIVITY_BUILD", "base": 60, "consumes": {"#planks": 4}, "implemented": false},
+        {"id": "more5_detour_route", "case": "ACTIVITY_MOVE", "base": 52, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more5:route_opened": 10},
+      "advice": ["bridge_or_walk_around_water_and_lava"]
+    },
+    "more5_chest_far": {
+      "tasks": [
+        {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "base": 55, "consumes": {"#planks": 8}, "implemented": false},
+        {"id": "more5_carry_to_site", "case": "TRANSFER_ITEM", "base": 48, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more5:site_chest": 10},
+      "advice": ["put_a_temporary_chest_near_the_work_site"]
+    },
+    "more5_mine_dark": {
+      "tasks": [
+        {"id": "more5_light_mine", "case": "LIGHTING", "base": 60, "consumes": {"torch": 1}, "implemented": false},
+        {"id": "more5_craft_mine_torch", "case": "CRAFT_TORCHES", "base": 50, "consumes": {"coal": 1, "stick": 1}, "implemented": false}
+      ],
+      "push": {"more5:mine_lit": 12, "torch": 8, "coal": 6},
+      "advice": ["light_the_mine_as_you_dig"]
+    },
+    "more5_wood_drops": {
+      "tasks": [
+        {"id": "more5_pickup_wood_drop", "case": "COLLECT_DROPS", "base": 52, "consumes": {}, "implemented": false},
+        {"id": "more5_plant_sapling", "case": "BUILD_ORCHARD", "base": 48, "consumes": {"#saplings": 1}, "implemented": false}
+      ],
+      "push": {"more5:wood_drop": 10, "more5:sapling_planted": 8, "#saplings": 6, "food": 5},
+      "advice": ["pick_up_saplings_and_apples_and_replant"]
+    }
+  }
+}

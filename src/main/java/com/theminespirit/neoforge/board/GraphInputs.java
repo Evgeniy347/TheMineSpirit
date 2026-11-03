@@ -77,27 +77,24 @@ final class GraphInputs {
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
                 .withFacts(GraphStoreInputs.of(facts, level, graph));
-        return More6Inputs.apply(
-                More3Inputs.apply(
-                        More2Inputs.apply(
-                                MoreInputs.apply(
-                                        FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan),
-                                        level,
-                                        service,
-                                        spirits,
-                                        scan,
-                                        graph),
+        GraphState more3 = More3Inputs.apply(
+                More2Inputs.apply(
+                        MoreInputs.apply(
+                                FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan),
                                 level,
-                                scan),
+                                service,
+                                spirits,
+                                scan,
+                                graph),
                         level,
-                        service,
-                        spirits,
-                        graph,
-                        around,
                         scan),
                 level,
+                service,
+                spirits,
+                graph,
                 around,
                 scan);
+        return More6Inputs.apply(More5World.apply(more3, level, graph, scan, around), level, around, scan);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
