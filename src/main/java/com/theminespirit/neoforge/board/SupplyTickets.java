@@ -8,7 +8,6 @@ import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.inventory.StorageFinder;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +47,6 @@ final class SupplyTickets {
                         id,
                         request.item());
             }
-            Optional<StageSite> site = SettlementPlotStore.get(level).site();
-            site.ifPresent(stage -> ChestSpaceWatch.request(level, service, stage, now, "сдача " + request.item()));
             if (SupplyGate.needsDepositPoint(boardCase)) {
                 return;
             }

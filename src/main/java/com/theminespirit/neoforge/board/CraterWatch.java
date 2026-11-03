@@ -1,12 +1,9 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardRules;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterNeed;
+import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.Point;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -50,34 +47,26 @@ public final class CraterWatch {
         if (need.isEmpty()) {
             return;
         }
-        BoardService service = BoardRegistry.get(level);
-        BlockCoord target = new BlockCoord(center.getX(), center.getY(), center.getZ());
         List<BlockCoord> profile = new ArrayList<>();
         for (BlockPos pos : event.getAffectedBlocks()) {
             profile.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         }
-        service.craters().remember(craterCause(center), profile);
-        service.submit(
-                new BoardTicket(
-                        craterId(center),
-                        BoardCase.FILL_CRATER,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.FILL_CRATER),
-                        level.getGameTime(),
-                        1,
-                        craterCause(center),
-                        List.of(),
-                        need),
-                TicketTarget.at(target)
-                        .withCraterBlocks(need.values().stream()
-                                .mapToInt(Integer::intValue)
-                                .sum()));
+        BoardRegistry.get(level).craters().remember(craterCause(center), profile);
     }
 
     static Set<String> liveCauses(ServerLevel level, BoardService service) {
         return service.craters()
                 .retainLive(pos -> level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z()))
                         .isAir());
+    }
+
+    static List<BlockCoord> centers(BoardService service) {
+        List<BlockCoord> centers = new ArrayList<>();
+        for (String cause : service.craters().causes()) {
+            Optional<BlockCoord> center = CraterProfiles.center(cause);
+            center.ifPresent(centers::add);
+        }
+        return centers;
     }
 
     static String craterCause(BlockPos center) {

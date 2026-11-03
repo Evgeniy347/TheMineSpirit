@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -38,6 +39,20 @@ public final class CraterProfiles {
     public static String cause(BlockCoord center) {
         Objects.requireNonNull(center, "Центр воронки не может быть null: по нему строится причина");
         return "crater:" + center.x() + ":" + center.y() + ":" + center.z();
+    }
+
+    public static Optional<BlockCoord> center(String cause) {
+        Objects.requireNonNull(cause, "Причина воронки не может быть null: из неё берётся центр");
+        String[] parts = cause.split(":", -1);
+        if (parts.length != 4 || !"crater".equals(parts[0])) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(
+                    new BlockCoord(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3])));
+        } catch (NumberFormatException ignored) {
+            return Optional.empty();
+        }
     }
 
     public void remember(String cause, List<BlockCoord> cells) {

@@ -48,7 +48,8 @@ class WorldFragmentTests {
             GraphEvent event = graph.events().get(GraphWorldEvents.REPAIR + building);
             assertTrue(event != null, "Ремонт постройки '" + building + "' объявлен узлом");
             GraphEvent.Task task = event.tasks().get(0);
-            assertEquals("repair:" + building, task.id(), "Задание ремонта называет постройку");
+            String expected = "chests".equals(building) ? "repair:stock_chests" : "repair:" + building;
+            assertEquals(expected, task.id(), "Задание ремонта называет билет StageRepair для этой постройки");
             assertTrue(
                     task.base() >= 50 && task.base() <= 100,
                     "Стартовый вес ремонта разумен: " + building + " = " + task.base());

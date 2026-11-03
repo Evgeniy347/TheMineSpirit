@@ -1,15 +1,12 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardRules;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
-import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.FenceBreaks;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.FenceLedger;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -49,44 +46,20 @@ public final class FenceWatch {
             return;
         }
         String blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
-        BoardService service = BoardRegistry.get(level);
-        BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        service.submit(
-                new BoardTicket(
-                        fenceId(pos),
-                        BoardCase.REPAIR_FENCE,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.REPAIR_FENCE),
-                        level.getGameTime(),
-                        1,
-                        fenceCause(pos),
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(target).withFenceBlock(blockId));
+        FenceLedger.get(level).remember(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()), blockId);
     }
 
-    static Set<String> liveCauses(ServerLevel level, BoardService service) {
-        Set<String> live = new HashSet<>();
-        for (BoardTicket ticket : service.board().all()) {
-            String cause = ticket.cause();
-            if (!cause.startsWith("fence:")) {
-                continue;
-            }
-            String[] parts = cause.split(":", -1);
-            if (parts.length != 4) {
-                continue;
-            }
-            try {
-                BlockPos pos = new BlockPos(
-                        Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
-                if (!isFence(level.getBlockState(pos))) {
-                    live.add(cause);
-                }
-            } catch (NumberFormatException ignored) {
-                live.add(cause);
-            }
-        }
+    static Set<String> liveCauses(ServerLevel level) {
+        Set<String> live = new LinkedHashSet<>();
+        liveBreaks(level).keySet().forEach(at -> live.add(FenceBreaks.cause(at)));
         return live;
+    }
+
+    static Map<BlockCoord, String> liveBreaks(ServerLevel level) {
+        return FenceLedger.get(level).retainLive(at -> {
+            BlockPos block = pos(at);
+            return !level.isLoaded(block) || !isFence(level.getBlockState(block));
+        });
     }
 
     static String fenceCause(BlockPos pos) {
@@ -103,6 +76,10 @@ public final class FenceWatch {
 
     static String fenceId(BlockPos pos) {
         return "repair_fence:" + pos.getX() + "," + pos.getY() + "," + pos.getZ();
+    }
+
+    static BlockPos pos(BlockCoord at) {
+        return new BlockPos(at.x(), at.y(), at.z());
     }
 
     private static boolean nearSettlement(ServerLevel level, BlockPos pos) {
