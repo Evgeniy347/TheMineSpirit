@@ -66,6 +66,8 @@ def event_category(name):
         return "event:more2"
     if name in MORE3_EVENTS:
         return "event:more3"
+    if name.startswith("more4_"):
+        return "event:more4"
     if name.startswith("gear_") or name in GEAR_EVENTS:
         return "event:gear"
     return None

@@ -422,6 +422,50 @@ def test_more5_inputs():
     print("OK: входы области graphmore5 учитываются в выборе")
 
 
+MORE4_EVENTS = (
+    "more4_player_near", "more4_player_hungry", "more4_player_tool_broken",
+    "more4_wrong_tool_hand", "more4_portal_found", "more4_portal_unsafe",
+    "more4_space_found", "more4_space_tight", "more4_tamed_pet", "more4_rare_found",
+    "more4_rare_mixed", "more4_caution",
+)
+MORE4_WAYS = (
+    "more4_guard_settlement", "more4_watch_chests", "more4_bring_player_food",
+    "more4_lend_player_tool", "more4_switch_tool", "more4_guard_portal",
+    "more4_fence_portal", "more4_plan_expansion", "more4_find_space",
+    "more4_guard_with_pet", "more4_leave_pet_alone", "more4_store_rare",
+    "more4_spare_rare", "more4_sort_rare", "more4_feed_hungry", "more4_rest_injured",
+)
+
+
+def test_more4_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for event in MORE4_EVENTS:
+        assert event in graph.events, "Python-модель не видит событие области more4: " + event
+    for way in MORE4_WAYS:
+        assert graph.way(way) is not None, "Python-модель не видит путь области more4: " + way
+        assert not graph.implemented(way), "Действие области graphmore4 пока заглушено: " + way
+    for item in ("more4:settlement_guarded", "more4:player_helped", "more4:tool_ready",
+                 "more4:portal_guarded", "more4:expansion_planned", "more4:pet_guarded",
+                 "more4:rare_kept", "more4:caution"):
+        assert item in graph.items, "Python-модель не видит новый узел области graphmore4: " + item
+        assert graph.items[item].base > 0, "Стартовый вес узла more4 положителен: " + item
+    assert "#rare" in graph.groups, "Python-модель не видит группу редких предметов"
+    print("OK: узлы и события области graphmore4 читаются из фрагмента")
+
+
+def test_more4_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    tasks = {task["id"] for task in plan(graph, State({
+        "stage": 1, "kits": {"spirit-1": {}}, "events": list(MORE4_EVENTS)}))["tasks"]}
+    for event in MORE4_EVENTS:
+        assert any(task.startswith("event:" + event + ":") for task in tasks),             "Python: событие области more4 не даёт задания: " + event
+    quiet = {task["id"] for task in plan(graph, State({
+        "stage": 1, "kits": {"spirit-1": {}}, "events": []}))["tasks"]}
+    for way in MORE4_WAYS:
+        assert way not in quiet, "Python: без входа области more4 задачи нет: " + way
+    print("OK: входы области graphmore4 учитываются в выборе")
+
+
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
@@ -468,6 +512,7 @@ def test_input_worlds():
         "more": "more_help_player",
         "more2": "event:more2_fire_near_building",
         "more3": "event:danger_spot",
+        "more4": "event:more4_player_near",
     }
     for name, prefix in expected.items():
         assert name in worlds, "Стартовый мир области не собран: " + name
@@ -565,6 +610,8 @@ if __name__ == "__main__":
         test_more3_nodes()
         test_more5_nodes()
         test_more5_inputs()
+        test_more4_nodes()
+        test_more4_inputs()
         test_baseline_trail()
         test_event_scaling()
         test_input_worlds()
