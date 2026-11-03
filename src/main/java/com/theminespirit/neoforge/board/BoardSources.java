@@ -89,7 +89,6 @@ public final class BoardSources {
         guard.run("fishing", () -> fishing.tick(level, service, spirits, stock, now));
         guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
         guard.run("pen", () -> PenBuild.tick(level, service, spirits, now));
-        guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
         guard.run("demand", () -> demand.tick(level, service, spirits, now));
         guard.run(
                 "repair_audit",

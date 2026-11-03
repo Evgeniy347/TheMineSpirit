@@ -17,6 +17,7 @@ import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.core.town.YardFloor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,22 +27,23 @@ import org.slf4j.Logger;
 final class YardFloorWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int MAX_DEPTH = 12;
-    private static final int EVERY = 600;
-    private static long lastCheck = Long.MIN_VALUE;
     private static final String REPAIR = RepairPlan.PREFIX + "stock_chests";
 
     private YardFloorWatch() {}
 
-    static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
-        if (!YardFloor.due(now, lastCheck, EVERY)) {
-            return;
-        }
-        lastCheck = now;
-        if (active(service) || audit(level, site).holes().isEmpty()) {
-            return;
+    static boolean handles(String node) {
+        return (RepairPlan.PREFIX + BoardCase.STOCK_CHESTS.name().toLowerCase(Locale.ROOT)).equals(node);
+    }
+
+    static boolean post(ServerLevel level, BoardService service, StageSite site, long now) {
+        if (active(service)) {
+            return true;
         }
         YardFloor.Audit found = audit(level, site);
         List<BlockCoord> holes = found.holes();
+        if (holes.isEmpty()) {
+            return true;
+        }
         List<PlannedBlock> fill = holes.stream()
                 .map(cell -> new PlannedBlock(cell, StageBuilds.SUPPORT))
                 .toList();
@@ -61,7 +63,7 @@ final class YardFloorWatch {
                         need),
                 now);
         LOGGER.info(
-                "[layout] двор: под станками {} дыр ({} из {} стоят на опоре), заделка {}",
+                "[layout] двор: под станками {} дыр ({} из {} стоят на опоре), заделка {} — узел repair:stock_chests",
                 holes.size(),
                 found.supported(),
                 found.stations().size(),
@@ -69,6 +71,7 @@ final class YardFloorWatch {
                         .limit(5)
                         .map(cell -> cell + " ожидался пол, стоит " + block(level, cell))
                         .toList());
+        return true;
     }
 
     static TownSnapshot.Progress progress(ServerLevel level, StageSite site) {

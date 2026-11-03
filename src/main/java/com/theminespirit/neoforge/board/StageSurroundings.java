@@ -12,8 +12,6 @@ final class StageSurroundings {
             return;
         }
         PlotAudit.tick(level, service, stage, now);
-        OldChests.tick(level, service, stage, now);
-        ChestSpaceWatch.tick(level, service, stage, now);
         OrchardHarvest.tick(level, service, stage, now);
     }
 }
