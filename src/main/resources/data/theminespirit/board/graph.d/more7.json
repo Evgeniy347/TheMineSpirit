@@ -1,0 +1,98 @@
+{
+  "_note_more7": "Область graphmore7: занятость духов, предметы следующего этапа, пики времени суток, заполненность загонов и полей, готовые заказы игрока. Новые узлы только здесь; сборщик входа — More7Inputs.",
+  "items": {
+    "more7:work_split": {"xmin": 0, "k": 1, "base": 18, "stage": 1},
+    "more7:stage_gated": {"xmin": 0, "k": 1, "base": 21, "stage": 1},
+    "more7:harvest_peak": {"xmin": 0, "k": 1, "base": 20, "stage": 1},
+    "more7:return_peak": {"xmin": 0, "k": 1, "base": 19, "stage": 1},
+    "more7:pen_room": {"xmin": 0, "k": 1, "base": 18, "stage": 1},
+    "more7:field_room": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
+    "more7:order_delivered": {"xmin": 0, "k": 1, "base": 22, "stage": 1}
+  },
+  "ways": [
+    {"id": "more7_spread_work", "case": "ACTIVITY_SENSE", "makes": "more7:work_split",
+     "yield": 1, "weight": 2.26, "consumes": {}, "ticks": 120,
+     "implemented": false, "todo": "more7_work_pileup"},
+    {"id": "more7_defer_gated", "case": "GATHER_MATERIALS", "makes": "more7:stage_gated",
+     "yield": 1, "weight": 1.55, "consumes": {}, "ticks": 200,
+     "implemented": false, "todo": "more7_gated_item"},
+    {"id": "more7_harvest_early", "case": "GATHER_MATERIALS", "makes": "more7:harvest_peak",
+     "yield": 1, "weight": 2.05, "consumes": {}, "ticks": 160,
+     "implemented": false, "todo": "more7_morning_harvest"},
+    {"id": "more7_return_home", "case": "ACTIVITY_RETURN", "makes": "more7:return_peak",
+     "yield": 1, "weight": 1.9, "consumes": {}, "ticks": 100,
+     "implemented": false, "todo": "more7_evening_return"},
+    {"id": "more7_expand_pen", "case": "BUILD_PEN", "makes": "more7:pen_room",
+     "yield": 1, "weight": 1.31, "consumes": {"#logs": 4}, "ticks": 600,
+     "implemented": false, "todo": "more7_pen_full"},
+    {"id": "more7_hold_herd", "case": "ACTIVITY_SENSE", "makes": "more7:pen_room",
+     "yield": 1, "weight": 1.15, "consumes": {}, "ticks": 100,
+     "implemented": false, "todo": "more7_pen_full"},
+    {"id": "more7_expand_field", "case": "GATHER_MATERIALS", "makes": "more7:field_room",
+     "yield": 1, "weight": 1.27, "consumes": {}, "ticks": 300,
+     "implemented": false, "todo": "more7_field_full"},
+    {"id": "more7_hold_sowing", "case": "ACTIVITY_SENSE", "makes": "more7:field_room",
+     "yield": 1, "weight": 1.1, "consumes": {}, "ticks": 100,
+     "implemented": false, "todo": "more7_field_full"},
+    {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "makes": "more7:order_delivered",
+     "yield": 1, "weight": 2.18, "consumes": {}, "ticks": 160,
+     "implemented": false, "todo": "more7_order_ready"},
+    {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "makes": "more7:order_delivered",
+     "yield": 1, "weight": 2.05, "consumes": {}, "ticks": 160,
+     "implemented": false, "todo": "more7_order_ready"}
+  ],
+  "events": {
+    "more7_work_pileup": {
+      "tasks": [
+        {"id": "more7_spread_work", "case": "ACTIVITY_SENSE", "base": 58, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:work_split": 8},
+      "advice": ["split_spirits_across_pending_needs"]
+    },
+    "more7_gated_item": {
+      "tasks": [
+        {"id": "more7_defer_gated", "case": "GATHER_MATERIALS", "base": 50, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:stage_gated": 8},
+      "advice": ["do_not_target_items_from_next_stage"]
+    },
+    "more7_morning_harvest": {
+      "tasks": [
+        {"id": "more7_harvest_early", "case": "GATHER_MATERIALS", "base": 64, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:harvest_peak": 10},
+      "advice": ["harvest_before_the_day_gets_busy"]
+    },
+    "more7_evening_return": {
+      "tasks": [
+        {"id": "more7_return_home", "case": "ACTIVITY_RETURN", "base": 60, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:return_peak": 10},
+      "advice": ["return_home_before_night"]
+    },
+    "more7_pen_full": {
+      "tasks": [
+        {"id": "more7_expand_pen", "case": "BUILD_PEN", "base": 52, "consumes": {"#logs": 4}, "implemented": false},
+        {"id": "more7_hold_herd", "case": "ACTIVITY_SENSE", "base": 46, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:pen_room": 8},
+      "advice": ["expand_pen_or_stop_breeding"]
+    },
+    "more7_field_full": {
+      "tasks": [
+        {"id": "more7_expand_field", "case": "GATHER_MATERIALS", "base": 50, "consumes": {}, "implemented": false},
+        {"id": "more7_hold_sowing", "case": "ACTIVITY_SENSE", "base": 45, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:field_room": 8},
+      "advice": ["expand_field_or_stop_sowing"]
+    },
+    "more7_order_ready": {
+      "tasks": [
+        {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "base": 66, "consumes": {}, "implemented": false},
+        {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "base": 62, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more7:order_delivered": 12},
+      "advice": ["hand_order_to_player_or_his_chest"]
+    }
+  }
+}

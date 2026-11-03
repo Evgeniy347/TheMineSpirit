@@ -95,7 +95,8 @@ final class GraphInputs {
                 around,
                 scan);
         GraphState more4 = More4Inputs.apply(more3, level, spirits, scan, graph);
-        return More5World.apply(more4, level, graph, scan, around);
+        GraphState more5 = More5World.apply(more4, level, graph, scan, around);
+        return More7Inputs.apply(more5, level, graph, scan);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

@@ -466,6 +466,57 @@ def test_more4_inputs():
     print("OK: входы области graphmore4 учитываются в выборе")
 
 
+MORE7 = {
+    "more7:work_split": "more7_spread_work",
+    "more7:stage_gated": "more7_defer_gated",
+    "more7:harvest_peak": "more7_harvest_early",
+    "more7:return_peak": "more7_return_home",
+    "more7:pen_room": "more7_expand_pen",
+    "more7:field_room": "more7_expand_field",
+    "more7:order_delivered": "more7_order_to_player",
+}
+
+
+def test_more7_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    events = ("more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
+              "more7_evening_return", "more7_pen_full", "more7_field_full",
+              "more7_order_ready")
+    ways = ("more7_spread_work", "more7_defer_gated", "more7_harvest_early",
+            "more7_return_home", "more7_expand_pen", "more7_hold_herd",
+            "more7_expand_field", "more7_hold_sowing", "more7_order_to_player",
+            "more7_order_to_chest")
+    for event in events:
+        assert event in graph.events, "Python-модель не видит событие области graphmore7: " + event
+    for way in ways:
+        assert graph.way(way) is not None, "Python-модель не видит путь области graphmore7: " + way
+        assert not graph.implemented(way), "Действие области graphmore7 пока заглушено: " + way
+    for item, way in MORE7.items():
+        assert item in graph.items, "Python-модель не видит узел области graphmore7: " + item
+        assert graph.items[item].base > 0, "Стартовый вес узла more7 положителен: " + item
+        assert graph.way(way) is not None, "Путь узла more7 объявлен: " + way
+    print("OK: узлы и события области graphmore7 читаются из фрагмента")
+
+
+def test_more7_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    tasks = {task["id"] for task in plan(graph, State({
+        "stage": 1, "kits": {"spirit-1": {}}, "events": [
+            "more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
+            "more7_evening_return", "more7_pen_full", "more7_field_full",
+            "more7_order_ready"]}))["tasks"]}
+    for event in ("more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
+                  "more7_evening_return", "more7_pen_full", "more7_field_full",
+                  "more7_order_ready"):
+        assert any(task.startswith("event:" + event + ":") for task in tasks), \
+            "Python: событие области graphmore7 не даёт задания: " + event
+    quiet = {task["id"] for task in plan(graph, State({
+        "stage": 1, "kits": {"spirit-1": {}}, "events": []}))["tasks"]}
+    for way in MORE7.values():
+        assert way not in quiet, "Python: без входа области graphmore7 задачи нет: " + way
+    print("OK: входы области graphmore7 учитываются в выборе")
+
+
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
@@ -513,6 +564,9 @@ def test_input_worlds():
         "more2": "event:more2_fire_near_building",
         "more3": "event:danger_spot",
         "more4": "event:more4_player_near",
+
+
+        "more7": "event:more7_order_ready",
     }
     for name, prefix in expected.items():
         assert name in worlds, "Стартовый мир области не собран: " + name
@@ -612,6 +666,8 @@ if __name__ == "__main__":
         test_more5_inputs()
         test_more4_nodes()
         test_more4_inputs()
+        test_more7_nodes()
+        test_more7_inputs()
         test_baseline_trail()
         test_event_scaling()
         test_input_worlds()
