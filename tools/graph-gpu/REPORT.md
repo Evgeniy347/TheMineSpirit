@@ -189,6 +189,53 @@
 `coal` 28, `event:*` и `way:dig` 1.0. Проверка: `graphExport` → **200/200**; `sim_gpu` = Java;
 `unit --fast-analyzers` 8068; `pmdMain pmdTest`; `gametest --full` 15/15.
 
+## 03.11-3 — третий пересчёт: more4–7 и аудит
+
+**Миры.** В main уже были миры `more4`, `more6`, `more7` и факты аудита в `_area_world`; не хватало
+`more5`. Добавлен `_more5_world` (12 событий области), число духов в мирах областей поднято до 20,
+чтобы все задания событий попадали в первый прогон и ни одно не терялось при завершении мира.
+`_area_world` подаёт `missing`/`extra`/`wrong`/`auditPercent`, `Stray.builder` и `blocks`,
+`Terrain.cut/fill/floating`; завершение ремонта чистит эти поля, уборки — `cut/fill/floating`.
+Python-модель уже читала аудит (`GraphBuildingMaterials`, `GraphEventFacts`); добавлен тест
+`test_audit_inputs`: недостача становится материалами ремонта, а вес ремонта растёт от
+`auditPercent` и важности этапа. `test_dead_inputs` проверяет, что мир `more5` действительно
+вызывает `more5_defend_player`, `more5_pickup_wood_drop`, `more5_light_mine`.
+
+**Пересчёт.** 87 категорий (добавлены `event:more4…more7`). Ограниченный прогон
+`--fixed "decay,way:CRAFT_*_AXE,way:dig"`: 9 поколений × 8 × 2 сида, доля **0.8184**,
+сумма 4893 → 4800 до исключений. Категории событий на шагах не сказались (события одноразовые),
+поэтому оставлены 1.0. Исключения ради зелёных правил: `decay` 0.55, топоры 1.0,
+`cobblestone`/`stick` 36, `coal` 28, `orchard_oak` 50 (иначе полоса построек меняет порядок
+«сад важнее при нехватке брёвен»), `way:dig` 1.0.
+
+Метрики стартов (03.11-2 → 03.11-3):
+
+| Старт | До | После |
+|---|---|---|
+| `late3` | 331 | 268, этап 3 |
+| `late3-half` | 113 | 83, этап 3 |
+| `stage2-full` | 1483 | 1430, этап 3 |
+| `stage2-all` | 1171 | 1090, этап 3 |
+| `life` / `store` | 12 / 19 | 12 / 19 |
+| `farm` / `world` | 60 / 21 | 60 / 21 |
+| `more4` / `more5` | — | 18 / 21 |
+| `more6` / `more7` | 13 / 11 | 13 / 11 |
+| `more` / `more2` / `more3` / `gear` / `dig` | 17 / 16 / 20 / 10 / 11 | без изменений |
+
+Базовые миры Java: 84 / 1239 / 2594 / 1430 / 5275 шагов; Python совпадает по шагам, тикам и
+порядку. Простоя в мирах областей нет; `stage2-full`/`stage2-all` доходят до этапа 3, но этап 3
+пока не закрывают (нехватка материалов этапа 3 — отдельный тупик).
+
+Мёртвые узлы не изменились: 9 путей-дублей (`assign_chest_purpose`, `clear_trash`,
+`home_night_work`, `raise_bottleneck_weight`, `recover_death_drop`, `repair_world_decay`,
+`secure_danger`, `spread_work`, `use_idle_station`), 2 необязательные заглушки
+(`more2_field_chest`, `more2_trail`) и 6 push-only событий (`crop_dry`, `pen_full`, `gear_kit_*`).
+Все новые пути и события more4–7 активируются.
+
+Проверка: `graphExport` → **200/200** до и после; `sim_gpu` = `GraphSimulationTests`;
+`unit --fast-analyzers` 8181; `pmdMain pmdTest`; `gametest --full` 15/15 (первый прогон упал
+флаком `gatherscene_arenasteps_allpass` на исчезнувшей двери, отдельный и повторный прогон зелёные).
+
 ## Найдено в данных Java (не правил)
 
 - В слиянии графа два разных пути имеют один `id = craft_bread`: ручной делает `food` (weight 0.7),

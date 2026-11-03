@@ -60,9 +60,10 @@ PYTHONIOENCODING=utf-8 py -3.9 search.py --mode es --generations 10 --population
 PYTHONIOENCODING=utf-8 py -3.9 search.py --mode es --generations 10 --population 16 --seeds 2 --init best-weights.json
 ```
 
-- 73 множителя-категории в пределах ±50 %, а не по каждому пути:
+- 87 множителей-категорий в пределах ±50 %, а не по каждому пути:
   базы предметов (`perSpirit`/этап), базы построек (этап), веса путей по `BoardCase`
-  (включая `way:dig`), полосы событий областей (`event:life/store/farm/gear/more2/more3`),
+  (включая `way:dig`), полосы событий областей
+  (`event:life/store/farm/gear/more2/more3/more4/more5/more6/more7`),
   `decay`, `urgentBoost`, `buildReadyBoost`;
 - метрика — сумма шагов до конца этапа 3 по стартам; застрявший мир получает штраф `limit + 500`;
 - каждое поколение считается одним пакетом миров, линейная система решается на CUDA.
@@ -71,10 +72,10 @@ PYTHONIOENCODING=utf-8 py -3.9 search.py --mode es --generations 10 --population
 (`weights`) и готовые абсолютные значения (`absolute`). Файл `graph.json` скрипт не меняет.
 Длинный поиск запускает главный агент; `--limit` задаёт предел решений на мир (по умолчанию 4000).
 
-Текущий прогон (`--generations 9 --population 8 --seeds 2 --limit 1600 --fixed ...`): доля 0.4682,
-сумма шагов 5498 → 4806 до правок ради зелёных правил. В `board/graph.json` и `graph.d` перенесены
+Текущий прогон (`--generations 9 --population 8 --seeds 2 --limit 1600 --fixed ...`): доля 0.8184,
+сумма шагов 4893 → 4800 до правок ради зелёных правил. В `board/graph.json` и `graph.d` перенесены
 абсолютные значения; `decay` внесён 0.55, иначе правила `GraphPlannerTests` упираются в
-`maxPriority`. Подробности, тупик этапа 2 и список мёртвых узлов — `REPORT.md`, разделы 03.11 и 03.11-2.
+`maxPriority`. Подробности, тупик этапа 2 и список мёртвых узлов — `REPORT.md`, разделы 03.11, 03.11-2 и 03.11-3.
 
 ## Файлы
 

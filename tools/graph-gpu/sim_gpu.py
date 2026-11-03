@@ -264,6 +264,12 @@ MORE3_EVENTS = (
     "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay", "stage_slow",
 )
 
+MORE5_EVENTS = (
+    "more5_player_weak", "more5_crops_dark", "more5_saplings_dark", "more5_crops_dry",
+    "more5_growth_unfed", "more5_fuel_low", "more5_build_shortage", "more5_mob_broken",
+    "more5_route_blocked", "more5_chest_far", "more5_mine_dark", "more5_wood_drops",
+)
+
 MORE4_EVENTS = (
     "more4_player_near", "more4_player_hungry", "more4_player_tool_broken",
     "more4_wrong_tool_hand", "more4_portal_found", "more4_portal_unsafe",
@@ -293,7 +299,7 @@ AREA_STOCK = {
 }
 
 
-def ready_world(graph, stage=3, spirits=16):
+def ready_world(graph, stage=3, spirits=20):
     """Мир у конца этапа: всё построено, кроме одной постройки — есть чем закончить."""
     world = World.settled(graph)
     world.world.clear()
@@ -435,6 +441,12 @@ def _more3_world(graph):
     return world
 
 
+def _more5_world(graph):
+    world = ready_world(graph)
+    world.events.update(MORE5_EVENTS)
+    return world
+
+
 def _more4_world(graph):
     world = ready_world(graph)
     world.events.update(MORE4_EVENTS)
@@ -479,6 +491,7 @@ def input_builders():
         ("more2", _more2_world),
         ("more3", _more3_world),
         ("more4", _more4_world),
+        ("more5", _more5_world),
         ("more7", _more7_world),
         ("more6", _more6_world),
         ("dig", _dig_world),

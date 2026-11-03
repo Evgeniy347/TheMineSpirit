@@ -37,6 +37,10 @@ DIG_WAYS = {"dig_out", "bridge", "pillar", "restore_trace"}
 STORE_EVENTS = {"store_minimum", "transfer_pending", "storage_full", "furnace_ready"}
 FARM_EVENTS = {"crop_ready", "animal_starving", "orchard_empty"}
 MORE3_EVENTS = set(sim_gpu.MORE3_EVENTS)
+MORE4_EVENTS = set(sim_gpu.MORE4_EVENTS)
+MORE5_EVENTS = set(sim_gpu.MORE5_EVENTS)
+MORE6_EVENTS = set(sim_gpu.MORE6_EVENTS)
+MORE7_EVENTS = set(sim_gpu.MORE7_EVENTS)
 GEAR_EVENTS = {"tool_worn", "armor_worn"}
 
 
@@ -66,6 +70,14 @@ def event_category(name):
         return "event:more2"
     if name in MORE3_EVENTS:
         return "event:more3"
+    if name in MORE4_EVENTS:
+        return "event:more4"
+    if name in MORE5_EVENTS:
+        return "event:more5"
+    if name in MORE6_EVENTS:
+        return "event:more6"
+    if name in MORE7_EVENTS:
+        return "event:more7"
     if name.startswith("more4_"):
         return "event:more4"
     if name.startswith("gear_") or name in GEAR_EVENTS:
