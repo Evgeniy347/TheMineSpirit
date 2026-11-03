@@ -36,7 +36,6 @@ public final class Board {
     private final BlockedBook blocked;
     private final CasePauseBook casePauses = new CasePauseBook();
     private final StuckSpirits stuckSpirits = new StuckSpirits();
-    private final IdleRelease idleRelease;
     private final List<BoardLogEntry> detachments = new ArrayList<>();
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
     private final FailureHistory failHistory = new FailureHistory();
@@ -54,7 +53,6 @@ public final class Board {
         this.events = Objects.requireNonNull(events, "Слушатель переходов не может быть null: иначе BoardEvents.NONE");
         this.blocked = new BlockedBook(
                 statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
-        this.idleRelease = new IdleRelease(casePauses, blocked);
     }
 
     public long now() {
@@ -91,7 +89,6 @@ public final class Board {
         blocked.restore(state.blocked());
         casePauses.restore(state.pauses());
         stuckSpirits.restore(state.stuck(), nowTicks.getAsLong());
-        idleRelease.clear();
         ledger.clear();
         ledger.restore(state.ledger());
         for (BoardState.Entry entry : state.entries()) {
@@ -305,11 +302,6 @@ public final class Board {
 
     public int releaseDetached() {
         return casePauses.releaseDetached();
-    }
-
-    public int releaseIdle(Set<UUID> present, Set<UUID> idle, long now) {
-        BoardTiming.require(now);
-        return idleRelease.tick(present, idle, now);
     }
 
     public int consecutiveFailures(UUID spirit, BoardCase boardCase) {

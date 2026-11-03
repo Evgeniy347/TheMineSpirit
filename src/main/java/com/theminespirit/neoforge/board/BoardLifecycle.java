@@ -28,12 +28,6 @@ public final class BoardLifecycle {
             try {
                 BoardService service = BoardRegistry.get(level);
                 service.tick(level, tick);
-                if (tick % 100 == 0) {
-                    SettlementPlotStore store = SettlementPlotStore.get(level);
-                    store.site()
-                            .ifPresent(site -> store.town()
-                                    .ifPresent(town -> PlanDemolition.tick(level, service, site, town, tick)));
-                }
             } finally {
                 TickWatch.done("BoardService", watch);
             }

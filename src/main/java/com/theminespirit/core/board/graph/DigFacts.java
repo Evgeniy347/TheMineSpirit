@@ -7,6 +7,7 @@ public final class DigFacts {
     public static final String DIG_OUT_ITEM = "dig_open";
     public static final String BRIDGE_ITEM = "bridge_open";
     public static final String PILLAR_ITEM = "pillar_open";
+    public static final String TRAIL_CLEAN = "trail_clean";
     private static final String PIT = "pit";
     private static final String WATER = "water";
 

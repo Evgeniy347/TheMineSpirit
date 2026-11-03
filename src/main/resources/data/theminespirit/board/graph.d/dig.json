@@ -34,11 +34,7 @@
       "weight": 1.0,
       "tool": "pickaxe",
       "tier": "wooden",
-      "needs": {
-        "trail_clean": 1
-      },
-      "ticks": 300,
-      "implemented": false
+      "ticks": 300
     },
     {
       "id": "bridge",

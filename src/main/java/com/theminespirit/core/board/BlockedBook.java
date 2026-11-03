@@ -138,18 +138,6 @@ final class BlockedBook {
         }
     }
 
-    int releaseAll(long now) {
-        int released = 0;
-        for (BoardTicket ticket : List.copyOf(tickets.values())) {
-            if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {
-                continue;
-            }
-            release(ticket, now, List.of("failures=0", "idle=" + BoardTuning.idleReleaseTicks()));
-            released++;
-        }
-        return released;
-    }
-
     private void release(BoardTicket ticket, long now, List<String> change) {
         statuses.put(ticket.id(), BoardStatus.PENDING);
         claims.remove(ticket.id());

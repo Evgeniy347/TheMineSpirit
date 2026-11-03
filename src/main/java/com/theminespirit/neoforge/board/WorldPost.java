@@ -5,7 +5,7 @@ final class WorldPost {
 
     static boolean handles(String node) {
         return switch (node) {
-            case "demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace" -> true;
+            case "backfill", "level_lot", "restore_trace" -> true;
             default -> node.startsWith("repair:");
         };
     }
