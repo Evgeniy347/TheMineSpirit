@@ -2,6 +2,7 @@ package com.theminespirit.core.mining;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -47,5 +48,33 @@ class LeftOreRulesTests {
                 LeftOreRules.IRON_TIER,
                 LeftOreRules.requiredTool("minecraft:gold_ore"),
                 "золото добывается железной киркой и лучше — задание ждёт её");
+    }
+
+    @Test
+    void itemOf_LeftOres_MapToGraphItems() {
+        assertEquals(
+                "lapis_lazuli",
+                LeftOreRules.itemOf("minecraft:deepslate_lapis_ore"),
+                "Оставленный лазурит ищется в графе как lapis_lazuli: иначе узел mine_lapis его не видит");
+        assertEquals(
+                "diamond",
+                LeftOreRules.itemOf("minecraft:diamond_ore"),
+                "Оставленный алмаз — предмет diamond, а не блок руды");
+        assertEquals(
+                "gold_ingot",
+                LeftOreRules.itemOf("minecraft:nether_gold_ore"),
+                "Золотая руда даёт gold_ingot в графе: по нему закрывается нехватка");
+        assertEquals(
+                "redstone",
+                LeftOreRules.itemOf("minecraft:redstone_ore"),
+                "Редстоун ищется как redstone, а не как redstone_ore");
+    }
+
+    @Test
+    void itemOf_NotOre_IsRejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> LeftOreRules.itemOf("minecraft:dirt"),
+                "Не руда не может лежать в памяти оставленной руды: молчаливый ANY увёл бы духа к грязи");
     }
 }

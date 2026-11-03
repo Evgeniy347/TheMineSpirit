@@ -83,10 +83,6 @@ final class GraphFood {
                             item,
                             now + BoardTuning.boardIntervalTicks());
                 }
-                SettlementPlotStore.get(level)
-                        .site()
-                        .ifPresent(stage -> ChestSpaceWatch.request(
-                                level, service, stage, now, "голод " + spirit.displayName() + ": нет '" + item + "'"));
                 continue;
             }
             BlockCoord from = container.orElseThrow();

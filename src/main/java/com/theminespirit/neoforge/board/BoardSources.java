@@ -61,7 +61,7 @@ public final class BoardSources {
         roundNow = now;
         guard.startRound();
         Set<String> craters = guard.call("crater", () -> CraterWatch.liveCauses(level, service), Set.of());
-        Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level, service), Set.of());
+        Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level), Set.of());
         live.addAll(craters);
         live.addAll(fences);
         live.addAll(guard.call(
@@ -76,7 +76,6 @@ public final class BoardSources {
                 Set.of()));
         guard.run("idle", () -> idle.tick(service, spirits, now));
         guard.run("repair", () -> RepairWatch.tick(level, service, spirits, now));
-        guard.run("warehouse", () -> WarehouseWatch.tick(level, service, spirits, now));
         guard.run("demand", () -> demand.tick(level, service, spirits, now));
         guard.run(
                 "repair_audit",
@@ -91,7 +90,7 @@ public final class BoardSources {
         }
         live.addAll(guard.call("transfer", () -> TransferWatch.liveCauses(service), Set.of()));
         guard.run("transfer_drift", () -> transferDrift.tick(level, service, spirits));
-        live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level, service, spirits, now), Set.of()));
+        live.addAll(guard.call("left_ore", () -> LeftOreWatch.tick(level), Set.of()));
         live.addAll(guard.call("rescue", () -> rescue.tick(level, service, spirits, now), Set.of()));
         return live;
     }

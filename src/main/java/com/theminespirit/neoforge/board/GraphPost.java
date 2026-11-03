@@ -102,6 +102,15 @@ final class GraphPost {
             CraftOrders.refresh(level);
             return true;
         }
+        if (YardFloorWatch.handles(ticket.node())) {
+            return YardFloorWatch.post(level, service, scan.stage(), now);
+        }
+        if ("fill_crater".equals(ticket.node())) {
+            return new GraphHarvestPost(this).craters(ticket);
+        }
+        if (ticket.task().boardCase() == BoardCase.REPAIR_FENCE) {
+            return new GraphHarvestPost(this).fences(ticket);
+        }
         if (WorldPost.handles(ticket.node())) {
             return WorldPost.post();
         }
@@ -153,7 +162,10 @@ final class GraphPost {
             case GATHER_MATERIALS ->
                 FarmPost.pet(this, ticket) || PortalPost.way(this, ticket, task) || gather(ticket, task);
             case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
+            case HARVEST_ORCHARD -> new GraphHarvestPost(this).orchard(ticket, task);
+            case MINE_LEFT_ORE -> new GraphHarvestPost(this).leftOre(ticket, task);
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
+            case STOCK_CHESTS -> ChestSpaceWatch.post(level, service, scan.stage(), now);
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             default -> FarmPost.way(this, ticket, task);
@@ -161,6 +173,9 @@ final class GraphPost {
     }
 
     private boolean building(GraphTickets.Ticket ticket) {
+        if (WarehouseWatch.handles(ticket.node())) {
+            return WarehouseWatch.post(this, ticket);
+        }
         GraphPlan.Task task = ticket.task();
         BoardCase boardCase = graph.buildings().get(ticket.node()).boardCase();
         if (FirstStepsRunner.ticketIds(boardCase).stream().anyMatch(this::open)) {

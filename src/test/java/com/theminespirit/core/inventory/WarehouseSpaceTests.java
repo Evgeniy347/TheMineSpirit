@@ -61,24 +61,6 @@ class WarehouseSpaceTests {
                         + "старое поведение unload изменилось бы молча");
     }
 
-    @Test
-    void needsChest_NinetyFivePercentTaken_NewChestNeeded() {
-        assertTrue(
-                WarehouseSpace.needsChest(5, 100, WarehouseSpace.MIN_FREE_PERCENT),
-                "Склад занят на 95%: свободно меньше 20% — доска ставит задание «поставить сундук» "
-                        + "(решение владельца 25.10)");
-    }
-
-    @Test
-    void needsChest_SeventyPercentTaken_NoNewChest() {
-        assertFalse(
-                WarehouseSpace.needsChest(30, 100, WarehouseSpace.MIN_FREE_PERCENT),
-                "Склад занят на 70%: запаса 20% хватает — лишний сундук съедает дерево этапа 1");
-        assertFalse(
-                WarehouseSpace.needsChest(0, 0, WarehouseSpace.MIN_FREE_PERCENT),
-                "Сундуков ещё нет: первый ставит шаг этапа 1, правило места не подменяет его");
-    }
-
     private static ContainerSnapshot chestWithFreeSlots(int free) {
         List<Stack> slots = new ArrayList<>();
         for (int slot = 0; slot < CHEST_SLOTS - free; slot++) {

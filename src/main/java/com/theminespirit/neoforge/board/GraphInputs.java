@@ -11,6 +11,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
@@ -163,12 +164,10 @@ final class GraphInputs {
         town.ifPresent(plan -> plan.placements()
                 .forEach(place -> StageCatalog.graphId(place.id()).ifPresent(id -> {
                     SupplyGraph.Building building = graph.buildings().get(id);
-                    if (building == null
-                            || buildings.containsKey(id)
-                            || !StageCatalog.watcherOwned(building.boardCase())) {
+                    if (building == null || buildings.containsKey(id)) {
                         return;
                     }
-                    boolean built = ledger.has(building.boardCase(), 1);
+                    boolean built = ledger.has(building.boardCase(), WarehouseRules.levelOf(building.id()));
                     buildings.put(id, built ? Built.BUILT : Built.PLANNED);
                 })));
     }

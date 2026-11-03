@@ -37,7 +37,7 @@
     "repair_chests": {
       "tasks": [
         {
-          "id": "repair:chests",
+          "id": "repair:stock_chests",
           "case": "REPAIR_BUILDING",
           "base": 60,
           "consumes": {

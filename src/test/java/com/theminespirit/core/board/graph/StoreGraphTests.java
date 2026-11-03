@@ -1,8 +1,10 @@
 package com.theminespirit.core.board.graph;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.RepairPlan;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,23 @@ class StoreGraphTests {
         assertFalse(graph.implemented("store_carry_deliver"), "Перенос пока заглушка с TODO(store:transfer)");
         assertFalse(graph.implemented("store_smelt_load"), "Загрузка печи пока заглушка с TODO(store:smelt)");
         assertFalse(graph.implemented("store_sort"), "Сортировка пока заглушка с TODO(store:sort)");
+        assertTrue(
+                graph.implemented("store_space"),
+                "Новая пара сундуков исполняется существующим кейсом STOCK_CHESTS, а не сторожем: "
+                        + "у пути store_space больше нет TODO(store:space)");
+    }
+
+    @Test
+    void repairEvent_StockChests_UsesRepairPlanTicketId() {
+        SupplyGraph graph = SupplyGraph.loadDefault();
+        GraphEvent event = graph.events().get("repair_chests");
+
+        assertTrue(event != null, "Ремонт двора объявлен узлом repair_chests");
+        assertEquals(
+                RepairPlan.PREFIX + "stock_chests",
+                event.tasks().get(0).id(),
+                "Узел ремонта двора называет тот же билет, что StageRepair для STOCK_CHESTS: "
+                        + "иначе граф и исполнитель ставят две разные заявки на одни дыры");
     }
 
     @Test

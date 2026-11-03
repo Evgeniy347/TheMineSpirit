@@ -61,7 +61,6 @@ final class PlotAudit {
     private PlotAudit() {}
 
     static void tick(ServerLevel level, BoardService service, StageSite site, long now) {
-        YardFloorWatch.tick(level, service, site, now);
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)
                 || open(service, EXCLUSIVE)
                 || recent(service, now)
