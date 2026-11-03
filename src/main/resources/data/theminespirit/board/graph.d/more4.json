@@ -1,0 +1,161 @@
+{
+  "_note_more4": "Область graphmore4: чужие игроки у поселения, портал в Нижний мир, нужды игрока (еда, инструмент), нужный инструмент в руке, свободные места под постройки, прирученные волки и кошки, редкие предметы, осторожный режим поселения. Сборщик входа — More4Inputs; действия пока заглушены.",
+  "groups": {
+    "#rare": [
+      "diamond",
+      "emerald",
+      "netherite_ingot",
+      "netherite_scrap",
+      "ancient_debris",
+      "totem_of_undying",
+      "echo_shard",
+      "dragon_breath",
+      "nether_star",
+      "amethyst_shard",
+      "blaze_rod",
+      "ender_pearl",
+      "obsidian"
+    ]
+  },
+  "items": {
+    "more4:settlement_guarded": {"xmin": 0, "k": 1, "base": 22, "stage": 1},
+    "more4:player_helped": {"xmin": 0, "k": 1, "base": 20, "stage": 1},
+    "more4:tool_ready": {"xmin": 0, "k": 1, "base": 21, "stage": 1},
+    "more4:portal_guarded": {"xmin": 0, "k": 1, "base": 23, "stage": 1},
+    "more4:expansion_planned": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
+    "more4:pet_guarded": {"xmin": 0, "k": 1, "base": 18, "stage": 1},
+    "more4:rare_kept": {"xmin": 0, "k": 1, "base": 22, "stage": 1},
+    "more4:caution": {"xmin": 0, "k": 1, "base": 24, "stage": 1}
+  },
+  "ways": [
+    {"id": "more4_guard_settlement", "case": "ACTIVITY_GUARD", "makes": "more4:settlement_guarded",
+     "yield": 1, "weight": 1.1, "ticks": 160, "implemented": false, "todo": "more4_player_near"},
+    {"id": "more4_watch_chests", "case": "ACTIVITY_GUARD", "makes": "more4:settlement_guarded",
+     "yield": 1, "weight": 0.95, "ticks": 160, "implemented": false, "todo": "more4_player_near"},
+    {"id": "more4_bring_player_food", "case": "TRANSFER_ITEM", "makes": "more4:player_helped",
+     "yield": 1, "weight": 0.9, "consumes": {"food": 1}, "ticks": 140, "implemented": false,
+     "todo": "more4_player_hungry"},
+    {"id": "more4_lend_player_tool", "case": "TRANSFER_ITEM", "makes": "more4:player_helped",
+     "yield": 1, "weight": 0.85, "ticks": 140, "implemented": false, "todo": "more4_player_tool_broken"},
+    {"id": "more4_switch_tool", "case": "ACTIVITY_ARM", "makes": "more4:tool_ready",
+     "yield": 1, "weight": 1.05, "ticks": 60, "implemented": false, "todo": "more4_wrong_tool_hand"},
+    {"id": "more4_guard_portal", "case": "ACTIVITY_GUARD", "makes": "more4:portal_guarded",
+     "yield": 1, "weight": 1.0, "ticks": 200, "implemented": false, "todo": "more4_portal_found"},
+    {"id": "more4_fence_portal", "case": "BUILD_FENCE", "makes": "more4:portal_guarded",
+     "yield": 1, "weight": 1.2, "consumes": {"#building_blocks": 8}, "ticks": 300, "implemented": false,
+     "todo": "more4_portal_unsafe"},
+    {"id": "more4_plan_expansion", "case": "ACTIVITY_SENSE", "makes": "more4:expansion_planned",
+     "yield": 1, "weight": 0.75, "ticks": 160, "implemented": false, "todo": "more4_space_found"},
+    {"id": "more4_find_space", "case": "ACTIVITY_SENSE", "makes": "more4:expansion_planned",
+     "yield": 1, "weight": 0.8, "ticks": 200, "implemented": false, "todo": "more4_space_tight"},
+    {"id": "more4_guard_with_pet", "case": "ACTIVITY_GUARD", "makes": "more4:pet_guarded",
+     "yield": 1, "weight": 0.7, "ticks": 200, "implemented": false, "todo": "more4_tamed_pet"},
+    {"id": "more4_leave_pet_alone", "case": "ACTIVITY_SENSE", "makes": "more4:pet_guarded",
+     "yield": 1, "weight": 0.45, "ticks": 60, "implemented": false, "todo": "more4_tamed_pet"},
+    {"id": "more4_store_rare", "case": "STOCK_CHESTS", "makes": "more4:rare_kept",
+     "yield": 1, "weight": 0.95, "ticks": 160, "implemented": false, "todo": "more4_rare_found"},
+    {"id": "more4_spare_rare", "case": "ACTIVITY_SENSE", "makes": "more4:rare_kept",
+     "yield": 1, "weight": 0.6, "ticks": 80, "implemented": false, "todo": "more4_rare_found"},
+    {"id": "more4_sort_rare", "case": "STOCK_CHESTS", "makes": "more4:rare_kept",
+     "yield": 1, "weight": 1.0, "ticks": 160, "implemented": false, "todo": "more4_rare_mixed"},
+    {"id": "more4_feed_hungry", "case": "RESTOCK_FOOD", "makes": "more4:caution",
+     "yield": 1, "weight": 1.0, "consumes": {"food": 1}, "ticks": 140, "implemented": false,
+     "todo": "more4_caution"},
+    {"id": "more4_rest_injured", "case": "ACTIVITY_REST", "makes": "more4:caution",
+     "yield": 1, "weight": 0.9, "ticks": 200, "implemented": false, "todo": "more4_caution"}
+  ],
+  "events": {
+    "more4_player_near": {
+      "tasks": [
+        {"id": "more4_guard_settlement", "case": "ACTIVITY_GUARD", "base": 84, "consumes": {}, "implemented": false},
+        {"id": "more4_watch_chests", "case": "ACTIVITY_GUARD", "base": 78, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:settlement_guarded": 8, "#building_blocks": 2},
+      "advice": ["guard_buildings_and_chests_while_outsider_near"]
+    },
+    "more4_player_hungry": {
+      "tasks": [
+        {"id": "more4_bring_player_food", "case": "TRANSFER_ITEM", "base": 58, "consumes": {"food": 1},
+         "implemented": false}
+      ],
+      "push": {"food": 4, "more4:player_helped": 6},
+      "advice": ["bring_food_to_hungry_player"]
+    },
+    "more4_player_tool_broken": {
+      "tasks": [
+        {"id": "more4_lend_player_tool", "case": "TRANSFER_ITEM", "base": 52, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:player_helped": 5},
+      "advice": ["offer_player_a_spare_tool"]
+    },
+    "more4_wrong_tool_hand": {
+      "tasks": [
+        {"id": "more4_switch_tool", "case": "ACTIVITY_ARM", "base": 68, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:tool_ready": 6},
+      "advice": ["equip_required_tool_before_starting_work"]
+    },
+    "more4_portal_found": {
+      "tasks": [
+        {"id": "more4_guard_portal", "case": "ACTIVITY_GUARD", "base": 64, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:portal_guarded": 5},
+      "advice": ["keep_nether_portal_watched"]
+    },
+    "more4_portal_unsafe": {
+      "tasks": [
+        {"id": "more4_fence_portal", "case": "BUILD_FENCE", "base": 88, "consumes": {"#building_blocks": 8},
+         "implemented": false},
+        {"id": "more4_guard_portal", "case": "ACTIVITY_GUARD", "base": 72, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:portal_guarded": 6, "#building_blocks": 4},
+      "advice": ["fence_unsafe_nether_portal"]
+    },
+    "more4_space_found": {
+      "tasks": [
+        {"id": "more4_plan_expansion", "case": "ACTIVITY_SENSE", "base": 40, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:expansion_planned": 5},
+      "advice": ["mark_free_ground_for_future_buildings"]
+    },
+    "more4_space_tight": {
+      "tasks": [
+        {"id": "more4_find_space", "case": "ACTIVITY_SENSE", "base": 46, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:expansion_planned": 4},
+      "advice": ["search_wider_area_for_expansion"]
+    },
+    "more4_tamed_pet": {
+      "tasks": [
+        {"id": "more4_guard_with_pet", "case": "ACTIVITY_GUARD", "base": 54, "consumes": {}, "implemented": false},
+        {"id": "more4_leave_pet_alone", "case": "ACTIVITY_SENSE", "base": 24, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:pet_guarded": 5},
+      "advice": ["take_tamed_pet_on_guard_duty_and_do_not_disturb"]
+    },
+    "more4_rare_found": {
+      "tasks": [
+        {"id": "more4_store_rare", "case": "STOCK_CHESTS", "base": 48, "consumes": {}, "implemented": false},
+        {"id": "more4_spare_rare", "case": "ACTIVITY_SENSE", "base": 30, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:rare_kept": 5},
+      "advice": ["keep_rare_items_safe_and_do_not_waste_them"]
+    },
+    "more4_rare_mixed": {
+      "tasks": [
+        {"id": "more4_sort_rare", "case": "STOCK_CHESTS", "base": 56, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:rare_kept": 4},
+      "advice": ["store_rare_items_in_their_own_chest"]
+    },
+    "more4_caution": {
+      "tasks": [
+        {"id": "more4_feed_hungry", "case": "RESTOCK_FOOD", "base": 60, "consumes": {"food": 1},
+         "implemented": false},
+        {"id": "more4_rest_injured", "case": "ACTIVITY_REST", "base": 56, "consumes": {}, "implemented": false}
+      ],
+      "push": {"more4:caution": 6, "food": 3},
+      "advice": ["settlement_caution_when_spirits_are_hurt_or_hungry"]
+    }
+  }
+}
