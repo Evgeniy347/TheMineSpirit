@@ -189,7 +189,8 @@ final class GraphFactInputs {
             boolean built = state == Built.BUILT;
             facts.put(
                     id,
-                    new GraphFacts.Building(id, built ? 1 : 0, built ? 100 : 0, 0, position(id, town, scan), false));
+                    new GraphFacts.Building(
+                            id, built ? 1 : 0, built ? 100 : 0, 0, 0, 0, position(id, town, scan), false));
         });
         return facts;
     }

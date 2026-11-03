@@ -184,18 +184,20 @@ public record GraphFacts(
             int level,
             int auditPercent,
             int damage,
+            int missing,
+            int extra,
             @Nullable Position position,
             boolean unknown) {
         public Building {
             Objects.requireNonNull(id, "id постройки не может быть null: по нему сверяют план");
-            if (level < 0 || damage < 0) {
-                throw new IllegalArgumentException("Уровень " + level + " и повреждения " + damage
-                        + " не бывают отрицательными: отсутствие — ноль");
+            if (level < 0 || damage < 0 || missing < 0 || extra < 0 || auditPercent < 0 || auditPercent > 100) {
+                throw new IllegalArgumentException("Уровень, процент, повреждения, недостача и лишнее вне границ: "
+                        + "отсутствие — ноль, процент 0..100, неизвестное отмечают флагом unknown");
             }
-            if (auditPercent < 0 || auditPercent > 100) {
-                throw new IllegalArgumentException(
-                        "Процент аудита " + auditPercent + " вне [0, 100]: неизвестное отмечают флагом unknown");
-            }
+        }
+
+        public Building(String id, int level, int auditPercent, int damage, @Nullable Position at, boolean unknown) {
+            this(id, level, auditPercent, damage, damage, 0, at, unknown);
         }
     }
 
@@ -284,7 +286,6 @@ public record GraphFacts(
     }
 
     public GraphFacts withWorld(GraphWorldFacts world) {
-        Objects.requireNonNull(world, "Факты участка не могут быть null: пустые задают пустым World");
         return new GraphFacts(
                 spirits,
                 threats,

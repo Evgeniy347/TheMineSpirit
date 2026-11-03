@@ -61,7 +61,12 @@ final class GraphInputs {
                 GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
                         .withThreats(life.threats())
                         .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
-                        .withWorld(WorldAreaInputs.of(level, service, scan, buildings, town)));
+                        .withWorld(WorldAreaInputs.of(
+                                level,
+                                service,
+                                scan,
+                                town,
+                                BuildingAuditInputs.buildings(level, service, scan, buildings, town))));
         GraphState state = new GraphState(
                         GraphNames.stock(
                                 stock.available(),

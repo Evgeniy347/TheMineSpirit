@@ -65,7 +65,7 @@ class GraphStateFactsTests {
     void building_AuditPercentAboveHundred_Rejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GraphFacts.Building("hut", 1, 101, 0, null, false),
+                () -> new GraphFacts.Building("hut", 1, 101, 0, 0, 0, null, false),
                 "Процент аудита выше 100 невозможен");
     }
 
