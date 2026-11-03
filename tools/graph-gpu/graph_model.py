@@ -750,6 +750,8 @@ def buildings_first(graph, tasks, ready):
     if not order or max_other >= graph.max_priority:
         return tasks
     start = max(max_other + 1, order[0])
+    room = max(order[0], graph.max_priority - (len(order) - 1))
+    start = min(start, room)
     step = max(1, (graph.max_priority - start) // (len(order) - 1)) if len(order) > 1 else 1
     band = {value: min(graph.max_priority, start + index * step)
             for index, value in enumerate(order)}

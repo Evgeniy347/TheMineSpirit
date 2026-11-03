@@ -44,6 +44,8 @@ final class GraphBuildOrder {
             return tasks;
         }
         int start = Math.max(maxOther + 1, order.get(0));
+        int room = Math.max(order.get(0), graph.maxPriority() - (order.size() - 1));
+        start = Math.min(start, room);
         int step = order.size() > 1 ? Math.max(1, (graph.maxPriority() - start) / (order.size() - 1)) : 1;
         Map<Integer, Integer> band = new LinkedHashMap<>();
         for (int index = 0; index < order.size(); index++) {
@@ -56,6 +58,7 @@ final class GraphBuildOrder {
                 .max()
                 .orElse(0);
         int shift = Math.max(0, start - 1 - maxSupply);
+        int bandStart = start;
         return tasks.stream()
                 .map(task -> {
                     boolean building = task.id().startsWith(BUILDING);
@@ -63,9 +66,9 @@ final class GraphBuildOrder {
                     if (building) {
                         priority = task.priority() > 0 ? band.getOrDefault(task.priority(), task.priority()) : 0;
                     } else if (supply.contains(task.makes()) && !task.consumes().isEmpty()) {
-                        priority = start;
+                        priority = bandStart;
                     } else if (supply.contains(task.makes())) {
-                        priority = Math.min(Math.max(0, start - 1), task.priority() + shift);
+                        priority = Math.min(Math.max(0, bandStart - 1), task.priority() + shift);
                     } else {
                         priority = task.priority();
                     }

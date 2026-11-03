@@ -71,10 +71,10 @@ PYTHONIOENCODING=utf-8 py -3.9 search.py --mode es --generations 10 --population
 (`weights`) и готовые абсолютные значения (`absolute`). Файл `graph.json` скрипт не меняет.
 Длинный поиск запускает главный агент; `--limit` задаёт предел решений на мир (по умолчанию 4000).
 
-Текущий прогон (`--generations 9 --population 8 --seeds 2 --limit 1600`): доля 0.3776, сумма
-шагов 5646 → 4850 до правок ради зелёных правил. В `board/graph.json` и `graph.d` перенесены
+Текущий прогон (`--generations 9 --population 8 --seeds 2 --limit 1600 --fixed ...`): доля 0.4682,
+сумма шагов 5498 → 4806 до правок ради зелёных правил. В `board/graph.json` и `graph.d` перенесены
 абсолютные значения; `decay` внесён 0.55, иначе правила `GraphPlannerTests` упираются в
-`maxPriority`. Подробности и список мёртвых узлов — `REPORT.md`, раздел 03.11.
+`maxPriority`. Подробности, тупик этапа 2 и список мёртвых узлов — `REPORT.md`, разделы 03.11 и 03.11-2.
 
 ## Файлы
 
