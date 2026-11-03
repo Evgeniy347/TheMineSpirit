@@ -13,6 +13,7 @@ public final class More4Rules {
     public static final int HUNGRY_FOOD = 6;
     public static final float INJURED_HEALTH = 10.0F;
     public static final int SPACE_MIN = 8;
+    public static final int SPACE_LEVEL = 1;
     public static final String RARE = "#rare";
 
     public static final String PLAYER_NEAR = "more4_player_near";
@@ -170,6 +171,24 @@ public final class More4Rules {
         add(events, signals.rare().mixed() > 0, RARE_MIXED);
         add(events, signals.settlement().cautious(), CAUTION);
         return Set.copyOf(events);
+    }
+
+    public static boolean flat(int height, int[] neighbours, boolean[] loaded, int maxDrop) {
+        Objects.requireNonNull(neighbours, "Высоты соседей не могут быть null: без них ровность не проверить");
+        Objects.requireNonNull(loaded, "Признаки загрузки не могут быть null: неизвестный чанк не считают ровным");
+        if (neighbours.length != loaded.length) {
+            throw new IllegalArgumentException("Высот " + neighbours.length + " и признаков загрузки " + loaded.length
+                    + ": каждому соседу нужна своя высота");
+        }
+        if (maxDrop < 0) {
+            throw new IllegalArgumentException("Перепад " + maxDrop + " не бывает отрицательным: ровно — ноль");
+        }
+        for (int index = 0; index < neighbours.length; index++) {
+            if (!loaded[index] || Math.abs(neighbours[index] - height) > maxDrop) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static int wrongHands(Collection<Hand> hands) {

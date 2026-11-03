@@ -35,7 +35,6 @@ final class More4World {
     private static final int SPACE_RADIUS = 48;
     private static final int SPACE_STEP = 4;
     private static final int SPACE_EDGE = 2;
-    private static final int SPACE_LEVEL = 1;
 
     private More4World() {}
 
@@ -203,15 +202,21 @@ final class More4World {
         if (ground.isAir() || !ground.getFluidState().isEmpty()) {
             return false;
         }
+        int size = (2 * SPACE_EDGE + 1) * (2 * SPACE_EDGE + 1);
+        int[] neighbours = new int[size];
+        boolean[] loaded = new boolean[size];
+        int index = 0;
         for (int dx = -SPACE_EDGE; dx <= SPACE_EDGE; dx++) {
             for (int dz = -SPACE_EDGE; dz <= SPACE_EDGE; dz++) {
-                int neighbour = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz);
-                if (Math.abs(neighbour - height) > SPACE_LEVEL) {
-                    return false;
-                }
+                BlockPos probe = new BlockPos(x + dx, height, z + dz);
+                loaded[index] = level.isLoaded(probe);
+                neighbours[index] = loaded[index]
+                        ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz)
+                        : height;
+                index++;
             }
         }
-        return true;
+        return More4Rules.flat(height, neighbours, loaded, More4Rules.SPACE_LEVEL);
     }
 
     private static More4Rules.Pets pets(ServerLevel level, BlockCoord home) {

@@ -171,6 +171,35 @@ class More4RulesTests {
     }
 
     @Test
+    void flat_LevelAndLoaded_IsFlat() {
+        assertTrue(
+                More4Rules.flat(64, new int[] {64, 65, 63, 64}, new boolean[] {true, true, true, true}, 1),
+                "Соседи в пределах одного блока и загружены — площадка ровная");
+    }
+
+    @Test
+    void flat_UnloadedNeighbour_IsNotFlat() {
+        assertFalse(
+                More4Rules.flat(64, new int[] {64, 64}, new boolean[] {true, false}, 1),
+                "Незагруженный чанк — неизвестность, а не ровное место: нельзя обещать стройку");
+    }
+
+    @Test
+    void flat_UnevenNeighbour_IsNotFlat() {
+        assertFalse(
+                More4Rules.flat(64, new int[] {64, 66}, new boolean[] {true, true}, 1),
+                "Перепад больше допустимого — площадка не ровная");
+    }
+
+    @Test
+    void flat_LengthMismatch_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> More4Rules.flat(64, new int[] {64}, new boolean[] {true, true}, 1),
+                "Каждому соседу нужна своя высота: иначе ровность считается по чужим данным");
+    }
+
+    @Test
     void signals_NegativeWrongHands_Rejected() {
         assertThrows(
                 IllegalArgumentException.class,
