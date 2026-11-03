@@ -196,9 +196,13 @@ def test_world_inputs():
         "stage": 1,
         "kits": {"spirit-1": {}},
         "facts": {
-            "strays": [{"id": "s", "type": "wall", "position": {"x": 1, "y": 64, "z": 1}}],
-            "terrain": {"pits": 1, "hanging": 1, "heightDrop": 2, "deepestPit": 3, "traces": 1},
-            "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": False}},
+            "strays": [{"id": "s", "type": "wall", "position": {"x": 1, "y": 64, "z": 1},
+                        "builder": "spirit-1", "blocks": {"wall": 1}}],
+            "terrain": {"pits": 1, "hanging": 1, "heightDrop": 2, "deepestPit": 3, "traces": 1,
+                        "cut": {"minecraft:dirt": 2}, "fill": {"minecraft:dirt": 3},
+                        "floating": {"minecraft:oak_log": 4}},
+            "buildings": {"hut": {"id": "hut", "damage": 5, "missing": {"minecraft:dirt": 3},
+                                  "extra": {}, "wrong": 0, "auditPercent": 75, "unknown": False}},
         },
     })
     for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace", "repair_hut"):

@@ -24,7 +24,7 @@ final class StageBootstrap {
         }
         READY.add(level);
         StageWorldGate.apply(
-                level, service, site.orElseThrow(), plot.orElseThrow().wood());
+                level, service, site.orElseThrow(), plot.orElseThrow().wood(), null);
     }
 
     static void forget(ServerLevel level) {

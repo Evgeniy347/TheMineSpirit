@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
@@ -27,6 +29,8 @@ final class WorldAreaInputs {
     private static RepairAudit.@Nullable Report cachedHouse;
     private static @Nullable StageSite cachedHouseSite;
     private static long cachedHouseAt = Long.MIN_VALUE;
+
+    record Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating) {}
 
     record Placed(BlockCoord at, String type, @Nullable String builder) {
         Placed {
@@ -53,8 +57,18 @@ final class WorldAreaInputs {
         PlotAudit.Audit audit = PlotAudit.audit(level, site, now);
         List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
                 .orElse(List.of());
-        GraphFacts.Terrain terrain =
-                terrain(audit.holes(), audit.depths(), audit.extras(), floating.size(), strays.size());
+        GraphFacts.Terrain terrain = terrain(
+                audit.holes(),
+                audit.depths(),
+                audit.extras(),
+                floating.size(),
+                strays.size(),
+                new Marks(
+                        blockCounts(level, audit.extras()),
+                        audit.holes().isEmpty()
+                                ? Map.of()
+                                : Map.of("minecraft:dirt", audit.holes().size()),
+                        floatingCounts(floating)));
         return new GraphWorldFacts(strays, terrain, buildings);
     }
 
@@ -73,7 +87,8 @@ final class WorldAreaInputs {
                             trace.type(),
                             new GraphFacts.Position(
                                     trace.at().x(), trace.at().y(), trace.at().z()),
-                            trace.builder()));
+                            trace.builder(),
+                            Map.of(trace.type(), 1)));
         }
         return found.values().stream()
                 .sorted(Comparator.comparingInt(
@@ -85,6 +100,16 @@ final class WorldAreaInputs {
 
     static GraphFacts.Terrain terrain(
             List<BlockCoord> holes, Map<BlockCoord, Integer> depths, List<BlockCoord> extras, int hanging, int traces) {
+        return terrain(holes, depths, extras, hanging, traces, new Marks(Map.of(), Map.of(), Map.of()));
+    }
+
+    static GraphFacts.Terrain terrain(
+            List<BlockCoord> holes,
+            Map<BlockCoord, Integer> depths,
+            List<BlockCoord> extras,
+            int hanging,
+            int traces,
+            Marks marks) {
         if (hanging < 0 || traces < 0) {
             throw new IllegalArgumentException(
                     "Висящее " + hanging + " и следы " + traces + " не бывают отрицательными: отсутствие — ноль");
@@ -96,7 +121,28 @@ final class WorldAreaInputs {
             int bottom = holes.stream().mapToInt(BlockCoord::y).min().orElse(0);
             heightDrop = Math.max(0, top - bottom);
         }
-        return new GraphFacts.Terrain(depths.size(), hanging, heightDrop, deepest, traces);
+        return new GraphFacts.Terrain(
+                depths.size(), hanging, heightDrop, deepest, traces, marks.cut(), marks.fill(), marks.floating());
+    }
+
+    private static Map<String, Integer> blockCounts(ServerLevel level, List<BlockCoord> cells) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (BlockCoord at : cells) {
+            String block = BuiltInRegistries.BLOCK
+                    .getKey(level.getBlockState(new BlockPos(at.x(), at.y(), at.z()))
+                            .getBlock())
+                    .toString();
+            counts.merge(block, 1, Integer::sum);
+        }
+        return Map.copyOf(counts);
+    }
+
+    private static Map<String, Integer> floatingCounts(List<FloatingBlocks.Finding> findings) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (FloatingBlocks.Finding finding : findings) {
+            counts.merge(finding.blockId(), finding.cells().size(), Integer::sum);
+        }
+        return Map.copyOf(counts);
     }
 
     static Map<String, GraphFacts.Building> buildings(
@@ -110,7 +156,15 @@ final class WorldAreaInputs {
             facts.put(
                     id,
                     new GraphFacts.Building(
-                            id, building.level(), percent, damage, damage, 0, building.position(), unknown));
+                            id,
+                            building.level(),
+                            percent,
+                            damage,
+                            Map.of(),
+                            Map.of(),
+                            0,
+                            building.position(),
+                            unknown));
         });
         return facts;
     }

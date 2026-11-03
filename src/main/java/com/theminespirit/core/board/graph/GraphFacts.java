@@ -184,20 +184,33 @@ public record GraphFacts(
             int level,
             int auditPercent,
             int damage,
-            int missing,
-            int extra,
+            Map<String, Integer> missing,
+            Map<String, Integer> extra,
+            int wrong,
             @Nullable Position position,
             boolean unknown) {
         public Building {
             Objects.requireNonNull(id, "id постройки не может быть null: по нему сверяют план");
-            if (level < 0 || damage < 0 || missing < 0 || extra < 0 || auditPercent < 0 || auditPercent > 100) {
-                throw new IllegalArgumentException("Уровень, процент, повреждения, недостача и лишнее вне границ: "
+            missing = Map.copyOf(
+                    Objects.requireNonNull(missing, "Недостача постройки не может быть null: пустая — пустая карта"));
+            extra = Map.copyOf(
+                    Objects.requireNonNull(extra, "Лишнее постройки не может быть null: пустое — пустая карта"));
+            if (level < 0 || damage < 0 || wrong < 0 || auditPercent < 0 || auditPercent > 100) {
+                throw new IllegalArgumentException("Уровень, процент, повреждения и чужие блоки вне границ: "
                         + "отсутствие — ноль, процент 0..100, неизвестное отмечают флагом unknown");
             }
         }
 
         public Building(String id, int level, int auditPercent, int damage, @Nullable Position at, boolean unknown) {
-            this(id, level, auditPercent, damage, damage, 0, at, unknown);
+            this(id, level, auditPercent, damage, Map.of(), Map.of(), 0, at, unknown);
+        }
+
+        public int missingCount() {
+            return missing.values().stream().mapToInt(Integer::intValue).sum();
+        }
+
+        public int extraCount() {
+            return extra.values().stream().mapToInt(Integer::intValue).sum();
         }
     }
 
@@ -205,24 +218,41 @@ public record GraphFacts(
             String id,
             String type,
             Position position,
-            @Nullable String builder) {
+            @Nullable String builder,
+            Map<String, Integer> blocks) {
         public Stray {
             Objects.requireNonNull(id, "id лишней постройки не может быть null: по нему её сносят");
             Objects.requireNonNull(type, "тип лишней постройки не может быть null: без типа не выбрать снос");
             Objects.requireNonNull(position, "позиция лишней постройки не может быть null: без неё не дойти");
+            blocks = Map.copyOf(Objects.requireNonNull(blocks, "Состав лишней постройки не может быть null"));
+        }
+
+        public Stray(String id, String type, Position position, @Nullable String builder) {
+            this(id, type, position, builder, Map.of(type, 1));
         }
     }
 
-    public record Terrain(int pits, int hanging, int heightDrop, int deepestPit, int traces) {
+    public record Terrain(
+            int pits,
+            int hanging,
+            int heightDrop,
+            int deepestPit,
+            int traces,
+            Map<String, Integer> cut,
+            Map<String, Integer> fill,
+            Map<String, Integer> floating) {
         public Terrain {
-            if (pits < 0 || hanging < 0 || heightDrop < 0) {
-                throw new IllegalArgumentException("Ямы " + pits + ", висящее " + hanging + ", перепад " + heightDrop
-                        + " не бывают отрицательными: отсутствие — ноль");
+            if (pits < 0 || hanging < 0 || heightDrop < 0 || deepestPit < 0 || traces < 0) {
+                throw new IllegalArgumentException(
+                        "Ямы, висящее, перепад, глубина и следы не бывают отрицательными: " + "отсутствие — ноль");
             }
-            if (deepestPit < 0 || traces < 0) {
-                throw new IllegalArgumentException("Глубина ямы " + deepestPit + " и следы " + traces
-                        + " не бывают отрицательными: отсутствие — ноль");
-            }
+            cut = Map.copyOf(Objects.requireNonNull(cut, "Срезка лота не может быть null"));
+            fill = Map.copyOf(Objects.requireNonNull(fill, "Подсыпка лота не может быть null"));
+            floating = Map.copyOf(Objects.requireNonNull(floating, "Состав висящего не может быть null"));
+        }
+
+        public Terrain(int pits, int hanging, int heightDrop, int deepestPit, int traces) {
+            this(pits, hanging, heightDrop, deepestPit, traces, Map.of(), Map.of(), Map.of());
         }
 
         public static Terrain empty() {

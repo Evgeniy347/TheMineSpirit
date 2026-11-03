@@ -6,8 +6,10 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.town.TownPlan;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -24,7 +26,18 @@ final class StageSchedule {
             int spirits,
             long now) {
         Objects.requireNonNull(level, "Уровень не может быть null: шаги этапа открываются в мире");
-        StageWorldGate.apply(level, service, scan.stage(), scan.wood());
+        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        StageWorldGate.apply(
+                level,
+                service,
+                scan.stage(),
+                scan.wood(),
+                WorldAreaInputs.of(
+                        level,
+                        service,
+                        scan,
+                        town,
+                        BuildingAuditInputs.buildings(level, service, scan, Map.of(), town)));
         for (BoardCase step :
                 StageReopen.missing(service.board(), StageReopen.STEPS, BoardTuning.stageCaseLimit(spirits))) {
             Map<String, Integer> missing = FirstStepsRunner.open(

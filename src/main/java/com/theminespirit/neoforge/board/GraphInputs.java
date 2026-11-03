@@ -11,6 +11,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphNames;
@@ -74,7 +75,7 @@ final class GraphInputs {
                         stage,
                         kits(spirits, graph),
                         buildings,
-                        materials(level, service, stock, scan, graph, buildings, stage),
+                        materials(level, service, stock, scan, graph, buildings, facts),
                         ChestSpaceWatch.space(level).freePercent(),
                         life.events(),
                         around.world(),
@@ -246,8 +247,9 @@ final class GraphInputs {
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph,
             Map<String, Built> buildings,
-            int stage) {
+            GraphFacts facts) {
         MaterialSource source = FirstStepsRunner.materialSource(level);
+        int stage = service.board().ledger().stage();
         Map<String, Map<String, Integer>> materials = new HashMap<>();
         for (String id : StageBuilt.ids()) {
             SupplyGraph.Building building = graph.buildings().get(id);
@@ -261,6 +263,7 @@ final class GraphInputs {
             Map<String, Integer> need = FirstStepsRunner.materialsOf(level, stock, scan, building.boardCase());
             materials.put(id, known(graph, source, need));
         }
+        GraphBuildingMaterials.of(facts, graph).forEach(materials::putIfAbsent);
         return materials;
     }
 

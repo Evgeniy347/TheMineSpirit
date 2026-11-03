@@ -40,6 +40,7 @@
 | [test-performance.md](test-performance.md) | Производительность JUnit и GameTest: замеры и рекомендации | инструменты сборки |
 | [pathfinding-range.md](pathfinding-range.md) | Дальность поиска пути: замеры 32–2048, лимиты узлов и чанков, граф троп | свой стенд на снимке мира |
 | [graph-inputs.md](graph-inputs.md) | Что граф получает сейчас, чего не хватает, обходы графа, переход на «дух → работа» | свой код `core/board/graph`, `neoforge/board` |
+| [graph-inputs-damage.md](graph-inputs-damage.md) | Количества недостающего/лишнего построек, лотов и лишних построек на входе графа | свой код `core/board/graph`, `neoforge/board` |
 | [graph-inputs-tables.md](graph-inputs-tables.md) | Полные таблицы к разбору входа и выхода графа | свой код |
 | [graph-ideas.md](graph-ideas.md) | Идеи расширения графа: входы, узлы, потребности поселения, приоритеты | свой код, данные, механики Minecraft |
 | [graph-ideas-tables.md](graph-ideas-tables.md) | Полные таблицы идей к расширению графа | свой код, данные |

@@ -123,6 +123,23 @@ def _short_id(item):
     return item[len(NAMESPACE):] if item.startswith(NAMESPACE) else item
 
 
+_WALL_ITEMS = {
+    "wall_torch": "torch",
+    "soul_wall_torch": "soul_torch",
+    "redstone_wall_torch": "redstone_torch",
+    "wall_sign": "sign",
+    "wall_hanging_sign": "hanging_sign",
+    "wall_banner": "banner",
+}
+
+
+def _block_item(block):
+    name = _short_id(block)
+    if name == "air":
+        return None
+    return _WALL_ITEMS.get(name, name)
+
+
 def _worn(durability, maximum, percent):
     return maximum > 0 and int(durability) * 100 // int(maximum) <= percent
 
@@ -673,13 +690,13 @@ class State:
     def _derive_world_events(self):
         """GraphWorldEvents: входы участка добавляют узлы уборки и ремонта."""
         derived = []
-        if self.strays:
+        if any(stray.get("builder") is not None for stray in self.strays):
             derived.append("demolish_stray")
-        if int(self.terrain.get("pits", 0)) > 0:
+        if int(self.terrain.get("pits", 0)) > 0 or self.terrain.get("fill"):
             derived.append("backfill")
-        if int(self.terrain.get("hanging", 0)) > 0:
+        if int(self.terrain.get("hanging", 0)) > 0 or self.terrain.get("floating"):
             derived.append("clear_floating")
-        if int(self.terrain.get("heightDrop", 0)) > 0:
+        if int(self.terrain.get("heightDrop", 0)) > 0 or self.terrain.get("cut"):
             derived.append("level_lot")
         if int(self.terrain.get("traces", 0)) > 0:
             derived.append("restore_trace")
@@ -870,7 +887,20 @@ class Planner:
 
     def materials(self, building):
         known = self.graph.buildings.get(building)
-        return self.state.materials.get(building, known.materials if known is not None else {})
+        material = self.state.materials.get(building)
+        if material is not None:
+            return material
+        fact = self.state.building_facts.get(building) or {}
+        missing = fact.get("missing") or {}
+        if missing and not fact.get("unknown", False):
+            items = {}
+            for block, count in missing.items():
+                item = _block_item(block)
+                if item is not None and item in self.graph.items:
+                    items[item] = items.get(item, 0) + int(count)
+            if items:
+                return items
+        return known.materials if known is not None else {}
 
     def ready(self, building):
         known = self.graph.buildings.get(building)
@@ -1131,6 +1161,27 @@ class Planner:
         if way.building is not None and state.built(way.building) != BUILT:
             self.require_building(key, way.building, decay, "нужна пути " + way.id)
 
+    def event_consumes(self, task):
+        building = task.get("building")
+        if building is not None:
+            material = self.state.materials.get(building)
+            if material is not None:
+                return dict(material)
+        return dict(task.get("consumes") or {})
+
+    def event_weight(self, task):
+        base = int(task.get("base", 0))
+        building = task.get("building")
+        if building is None or building not in self.state.building_facts:
+            return base
+        fact = self.state.building_facts.get(building) or {}
+        if fact.get("unknown", False):
+            return base
+        share = (100 - int(fact.get("auditPercent", 0))) / 100.0
+        required = self.state.stage_reqs.get("minimum") or {}
+        importance = 1.5 if building in required else 1.0
+        return base + round(base * share * importance)
+
     def boost(self, node, weight, event_name):
         if node.startswith(TOOL):
             kind = node[len(TOOL):]
@@ -1152,8 +1203,8 @@ class Planner:
                 continue
             for task in event["tasks"]:
                 key = EVENT + name + ":" + task.get("id", "")
-                self.flow.root(key, task.get("base", 0))
-                for item, value in (task.get("consumes") or {}).items():
+                self.flow.root(key, self.event_weight(task))
+                for item, value in self.event_consumes(task).items():
                     if self.count(item) < value:
                         self.push(key, item, self.graph.decay)
             for node, weight in event["push"].items():
@@ -1282,7 +1333,7 @@ class Planner:
             task = next((t for t in event["tasks"] if t.get("id") == parts[2]), None)
             if task is None:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
-            consumes = dict(task.get("consumes") or {})
+            consumes = self.event_consumes(task)
             building = task.get("building")
             feasible = self.stocked(consumes) and (building is None or state.built(building) == BUILT)
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,

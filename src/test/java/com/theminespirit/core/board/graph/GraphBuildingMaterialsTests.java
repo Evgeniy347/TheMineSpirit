@@ -1,0 +1,58 @@
+package com.theminespirit.core.board.graph;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+class GraphBuildingMaterialsTests {
+    private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
+
+    @Test
+    void materials_MissingBlocks_BecomeItems() {
+        GraphFacts facts =
+                facts(new GraphFacts.Building("hut", 1, 75, 3, Map.of("minecraft:dirt", 3), Map.of(), 0, null, false));
+
+        Map<String, Map<String, Integer>> materials = GraphBuildingMaterials.of(facts, GRAPH);
+
+        assertEquals(
+                Map.of("dirt", 3),
+                materials.get("hut"),
+                "недостающие блоки через blockItems превращаются в предметы для ремонта");
+    }
+
+    @Test
+    void materials_UnknownChunks_GiveNothing() {
+        GraphFacts facts =
+                facts(new GraphFacts.Building("hut", 1, 0, 0, Map.of("minecraft:dirt", 3), Map.of(), 0, null, true));
+
+        assertTrue(
+                GraphBuildingMaterials.of(facts, GRAPH).isEmpty(),
+                "пока чанки не загружены, материалы не выдумываются: ремонт не должен начинаться вслепую");
+    }
+
+    @Test
+    void materials_CleanBuilding_GivesNothing() {
+        GraphFacts facts = facts(
+                new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of("minecraft:stone", 1), 0, null, false));
+
+        assertTrue(
+                GraphBuildingMaterials.of(facts, GRAPH).isEmpty(),
+                "лишнее убирают отдельным путём ремонта, а не закупкой материалов: недостачи нет");
+    }
+
+    private static GraphFacts facts(GraphFacts.Building building) {
+        return new GraphFacts(
+                Map.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                Map.of(),
+                Map.of(building.id(), building),
+                List.of(),
+                GraphFacts.Terrain.empty(),
+                new GraphFacts.StageReqs(Map.of(), Map.of()));
+    }
+}

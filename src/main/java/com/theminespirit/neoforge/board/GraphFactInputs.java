@@ -190,7 +190,15 @@ final class GraphFactInputs {
             facts.put(
                     id,
                     new GraphFacts.Building(
-                            id, built ? 1 : 0, built ? 100 : 0, 0, 0, 0, position(id, town, scan), false));
+                            id,
+                            built ? 1 : 0,
+                            built ? 100 : 0,
+                            0,
+                            Map.of(),
+                            Map.of(),
+                            0,
+                            position(id, town, scan),
+                            false));
         });
         return facts;
     }

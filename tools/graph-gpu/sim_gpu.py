@@ -130,6 +130,9 @@ class World:
             building = (facts.get("buildings") or {}).get(name[len("repair_"):])
             if building is not None:
                 building["damage"] = 0
+                building["missing"] = {}
+                building["extra"] = {}
+                building["wrong"] = 0
         elif name.startswith("life_threat"):
             threats = facts.get("threats") or []
             if threats:
@@ -154,10 +157,13 @@ class World:
                 strays.pop(0)
         elif name == "backfill":
             self._terrain("pits", -1)
+            self._terrain_map("fill")
         elif name == "clear_floating":
             self._terrain("hanging", -1)
+            self._terrain_map("floating")
         elif name == "level_lot":
             self._terrain("heightDrop", 0, absolute=True)
+            self._terrain_map("cut")
         elif name == "restore_trace":
             self._terrain("traces", -1)
 
@@ -173,6 +179,11 @@ class World:
                 spirit.setdefault("tools", []).append({
                     "item": "minecraft:netherite_" + kind, "kind": kind, "tier": 4,
                     "durability": 100, "maxDurability": 100})
+
+    def _terrain_map(self, key):
+        terrain = self.facts.get("terrain")
+        if terrain is not None:
+            terrain[key] = {}
 
     def _terrain(self, key, delta, absolute=False):
         terrain = self.facts.get("terrain")
@@ -352,9 +363,13 @@ def _area_world(graph):
     world = ready_world(graph)
     damaged = {name[len("repair_"):] for name in graph.events if name.startswith("repair_")}
     world.with_facts({
-        "strays": [{"id": "stray-1", "type": "wall", "position": {"x": 5, "y": 64, "z": 5}}],
-        "terrain": {"pits": 2, "hanging": 1, "heightDrop": 4, "deepestPit": 3, "traces": 2},
-        "buildings": {building: {"id": building, "damage": 5, "unknown": False}
+        "strays": [{"id": "stray-1", "type": "wall", "position": {"x": 5, "y": 64, "z": 5},
+                    "builder": "spirit-1", "blocks": {"wall": 1}}],
+        "terrain": {"pits": 2, "hanging": 1, "heightDrop": 4, "deepestPit": 3, "traces": 2,
+                    "cut": {"minecraft:dirt": 2}, "fill": {"minecraft:dirt": 3},
+                    "floating": {"minecraft:oak_log": 4}},
+        "buildings": {building: {"id": building, "damage": 5, "missing": {"minecraft:dirt": 3},
+                                 "extra": {}, "wrong": 0, "auditPercent": 75, "unknown": False}
                       for building in damaged if building in graph.buildings},
     })
     return world

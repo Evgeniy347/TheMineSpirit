@@ -15,17 +15,17 @@ public final class GraphWorldEvents {
 
     public static Set<String> of(GraphFacts facts) {
         Set<String> events = new LinkedHashSet<>();
-        if (!facts.strays().isEmpty()) {
+        if (facts.strays().stream().anyMatch(stray -> stray.builder() != null)) {
             events.add(DEMOLISH_STRAY);
         }
         GraphFacts.Terrain terrain = facts.terrain();
-        if (terrain.pits() > 0) {
+        if (terrain.pits() > 0 || !terrain.fill().isEmpty()) {
             events.add(BACKFILL);
         }
-        if (terrain.hanging() > 0) {
+        if (terrain.hanging() > 0 || !terrain.floating().isEmpty()) {
             events.add(CLEAR_FLOATING);
         }
-        if (terrain.heightDrop() > 0) {
+        if (terrain.heightDrop() > 0 || !terrain.cut().isEmpty()) {
             events.add(LEVEL_LOT);
         }
         if (terrain.traces() > 0) {

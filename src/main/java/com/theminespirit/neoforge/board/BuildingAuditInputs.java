@@ -10,6 +10,7 @@ import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownPlan;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
@@ -21,24 +22,43 @@ public final class BuildingAuditInputs {
     private static final Set<String> STAGE_KEYS =
             Set.of(HUT, "mine", "chests", "fence", "lighting", "streets", "orchard_oak");
 
-    record Audit(int total, int done, int extra, int unknown) {
+    private BuildingAuditInputs() {}
+
+    record Audit(
+            int total, int done, Map<String, Integer> missing, Map<String, Integer> extra, int wrong, int unknown) {
         Audit {
-            if (total < 0 || done < 0 || done > total || extra < 0 || unknown < 0) {
-                throw new IllegalArgumentException("Аудит " + done + " из " + total + ", лишних " + extra
+            missing = Map.copyOf(Objects.requireNonNull(missing, "Недостача аудита не может быть null"));
+            extra = Map.copyOf(Objects.requireNonNull(extra, "Лишнее аудита не может быть null"));
+            if (total < 0 || done < 0 || done > total || wrong < 0 || unknown < 0) {
+                throw new IllegalArgumentException("Аудит " + done + " из " + total + ", чужих " + wrong
                         + ", неизвестных " + unknown + ": числа не отрицательны, сделанное не больше плана");
             }
         }
 
         Audit plus(Audit other) {
-            return new Audit(total + other.total, done + other.done, extra + other.extra, unknown + other.unknown);
+            return new Audit(
+                    total + other.total,
+                    done + other.done,
+                    merge(missing, other.missing),
+                    merge(extra, other.extra),
+                    wrong + other.wrong,
+                    unknown + other.unknown);
         }
 
-        int missing() {
-            return total - done;
+        int missingCount() {
+            return missing.values().stream().mapToInt(Integer::intValue).sum();
+        }
+
+        int extraCount() {
+            return extra.values().stream().mapToInt(Integer::intValue).sum();
         }
     }
 
-    private BuildingAuditInputs() {}
+    static Map<String, Integer> merge(Map<String, Integer> first, Map<String, Integer> second) {
+        Map<String, Integer> out = new LinkedHashMap<>(first);
+        second.forEach((block, count) -> out.merge(block, count, Integer::sum));
+        return Map.copyOf(out);
+    }
 
     static boolean auditable(String planId) {
         if (planId == null || planId.isBlank()) {
@@ -167,12 +187,11 @@ public final class BuildingAuditInputs {
 
     static GraphFacts.Building fact(String id, int level, GraphFacts.Position at, Audit audit, boolean built) {
         if (audit.unknown() > 0) {
-            return new GraphFacts.Building(id, level, 0, 0, 0, 0, at, true);
+            return new GraphFacts.Building(id, level, 0, 0, Map.of(), Map.of(), 0, at, true);
         }
         int percent = audit.total() == 0 ? (built ? 100 : 0) : Math.min(100, audit.done() * 100 / audit.total());
-        int missing = audit.missing();
-        int extra = audit.extra();
-        int damage = built ? missing + extra : 0;
-        return new GraphFacts.Building(id, level, percent, damage, missing, extra, at, false);
+        int damage = built ? Math.max(audit.missingCount() + audit.extraCount(), audit.total() - audit.done()) : 0;
+        return new GraphFacts.Building(
+                id, level, percent, damage, audit.missing(), audit.extra(), audit.wrong(), at, false);
     }
 }
