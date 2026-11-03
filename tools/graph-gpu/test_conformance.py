@@ -370,6 +370,49 @@ def test_more3_nodes():
     print("OK: узлы и события области more3 учитываются в выборе")
 
 
+MORE6_EVENTS = (
+    "more6_spirits_short", "more6_weak_far", "more6_build_unfinished",
+    "more6_carry_materials", "more6_station_broken", "more6_loose_items",
+    "more6_water_needed", "more6_lava_needed", "more6_repeat_demand",
+    "more6_spirit_idle",
+)
+
+MORE6_WAYS = (
+    "more6_call_spirit", "more6_return_weak", "more6_send_near",
+    "more6_finish_build", "more6_deposit_materials", "more6_refuel_station",
+    "more6_place_station", "more6_pickup_items", "more6_fetch_water",
+    "more6_fetch_lava", "more6_maintain_stock", "more6_assign_idle",
+)
+
+
+def test_more6_nodes():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for event in MORE6_EVENTS:
+        assert event in graph.events, "Python-модель не видит событие области more6: " + event
+        assert graph.events[event]["tasks"], "Событие области more6 ставит работу: " + event
+    for way in MORE6_WAYS:
+        path = graph.way(way)
+        assert path is not None, "Python-модель не видит путь области more6: " + way
+        assert path.makes in graph.items, "Python-модель не видит узел области more6: " + path.makes
+        assert graph.items[path.makes].base > 0, "Стартовый вес узла more6 положителен: " + path.makes
+        assert way in graph.unimplemented, "Действие области more6 пока заглушено: " + way
+    print("OK: узлы и заглушки области more6 читаются из фрагментов")
+
+
+def test_more6_inputs():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    tasks = {task["id"] for task in plan(graph, State({
+        "stage": 1, "kits": {"spirit-1": {}}, "events": list(MORE6_EVENTS)}))["tasks"]}
+    for event in MORE6_EVENTS:
+        assert any(task.startswith("event:" + event + ":") for task in tasks), \
+            "Python: событие области more6 не даёт задания: " + event
+    quiet = {task["id"] for task in plan(graph, State({"stage": 1, "kits": {"spirit-1": {}}}))["tasks"]}
+    for event in MORE6_EVENTS:
+        assert not any(task.startswith("event:" + event + ":") for task in quiet), \
+            "Python: без входа области more6 задачи нет: " + event
+    print("OK: входы области more6 учитываются в выборе")
+
+
 MORE5_EVENTS = ("more5_player_weak", "more5_crops_dark", "more5_saplings_dark",
                 "more5_crops_dry", "more5_growth_unfed", "more5_fuel_low",
                 "more5_build_shortage", "more5_mob_broken", "more5_route_blocked",
@@ -567,6 +610,9 @@ def test_input_worlds():
 
 
         "more7": "event:more7_order_ready",
+
+
+        "more6": "event:more6_spirits_short",
     }
     for name, prefix in expected.items():
         assert name in worlds, "Стартовый мир области не собран: " + name
@@ -662,6 +708,8 @@ if __name__ == "__main__":
         test_more2_nodes()
         test_more2_inputs()
         test_more3_nodes()
+        test_more6_nodes()
+        test_more6_inputs()
         test_more5_nodes()
         test_more5_inputs()
         test_more4_nodes()
