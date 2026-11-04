@@ -28,19 +28,26 @@ class More7PlannerTests {
             List<GraphPlan.Task> tasks = plan.tasks().stream()
                     .filter(task -> task.id().startsWith("event:" + event + ":"))
                     .toList();
+            List<GraphPlan.Task> stubs =
+                    tasks.stream().filter(task -> !task.implemented()).toList();
+            List<GraphPlan.Task> wired =
+                    tasks.stream().filter(GraphPlan.Task::implemented).toList();
             assertFalse(tasks.isEmpty(), "Событие области graphmore7 обязано дать задание: " + event);
-            assertTrue(tasks.stream().noneMatch(GraphPlan.Task::implemented), "Заглушки не выдают себя за действия");
             assertTrue(
                     tasks.stream().allMatch(task -> task.priority() > 0), "Стартовый приоритет положителен: " + event);
             assertTrue(
+                    wired.stream().allMatch(task -> tickets.live().contains(GraphTickets.id(task))),
+                    "Связанное действие попадает в живые задания области: " + event);
+            assertTrue(
                     tickets.post().stream()
-                            .noneMatch(ticket -> tasks.stream()
+                            .noneMatch(ticket -> stubs.stream()
                                     .anyMatch(task -> (GraphTickets.PREFIX + task.id()).equals(ticket.id()))),
                     "Несуществующее действие не ставится на доску: " + event);
             assertTrue(
                     tickets.unimplemented().stream()
-                            .anyMatch(known ->
-                                    tasks.stream().anyMatch(task -> task.id().equals(known.id()))),
+                                    .anyMatch(known -> stubs.stream()
+                                            .anyMatch(task -> task.id().equals(known.id())))
+                            || stubs.isEmpty(),
                     "Заглушка попадает в список нереализованных: " + event);
         }
     }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class GraphMore7FragmentsTests {
@@ -18,7 +19,7 @@ class GraphMore7FragmentsTests {
             More7Rules.PEN_FULL,
             More7Rules.FIELD_FULL,
             More7Rules.ORDER_READY);
-    private static final Map<String, String> STUBS = Map.ofEntries(
+    private static final Map<String, String> WAYS = Map.ofEntries(
             Map.entry("more7_spread_work", More7Rules.WORK_PILEUP),
             Map.entry("more7_defer_gated", More7Rules.GATED_ITEM),
             Map.entry("more7_harvest_early", More7Rules.MORNING_HARVEST),
@@ -29,6 +30,8 @@ class GraphMore7FragmentsTests {
             Map.entry("more7_hold_sowing", More7Rules.FIELD_FULL),
             Map.entry("more7_order_to_player", More7Rules.ORDER_READY),
             Map.entry("more7_order_to_chest", More7Rules.ORDER_READY));
+    private static final Set<String> IMPLEMENTED =
+            Set.of("more7_harvest_early", "more7_expand_pen", "more7_return_home", "more7_order_to_chest");
 
     @Test
     void more7Events_FragmentLoad_AreDeclaredWithTasks() {
@@ -39,14 +42,16 @@ class GraphMore7FragmentsTests {
     }
 
     @Test
-    void more7Ways_FragmentLoad_AreStubsWithPositiveStartWeights() {
-        for (Map.Entry<String, String> stub : STUBS.entrySet()) {
-            SupplyGraph.Way way = GRAPH.way(stub.getKey()).orElseThrow();
-            assertTrue(way.weight() > 0, "Стартовый вес пути положителен: " + stub.getKey());
-            assertTrue(way.boardCase() != null, "У пути есть вид работы: " + stub.getKey());
-            assertFalse(GRAPH.implemented(stub.getKey()), "Действие пока заглушено: " + stub.getKey());
-            assertTrue(
-                    GRAPH.producers(way.makes()).contains(way), "Заглушка делает свой узел области: " + stub.getKey());
+    void more7Ways_FragmentLoad_AreWiredOrMarkedStubWithPositiveStartWeights() {
+        for (Map.Entry<String, String> known : WAYS.entrySet()) {
+            SupplyGraph.Way way = GRAPH.way(known.getKey()).orElseThrow();
+            assertTrue(way.weight() > 0, "Стартовый вес пути положителен: " + known.getKey());
+            assertTrue(way.boardCase() != null, "У пути есть вид работы: " + known.getKey());
+            assertEquals(
+                    IMPLEMENTED.contains(known.getKey()),
+                    GRAPH.implemented(known.getKey()),
+                    "Путь " + known.getKey() + " либо связан с действием, либо честно помечен заглушкой");
+            assertTrue(GRAPH.producers(way.makes()).contains(way), "Путь делает свой узел области: " + known.getKey());
         }
     }
 
@@ -70,9 +75,13 @@ class GraphMore7FragmentsTests {
             GraphEvent known = GRAPH.events().get(event);
             for (GraphEvent.Task task : known.tasks()) {
                 assertTrue(
-                        STUBS.containsKey(task.id()),
-                        "Задача " + event + " -> " + task.id() + " должна быть заглушкой области");
-                assertFalse(task.implemented(), "Задача " + event + " -> " + task.id() + " ещё не реализована");
+                        WAYS.containsKey(task.id()),
+                        "Задача " + event + " -> " + task.id() + " должна принадлежать области");
+                assertEquals(
+                        IMPLEMENTED.contains(task.id()),
+                        task.implemented(),
+                        "Задача " + event + " -> " + task.id()
+                                + " не расходится с состоянием пути: иначе граф ставит неисполнимую работу");
             }
             known.push().keySet().forEach(node -> assertTrue(known(node), event + " push неизвестного " + node));
             known.tasks()
