@@ -34,7 +34,7 @@ final class DigInputs {
     }
 
     private static DigFacts.Cause situation(Level level, SpiritEntity spirit, BlockPos feet) {
-        if (DigOutScript.sealed(level, feet)) {
+        if (DigOutScript.embedded(spirit) || DigOutScript.sealed(level, feet)) {
             return DigFacts.Cause.SEALED;
         }
         if (PitRescue.trapped(spirit).isPresent()) {

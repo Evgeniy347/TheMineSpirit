@@ -253,25 +253,6 @@ public final class ActivityPlans {
                                         CatalogLimits.STATION_RADIUS_DEFAULT))));
     }
 
-    public static Plan buildFarm(BlockCoord origin, String crop, int side) {
-        int size = Math.max(2, Math.min(side, CatalogLimits.FARM_RADIUS_MAX));
-        return new Plan(
-                "build_farm",
-                new ScriptCall(
-                        "build_farm",
-                        Map.of(
-                                CROP,
-                                crop,
-                                "x1",
-                                origin.x(),
-                                "z1",
-                                origin.z(),
-                                "x2",
-                                origin.x() + size - 1,
-                                "z2",
-                                origin.z() + size - 1)));
-    }
-
     private static SequenceNode sequence(TaskNode... steps) {
         return new SequenceNode(List.of(steps));
     }

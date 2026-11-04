@@ -12,12 +12,12 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
-final class RescuePost {
+final class GraphRescuePost {
     private static final String RESCUE = "rescue:";
 
-    private RescuePost() {}
+    private GraphRescuePost() {}
 
-    static boolean post(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task) {
+    static boolean rescue(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task) {
         BlockCoord home = SettlementHome.of(post.spirits);
         boolean posted = false;
         for (GraphFacts.Spirit fact : post.facts.spirits().values()) {

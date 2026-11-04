@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public final class WorkStand {
     public static final int RADIUS = 3;
@@ -20,8 +21,13 @@ public final class WorkStand {
     }
 
     public static Optional<BlockCoord> near(BlockCoord point, Ground ground) {
+        return near(point, ground, feet -> true);
+    }
+
+    public static Optional<BlockCoord> near(BlockCoord point, Ground ground, Predicate<BlockCoord> reachable) {
         Objects.requireNonNull(point, "Точка работы не может быть null: стоянку ищут возле неё");
         Objects.requireNonNull(ground, "Рельеф не может быть null: высоту стоянки берут по текущему миру");
+        Objects.requireNonNull(reachable, "Проверка пути не может быть null: иначе стоянка снова будет за преградой");
         List<int[]> offsets = new ArrayList<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx++) {
             for (int dz = -RADIUS; dz <= RADIUS; dz++) {
@@ -36,7 +42,7 @@ public final class WorkStand {
             int x = point.x() + offset[0];
             int z = point.z() + offset[1];
             BlockCoord feet = new BlockCoord(x, ground.feet(x, z), z);
-            if (ground.free(feet)) {
+            if (ground.free(feet) && reachable.test(feet)) {
                 free.add(feet);
             }
         }

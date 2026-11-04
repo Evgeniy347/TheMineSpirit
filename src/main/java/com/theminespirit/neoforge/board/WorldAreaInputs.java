@@ -7,14 +7,19 @@ import com.theminespirit.core.board.graph.GraphWorldFacts;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.town.FloatingBlocks;
+import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StrayGroups;
 import com.theminespirit.core.town.TownPlan;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -48,28 +53,50 @@ final class WorldAreaInputs {
             FirstStepsRunner.StageScan scan,
             Optional<TownPlan> town,
             Map<String, GraphFacts.Building> buildings) {
-        long now = service.board().now();
         StageSite site = scan.stage();
-        List<GraphFacts.Stray> strays = strays(
-                placements(service),
-                at -> site.enclosure().contains(at.x(), at.z()),
-                at -> site.planned(at.x(), at.y(), at.z()));
-        PlotAudit.Audit audit = PlotAudit.audit(level, site, now);
+        SettlementScan.Strays found = WorldAreaScan.scan(level, site, town);
+        List<GraphFacts.Stray> strays = new ArrayList<>(strays(found, placements(service)));
+        Set<GraphFacts.Position> seen = new HashSet<>();
+        strays.forEach(stray -> seen.add(stray.position()));
+        town.ifPresent(plan -> FarmStray.facts(level, site, plan).stream()
+                .filter(stray -> seen.add(stray.position()))
+                .forEach(strays::add));
         List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
                 .orElse(List.of());
         GraphFacts.Terrain terrain = terrain(
-                audit.holes(),
-                audit.depths(),
-                audit.extras(),
+                List.copyOf(found.pits().keySet()),
+                found.pits(),
+                found.mounds(),
                 floating.size(),
-                strays.size(),
+                found.traces().size(),
                 new Marks(
-                        blockCounts(level, audit.extras()),
-                        audit.holes().isEmpty()
+                        blockCounts(level, found.mounds()),
+                        found.pits().isEmpty()
                                 ? Map.of()
-                                : Map.of("minecraft:dirt", audit.holes().size()),
-                        floatingCounts(floating)));
+                                : Map.of("minecraft:dirt", found.pits().size()),
+                        floatingCounts(floating)),
+                found.unknown() > 0);
         return new GraphWorldFacts(strays, terrain, buildings);
+    }
+
+    static List<GraphFacts.Stray> strays(SettlementScan.Strays found, List<Placed> placed) {
+        Map<BlockCoord, String> builders = new HashMap<>();
+        for (Placed trace : placed) {
+            if (trace.builder() != null) {
+                builders.putIfAbsent(trace.at(), trace.builder());
+            }
+        }
+        List<GraphFacts.Stray> facts = new ArrayList<>();
+        for (StrayGroups.Group group : StrayGroups.of(found.strays(), builders)) {
+            BlockCoord at = group.position();
+            facts.add(new GraphFacts.Stray(
+                    "stray:" + group.type() + "@" + key(at),
+                    group.type(),
+                    new GraphFacts.Position(at.x(), at.y(), at.z()),
+                    group.builder(),
+                    group.blocks()));
+        }
+        return List.copyOf(facts);
     }
 
     static List<GraphFacts.Stray> strays(
@@ -110,6 +137,17 @@ final class WorldAreaInputs {
             int hanging,
             int traces,
             Marks marks) {
+        return terrain(holes, depths, extras, hanging, traces, marks, false);
+    }
+
+    static GraphFacts.Terrain terrain(
+            List<BlockCoord> holes,
+            Map<BlockCoord, Integer> depths,
+            List<BlockCoord> extras,
+            int hanging,
+            int traces,
+            Marks marks,
+            boolean unknown) {
         if (hanging < 0 || traces < 0) {
             throw new IllegalArgumentException(
                     "Висящее " + hanging + " и следы " + traces + " не бывают отрицательными: отсутствие — ноль");
@@ -122,7 +160,15 @@ final class WorldAreaInputs {
             heightDrop = Math.max(0, top - bottom);
         }
         return new GraphFacts.Terrain(
-                depths.size(), hanging, heightDrop, deepest, traces, marks.cut(), marks.fill(), marks.floating());
+                depths.size(),
+                hanging,
+                heightDrop,
+                deepest,
+                traces,
+                marks.cut(),
+                marks.fill(),
+                marks.floating(),
+                unknown);
     }
 
     private static Map<String, Integer> blockCounts(ServerLevel level, List<BlockCoord> cells) {

@@ -12,6 +12,7 @@ import com.theminespirit.core.rest.SettlementRoutes;
 import com.theminespirit.core.rest.SseSlots;
 import com.theminespirit.core.rest.TaskRoutes;
 import com.theminespirit.core.rest.V1Routes;
+import com.theminespirit.core.rest.WorldRoutes;
 import com.theminespirit.neoforge.SpiritScripts;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,7 @@ public final class RestRouter {
         SettlementRoutes settlementRoutes = new SettlementRoutes(
                 new SpiritSettlementGateway(gateway.server(), gateway.serverCall()), new IdempotencyCache());
         routes.addAll(settlementRoutes.routes());
+        routes.addAll(new WorldRoutes(new SpiritWorldGateway()).routes());
         return Router.of(routes);
     }
 }

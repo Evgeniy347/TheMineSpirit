@@ -2,9 +2,9 @@ package com.theminespirit.neoforge;
 
 import java.util.Objects;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
 public final class BlockItems {
@@ -14,16 +14,16 @@ public final class BlockItems {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, какой предмет списывать");
         Block block = BlockStates.blockFor(blockId);
         Item item = block.asItem();
-        if (!(item instanceof BlockItem)) {
-            throw new IllegalArgumentException("Блок '" + blockId
-                    + "' не имеет предмета для постановки: без BlockItem его не удержать в инвентаре");
+        if (item.equals(Items.AIR)) {
+            throw new IllegalArgumentException(
+                    "Блок '" + blockId + "' не имеет предмета для постановки: его не удержать в инвентаре");
         }
         return item;
     }
 
     public static boolean hasBlockItem(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что ставить");
-        return BlockStates.blockFor(blockId).asItem() instanceof BlockItem;
+        return !BlockStates.blockFor(blockId).asItem().equals(Items.AIR);
     }
 
     public static int countIn(Container inventory, String blockId) {

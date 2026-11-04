@@ -98,17 +98,18 @@ final class GraphFluidPost {
             return Optional.empty();
         }
         BlockCoord origin = new BlockCoord(position.x(), position.y(), position.z());
-        Optional<BlockCoord> planned = FarmWaterCell.planned(scheme.orElseThrow(), origin);
-        if (planned.isEmpty()) {
-            return Optional.empty();
-        }
-        BlockCoord cell = planned.orElseThrow();
-        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
-        if (!post.level.isLoaded(pos) || !post.level.getBlockState(pos).isAir()) {
+        Optional<BlockCoord> cell = FarmWaterCell.plannedAll(scheme.orElseThrow(), origin).stream()
+                .filter(at -> {
+                    BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+                    return post.level.isLoaded(pos)
+                            && post.level.getBlockState(pos).isAir();
+                })
+                .findFirst();
+        if (cell.isEmpty()) {
             return Optional.empty();
         }
         boolean dry = More6Scan.dryFields(post.level, List.of(position)) > 0;
-        return dry ? Optional.of(cell) : Optional.empty();
+        return dry ? cell : Optional.empty();
     }
 
     private static long distance(BlockCoord home, GraphFacts.Position position) {

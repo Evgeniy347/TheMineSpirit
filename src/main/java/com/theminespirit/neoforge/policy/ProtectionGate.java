@@ -9,6 +9,7 @@ import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.policy.SelfRescue;
 import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
@@ -40,6 +41,17 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreak(BlockPos pos, BlockState state) {
+        return decideBreak(pos, state, false, false);
+    }
+
+    public BlockProtection.Decision checkBreakOrEscape(BlockPos pos, BlockState state, boolean escaping) {
+        BlockPos feet = spirit.blockPosition();
+        if (escaping
+                && SelfRescue.mayBreakAtFeet(
+                        new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
+                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
+            return new BlockProtection.Allowed();
+        }
         return decideBreak(pos, state, false, false);
     }
 

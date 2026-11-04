@@ -45,10 +45,6 @@ final class FarmBuilt {
         if (buildings.getOrDefault("apiary", Built.ABSENT) != Built.BUILT && HiveSite.hiveNear(level, scan.home())) {
             buildings.put("apiary", Built.BUILT);
         }
-        if (buildings.getOrDefault("wheat_field", Built.ABSENT) != Built.BUILT
-                && FarmField.exists(level, scan.home())) {
-            buildings.put("wheat_field", Built.BUILT);
-        }
         if (buildings.getOrDefault("storage_space", Built.ABSENT) != Built.BUILT
                 && FarmField.chestNear(level, scan.home())) {
             buildings.put("storage_space", Built.BUILT);

@@ -53,6 +53,33 @@ class FluidPlansTests {
     }
 
     @Test
+    void waterCrops_StandBesideSource_GoesToStandAndPoursIntoCell() {
+        BlockCoord stand = new BlockCoord(9, 62, 10);
+        BlockCoord cell = new BlockCoord(21, 64, 21);
+        List<ScriptCall> calls = calls(FluidPlans.waterCrops(FluidKind.WATER, SOURCE, stand, cell));
+
+        assertEquals(stand, point(calls.get(1)), "Дух идёт на стоянку у воды, а не в клетку источника");
+        assertEquals(cell.x(), calls.get(calls.size() - 1).params().get("x"), "Льёт в клетку плана");
+    }
+
+    @Test
+    void farmWaterCell_PlanWithTwoCells_ReturnsBothForRefill() {
+        Schematic scheme = new Schematic(
+                7,
+                2,
+                12,
+                List.of(
+                        new Schematic.Entry(3, 0, 3, "minecraft:water"),
+                        new Schematic.Entry(3, 0, 8, "minecraft:water")),
+                List.of());
+
+        assertEquals(
+                List.of(new BlockCoord(3, 0, 3), new BlockCoord(3, 0, 8)),
+                FarmWaterCell.plannedAll(scheme, new BlockCoord(0, 0, 0)),
+                "Полив видит обе клетки воды плана: иначе вторая ямка останется сухой");
+    }
+
+    @Test
     void plans_CatalogValidated_KeepSameScripts() {
         for (TaskNode plan : List.of(
                 FluidPlans.fetch(FluidKind.WATER, SOURCE, STORE),

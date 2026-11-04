@@ -41,7 +41,7 @@ final class PlanDemolition {
     private static final StateChangeLog CHANGES = new StateChangeLog();
     private static final DemolitionRetry RETRIES = new DemolitionRetry();
 
-    private record Collected(
+    record Collected(
             List<BlockCoord> remove,
             List<String> notes,
             int excluded,
@@ -67,9 +67,11 @@ final class PlanDemolition {
                 && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
         List<FloatingBlocks.Finding> findings = FloatingScanCycle.find(level, site, town.region());
-        Collected collected = collect(level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level));
+        Collected base = collect(level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level));
+        Collected collected = FarmStray.withFarm(base, level, site, town, plan);
         List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
         List<BlockCoord> stray = candidates.stream()
+                .distinct()
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
                 .limit(collected.treeCells().isEmpty() ? BATCH : candidates.size())
                 .toList();
@@ -156,12 +158,15 @@ final class PlanDemolition {
             UnreachableCells unreachableCells) {
         List<BlockCoord> remove = new ArrayList<>();
         List<String> notes = new ArrayList<>();
-        int protectedSkipped = 0;
-        int unreachableSkipped = 0;
         int excluded = 0;
         int reachableShown = 0;
         DemolitionTickets.Placement placement = null;
         List<BlockCoord> treeCells = List.of();
+        PlanStrays.Result strays = PlanStrays.collect(level, unreachableCells, SHOWN);
+        remove.addAll(strays.remove());
+        notes.addAll(strays.notes());
+        int protectedSkipped = strays.protectedCount();
+        int unreachableSkipped = strays.unreachable();
         for (FloatingBlocks.Finding finding : findings) {
             BlockCoord at = finding.at();
             boolean blocked = unreachableCells.excluded(at);

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.FarmRules;
+import com.theminespirit.core.board.graph.GraphEvents;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
@@ -41,14 +42,16 @@ final class FarmInputs {
                 .anyMatch(position -> level.isLoaded(pos(position))
                         && level.getBlockState(pos(position)).isAir());
         boolean hasFeed = sum(graph, stock, "#crops") > 0;
-        Set<String> events = FarmRules.events(
-                herds,
-                FarmRules.herdCounts(adults),
-                graph,
-                state.spirits(),
-                crops,
-                seeds,
-                new FarmRules.Signals(orchardEmpty, saplings > 0, hasFeed));
+        Set<String> events = GraphEvents.merge(
+                state.events(),
+                FarmRules.events(
+                        herds,
+                        FarmRules.herdCounts(adults),
+                        graph,
+                        state.spirits(),
+                        crops,
+                        seeds,
+                        new FarmRules.Signals(orchardEmpty, saplings > 0, hasFeed)));
         return new GraphState(
                 stock,
                 state.stage(),

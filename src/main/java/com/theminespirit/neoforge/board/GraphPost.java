@@ -131,7 +131,7 @@ final class GraphPost {
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
-            case RESCUE_SPIRIT -> RescuePost.post(this, ticket, task);
+            case RESCUE_SPIRIT -> GraphRescuePost.rescue(this, ticket, task);
             case FILL_CRATER -> new GraphHarvestPost(this).craters(ticket);
             default -> MorePost.way(this, ticket, task) || FarmPost.way(this, ticket, task);
         };
