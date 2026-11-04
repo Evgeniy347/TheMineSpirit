@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShovelItem;
@@ -80,6 +81,18 @@ final class PathTrample {
         String item = SchematicActions.shovelItem(cobble);
         int held = spirit.getInventory().countItem(BuiltInRegistries.ITEM.get(ResourceLocation.parse(item)));
         return List.of(new ScriptCall("acquire", Map.of("item", item, "count", held + 1)));
+    }
+
+    static List<ScriptCall> restockHoe(SpiritEntity spirit) {
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = spirit.getInventory().getItem(slot);
+            if (stack.getItem() instanceof HoeItem && stack.getDamageValue() < stack.getMaxDamage() - 1) {
+                return List.of();
+            }
+        }
+        String item =
+                spirit.getInventory().countItem(Items.COBBLESTONE) > 0 ? "minecraft:stone_hoe" : "minecraft:wooden_hoe";
+        return List.of(new ScriptCall("acquire", Map.of("item", item, "count", 1)));
     }
 
     private static int shovelSlot(SpiritEntity spirit) {

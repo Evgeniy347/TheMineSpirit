@@ -13,7 +13,6 @@ import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -210,14 +208,16 @@ final class SchematicSite {
         for (BlockCoord cell : air) {
             BlockState current = level.getBlockState(toPos(cell));
             if (current.is(BlockTags.LOGS)) {
-                unique.addAll(TreeSpan.of(cell, this::wildLog));
+                unique.addAll(TreeSpan.of(cell, at -> SchematicWild.log(level, schemeCells, at)));
             } else if (!current.isAir() && current.getFluidState().isEmpty()) {
                 unique.add(cell);
             }
         }
         List<BlockCoord> cells = new ArrayList<>(unique);
         for (Schematic.PlacedEntry entry : entries) {
-            if (entry.optional() || SchematicActions.isActionPlaced(entry.block())) {
+            if (entry.optional()
+                    || SchematicActions.isActionPlaced(entry.block())
+                    || SchematicActions.isFluidPlaced(entry.block())) {
                 continue;
             }
             BlockState current = level.getBlockState(toPos(entry.pos()));
@@ -234,18 +234,9 @@ final class SchematicSite {
         return cells;
     }
 
-    private boolean wildLog(BlockCoord cell) {
-        BlockPos pos = toPos(cell);
-        boolean placed = level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isMarked(pos);
-        return !schemeCells.contains(cell)
-                && !placed
-                && level.getBlockState(pos).is(BlockTags.LOGS);
-    }
-
     boolean freeForPlacing(Schematic.PlacedEntry entry) {
         BlockState current = level.getBlockState(toPos(entry.pos()));
-        return current.isAir() || current.canBeReplaced();
+        return SchematicActions.isActionPlaced(entry.block()) || current.isAir() || current.canBeReplaced();
     }
 
     void repairState(Schematic.PlacedEntry entry) {
@@ -263,7 +254,8 @@ final class SchematicSite {
     }
 
     boolean supported(Schematic.PlacedEntry entry) {
-        return BlockPlacer.hasSupport(level, toPos(entry.pos()), wanted(entry));
+        return SchematicActions.isFluidPlaced(entry.block())
+                || BlockPlacer.hasSupport(level, toPos(entry.pos()), wanted(entry));
     }
 
     boolean standable(BlockCoord feet) {

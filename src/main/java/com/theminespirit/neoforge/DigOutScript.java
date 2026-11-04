@@ -59,6 +59,10 @@ public final class DigOutScript implements ScriptInstance {
         return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new SealedView(level));
     }
 
+    public static boolean embedded(SpiritEntity spirit) {
+        return EmbeddedSpace.inside(spirit);
+    }
+
     public static boolean open(Level level, BlockPos cell) {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
     }
@@ -108,6 +112,18 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (spirit.isRemoved()) {
             return fail("дух исчез, выбираясь из-под земли");
+        }
+        if (embedded(spirit) && !breaking) {
+            BlockPos feet = spirit.blockPosition();
+            BlockBreaker.Begin begin = breaker.begin(feet);
+            if (begin instanceof BlockBreaker.Started) {
+                breaking = true;
+                return ScriptStatus.RUNNING;
+            }
+            String why = begin instanceof BlockBreaker.Refused refused
+                    ? refused.message()
+                    : ((BlockBreaker.Protected) begin).reason();
+            return fail("не выйти из блока " + feet.toShortString() + ": " + why);
         }
         if (followRoute()) {
             return ScriptStatus.RUNNING;

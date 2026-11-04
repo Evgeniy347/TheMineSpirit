@@ -48,6 +48,11 @@ final class DigOutAction {
             if (digging || paused) {
                 continue;
             }
+            if (DigOutScript.embedded(spirit)) {
+                pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
+                start(service, spirit, SurfacePoint.of(level, settlement));
+                continue;
+            }
             if (DigOutScript.open(level, feet)) {
                 Optional<PitEscape.Exit> pit = PitRescue.trapped(spirit);
                 if (pit.isPresent() && service.idleOrActivity(spirit)) {

@@ -40,7 +40,7 @@ public final class BoardSources {
     }
 
     public GraphDecisions graphDecisions() {
-        return graph.decisions();
+        return graph.decisionLog.decisions();
     }
 
     public GraphFailureMemory graphFailures() {

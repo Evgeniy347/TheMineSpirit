@@ -39,7 +39,7 @@ final class DigOutPost {
                 continue;
             }
             BlockPos feet = spirit.blockPosition();
-            boolean matches = (dig && DigOutScript.sealed(post.level, feet))
+            boolean matches = (dig && (DigOutScript.sealed(post.level, feet) || DigOutScript.embedded(spirit)))
                     || (bridge && water(post.level, feet) && !DigOutScript.sealed(post.level, feet))
                     || (pillar && PitRescue.trapped(spirit).isPresent());
             if (!matches) {

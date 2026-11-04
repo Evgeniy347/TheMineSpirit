@@ -9,14 +9,17 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.OrchardSites;
+import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TerrainGrid;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownPlanner;
 import com.theminespirit.core.town.TownRules;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -83,21 +86,41 @@ final class TownSurvey {
             TownRules rules,
             List<List<String>> stages,
             BoardService service) {
-        List<String> demanded = demanded(service, plan);
+        TownPlan current = plan;
+        List<String> demanded = demanded(service, current);
         boolean missing = stages.get(0).stream()
                 .filter(id -> !TownPlanner.LINE_ELEMENTS.contains(id))
                 .anyMatch(id -> plan.placement(id).isEmpty() && !plan.unplaced().contains(id));
-        if (demanded.isEmpty() && !missing) {
-            return plan;
+        boolean resized = TownPlanner.staleSizes(current, rules);
+        if (demanded.isEmpty() && !missing && !resized) {
+            return current;
         }
         TerrainGrid grid =
-                GroundProbe.terrain(level, plan.anchor(), rules.ground().probeRadius());
-        TownPlan next = TownPlanner.plant(grid, plan, rules, stages, demanded, 1);
-        if (!next.equals(plan)) {
+                GroundProbe.terrain(level, current.anchor(), rules.ground().probeRadius());
+        if (resized) {
+            TownPlan adapted = TownPlanner.readapt(grid, current, rules, built(service, current));
+            if (!adapted.equals(current)) {
+                store.refitTown(adapted);
+                LOGGER.info("[plot] участки подогнаны под новые схемы: {}", adapted.unplaced());
+                current = adapted;
+            }
+        }
+        TownPlan next = TownPlanner.plant(grid, current, rules, stages, demanded, 1);
+        if (!next.equals(current)) {
             store.refitTown(next);
             LOGGER.info("[plot] план расширен: сады {}, не поместилось {}", demanded, next.unplaced());
         }
         return next;
+    }
+
+    private static Set<String> built(BoardService service, TownPlan plan) {
+        Set<String> built = new HashSet<>();
+        for (Placement place : plan.placements()) {
+            if (service.board().ledger().hasPlan(place.id(), 1)) {
+                built.add(place.id());
+            }
+        }
+        return built;
     }
 
     private static List<String> demanded(BoardService service, TownPlan plan) {

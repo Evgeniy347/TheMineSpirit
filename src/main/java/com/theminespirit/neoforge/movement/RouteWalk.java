@@ -5,6 +5,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteStep;
+import com.theminespirit.neoforge.EmbeddedSpace;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Optional;
@@ -108,6 +109,12 @@ public final class RouteWalk {
     }
 
     private Optional<String> walk(BlockCoord cell) {
+        if (EmbeddedSpace.inside(spirit)) {
+            BlockPos feet = spirit.blockPosition();
+            return Optional.of("дух в блоке "
+                    + spirit.level().getBlockState(feet).getBlock().getDescriptionId() + " у " + feet.toShortString()
+                    + ": шаг WALK в " + cell + " не начать, нужен dig_out");
+        }
         if (spirit.isInWater()) {
             return swimmer.exit(cell) ? advance() : Optional.<String>empty();
         }

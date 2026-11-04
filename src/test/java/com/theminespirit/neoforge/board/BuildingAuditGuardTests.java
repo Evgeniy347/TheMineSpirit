@@ -72,6 +72,20 @@ class BuildingAuditGuardTests {
     }
 
     @Test
+    void everyPlanBuilding_Damaged_IsRepairedNotOnlyHouse() {
+        GraphFacts.Building fact = BuildingAuditInputs.fact(
+                "warehouse",
+                1,
+                new GraphFacts.Position(40, 64, 40),
+                new BuildingAuditInputs.Audit(40, 33, Map.of("minecraft:oak_planks", 7), Map.of(), 0, 0),
+                true);
+
+        assertFalse(fact.unknown(), "склад плана аудируется схемой, как и дом");
+        assertEquals(7, fact.damage(), "повреждения считаются для любой постройки плана, а не только для дома");
+        assertEquals(Map.of("minecraft:oak_planks", 7), fact.missing(), "недостача склада видна графу");
+    }
+
+    @Test
     void rebuild_NoComposition_StillDamaged() {
         GraphFacts.Building fact = BuildingAuditInputs.fact(
                 "hut",

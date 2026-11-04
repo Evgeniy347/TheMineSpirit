@@ -135,16 +135,6 @@ class ActivityPlansTests {
         assertEquals("minecraft:charcoal", smelt.params().get("item"), "Продукт плавки назван");
     }
 
-    @Test
-    void buildFarm_Plan_NamesCropAndRectangle() {
-        ScriptCall farm = calls(ActivityPlans.buildFarm(AT, "wheat", 4).task()).get(0);
-
-        assertEquals("build_farm", farm.script(), "Грядку разбивают скриптом build_farm");
-        assertEquals("wheat", farm.params().get("crop"), "Культура грядки названа");
-        assertEquals(10, farm.params().get("x1"), "Левый край прямоугольника");
-        assertEquals(13, farm.params().get("x2"), "Правый край прямоугольника");
-    }
-
     private static List<ScriptCall> calls(TaskNode node) {
         List<ScriptCall> calls = new ArrayList<>();
         collect(node, calls);

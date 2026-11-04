@@ -13,10 +13,10 @@ public final class GraphStageGate {
 
     public static boolean lotsReady(GraphFacts facts) {
         GraphSiteFacts.Terrain terrain = facts.terrain();
-        return terrain.cut().isEmpty() && terrain.fill().isEmpty();
+        return !terrain.unknown() && terrain.cut().isEmpty() && terrain.fill().isEmpty();
     }
 
     public static boolean straysReady(GraphFacts facts) {
-        return facts.strays().stream().noneMatch(stray -> stray.builder() != null);
+        return facts.strays().isEmpty();
     }
 }

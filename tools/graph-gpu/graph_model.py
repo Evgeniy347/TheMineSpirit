@@ -727,7 +727,7 @@ class State:
     def _derive_world_events(self):
         """GraphWorldEvents: входы участка добавляют узлы уборки и ремонта."""
         derived = []
-        if any(stray.get("builder") is not None for stray in self.strays):
+        if self.strays:
             derived.append("demolish_stray")
         if int(self.terrain.get("pits", 0)) > 0 or self.terrain.get("fill"):
             derived.append("backfill")

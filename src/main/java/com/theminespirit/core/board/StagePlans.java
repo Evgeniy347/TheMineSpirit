@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
@@ -79,6 +80,9 @@ public final class StagePlans {
                 .byId(scheme)
                 .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
                         .forEach((item, count) -> {
+                            if (SchematicActions.isActionPlaced(item)) {
+                                return;
+                            }
                             String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
                             steps.add(PlanSteps.acquire(
                                     id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
@@ -119,6 +123,9 @@ public final class StagePlans {
                 .byId(scheme)
                 .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
                         .forEach((item, count) -> {
+                            if (SchematicActions.isActionPlaced(item)) {
+                                return;
+                            }
                             String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
                             steps.add(PlanSteps.acquire(
                                     id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));

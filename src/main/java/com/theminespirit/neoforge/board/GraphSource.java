@@ -2,8 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.graph.GraphDecisions;
-import com.theminespirit.core.board.graph.GraphExplain;
 import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
@@ -12,6 +10,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.GraphWhy;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.graph.WorldReport;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -40,7 +39,7 @@ public final class GraphSource {
     private long lastCycle = -1;
     private long lastDeep = -1;
     private Set<String> lastLive = Set.of();
-    private GraphDecisions decisions = GraphDecisions.empty();
+    final GraphDecisionNote decisionLog = new GraphDecisionNote();
 
     private record Half(
             ServerLevel level,
@@ -123,7 +122,8 @@ public final class GraphSource {
             }
         }
         report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
-        explain(half.plan(), half.now());
+        decisionLog.note(half.plan(), half.now());
+        reportWorld(half.state(), half.now());
         if (half.deep()) {
             String buildings = new TreeMap<>(half.state().buildings()) + " "
                     + half.plan().tasks().stream()
@@ -222,18 +222,21 @@ public final class GraphSource {
         return task.feasible() ? "" : "?(" + GraphWhy.building(graph, state, task.makes()) + ")";
     }
 
-    private void explain(GraphPlan plan, long now) {
-        decisions = GraphExplain.of(plan, now);
-        if (!notes.due("decisions", now)) {
+    private void reportWorld(GraphState state, long now) {
+        WorldReport report = WorldReport.of(state.facts());
+        WorldFactsStore.set(report);
+        if (!notes.due("world", now)) {
             return;
         }
-        for (GraphDecisions.Row row : decisions.decisions()) {
-            LOGGER.info("[graph] решение: {}", row.line());
-        }
-    }
-
-    public GraphDecisions decisions() {
-        return decisions;
+        LOGGER.info(
+                "[graph] мир: лишних {} (кусков {}), ям {}, насыпей {}, висящих {}, повреждено построек {}{}",
+                report.strayBlocks(),
+                report.strayGroups(),
+                report.pits(),
+                report.mounds(),
+                report.hanging(),
+                report.damaged(),
+                report.unknown() ? " (чанки не загружены)" : "");
     }
 
     private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {

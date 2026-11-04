@@ -117,6 +117,70 @@ public final class TownPlanner {
         return new TownPlan(plan.anchor(), plan.region(), plan.streets(), placed, plan.fence(), unplaced);
     }
 
+    public static boolean staleSizes(TownPlan plan, TownRules rules) {
+        Objects.requireNonNull(plan, "План не может быть null: сверяются размеры участков");
+        Objects.requireNonNull(rules, "Правила плана не могут быть null: размеры берутся из каталога");
+        for (Placement place : plan.placements()) {
+            Optional<TownEntry> entry = rules.template(place.id());
+            if (entry.isPresent()
+                    && (place.width() != entry.orElseThrow().width()
+                            || place.depth() != entry.orElseThrow().depth())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static TownPlan readapt(TerrainGrid grid, TownPlan plan, TownRules rules, Set<String> built) {
+        Objects.requireNonNull(grid, "Рельеф не может быть null: иначе участок не перенести");
+        Objects.requireNonNull(plan, "План не может быть null: переносятся его участки");
+        Objects.requireNonNull(rules, "Правила плана не могут быть null: в них новые размеры");
+        Objects.requireNonNull(built, "Готовые постройки не могут быть null: их не двигают");
+        if (!staleSizes(plan, rules)) {
+            return plan;
+        }
+        List<Placement> keep = new ArrayList<>();
+        List<Placement> resize = new ArrayList<>();
+        for (Placement place : plan.placements()) {
+            Optional<TownEntry> entry = rules.template(place.id());
+            boolean same = entry.isEmpty()
+                    || (place.width() == entry.orElseThrow().width()
+                            && place.depth() == entry.orElseThrow().depth());
+            if (built.contains(place.id()) || same) {
+                keep.add(place);
+            } else {
+                resize.add(place);
+            }
+        }
+        BuildingPlacer placer = new BuildingPlacer(
+                grid,
+                plan.region(),
+                plan.streets(),
+                plan.anchor().x(),
+                plan.anchor().z(),
+                rules,
+                keep);
+        List<String> unplaced = new ArrayList<>(plan.unplaced());
+        List<Placement> failed = new ArrayList<>();
+        for (Placement place : resize) {
+            TownEntry entry = rules.template(place.id())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Нет шаблона участка для '" + place.id() + "': новый размер неоткуда взять"));
+            Optional<Placement> moved =
+                    placer.placeAt(entry, place.id(), place.stage(), place.x(), place.z(), place.facing());
+            if (moved.isEmpty()) {
+                moved = placer.placeAs(entry, place.id(), place.stage());
+            }
+            if (moved.isEmpty()) {
+                unplaced.add(place.id());
+                failed.add(place);
+            }
+        }
+        List<Placement> placements = new ArrayList<>(placer.placed());
+        placements.addAll(failed);
+        return new TownPlan(plan.anchor(), plan.region(), plan.streets(), placements, plan.fence(), unplaced);
+    }
+
     private static List<String> stageEntries(List<List<String>> stages, int stage) {
         if (stage < 1 || stage > stages.size()) {
             return List.of();

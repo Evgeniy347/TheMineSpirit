@@ -22,6 +22,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
@@ -99,7 +101,9 @@ public final class BlockPlacer {
             return new Protected(refused.policy(), refused.reason());
         }
         if (action) {
-            return PathTrample.trample(spirit, target);
+            return SchematicActions.isTilled(blockId)
+                    ? farmland(spirit, level, target)
+                    : PathTrample.trample(spirit, target);
         }
         Begin guard = placementGuard(level, target, state, supportRequired);
         if (guard != null) {
@@ -138,6 +142,19 @@ public final class BlockPlacer {
             SettlementChestWatch.placed(server, target, level.getBlockState(target));
         }
         return new Started(target.immutable());
+    }
+
+    private static Begin farmland(SpiritEntity spirit, Level level, BlockPos target) {
+        if (new FarmActions(spirit).till(target)) {
+            if (level instanceof ServerLevel server) {
+                PlacedBlocksData.get(server).markSpirit(target);
+            }
+            return new Started(target.immutable());
+        }
+        return new Refused(
+                RefuseReason.NO_MATERIAL,
+                "нет тяпки для пашни: сначала нужна тяпка (в " + target.toShortString() + " осталась "
+                        + BlockStates.idOf(level.getBlockState(target)) + ")");
     }
 
     private @Nullable Begin placementGuard(Level level, BlockPos target, BlockState state, boolean supportRequired) {
@@ -219,6 +236,9 @@ public final class BlockPlacer {
     }
 
     static boolean hasSupport(Level level, BlockPos target, BlockState state) {
+        if (state.getBlock() instanceof CropBlock || state.getBlock() instanceof NetherWartBlock) {
+            return state.canSurvive(level, target);
+        }
         if (upperHalfOnLower(level, target, state)) {
             return true;
         }

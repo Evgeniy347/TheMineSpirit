@@ -9,6 +9,8 @@ import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.SettlementScan;
+import com.theminespirit.core.town.StrayGroups;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,35 @@ class WorldAreaInputsTests {
     }
 
     @Test
+    void strays_WorldScan_GroupsConnectedBlocksAndKeepsJournalBuilder() {
+        SettlementScan.Strays found = new SettlementScan.Strays(
+                Map.of(),
+                List.of(),
+                List.of(
+                        new StrayGroups.Cell(new BlockCoord(1, 64, 1), "minecraft:oak_fence"),
+                        new StrayGroups.Cell(new BlockCoord(2, 64, 1), "minecraft:oak_fence")),
+                List.of(),
+                0);
+        List<WorldAreaInputs.Placed> placed =
+                List.of(new WorldAreaInputs.Placed(new BlockCoord(2, 64, 1), "oak_fence", "spirit-1"));
+
+        List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(found, placed);
+
+        assertEquals(1, strays.size(), "связные клетки сканера — один кусок лишнего");
+        assertEquals(Map.of("oak_fence", 2), strays.get(0).blocks(), "у куска есть тип и количество");
+        assertEquals("spirit-1", strays.get(0).builder(), "строитель куска берётся из журнала, если запись есть");
+    }
+
+    @Test
+    void terrain_UnknownChunk_IsNotReportedFlat() {
+        GraphSiteFacts.Terrain terrain = WorldAreaInputs.terrain(
+                List.of(), Map.of(), List.of(), 0, 0, new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of()), true);
+
+        assertTrue(terrain.unknown(), "незагруженный чанк делает рельеф неизвестным");
+        assertEquals(0, terrain.pits(), "по неизвестному рельефу ям не выдумываем");
+    }
+
+    @Test
     void terrain_HolesAndExtras_CountDepthAndDrop() {
         Map<BlockCoord, Integer> depths = new LinkedHashMap<>();
         depths.put(new BlockCoord(1, 63, 1), 2);
@@ -70,7 +101,7 @@ class WorldAreaInputsTests {
         assertEquals(3, terrain.heightDrop(), "Перепад — от нижней ямы до верхнего лишнего блока");
         assertEquals(4, terrain.hanging(), "Висящее переносится");
         assertEquals(7, terrain.traces(), "Следы вне плана переносятся");
-        assertTrue(!terrain.flat(), "Неровный участок не считается ровным");
+        assertTrue(terrain.pits() > 0, "Неровный участок виден по ямам, а не по выдуманному флагу");
     }
 
     @Test
