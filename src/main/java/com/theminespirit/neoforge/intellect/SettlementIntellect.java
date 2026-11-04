@@ -1,19 +1,14 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
-import com.theminespirit.core.intellect.Activity;
 import com.theminespirit.core.intellect.ActivityCatalog;
-import com.theminespirit.core.intellect.ActivityId;
-import com.theminespirit.core.intellect.ActivityIntent;
 import com.theminespirit.core.intellect.ActivityLedger;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.SettlementView;
 import com.theminespirit.core.intellect.StrategicQueue;
-import com.theminespirit.core.intellect.StrengthVerdict;
 import com.theminespirit.core.intellect.TacticalDecision;
 import com.theminespirit.core.intellect.TacticalIntellect;
 import com.theminespirit.core.intellect.activity.ChopActivity;
@@ -25,23 +20,15 @@ import com.theminespirit.core.intellect.activity.MineActivity;
 import com.theminespirit.core.intellect.activity.RestActivity;
 import com.theminespirit.core.intellect.activity.SmeltActivity;
 import com.theminespirit.core.intellect.activity.UnloadActivity;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.ArmorModel;
 import com.theminespirit.core.tactics.EnemyProfiles;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.board.ActivityOffer;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -118,8 +105,6 @@ public final class SettlementIntellect {
         TacticalDecision decision = intellect.decide(view, ledger, reservations, queue, tick);
         lastDecision = decision;
         decisions.tick(decision.refusals(), decision.notes());
-        applyStrengths(BoardRegistry.get(level), members, decision, home, tick);
-        applyActivities(level, members, snapshots, decision, view, home, tick);
         expeditions.update(level, decision.expedition(), members, tick);
     }
 
@@ -186,95 +171,5 @@ public final class SettlementIntellect {
         }
         Point point = home.get();
         return new Point(point.x(), Math.max(-60, point.y() - 10), point.z());
-    }
-
-    private void applyStrengths(
-            BoardService board,
-            List<SpiritEntity> members,
-            TacticalDecision decision,
-            Optional<Point> home,
-            long tick) {
-        Map<String, SpiritEntity> byId = new HashMap<>();
-        for (SpiritEntity spirit : members) {
-            if (!spirit.isRemoved()) {
-                byId.put(spirit.getUUID().toString(), spirit);
-            }
-        }
-        for (StrengthVerdict verdict : decision.strengths()) {
-            SpiritEntity spirit = byId.get(verdict.spirit().toString());
-            if (spirit != null) {
-                StrengthDirector.apply(
-                        spirit,
-                        verdict,
-                        (armed, script, task, at) ->
-                                board.launch(armed, BoardCase.ACTIVITY_ARM, script, task, starter::start, at),
-                        tick,
-                        home.isPresent());
-                ledger.clear(spirit.getUUID());
-            }
-        }
-    }
-
-    private void applyActivities(
-            ServerLevel level,
-            List<SpiritEntity> members,
-            List<SpiritSnapshot> snapshots,
-            TacticalDecision decision,
-            SettlementView view,
-            Optional<Point> home,
-            long tick) {
-        if (home.isEmpty()) {
-            return;
-        }
-        Map<String, SpiritEntity> byId = new HashMap<>();
-        for (SpiritEntity spirit : members) {
-            if (!spirit.isRemoved()) {
-                byId.put(spirit.getUUID().toString(), spirit);
-            }
-        }
-        Map<String, SpiritSnapshot> shots = new HashMap<>();
-        for (SpiritSnapshot snapshot : snapshots) {
-            shots.put(snapshot.id().toString(), snapshot);
-        }
-        Set<UUID> team = new HashSet<>();
-        expeditions.active().ifPresent(stand -> team.addAll(stand.team()));
-        Set<UUID> defenders = new HashSet<>();
-        for (var assignment : decision.activities().assignments()) {
-            if (assignment.activity() == ActivityId.DEFEND) {
-                defenders.add(assignment.spirit());
-            }
-        }
-        for (SpiritEntity spirit : members) {
-            if (!spirit.isRemoved()) {
-                spirit.setDefenceAssigned(defenders.contains(spirit.getUUID()));
-            }
-        }
-        List<ActivityOffer> offers = new ArrayList<>();
-        for (var assignment : decision.activities().assignments()) {
-            if (assignment.activity() == ActivityId.DEFEND) {
-                SpiritEntity defender = byId.get(assignment.spirit().toString());
-                if (defender != null) {
-                    offers.add(new ActivityOffer(defender, ActivityId.DEFEND, "defend", null));
-                }
-                continue;
-            }
-            if (team.contains(assignment.spirit())) {
-                continue;
-            }
-            SpiritEntity spirit = byId.get(assignment.spirit().toString());
-            SpiritSnapshot snapshot = shots.get(assignment.spirit().toString());
-            if (spirit == null || snapshot == null) {
-                continue;
-            }
-            Activity activity = catalog.byId(assignment.activity());
-            ActivityIntent intent = activity.order(snapshot, view);
-            Optional<TaskNode> task = ActivityTaskFactory.taskFor(intent, spirit);
-            if (task.isEmpty()) {
-                continue;
-            }
-            offers.add(new ActivityOffer(
-                    spirit, assignment.activity(), intent.script().get(), task.get()));
-        }
-        BoardRegistry.get(level).offerActivities(offers, starter::start, tick);
     }
 }

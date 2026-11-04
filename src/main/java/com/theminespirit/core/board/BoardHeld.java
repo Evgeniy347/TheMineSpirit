@@ -12,10 +12,9 @@ public final class BoardHeld {
         Objects.requireNonNull(board, "Доска не может быть null: держатель задания читается с неё");
         Objects.requireNonNull(spirit, "spirit не может быть null: держатель задания — дух");
         List<BoardTicket> assigned = board.assignedTo(spirit);
-        if (!assigned.isEmpty()) {
-            return Optional.of(assigned.get(0));
+        if (assigned.isEmpty()) {
+            return Optional.empty();
         }
-        return board.find(BoardActivities.idOf(spirit))
-                .filter(ticket -> board.statusOf(ticket.id()).orElse(null) == BoardStatus.ASSIGNED);
+        return Optional.of(assigned.get(0));
     }
 }

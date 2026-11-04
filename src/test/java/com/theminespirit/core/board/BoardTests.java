@@ -98,22 +98,6 @@ class BoardTests {
     }
 
     @Test
-    void occupy_ExternalTaskScript_ShownOnActivity() {
-        Board board = boardAt(0);
-
-        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_EXTERNAL, "chop_tree", null, 0);
-
-        assertEquals(
-                List.of("script=chop_tree"),
-                board.all().stream()
-                        .filter(ticket -> ticket.id().equals(BoardActivities.idOf(SPIRIT_ONE)))
-                        .findFirst()
-                        .orElseThrow()
-                        .modifiers(),
-                "Задача духа через REST видна на доске занятием со своим скриптом, а не безымянной (INC-48)");
-    }
-
-    @Test
     void scriptOf_GotoThenChop_NamesWork() {
         assertEquals(
                 "chop_tree",
@@ -526,64 +510,6 @@ class BoardTests {
     }
 
     @Test
-    void pendingFor_EqualUuidOtherInstance_FindsTicket() {
-        Board board = boardAt(0);
-        BoardTicket mine = new BoardTicket(
-                "build_1",
-                BoardCase.BUILD_HOUSE,
-                Optional.of(SPIRIT_ONE),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
-                0,
-                1,
-                BoardTicket.ALWAYS_CAUSE,
-                List.of(),
-                Map.of());
-        board.submit(mine);
-
-        assertEquals(
-                List.of(mine),
-                board.pendingFor(UUID.fromString(SPIRIT_ONE.toString())),
-                "Владелец задания сравнивается по значению UUID, а не по экземпляру: после перезагрузки доски "
-                        + "и духа UUID — разные объекты с тем же значением, и дух терял бы свои задания");
-    }
-
-    @Test
-    void pendingFor_Returns_SpiritTickets() {
-        Board board = boardAt(0);
-        BoardTicket mine = new BoardTicket(
-                "build_1",
-                BoardCase.BUILD_HOUSE,
-                Optional.of(SPIRIT_ONE),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
-                0,
-                1,
-                BoardTicket.ALWAYS_CAUSE,
-                List.of(),
-                Map.of());
-        BoardTicket other = new BoardTicket(
-                "build_2",
-                BoardCase.BUILD_HOUSE,
-                Optional.of(SPIRIT_TWO),
-                BoardRules.priorityOf(BoardCase.BUILD_HOUSE),
-                0,
-                1,
-                BoardTicket.ALWAYS_CAUSE,
-                List.of(),
-                Map.of());
-        board.submit(mine);
-        board.submit(other);
-
-        assertEquals(
-                List.of(mine),
-                board.pendingFor(SPIRIT_ONE),
-                "pendingFor возвращает задания владельца: адаптер знает, чем дух занят");
-        assertEquals(
-                List.of(other),
-                board.pendingFor(SPIRIT_TWO),
-                "Задания другого духа не попадают в список: занятость считается по владельцу");
-    }
-
-    @Test
     void assignedTo_Returns_TicketClaimedBySpirit() {
         Board board = boardAt(0);
         BoardTicket supply = ticket("supply:dirt", BoardCase.SUPPLY_SITE, 0, List.of());
@@ -993,22 +919,6 @@ class BoardTests {
         assertTrue(
                 !board.blocked(blocked.id()),
                 "Заблокированное по старым правилам больше не держит цепочку: " + board.statusOf(blocked.id()));
-    }
-
-    @Test
-    void occupy_ActivityChangeAndVacate_Journaled() {
-        List<String> events = new ArrayList<>();
-        Board board =
-                new Board(() -> 0L, (event, ticket, holder, tick) -> events.add(event + ":" + ticket.boardCase()));
-
-        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_COMBAT, 0);
-        board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_COMBAT, 0);
-        board.vacate(SPIRIT_ONE, null);
-
-        assertEquals(
-                List.of("ASSIGNED:ACTIVITY_COMBAT", "CANCELLED:ACTIVITY_COMBAT"),
-                events,
-                "Бой и стража видны в журнале доски: постановка и снятие занятия (INC-35), без повторов");
     }
 
     private static BoardTicket simpleTicket(String id, BoardCase boardCase) {

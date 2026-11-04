@@ -12,6 +12,8 @@ import com.theminespirit.neoforge.board.BoardService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -29,7 +31,7 @@ public final class Observe9ScenesGameTests {
     // [флак] шаг наблюдения 9 ждёт 900 тиков тактики, а не мгновенного события: бюджет двойной.
     @SettlementSystems(coordinator = true)
     @GameTest(template = "arena", batch = "scene_observe9_arena", timeoutTicks = 1400)
-    public static void observe9Scene_ActivityCardPaused_ModeDoesNotFlap(GameTestHelper helper) {
+    public static void observe9Scene_BusyTicket_ModeDoesNotFlap(GameTestHelper helper) {
         GameTestFilter.setMobsTargetSpirits(false);
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(5, 1, 5));
@@ -43,14 +45,19 @@ public final class Observe9ScenesGameTests {
         List<String> orderChanges = Collections.synchronizedList(new ArrayList<>());
         AtomicReference<CombatMode> lastMode =
                 new AtomicReference<>(spirit.tactics().combatMode());
+        BoardTicket busy = new BoardTicket(
+                "test:busy",
+                BoardCase.GATHER_MATERIALS,
+                Optional.of(spirit.getUUID()),
+                50,
+                helper.getTick(),
+                1,
+                "test",
+                List.of(),
+                Map.of());
+        board.board().submit(busy);
+        board.board().claim("test:busy", spirit.getUUID(), helper.getTick());
         helper.onEachTick(() -> {
-            board.board()
-                    .occupy(
-                            spirit.getUUID(),
-                            BoardCase.ACTIVITY_SMELT,
-                            "smelt",
-                            "-171,71,-489",
-                            helper.getLevel().getGameTime());
             CombatMode mode = spirit.tactics().combatMode();
             if (mode != lastMode.getAndSet(mode)) {
                 orderChanges.add((helper.getTick() - start) + ":" + mode);
@@ -68,12 +75,12 @@ public final class Observe9ScenesGameTests {
                     .toList();
             helper.assertTrue(
                     flips.size() <= 1,
-                    "Дух с занятием доски (карточка ACTIVITY_SMELT) и без врагов не должен переключать режим: "
+                    "Дух с билетом доски и без врагов не должен переключать режим: "
                             + "за " + MEASURE_TICKS + " тиков записей режима " + flips.size() + " — " + flips
                             + "; приказ " + spirit.tactics().activeDirective()
                             + "; ordered " + orderChanges
                             + "; скрипт " + spirit.currentTaskScript() + "/" + spirit.taskStatus());
-            board.board().vacate(spirit.getUUID(), null);
+            board.board().cancel("test:busy");
             TacticsScene.finish(helper, spirit);
         });
     }

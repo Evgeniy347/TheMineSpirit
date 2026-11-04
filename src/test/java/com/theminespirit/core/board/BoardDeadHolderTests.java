@@ -112,32 +112,4 @@ class BoardDeadHolderTests {
                 board.statusOf("repair:build_house"),
                 "Свободное задание остаётся свободным");
     }
-
-    @Test
-    void releaseDeadHolders_DeadActivity_Vacated() {
-        Board board = boardAt(0);
-        UUID dead = UUID.randomUUID();
-        board.occupy(dead, BoardCase.ACTIVITY_CHOP, 0);
-
-        List<HolderRelease> released = board.releaseDeadHolders(Set.of(UUID.randomUUID()));
-
-        assertEquals(
-                List.of(new HolderRelease(BoardActivities.idOf(dead), BoardCase.ACTIVITY_CHOP, dead, true)),
-                released,
-                "Занятие погибшего духа снимается: иначе activity:<дух> висит и занимает место в выдаче");
-        assertEquals(Optional.empty(), board.occupation(dead), "У погибшего духа не остаётся занятия на доске");
-    }
-
-    @Test
-    void releaseDeadHolders_LiveActivity_Kept() {
-        Board board = boardAt(0);
-        UUID live = UUID.randomUUID();
-        board.occupy(live, BoardCase.ACTIVITY_CHOP, 0);
-
-        List<HolderRelease> released = board.releaseDeadHolders(Set.of(live));
-
-        assertEquals(List.of(), released, "Занятие живого духа не снимается пересборкой");
-        assertEquals(
-                Optional.of(BoardCase.ACTIVITY_CHOP), board.occupation(live), "Занятие живого духа остаётся на доске");
-    }
 }

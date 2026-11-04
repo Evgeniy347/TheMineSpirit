@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardTicket;
@@ -36,32 +35,26 @@ final class JobLaunch {
                 : TicketPlanPick.plan(ticket.boardCase(), ticket.level(), target);
     }
 
-    static void start(Board board, ActivityCards cards, SpiritEntity spirit, String ticketId, TaskNode plan) {
-        Objects.requireNonNull(board, "Доска не может быть null: занятие снимается с неё");
+    static void start(ActivityCards cards, SpiritEntity spirit, String ticketId, TaskNode plan) {
         Objects.requireNonNull(cards, "Карточки занятий не могут быть null: иначе карточка занятия останется");
         Objects.requireNonNull(spirit, "Дух не может быть null: задание стартует у конкретного духа");
         Objects.requireNonNull(plan, "План не может быть null: духу нечего исполнять");
-        String activity = board.occupation(spirit.getUUID()).map(Enum::name).orElse(null);
-        String prior = activity != null ? activity : spirit.currentActivity().orElse(null);
+        String prior = spirit.currentActivity().orElse(null);
         boolean background = spirit.runsBackgroundTask();
         cards.forget(spirit.getUUID());
-        if (activity != null) {
-            board.vacate(spirit.getUUID(), "задание " + ticketId + " вытеснило занятие " + activity);
-        }
         spirit.startTask(plan);
-        if (activity != null || background) {
+        if (background) {
             String script =
                     BoardActivities.cardScript(spirit.currentTaskScript().orElse(null), plan);
             LOGGER.info(
-                    "[board] задание {} стартует скрипт {}, activity {} отменена",
+                    "[board] задание {} стартует скрипт {}, вытесняет фоновое занятие {}",
                     ticketId,
                     script == null ? "?" : script,
-                    prior == null ? BoardActivities.idOf(spirit.getUUID()) : prior);
+                    prior == null ? "?" : prior);
         }
     }
 
-    static void dropUnclaimed(
-            Board board, ActivityCards cards, SpiritEntity spirit, String ticketId, BoardOutcome outcome) {
+    static void dropUnclaimed(ActivityCards cards, SpiritEntity spirit, String ticketId, BoardOutcome outcome) {
         spirit.cancelTask();
         cards.forget(spirit.getUUID());
         WorkReserveHub.releaseAll(spirit);

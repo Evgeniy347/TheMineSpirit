@@ -144,7 +144,6 @@ src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	компакт
 src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
 src/main/java/com/theminespirit/gametest/FullCycleGameTests.java	[флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
 src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	[флак] путь из глубины дома — до 60 шагов по лестнице (≈ 600 тиков), под нагрузкой полного прогона запас 4×.
-src/main/java/com/theminespirit/gametest/IntellectForageGameTests.java	[флак] охота длиннее прочих сцен интеллекта: подход к дикой корове вне домашнего загона и добивание
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
 src/main/java/com/theminespirit/gametest/MineVeinDurabilityGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.

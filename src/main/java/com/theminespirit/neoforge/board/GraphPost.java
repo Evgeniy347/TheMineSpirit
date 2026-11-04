@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
@@ -269,8 +268,7 @@ final class GraphPost {
                 plan.task(),
                 (member, name, task, tick) -> {
                     if (member.isRemoved()) return false;
-                    JobLaunch.start(
-                            service.board(), service.cards, member, BoardActivities.idOf(member.getUUID()), task);
+                    JobLaunch.start(service.cards, member, plan.script(), task);
                     return true;
                 },
                 now);

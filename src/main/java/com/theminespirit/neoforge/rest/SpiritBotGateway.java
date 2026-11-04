@@ -223,7 +223,10 @@ public final class SpiritBotGateway implements BotGateway {
                 }
             }
         }
-        return spirit.currentActivity().orElse(null);
+        return spirit.currentTaskScript()
+                .flatMap(BoardActivities::caseOfScript)
+                .map(Enum::name)
+                .orElseGet(() -> spirit.currentActivity().orElse(null));
     }
 
     private static BotState state(SpiritEntity spirit, @Nullable BotBoardTask boardTask) {

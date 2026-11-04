@@ -404,56 +404,16 @@ public final class Board {
             if (holder == null || live.contains(holder)) {
                 continue;
             }
-            if (BoardActivities.isActivity(ticket.boardCase())) {
-                if (vacate(holder, null)) {
-                    released.add(new HolderRelease(ticket.id(), ticket.boardCase(), holder, true));
-                }
-            } else if (release(ticket.id())) {
+            if (release(ticket.id())) {
                 released.add(new HolderRelease(ticket.id(), ticket.boardCase(), holder, false));
             }
         }
         return List.copyOf(released);
     }
 
-    public void occupy(UUID spirit, BoardCase activity, long now) {
-        occupy(spirit, activity, null, null, now);
-    }
-
-    public void occupy(UUID spirit, BoardCase activity, @Nullable String script, @Nullable String target, long now) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: занятие показывается на конкретного духа");
-        BoardTiming.require(now);
-        String id = BoardActivities.idOf(spirit);
-        BoardTicket current = tickets.get(id);
-        List<String> details = BoardActivities.details(script, target);
-        if (current != null
-                && current.boardCase() == activity
-                && current.modifiers().equals(details)) {
-            return;
-        }
-        BoardTicket ticket = BoardActivities.ticket(spirit, activity, now, details);
-        tickets.remove(id);
-        tickets.put(id, ticket);
-        statuses.put(id, BoardStatus.ASSIGNED);
-        claimAssignees.put(id, spirit);
-        events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
-    }
-
-    public boolean vacate(UUID spirit, @Nullable String reason) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: занятие снимается с конкретного духа");
-        String id = BoardActivities.idOf(spirit);
-        BoardTicket ticket = tickets.remove(BoardActivities.idOf(spirit));
-        if (ticket == null) {
-            return false;
-        }
-        statuses.remove(id);
-        claimAssignees.remove(id);
-        events.transition(BoardLog.Event.CANCELLED, ticket.withFailure(reason), spirit, nowTicks.getAsLong());
-        return true;
-    }
-
     public Optional<BoardCase> occupation(UUID spirit) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие читается у конкретного духа");
-        return Optional.ofNullable(tickets.get(BoardActivities.idOf(spirit))).map(BoardTicket::boardCase);
+        return Optional.empty();
     }
 
     public List<String> retain(Set<String> liveCauses, long now) {
@@ -519,22 +479,6 @@ public final class Board {
         failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
         removed += evictOverflow();
         return removed;
-    }
-
-    public List<BoardTicket> pendingFor(UUID spirit) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: список заданий строится на духа");
-        List<BoardTicket> pending = new ArrayList<>();
-        for (BoardTicket ticket : tickets.values()) {
-            BoardStatus status = statuses.get(ticket.id());
-            if ((status == BoardStatus.PENDING
-                            || status == BoardStatus.WAITING_RESOURCES
-                            || status == BoardStatus.ASSIGNED)
-                    && ticket.assignee().filter(spirit::equals).isPresent()) {
-                pending.add(ticket);
-            }
-        }
-        pending.sort(QueueOrder.of(tickets.values(), statuses, now()));
-        return List.copyOf(pending);
     }
 
     public List<BoardTicket> assignedTo(UUID spirit) {

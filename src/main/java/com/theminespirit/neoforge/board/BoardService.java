@@ -431,48 +431,17 @@ public final class BoardService {
             issuedGenerations.remove(ticket.id());
             board.release(ticket.id());
         }
-        board.vacate(spirit.getUUID(), null);
         cards.forget(spirit.getUUID());
         WorkReserveHub.releaseAll(spirit);
     }
 
-    public void offerActivities(List<ActivityOffer> offers, ActivityOffer.Launcher launcher, long now) {
-        Objects.requireNonNull(offers, "Предложения не могут быть null: пустой набор — пустой список");
-        Objects.requireNonNull(launcher, "Запуск занятий не может быть null: занятие выдаёт доска через него");
-        List<SpiritEntity> offered = new ArrayList<>();
-        for (ActivityOffer offer : offers) {
-            SpiritEntity spirit = offer.spirit();
-            offered.add(spirit);
-            TaskNode task = offer.task();
-            if (spirit.isRemoved()
-                    || task == null
-                    || !board.assignedTo(spirit.getUUID()).isEmpty()
-                    || graphWorkFor(spirit.getUUID())) {
-                continue;
-            }
-            if (launcher.start(spirit, offer.script(), task, now)) {
-                cards.remember(
-                        spirit.getUUID(),
-                        BoardActivities.caseOf(offer.activity()),
-                        spirit.taskGeneration(),
-                        offer.script(),
-                        BoardActivities.targetOf(task));
-            }
-        }
-        reconcileActivities(offered, false);
-    }
-
-    private boolean graphWorkFor(UUID spirit) {
-        return board.pendingFor(spirit).stream().anyMatch(ticket -> !BoardActivities.isActivity(ticket.boardCase()));
+    @FunctionalInterface
+    public interface Launcher {
+        boolean start(SpiritEntity spirit, String script, TaskNode task, long tick);
     }
 
     public boolean launch(
-            SpiritEntity spirit,
-            BoardCase activity,
-            String script,
-            TaskNode task,
-            ActivityOffer.Launcher launcher,
-            long now) {
+            SpiritEntity spirit, BoardCase activity, String script, TaskNode task, Launcher launcher, long now) {
         Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
         if (!BoardActivities.isActivity(activity)) {
             throw new IllegalArgumentException(
@@ -480,20 +449,10 @@ public final class BoardService {
         }
         if (!launcher.start(spirit, script, task, now)) return false;
         cards.remember(spirit.getUUID(), activity, spirit.taskGeneration(), script, BoardActivities.targetOf(task));
-        board.occupy(spirit.getUUID(), activity, script, BoardActivities.targetOf(task), board.now());
         return true;
     }
 
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BoardOccupant.Occupation> occupation = occupationOf(spirit);
-            if (occupation.isPresent()) {
-                BoardOccupant.Occupation occ = occupation.get();
-                board.occupy(spirit.getUUID(), occ.boardCase(), occ.script(), occ.target(), board.now());
-            } else {
-                board.vacate(spirit.getUUID(), "нет занятия: дух свободен или занят билетом доски");
-            }
-        }
         WaitRefresh.tick(board, spirits, targets, stock, crafters, board.now());
         if (!census) return;
     }
@@ -555,17 +514,11 @@ public final class BoardService {
     }
 
     boolean idleOrActivity(SpiritEntity spirit) {
-        return cards.idleOrActivity(
-                spirit.getUUID(), spirit.taskGeneration(), spirit.taskStatus().orElse(null));
+        return board.assignedTo(spirit.getUUID()).isEmpty();
     }
 
     void detachForAction(SpiritEntity spirit) {
         board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
-        cards.forget(spirit.getUUID());
-    }
-
-    private Optional<BoardOccupant.Occupation> occupationOf(SpiritEntity spirit) {
-        return cards.occupation(spirit, !board.assignedTo(spirit.getUUID()).isEmpty());
     }
 
     public void completeCapture(String captureId) {
@@ -745,7 +698,7 @@ public final class BoardService {
         TaskNode plan;
         try {
             plan = JobLaunch.plan(ticket, target);
-            JobLaunch.start(board, cards, spirit, ticket.id(), plan);
+            JobLaunch.start(cards, spirit, ticket.id(), plan);
         } catch (RuntimeException failure) {
             LOGGER.warn(
                     "[incident] дух {} не продолжил задание {} после вытеснения: {}; задание возвращено доске",
@@ -877,7 +830,7 @@ public final class BoardService {
                         spirit.displayName());
             }
             try {
-                JobLaunch.start(board, cards, spirit, ticket.id(), plan);
+                JobLaunch.start(cards, spirit, ticket.id(), plan);
             } catch (RuntimeException failure) {
                 LOGGER.error(
                         "Задание {}: дух {} не принял задание: {}",
@@ -896,7 +849,7 @@ public final class BoardService {
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
                 notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters));
             } else {
-                JobLaunch.dropUnclaimed(board, cards, spirit, ticket.id(), outcome);
+                JobLaunch.dropUnclaimed(cards, spirit, ticket.id(), outcome);
             }
         }
     }
