@@ -15,7 +15,7 @@ public final class GraphWorldEvents {
 
     public static Set<String> of(GraphFacts facts) {
         Set<String> events = new LinkedHashSet<>();
-        if (facts.strays().stream().anyMatch(stray -> stray.builder() != null)) {
+        if (!facts.strays().isEmpty()) {
             events.add(DEMOLISH_STRAY);
         }
         GraphFacts.Terrain terrain = facts.terrain();

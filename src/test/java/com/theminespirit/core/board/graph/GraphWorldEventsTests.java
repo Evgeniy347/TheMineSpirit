@@ -55,15 +55,15 @@ class GraphWorldEventsTests {
     }
 
     @Test
-    void facts_PlayerStray_GivesNoDemolition() {
+    void facts_OldStrayWithoutBuilder_GivesDemolition() {
         GraphFacts facts = facts(
-                List.of(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), null)),
+                List.of(new GraphFacts.Stray("s", "oak_fence", new GraphFacts.Position(1, 64, 1), null)),
                 GraphFacts.Terrain.empty(),
                 Map.of());
 
-        assertFalse(
+        assertTrue(
                 GraphWorldEvents.of(facts).contains(GraphWorldEvents.DEMOLISH_STRAY),
-                "постройку игрока не сносим: она не ставит задачу уборки");
+                "старый мусор без записи журнала — всё равно лишнее: его сносит граф, а не журнал");
     }
 
     @Test
@@ -71,7 +71,7 @@ class GraphWorldEventsTests {
         GraphFacts facts = facts(
                 List.of(),
                 new GraphFacts.Terrain(
-                        0, 0, 0, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of("minecraft:oak_log", 4)),
+                        0, 0, 0, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of("minecraft:oak_log", 4), false),
                 Map.of());
 
         Set<String> events = GraphWorldEvents.of(facts);
@@ -84,7 +84,7 @@ class GraphWorldEventsTests {
     void facts_FillComposition_GivesBackfill() {
         GraphFacts facts = facts(
                 List.of(),
-                new GraphFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of()),
+                new GraphFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of(), false),
                 Map.of());
 
         assertTrue(GraphWorldEvents.of(facts).contains(GraphWorldEvents.BACKFILL), "яма из блоков требует подсыпки");
