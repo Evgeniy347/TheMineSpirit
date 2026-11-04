@@ -446,7 +446,8 @@ public final class BoardService {
             TaskNode task = offer.task();
             if (spirit.isRemoved()
                     || task == null
-                    || !board.assignedTo(spirit.getUUID()).isEmpty()) {
+                    || !board.assignedTo(spirit.getUUID()).isEmpty()
+                    || graphWorkFor(spirit.getUUID())) {
                 continue;
             }
             if (launcher.start(spirit, offer.script(), task, now)) {
@@ -459,6 +460,10 @@ public final class BoardService {
             }
         }
         reconcileActivities(offered, false);
+    }
+
+    private boolean graphWorkFor(UUID spirit) {
+        return board.pendingFor(spirit).stream().anyMatch(ticket -> !BoardActivities.isActivity(ticket.boardCase()));
     }
 
     public boolean launch(

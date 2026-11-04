@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.ActivityGrace;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -50,6 +51,7 @@ final class ActivityCards {
             return null;
         }
         RunStatus status = spirit.taskStatus().orElse(null);
+        long now = spirit.level().getGameTime();
         if (status == RunStatus.RUNNING) {
             if (own.idleSince() == 0) {
                 return own;
@@ -57,6 +59,14 @@ final class ActivityCards {
             Launched active = new Launched(own.activity(), own.generation(), own.script(), own.target(), 0);
             launched.put(id, active);
             return active;
+        }
+        if (own.idleSince() == 0) {
+            Launched idle = new Launched(own.activity(), own.generation(), own.script(), own.target(), now);
+            launched.put(id, idle);
+            return idle;
+        }
+        if (ActivityGrace.keep(own.idleSince(), now)) {
+            return own;
         }
         launched.remove(id);
         return null;
