@@ -120,6 +120,24 @@ class RetreatPathTests {
     }
 
     @Test
+    void walkable_ClosedGateOpenable_StandBeyondIsReachable() {
+        BlockCoord gate = cell(1, 0, 0);
+        SafetyView view = coord -> {
+            if (coord.equals(gate)) {
+                return Cell.PASSABLE;
+            }
+            return coord.y() < 0 ? Cell.SOLID : Cell.PASSABLE;
+        };
+        Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
+
+        Set<BlockCoord> open = RetreatPath.walkable(cell(0, 0, 0), view, near).orElseThrow();
+
+        assertTrue(
+                open.contains(cell(2, 0, 0)),
+                "Закрытая калитка открывается по пути: стоянка за ней достижима пешком, отказ был бы ложным");
+    }
+
+    @Test
     void walkable_RoofOrSealedCell_NotOffered() {
         Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
         Set<BlockCoord> open = RetreatPath.walkable(NOOK, nook(Set.of()), near).orElseThrow();

@@ -3,9 +3,11 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.ReachStands;
+import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.movement.NetworkLevelView;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.HashSet;
 import java.util.List;
@@ -155,10 +157,35 @@ public final class ReachApproach {
             reachable = path != null && path.canReach();
         }
         if (!reachable) {
+            reachable = twoWayWalk(feet);
+        }
+        if (!reachable) {
             rejected++;
             rejection = "до стоянки нет пути пешком от " + feet();
         }
         return reachable;
+    }
+
+    private boolean twoWayWalk(BlockCoord stand) {
+        BlockCoord from = feet();
+        int margin = 8;
+        int minX = Math.min(from.x(), stand.x()) - margin;
+        int maxX = Math.max(from.x(), stand.x()) + margin;
+        int minZ = Math.min(from.z(), stand.z()) - margin;
+        int maxZ = Math.max(from.z(), stand.z()) + margin;
+        int minY = Math.min(from.y(), stand.y()) - margin;
+        int maxY = Math.max(from.y(), stand.y()) + margin;
+        return RetreatPath.walkable(
+                        from,
+                        new NetworkLevelView(spirit.level()),
+                        cell -> cell.x() >= minX
+                                && cell.x() <= maxX
+                                && cell.z() >= minZ
+                                && cell.z() <= maxZ
+                                && cell.y() >= minY
+                                && cell.y() <= maxY)
+                .map(cells -> cells.contains(stand))
+                .orElse(false);
     }
 
     private void finish() {
