@@ -67,7 +67,7 @@
           "case": "ACTIVITY_ARM",
           "base": 55,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "advice": [
@@ -81,7 +81,7 @@
           "case": "ACTIVITY_CRAFT",
           "base": 50,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "advice": [
@@ -95,7 +95,7 @@
           "case": "ACTIVITY_CRAFT",
           "base": 50,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "push": {
@@ -112,7 +112,7 @@
           "case": "ACTIVITY_CRAFT",
           "base": 45,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "push": {
@@ -129,7 +129,7 @@
           "case": "ACTIVITY_CRAFT",
           "base": 40,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "push": {
@@ -146,7 +146,7 @@
           "case": "ACTIVITY_CRAFT",
           "base": 45,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "push": {
@@ -163,7 +163,7 @@
           "case": "ACTIVITY_CRAFT",
           "base": 35,
           "consumes": {},
-          "implemented": false
+          "implemented": true
         }
       ],
       "push": {

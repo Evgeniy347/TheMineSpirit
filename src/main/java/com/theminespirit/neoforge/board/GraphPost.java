@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
@@ -9,6 +10,8 @@ import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
+import com.theminespirit.core.board.graph.ActivityPlans;
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphState;
@@ -18,12 +21,9 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.CraftedItems;
-import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -35,10 +35,6 @@ final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
     static final String PART = ":2";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
-    private static final String EAT = "eat";
-    private static final String ORDER = "craft_player_order";
-    private static final Set<String> DEMOLITION = Set.of("demolish_stray", "clear_floating");
-    private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
     private static final Set<BoardStatus> OPEN_STATUSES =
             Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
@@ -53,6 +49,7 @@ final class GraphPost {
     final MaterialSource source;
     final PetWork pets;
     final GraphState state;
+    final GraphFacts facts;
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -74,6 +71,7 @@ final class GraphPost {
         this.source = FirstStepsRunner.materialSource(level);
         this.around = site.around();
         this.now = now;
+        this.facts = site.state().facts();
     }
 
     record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets, GraphState state) {}
@@ -102,70 +100,7 @@ final class GraphPost {
     }
 
     private boolean event(GraphTickets.Ticket ticket) {
-        if (GraphMorePost.handles(ticket)) return GraphMorePost.post(this, ticket, ticket.task());
-        if (ticket.id().startsWith(GraphTickets.PREFIX + "event:life_")) {
-            return true;
-        }
-        if (FarmPost.event(this, ticket)) {
-            return true;
-        }
-        if (EAT.equals(ticket.node())) {
-            return hungry(ticket);
-        }
-        if (BoardCase.REPAIR_TOOL.name().toLowerCase(Locale.ROOT).equals(ticket.node())) {
-            return RepairWatch.post(level, service, spirits, ticket.task().priority(), now);
-        }
-        if (ORDER.equals(ticket.node())) {
-            CraftOrders.refresh(level);
-            return true;
-        }
-        if (DEMOLITION.contains(ticket.node())) {
-            Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-            town.ifPresent(plan -> PlanDemolition.tick(level, service, scan.stage(), plan, now, this));
-            return town.isPresent();
-        }
-        if (YardFloorWatch.handles(ticket.node())) {
-            return YardFloorWatch.post(level, service, scan.stage(), now);
-        }
-        if ("fill_crater".equals(ticket.node())) {
-            return new GraphHarvestPost(this).craters(ticket);
-        }
-        if (ticket.task().boardCase() == BoardCase.REPAIR_FENCE) {
-            return new GraphHarvestPost(this).fences(ticket);
-        }
-        if (WorldPost.handles(ticket.node())) {
-            return WorldPost.post(this, ticket);
-        }
-        return MorePost.event(this, ticket) || (COLLECT.contains(ticket.node()) && collect(ticket));
-    }
-
-    private boolean hungry(GraphTickets.Ticket ticket) {
-        GraphFood.post(
-                level, service, spirits, stock, ticket.id(), ticket.task().priority(), now);
-        FarmPost.eat(this, ticket);
-        return true;
-    }
-
-    private boolean collect(GraphTickets.Ticket ticket) {
-        boolean saplings = "collect_saplings".equals(ticket.node());
-        Optional<BlockCoord> at = saplings ? around.decay() : around.anyDrop();
-        if (at.isEmpty()) {
-            return false;
-        }
-        Optional<BlockCoord> target = saplings ? GraphTargets.leafDropStand(level, at.orElseThrow()) : at;
-        if (target.isEmpty()) {
-            return false;
-        }
-        submit(
-                ticket(
-                        ticket.id(),
-                        BoardCase.COLLECT_DROPS,
-                        Optional.empty(),
-                        ticket.task().priority(),
-                        ticket.id(),
-                        Map.of()),
-                TicketTarget.at(target.orElseThrow()));
-        return true;
+        return GraphEventPost.post(this, ticket);
     }
 
     private boolean way(GraphTickets.Ticket ticket, GraphPlan.Task task) {
@@ -176,6 +111,9 @@ final class GraphPost {
         }
         if (task.spirit().isPresent()) {
             return false;
+        }
+        if (StorePost.way(this, ticket)) {
+            return true;
         }
         return switch (boardCase) {
             case REPAIR_TOOL -> RepairWatch.post(level, service, spirits, task.priority(), now);
@@ -189,6 +127,7 @@ final class GraphPost {
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
+            case FILL_CRATER -> new GraphHarvestPost(this).craters(ticket);
             default -> MorePost.way(this, ticket, task) || FarmPost.way(this, ticket, task);
         };
     }
@@ -290,6 +229,21 @@ final class GraphPost {
 
     boolean open(String id) {
         return service.board().statusOf(id).filter(OPEN_STATUSES::contains).isPresent();
+    }
+
+    boolean launchActivity(SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {
+        return service.launch(
+                spirit,
+                activity,
+                plan.script(),
+                plan.task(),
+                (member, name, task, tick) -> {
+                    if (member.isRemoved()) return false;
+                    JobLaunch.start(
+                            service.board(), service.cards, member, BoardActivities.idOf(member.getUUID()), task);
+                    return true;
+                },
+                now);
     }
 
     private GraphRoutes routes() {

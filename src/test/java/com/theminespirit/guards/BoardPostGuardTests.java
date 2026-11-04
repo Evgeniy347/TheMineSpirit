@@ -45,7 +45,7 @@ class BoardPostGuardTests {
     @Test
     void demolition_IsExecutedByGraphNode_NotByScheduler() {
         Map<Path, String> board = SourceFiles.javaUnder(BOARD);
-        String post = board.get(BOARD.resolve("GraphPost.java"));
+        String post = board.get(BOARD.resolve("GraphEventPost.java"));
         String lifecycle = board.get(BOARD.resolve("BoardLifecycle.java"));
 
         assertTrue(
