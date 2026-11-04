@@ -132,7 +132,7 @@ class GraphStateFactsTests {
     @Test
     void stageReqs_MutableInput_AreCopied() {
         Map<String, Integer> minimum = new HashMap<>(Map.of("hut", 1));
-        GraphFacts.StageReqs reqs = new GraphFacts.StageReqs(minimum, Map.of("hut", 0));
+        GraphSiteFacts.StageReqs reqs = new GraphSiteFacts.StageReqs(minimum, Map.of("hut", 0));
         minimum.put("hut", 2);
 
         assertEquals(Map.of("hut", 1), reqs.minimum(), "Минимум этапа копируется");
@@ -140,7 +140,7 @@ class GraphStateFactsTests {
 
     @Test
     void terrain_Empty_IsFlat() {
-        List<GraphFacts.Stray> strays = new ArrayList<>();
+        List<GraphSiteFacts.Stray> strays = new ArrayList<>();
         GraphFacts facts = new GraphFacts(
                 Map.of(),
                 List.of(),
@@ -149,9 +149,9 @@ class GraphStateFactsTests {
                 Map.of(),
                 Map.of(),
                 strays,
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
-        strays.add(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+        strays.add(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
 
         assertEquals(List.of(), facts.strays(), "Список лишних построек копируется");
     }
@@ -180,7 +180,7 @@ class GraphStateFactsTests {
                 Map.of(),
                 Map.of(),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
     }
 }

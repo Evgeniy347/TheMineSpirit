@@ -18,7 +18,7 @@ public final class GraphWorldEvents {
         if (facts.strays().stream().anyMatch(stray -> stray.builder() != null)) {
             events.add(DEMOLISH_STRAY);
         }
-        GraphFacts.Terrain terrain = facts.terrain();
+        GraphSiteFacts.Terrain terrain = facts.terrain();
         if (terrain.pits() > 0 || !terrain.fill().isEmpty()) {
             events.add(BACKFILL);
         }

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.StoreInputs;
 import com.theminespirit.core.board.graph.StoreMinimums;
 import com.theminespirit.core.board.graph.SupplyGraph;
@@ -25,7 +26,7 @@ final class GraphStoreInputs {
     private GraphStoreInputs() {}
 
     static GraphFacts of(GraphFacts base, ServerLevel level, SupplyGraph graph) {
-        GraphFacts.StageReqs reqs =
+        GraphSiteFacts.StageReqs reqs =
                 StoreInputs.stageReqs(base.stageReqs(), StoreMinimums.loadDefault(), graph, base.chests());
         Map<String, GraphFacts.Station> stations = new LinkedHashMap<>(base.stations());
         stations.replaceAll((id, station) -> readFurnace(level, station));

@@ -319,6 +319,14 @@ def test_more_inputs():
     quiet = {task["id"] for task in plan(graph, State(more_state([])))["tasks"]}
     for way in MORE.values():
         assert way not in quiet, "Python: без входа области more задачи нет: " + way
+    assert not any(task.startswith("explore:more:") for task in quiet), \
+        "Python: условие more не «нет источника» и не просит разведку: " + str(sorted(quiet))
+    facts = State({"stage": 1, "kits": {"spirit-1": {}}, "facts": {"feedback": {
+        "clock": {"morning": False, "duskSoon": True, "night": False, "dayTime": 12000},
+        "player": {"position": {"x": 1, "y": 64, "z": 2}, "near": True,
+                   "holdingBlock": False, "usingItem": False, "digging": True}}}})
+    assert facts.clock["duskSoon"] is True, "Python-модель обязана читать факт dusk_soon"
+    assert facts.player["digging"] is True, "Python-модель обязана читать факт игрока: копает рядом"
     print("OK: входы области more учитываются в выборе")
 
 
@@ -776,6 +784,42 @@ def test_stage_two_worlds():
     print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")
 
 
+def test_failure_memory():
+    """Память неудач в Python: штраф узла и удлинение дальней дороги (GraphFailureMemoryTests/GraphChoiceTests)."""
+    base = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+
+    def dusk(**choice):
+        graph = base
+        if choice:
+            data = copy.deepcopy(base.raw)
+            data.setdefault("choice", {}).update(choice)
+            graph = Graph(data)
+        world = sim_gpu.World.settled(graph)
+        world.world.add("more:dusk_soon")
+        world.distances["more:dusk_soon"] = 40
+        return world
+
+    calm = dusk()
+    calm_priority = next(t["priority"] for t in calm.plan()["tasks"]
+                         if t["id"] == "more_return_before_night")
+    failed = dusk()
+    failed.with_facts({"feedback": {"failures": [{"node": "more_return_before_night", "target": "0,64,0",
+                                                  "count": 1, "cause": "NO_PATH", "lastTick": 100}]}})
+    failed_priority = next(t["priority"] for t in failed.plan()["tasks"]
+                           if t["id"] == "more_return_before_night")
+    assert failed_priority < calm_priority, \
+        "Python: провал узла снижает вес, а не выбирает ту же работу снова: %s/%s" % (
+            failed_priority, calm_priority)
+
+    far = dusk(farTrip=5.0)
+    far.with_facts({"feedback": {"failures": [{"node": "more_return_before_night", "target": "0,64,0",
+                                               "count": 1, "cause": "NO_PATH", "lastTick": 100}]}})
+    far_ticks = next(t["ticks"] for t in far.plan()["tasks"]
+                     if t["id"] == "more_return_before_night")
+    assert far_ticks == 2200, "Python: провал дальней дороги удлиняет её по farTrip: " + str(far_ticks)
+    print("OK: память неудач штрафует узел и дальнюю дорогу в Python")
+
+
 def test_choice_mechanics():
     """Правила выбора в Python: те же поправки, что и в Java (GraphChoiceTests)."""
     base = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
@@ -903,6 +947,7 @@ if __name__ == "__main__":
         test_input_effects()
         test_dead_inputs()
         test_stage_two_worlds()
+        test_failure_memory()
         test_choice_mechanics()
         test_conformance()
     except AssertionError as error:

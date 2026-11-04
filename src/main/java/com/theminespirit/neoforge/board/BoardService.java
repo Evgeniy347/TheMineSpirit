@@ -75,11 +75,11 @@ public final class BoardService {
     private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
+    public final BoardSources sources;
     final ActivityCards cards = new ActivityCards();
     private final Board board;
     private final HerdCycles animals;
     private final StockReader stockReader;
-    private final BoardSources sources;
     private final JournalService journal;
     private final @Nullable BoardStateStore store;
     private final CraterProfiles craters = new CraterProfiles(64);
@@ -710,8 +710,12 @@ public final class BoardService {
 
     private void dropUntooled(SpiritEntity spirit) {
         boolean walledIn = DIG_OUT.equals(spirit.currentTaskScript().orElse(null));
-        for (ToolLossRelease.Released freed :
-                ToolLossRelease.apply(board, spirit.getUUID(), SpiritItems.ids(spirit), walledIn, this::supplyOf)) {
+        for (ToolLossRelease.Released freed : ToolLossRelease.apply(
+                board,
+                spirit.getUUID(),
+                SpiritItems.ids(spirit),
+                walledIn,
+                ticket -> sources.supplyOf(ticket, targets))) {
             Long issued = issuedGenerations.remove(freed.ticketId());
             if (issued != null
                     && issued == spirit.taskGeneration()
@@ -727,11 +731,6 @@ public final class BoardService {
                     spirit.getUUID().toString(),
                     ConfigStamp.current()));
         }
-    }
-
-    private @Nullable String supplyOf(BoardTicket ticket) {
-        TicketTarget target = targets.get(ticket.id());
-        return target == null ? null : target.supplyItem();
     }
 
     private void checkStall(SpiritEntity spirit, BoardTicket ticket) {
@@ -759,6 +758,7 @@ public final class BoardService {
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
+        sources.graphFailure(ticket, targets.get(ticket.id()), reason, board.now());
         board.fail(ticket.id(), stock, reason);
     }
 
@@ -803,10 +803,10 @@ public final class BoardService {
                 default -> {}
             }
         } else {
-            board.fail(
-                    ticket.id(),
-                    stock,
-                    verdict != null ? verdict : spirit.taskFailureReason().orElse(null));
+            String failure =
+                    verdict != null ? verdict : spirit.taskFailureReason().orElse(null);
+            sources.graphFailure(ticket, targets.get(ticket.id()), failure, board.now());
+            board.fail(ticket.id(), stock, failure);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
             for (BoardLogEntry entry : board.drainDetachments()) {
                 journal.recordEntry(entry);

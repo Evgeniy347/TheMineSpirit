@@ -52,7 +52,7 @@ class GraphBuildingMaterialsTests {
                 Map.of(),
                 Map.of(building.id(), building),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
     }
 }

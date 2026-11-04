@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class GraphWorldEventsTests {
     @Test
     void facts_FlatAndClean_GiveNoWorldEvents() {
-        GraphFacts facts = facts(List.of(), GraphFacts.Terrain.empty(), Map.of());
+        GraphFacts facts = facts(List.of(), GraphSiteFacts.Terrain.empty(), Map.of());
 
         assertEquals(Set.of(), GraphWorldEvents.of(facts), "Ровный участок без следов не ставит уборку");
     }
@@ -20,8 +20,8 @@ class GraphWorldEventsTests {
     @Test
     void facts_StraysTerrainAndDamage_GiveNodes() {
         GraphFacts facts = facts(
-                List.of(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), "spirit-1")),
-                new GraphFacts.Terrain(2, 3, 4, 5, 6),
+                List.of(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), "spirit-1")),
+                new GraphSiteFacts.Terrain(2, 3, 4, 5, 6),
                 Map.of(
                         "hut",
                         new GraphFacts.Building(
@@ -41,7 +41,7 @@ class GraphWorldEventsTests {
     void facts_UnknownOrUndamagedBuilding_GiveNoRepair() {
         GraphFacts facts = facts(
                 List.of(),
-                GraphFacts.Terrain.empty(),
+                GraphSiteFacts.Terrain.empty(),
                 Map.of(
                         "hut",
                                 new GraphFacts.Building(
@@ -57,8 +57,8 @@ class GraphWorldEventsTests {
     @Test
     void facts_PlayerStray_GivesNoDemolition() {
         GraphFacts facts = facts(
-                List.of(new GraphFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), null)),
-                GraphFacts.Terrain.empty(),
+                List.of(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(1, 64, 1), null)),
+                GraphSiteFacts.Terrain.empty(),
                 Map.of());
 
         assertFalse(
@@ -70,7 +70,7 @@ class GraphWorldEventsTests {
     void facts_LotAndFloatingComposition_GiveNodes() {
         GraphFacts facts = facts(
                 List.of(),
-                new GraphFacts.Terrain(
+                new GraphSiteFacts.Terrain(
                         0, 0, 0, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of("minecraft:oak_log", 4)),
                 Map.of());
 
@@ -84,7 +84,7 @@ class GraphWorldEventsTests {
     void facts_FillComposition_GivesBackfill() {
         GraphFacts facts = facts(
                 List.of(),
-                new GraphFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of()),
+                new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of("minecraft:dirt", 3), Map.of()),
                 Map.of());
 
         assertTrue(GraphWorldEvents.of(facts).contains(GraphWorldEvents.BACKFILL), "яма из блоков требует подсыпки");
@@ -94,14 +94,16 @@ class GraphWorldEventsTests {
     void state_WithWorldFacts_MergesDerivedEvents() {
         GraphState state = new GraphState(
                         Map.of(), 1, Map.of("spirit-1", Map.of()), Map.of(), Map.of(), 60, Set.of("night"), Set.of())
-                .withFacts(facts(List.of(), new GraphFacts.Terrain(1, 0, 0, 2, 0), Map.of()));
+                .withFacts(facts(List.of(), new GraphSiteFacts.Terrain(1, 0, 0, 2, 0), Map.of()));
 
         assertTrue(state.events().contains("night"), "Старое событие не теряется");
         assertTrue(state.events().contains(GraphWorldEvents.BACKFILL), "Вход графа добавляет узел засыпки");
     }
 
     private static GraphFacts facts(
-            List<GraphFacts.Stray> strays, GraphFacts.Terrain terrain, Map<String, GraphFacts.Building> buildings) {
+            List<GraphSiteFacts.Stray> strays,
+            GraphSiteFacts.Terrain terrain,
+            Map<String, GraphFacts.Building> buildings) {
         return new GraphFacts(
                 Map.of(),
                 List.of(),
@@ -111,6 +113,6 @@ class GraphWorldEventsTests {
                 buildings,
                 strays,
                 terrain,
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
     }
 }

@@ -193,7 +193,7 @@ public final class GraphPlanner {
             }
             List<String> missing = producers.stream()
                     .map(SupplyGraph.Way::world)
-                    .filter(resource -> resource != null && !state.world().contains(resource))
+                    .filter(id -> id != null && !state.world().contains(id) && !id.startsWith("more:"))
                     .distinct()
                     .toList();
             if (!missing.isEmpty() && !sourced(node)) {

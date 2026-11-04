@@ -286,7 +286,7 @@ class GraphChoiceTests {
                 Map.of("furnace", furnace),
                 Map.of(),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
     }
 }

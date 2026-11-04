@@ -14,8 +14,8 @@ public final class StoreInputs {
 
     private StoreInputs() {}
 
-    public static GraphFacts.StageReqs stageReqs(
-            GraphFacts.StageReqs base, StoreMinimums settings, SupplyGraph graph, List<GraphFacts.Chest> chests) {
+    public static GraphSiteFacts.StageReqs stageReqs(
+            GraphSiteFacts.StageReqs base, StoreMinimums settings, SupplyGraph graph, List<GraphFacts.Chest> chests) {
         Map<String, Integer> minimum = new LinkedHashMap<>(base.minimum());
         Map<String, Integer> actual = new LinkedHashMap<>(base.actual());
         Map<String, Integer> stored = counts(chests);
@@ -23,7 +23,7 @@ public final class StoreInputs {
             minimum.put(item, entry.target());
             actual.put(item, count(graph, stored, item));
         });
-        return new GraphFacts.StageReqs(minimum, actual);
+        return new GraphSiteFacts.StageReqs(minimum, actual);
     }
 
     public static GraphFacts.Station furnaceStation(GraphFacts.Station station, FurnaceSlots slots, boolean lit) {

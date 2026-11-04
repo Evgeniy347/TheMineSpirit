@@ -4,6 +4,7 @@ import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.inventory.ContainerSnapshot;
@@ -41,7 +42,7 @@ final class GraphFactInputs {
                 stationFacts(graph, buildings, town, scan),
                 buildingFacts(buildings, town, scan),
                 List.of(),
-                GraphFacts.Terrain.empty(),
+                GraphSiteFacts.Terrain.empty(),
                 stageReqs(service, service.board().ledger().stage()));
     }
 
@@ -219,14 +220,14 @@ final class GraphFactInputs {
         return counts;
     }
 
-    private static GraphFacts.StageReqs stageReqs(BoardService service, int stage) {
+    private static GraphSiteFacts.StageReqs stageReqs(BoardService service, int stage) {
         StageRules rules = DataTables.INSTANCE.stages().current();
         if (stage > rules.stages().size()) {
-            return new GraphFacts.StageReqs(Map.of(), Map.of());
+            return new GraphSiteFacts.StageReqs(Map.of(), Map.of());
         }
         Map<String, Integer> minimum = rules.stages().get(stage - 1).requires();
         Map<String, Integer> actual = new LinkedHashMap<>();
         minimum.forEach((id, level) -> actual.put(id, service.board().ledger().hasPlan(id, level) ? level : 0));
-        return new GraphFacts.StageReqs(minimum, actual);
+        return new GraphSiteFacts.StageReqs(minimum, actual);
     }
 }

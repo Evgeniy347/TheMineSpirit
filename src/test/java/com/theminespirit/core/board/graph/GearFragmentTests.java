@@ -60,7 +60,7 @@ class GearFragmentTests {
     @Test
     void planner_GearInputs_AddUnimplementedStubs() {
         GraphFacts facts = facts(
-                new GraphFacts.StageReqs(Map.of(), Map.of()),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 Map.of(
                         "spirit-1",
                         new GraphFacts.Spirit(
@@ -100,7 +100,7 @@ class GearFragmentTests {
         return graph.items().containsKey(node) || graph.isGroup(node) || graph.isTool(node);
     }
 
-    private static GraphFacts facts(GraphFacts.StageReqs reqs, Map<String, GraphFacts.Spirit> spirits) {
+    private static GraphFacts facts(GraphSiteFacts.StageReqs reqs, Map<String, GraphFacts.Spirit> spirits) {
         return new GraphFacts(
                 spirits,
                 List.of(),
@@ -109,7 +109,7 @@ class GearFragmentTests {
                 Map.of(),
                 new LinkedHashMap<>(),
                 List.of(),
-                GraphFacts.Terrain.empty(),
+                GraphSiteFacts.Terrain.empty(),
                 reqs);
     }
 }

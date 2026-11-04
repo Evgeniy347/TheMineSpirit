@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphWorldFacts;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
@@ -50,14 +51,14 @@ final class WorldAreaInputs {
             Map<String, GraphFacts.Building> buildings) {
         long now = service.board().now();
         StageSite site = scan.stage();
-        List<GraphFacts.Stray> strays = strays(
+        List<GraphSiteFacts.Stray> strays = strays(
                 placements(service),
                 at -> site.enclosure().contains(at.x(), at.z()),
                 at -> site.planned(at.x(), at.y(), at.z()));
         PlotAudit.Audit audit = PlotAudit.audit(level, site, now);
         List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
                 .orElse(List.of());
-        GraphFacts.Terrain terrain = terrain(
+        GraphSiteFacts.Terrain terrain = terrain(
                 audit.holes(),
                 audit.depths(),
                 audit.extras(),
@@ -72,9 +73,9 @@ final class WorldAreaInputs {
         return new GraphWorldFacts(strays, terrain, buildings);
     }
 
-    static List<GraphFacts.Stray> strays(
+    static List<GraphSiteFacts.Stray> strays(
             List<Placed> placed, Predicate<BlockCoord> inside, Predicate<BlockCoord> planned) {
-        Map<String, GraphFacts.Stray> found = new LinkedHashMap<>();
+        Map<String, GraphSiteFacts.Stray> found = new LinkedHashMap<>();
         for (Placed trace : placed) {
             if (!inside.test(trace.at()) || planned.test(trace.at())) {
                 continue;
@@ -82,7 +83,7 @@ final class WorldAreaInputs {
             String key = key(trace.at());
             found.putIfAbsent(
                     key,
-                    new GraphFacts.Stray(
+                    new GraphSiteFacts.Stray(
                             "stray:" + trace.type() + "@" + key,
                             trace.type(),
                             new GraphFacts.Position(
@@ -92,18 +93,18 @@ final class WorldAreaInputs {
         }
         return found.values().stream()
                 .sorted(Comparator.comparingInt(
-                                (GraphFacts.Stray stray) -> stray.position().y())
+                                (GraphSiteFacts.Stray stray) -> stray.position().y())
                         .thenComparingInt(stray -> stray.position().x())
                         .thenComparingInt(stray -> stray.position().z()))
                 .toList();
     }
 
-    static GraphFacts.Terrain terrain(
+    static GraphSiteFacts.Terrain terrain(
             List<BlockCoord> holes, Map<BlockCoord, Integer> depths, List<BlockCoord> extras, int hanging, int traces) {
         return terrain(holes, depths, extras, hanging, traces, new Marks(Map.of(), Map.of(), Map.of()));
     }
 
-    static GraphFacts.Terrain terrain(
+    static GraphSiteFacts.Terrain terrain(
             List<BlockCoord> holes,
             Map<BlockCoord, Integer> depths,
             List<BlockCoord> extras,
@@ -121,7 +122,7 @@ final class WorldAreaInputs {
             int bottom = holes.stream().mapToInt(BlockCoord::y).min().orElse(0);
             heightDrop = Math.max(0, top - bottom);
         }
-        return new GraphFacts.Terrain(
+        return new GraphSiteFacts.Terrain(
                 depths.size(), hanging, heightDrop, deepest, traces, marks.cut(), marks.fill(), marks.floating());
     }
 

@@ -12,7 +12,7 @@ public final class GraphStageGate {
     }
 
     public static boolean lotsReady(GraphFacts facts) {
-        GraphFacts.Terrain terrain = facts.terrain();
+        GraphSiteFacts.Terrain terrain = facts.terrain();
         return terrain.cut().isEmpty() && terrain.fill().isEmpty();
     }
 

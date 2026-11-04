@@ -2,6 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.graph.GraphDecisions;
+import com.theminespirit.core.board.graph.GraphExplain;
 import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
@@ -37,6 +39,7 @@ public final class GraphSource {
     private long lastCycle = -1;
     private long lastDeep = -1;
     private Set<String> lastLive = Set.of();
+    private GraphDecisions decisions = GraphDecisions.empty();
 
     private record Half(
             ServerLevel level,
@@ -119,6 +122,7 @@ public final class GraphSource {
             }
         }
         report(half.plan(), half.result(), unconnected, half.now());
+        explain(half.plan(), half.now());
         if (half.deep()) {
             String buildings = new TreeMap<>(half.state().buildings()) + " "
                     + half.plan().tasks().stream()
@@ -209,6 +213,20 @@ public final class GraphSource {
         int percent = progress.total() == 0 ? 0 : progress.done() * 100 / progress.total();
         return task.makes() + "=" + percent + "%(" + progress.done() + "/" + progress.total() + ")"
                 + (task.feasible() ? "" : "?");
+    }
+
+    private void explain(GraphPlan plan, long now) {
+        decisions = GraphExplain.of(plan, now);
+        if (!notes.due("decisions", now)) {
+            return;
+        }
+        for (GraphDecisions.Row row : decisions.decisions()) {
+            LOGGER.info("[graph] решение: {}", row.line());
+        }
+    }
+
+    public GraphDecisions decisions() {
+        return decisions;
     }
 
     private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {

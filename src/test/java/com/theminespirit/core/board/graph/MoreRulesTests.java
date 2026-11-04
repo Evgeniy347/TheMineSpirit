@@ -40,6 +40,14 @@ class MoreRulesTests {
     }
 
     @Test
+    void playerNearDigging_NearPlayer_KeepClearForWork() {
+        Set<String> signals = MoreRules.signals(withPlayer(new MoreRules.Player(true, false, false, true)));
+
+        assertTrue(signals.contains(MoreRules.PLAYER_NEAR), "Копающий рядом игрок — близость");
+        assertTrue(signals.contains(MoreRules.PLAYER_BUILDING), "Копающий игрок — дух не толпится в его клетке");
+    }
+
+    @Test
     void playerFarHoldingBlock_DistantPlayer_NoSignals() {
         Set<String> signals = MoreRules.signals(withPlayer(new MoreRules.Player(false, true, true)));
 

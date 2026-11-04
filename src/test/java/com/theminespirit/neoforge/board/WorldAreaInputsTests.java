@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,7 +23,7 @@ class WorldAreaInputsTests {
                 new WorldAreaInputs.Placed(new BlockCoord(3, 64, 3), "stone", "spirit-3"),
                 new WorldAreaInputs.Placed(new BlockCoord(4, 64, 4), "sand", "spirit-4"));
 
-        List<GraphFacts.Stray> strays = WorldAreaInputs.strays(placed, at -> at.x() < 4, at -> at.x() == 2);
+        List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(placed, at -> at.x() < 4, at -> at.x() == 2);
 
         assertEquals(2, strays.size(), "След вне участка и след в плане не считаются лишними");
         assertEquals("oak_planks", strays.get(0).type(), "Тип лишней постройки берётся из журнала");
@@ -43,7 +44,7 @@ class WorldAreaInputsTests {
                 new WorldAreaInputs.Placed(new BlockCoord(1, 64, 1), "dirt", "old"),
                 new WorldAreaInputs.Placed(new BlockCoord(2, 64, 2), "dirt", null));
 
-        List<GraphFacts.Stray> strays = WorldAreaInputs.strays(placed, at -> true, at -> false);
+        List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(placed, at -> true, at -> false);
 
         assertEquals(2, strays.size(), "Один след на клетку: повтор из журнала не размножается");
         assertEquals("stone", first(strays, 1).type(), "Новая запись журнала главнее старой");
@@ -57,7 +58,7 @@ class WorldAreaInputsTests {
         depths.put(new BlockCoord(1, 63, 1), 2);
         depths.put(new BlockCoord(2, 63, 2), 5);
 
-        GraphFacts.Terrain terrain = WorldAreaInputs.terrain(
+        GraphSiteFacts.Terrain terrain = WorldAreaInputs.terrain(
                 List.of(new BlockCoord(1, 63, 1), new BlockCoord(2, 63, 2)),
                 depths,
                 List.of(new BlockCoord(3, 66, 3)),
@@ -74,9 +75,9 @@ class WorldAreaInputsTests {
 
     @Test
     void terrain_EmptyOrNegative_Handled() {
-        GraphFacts.Terrain flat = WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), 0, 0);
+        GraphSiteFacts.Terrain flat = WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), 0, 0);
 
-        assertEquals(GraphFacts.Terrain.empty(), flat, "Пустой вход даёт ровный участок");
+        assertEquals(GraphSiteFacts.Terrain.empty(), flat, "Пустой вход даёт ровный участок");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), -1, 0),
@@ -123,7 +124,7 @@ class WorldAreaInputsTests {
         assertEquals(0, facts.get("hut").auditPercent(), "Пока аудит не готов, процент не выдумываем");
     }
 
-    private static GraphFacts.Stray first(List<GraphFacts.Stray> strays, int x) {
+    private static GraphSiteFacts.Stray first(List<GraphSiteFacts.Stray> strays, int x) {
         return strays.stream()
                 .filter(stray -> stray.position().x() == x)
                 .findFirst()
